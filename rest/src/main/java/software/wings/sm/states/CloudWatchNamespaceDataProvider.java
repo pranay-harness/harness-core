@@ -8,7 +8,6 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -30,7 +29,7 @@ public class CloudWatchNamespaceDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
     List<SettingAttribute> settingAttributesByType =
-        settingsService.getSettingAttributesByType(Base.GLOBAL_APP_ID, SettingVariableTypes.AWS.name());
+        settingsService.getSettingAttributesByType(appId, SettingVariableTypes.AWS.name());
     if (settingAttributesByType != null && settingAttributesByType.size() > 0) {
       SettingAttribute settingAttribute = settingAttributesByType.get(0);
       AwsConfig awsInfrastructureProviderConfig = (AwsConfig) settingAttribute.getValue();
