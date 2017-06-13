@@ -17,13 +17,13 @@ REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Bot..."
+  echo "Downloading Delegate..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
-    echo "Downloading Bot..."
+    echo "Downloading Delegate..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
@@ -40,11 +40,11 @@ fi
 
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
-  echo "Bot already running"
+  echo "Delegate already running"
 else
   export HOSTNAME
   export CAPSULE_CACHE_DIR="$DIR/.cache"
   rm -rf "$CAPSULE_CACHE_DIR"
   nohup $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
-  echo "Bot started"
+  echo "Delegate started"
 fi

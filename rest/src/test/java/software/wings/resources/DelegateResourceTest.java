@@ -25,6 +25,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -167,7 +168,8 @@ public class DelegateResourceTest {
     verify(DELEGATE_SERVICE).download(anyString(), anyString());
     verify(DOWNLOAD_TOKEN_SERVICE).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
-    assertThat(restResponse.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=wings-bot.zip");
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + Constants.DELEGATE_DIR + ".zip");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity()).get(0)).isEqualTo("Test");
   }
 

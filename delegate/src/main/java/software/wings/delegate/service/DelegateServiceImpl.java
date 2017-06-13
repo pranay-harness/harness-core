@@ -103,7 +103,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
-        logger.info("Received Bot upgrade request");
+        logger.info("Received Delegate upgrade request");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
         while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
@@ -228,9 +228,9 @@ public class DelegateServiceImpl implements DelegateService {
       //      startUpgradeCheck(accountId, delegateId, getVersion()); // don't auto-upgrade for now
 
       if (upgrade) {
-        logger.info("Bot upgraded.");
+        logger.info("Delegate upgraded.");
       } else {
-        logger.info("Bot started.");
+        logger.info("Delegate started.");
       }
 
       synchronized (waiter) {
@@ -273,12 +273,12 @@ public class DelegateServiceImpl implements DelegateService {
           delegateResponse = execute(managerClient.registerDelegate(accountId,
               builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
-          String msg = "Unknown error occurred while registering Bot [" + accountId + "] with manager";
+          String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
           logger.error(msg, e);
           throw new WingsException(msg, e);
         }
         if (delegateResponse == null) {
-          String msg = "Error occurred while registering Bot [" + accountId
+          String msg = "Error occurred while registering Delegate [" + accountId
               + "] with manager. Please see the manager log for more information.";
           logger.error(msg);
           throw new WingsException(msg);
@@ -290,7 +290,7 @@ public class DelegateServiceImpl implements DelegateService {
         return delegateResponse.getResource().getUuid();
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
-      String msg = "Timeout occurred while registering Bot [" + accountId + "] with manager";
+      String msg = "Timeout occurred while registering Delegate [" + accountId + "] with manager";
       logger.error(msg, e);
       throw new WingsException(msg, e);
     }

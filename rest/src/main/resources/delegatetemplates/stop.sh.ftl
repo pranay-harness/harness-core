@@ -17,13 +17,13 @@ then
       sleep 1
       i=$((i+1))
     else
-      echo "Bot stopped"
+      echo "Delegate stopped"
       exit 0
     fi
   done
   echo "Unable to stop bot in 30 seconds."
   exit 1
 else
-  echo "Bot not running"
+  echo "Delegate not running"
   exit 1
 fi

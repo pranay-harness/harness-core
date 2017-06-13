@@ -42,6 +42,6 @@
             <td>&nbsp;</td>
         </tr>
     </table>
-    <div class="footer light" style="color: #CDD3D4;margin-top: 50px;padding-top: 20px;border-top: 1px solid #CDD3D4;font-size: small;text-align: center;padding-bottom: 50px;">&copy;  WINGS SOFTWARE</div>
+    <div class="footer light" style="color: #CDD3D4;margin-top: 50px;padding-top: 20px;border-top: 1px solid #CDD3D4;font-size: small;text-align: center;padding-bottom: 50px;">&copy;  HARNESS INC</div>
 </div>
 

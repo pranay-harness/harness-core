@@ -247,4 +247,6 @@ public interface Constants {
   String RUNTIME = "RUNTIME";
   String NOT_REGISTERED = "<Not registered yet>";
   String MAINTENANCE = "maintenance";
+
+  String DELEGATE_DIR = "harness-delegate";
 }

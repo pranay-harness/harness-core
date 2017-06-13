@@ -38,6 +38,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
@@ -193,10 +194,10 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
-      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo("wings-bot/");
+      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(Constants.DELEGATE_DIR + "/");
 
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-bot/run.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/run.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
@@ -210,7 +211,7 @@ public class DelegateServiceTest extends WingsBaseTest {
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
 
       file = zipArchiveInputStream.getNextZipEntry();
-      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-bot/stop.sh");
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/stop.sh");
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))

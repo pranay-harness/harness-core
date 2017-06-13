@@ -20,14 +20,14 @@
                 <td align="center">
                   <div class="contentText" style="padding-bottom: 50px;font-size: 1.6em;">
                      <div class="salutation">Hi ${(name!"there")?capitalize},</div>
-                     <div>Welcome to Wings!</div>
+                     <div>Welcome to Harness!</div>
                   </div>
                 </td>
               </tr>
               <tr>
                 <td align="center">
                   <div class="light" style="color: #CDD3D4;">Click below to activate your account.</div>
-                  <a class="button" href="${url!}" style="margin: auto;display: block;padding: 10px 16px;text-decoration: none;border-radius: 2px;border: 1px solid;text-align: center;vertical-align: middle;font-weight: bold;white-space: nowrap;background: #ffffff;border-color: #3a4449;background-color: #3a4449;color: #ffffff;border-top-width: 1px;width: 50%;">ACTIVATE YOUR WINGS ACCOUNT</a>
+                  <a class="button" href="${url!}" style="margin: auto;display: block;padding: 10px 16px;text-decoration: none;border-radius: 2px;border: 1px solid;text-align: center;vertical-align: middle;font-weight: bold;white-space: nowrap;background: #ffffff;border-color: #3a4449;background-color: #3a4449;color: #ffffff;border-top-width: 1px;width: 50%;">ACTIVATE YOUR HARNESS ACCOUNT</a>
                   <br />
                   <br />
                 </td>
@@ -42,5 +42,5 @@
           <td>&nbsp;</td>
         </tr>
       </table>
-      <div class="footer light" style="color: #CDD3D4;margin-top: 50px;padding-top: 20px;border-top: 1px solid #CDD3D4;font-size: small;text-align: center;padding-bottom: 50px;">&copy;  WINGS SOFTWARE</div>
+      <div class="footer light" style="color: #CDD3D4;margin-top: 50px;padding-top: 20px;border-top: 1px solid #CDD3D4;font-size: small;text-align: center;padding-bottom: 50px;">&copy;  HARNESS INC</div>
     </div>

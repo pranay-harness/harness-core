@@ -16,6 +16,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -158,7 +159,7 @@ public class DelegateResource {
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=wings-bot.zip")
+        .header("Content-Disposition", "attachment; filename=" + Constants.DELEGATE_DIR + ".zip")
         .build();
   }
 

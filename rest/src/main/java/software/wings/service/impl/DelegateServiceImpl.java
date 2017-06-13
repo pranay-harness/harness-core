@@ -45,6 +45,7 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -246,7 +247,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (responseData == null) {
       logger.error("Task [{}] timed out. remove it from cache", task.toString());
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_DIR);
     }
     return responseData;
   }
@@ -367,13 +368,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File download(String managerHost, String accountId) throws IOException, TemplateException {
-    File delegateFile = File.createTempFile("wings-bot", ".zip");
+    File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
     File run = File.createTempFile("run", ".sh");
     File stop = File.createTempFile("stop", ".sh");
     File readme = File.createTempFile("README", ".txt");
 
     ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
-    out.putArchiveEntry(new ZipArchiveEntry("wings-bot/"));
+    out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
     out.closeArchiveEntry();
     Account account = accountService.get(accountId);
 
@@ -384,7 +385,7 @@ public class DelegateServiceImpl implements DelegateService {
               fileWriter);
     }
     run = new File(run.getAbsolutePath());
-    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-bot/run.sh");
+    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");
     runZipArchiveEntry.setUnixMode(0755 << 16L);
     AsiExtraField permissions = new AsiExtraField();
     permissions.setMode(0755);
@@ -399,7 +400,7 @@ public class DelegateServiceImpl implements DelegateService {
       cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
     }
     stop = new File(stop.getAbsolutePath());
-    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, "wings-bot/stop.sh");
+    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
     stopZipArchiveEntry.setUnixMode(0755 << 16L);
     permissions = new AsiExtraField();
     permissions.setMode(0755);
@@ -414,7 +415,7 @@ public class DelegateServiceImpl implements DelegateService {
       cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
     }
     readme = new File(readme.getAbsolutePath());
-    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, "wings-bot/README.txt");
+    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
     out.putArchiveEntry(readmeZipArchiveEntry);
     try (FileInputStream fis = new FileInputStream(readme)) {
       IOUtils.copy(fis, out);

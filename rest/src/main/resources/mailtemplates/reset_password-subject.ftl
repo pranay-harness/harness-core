@@ -1,1 +1,1 @@
-Reset your WINGS PLATFORM password
+Reset your HARNESS PLATFORM password

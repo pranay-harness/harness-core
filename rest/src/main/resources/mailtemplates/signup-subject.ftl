@@ -1,1 +1,1 @@
-Activate your Wings Platform account
+Activate your Harness Platform account

@@ -54,9 +54,9 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       }
 
       try {
-        logger.info("Verifying Bot token");
+        logger.info("Verifying Delegate token");
         AuthToken authToken = authService.validateToken(req.getParameter("token"));
-        logger.info("Bot token verified");
+        logger.info("Delegate token verified");
 
         List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
         if (pathSegments.size() <= 5) {
