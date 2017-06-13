@@ -60,6 +60,8 @@ public class MetricCalculator {
           MetricType metricType = MetricType.COUNT;
           if (record.getMetricName().endsWith("(ms)")) {
             metricType = MetricType.TIME;
+          } else if (record.getMetricName().contains(" per ")) {
+            metricType = MetricType.RATE;
           }
           metricDefinition = AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
                                  .withAccountId(record.getAccountId())
@@ -191,11 +193,12 @@ public class MetricCalculator {
     // default thresholds: 1-2x = medium, >2x high
     double ratio = 0.0;
     if (newSummary != null && oldSummary != null) {
-      if (metricDefinition.getMetricType() == MetricType.COUNT) {
+      MetricType metricType = metricDefinition.getMetricType();
+      if (metricType == MetricType.COUNT) {
         ratio = (newSummary.getStats().sum() / newSummary.getNodeCount())
             / (oldSummary.getStats().sum() / oldSummary.getNodeCount());
-      } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE
-          || metricDefinition.getMetricType() == MetricType.TIME) {
+      } else if (metricType == MetricType.PERCENTAGE || metricType == MetricType.TIME
+          || metricType == MetricType.RATE) {
         ratio = newSummary.getStats().mean() / oldSummary.getStats().mean();
       }
       if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_HIGHER) {
@@ -249,6 +252,8 @@ public class MetricCalculator {
       Stats tempStats = Stats.of(tempValueMap.get(key));
       if (metricDefinition.getMetricType() == MetricType.COUNT) {
         valueMap.put(key, tempStats.sum());
+      } else if (metricDefinition.getMetricType() == MetricType.RATE) {
+        valueMap.put(key, tempStats.mean());
       } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE) {
         valueMap.put(key, tempStats.mean());
       } else if (metricDefinition.getMetricType() == MetricType.TIME) {
@@ -273,6 +278,8 @@ public class MetricCalculator {
     double value = 0;
     if (metricDefinition.getMetricType() == MetricType.COUNT) {
       value = stats.sum();
+    } else if (metricDefinition.getMetricType() == MetricType.RATE) {
+      value = stats.mean();
     } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE) {
       value = stats.mean();
     } else if (metricDefinition.getMetricType() == MetricType.TIME) {

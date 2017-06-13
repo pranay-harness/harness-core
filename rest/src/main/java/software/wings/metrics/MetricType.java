@@ -11,8 +11,11 @@ public enum MetricType { /**
          * Metrics that count something.
          */
   COUNT, /**
-          * Metrics that show the percentage of events that matched.
+          * Metrics that count something as a rate (count per time)
           */
+  RATE, /**
+         * Metrics that show the percentage of events that matched.
+         */
   PERCENTAGE, /**
                * Metrics that are either true or false.
                */
