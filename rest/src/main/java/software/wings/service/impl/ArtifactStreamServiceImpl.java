@@ -134,7 +134,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(artifactStream.getUuid())
+                          .withIdentity(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(ARTIFACT_STREAM_POLL_INTERVAL)
                                             .repeatForever())
@@ -157,7 +157,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     artifactStream = create(artifactStream);
     if (!artifactStream.isAutoDownload()) {
-      jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, savedArtifactStream.getUuid());
+      jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
     return artifactStream;
   }
@@ -171,9 +171,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                   .field("appId")
                                                   .equal(appId));
     if (deleted) {
-      jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid());
+      jobScheduler.deleteJob(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
       artifactStream.getStreamActions().forEach(
-          streamAction -> jobScheduler.deleteJob(artifactStreamId, streamAction.getWorkflowId()));
+          streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
       artifactService.deleteByArtifactStream(appId, artifactStreamId);
     }
     return deleted;
@@ -254,7 +254,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(streamId, artifactStreamAction.getWorkflowId())
+                          .withIdentity(artifactStreamAction.getWorkflowId(), streamId)
                           .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                           .build();
 
@@ -306,13 +306,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public void triggerScheduledStreamAction(String appId, String streamId, String workflowId) {
     ArtifactStream artifactStream = get(appId, streamId);
+    if (artifactStream == null) {
+      logger.debug("Artifact stream does not exist. Hence deleting associated job");
+      jobScheduler.deleteJob(workflowId, streamId);
+      return;
+    }
     ArtifactStreamAction artifactStreamAction =
         artifactStream.getStreamActions()
             .stream()
             .filter(asa -> asa.isCustomAction() && asa.getWorkflowId().equals(workflowId))
             .findFirst()
             .orElse(null);
-
+    if (artifactStreamAction == null) {
+      logger.debug("Artifact stream does not have trigger anymore . Hence deleting associated job");
+      jobScheduler.deleteJob(workflowId, streamId);
+      return;
+    }
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
     int latestArtifactBuildNo = (latestArtifact != null && latestArtifact.getMetadata().get("buildNo") != null)
         ? Integer.parseInt(latestArtifact.getMetadata().get("buildNo"))

@@ -9,8 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -45,7 +45,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -180,8 +179,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(jobScheduler).deleteJob("ARTIFACT_STREAM_CRON_GROUP", ARTIFACT_STREAM_ID);
-    verify(jobScheduler).deleteJob(ARTIFACT_STREAM_ID, WORKFLOW_ID);
+    verify(jobScheduler).deleteJob(ARTIFACT_STREAM_ID, "ARTIFACT_STREAM_CRON_GROUP");
+    verify(jobScheduler).deleteJob(WORKFLOW_ID, ARTIFACT_STREAM_ID);
   }
 
   @Test

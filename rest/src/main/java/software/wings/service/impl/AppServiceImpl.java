@@ -150,7 +150,7 @@ public class AppServiceImpl implements AppService {
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(application.getUuid())
+            .withIdentity(application.getUuid(), SM_CLEANUP_CRON_GROUP)
             .withSchedule(
                 SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
             .build();
@@ -303,7 +303,7 @@ public class AppServiceImpl implements AppService {
   }
 
   void deleteCronForStateMachineExecutionCleanup(String appId) {
-    jobScheduler.deleteJob(SM_CLEANUP_CRON_GROUP, appId);
+    jobScheduler.deleteJob(appId, SM_CLEANUP_CRON_GROUP);
   }
 
   @Override

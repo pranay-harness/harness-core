@@ -263,6 +263,6 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
     inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
-    inOrder.verify(jobScheduler).deleteJob(anyString(), eq(APP_ID));
+    inOrder.verify(jobScheduler).deleteJob(eq(APP_ID), anyString());
   }
 }

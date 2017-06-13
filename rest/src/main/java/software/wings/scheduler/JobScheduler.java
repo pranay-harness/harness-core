@@ -110,14 +110,14 @@ public class JobScheduler {
    * Delete job boolean.
    *
    *
-   * @param groupName
    * @param jobName the job name
+   * @param groupName the group name
    * @return the boolean
    */
-  public boolean deleteJob(String groupName, String jobName) {
+  public boolean deleteJob(String jobName, String groupName) {
     if (groupName != null && jobName != null) {
       try {
-        return scheduler.deleteJob(new JobKey(groupName, jobName));
+        return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
         logger.error("Couldn't delete cron job [{} {}] ", groupName, jobName);
       }
