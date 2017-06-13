@@ -9,4 +9,4 @@ test:
 	source .pyenv/bin/activate ; nosetests -vv tests/; deactivate
 
 jupyter:
-	source .pyenv/bin/activate ; jupyter notebook --NotebookApp.iopub_data_rate_limit=100000000
+	source .pyenv/bin/activate ; jupyter nbextension enable --py --sys-prefix widgetsnbextension; jupyter notebook --NotebookApp.iopub_data_rate_limit=100000000
