@@ -115,6 +115,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       long tierId, String btName, int durantionInMinutes) throws IOException {
+    logger.debug("getting AppDynamics metric data");
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
         + "Individual Nodes|*|*";
@@ -125,6 +126,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
     if (tierBTMResponse.isSuccessful()) {
+      logger.debug("AppDynamics metric data found: " + tierBTMResponse.body().size() + " records.");
       return tierBTMResponse.body();
     } else {
       logger.error("Request not successful. Reason: {}", tierBTMResponse);

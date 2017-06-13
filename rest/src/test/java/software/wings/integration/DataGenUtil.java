@@ -251,10 +251,10 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(Builder.anAppDynamicsConfig()
                            .withAccountId(accountId)
-                           .withControllerUrl("https://na774.saas.appdynamics.com/controller")
-                           .withUsername("testuser")
-                           .withAccountname("na774")
-                           .withPassword("testuser123".toCharArray())
+                           .withControllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
+                           .withUsername("wingsnfr")
+                           .withAccountname("wingsnfr")
+                           .withPassword("cbm411sjesma".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);

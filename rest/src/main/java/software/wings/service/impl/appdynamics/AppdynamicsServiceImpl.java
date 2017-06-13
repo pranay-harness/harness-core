@@ -5,6 +5,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ArrayListMultimap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
@@ -41,6 +43,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class AppdynamicsServiceImpl implements AppdynamicsService {
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
   private static final long APPDYNAMICS_CALL_TIMEOUT = TimeUnit.MINUTES.toMillis(1L);
 
   @com.google.inject.Inject private SettingsService settingsService;
@@ -127,11 +130,15 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Override
   public Boolean saveMetricData(
       String accountId, long appdynamicsAppId, long tierId, List<AppdynamicsMetricData> metricDataList) {
+    logger.debug("inserting " + metricDataList.size() + " pieces of AppDynamics metrics data");
+    int count = 0;
     for (AppdynamicsMetricData metricData : metricDataList) {
       List<AppdynamicsMetricDataRecord> metricDataRecords =
           AppdynamicsMetricDataRecord.generateDataRecords(accountId, appdynamicsAppId, tierId, metricData);
+      count += metricDataRecords.size();
       wingsPersistence.saveIgnoringDuplicateKeys(metricDataRecords);
     }
+    logger.debug("inserted " + count + " AppDynamicsMetricDataRecords to persistence layer.");
     return true;
   }
 

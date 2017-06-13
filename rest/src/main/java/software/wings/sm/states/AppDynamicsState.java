@@ -161,6 +161,7 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    logger.debug("Executing AppDynamics state");
     triggerAppdynamicsDataCollection(context);
     final List<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
@@ -251,6 +252,7 @@ public class AppDynamicsState extends State {
       for (AppdynamicsMetric appdynamicsMetric : appdynamicsMetrics) {
         btNames.add(appdynamicsMetric.getName());
       }
+      logger.debug("AppDynamics BT names: " + String.join(", ", btNames));
 
       return btNames;
     } catch (Exception e) {
