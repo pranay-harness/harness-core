@@ -98,5 +98,8 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.  
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
 
+### Python
+* Refer to the readme under python/splunk_intelligence
+
 ### Troubleshooting
 https://github.com/wings-software/wings/wiki/Troubleshooting-running-java-process
