@@ -267,7 +267,7 @@ public class DelegateServiceImpl implements DelegateService {
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
     try {
-      return await().with().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> {
+      return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
         try {
           delegateResponse = execute(managerClient.registerDelegate(accountId,
