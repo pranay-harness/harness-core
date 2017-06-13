@@ -32,7 +32,7 @@ public class MetricCalculatorTest {
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("0")
           .withMetricName("Calls per Minute")
-          .withMetricType(MetricType.COUNT)
+          .withMetricType(MetricType.RATE)
           .withMediumThreshold(1)
           .withHighThreshold(2)
           .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
@@ -93,23 +93,23 @@ public class MetricCalculatorTest {
           .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
           .build();
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_1 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node1", 60000, 5);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_2 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node2", 60000, 6);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 60000, 6);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_3 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node3", 60000, 7);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 60000, 7);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_4 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node4", 60000, 8);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 60000, 8);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_5 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node1", 120000, 9);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 120000, 9);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_6 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node2", 120000, 10);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 120000, 10);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_7 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node3", 120000, 11);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 120000, 11);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_8 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node4", 120000, 12);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 120000, 12);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_9 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.COUNT, 1, "tier1", 2, "todolist", "node1", 240000, 15);
+      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 15);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
       8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
@@ -211,11 +211,11 @@ public class MetricCalculatorTest {
     BucketData bucketData = MetricCalculator.parse(CALLS_METRIC_DEFINITION, records);
     // newRecords sum = 38, oldRecords sum = 30, so medium risk
     assertEquals(RiskLevel.MEDIUM, bucketData.getRisk());
-    assertEquals(MetricType.COUNT, bucketData.getMetricType());
+    assertEquals(MetricType.RATE, bucketData.getMetricType());
     assertEquals(2, bucketData.getOldData().getNodeCount());
     assertEquals(2, bucketData.getNewData().getNodeCount());
-    assertEquals(30d, bucketData.getOldData().getValue(), 0.05);
-    assertEquals(38d, bucketData.getNewData().getValue(), 0.05);
+    assertEquals(7.5d, bucketData.getOldData().getValue(), 0.05);
+    assertEquals(9.5d, bucketData.getNewData().getValue(), 0.05);
   }
 
   @Test
@@ -226,8 +226,8 @@ public class MetricCalculatorTest {
     DataSummary summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS);
     assertEquals(4, summary.getNodeCount());
     assertThat(summary.getNodeList().toArray(), arrayContainingInAnyOrder("node1", "node2", "node3", "node4"));
-    assertEquals(68, summary.getStats().sum(), 0.05);
-    assertEquals(68, summary.getValue(), 0.05);
+    assertEquals(8.5d, summary.getStats().mean(), 0.05);
+    assertEquals(8.5d, summary.getValue(), 0.05);
     assertEquals(false, summary.isMissingData());
 
     // with some missing data
@@ -235,8 +235,8 @@ public class MetricCalculatorTest {
         BT2_CALL_RECORD_4, BT2_CALL_RECORD_5, BT2_CALL_RECORD_6, BT2_CALL_RECORD_7, BT2_CALL_RECORD_8);
     summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS_WITH_MISSING_3);
     assertEquals(4, summary.getNodeCount());
-    assertEquals(61, summary.getStats().sum(), 0.05);
-    assertEquals(61, summary.getValue(), 0.05);
+    assertEquals(8.417, summary.getStats().mean(), 0.05);
+    assertEquals(8.417, summary.getValue(), 0.05);
     assertEquals(true, summary.isMissingData());
 
     // with a gap in the times of the records
@@ -246,7 +246,8 @@ public class MetricCalculatorTest {
     assertEquals(1, summary.getNodeCount());
     assertEquals("node1", summary.getNodeList().get(0));
     assertEquals(29, summary.getStats().sum(), 0.05);
-    assertEquals(29, summary.getValue(), 0.05);
+    assertEquals(9.667, summary.getStats().mean(), 0.05);
+    assertEquals(9.667, summary.getValue(), 0.05);
     assertEquals(true, summary.isMissingData());
 
     // with time metric type
