@@ -40,11 +40,15 @@ public class QuartzJobTriggerMigratorUtil extends WingsBaseTest {
   @Test
   public void scheduleCronForStateMachineExecutionCleanup() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
+    System.out.println("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
+
     if (pageResponse.isEmpty() || CollectionUtils.isEmpty(pageResponse.getResponse())) {
+      System.out.println("No applications found");
       return;
     }
     pageResponse.getResponse().forEach(application -> {
+      System.out.println("Creating scheduler for application " + application);
       jobScheduler.deleteJob(application.getUuid(), "SM_CLEANUP_CRON_GROUP");
       addCronForStateMachineExecutionCleanup(application);
     });

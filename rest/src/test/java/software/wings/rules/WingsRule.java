@@ -179,8 +179,7 @@ public class WingsRule implements MethodRule {
     configuration.getPortal().setAllowedDomains("wings.software");
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
-    configuration.getMongoConnectionFactory().setUri("mongodb://" + mongoClient.getAddress().getHost() + ":"
-        + mongoClient.getAddress().getPort() + "/" + datastore.getDB().getName());
+    configuration.getMongoConnectionFactory().setUri(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
     configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
