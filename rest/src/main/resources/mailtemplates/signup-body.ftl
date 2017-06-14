@@ -3,7 +3,7 @@
         <tr>
           <td>&nbsp;</td>
           <td class="center" align="center">
-           <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"></div>
+           <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png?v=1); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"></div>
           </td>
           <td>&nbsp;</td>
         </tr>
@@ -12,7 +12,7 @@
           <td class="center" align="center">
             <table bgcolor="#fff" width="550px">
               <tr>
-                <td background="https://s3.amazonaws.com/wings-assets/emailimage.png" width="550px" height="250px">
+                <td background="https://s3.amazonaws.com/wings-assets/emailimage.png?v=1" width="550px" height="250px">
                   &nbsp;
                 </td>
               </tr>
@@ -38,7 +38,7 @@
         </tr>
         <tr>
           <td>&nbsp;</td>
-          <td class="center" style="text-align: center;"> <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"> </div> </td>
+          <td class="center" style="text-align: center;"> <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png?v=1); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"> </div> </td>
           <td>&nbsp;</td>
         </tr>
       </table>
