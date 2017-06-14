@@ -21,19 +21,22 @@ public class SignalService {
 
   public void pause() {
     if (state.compareAndSet(State.RUNNING, State.PAUSE)) {
-      logger.debug("Setting state to pause from running");
+      logger.info("Setting state to pause from running");
       delegateService.pause();
+      logger.info("Delegate paused");
     }
   }
 
   public void resume() {
     if (state.compareAndSet(State.PAUSE, State.RUNNING)) {
-      logger.debug("Setting state to running from pause");
+      logger.info("Setting state to running from pause");
       delegateService.resume();
+      logger.info("Delegate resumed");
     }
     if (state.compareAndSet(State.PAUSED, State.RUNNING)) {
-      logger.debug("Setting state to running from paused");
+      logger.info("Setting state to running from paused");
       delegateService.resume();
+      logger.info("Delegate running");
     }
   }
 
@@ -41,11 +44,12 @@ public class SignalService {
     state.set(State.STOP);
     logger.info("Setting state to stopped");
     delegateService.stop();
+    logger.info("Setting state to stopped");
   }
 
   public void paused() {
     if (state.compareAndSet(State.PAUSE, State.PAUSED)) {
-      logger.debug("Setting state to paused from pause");
+      logger.info("Setting state to paused from pause");
     }
   }
 
