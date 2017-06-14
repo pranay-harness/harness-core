@@ -4,7 +4,7 @@ clean:
 	if [ -d ".pyenv" ]; then rm -rf .pyenv; fi
 init:
 	if [ ! -d ".pyenv" ]; then echo "Setting up virtualenv"; virtualenv --python=/usr/bin/python2.7 .pyenv; fi
-	source .pyenv/bin/activate ; pip install -r requirements.txt;
+	source .pyenv/bin/activate ; pip install --upgrade pip; pip install -r requirements.txt;
 test:
 	source .pyenv/bin/activate ; nosetests -vv tests/; deactivate
 
