@@ -5,6 +5,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -82,7 +83,7 @@ public class DelegateQueueTask implements Runnable {
         Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                               .field("status")
                                               .equal(Status.STARTED)
-                                              .field("delegateId")
+                                              .field(Mapper.ID_KEY)
                                               .equal(delegateTask.getUuid());
         UpdateOperations<DelegateTask> updateOperations =
             wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
