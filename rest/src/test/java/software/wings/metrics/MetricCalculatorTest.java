@@ -1,8 +1,10 @@
 package software.wings.metrics;
 
+import static software.wings.metrics.appdynamics.AppdynamicsConstants.*;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ArrayListMultimap;
 
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.MetricSummary.BTMetrics;
@@ -18,7 +21,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by mike@ on 5/24/17.
@@ -31,7 +33,7 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("0")
-          .withMetricName("Calls per Minute")
+          .withMetricName(CALLS_PER_MINUTE)
           .withMetricType(MetricType.RATE)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -42,7 +44,7 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("1")
-          .withMetricName("Number of Slow Calls")
+          .withMetricName(NUMBER_OF_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -53,7 +55,7 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("2")
-          .withMetricName("Number of Very Slow Calls")
+          .withMetricName(NUMBER_OF_VERY_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -64,7 +66,7 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("3")
-          .withMetricName("Error Count")
+          .withMetricName(ERRORS_PER_MINUTE)
           .withMetricType(MetricType.COUNT)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -75,7 +77,7 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("4")
-          .withMetricName("Stall Count")
+          .withMetricName(STALL_COUNT)
           .withMetricType(MetricType.COUNT)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -86,47 +88,48 @@ public class MetricCalculatorTest {
           .withAccountId(ACCOUNT_ID)
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("5")
-          .withMetricName("95th Percentile Response Time (ms)")
+          .withMetricName(RESPONSE_TIME_95)
           .withMetricType(MetricType.TIME)
           .withMediumThreshold(1)
           .withHighThreshold(2)
           .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
           .build();
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_1 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 60000, 5);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_2 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 60000, 6);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 60000, 6);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_3 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 60000, 7);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 60000, 7);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_4 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 60000, 8);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 60000, 8);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_5 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 120000, 9);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 120000, 9);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_6 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 120000, 10);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 120000, 10);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_7 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 120000, 11);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node3", 120000, 11);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_8 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 120000, 12);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 120000, 12);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_9 = createAppdynamicsMetricDataRecord(
-      6, "Calls per Minute", MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 15);
+      6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 15);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 2, "todolist", "node1", 60000, 5);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 2, "todolist", "node2", 60000, 6);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node2", 60000, 6);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_3 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 2, "todolist", "node3", 120000, 7);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node3", 120000, 7);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_4 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 2, "todolist", "node4", 120000, 8);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node4", 120000, 8);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 4, "login", "node1", 60000, 9);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node1", 60000, 9);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 4, "login", "node2", 60000, 10);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node2", 60000, 10);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_3 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 4, "login", "node1", 120000, 11);
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node1", 120000, 11);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_4 = createAppdynamicsMetricDataRecord(
-      8, "Average Response Time (ms)", MetricType.TIME, 1, "tier1", 4, "login", "node2", 120000, 12);
-
+      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node2", 120000, 12);
+  private AppdynamicsMetricDataRecord BT2_UNKNOWN_RECORD_4 =
+      createAppdynamicsMetricDataRecord(8, "foo", MetricType.TIME, 1, "tier1", 2, "todolist", "node2", 120000, 12);
   @Test
   public void shouldCalculateMetrics() {
     List<MetricDefinition> metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION, ART_METRIC_DEFINITION);
@@ -155,15 +158,15 @@ public class MetricCalculatorTest {
     BTMetrics todolistMetrics = output.getBtMetricsMap().get("todolist");
     assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
-    BucketData todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
+    assertEquals(1, todolistMetrics.getBtRiskSummary().size());
+    BucketData todolistCallData = todolistMetrics.getMetricsMap().get(CALLS_PER_MINUTE);
     System.out.println(todolistCallData);
-    assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
+    assertEquals(RiskLevel.LOW, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    BucketData todolistArtData = todolistMetrics.getMetricsMap().get("Average Response Time (ms)");
+    BucketData todolistArtData = todolistMetrics.getMetricsMap().get(RESPONSE_TIME_95);
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
+    BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get(RESPONSE_TIME_95);
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
     assertEquals(1, output.getRiskMessages().size());
@@ -184,18 +187,27 @@ public class MetricCalculatorTest {
     todolistMetrics = output.getBtMetricsMap().get("todolist");
     assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
-    todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
-    assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
+    assertEquals(1, todolistMetrics.getBtRiskSummary().size());
+    todolistCallData = todolistMetrics.getMetricsMap().get(CALLS_PER_MINUTE);
+    assertEquals(RiskLevel.LOW, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    todolistArtData = todolistMetrics.getMetricsMap().get("Average Response Time (ms)");
+    todolistArtData = todolistMetrics.getMetricsMap().get(RESPONSE_TIME_95);
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
+    loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get(RESPONSE_TIME_95);
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
     assertEquals(1, output.getRiskMessages().size());
     assertEquals("todolist", output.getRiskMessages().get(0));
+
+    // with unknown metric type
+    data.put("todolist", BT2_UNKNOWN_RECORD_4);
+    try {
+      output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
+      fail("Expected a WingsException to be thrown");
+    } catch (WingsException we) {
+      assertEquals("Unexpected metric type: foo", we.getMessage());
+    }
   }
 
   @Test
@@ -266,8 +278,6 @@ public class MetricCalculatorTest {
         VERY_SLOW_CALLS_METRIC_DEFINITION, ERRORS_METRIC_DEFINITION, STALLS_METRIC_DEFINITION, ART_METRIC_DEFINITION);
     ArrayListMultimap<String, AppdynamicsMetricDataRecord> data = ArrayListMultimap.create();
     String[] bts = new String[] {"todolist", "login"};
-    String[] metrics = new String[] {"Calls per Minute", "Number of Slow Calls", "Number of Very Slow Calls",
-        "Error Count", "Stall Count", "95th Percentile Response Time (ms)"};
     String[] nodes = new String[] {"alpha", "beta", "gamma", "delta"};
 
     for (int b = 0; b < bts.length; b++) {

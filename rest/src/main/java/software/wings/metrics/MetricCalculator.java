@@ -3,8 +3,11 @@ package software.wings.metrics;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.math.Stats;
 
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.ThresholdType;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
@@ -56,23 +59,15 @@ public class MetricCalculator {
         MetricDefinition metricDefinition;
         if (metricDefinitionMap.containsKey(String.valueOf(record.getMetricId()))) {
           metricDefinition = metricDefinitionMap.get(String.valueOf(record.getMetricId()));
-        } else {
-          MetricType metricType = MetricType.COUNT;
-          if (record.getMetricName().endsWith("(ms)")) {
-            metricType = MetricType.TIME;
-          } else if (record.getMetricName().contains(" per ")) {
-            metricType = MetricType.RATE;
-          }
-          metricDefinition = AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+        } else if (AppdynamicsConstants.METRIC_TEMPLATE_MAP.containsKey(record.getMetricName())) {
+          metricDefinition = AppdynamicsConstants.METRIC_TEMPLATE_MAP.get(record.getMetricName())
                                  .withAccountId(record.getAccountId())
                                  .withAppdynamicsAppId(record.getAppdAppId())
                                  .withMetricId(String.valueOf(record.getMetricId()))
-                                 .withMetricName(record.getMetricName())
-                                 .withMetricType(metricType)
-                                 .withMediumThreshold(1.0)
-                                 .withHighThreshold(2.0)
-                                 .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                                  .build();
+        } else {
+          throw new WingsException(
+              ErrorCode.APPDYNAMICS_ERROR, "Unexpected metric type: " + record.getMetricName(), null);
         }
         metricData.put(metricDefinition, record);
       }
