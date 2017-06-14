@@ -15,12 +15,14 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 
+import software.wings.beans.Application;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.Encryptable;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
 
@@ -37,6 +39,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingValidationService settingValidationService;
+  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -234,11 +237,22 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
-    PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
-                                                    .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
-                                                    .addFilter("value.type", Operator.EQ, type)
-                                                    .build();
+    PageRequest<SettingAttribute> pageRequest = null;
+    if (appId != null && appId.equals(GLOBAL_APP_ID)) {
+      pageRequest = aPageRequest()
+                        .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
+                        .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
+                        .addFilter("value.type", Operator.EQ, type)
+                        .build();
+    } else {
+      Application application = appService.get(appId);
+      pageRequest = aPageRequest()
+                        .addFilter("accountId", Operator.EQ, application.getAccountId())
+                        .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
+                        .addFilter("value.type", Operator.EQ, type)
+                        .build();
+    }
+
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
   }
 
