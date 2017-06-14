@@ -37,7 +37,7 @@ public class AppdynamicsConstants {
 
   public static final AppdynamicsMetricDefinition.Builder TOTAL_CALLS_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withMetricName("Total Calls")
+          .withMetricName(TOTAL_CALLS)
           .withMetricType(MetricType.COUNT)
           .withThresholdType(ThresholdType.NO_ALERT);
 
