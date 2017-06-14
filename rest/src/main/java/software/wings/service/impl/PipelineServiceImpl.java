@@ -4,7 +4,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
-import static software.wings.beans.ApprovalDetails.Action.*;
+import static software.wings.beans.ApprovalDetails.Action.APPROVE;
+import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
@@ -44,12 +45,14 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.PipelineService;
@@ -72,7 +75,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -419,13 +421,9 @@ public class PipelineServiceImpl implements PipelineService {
           "No Pipeline execution [" + pipelineExecutionId
               + "] waiting for approval id: " + approvalDetails.getApprovalId());
     }
-    if (Objects.isNull(approvalDetails.getApprovedBy())) {
-      Validator.notNullCheck("appId", appId);
-      Application application = appService.get(appId);
-      approvalDetails.setApprovedBy(anEmbeddedUser()
-                                        .withEmail(application.getCreatedBy().getEmail())
-                                        .withName(application.getCreatedBy().getName())
-                                        .build());
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      approvalDetails.setApprovedBy(anEmbeddedUser().withEmail(user.getEmail()).withName(user.getName()).build());
     }
     ApprovalStateExecutionData executionData = null;
     if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
