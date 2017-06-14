@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
@@ -35,6 +37,7 @@ import software.wings.beans.StringValue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -48,6 +51,8 @@ import javax.inject.Named;
 public class SettingsServiceImplTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private AppService appService;
+  @Mock private Application application;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -72,6 +77,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             return (SettingAttribute) invocationOnMock.getArguments()[1];
           }
         });
+    when(appService.get(anyString())).thenReturn(application);
+    when(application.getAccountId()).thenReturn("ACCOUNT_ID");
   }
 
   /**

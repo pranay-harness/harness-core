@@ -237,8 +237,8 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
-    PageRequest<SettingAttribute> pageRequest = null;
-    if (appId != null && appId.equals(GLOBAL_APP_ID)) {
+    PageRequest<SettingAttribute> pageRequest;
+    if (appId == null || appId.equals(GLOBAL_APP_ID)) {
       pageRequest = aPageRequest()
                         .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
                         .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
