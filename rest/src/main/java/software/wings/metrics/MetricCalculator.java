@@ -74,7 +74,9 @@ public class MetricCalculator {
           // throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "Unexpected metric type: " + record.getMetricName(),
           // null);
         }
-        metricData.put(metricDefinition, record);
+        if (metricDefinition != null) {
+          metricData.put(metricDefinition, record);
+        }
       }
 
       Map<String, BucketData> metricDataMap = new HashMap<>();
