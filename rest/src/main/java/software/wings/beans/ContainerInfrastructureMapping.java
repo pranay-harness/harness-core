@@ -9,7 +9,7 @@ import java.util.Optional;
  * Created by rishi on 5/18/17.
  */
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Service Cluster Name") private String clusterName;
+  @Attributes(title = "Cluster Name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -25,7 +25,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
    *
    * @return the cluster name
    */
-  @Attributes(title = "Service Cluster Name")
+  @Attributes(title = "Cluster Name")
   public String getClusterName() {
     return clusterName;
   }
