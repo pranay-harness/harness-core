@@ -48,10 +48,10 @@ smtp:
   type: SMTP
   host: smtp.gmail.com
   port: 465
-  fromAddress: wings_test@wings.software
+  fromAddress: support@harness.io
   useSSL: true
-  username: wings_test@wings.software
-  password: "@wes0me@pp"
+  username: support@harness.io
+  password: "H@rness@987"
 
 logging:
   level: INFO
@@ -81,7 +81,7 @@ delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/de
 portal:
   url: https://localhost:8000
   allowedDomains: wings.software
-  companyName: Wings Software
+  companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
 
