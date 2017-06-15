@@ -199,15 +199,16 @@ public class MetricCalculatorTest {
     assertEquals(2, loginArtData.getOldData().getNodeCount());
     assertEquals(1, output.getRiskMessages().size());
     assertEquals("todolist", output.getRiskMessages().get(0));
-
-    // with unknown metric type
-    data.put("todolist", BT2_UNKNOWN_RECORD_4);
-    try {
-      output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
-      fail("Expected a WingsException to be thrown");
-    } catch (WingsException we) {
-      assertEquals("Unexpected metric type: foo", we.getMessage());
-    }
+    /*
+        // with unknown metric type
+        data.put("todolist", BT2_UNKNOWN_RECORD_4);
+        try {
+          output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
+          fail("Expected a WingsException to be thrown");
+        } catch (WingsException we) {
+          assertEquals("Unexpected metric type: foo", we.getMessage());
+        }
+        */
   }
 
   @Test
