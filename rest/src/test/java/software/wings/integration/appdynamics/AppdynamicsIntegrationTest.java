@@ -25,6 +25,7 @@ import software.wings.dl.PageResponse;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -52,7 +53,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Inject private AppdynamicsService appdynamicsService;
 
   final long METRIC_ID = 4L;
-  final String METRIC_NAME = "Average Response Time (ms)";
+  final String METRIC_NAME = AppdynamicsConstants.RESPONSE_TIME_95;
   final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Before
@@ -371,6 +372,16 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(btMetricsTarget).get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {
         });
     String btName = tierBTMResponse.getResource().get(0).getName();
+
+    // delete stale data from previous runs
+    Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
+    query.filter("accountId = ", ACCOUNT_ID)
+        .filter("appdAppId = ", appId)
+        .filter("metricId", METRIC_ID)
+        .filter("tierId", tier.getId());
+    boolean success = wingsPersistence.delete(query);
+    assert (success);
+
     final AppdynamicsMetricDataValue METRIC_VALUE_1 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
                                                           .withStartTimeInMillis(1495432894010L)
                                                           .withValue(100L)
@@ -455,12 +466,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     assert (restResponse.getResource());
 
     // query
-    PageRequest.Builder requestBuilder = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
-                                             .addFilter("appdAppId", Operator.EQ, appId)
-                                             .addFilter("metricId", Operator.EQ, METRIC_ID)
-                                             .addFilter("tierId", Operator.EQ, tier.getId())
-                                             .addOrder("startTime", OrderType.ASC);
+    requestBuilder = aPageRequest()
+                         .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
+                         .addFilter("appdAppId", Operator.EQ, appId)
+                         .addFilter("metricId", Operator.EQ, METRIC_ID)
+                         .addFilter("tierId", Operator.EQ, tier.getId())
+                         .addOrder("startTime", OrderType.ASC);
     PageResponse<AppdynamicsMetricDataRecord> response =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     List<AppdynamicsMetricDataRecord> result = response.getResponse();
