@@ -1,5 +1,5 @@
 {
-  "ui:order": ["jenkinsConfigId", "jobName", "jobParameters", "filePathsForAssertion", "waitInterval"],
+  "ui:order": ["jenkinsConfigId", "jobName", "jobParameters", "filePathsForAssertion", "waitInterval", "timeoutMillis"],
   "custom:propsOrder:jsonSchema": {
     "properties.filePathsForAssertion.items.properties": ["filePath", "assertion"]
   },

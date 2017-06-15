@@ -12,7 +12,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
-import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
@@ -29,13 +28,11 @@ import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
@@ -71,7 +68,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
@@ -122,10 +118,10 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     PageResponse<WorkflowExecution> pageResponse =
-        workflowExecutionService.listExecutions(pageRequest, false, false, false);
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
     if (pageResponse != null) {
       List<WorkflowExecution> workflowExecutions =
-          workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
+          workflowExecutionService.listExecutions(pageRequest, false, false, false, false).getResponse();
 
       Map<String, List<WorkflowExecution>> workflowExecutionsByApp =
           workflowExecutions.stream().collect(groupingBy(WorkflowExecution::getAppId));
@@ -213,7 +209,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter("appId", Operator.IN, appIds.toArray())
             .build();
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false).getResponse();
 
     Map<String, List<WorkflowExecution>> wflExecutionsByApp = new HashMap<>();
     workflowExecutions.forEach(wflExecution
@@ -272,7 +268,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
     PageResponse<WorkflowExecution> pageResponse =
-        workflowExecutionService.listExecutions(pageRequest, false, false, false);
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
 
     if (pageResponse != null) {
       List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
