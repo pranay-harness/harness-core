@@ -4,10 +4,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.anyVararg;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
@@ -25,13 +23,10 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
@@ -41,7 +36,6 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Activity;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
@@ -175,7 +169,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withCreatedAt(startEpoch)
             .build());
 
-    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
 
     Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(asList(APP_ID), 10);
@@ -213,7 +207,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withStatus(ExecutionStatus.FAILED)
             .build());
 
-    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
 
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
@@ -274,7 +268,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withCreatedAt(startEpoch)
             .build());
 
-    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
     DeploymentStatistics deploymentStatistics = statisticsService.getDeploymentStatistics(ACCOUNT_ID, APP_ID, 30);
 

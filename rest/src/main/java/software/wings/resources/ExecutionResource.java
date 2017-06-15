@@ -107,7 +107,7 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
-    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true));
+    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, true));
   }
 
   /**
