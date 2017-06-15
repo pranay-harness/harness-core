@@ -345,7 +345,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testAppdynamicsPersistence() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
