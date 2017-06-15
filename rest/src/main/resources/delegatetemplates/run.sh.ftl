@@ -10,10 +10,11 @@ then
   ln -s $JRE_DIR jre
 fi
 
-REMOTE_HOST=$(echo ${delegateMetadataUrl} | awk -F/ '{print $3}')
-REMOTE_DELEGATE_METADATA=$(curl ${delegateMetadataUrl} --fail --silent --show-error)
-REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
+
+REMOTE_DELEGATE_URL=${delegateJarUrl}
+REMOTE_DELEGATE_VERSION=${upgradeVersion}
+
+CURRENT_VERSION=${currentVersion}
 
 if [ ! -e delegate.jar ]
 then
@@ -21,7 +22,7 @@ then
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar

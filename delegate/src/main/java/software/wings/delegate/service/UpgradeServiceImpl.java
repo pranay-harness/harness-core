@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 
 import com.google.common.collect.Sets;
@@ -46,17 +47,7 @@ public class UpgradeServiceImpl implements UpgradeService {
 
   @Override
   public void doUpgrade(Delegate delegate, String version) throws IOException, TimeoutException, InterruptedException {
-    Files.deleteIfExists(Paths.get("upgrade.sh"));
-    File upgradeScript = new File("upgrade.sh");
-
-    try (BufferedWriter writer = Files.newBufferedWriter(upgradeScript.toPath())) {
-      writer.write(delegate.getUpgradeScript(), 0, delegate.getUpgradeScript().length());
-      writer.flush();
-    }
-
-    Files.setPosixFilePermissions(upgradeScript.toPath(),
-        Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-            PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+    replaceRunScripts(delegate);
 
     StartedProcess process = null;
     try {
@@ -76,7 +67,9 @@ public class UpgradeServiceImpl implements UpgradeService {
           30, TimeUnit.MINUTES, false);
       if (processStarted) {
         try {
+          logger.info("New Delegate started. Pause old delegate");
           signalService.pause();
+          logger.info("Old delegate paused");
           new PrintWriter(process.getProcess().getOutputStream(), true).println("goahead");
 
           // Cleanup capsule cache.
@@ -116,6 +109,22 @@ public class UpgradeServiceImpl implements UpgradeService {
           logger.error("ALERT: Couldn't kill forcibly.");
         }
       }
+    }
+  }
+
+  private void replaceRunScripts(Delegate delegate) throws IOException {
+    for (String fileName : asList("upgrade.sh", "run.sh", "start.sh")) {
+      Files.deleteIfExists(Paths.get(fileName));
+      File scriptFile = new File(fileName);
+      String script = delegate.getScriptByName(fileName);
+
+      try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
+        writer.write(script, 0, script.length());
+        writer.flush();
+      }
+      Files.setPosixFilePermissions(scriptFile.toPath(),
+          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
     }
   }
 

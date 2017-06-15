@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.collect.AppdynamicsDataCollectionInfo;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult.AppdynamicsDataCollectionTaskStatus;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -112,7 +113,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
               appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
         }
         for (int i = metricsData.size() - 1; i >= 0; i--) {
-          if (metricsData.get(i).getMetricName().equals("METRIC DATA NOT FOUND")) {
+          if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricsData.get(i).getMetricName())) {
             metricsData.remove(i);
           }
         }
