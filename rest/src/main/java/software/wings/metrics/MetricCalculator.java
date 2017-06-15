@@ -69,6 +69,7 @@ public class MetricCalculator {
                                  .withMetricId(String.valueOf(record.getMetricId()))
                                  .build();
         } else {
+          metricDefinition = null;
           logger.debug("Unexpected metric type: " + record.getMetricName());
           // throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "Unexpected metric type: " + record.getMetricName(),
           // null);
