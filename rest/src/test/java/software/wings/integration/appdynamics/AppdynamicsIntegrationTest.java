@@ -467,12 +467,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     assert (restResponse.getResource());
 
     // query
-    requestBuilder = aPageRequest()
-                         .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
-                         .addFilter("appdAppId", Operator.EQ, appId)
-                         .addFilter("metricId", Operator.EQ, METRIC_ID)
-                         .addFilter("tierId", Operator.EQ, tier.getId())
-                         .addOrder("startTime", OrderType.ASC);
+    PageRequest.Builder requestBuilder = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
+                                             .addFilter("appdAppId", Operator.EQ, appId)
+                                             .addFilter("metricId", Operator.EQ, METRIC_ID)
+                                             .addFilter("tierId", Operator.EQ, tier.getId())
+                                             .addOrder("startTime", OrderType.ASC);
     PageResponse<AppdynamicsMetricDataRecord> response =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     List<AppdynamicsMetricDataRecord> result = response.getResponse();
@@ -534,12 +534,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getOldData().getValue(), 0.05);
 
     // delete
-    Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
+    query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
     query.filter("accountId = ", ACCOUNT_ID)
         .filter("appdAppId = ", appId)
         .filter("metricId", METRIC_ID)
         .filter("tierId", tier.getId());
-    boolean success = wingsPersistence.delete(query);
+    success = wingsPersistence.delete(query);
     assert (success);
     requestBuilder = aPageRequest()
                          .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
