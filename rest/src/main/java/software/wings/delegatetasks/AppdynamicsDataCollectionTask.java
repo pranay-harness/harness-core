@@ -119,6 +119,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
           }
           if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricName)) {
             metricsData.remove(i);
+            if (!metricName.equals("METRIC DATA NOT FOUND")) {
+              logger.debug("metric with unexpected name found: " + metricsData.get(i));
+            }
           }
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
