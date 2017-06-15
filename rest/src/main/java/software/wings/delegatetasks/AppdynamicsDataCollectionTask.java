@@ -113,7 +113,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
               appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
         }
         for (int i = metricsData.size() - 1; i >= 0; i--) {
-          if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricsData.get(i).getMetricName())) {
+          String metricName = metricsData.get(i).getMetricName();
+          if (metricName.contains("|")) {
+            metricName = metricName.substring(metricName.lastIndexOf("|") + 1);
+          }
+          if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricName)) {
             metricsData.remove(i);
           }
         }
