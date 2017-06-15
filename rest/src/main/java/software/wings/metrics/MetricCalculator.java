@@ -3,6 +3,8 @@ package software.wings.metrics;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.math.Stats;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData.DataSummary;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * Created by mike@ on 5/23/17.
  */
 public class MetricCalculator {
+  private static final Logger logger = LoggerFactory.getLogger(MetricCalculator.class);
   /**
    * Generate the per-BT/per-metric data.
    * @param metricDefinitions A list of MetricDefinitions that are represented in the metric data.
@@ -66,8 +69,9 @@ public class MetricCalculator {
                                  .withMetricId(String.valueOf(record.getMetricId()))
                                  .build();
         } else {
-          throw new WingsException(
-              ErrorCode.APPDYNAMICS_ERROR, "Unexpected metric type: " + record.getMetricName(), null);
+          logger.debug("Unexpected metric type: " + record.getMetricName());
+          // throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "Unexpected metric type: " + record.getMetricName(),
+          // null);
         }
         metricData.put(metricDefinition, record);
       }
