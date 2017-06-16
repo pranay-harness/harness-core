@@ -103,10 +103,12 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
+        System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
         logger.info("Received Delegate upgrade request");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
         while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
+          logger.info("Message received [{}]", line);
           line = it.nextLine();
         }
       }

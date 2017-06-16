@@ -219,6 +219,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldTransferGridFSFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();

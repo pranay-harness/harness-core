@@ -5,6 +5,7 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
@@ -152,31 +153,52 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate delegate = get(accountId, delegateId);
     logger.debug("Checking delegate for upgrade: {}", delegate.getUuid());
 
-    String latestVersion = null;
+    String latestVersion = "0.0.0";
+    String jarRelativePath = "";
     try {
-      latestVersion = substringBefore(Request.Get(mainConfiguration.getDelegateMetadataUrl())
-                                          .connectTimeout(1000)
-                                          .socketTimeout(1000)
-                                          .execute()
-                                          .returnContent()
-                                          .asString(),
-          " ");
+      String delegateMatadata = Request.Get(mainConfiguration.getDelegateMetadataUrl())
+                                    .connectTimeout(1000)
+                                    .socketTimeout(1000)
+                                    .execute()
+                                    .returnContent()
+                                    .asString();
+      latestVersion = substringBefore(delegateMatadata, " ");
+      jarRelativePath = substringAfter(delegateMatadata, " ");
     } catch (IOException e) {
       logger.error("Unable to fetch delegate version information ", e);
-      latestVersion = "0.0.0";
     }
-    boolean doUpgrade = Version.valueOf(version).lessThan(Version.valueOf(latestVersion));
+
+    boolean doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
 
     delegate.setDoUpgrade(doUpgrade);
     if (doUpgrade) {
       logger.debug("Upgrading delegate to version: {}", latestVersion);
+      Account account = accountService.get(accountId);
+
       delegate.setVersion(latestVersion);
+      String delegateJarDownloadUrl = mainConfiguration.getDelegateMetadataUrl().split("/")[2] + "/" + jarRelativePath;
+      ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
+                                                      .put("accountId", accountId)
+                                                      .put("accountSecret", account.getAccountKey())
+                                                      .put("upgradeVersion", latestVersion)
+                                                      .put("currentVersion", version)
+                                                      .put("delegateJarUrl", delegateJarDownloadUrl)
+                                                      .put("managerHostAndPort", managerHost)
+                                                      .build();
+
       try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("upgrade.sh.ftl")
-            .process(ImmutableMap.of("delegateMetadataUrl", mainConfiguration.getDelegateMetadataUrl(), "accountId",
-                         accountId, "managerHostAndPort", managerHost),
-                stringWriter);
+        cfg.getTemplate("upgrade.sh.ftl").process(immutableMap, stringWriter);
         delegate.setUpgradeScript(stringWriter.toString());
+      }
+
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("run.sh.ftl").process(immutableMap, stringWriter);
+        delegate.setRunScript(stringWriter.toString());
+      }
+
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
+        delegate.setStopScript(stringWriter.toString());
       }
     }
     return delegate;
@@ -379,11 +401,33 @@ public class DelegateServiceImpl implements DelegateService {
     out.closeArchiveEntry();
     Account account = accountService.get(accountId);
 
+    String latestVersion = "0.0.0";
+    String jarRelativePath = "";
+    try {
+      String delegateMatadata = Request.Get(mainConfiguration.getDelegateMetadataUrl())
+                                    .connectTimeout(1000)
+                                    .socketTimeout(1000)
+                                    .execute()
+                                    .returnContent()
+                                    .asString();
+      latestVersion = substringBefore(delegateMatadata, " ");
+      jarRelativePath = substringAfter(delegateMatadata, " ");
+    } catch (IOException e) {
+      logger.error("Unable to fetch delegate version information ", e);
+    }
+
+    String delegateJarDownloadUrl = mainConfiguration.getDelegateMetadataUrl().split("/")[2] + "/" + jarRelativePath;
+    ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
+                                                    .put("accountId", accountId)
+                                                    .put("accountSecret", account.getAccountKey())
+                                                    .put("upgradeVersion", latestVersion)
+                                                    .put("currentVersion", "0.0.0")
+                                                    .put("delegateJarUrl", delegateJarDownloadUrl)
+                                                    .put("managerHostAndPort", managerHost)
+                                                    .build();
+
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
-      cfg.getTemplate("run.sh.ftl")
-          .process(ImmutableMap.of("delegateMetadataUrl", mainConfiguration.getDelegateMetadataUrl(), "accountId",
-                       accountId, "accountSecret", account.getAccountKey(), "managerHostAndPort", managerHost),
-              fileWriter);
+      cfg.getTemplate("run.sh.ftl").process(immutableMap, fileWriter);
     }
     run = new File(run.getAbsolutePath());
     ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");

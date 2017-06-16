@@ -1,1 +1,1 @@
-Install the Wings Delegate by executing run.sh in this directory.
+Install the Harness Delegate by executing run.sh in this directory.

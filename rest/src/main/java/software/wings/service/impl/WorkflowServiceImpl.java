@@ -304,7 +304,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 .build();
 
         workflow.setWorkflowExecutions(
-            workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false).getResponse());
+            workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+                .getResponse());
       }
     }
 

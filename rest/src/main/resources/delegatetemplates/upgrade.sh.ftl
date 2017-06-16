@@ -1,17 +1,15 @@
 <#include "common.sh.ftl">
 
-REMOTE_HOST=$(echo ${delegateMetadataUrl} | awk -F/ '{print $3}')
-REMOTE_DELEGATE_METADATA=$(curl ${delegateMetadataUrl} --fail --silent --show-error)
-REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
+REMOTE_DELEGATE_URL=${delegateJarUrl}
+REMOTE_DELEGATE_VERSION=${upgradeVersion}
 
-CURRENT_VERSION=0
+CURRENT_VERSION=${currentVersion}
 
 if [ -e delegate.jar ]
 then
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
 
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
     mkdir -p backup.$CURRENT_VERSION
@@ -40,4 +38,4 @@ export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 rm -rf "$CAPSULE_CACHE_DIR"
 echo "Delegate upgrading to version $REMOTE_DELEGATE_VERSION"
-$JRE_BINARY -Ddelegatesourcedir="$DIR" -jar delegate.jar config-delegate.yml upgrade
+$JRE_BINARY -Ddelegatesourcedir="$DIR" -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml upgrade

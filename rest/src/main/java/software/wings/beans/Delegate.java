@@ -21,6 +21,8 @@ public class Delegate extends Base {
   private List<TaskType> supportedTaskTypes;
   @Transient private boolean doUpgrade;
   @Transient private String upgradeScript;
+  @Transient private String runScript;
+  @Transient private String stopScript;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
@@ -210,6 +212,35 @@ public class Delegate extends Base {
    */
   public void setSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
     this.supportedTaskTypes = supportedTaskTypes;
+  }
+
+  public String getRunScript() {
+    return runScript;
+  }
+
+  public void setRunScript(String runScript) {
+    this.runScript = runScript;
+  }
+
+  public String getStopScript() {
+    return stopScript;
+  }
+
+  public void setStopScript(String stopScript) {
+    this.stopScript = stopScript;
+  }
+
+  public String getScriptByName(String fileName) {
+    switch (fileName) {
+      case "upgrade.sh":
+        return getUpgradeScript();
+      case "run.sh":
+        return getRunScript();
+      case "stop.sh":
+        return getStopScript();
+      default:
+        return null;
+    }
   }
 
   public enum Status { ENABLED, DISABLED }

@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 
 import com.google.common.collect.Sets;
@@ -29,6 +30,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 
 /**
@@ -44,24 +46,20 @@ public class UpgradeServiceImpl implements UpgradeService {
 
   @Inject private SignalService signalService;
 
+  private AtomicBoolean isUpgrading = new AtomicBoolean(false);
+
   @Override
   public void doUpgrade(Delegate delegate, String version) throws IOException, TimeoutException, InterruptedException {
-    Files.deleteIfExists(Paths.get("upgrade.sh"));
-    File upgradeScript = new File("upgrade.sh");
-
-    try (BufferedWriter writer = Files.newBufferedWriter(upgradeScript.toPath())) {
-      writer.write(delegate.getUpgradeScript(), 0, delegate.getUpgradeScript().length());
-      writer.flush();
-    }
-
-    Files.setPosixFilePermissions(upgradeScript.toPath(),
-        Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-            PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+    logger.info("Replace run scripts");
+    replaceRunScripts(delegate);
+    logger.info("Run scripts downloaded");
 
     StartedProcess process = null;
     try {
+      logger.info("Starting new delegate process");
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
+                    .timeout(5, TimeUnit.MINUTES)
                     .command("nohup", "./upgrade.sh", version)
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
@@ -69,22 +67,21 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
+      logger.info("upgrade script executed " + process.getProcess().isAlive());
 
+      logger.info("Wait for process to start");
       boolean processStarted = timeLimiter.callWithTimeout(
           ()
               -> streamContainsString(new InputStreamReader(pipedInputStream), "botstarted"),
           30, TimeUnit.MINUTES, false);
       if (processStarted) {
         try {
+          logger.info("New Delegate started. Pause old delegate");
           signalService.pause();
+          logger.info("Old delegate paused");
           new PrintWriter(process.getProcess().getOutputStream(), true).println("goahead");
-
-          // Cleanup capsule cache.
-          cleanup(
-              new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion(), "delegate-");
-
-          // Cleanup old backup.
-          cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion(), "backup.");
+          removeDelegateVersionFromCapsule(delegate, version);
+          cleanupOldDelegateVersionFromBackup(delegate, version);
 
           signalService.stop();
         } finally {
@@ -119,11 +116,50 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
+  private void cleanupOldDelegateVersionFromBackup(Delegate delegate, String version) {
+    try {
+      cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion(), "backup.");
+    } catch (Exception ex) {
+      logger.error("Failed to clean delegate version [{}] from Backup", delegate.getVersion());
+    }
+  }
+
+  private void removeDelegateVersionFromCapsule(Delegate delegate, String version) {
+    try {
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion(), "delegate-");
+    } catch (Exception ex) {
+      logger.error("Failed to clean delegate version [{}] from Capsule", delegate.getVersion());
+    }
+  }
+
+  private void replaceRunScripts(Delegate delegate) throws IOException {
+    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh")) {
+      Files.deleteIfExists(Paths.get(fileName));
+      File scriptFile = new File(fileName);
+      String script = delegate.getScriptByName(fileName);
+
+      if (script != null && script.length() != 0) {
+        try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
+          writer.write(script, 0, script.length());
+          writer.flush();
+        }
+        logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
+        Files.setPosixFilePermissions(scriptFile.toPath(),
+            Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+                PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+        logger.info("Done setting file permissions");
+      } else {
+        logger.error("Couldn't find script for file [{}]", scriptFile);
+      }
+    }
+  }
+
   private boolean streamContainsString(Reader reader, String searchString) throws IOException {
     char[] buffer = new char[1024];
     int numCharsRead;
     int count = 0;
     while ((numCharsRead = reader.read(buffer)) > 0) {
+      logger.info("String on stream [{}]", new String(buffer));
       for (int c = 0; c < numCharsRead; c++) {
         if (buffer[c] == searchString.charAt(count))
           count++;

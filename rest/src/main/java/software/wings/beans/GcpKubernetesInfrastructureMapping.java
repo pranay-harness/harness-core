@@ -11,7 +11,7 @@ import java.util.Optional;
  */
 @JsonTypeName("GCP_KUBERNETES")
 public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster name") private String clusterName;
+  @Attributes(title = "Cluster Name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
