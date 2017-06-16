@@ -198,10 +198,10 @@ public class DelegateServiceImpl implements DelegateService {
 
       latestVersion = substringBefore(delegateMatadata, " ").trim();
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
-      delegateJarDownloadUrl = delegateMetadataUrl.split("/")[2] + "/" + jarRelativePath;
+      delegateJarDownloadUrl = "http://" + (delegateMetadataUrl.split("/")[2]).trim() + "/" + jarRelativePath;
       jarFileExists = Request.Head(delegateJarDownloadUrl)
-                          .connectTimeout(1000)
-                          .socketTimeout(1000)
+                          .connectTimeout(5000)
+                          .socketTimeout(5000)
                           .execute()
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
