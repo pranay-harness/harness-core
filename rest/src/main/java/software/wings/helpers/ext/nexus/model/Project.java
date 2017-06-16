@@ -19,6 +19,8 @@ public class Project implements Serializable {
   private String packaging;
   private String description;
 
+  private Parent parent;
+
   public String getModelVersion() {
     return modelVersion;
   }
@@ -64,5 +66,13 @@ public class Project implements Serializable {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public Parent getParent() {
+    return parent;
+  }
+
+  public void setParent(Parent parent) {
+    this.parent = parent;
   }
 }

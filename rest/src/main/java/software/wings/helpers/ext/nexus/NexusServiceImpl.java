@@ -4,15 +4,6 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.inject.Singleton;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import okhttp3.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -37,6 +28,15 @@ import software.wings.helpers.ext.nexus.model.Data;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by srinivas on 3/28/17.
@@ -110,7 +110,8 @@ public class NexusServiceImpl implements NexusService {
     logger.debug(
         "Downloading artifact of repo {} group {} artifact {} and version  ", repoType, groupId, artifactName, version);
     final Project project = getPomModel(nexusConfig, repoType, groupId, artifactName, version);
-    final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/" + project.getVersion() + "/";
+    final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/"
+        + (project.getVersion() != null ? project.getVersion() : project.getParent().getVersion()) + "/";
     final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
     try {
       final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
@@ -314,7 +315,8 @@ public class NexusServiceImpl implements NexusService {
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
     logger.debug("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
     Project project = getPomModel(nexusConfig, repoId, groupId, artifactName, "LATEST");
-    return aBuildDetails().withNumber(project.getVersion()).withRevision(project.getVersion()).build();
+    String version = project.getVersion() != null ? project.getVersion() : project.getParent().getVersion();
+    return aBuildDetails().withNumber(version).withRevision(version).build();
   }
 
   private Response<IndexBrowserTreeViewResponse> getIndexBrowserTreeViewResponseResponse(
