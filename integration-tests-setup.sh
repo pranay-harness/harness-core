@@ -42,6 +42,7 @@ cd ../
 #run delegate
 export MAVEN_OPTS="-Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0"
 cd delegate
+sed -ie 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
 nohup mvn exec:java > delegate.out 2>&1 &
 echo $! > delegate.pid
 cd ../
@@ -49,7 +50,7 @@ cd ../
 #wait for delegate to start
 echo 'wait for delegate to start'
 
-#run data gen to load test data
+#wait for delegate to start
 cd rest
 mvn test -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister
 foundRegisteredDelegate=$?

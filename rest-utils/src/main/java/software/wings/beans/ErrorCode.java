@@ -5,6 +5,7 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import com.google.common.base.Splitter;
@@ -363,7 +364,7 @@ public enum ErrorCode {
   ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"), /**
                                                            * Unavailable delegates error code.
                                                            */
-  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES");
+  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES", SERVICE_UNAVAILABLE);
 
   /**
    * The constant ARGS_NAME.

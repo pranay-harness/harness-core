@@ -61,7 +61,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.net.ssl.SSLContext;
@@ -299,6 +298,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startUpgradeCheck(String accountId, String delegateId, String version) {
+    if (!delegateConfiguration.isDoUpgrade()) {
+      logger.info("Auto upgrade is disabled in configuration.");
+      logger.info("Delegate stays on version: [{}]", version);
+      return;
+    }
+
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     upgradeExecutor.scheduleWithFixedDelay(() -> {
       logger.info("checking for upgrade");
@@ -310,7 +315,7 @@ public class DelegateServiceImpl implements DelegateService {
         } else {
           logger.info("delegate uptodate...");
         }
-      } catch (IOException | InterruptedException | TimeoutException e) {
+      } catch (Exception e) {
         logger.error("Exception while checking for upgrade ", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);

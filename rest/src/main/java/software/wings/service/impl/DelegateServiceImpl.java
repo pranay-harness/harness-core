@@ -153,49 +153,20 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate delegate = get(accountId, delegateId);
     logger.debug("Checking delegate for upgrade: {}", delegate.getUuid());
 
-    boolean doUpgrade = false;
-    String latestVersion = null;
-    String jarRelativePath = null;
-    try {
-      String delegateMatadata = Request.Get(mainConfiguration.getDelegateMetadataUrl())
-                                    .connectTimeout(1000)
-                                    .socketTimeout(1000)
-                                    .execute()
-                                    .returnContent()
-                                    .asString();
-      latestVersion = substringBefore(delegateMatadata, " ");
-      jarRelativePath = substringAfter(delegateMatadata, " ");
-    } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information ", e);
-    }
+    ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
-    if (jarRelativePath != null && jarRelativePath.length() != 0) {
-      doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
-    }
-
-    delegate.setDoUpgrade(doUpgrade);
-    if (doUpgrade) {
-      logger.debug("Upgrading delegate to version: {}", latestVersion);
-      Account account = accountService.get(accountId);
-
-      delegate.setVersion(latestVersion);
-      String delegateJarDownloadUrl = mainConfiguration.getDelegateMetadataUrl().split("/")[2] + "/" + jarRelativePath;
-      ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
-                                                      .put("accountId", accountId)
-                                                      .put("accountSecret", account.getAccountKey())
-                                                      .put("upgradeVersion", latestVersion)
-                                                      .put("currentVersion", version)
-                                                      .put("delegateJarUrl", delegateJarDownloadUrl)
-                                                      .put("managerHostAndPort", managerHost)
-                                                      .build();
+    if (scriptParams != null && scriptParams.size() > 0) {
+      delegate.setDoUpgrade(true);
+      logger.debug("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
+      delegate.setVersion((String) scriptParams.get("upgradeVersion"));
 
       try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("upgrade.sh.ftl").process(immutableMap, stringWriter);
+        cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
         delegate.setUpgradeScript(stringWriter.toString());
       }
 
       try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("run.sh.ftl").process(immutableMap, stringWriter);
+        cfg.getTemplate("run.sh.ftl").process(scriptParams, stringWriter);
         delegate.setRunScript(stringWriter.toString());
       }
 
@@ -205,6 +176,115 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
     return delegate;
+  }
+
+  private ImmutableMap<Object, Object> getJarAndScriptRunTimeParamMap(
+      String accountId, String version, String managerHost) {
+    String latestVersion = null;
+    String jarRelativePath;
+    String delegateJarDownloadUrl = null;
+    boolean jarFileExists = false;
+
+    try {
+      String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+      String delegateMatadata = Request.Get(delegateMetadataUrl)
+                                    .connectTimeout(1000)
+                                    .socketTimeout(1000)
+                                    .execute()
+                                    .returnContent()
+                                    .asString()
+                                    .trim();
+
+      latestVersion = substringBefore(delegateMatadata, " ").trim();
+      jarRelativePath = substringAfter(delegateMatadata, " ").trim();
+      delegateJarDownloadUrl = delegateMetadataUrl.split("/")[2] + "/" + jarRelativePath;
+      jarFileExists = Request.Head(delegateJarDownloadUrl)
+                          .connectTimeout(1000)
+                          .socketTimeout(1000)
+                          .execute()
+                          .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
+    } catch (IOException e) {
+      logger.error("Unable to fetch delegate version information ", e);
+    }
+
+    logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
+    boolean doUpgrade = false;
+    if (jarFileExists) {
+      doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+    }
+
+    if (doUpgrade) {
+      Account account = accountService.get(accountId);
+      ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
+                                                      .put("accountId", accountId)
+                                                      .put("accountSecret", account.getAccountKey())
+                                                      .put("upgradeVersion", latestVersion)
+                                                      .put("currentVersion", version)
+                                                      .put("delegateJarUrl", delegateJarDownloadUrl)
+                                                      .put("managerHostAndPort", managerHost)
+                                                      .build();
+      return immutableMap;
+    }
+    return null;
+  }
+
+  @Override
+  public File download(String managerHost, String accountId) throws IOException, TemplateException {
+    File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
+    File run = File.createTempFile("run", ".sh");
+    File stop = File.createTempFile("stop", ".sh");
+    File readme = File.createTempFile("README", ".txt");
+
+    ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
+    out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
+    out.closeArchiveEntry();
+
+    ImmutableMap<Object, Object> scriptParams =
+        getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
+      cfg.getTemplate("run.sh.ftl").process(scriptParams, fileWriter);
+    }
+    run = new File(run.getAbsolutePath());
+    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");
+    runZipArchiveEntry.setUnixMode(0755 << 16L);
+    AsiExtraField permissions = new AsiExtraField();
+    permissions.setMode(0755);
+    runZipArchiveEntry.addExtraField(permissions);
+    out.putArchiveEntry(runZipArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(run)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
+
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
+      cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
+    }
+    stop = new File(stop.getAbsolutePath());
+    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
+    stopZipArchiveEntry.setUnixMode(0755 << 16L);
+    permissions = new AsiExtraField();
+    permissions.setMode(0755);
+    stopZipArchiveEntry.addExtraField(permissions);
+    out.putArchiveEntry(stopZipArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(stop)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
+
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+      cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
+    }
+    readme = new File(readme.getAbsolutePath());
+    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
+    out.putArchiveEntry(readmeZipArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(readme)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
+
+    out.close();
+    return delegateFile;
   }
 
   @Override
@@ -390,88 +470,6 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info(
           "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
     }
-  }
-
-  @Override
-  public File download(String managerHost, String accountId) throws IOException, TemplateException {
-    File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
-    File run = File.createTempFile("run", ".sh");
-    File stop = File.createTempFile("stop", ".sh");
-    File readme = File.createTempFile("README", ".txt");
-
-    ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
-    out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
-    out.closeArchiveEntry();
-    Account account = accountService.get(accountId);
-
-    String latestVersion = "0.0.0";
-    String jarRelativePath = "";
-    try {
-      String delegateMatadata = Request.Get(mainConfiguration.getDelegateMetadataUrl())
-                                    .connectTimeout(1000)
-                                    .socketTimeout(1000)
-                                    .execute()
-                                    .returnContent()
-                                    .asString();
-      latestVersion = substringBefore(delegateMatadata, " ");
-      jarRelativePath = substringAfter(delegateMatadata, " ");
-    } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information ", e);
-    }
-
-    String delegateJarDownloadUrl = mainConfiguration.getDelegateMetadataUrl().split("/")[2] + "/" + jarRelativePath;
-    ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
-                                                    .put("accountId", accountId)
-                                                    .put("accountSecret", account.getAccountKey())
-                                                    .put("upgradeVersion", latestVersion)
-                                                    .put("currentVersion", "0.0.0")
-                                                    .put("delegateJarUrl", delegateJarDownloadUrl)
-                                                    .put("managerHostAndPort", managerHost)
-                                                    .build();
-
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
-      cfg.getTemplate("run.sh.ftl").process(immutableMap, fileWriter);
-    }
-    run = new File(run.getAbsolutePath());
-    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, Constants.DELEGATE_DIR + "/run.sh");
-    runZipArchiveEntry.setUnixMode(0755 << 16L);
-    AsiExtraField permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    runZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(runZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(run)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
-
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
-      cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
-    }
-    stop = new File(stop.getAbsolutePath());
-    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
-    stopZipArchiveEntry.setUnixMode(0755 << 16L);
-    permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    stopZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(stopZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(stop)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
-
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
-      cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
-    }
-    readme = new File(readme.getAbsolutePath());
-    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
-    out.putArchiveEntry(readmeZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(readme)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
-
-    out.close();
-    return delegateFile;
   }
 
   @Override

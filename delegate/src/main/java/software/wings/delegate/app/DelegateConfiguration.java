@@ -14,6 +14,8 @@ public class DelegateConfiguration {
 
   private String localDiskPath;
 
+  private boolean doUpgrade;
+
   /**
    * Getter for property 'managerUrl'.
    *
@@ -62,5 +64,13 @@ public class DelegateConfiguration {
 
   public void setLocalDiskPath(String localDiskPath) {
     this.localDiskPath = localDiskPath;
+  }
+
+  public boolean isDoUpgrade() {
+    return doUpgrade;
+  }
+
+  public void setDoUpgrade(boolean doUpgrade) {
+    this.doUpgrade = doUpgrade;
   }
 }
