@@ -14,21 +14,21 @@ class KmeansAnomalyDetector(object):
         :param feature_matrix: the test feature matrix
         :param km: the kmeans cluster
         :param threshold: the cosine threshold
-        :return: the cluster assignments, or -1 if anomaly
+        :return: the cluster assignments,and anomalies ( 1 if normal, -1 if anomaly)
         """
 
         clusters = np.array(km.get_clusters())
 
         predictions = km.predict(feature_matrix)
 
-        result = []
+        anomalies = []
 
         for j, i in enumerate(predictions):
             mat = feature_matrix[j]
             sim = cosine_similarity(km.get_feature_matrix()[clusters == i], mat)
             if len(np.where(sim < threshold)[0]) > 0:
-                result.append(-1)
+                anomalies.append(-1)
             else:
-                result.append(i)
+                anomalies.append(1)
 
-        return result
+        return predictions,anomalies
