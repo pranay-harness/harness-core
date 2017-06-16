@@ -2,13 +2,13 @@ import argparse
 import logging
 import sys
 
-from src.core.IsolationForestClassifier import IsolationForestClassifier
-from src.core.KmeansAnomalyDetector import KmeansAnomalyDetector
-from src.core.KmeansCluster import KmeansCluster
-from src.core.TFIDFVectorizer import TFIDFVectorizer
-from src.core.Tokenizer import Tokenizer
+from core.IsolationForestClassifier import IsolationForestClassifier
+from core.KmeansAnomalyDetector import KmeansAnomalyDetector
+from core.KmeansCluster import KmeansCluster
+from core.TFIDFVectorizer import TFIDFVectorizer
+from core.Tokenizer import Tokenizer
 import numpy as np
-from src.sources.SplunkDataset import SplunkDataset
+from sources.SplunkDataset import SplunkDataset
 
 
 class SplunkIntel(object):

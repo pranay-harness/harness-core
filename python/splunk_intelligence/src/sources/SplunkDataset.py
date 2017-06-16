@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.sources.SplunkFileSource import SplunkFileSource
+from sources.SplunkFileSource import SplunkFileSource
 
 
 class SplunkDataset(object):
