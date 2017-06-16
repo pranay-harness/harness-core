@@ -5,6 +5,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
@@ -24,6 +25,7 @@ import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
@@ -39,6 +41,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
@@ -210,7 +213,7 @@ public class JenkinsState extends State {
       });
     }
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
@@ -218,7 +221,12 @@ public class JenkinsState extends State {
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
                 jenkinsConfig.getPassword(), finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
-            .build());
+            .build();
+
+    if (getTimeoutMillis() != null) {
+      delegateTask.setTimeout(getTimeoutMillis());
+    }
+    String delegateTaskId = delegateService.queueTask(delegateTask);
 
     JenkinsExecutionData jenkinsExecutionData =
         aJenkinsExecutionData().withJobName(finalJobName).withJobParameters(evaluatedParameters).build();
@@ -252,6 +260,13 @@ public class JenkinsState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Attributes(title = "Timeout (Milli-seconds)")
+  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
+  @Override
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 
   protected String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();

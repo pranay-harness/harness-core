@@ -3,7 +3,6 @@ package software.wings.beans;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.exception.WingsException;
 
 import java.util.List;
 
@@ -240,7 +239,7 @@ public class Delegate extends Base {
       case "stop.sh":
         return getStopScript();
       default:
-        throw new WingsException(ErrorCode.RESOURCE_NOT_FOUND);
+        return null;
     }
   }
 

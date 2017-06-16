@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -22,15 +25,6 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
-  /**
-   * The constant DEFAULT_SYNC_CALL_TIMEOUT.
-   */
-  public static final int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
-  /**
-   * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
-   */
-  public static final int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-
   @NotNull private TaskType taskType;
   private Object[] parameters;
   private String tag;

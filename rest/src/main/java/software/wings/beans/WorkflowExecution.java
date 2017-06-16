@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -593,6 +595,19 @@ public class WorkflowExecution extends Base {
     public WorkflowExecutionBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("workflowId", workflowId)
+          .add("stateMachineId", stateMachineId)
+          .add("envId", envId)
+          .add("appName", appName)
+          .add("envName", envName)
+          .add("uuid", uuid)
+          .add("appId", appId)
+          .toString();
     }
 
     public WorkflowExecutionBuilder but() {

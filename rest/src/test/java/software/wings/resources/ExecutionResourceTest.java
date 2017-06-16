@@ -65,7 +65,7 @@ public class ExecutionResourceTest {
     when(appService.list(anyObject(), eq(false), eq(0), eq(0))).thenReturn(applicationPageResponse);
 
     PageResponse<WorkflowExecution> workflowExecutionPageResponse = aPageResponse().build();
-    when(workflowExecutionService.listExecutions(anyObject(), eq(true), eq(true), eq(true)))
+    when(workflowExecutionService.listExecutions(anyObject(), eq(true), eq(true), eq(true), eq(true)))
         .thenReturn(workflowExecutionPageResponse);
 
     RestResponse<PageResponse<WorkflowExecution>> actual =
