@@ -89,8 +89,9 @@ public class MetricCalculator {
       }
 
       // create total calls metric if doesn't exist
-      if (!metricDataMap.containsKey("Total Calls") && metricDataMap.containsKey("Calls per Minute")) {
-        BucketData bucketData = metricDataMap.get("Calls per Minute");
+      if (!metricDataMap.containsKey(AppdynamicsConstants.TOTAL_CALLS)
+          && metricDataMap.containsKey(AppdynamicsConstants.CALLS_PER_MINUTE)) {
+        BucketData bucketData = metricDataMap.get(AppdynamicsConstants.CALLS_PER_MINUTE);
         BucketData callsBucket = new BucketData();
         callsBucket.setRisk(bucketData.getRisk());
         callsBucket.setMetricType(MetricType.COUNT);
@@ -108,7 +109,29 @@ public class MetricCalculator {
           callsBucket.getNewData().setValue(callsBucket.getNewData().getStats().sum()
               * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1));
         }
-        metricDataMap.put("Total Calls", callsBucket);
+        metricDataMap.put(AppdynamicsConstants.TOTAL_CALLS, callsBucket);
+      }
+
+      // add very slow calls to slow calls
+      if (metricDataMap.containsKey(AppdynamicsConstants.NUMBER_OF_VERY_SLOW_CALLS)
+          && metricDataMap.containsKey(AppdynamicsConstants.NUMBER_OF_SLOW_CALLS)) {
+        BucketData verySlowCalls = metricDataMap.get(AppdynamicsConstants.NUMBER_OF_VERY_SLOW_CALLS);
+        BucketData slowCalls = metricDataMap.get(AppdynamicsConstants.NUMBER_OF_SLOW_CALLS);
+        if (verySlowCalls.getOldData() != null) {
+          if (slowCalls.getOldData() != null) {
+            slowCalls.getOldData().setValue(slowCalls.getOldData().getValue() + verySlowCalls.getOldData().getValue());
+          } else {
+            slowCalls.setOldData(verySlowCalls.getOldData());
+          }
+        }
+        if (verySlowCalls.getNewData() != null) {
+          if (slowCalls.getNewData() != null) {
+            slowCalls.getNewData().setValue(slowCalls.getNewData().getValue() + verySlowCalls.getNewData().getValue());
+          } else {
+            slowCalls.setNewData(verySlowCalls.getNewData());
+          }
+        }
+        metricDataMap.put(AppdynamicsConstants.NUMBER_OF_SLOW_CALLS, slowCalls);
       }
       MetricSummary.BTMetrics btMetrics = calculateOverallBTRisk(metricDataMap);
       btMetricDataMap.put(btName, btMetrics);
