@@ -8,6 +8,8 @@ Vectorizer based on TF-IDF
 """
 class TFIDFVectorizer(object):
 
+    tfidf_matrix = None
+
     def __init__(self, tokenizer, min_df, max_df):
         """
 
