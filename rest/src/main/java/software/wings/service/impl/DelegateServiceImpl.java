@@ -153,8 +153,9 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate delegate = get(accountId, delegateId);
     logger.debug("Checking delegate for upgrade: {}", delegate.getUuid());
 
-    String latestVersion = "0.0.0";
-    String jarRelativePath = "";
+    boolean doUpgrade = false;
+    String latestVersion = null;
+    String jarRelativePath = null;
     try {
       String delegateMatadata = Request.Get(mainConfiguration.getDelegateMetadataUrl())
                                     .connectTimeout(1000)
@@ -168,7 +169,9 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Unable to fetch delegate version information ", e);
     }
 
-    boolean doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+    if (jarRelativePath != null && jarRelativePath.length() != 0) {
+      doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+    }
 
     delegate.setDoUpgrade(doUpgrade);
     if (doUpgrade) {
