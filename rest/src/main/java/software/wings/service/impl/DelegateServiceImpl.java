@@ -188,12 +188,13 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       String delegateMatadata = Request.Get(delegateMetadataUrl)
-                                    .connectTimeout(1000)
-                                    .socketTimeout(1000)
+                                    .connectTimeout(5000)
+                                    .socketTimeout(5000)
                                     .execute()
                                     .returnContent()
                                     .asString()
                                     .trim();
+      logger.info("Delegate meta data: [{}]", delegateMatadata);
 
       latestVersion = substringBefore(delegateMatadata, " ").trim();
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
@@ -205,6 +206,8 @@ public class DelegateServiceImpl implements DelegateService {
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
       logger.error("Unable to fetch delegate version information ", e);
+      logger.error("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
+          delegateJarDownloadUrl);
     }
 
     logger.info("Found delegate latest version: [{}] url: [{}]", latestVersion, delegateJarDownloadUrl);
