@@ -35,6 +35,7 @@ then
   echo "accountSecret: ${accountSecret}" >> config-delegate.yml
   echo "managerUrl: https://${managerHostAndPort}/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+  echo "doUpgrade: true" >> config-delegate.yml
   echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
 
