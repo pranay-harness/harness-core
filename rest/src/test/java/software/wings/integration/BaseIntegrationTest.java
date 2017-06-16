@@ -25,7 +25,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
@@ -241,8 +240,8 @@ private void addAdminUser() {
                                   aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
                               .build())
                       .getResponse())
-              .withAccountName("Wings Software")
-              .withCompanyName("Wings Software")
+              .withAccountName("Harness Inc")
+              .withCompanyName("Harness Inc")
               .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});

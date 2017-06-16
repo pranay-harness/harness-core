@@ -1,11 +1,8 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
-
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
-import static software.wings.beans.Role.Builder.aRole;
-import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
@@ -19,19 +16,16 @@ import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
-import java.util.Arrays;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationBatch;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.Role;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.User;
@@ -182,7 +176,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     String concatenatedMessage = String.join("\n\n", messages);
     channels.forEach(channel
-        -> slackNotificationService.sendMessage(slackConfig, channel, "Wings Notification Bot", concatenatedMessage));
+        -> slackNotificationService.sendMessage(slackConfig, channel, "Harness Notification Bot", concatenatedMessage));
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {

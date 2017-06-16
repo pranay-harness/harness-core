@@ -33,14 +33,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   public void shouldSaveAccount() throws Exception {
     Account account = accountService.save(
-        anAccount().withCompanyName("Wings").withAccountName("Wings").withAccountKey("ACCOUNT_KEY").build());
+        anAccount().withCompanyName("Harness").withAccountName("Harness").withAccountKey("ACCOUNT_KEY").build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
     verify(settingsService).createDefaultAccountSettings(account.getUuid());
   }
 
   @Test
   public void shouldDeleteAccount() throws Exception {
-    String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings").build());
+    String accountId = wingsPersistence.save(anAccount().withCompanyName("Harness").build());
     accountService.delete(accountId);
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
@@ -50,21 +50,21 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateCompanyName() throws Exception {
     Account account = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withCompanyName("Wings").withAccountName("Wings").build());
-    account.setCompanyName("Wings Software");
+        Account.class, anAccount().withCompanyName("Harness").withAccountName("Wings").build());
+    account.setCompanyName("Harness Inc");
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
 
   @Test
   public void shouldGetAccountByName() throws Exception {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Wings").build());
-    assertThat(accountService.getByName("Wings")).isEqualTo(account);
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Harness").build());
+    assertThat(accountService.getByName("Harness")).isEqualTo(account);
   }
 
   @Test
   public void shouldGetAccount() throws Exception {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Wings").build());
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Harness").build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
   }
 }
