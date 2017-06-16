@@ -65,7 +65,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
+    String accountId = wingsPersistence.save(anAccount().withCompanyName("Harness Inc").build());
 
     settingsService.save(aSettingAttribute()
                              .withCategory(Category.CONNECTOR)

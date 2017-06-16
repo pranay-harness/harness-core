@@ -16,6 +16,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -154,6 +155,7 @@ public class MetricCalculator {
       }
     }
 
+    Collections.sort(riskMessages);
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
@@ -336,6 +338,8 @@ public class MetricCalculator {
         messages.add(s.toString());
       }
     }
+
+    Collections.sort(messages);
     return new MetricSummary.BTMetrics(risk, messages, metricBucketDataMap);
   }
 }

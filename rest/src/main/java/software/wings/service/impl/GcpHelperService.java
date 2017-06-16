@@ -60,7 +60,7 @@ public class GcpHelperService {
       if (credential.createScopedRequired()) {
         credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
       }
-      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Wings").build();
+      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service.", e);
       throw new WingsException(
