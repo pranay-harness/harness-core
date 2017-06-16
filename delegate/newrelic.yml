@@ -13,7 +13,7 @@ common: &default_settings
   # account. For example, if your license key is 12345 use this:
   # license_key: '12345'
   # The key binds your Agent's data to your account in the New Relic service.
-  license_key: 'b121ea34124754a7952717207b122be017f2ae76'
+  license_key: 'a8e43a608ff51733b30e0acda98b89d16c6c5b11'
 
   # Agent Enabled
   # Use this setting to disable the agent instead of removing it from the startup command.
@@ -29,7 +29,7 @@ common: &default_settings
   # app_name: My Application;My Application 2
   # This setting is required. Up to 3 different application names can be specified.
   # The first application name must be unique.
-  app_name: My Application
+  app_name: Harness Delegate
 
   # To enable high security, set this property to true. When in high
   # security mode, the agent will use SSL and obfuscated SQL. Additionally,
@@ -286,15 +286,23 @@ common: &default_settings
 
 development:
   <<: *default_settings
-  app_name: My Application (Development)
+  app_name: Harness Delegate (Development)
 
 test:
   <<: *default_settings
-  app_name: My Application (Test)
+  app_name: Harness Delegate (Test)
 
 production:
   <<: *default_settings
 
 staging:
   <<: *default_settings
-  app_name: My Application (Staging)
+  app_name: Harness Delegate (Staging)
+
+qa:
+  <<: *default_settings
+  app_name: Harness Delegate (QA)
+
+ci:
+  <<: *default_settings
+  app_name: Harness Delegate (CI)

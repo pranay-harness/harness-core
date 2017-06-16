@@ -207,7 +207,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId) {
-    logger.info("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
+    logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
 
     if (workflowExecution.getExecutionArgs() != null) {
@@ -274,7 +274,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
-    logger.info("Querying all state execution instance for Workflow execution {} ", workflowExecution.getUuid());
+    logger.debug("Querying all state execution instance for Workflow execution {} ", workflowExecution.getUuid());
     PageRequest<StateExecutionInstance> req = aPageRequest()
                                                   .withLimit(PageRequest.UNLIMITED)
                                                   .addFilter("appId", Operator.EQ, workflowExecution.getAppId())

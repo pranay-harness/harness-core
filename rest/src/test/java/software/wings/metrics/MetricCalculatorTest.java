@@ -112,6 +112,12 @@ public class MetricCalculatorTest {
       6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node4", 120000, 12);
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_9 = createAppdynamicsMetricDataRecord(
       6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 15);
+  private AppdynamicsMetricDataRecord BT2_SLOW_CALL_RECORD_1 = createAppdynamicsMetricDataRecord(
+      6, NUMBER_OF_SLOW_CALLS, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 15);
+  private AppdynamicsMetricDataRecord BT2_VERY_SLOW_CALL_RECORD_1 = createAppdynamicsMetricDataRecord(
+      6, NUMBER_OF_VERY_SLOW_CALLS, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 240000, 10);
+  private AppdynamicsMetricDataRecord BT2_VERY_SLOW_CALL_RECORD_2 = createAppdynamicsMetricDataRecord(
+      6, NUMBER_OF_VERY_SLOW_CALLS, MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 240000, 10);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
       8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
@@ -199,6 +205,21 @@ public class MetricCalculatorTest {
     assertEquals(2, loginArtData.getOldData().getNodeCount());
     assertEquals(1, output.getRiskMessages().size());
     assertEquals("todolist", output.getRiskMessages().get(0));
+
+    // merge slow and very slow calls
+    metricDefinitions = Arrays.asList(SLOW_CALLS_METRIC_DEFINITION, VERY_SLOW_CALLS_METRIC_DEFINITION);
+    ArrayListMultimap<String, AppdynamicsMetricDataRecord> dataMerge = ArrayListMultimap.create();
+    dataMerge.put("todolist", BT2_SLOW_CALL_RECORD_1);
+    dataMerge.put("todolist", BT2_VERY_SLOW_CALL_RECORD_1);
+    dataMerge.put("todolist", BT2_VERY_SLOW_CALL_RECORD_2);
+    output = MetricCalculator.calculateMetrics(metricDefinitions, dataMerge, Arrays.asList("node2"));
+    todolistMetrics = output.getBtMetricsMap().get("todolist");
+    BucketData slowData = todolistMetrics.getMetricsMap().get(NUMBER_OF_SLOW_CALLS);
+    assertEquals(25, slowData.getOldData().getValue(), 0.05);
+    assertEquals(10, slowData.getNewData().getValue(), 0.05);
+    BucketData verySlowData = todolistMetrics.getMetricsMap().get(NUMBER_OF_VERY_SLOW_CALLS);
+    assertEquals(10, verySlowData.getNewData().getValue(), 0.05);
+    assertEquals(10, verySlowData.getOldData().getValue(), 0.05);
     /*
         // with unknown metric type
         data.put("todolist", BT2_UNKNOWN_RECORD_4);
