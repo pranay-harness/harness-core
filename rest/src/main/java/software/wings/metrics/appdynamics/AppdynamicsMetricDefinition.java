@@ -4,6 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import software.wings.metrics.MetricDefinition;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.ThresholdComparisonType;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mike@ on 5/23/17.
@@ -46,9 +50,7 @@ public class AppdynamicsMetricDefinition extends MetricDefinition {
         .add("accountId", accountId)
         .add("metricName", metricName)
         .add("metricType", metricType)
-        .add("mediumThreshold", mediumThreshold)
-        .add("highThreshold", highThreshold)
-        .add("thresholdType", thresholdType)
+        .add("thresholds", thresholds)
         .add("appdynamicsAppId", appdynamicsAppId)
         .add("metricId", metricId)
         .toString();
@@ -59,9 +61,7 @@ public class AppdynamicsMetricDefinition extends MetricDefinition {
     private String metricId;
     private String metricName;
     private MetricType metricType;
-    private double mediumThreshold;
-    private double highThreshold;
-    private ThresholdType thresholdType;
+    private Map<ThresholdComparisonType, Threshold> thresholds = new HashMap<>();
     private long appdynamicsAppId;
 
     private Builder() {}
@@ -95,18 +95,13 @@ public class AppdynamicsMetricDefinition extends MetricDefinition {
       return this;
     }
 
-    public Builder withMediumThreshold(double threshold) {
-      this.mediumThreshold = threshold;
+    public Builder withThresholds(Map<ThresholdComparisonType, Threshold> thresholds) {
+      this.thresholds = thresholds;
       return this;
     }
 
-    public Builder withHighThreshold(double threshold) {
-      this.highThreshold = threshold;
-      return this;
-    }
-
-    public Builder withThresholdType(ThresholdType thresholdType) {
-      this.thresholdType = thresholdType;
+    public Builder withThreshold(ThresholdComparisonType tct, Threshold threshold) {
+      this.thresholds.put(tct, threshold);
       return this;
     }
 
@@ -120,9 +115,7 @@ public class AppdynamicsMetricDefinition extends MetricDefinition {
           .withAccountId(accountId)
           .withMetricName(metricName)
           .withMetricType(metricType)
-          .withMediumThreshold(mediumThreshold)
-          .withHighThreshold(highThreshold)
-          .withThresholdType(thresholdType)
+          .withThresholds(thresholds)
           .withAppdynamicsAppId(appdynamicsAppId)
           .withMetricId(metricId);
     }
@@ -132,9 +125,7 @@ public class AppdynamicsMetricDefinition extends MetricDefinition {
       appdynamicsMetricDefinition.setAccountId(accountId);
       appdynamicsMetricDefinition.setMetricName(metricName);
       appdynamicsMetricDefinition.setMetricType(metricType);
-      appdynamicsMetricDefinition.setMediumThreshold(mediumThreshold);
-      appdynamicsMetricDefinition.setHighThreshold(highThreshold);
-      appdynamicsMetricDefinition.setThresholdType(thresholdType);
+      appdynamicsMetricDefinition.setThresholds(thresholds);
       appdynamicsMetricDefinition.setAppdynamicsAppId(appdynamicsAppId);
       appdynamicsMetricDefinition.setMetricId(metricId);
       return appdynamicsMetricDefinition;

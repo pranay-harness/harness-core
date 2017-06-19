@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData.DataSummary;
+import software.wings.metrics.MetricDefinition.Threshold;
 import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
@@ -216,29 +217,81 @@ public class MetricCalculator {
       endTimeMillis = Math.max(endTimeMillis, newRecords.get(newRecords.size() - 1).getStartTime());
     }
     endTimeMillis += TimeUnit.MINUTES.toMillis(1);
+
+    /*
+     * This risk level stuff is confusing. A quick overview:
+     * The default is LOW.
+     * Depending on the metric type, we generate the ratio/delta/absolute.
+     * Now we'll set the risk level to the lowest level of all of the thresholds defined for the metric,
+     *   excluding metrics that have ThresholdType.NO_ALERT. This is so that if a metric has multiple
+     *   defined thresholds, such as:
+     *     ratio above 1.3, delta greater than 20 = HIGH
+     *     ratio above 1.0, delta greater than 0.01 = MEDIUM
+     *   if ratio is above 1.3 but delta is between 0.01 and 20, we want to return MEDIUM.
+     * relevantThreshold indicates whether we've seen any metrics that are not of type NO_ALERT, because
+     *   if we just saw a single NO_ALERT and didn't have that logic, it'd end up setting the risk to HIGH.
+     */
     RiskLevel risk = RiskLevel.LOW;
-    // default thresholds: 1-2x = medium, >2x high
+    // default thresholds are in AppdynamicsConstants
     double ratio = 0.0;
+    double delta = 0.0;
+    double absolute = 0.0;
     if (newSummary != null && oldSummary != null) {
       MetricType metricType = metricDefinition.getMetricType();
       if (metricType == MetricType.COUNT) {
         ratio = (newSummary.getStats().sum() / newSummary.getNodeCount())
             / (oldSummary.getStats().sum() / oldSummary.getNodeCount());
+        delta = (newSummary.getStats().sum() / newSummary.getNodeCount())
+            - (oldSummary.getStats().sum() / oldSummary.getNodeCount());
+        absolute = newSummary.getStats().sum() / newSummary.getNodeCount();
       } else if (metricType == MetricType.PERCENTAGE || metricType == MetricType.TIME_MS
           || metricType == MetricType.TIME || metricType == MetricType.RATE) {
         ratio = newSummary.getStats().mean() / oldSummary.getStats().mean();
+        delta = newSummary.getStats().mean() - oldSummary.getStats().mean();
+        absolute = newSummary.getStats().mean();
       }
-      if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_HIGHER) {
-        if (ratio > metricDefinition.getHighThreshold()) {
-          risk = RiskLevel.HIGH;
-        } else if (ratio > metricDefinition.getMediumThreshold() && ratio <= metricDefinition.getHighThreshold()) {
-          risk = RiskLevel.MEDIUM;
+      double value = Double.MIN_VALUE;
+      RiskLevel newRisk = RiskLevel.HIGH;
+      boolean relevantThreshold = false;
+      for (ThresholdComparisonType tct : metricDefinition.getThresholds().keySet()) {
+        Threshold threshold = metricDefinition.getThresholds().get(tct);
+        if (tct == ThresholdComparisonType.RATIO) {
+          value = ratio;
+        } else if (tct == ThresholdComparisonType.DELTA) {
+          value = delta;
+        } else if (tct == ThresholdComparisonType.ABSOLUTE) {
+          value = absolute;
+        } else {
+          logger.warn("Metric with undefined comparison type: " + metricDefinition);
         }
-      } else if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_LOWER) {
-        if (ratio < metricDefinition.getHighThreshold()) {
-          risk = RiskLevel.HIGH;
-        } else if (ratio < metricDefinition.getMediumThreshold() && ratio >= metricDefinition.getHighThreshold()) {
-          risk = RiskLevel.MEDIUM;
+        if (value != Double.MIN_VALUE && threshold.getThresholdType() != ThresholdType.NO_ALERT) {
+          relevantThreshold = true;
+          RiskLevel thresholdRisk = RiskLevel.LOW;
+          if (threshold.getThresholdType() == ThresholdType.ALERT_WHEN_HIGHER) {
+            if (value > threshold.getHigh()) {
+              thresholdRisk = RiskLevel.HIGH;
+            } else if (value > threshold.getMedium() && value <= threshold.getHigh()) {
+              thresholdRisk = RiskLevel.MEDIUM;
+            } else {
+              thresholdRisk = RiskLevel.LOW;
+            }
+          } else if (threshold.getThresholdType() == ThresholdType.ALERT_WHEN_LOWER) {
+            if (value < threshold.getHigh()) {
+              thresholdRisk = RiskLevel.HIGH;
+            } else if (value < threshold.getMedium() && value >= threshold.getHigh()) {
+              thresholdRisk = RiskLevel.MEDIUM;
+            } else {
+              thresholdRisk = RiskLevel.LOW;
+            }
+          }
+          if (thresholdRisk.compareTo(newRisk) > 0) {
+            newRisk = thresholdRisk;
+          }
+        }
+      }
+      if (relevantThreshold) {
+        if (newRisk.compareTo(risk) < 0) {
+          risk = newRisk;
         }
       }
     }
