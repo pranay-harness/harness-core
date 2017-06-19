@@ -224,8 +224,8 @@ public class MetricCalculator {
       if (metricType == MetricType.COUNT) {
         ratio = (newSummary.getStats().sum() / newSummary.getNodeCount())
             / (oldSummary.getStats().sum() / oldSummary.getNodeCount());
-      } else if (metricType == MetricType.PERCENTAGE || metricType == MetricType.TIME
-          || metricType == MetricType.RATE) {
+      } else if (metricType == MetricType.PERCENTAGE || metricType == MetricType.TIME_MS
+          || metricType == MetricType.TIME || metricType == MetricType.RATE) {
         ratio = newSummary.getStats().mean() / oldSummary.getStats().mean();
       }
       if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_HIGHER) {
@@ -283,7 +283,8 @@ public class MetricCalculator {
         valueMap.put(key, tempStats.mean());
       } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE) {
         valueMap.put(key, tempStats.mean());
-      } else if (metricDefinition.getMetricType() == MetricType.TIME) {
+      } else if (metricDefinition.getMetricType() == MetricType.TIME_MS
+          || metricDefinition.getMetricType() == MetricType.TIME) {
         valueMap.put(key, tempStats.mean());
       }
     }
@@ -309,7 +310,8 @@ public class MetricCalculator {
       value = stats.mean();
     } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE) {
       value = stats.mean();
-    } else if (metricDefinition.getMetricType() == MetricType.TIME) {
+    } else if (metricDefinition.getMetricType() == MetricType.TIME_MS
+        || metricDefinition.getMetricType() == MetricType.TIME) {
       value = stats.mean();
     }
     return new BucketData.DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, value, missingData);
