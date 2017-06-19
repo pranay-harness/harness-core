@@ -262,7 +262,7 @@ public class MetricCalculator {
         } else if (tct == ThresholdComparisonType.ABSOLUTE) {
           value = absolute;
         } else {
-          logger.warn("Metric with undefined comparison type: " + metricDefinition);
+          throw new WingsException("Metric with unexpected comparison type: " + metricDefinition);
         }
         if (value != Double.MIN_VALUE && threshold.getThresholdType() != ThresholdType.NO_ALERT) {
           relevantThreshold = true;
