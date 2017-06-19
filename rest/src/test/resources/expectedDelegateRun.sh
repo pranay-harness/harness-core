@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 vercomp () {
     if [[ $1 == $2 ]]
@@ -83,10 +83,11 @@ then
   ln -s $JRE_DIR jre
 fi
 
-REMOTE_HOST=$(echo http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')
-REMOTE_DELEGATE_METADATA=$(curl http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt --fail --silent --show-error)
-REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
+
+REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
+REMOTE_DELEGATE_VERSION=9.9.9
+
+CURRENT_VERSION=0.0.0
 
 if [ ! -e delegate.jar ]
 then
@@ -94,7 +95,7 @@ then
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
@@ -107,6 +108,7 @@ then
   echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
   echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+  echo "doUpgrade: true" >> config-delegate.yml
   echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 vercomp () {
     if [[ $1 == $2 ]]
@@ -73,18 +73,16 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-REMOTE_HOST=$(echo http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')
-REMOTE_DELEGATE_METADATA=$(curl http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt --fail --silent --show-error)
-REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
+REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
+REMOTE_DELEGATE_VERSION=9.9.9
 
-CURRENT_VERSION=0
+CURRENT_VERSION=0.0.0
 
 if [ -e delegate.jar ]
 then
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
 
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
     mkdir -p backup.$CURRENT_VERSION
@@ -113,4 +111,4 @@ export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 rm -rf "$CAPSULE_CACHE_DIR"
 echo "Delegate upgrading to version $REMOTE_DELEGATE_VERSION"
-$JRE_BINARY -Ddelegatesourcedir="$DIR" -jar delegate.jar config-delegate.yml upgrade
+$JRE_BINARY -Ddelegatesourcedir="$DIR" -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml upgrade
