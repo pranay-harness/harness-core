@@ -23,8 +23,8 @@ import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.metrics.BucketData;
 import software.wings.metrics.MetricSummary;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.AppService;
@@ -203,8 +203,14 @@ public class AppDynamicsState extends State {
     // TODO: add check for null finalMetrics and throw exception if no data was generated
     finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
     String id = wingsPersistence.save(finalMetrics);
+
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    // TODO: success, failed or manual intervention option should be determined based on preferences
+    if (finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
+      executionStatus = ExecutionStatus.FAILED;
+    }
     return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
         .build();
   }
