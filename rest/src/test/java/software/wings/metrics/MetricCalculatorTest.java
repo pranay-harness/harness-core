@@ -89,7 +89,7 @@ public class MetricCalculatorTest {
           .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("5")
           .withMetricName(RESPONSE_TIME_95)
-          .withMetricType(MetricType.TIME)
+          .withMetricType(MetricType.TIME_MS)
           .withMediumThreshold(1)
           .withHighThreshold(2)
           .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
@@ -119,23 +119,23 @@ public class MetricCalculatorTest {
   private AppdynamicsMetricDataRecord BT2_VERY_SLOW_CALL_RECORD_2 = createAppdynamicsMetricDataRecord(
       6, NUMBER_OF_VERY_SLOW_CALLS, MetricType.RATE, 1, "tier1", 2, "todolist", "node2", 240000, 10);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node1", 60000, 5);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 2, "todolist", "node1", 60000, 5);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node2", 60000, 6);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 2, "todolist", "node2", 60000, 6);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_3 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node3", 120000, 7);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 2, "todolist", "node3", 120000, 7);
   private AppdynamicsMetricDataRecord BT2_ART_RECORD_4 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 2, "todolist", "node4", 120000, 8);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 2, "todolist", "node4", 120000, 8);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_1 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node1", 60000, 9);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 4, "login", "node1", 60000, 9);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_2 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node2", 60000, 10);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 4, "login", "node2", 60000, 10);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_3 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node1", 120000, 11);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 4, "login", "node1", 120000, 11);
   private AppdynamicsMetricDataRecord BT4_ART_RECORD_4 = createAppdynamicsMetricDataRecord(
-      8, RESPONSE_TIME_95, MetricType.TIME, 1, "tier1", 4, "login", "node2", 120000, 12);
+      8, RESPONSE_TIME_95, MetricType.TIME_MS, 1, "tier1", 4, "login", "node2", 120000, 12);
   private AppdynamicsMetricDataRecord BT2_UNKNOWN_RECORD_4 =
-      createAppdynamicsMetricDataRecord(8, "foo", MetricType.TIME, 1, "tier1", 2, "todolist", "node2", 120000, 12);
+      createAppdynamicsMetricDataRecord(8, "foo", MetricType.TIME_MS, 1, "tier1", 2, "todolist", "node2", 120000, 12);
   @Test
   public void shouldCalculateMetrics() {
     List<MetricDefinition> metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION, ART_METRIC_DEFINITION);
@@ -285,7 +285,7 @@ public class MetricCalculatorTest {
     assertEquals(true, summary.isMissingData());
 
     // with time metric type
-    CALLS_METRIC_DEFINITION.setMetricType(MetricType.TIME);
+    CALLS_METRIC_DEFINITION.setMetricType(MetricType.TIME_MS);
     summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS);
     assertEquals(4, summary.getNodeCount());
     assertEquals(8.5, summary.getStats().mean(), 0.05);

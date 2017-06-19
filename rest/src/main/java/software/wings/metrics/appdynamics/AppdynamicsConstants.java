@@ -44,7 +44,7 @@ public class AppdynamicsConstants {
   public static final AppdynamicsMetricDefinition.Builder RESPONSE_TIME_95_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(RESPONSE_TIME_95)
-          .withMetricType(MetricType.TIME)
+          .withMetricType(MetricType.TIME_MS)
           .withMediumThreshold(1.0)
           .withHighThreshold(2.0)
           .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
