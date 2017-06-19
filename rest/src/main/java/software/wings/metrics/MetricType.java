@@ -8,8 +8,11 @@ public enum MetricType { /**
                           * Metrics used for timing a process.
                           */
   TIME_MS, /**
-            * Metrics that count something.
+            * Metrics used for timing a process (DEPRECATED).
             */
+  TIME, /**
+         * Metrics that count something.
+         */
   COUNT, /**
           * Metrics that count something as a rate (count per time)
           */
