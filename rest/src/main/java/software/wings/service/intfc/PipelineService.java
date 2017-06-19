@@ -96,6 +96,13 @@ public interface PipelineService {
   boolean deletePipeline(String appId, String pipelineId);
 
   /**
+   * Delete pipeline by application
+   * @param appId
+   * @return
+   */
+  boolean deletePipelineByApplication(String appId);
+
+  /**
    * Clone pipeline pipeline.
    *
    * @param originalPipelineId the original pipeline id

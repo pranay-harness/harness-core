@@ -44,6 +44,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -89,6 +90,7 @@ public class AppServiceImpl implements AppService {
   @Inject private StatisticsService statisticsService;
   @Inject private RoleService roleService;
   @Inject private JobScheduler jobScheduler;
+  @Inject private PipelineService pipelineService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -269,6 +271,7 @@ public class AppServiceImpl implements AppService {
         artifactService.deleteByApplication(appId);
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);
+        pipelineService.deletePipelineByApplication(appId);
         serviceResourceService.deleteByApp(appId);
       });
       notificationService.sendNotificationAsync(

@@ -364,7 +364,13 @@ public enum ErrorCode {
   ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"), /**
                                                            * Unavailable delegates error code.
                                                            */
-  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES", SERVICE_UNAVAILABLE);
+  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES", SERVICE_UNAVAILABLE), /**
+                                                                        * Workflow execution in progress
+                                                                        */
+  WORKFLOW_EXECUTION_IN_PROGRESS("WORKFLOW_EXECUTION_IN_PROGRESS"), /**
+                                                                     * Workflow execution in progress
+                                                                     */
+  PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS");
 
   /**
    * The constant ARGS_NAME.

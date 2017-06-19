@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -456,8 +457,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
+    return deleteWorkflow(appId, workflowId, false);
+  }
+
+  private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete) {
+    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    if (workflow == null) {
+      return true;
+    }
+    if (forceDelete) {
+      return wingsPersistence.delete(Workflow.class, appId, workflowId);
+    }
+    if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
+      String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
+    }
     return wingsPersistence.delete(Workflow.class, appId, workflowId);
-    // TODO: cleanup state machines and check the workflow in running state
   }
 
   /**
@@ -541,7 +556,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Key<Workflow>> workflowKeys =
         wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
     for (Key key : workflowKeys) {
-      deleteWorkflow(appId, (String) key.getId());
+      deleteWorkflow(appId, (String) key.getId(), true);
     }
   }
 

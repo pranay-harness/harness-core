@@ -12,13 +12,12 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
-import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
-import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -36,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import org.junit.Before;
@@ -77,19 +77,19 @@ import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
-import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -103,12 +103,10 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -126,14 +124,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private ServiceInstanceService serviceInstanceService;
-  @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private AppService appService;
   @Mock private AccountService accountService;
   @Mock private NotificationSetupService notificationSetupService;
   @Mock private Application application;
   @Mock private Account account;
+  @Mock private WorkflowExecutionService workflowExecutionService;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
@@ -163,6 +160,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(fieldEnd.equal(anyObject())).thenReturn(query);
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
+    when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, WORKFLOW_ID))
+        .thenReturn(false);
   }
 
   /**
@@ -313,6 +312,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow).isNull();
   }
 
+  /**
+   * Should delete workflow.
+   */
+  @Test(expected = WingsException.class)
+  public void deleteWorkflowExecutionInProgress() {
+    Workflow workflow = createWorkflow();
+    String uuid = workflow.getUuid();
+    when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, uuid)).thenReturn(true);
+    workflowService.deleteWorkflow(APP_ID, uuid);
+    workflow = workflowService.readWorkflow(APP_ID, uuid, null);
+    assertThat(workflow).isNull();
+  }
+
   private Workflow createWorkflow() {
     Graph graph = aGraph()
                       .addNodes(aNode()
@@ -347,6 +359,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                             .withAppId(APP_ID)
                             .withName("workflow1")
                             .withDescription("Sample Workflow")
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
                             .withOrchestrationWorkflow(orchestrationWorkflow)
                             .build();
 
