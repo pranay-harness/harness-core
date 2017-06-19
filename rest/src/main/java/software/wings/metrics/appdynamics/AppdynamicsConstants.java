@@ -1,7 +1,9 @@
 package software.wings.metrics.appdynamics;
 
+import software.wings.metrics.MetricDefinition.Threshold;
 import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.MetricType;
+import software.wings.metrics.ThresholdComparisonType;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Arrays;
@@ -33,53 +35,45 @@ public class AppdynamicsConstants {
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(CALLS_PER_MINUTE)
           .withMetricType(MetricType.RATE)
-          .withThresholdType(ThresholdType.NO_ALERT);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.NO_ALERT, 1, 2));
 
   public static final AppdynamicsMetricDefinition.Builder TOTAL_CALLS_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(TOTAL_CALLS)
           .withMetricType(MetricType.COUNT)
-          .withThresholdType(ThresholdType.NO_ALERT);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.NO_ALERT, 1, 2));
 
   public static final AppdynamicsMetricDefinition.Builder RESPONSE_TIME_95_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(RESPONSE_TIME_95)
           .withMetricType(MetricType.TIME_MS)
-          .withMediumThreshold(1.0)
-          .withHighThreshold(2.0)
-          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1.0, 1.3))
+          .withThreshold(ThresholdComparisonType.DELTA, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 0.01, 20.0));
 
   public static final AppdynamicsMetricDefinition.Builder ERRORS_PER_MINUTE_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(ERRORS_PER_MINUTE)
           .withMetricType(MetricType.RATE)
-          .withMediumThreshold(1.0)
-          .withHighThreshold(2.0)
-          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1.0, 1.3))
+          .withThreshold(ThresholdComparisonType.ABSOLUTE, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 3.0, 5.0));
 
   public static final AppdynamicsMetricDefinition.Builder STALL_COUNT_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(STALL_COUNT)
           .withMetricType(MetricType.COUNT)
-          .withMediumThreshold(1.0)
-          .withHighThreshold(2.0)
-          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1.0, 1.3));
 
   public static final AppdynamicsMetricDefinition.Builder NUMBER_OF_SLOW_CALLS_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(NUMBER_OF_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
-          .withMediumThreshold(1.0)
-          .withHighThreshold(2.0)
-          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1.0, 1.3));
 
   public static final AppdynamicsMetricDefinition.Builder NUMBER_OF_VERY_SLOW_CALLS_METRIC_TEMPLATE =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withMetricName(NUMBER_OF_VERY_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
-          .withMediumThreshold(1.0)
-          .withHighThreshold(2.0)
-          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER);
+          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1.0, 1.3));
 
   public static final Map<String, AppdynamicsMetricDefinition.Builder> METRIC_TEMPLATE_MAP =
       Collections.unmodifiableMap(

@@ -6,18 +6,18 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 
+import java.util.Map;
+
 /**
  * Created by mike@ on 5/23/17.
  */
-@Entity(value = "appdynamicsMetrics", noClassnameStored = true)
+@Entity(value = "appdynamicsMetricDefinitions", noClassnameStored = true)
 public abstract class MetricDefinition extends Base {
   @NotEmpty protected String accountId;
   @NotEmpty protected String metricId;
   @NotEmpty protected String metricName;
   @NotEmpty protected MetricType metricType;
-  protected double mediumThreshold;
-  protected double highThreshold;
-  @NotEmpty protected ThresholdType thresholdType;
+  protected Map<ThresholdComparisonType, Threshold> thresholds;
 
   public String getAccountId() {
     return accountId;
@@ -51,34 +51,70 @@ public abstract class MetricDefinition extends Base {
     this.metricType = metricType;
   }
 
-  public double getMediumThreshold() {
-    return mediumThreshold;
+  public Map<ThresholdComparisonType, Threshold> getThresholds() {
+    return thresholds;
   }
 
-  public void setMediumThreshold(double threshold) {
-    this.mediumThreshold = threshold;
+  public void setThresholds(Map<ThresholdComparisonType, Threshold> thresholds) {
+    this.thresholds = thresholds;
   }
 
-  public double getHighThreshold() {
-    return highThreshold;
-  }
-
-  public void setHighThreshold(double threshold) {
-    this.highThreshold = threshold;
-  }
-
-  public ThresholdType getThresholdType() {
-    return thresholdType;
-  }
-
-  public void setThresholdType(ThresholdType thresholdType) {
-    this.thresholdType = thresholdType;
+  public void addThreshold(ThresholdComparisonType tct, Threshold threshold) {
+    thresholds.put(tct, threshold);
   }
 
   public enum ThresholdType {
     ALERT_WHEN_LOWER,
     ALERT_WHEN_HIGHER,
     NO_ALERT,
+  }
+
+  public static class Threshold {
+    private ThresholdType thresholdType;
+    private double high;
+    private double medium;
+
+    // needed for Jackson
+    public Threshold() {}
+
+    public Threshold(ThresholdType thresholdType, double medium, double high) {
+      this.thresholdType = thresholdType;
+      this.medium = medium;
+      this.high = high;
+    }
+
+    public ThresholdType getThresholdType() {
+      return thresholdType;
+    }
+
+    public void setThresholdType(ThresholdType thresholdType) {
+      this.thresholdType = thresholdType;
+    }
+
+    public double getHigh() {
+      return high;
+    }
+
+    public void setHigh(double high) {
+      this.high = high;
+    }
+
+    public double getMedium() {
+      return medium;
+    }
+
+    public void setMedium(double medium) {
+      this.medium = medium;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("thresholdType", thresholdType)
+          .add("high", high)
+          .add("medium", medium)
+          .toString();
+    }
   }
 
   @Override
@@ -92,10 +128,6 @@ public abstract class MetricDefinition extends Base {
 
     MetricDefinition that = (MetricDefinition) o;
 
-    if (Double.compare(that.mediumThreshold, mediumThreshold) != 0)
-      return false;
-    if (Double.compare(that.highThreshold, highThreshold) != 0)
-      return false;
     if (!accountId.equals(that.accountId))
       return false;
     if (!metricId.equals(that.metricId))
@@ -104,22 +136,17 @@ public abstract class MetricDefinition extends Base {
       return false;
     if (metricType != that.metricType)
       return false;
-    return thresholdType == that.thresholdType;
+    return thresholds != null ? thresholds.equals(that.thresholds) : that.thresholds == null;
   }
 
   @Override
   public int hashCode() {
     int result = super.hashCode();
-    long temp;
     result = 31 * result + accountId.hashCode();
     result = 31 * result + metricId.hashCode();
     result = 31 * result + metricName.hashCode();
     result = 31 * result + metricType.hashCode();
-    temp = Double.doubleToLongBits(mediumThreshold);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(highThreshold);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    result = 31 * result + thresholdType.hashCode();
+    result = 31 * result + (thresholds != null ? thresholds.hashCode() : 0);
     return result;
   }
 
@@ -130,9 +157,7 @@ public abstract class MetricDefinition extends Base {
         .add("metricId", metricId)
         .add("metricName", metricName)
         .add("metricType", metricType)
-        .add("mediumThreshold", mediumThreshold)
-        .add("highThreshold", highThreshold)
-        .add("thresholdType", thresholdType)
+        .add("thresholds", thresholds)
         .toString();
   }
 }
