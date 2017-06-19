@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.collect.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult.AppdynamicsDataCollectionTaskStatus;

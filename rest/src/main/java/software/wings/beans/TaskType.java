@@ -11,6 +11,7 @@ import software.wings.delegatetasks.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NexusCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -58,7 +59,8 @@ public enum TaskType {
   APPDYNAMICS_GET_NODES_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_OF_BT(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class),
-  APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class);
+  APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class),
+  SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

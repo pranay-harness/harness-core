@@ -47,6 +47,10 @@
 
     <repositories>
         <repository>
+            <id>maven-central</id>
+            <url>http://repo.spring.io/plugins-release/</url>
+        </repository>
+        <repository>
             <id>michaelklishin</id>
             <url>https://dl.bintray.com/michaelklishin/maven/</url>
         </repository>

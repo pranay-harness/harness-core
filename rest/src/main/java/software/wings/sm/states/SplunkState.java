@@ -1,86 +1,64 @@
 package software.wings.sm.states;
 
-import static com.google.common.collect.ImmutableSortedMap.of;
-import static java.util.Arrays.asList;
-import static software.wings.api.SplunkStateExecutionData.Builder.aSplunkStateExecutionData;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.HttpStateExecutionData;
-import software.wings.api.SplunkStateExecutionData;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
+import software.wings.collect.AppdynamicsMetricDataCallback;
+import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.splunk.SplunkSettingProvider;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
-public class SplunkState extends HttpState {
-  private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
+public class SplunkState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(SplunkState.class);
 
-  @Transient @Inject private SettingsService settingsService;
+  @EnumData(enumDataProvider = SplunkSettingProvider.class)
+  @Attributes(required = true, title = "Splunk Server")
+  private String splunkConfigId;
 
   @Attributes(required = true, title = "Query") private String query;
 
-  /**
-   * Create a new Http State with given name.
-   *
-   * @param name name of the state.
-   */
+  @DefaultValue("15")
+  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
+  private String timeDuration;
+
+  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject private SettingsService settingsService;
+
+  @Transient @Inject private AppService appService;
+
+  @Transient @Inject private DelegateService delegateService;
+
   public SplunkState(String name) {
-    super(name);
-    setStateType(StateType.SPLUNK.name());
-  }
-
-  @Override
-  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    String evaluatedQuery = context.renderExpression(query);
-    logger.info("evaluatedQuery: {}", evaluatedQuery);
-
-    ExecutionResponse executionResponse = super.executeInternal(context, activityId);
-
-    executionResponse.setStateExecutionData(
-        aSplunkStateExecutionData().withQuery(evaluatedQuery).withAssertionStatement(getAssertion()).build());
-
-    return executionResponse;
-  }
-
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
-
-    HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
-
-    SplunkStateExecutionData splunkStateExecutionData = (SplunkStateExecutionData) context.getStateExecutionData();
-
-    executionResponse.setStateExecutionData(aSplunkStateExecutionData()
-                                                .withQuery(splunkStateExecutionData.getQuery())
-                                                .withAssertionStatement(getAssertion())
-                                                .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
-                                                .withResponse(httpStateExecutionData.getHttpResponseBody())
-                                                .build());
-
-    return executionResponse;
+    super(name, StateType.SPLUNK.getType());
   }
 
   /**
@@ -101,98 +79,56 @@ public class SplunkState extends HttpState {
     this.query = query;
   }
 
-  @SchemaIgnore
-  @Override
-  public List<String> getPatternsForRequiredContextElementType() {
-    return asList(query, getAssertion());
+  public String getTimeDuration() {
+    return timeDuration;
+  }
+
+  public void setTimeDuration(String timeDuration) {
+    this.timeDuration = timeDuration;
+  }
+
+  public String getSplunkConfigId() {
+    return splunkConfigId;
+  }
+
+  public void setSplunkConfigId(String splunkConfigId) {
+    this.splunkConfigId = splunkConfigId;
   }
 
   @Override
-  @Attributes(title = "Wait interval before execution(in seconds)")
-  public Integer getWaitInterval() {
-    return super.getWaitInterval();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getBody() {
-    return super.getBody();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getHeader() {
-    return super.getHeader();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getMethod() {
-    return super.getMethod();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getUrl() {
-    return super.getUrl();
-  }
-
-  @Attributes(required = true, title = "Assertion")
-  @Override
-  public String getAssertion() {
-    return super.getAssertion();
+  public ExecutionResponse execute(ExecutionContext context) {
+    logger.debug("Executing splunk state");
+    triggerSplunkDataCollection(context);
+    return null;
   }
 
   @Override
-  protected TaskType getTaskType() {
-    return TaskType.SPLUNK;
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    return super.handleAsyncResponse(context, response);
   }
 
   @Override
-  protected String getFinalMethod(ExecutionContext context) {
-    return "POST";
-  }
+  public void handleAbortEvent(ExecutionContext context) {}
 
-  @Override
-  protected String getFinalHeader(ExecutionContext context) {
-    SettingAttribute splunkSettingAttribute =
-        settingsService
-            .getGlobalSettingAttributesByType(
-                ((ExecutionContextImpl) context).getApp().getAccountId(), SettingVariableTypes.SPLUNK.name())
-            .get(0);
-    SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
-    return "Authorization: Basic "
-        + Base64.encodeBase64URLSafeString((splunkConfig.getUsername() + ":" + new String(splunkConfig.getPassword()))
-                                               .getBytes(StandardCharsets.UTF_8));
-  }
-
-  @Override
-  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
-    String evaluatedQuery = context.renderExpression(query);
-    logger.info("evaluatedQuery: {}", evaluatedQuery);
-    return toPostBody(of("search", "search " + evaluatedQuery, "exec_mode", "oneshot"));
-  }
-
-  @Override
-  protected String getFinalUrl(ExecutionContext context) {
-    SettingAttribute splunkSettingAttribute =
-        settingsService
-            .getGlobalSettingAttributesByType(
-                ((ExecutionContextImpl) context).getApp().getAccountId(), SettingVariableTypes.SPLUNK.name())
-            .get(0);
-    SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
-    return "https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs";
-  }
-
-  private String toPostBody(Map<String, String> params) throws UnsupportedEncodingException {
-    StringBuilder postData = new StringBuilder();
-    for (Entry<String, String> param : params.entrySet()) {
-      if (postData.length() != 0)
-        postData.append('&');
-      postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-      postData.append('=');
-      postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+  private void triggerSplunkDataCollection(ExecutionContext context) {
+    final SettingAttribute settingAttribute = settingsService.get(splunkConfigId);
+    if (settingAttribute == null) {
+      throw new WingsException("No appdynamics setting with id: " + splunkConfigId + " found");
     }
-    return postData.toString();
+
+    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+    final List<String> queries = Arrays.asList(query.split(","));
+    final SplunkDataCollectionInfo dataCollectionInfo =
+        new SplunkDataCollectionInfo(splunkConfig, queries, Integer.parseInt(timeDuration));
+    String waitId = UUIDGenerator.getUuid();
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
+                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
+                                    .withAppId(context.getAppId())
+                                    .withWaitId(waitId)
+                                    .withParameters(new Object[] {dataCollectionInfo})
+                                    .build();
+    waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
+    delegateService.queueTask(delegateTask);
   }
 }
