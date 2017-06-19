@@ -35,6 +35,7 @@ import software.wings.security.encryption.SimpleEncryption;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -336,6 +337,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     boolean encryptAfterUpdate = false;
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
+    List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       Object value = entry.getValue();
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
@@ -344,19 +346,22 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         this.encrypt(e);
         value = e;
       } else if (encryptable) {
-        try {
-          Field f = cls.getDeclaredField(entry.getKey());
-          Encrypted a = f.getAnnotation(Encrypted.class);
-          if (null != a) {
-            value = this.encryptChars((char[]) value, encryptionKey);
-            encryptAfterUpdate = true;
-          }
-        } catch (NoSuchFieldException e) {
-          throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName(), e);
+        Field f = declaredAndInheritedFields.stream()
+                      .filter(field -> field.getName().equals(entry.getKey()))
+                      .findFirst()
+                      .orElse(null);
+        if (f == null) {
+          throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName());
+        }
+        Encrypted a = f.getAnnotation(Encrypted.class);
+        if (null != a) {
+          value = this.encryptChars((char[]) value, encryptionKey);
+          encryptAfterUpdate = true;
         }
       }
       operations.set(entry.getKey(), value);
     }
+
     update(query, operations);
     if (encryptAfterUpdate) {
     }
@@ -522,11 +527,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   /**
    * Encrypt an Encryptable object. Currently assumes SimpleEncryption.
+   *
    * @param object the object to be encrypted
    */
   private void encrypt(Encryptable object) {
     try {
-      for (Field f : object.getClass().getDeclaredFields()) {
+      List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(object.getClass());
+      for (Field f : declaredAndInheritedFields) {
         Encrypted a = f.getAnnotation(Encrypted.class);
         if (a != null && a.value()) {
           f.setAccessible(true);
@@ -549,7 +556,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   private void decrypt(Encryptable object) {
     try {
-      for (Field f : object.getClass().getDeclaredFields()) {
+      List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(object.getClass());
+      for (Field f : declaredAndInheritedFields) {
         Encrypted a = f.getAnnotation(Encrypted.class);
         if (a != null && a.value()) {
           f.setAccessible(true);
@@ -575,6 +583,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     } catch (IllegalAccessException e) {
       throw new WingsException("Illegal access exception in encrypt", e);
     }
+  }
+
+  private List<Field> getDeclaredAndInheritedFields(Class<?> clazz) {
+    List<Field> declaredFields = new ArrayList<>();
+    while (clazz.getSuperclass() != null) {
+      Collections.addAll(declaredFields, clazz.getDeclaredFields());
+      clazz = clazz.getSuperclass();
+    }
+    return declaredFields;
   }
 
   /**
