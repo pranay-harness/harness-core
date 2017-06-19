@@ -783,7 +783,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .build();
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (pageResponse == null) {
+    if (pageResponse == null || pageResponse.size() == 0) {
       return false;
     }
     return true;
