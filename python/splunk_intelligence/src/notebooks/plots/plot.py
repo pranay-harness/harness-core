@@ -10,11 +10,11 @@ def split(input, length, size):
     input.replace('\tat', ' ')
     return '<br>'.join([input[start:start + size] for start in range(0, length, size)])
 
-
+#TODO tooltips should be plain text
 def scatter_plot(xy_matrix, tooltips):
     data = [Scatter(x=xy_matrix[:, 0],
                     y=xy_matrix[:, 1],
-                    text=[split(s[0], min(100, len(s[0])), 100) + '<br> id = ' + str(s[1]) for s in tooltips],
+                    text=[split(s[0], min(100, len(s[0])), 100) + '<br> id = ' + str(s[3]) for s in tooltips],
                     mode='markers')]
 
     layout = Layout(hovermode='closest')

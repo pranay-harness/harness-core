@@ -287,7 +287,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     UpdateResults update = wingsPersistence.update(query, operations);
 
-    jobScheduler.deleteJob(streamId, workflowId);
+    jobScheduler.deleteJob(workflowId, streamId);
 
     return get(appId, streamId);
   }
@@ -305,9 +305,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public void triggerScheduledStreamAction(String appId, String streamId, String workflowId) {
+    logger.info(
+        "Triggering scheduled action for app Id {} streamId {} and workflow id {} ", appId, streamId, workflowId);
     ArtifactStream artifactStream = get(appId, streamId);
     if (artifactStream == null) {
-      logger.debug("Artifact stream does not exist. Hence deleting associated job");
+      logger.info("Artifact stream does not exist. Hence deleting associated job");
       jobScheduler.deleteJob(workflowId, streamId);
       return;
     }
@@ -318,7 +320,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .findFirst()
             .orElse(null);
     if (artifactStreamAction == null) {
-      logger.debug("Artifact stream does not have trigger anymore . Hence deleting associated job");
+      logger.info("Artifact stream does not have trigger anymore . Hence deleting associated job");
       jobScheduler.deleteJob(workflowId, streamId);
       return;
     }
@@ -339,6 +341,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (latestArtifactBuildNo > lastDeployedArtifactBuildNo) {
       logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
       triggerStreamAction(latestArtifact, artifactStreamAction);
+    } else {
+      logger.info(
+          "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same. So, not triggering deployment",
+          latestArtifactBuildNo, lastDeployedArtifactBuildNo);
     }
   }
 
