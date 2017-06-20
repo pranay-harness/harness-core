@@ -5,7 +5,9 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rishi on 8/15/16.
@@ -52,10 +54,14 @@ public class ElementExecutionSummary {
     if (instanceStatusSummaries == null) {
       return 0;
     }
-    return Math.toIntExact(instanceStatusSummaries.stream()
-                               .map(instanceStatusSummary -> instanceStatusSummary.getInstanceElement().getUuid())
-                               .distinct()
-                               .count());
+    Set<String> instanceIds = new HashSet<>();
+    instanceStatusSummaries.forEach(instanceStatusSummary -> {
+      if (instanceStatusSummary.getInstanceElement() != null
+          && instanceStatusSummary.getInstanceElement().getUuid() != null) {
+        instanceIds.add(instanceStatusSummary.getInstanceElement().getUuid());
+      }
+    });
+    return instanceIds.size();
   }
 
   /**

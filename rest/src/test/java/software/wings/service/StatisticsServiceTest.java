@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
@@ -18,6 +19,7 @@ import static software.wings.beans.stats.ActivityStatusAggregation.Builder.anAct
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
+import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -138,7 +140,10 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toEpochMilli();
 
     List<ElementExecutionSummary> serviceExecutionSummaries = asList(
-        anElementExecutionSummary().withInstanceStatusSummaries(asList(anInstanceStatusSummary().build())).build());
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(asList(
+                anInstanceStatusSummary().withInstanceElement(anInstanceElement().withUuid(getUuid()).build()).build()))
+            .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
@@ -237,7 +242,10 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toEpochMilli();
 
     List<ElementExecutionSummary> serviceExecutionSummaries = asList(
-        anElementExecutionSummary().withInstanceStatusSummaries(asList(anInstanceStatusSummary().build())).build());
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(asList(
+                anInstanceStatusSummary().withInstanceElement(anInstanceElement().withUuid(getUuid()).build()).build()))
+            .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
