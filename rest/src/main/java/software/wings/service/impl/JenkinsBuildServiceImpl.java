@@ -50,11 +50,15 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config) {
+    logger.info("In getBuilds: App Id {} and ArtifactStreamAttributes {} and Jenkins config {} and password {}", appId,
+        artifactStreamAttributes, config, config.getPassword());
     return getBuildDetails(artifactStreamAttributes, appId, config);
   }
 
   private List<BuildDetails> getBuildDetails(
       ArtifactStreamAttributes artifactStreamAttributes, String appId, JenkinsConfig jenkinsConfig) {
+    logger.info("In getBuildDetails: App Id {} and ArtifactStreamAttributes {} and Jenkins config {} and password {}",
+        appId, artifactStreamAttributes, jenkinsConfig, jenkinsConfig.getPassword());
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     Jenkins jenkins =
@@ -68,6 +72,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public List<String> getJobs(JenkinsConfig jenkinsConfig) {
+    logger.info("In getJobs: Jenkins config {} and password {}", jenkinsConfig, jenkinsConfig.getPassword());
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
@@ -82,6 +87,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public List<String> getArtifactPaths(String jobName, String groupId, JenkinsConfig jenkinsConfig) {
+    logger.info("In getArtifactPaths: Jobname {} Jenkins config {} and password {}", jobName, jenkinsConfig,
+        jenkinsConfig.getPassword());
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     List<String> artifactPaths = new ArrayList<>();
@@ -103,6 +110,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig jenkinsConfig) {
+    logger.info("In getBuildDetails: App Id {} and ArtifactStreamAttributes {} and Jenkins config {} and password {}",
+        appId, artifactStreamAttributes, jenkinsConfig, jenkinsConfig.getPassword());
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     Jenkins jenkins =
@@ -116,6 +125,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public Map<String, String> getPlans(JenkinsConfig jenkinsConfig) {
+    logger.info("In getPlans: Jenkins config {} and password {}", jenkinsConfig, jenkinsConfig.getPassword());
     List<String> jobs = getJobs(jenkinsConfig);
     Map<String, String> jobKeyMap = new HashMap<>();
     if (jobs != null) {
