@@ -305,7 +305,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public void triggerScheduledStreamAction(String appId, String streamId, String workflowId) {
-    logger.info("Triggering scheduled action for app Id {} streamId and workflow id {} ", appId, streamId, workflowId);
+    logger.info(
+        "Triggering scheduled action for app Id {} streamId {} and workflow id {} ", appId, streamId, workflowId);
     ArtifactStream artifactStream = get(appId, streamId);
     if (artifactStream == null) {
       logger.info("Artifact stream does not exist. Hence deleting associated job");
@@ -342,7 +343,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       triggerStreamAction(latestArtifact, artifactStreamAction);
     } else {
       logger.info(
-          "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same. So, not triggering stream action",
+          "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same. So, not triggering deployment",
           latestArtifactBuildNo, lastDeployedArtifactBuildNo);
     }
   }
