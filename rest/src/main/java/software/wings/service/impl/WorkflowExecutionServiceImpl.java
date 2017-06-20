@@ -771,6 +771,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return null;
   }
 
+  @Override
+  public boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId) {
+    PageRequest<WorkflowExecution> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("workflowId", Operator.EQ, workflowId)
+            .addFilter("workflowType", Operator.EQ, workflowType)
+            .addFilter("status", Operator.IN, ExecutionStatus.NEW, ExecutionStatus.RUNNING)
+            .addFieldsIncluded("uuid")
+            .build();
+
+    PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
+    if (pageResponse == null || pageResponse.size() == 0) {
+      return false;
+    }
+    return true;
+  }
+
   private void notifyWorkflowExecution(WorkflowExecution workflowExecution) {
     EntityType entityType = EntityType.ORCHESTRATED_DEPLOYMENT;
     if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {

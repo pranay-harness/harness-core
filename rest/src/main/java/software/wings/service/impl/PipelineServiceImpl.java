@@ -8,6 +8,7 @@ import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -29,6 +30,7 @@ import com.google.inject.Singleton;
 
 import de.danielbechler.util.Collections;
 import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -300,12 +302,38 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public boolean deletePipeline(String appId, String pipelineId) {
-    boolean deleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).field(ID_KEY).equal(pipelineId));
-    if (deleted) {
-      workflowExecutionService.deleteByWorkflow(appId, pipelineId);
+    return deletePipeline(appId, pipelineId, false);
+  }
+
+  private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    if (pipeline == null) {
+      return true;
     }
-    return deleted;
+    if (forceDelete) {
+      return wingsPersistence.delete(pipeline);
+    }
+    PageRequest<PipelineExecution> pageRequest =
+        aPageRequest().addFilter("appId", EQ, appId).addFilter("pipelineId", EQ, pipelineId).build();
+    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
+    if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
+        || pageResponse.getResponse().stream().allMatch(
+               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
+      return wingsPersistence.delete(pipeline);
+    } else {
+      String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());
+      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message", message);
+    }
+  }
+
+  @Override
+  public boolean deletePipelineByApplication(String appId) {
+    List<Key<Pipeline>> pipelineKeys =
+        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
+    for (Key key : pipelineKeys) {
+      deletePipeline(appId, (String) key.getId(), true);
+    }
+    return false;
   }
 
   @Override

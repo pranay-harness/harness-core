@@ -53,6 +53,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
@@ -94,6 +95,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
 
   @Inject @InjectMocks AppService appService;
   /**
@@ -256,12 +258,13 @@ public class AppServiceTest extends WingsBaseTest {
         .thenReturn(anApplication().withUuid(APP_ID).withName("APP_NAME").build());
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
-        appContainerService, jobScheduler, artifactService, artifactStreamService, workflowService);
+        appContainerService, jobScheduler, artifactService, artifactStreamService, workflowService, pipelineService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
     inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
+    inOrder.verify(pipelineService).deletePipelineByApplication(APP_ID);
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(jobScheduler).deleteJob(eq(APP_ID), anyString());
   }

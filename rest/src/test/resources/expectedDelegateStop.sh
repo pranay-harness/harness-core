@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 vercomp () {
     if [[ $1 == $2 ]]

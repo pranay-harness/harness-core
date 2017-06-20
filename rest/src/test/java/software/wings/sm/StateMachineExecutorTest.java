@@ -7,6 +7,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 import software.wings.rules.Listeners;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineTest.StateAsync;
@@ -340,6 +341,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Repeat(times = 2, successes = 1)
   public void shouldTriggerAndFailAsync() throws InterruptedException {
     String appId = UUIDGenerator.getUuid();
     StateMachine sm = new StateMachine();

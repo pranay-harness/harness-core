@@ -12,6 +12,7 @@ import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecuti
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -57,6 +58,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -336,6 +338,37 @@ public class PipelineServiceTest extends WingsBaseTest {
                    .collect(Collectors.toList()))
         .hasSize(2)
         .isEqualTo(asList(SUCCESS, SUCCESS));
+  }
+
+  @Test
+  public void shouldDeletePipeline() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.Builder.aPipeline()
+                        .withAppId(APP_ID)
+                        .withUuid(PIPELINE_ID)
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
+                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .build());
+    when(wingsPersistence.delete(any(Pipeline.class))).thenReturn(true);
+
+    assertThat(pipelineService.deletePipeline(APP_ID, PIPELINE_ID)).isTrue();
+  }
+
+  @Test(expected = WingsException.class)
+  public void deletePipelineExecutionInProgress() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.Builder.aPipeline()
+                        .withAppId(APP_ID)
+                        .withUuid(PIPELINE_ID)
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
+                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .build());
+    PipelineExecution pipelineExecution = aPipelineExecution().withStatus(ExecutionStatus.RUNNING).build();
+    PageResponse pageResponse = aPageResponse().withResponse(asList(pipelineExecution)).build();
+    when(wingsPersistence.query(PipelineExecution.class,
+             aPageRequest().addFilter("appId", EQ, APP_ID).addFilter("pipelineId", EQ, PIPELINE_ID).build()))
+        .thenReturn(pageResponse);
+    pipelineService.deletePipeline(APP_ID, PIPELINE_ID);
   }
 
   private StateMachine createPipelineStateMachine() {

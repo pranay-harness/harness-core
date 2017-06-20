@@ -379,7 +379,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         .filter("appdAppId = ", appId)
         .filter("metricId", METRIC_ID)
         .filter("tierId", tier.getId());
-    boolean success = wingsPersistence.delete(query);
+    wingsPersistence.delete(query);
 
     final AppdynamicsMetricDataValue METRIC_VALUE_1 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
                                                           .withStartTimeInMillis(1495432894010L)
@@ -537,7 +537,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         .filter("appdAppId = ", appId)
         .filter("metricId", METRIC_ID)
         .filter("tierId", tier.getId());
-    success = wingsPersistence.delete(query);
+    boolean success = wingsPersistence.delete(query);
     assert (success);
     requestBuilder = aPageRequest()
                          .addFilter("accountId", Operator.EQ, ACCOUNT_ID)

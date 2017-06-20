@@ -7,6 +7,9 @@ package software.wings.metrics;
 public enum MetricType { /**
                           * Metrics used for timing a process.
                           */
+  TIME_MS, /**
+            * Metrics used for timing a process (DEPRECATED).
+            */
   TIME, /**
          * Metrics that count something.
          */

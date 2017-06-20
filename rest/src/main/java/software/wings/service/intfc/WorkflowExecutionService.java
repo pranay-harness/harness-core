@@ -6,6 +6,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -210,4 +211,6 @@ public interface WorkflowExecutionService {
 
   PhaseStepExecutionSummary getPhaseStepExecutionSummary(
       String appId, String executionUuid, String stateExecutionInstanceId);
+
+  boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId);
 }

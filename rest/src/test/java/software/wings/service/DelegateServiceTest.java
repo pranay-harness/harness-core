@@ -1,5 +1,9 @@
 package software.wings.service;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.head;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -18,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.common.io.CharStreams;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -27,7 +32,7 @@ import org.assertj.core.util.Lists;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -43,7 +48,6 @@ import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -80,13 +84,22 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private CacheHelper cacheHelper;
   @Mock private javax.cache.Cache<String, DelegateTask> cache;
 
+  @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
+
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setUp() {
-    when(mainConfiguration.getDelegateMetadataUrl())
-        .thenReturn("http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
+    when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
+    wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("9.9.9 jobs/delegateci/9/delegate.jar")
+                                             .withHeader("Content-Type", "text/plain")));
+
+    wireMockRule.stubFor(head(urlEqualTo("/jobs/delegateci/9/delegate.jar")).willReturn(aResponse().withStatus(200)));
+
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)).thenReturn(cache);
   }
@@ -194,7 +207,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore // TODO:: Delegate refactoring. remove it.
   public void shouldDownloadDelegate() throws Exception {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
@@ -233,8 +245,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 2, successes = 1)
-  @Ignore // TODO:: Delegate refactoring. remove it.
   public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws Exception {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
@@ -247,12 +257,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore // TODO:: Delegate refactoring. remove it.
   public void shouldNotSignalForDelegateUpgradeWhenDelegateIsLatest() throws Exception {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "0.0.0", "https://localhost:9090");
+    Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "9.9.9", "https://localhost:9090");
     assertThat(delegate.isDoUpgrade()).isFalse();
   }
 
