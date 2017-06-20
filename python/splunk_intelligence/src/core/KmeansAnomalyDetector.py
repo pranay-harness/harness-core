@@ -22,7 +22,6 @@ class KmeansAnomalyDetector(object):
         predictions = km.predict(feature_matrix)
 
         anomalies = []
-
         for j, i in enumerate(predictions):
             mat = feature_matrix[j]
             sim = cosine_similarity(km.get_feature_matrix()[clusters == i], mat)
