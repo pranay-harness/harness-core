@@ -276,6 +276,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
