@@ -2,6 +2,8 @@ package software.wings.helpers.ext.jenkins;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.awaitility.Awaitility.with;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -22,11 +24,19 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.HttpResponseException;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
+import org.awaitility.pollinterval.FibonacciPollInterval;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +48,7 @@ import java.util.regex.Pattern;
  */
 public class JenkinsImpl implements Jenkins {
   private JenkinsServer jenkinsServer;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Instantiates a new jenkins impl.
@@ -69,12 +80,52 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public JobWithDetails getJob(String jobname) throws IOException {
-    return jenkinsServer.getJob(jobname);
+    try {
+      return with()
+          .pollInterval(FibonacciPollInterval.fibonacci())
+          .await()
+          .atMost(Duration.ONE_MINUTE)
+          .until(
+              ()
+                  -> {
+                JobWithDetails jobWithDetails;
+                try {
+                  jobWithDetails = jenkinsServer.getJob(jobname);
+                } catch (HttpResponseException e) {
+                  if (e.getStatusCode() == 500 || e.getMessage().contains("Server error")) {
+                    logger.warn("Error occurred while retrieving job {}. Retrying ", jobname);
+                    return null;
+                  } else {
+                    throw e;
+                  }
+                }
+                return Collections.singletonList(jobWithDetails);
+              },
+              notNullValue())
+          .get(0);
+    } catch (ConditionTimeoutException e) {
+      return null;
+    }
   }
 
   @Override
   public Map<String, Job> getJobs() throws IOException {
-    return jenkinsServer.getJobs();
+    try {
+      return with().pollInterval(FibonacciPollInterval.fibonacci()).await().atMost(Duration.ONE_MINUTE).until(() -> {
+        try {
+          return jenkinsServer.getJobs();
+        } catch (HttpResponseException e) {
+          if (e.getStatusCode() == 500 || e.getMessage().contains("Server error")) {
+            logger.warn("Error occurred while retrieving jobs. Retrying ");
+            return null;
+          } else {
+            throw e;
+          }
+        }
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      return new HashMap<>();
+    }
   }
 
   /* (non-Javadoc)
