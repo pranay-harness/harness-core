@@ -1,5 +1,7 @@
 package software.wings.beans.artifact;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.beans.SettingAttribute;
 
 /**
@@ -13,6 +15,18 @@ public class ArtifactStreamAttributes {
   // TODO : Refactoring has to be done
   private String groupId; // For nexus integration
   private String artifactName;
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("jobName", jobName)
+        .add("imageName", imageName)
+        .add("artifactStreamType", artifactStreamType)
+        .add("serverSetting", serverSetting)
+        .add("groupId", groupId)
+        .add("artifactName", artifactName)
+        .toString();
+  }
 
   /**
    * Gets job name.
