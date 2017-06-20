@@ -76,25 +76,22 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   i=0
-  while [ "$i" -lt 30 ]
+  while [ "$i" -le 30 ]
   do
     if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
     then
       pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
-    fi
-    pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null
-    rc=$?
-    if [ "$rc" -eq 0 ]
-    then
-
-      sleep 1
+      if [ "$i" -gt 0 ]
+      then
+        sleep 1
+      fi
       i=$((i+1))
     else
       echo "Delegate stopped"
       exit 0
     fi
   done
-  echo "Unable to stop bot in 30 seconds."
+  echo "Unable to stop delegate in 30 seconds."
   exit 1
 else
   echo "Delegate not running"
