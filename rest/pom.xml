@@ -534,6 +534,12 @@
             <version>1.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.splunk</groupId>
+            <artifactId>splunk</artifactId>
+            <version>1.6.3.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

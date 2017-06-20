@@ -196,7 +196,7 @@ public class AppDynamicsState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .withErrorMessage("Verification running")
+        .withErrorMessage("Appdynamics Verification running")
         .withStateExecutionData(executionData)
         .build();
   }

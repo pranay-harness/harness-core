@@ -9,16 +9,37 @@ import java.util.List;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionInfo {
+  private String accountId;
+  private String applicationId;
   private SplunkConfig splunkConfig;
   private List<String> queries = new ArrayList<>();
   private int collectionTime;
 
   public SplunkDataCollectionInfo() {}
 
-  public SplunkDataCollectionInfo(SplunkConfig splunkConfig, List<String> queries, int collectionTime) {
+  public SplunkDataCollectionInfo(
+      String accountId, String applicationId, SplunkConfig splunkConfig, List<String> queries, int collectionTime) {
+    this.accountId = accountId;
+    this.applicationId = applicationId;
     this.splunkConfig = splunkConfig;
     this.queries = queries;
     this.collectionTime = collectionTime;
+  }
+
+  public String getApplicationId() {
+    return applicationId;
+  }
+
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   public SplunkConfig getSplunkConfig() {
@@ -48,6 +69,7 @@ public class SplunkDataCollectionInfo {
   @Override
   public String toString() {
     return "SplunkDataCollectionInfo{"
-        + "splunkConfig=" + splunkConfig + ", queries=" + queries + ", collectionTime=" + collectionTime + '}';
+        + "accountId='" + accountId + '\'' + ", applicationId='" + applicationId + '\''
+        + ", splunkConfig=" + splunkConfig + ", queries=" + queries + ", collectionTime=" + collectionTime + '}';
   }
 }
