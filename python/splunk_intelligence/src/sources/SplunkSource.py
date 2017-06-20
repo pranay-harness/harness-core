@@ -3,10 +3,14 @@ from time import sleep
 
 import splunklib.client as client
 import splunklib.results as results
+import datetime
+import json
 
 """
 Wraps the Splunk python sdk to read from Splunk
 """
+
+
 class SplunkSource(object):
     logger = logging.getLogger(__name__)
     logging.basicConfig(level=logging.INFO)
@@ -31,7 +35,7 @@ class SplunkSource(object):
             password=self.password,
             autologin=True)
 
-    def fetchClusteredEvents(self, query, mins):
+    def fetchClusteredEvents(self, query, mins, span=1):
 
         """
 
@@ -44,13 +48,31 @@ class SplunkSource(object):
         # Get the collection of jobs
         jobs = self.service.jobs
 
+        searchquery_normal = "search " + query + " | bin _time span=1m | cluster showcount=t labelonly=t" \
+                                                 "| table _time, _raw,cluster_label, host | " \
+                                                 "stats latest(_raw) as _raw " \
+                                                 "count as cluster_count by _time,cluster_label,host"
+
+        if span > mins:
+            print("span is > than mins. Setting span to mins")
+            span = mins
+
+        now = datetime.datetime.now().replace(second=0)
+        print(now)
         raw = []
-        for i in range(mins):
-            searchquery_normal = "search " + query + " | cluster showcount=t " \
-                                                     "| table _time, _raw, cluster_label, cluster_count"
+        for i in reversed(range(mins / span)):
+
+            print(i)
+
+            earliest = now - datetime.timedelta(minutes=(i + 1) * span)
+            latest = (earliest + datetime.timedelta(minutes=span - 1, seconds=59))
+
+            print(earliest.strftime('%Y-%m-%dT%H:%M:%S') + ' ' + latest.strftime('%Y-%m-%dT%H:%M:%S'))
+
             kwargs_normalsearch = {
-                "earliest_time": "-" + str(mins + 1) + "m",
-                "latest_time": "-" + str(mins) + "m"}
+                "earliest_time": earliest.strftime('%Y-%m-%dT%H:%M:%S'),
+                "latest_time": latest.strftime('%Y-%m-%dT%H:%M:%S')}
+
             job = self.service.jobs.create(searchquery_normal, **kwargs_normalsearch)
 
             # A normal search returns the job's SID right away, so we need to poll for completion
@@ -75,12 +97,15 @@ class SplunkSource(object):
             reader = results.ResultsReader(job.results(segmentation='none'))
             for result in reader:
                 if isinstance(result, dict):
+                    print(result.get('_time'))
                     raw.append(result)
             job.cancel()
             self.logger.info('\n')
-            mins = mins - 1
         return raw
 
+
 ############# Uncomment to test class ##################
-# splunkSource = SplunkSource('ec2-52-54-103-49.compute-1.amazonaws.com', 8089, 'admin', 'W!ngs@Splunk')
-# splunkSource.fetchClusteredEvents('*', 5)
+#splunkSource = SplunkSource('ec2-52-54-103-49.compute-1.amazonaws.com', 8089, 'admin', 'W!ngs@Splunk')
+#result = splunkSource.fetchClusteredEvents('*exception*', 1440, 100)
+#with open('wings.json', 'w') as out:
+#    out.write(json.dumps(result))

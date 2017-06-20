@@ -22,6 +22,21 @@ class SplunkDataset(object):
     centroids = []
     feature_names = []
 
+    def load_from_file_slice_by_nodes(self, file_name, test_nodes):
+        self.raw_events = SplunkFileSource.load_data(file_name)
+        for dict in self.raw_events:
+            if dict.get('host') in test_nodes:
+                self.all_events.append([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1])
+                self.test_events.append([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
+                                         len(self.all_events) - 1])
+            else:
+                self.all_events.append([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0])
+                self.control_events.append(
+                    [dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
+                     len(self.all_events) - 1])
+        self.anomolous_values = [-1] * len(self.test_events)
+
+
     def load_from_file(self, file_name, control_window, test_window):
         self.raw_events = SplunkFileSource.load_data(file_name)
         minute = 0
@@ -29,12 +44,12 @@ class SplunkDataset(object):
             if dict.get('cluster_label') == '1':
                 minute = minute + 1
             if control_window[0] <= minute <= control_window[1]:
-                self.all_events.append([dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count')])
+                self.all_events.append([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0])
                 self.control_events.append(
                     [dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
                      len(self.all_events) - 1])
             if test_window[0] <= minute <= test_window[1]:
-                self.all_events.append([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count')])
+                self.all_events.append([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1])
                 self.test_events.append([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
                                          len(self.all_events) - 1])
 
@@ -63,12 +78,20 @@ class SplunkDataset(object):
 
     def set_control_clusters(self, clusters):
         self.control_clusters = clusters
+        for i, c in enumerate(self.control_clusters):
+            self.all_events[self.control_events[i][3]][3] = c
 
     def set_test_clusters(self, clusters):
         self.test_clusters = clusters
+        for i,c in enumerate(self.test_clusters):
+            self.all_events[self.test_events[i][3]][3] = c
 
     def set_anomalies(self, anomalies):
         self.anomalies = anomalies
+        for i,c in enumerate(self.anomalies):
+            if c == -1:
+                self.all_events[self.test_events[i][3]][3] = c
+                self.all_events[self.test_events[i][3]][4] = 2
 
     def set_xy_matrix_all(self, xy_matrix):
         self.xy_matrix_all = xy_matrix
@@ -95,6 +118,8 @@ class SplunkDataset(object):
     def set_anomalous_values(self, id_list, values):
         for i, id in enumerate(id_list):
             self.anomolous_values[int(id)] = values[i]
+            if values[i] == -1:
+                self.all_events[self.test_events[int(id)][3]][5] = 2
 
     def get_control_clusters(self):
         return self.control_clusters
@@ -103,9 +128,7 @@ class SplunkDataset(object):
         return self.test_clusters
 
     def get_all_clusters(self):
-        all_clusters = list(self.control_clusters)
-        all_clusters.extend(list(self.test_clusters))
-        return all_clusters
+        return [event[3] for event in self.all_events]
 
     def set_centroids(self, centroids):
         self.centroids = centroids
@@ -137,3 +160,6 @@ class SplunkDataset(object):
 
     def get_anomalous_values(self):
         return self.anomolous_values
+
+    def get_raw_events(self):
+        return self.raw_events
