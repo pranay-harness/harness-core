@@ -52,7 +52,10 @@ public class ElementExecutionSummary {
     if (instanceStatusSummaries == null) {
       return 0;
     }
-    return instanceStatusSummaries.size();
+    return Math.toIntExact(instanceStatusSummaries.stream()
+                               .map(instanceStatusSummary -> instanceStatusSummary.getInstanceElement().getUuid())
+                               .distinct()
+                               .count());
   }
 
   /**

@@ -897,6 +897,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (!(stateExecutionInstance.getStateExecutionData() instanceof ElementStateExecutionData)) {
         continue;
       }
+      if (stateExecutionInstance.isRollback()) {
+        continue;
+      }
 
       ElementStateExecutionData elementStateExecutionData =
           (ElementStateExecutionData) stateExecutionInstance.getStateExecutionData();
