@@ -92,7 +92,7 @@ public class JenkinsImpl implements Jenkins {
                 try {
                   jobWithDetails = jenkinsServer.getJob(jobname);
                 } catch (HttpResponseException e) {
-                  if (e.getStatusCode() == 500 || e.getMessage().contains("Server error")) {
+                  if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
                     logger.warn("Error occurred while retrieving job {}. Retrying ", jobname);
                     return null;
                   } else {
@@ -115,7 +115,7 @@ public class JenkinsImpl implements Jenkins {
         try {
           return jenkinsServer.getJobs();
         } catch (HttpResponseException e) {
-          if (e.getStatusCode() == 500 || e.getMessage().contains("Server error")) {
+          if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
             logger.warn("Error occurred while retrieving jobs. Retrying ");
             return null;
           } else {
