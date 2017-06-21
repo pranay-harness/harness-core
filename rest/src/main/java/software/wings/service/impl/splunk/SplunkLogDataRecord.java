@@ -21,7 +21,6 @@ import java.util.List;
     @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash")
   }, options = @IndexOptions(unique = true, name = "splunkLogUniqueIdx"))
 })
-
 public class SplunkLogDataRecord extends Base {
   @NotEmpty private String applicationId;
   @NotEmpty private String clusterLabel;
@@ -51,5 +50,61 @@ public class SplunkLogDataRecord extends Base {
           DigestUtils.md5Hex(logElement.getLogMessage())));
     }
     return records;
+  }
+
+  public String getApplicationId() {
+    return applicationId;
+  }
+
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
+  }
+
+  public String getClusterLabel() {
+    return clusterLabel;
+  }
+
+  public void setClusterLabel(String clusterLabel) {
+    this.clusterLabel = clusterLabel;
+  }
+
+  public String getHost() {
+    return host;
+  }
+
+  public void setHost(String host) {
+    this.host = host;
+  }
+
+  public long getTimeStamp() {
+    return timeStamp;
+  }
+
+  public void setTimeStamp(long timeStamp) {
+    this.timeStamp = timeStamp;
+  }
+
+  public int getCount() {
+    return count;
+  }
+
+  public void setCount(int count) {
+    this.count = count;
+  }
+
+  public String getLogMessage() {
+    return logMessage;
+  }
+
+  public void setLogMessage(String logMessage) {
+    this.logMessage = logMessage;
+  }
+
+  public String getLogMD5Hash() {
+    return logMD5Hash;
+  }
+
+  public void setLogMD5Hash(String logMD5Hash) {
+    this.logMD5Hash = logMD5Hash;
   }
 }

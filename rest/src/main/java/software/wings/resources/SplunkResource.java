@@ -9,7 +9,10 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.PublicApi;
+import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.splunk.SplunkLogRequest;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
@@ -37,5 +40,15 @@ public class SplunkResource {
   public RestResponse<Boolean> saveSplunkLogData(@QueryParam("accountId") String accountId,
       @QueryParam("appId") final String appId, List<SplunkLogElement> logData) throws IOException {
     return new RestResponse<>(splunkService.saveLogData(appId, logData));
+  }
+
+  @POST
+  @Path("/get-logs")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<List<SplunkLogDataRecord>> getSplunkLogData(
+      @QueryParam("accountId") String accountId, SplunkLogRequest logRequest) throws IOException {
+    return new RestResponse<>(splunkService.getSplunkLogData(logRequest));
   }
 }
