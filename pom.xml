@@ -47,7 +47,7 @@
 
     <repositories>
         <repository>
-            <id>maven-central</id>
+            <id>spring-io</id>
             <url>http://repo.spring.io/plugins-release/</url>
         </repository>
         <repository>
