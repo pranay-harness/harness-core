@@ -986,6 +986,7 @@
                         </includes>
                         <excludes>
                             <exclude>**/DataGenUtil.java</exclude>
+                            <exclude>**/DelegateIntegrationTest</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
