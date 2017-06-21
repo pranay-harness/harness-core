@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -82,9 +83,9 @@ public class JenkinsImpl implements Jenkins {
   public JobWithDetails getJob(String jobname) throws IOException {
     try {
       return with()
-          .pollInterval(FibonacciPollInterval.fibonacci())
+          .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
           .await()
-          .atMost(Duration.ONE_MINUTE)
+          .atMost(new Duration(25L, TimeUnit.SECONDS))
           .until(
               ()
                   -> {
@@ -93,7 +94,8 @@ public class JenkinsImpl implements Jenkins {
                   jobWithDetails = jenkinsServer.getJob(jobname);
                 } catch (HttpResponseException e) {
                   if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-                    logger.warn("Error occurred while retrieving job {}. Retrying ", jobname);
+                    logger.warn(
+                        "Error occurred while retrieving job {}. Reason: {}. Retrying ", jobname, e.getMessage());
                     return null;
                   } else {
                     throw e;
@@ -111,18 +113,22 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public Map<String, Job> getJobs() throws IOException {
     try {
-      return with().pollInterval(FibonacciPollInterval.fibonacci()).await().atMost(Duration.ONE_MINUTE).until(() -> {
-        try {
-          return jenkinsServer.getJobs();
-        } catch (HttpResponseException e) {
-          if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-            logger.warn("Error occurred while retrieving jobs. Retrying ");
-            return null;
-          } else {
-            throw e;
-          }
-        }
-      }, notNullValue());
+      return with()
+          .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
+          .await()
+          .atMost(new Duration(25L, TimeUnit.SECONDS))
+          .until(() -> {
+            try {
+              return jenkinsServer.getJobs();
+            } catch (HttpResponseException e) {
+              if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
+                logger.warn("Error occurred while retrieving jobs. Reason: {}. Retrying", e.getMessage());
+                return null;
+              } else {
+                throw e;
+              }
+            }
+          }, notNullValue());
     } catch (ConditionTimeoutException e) {
       return new HashMap<>();
     }

@@ -90,7 +90,7 @@ public class ConfigResource {
     configFile.setAppId(appId);
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
-    configFile.setFileName(fileDetail.getFileName());
+    configFile.setFileName(new File(fileDetail.getFileName()).getName());
     try {
       Map<String, EntityVersion> envIdVersionMap =
           JsonUtils.asObject(configFile.getEnvIdVersionMapString(), new TypeReference<Map<String, EntityVersion>>() {});
@@ -149,7 +149,7 @@ public class ConfigResource {
       // Ignore
     }
     if (fileDetail != null && fileDetail.getFileName() != null) {
-      configFile.setFileName(fileDetail.getFileName());
+      configFile.setFileName(new File(fileDetail.getFileName()).getName());
     }
     configService.update(configFile,
         uploadedInputStream == null
