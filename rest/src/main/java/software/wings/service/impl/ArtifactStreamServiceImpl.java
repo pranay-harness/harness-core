@@ -395,8 +395,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     executionArgs.setArtifacts(asList(artifact));
     executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
     executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
-    executionArgs.setExecutionCredential(
-        aSSHExecutionCredential().withExecutionType(SSH).withAccountId(artifact.getAppId()).build());
+    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
 
     logger.info("Execute workflow of {} type with id {}", artifactStreamAction.getWorkflowType(),
         artifactStreamAction.getWorkflowId());

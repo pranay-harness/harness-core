@@ -14,7 +14,6 @@ import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -69,8 +68,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
-          .withValue(
-              anAwsConfig().withSecretKey(SECRET_KEY).withAccessKey(ACCESS_KEY).withAccountId(ACCOUNT_ID).build())
+          .withValue(anAwsConfig().withSecretKey(SECRET_KEY).withAccessKey(ACCESS_KEY).build())
           .build();
 
   @Before

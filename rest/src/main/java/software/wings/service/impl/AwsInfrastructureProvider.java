@@ -124,7 +124,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                            .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
                            .withSecretKey("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".toCharArray())
                            .build())
-            .withAccountId("kmpySmUISimoRrJL6NL73w")
             .build();
     // System.out.println(awsInfrastructureProvider.listAMIs(settingAttribute, "us-east-1"));
 

@@ -37,7 +37,6 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
                          .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
                          .withSecretKey("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".toCharArray())
                          .build())
-          .withAccountId("kmpySmUISimoRrJL6NL73w")
           .build();
 
   /*
