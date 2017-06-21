@@ -9,6 +9,7 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import org.apache.commons.codec.binary.StringUtils;
+import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -49,6 +50,10 @@ public class DelegateApplication {
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
     }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      logger.info("Log manager shutdown hook executing.");
+      LogManager.shutdown();
+    }));
     logger.info("Starting Delegate");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
@@ -56,7 +61,7 @@ public class DelegateApplication {
         new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade);
   }
 
-  public void run(DelegateConfiguration configuration, boolean upgrade) throws Exception {
+  private void run(DelegateConfiguration configuration, boolean upgrade) throws Exception {
     Injector injector = Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -76,6 +81,8 @@ public class DelegateApplication {
     injector.getInstance(ExecutorService.class).shutdown();
     injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     injector.getInstance(AsyncHttpClient.class).close();
+    logger.info("Flushing logs");
+    LogManager.shutdown();
     System.exit(0);
   }
 }

@@ -451,8 +451,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
-    logger.info("Delegate [{}], response received for task [{}]", response.getTask().getDelegateId(),
-        response.getTask().getUuid());
+    logger.info("Delegate [{}], response received for task [{}, {}, {}]", response.getTask().getDelegateId(),
+        response.getTask().getUuid(), response.getTask().getStatus(), response.getTask().getTaskType());
     if (isNotBlank(response.getTask().getWaitId())) {
       DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
           aPageRequest()
