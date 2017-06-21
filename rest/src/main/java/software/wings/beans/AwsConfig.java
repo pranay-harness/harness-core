@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
@@ -13,7 +14,7 @@ import software.wings.settings.SettingValue;
 @JsonTypeName("AWS")
 public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
-  @Attributes(title = "Secret Key", required = true) @NotEmpty private char[] secretKey;
+  @Attributes(title = "Secret Key", required = true) @NotEmpty @Encrypted private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId; // internal
 
   /**

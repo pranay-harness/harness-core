@@ -7,6 +7,7 @@ import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
@@ -35,7 +36,10 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private AwsClusterService awsClusterService;
 
   private SettingAttribute cloudProviderSetting =
-      aSettingAttribute().withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build()).build();
+      aSettingAttribute()
+          .withValue(
+              anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).withAccountId(ACCOUNT_ID).build())
+          .build();
   private AwsClusterConfiguration clusterConfiguration = anAwsClusterConfiguration()
                                                              .withName(CLUSTER_NAME)
                                                              .withSize(5)

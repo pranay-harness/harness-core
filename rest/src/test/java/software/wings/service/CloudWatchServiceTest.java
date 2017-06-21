@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.METRIC_DIMENSION;
 import static software.wings.utils.WingsTestConstants.METRIC_NAME;
 import static software.wings.utils.WingsTestConstants.NAMESPACE;
@@ -44,9 +45,11 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(settingsService.get(SETTING_ID))
-        .thenReturn(aSettingAttribute()
-                        .withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
-                        .build());
+        .thenReturn(
+            aSettingAttribute()
+                .withValue(
+                    anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).withAccountId(ACCOUNT_ID).build())
+                .build());
     when(awsHelperService.getAwsCloudWatchClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonCloudWatchClient);
 
     ListMetricsResult listMetricsResult = new ListMetricsResult().withMetrics(
