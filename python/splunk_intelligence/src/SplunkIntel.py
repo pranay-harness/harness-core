@@ -10,6 +10,7 @@ from core.KmeansCluster import KmeansCluster
 from core.TFIDFVectorizer import TFIDFVectorizer
 from core.Tokenizer import Tokenizer
 from sources.SplunkDataset import SplunkDataset
+from core.ThreeSigmaClassifier import ThreeSigmaClassifier
 
 
 class SplunkIntel(object):
@@ -24,7 +25,7 @@ class SplunkIntel(object):
         logging.info('Running using file source')
 
         vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, 1, 1.0)
-        tfidf_feature_matrix = vectorizer.fit_transform(self.splunkDataset.get_control_events_as_np())
+        tfidf_feature_matrix = vectorizer.fit_transform(self.splunkDataset.get_control_events_text_as_np())
         self.splunkDataset.set_feature_names(vectorizer.get_feature_names())
         self.splunkDataset.set_xy_matrix_control(vectorizer.get_cosine_dist_matrix(tfidf_feature_matrix))
 
@@ -34,7 +35,7 @@ class SplunkIntel(object):
         self.splunkDataset.set_control_clusters(kmeans.get_clusters())
         self.splunkDataset.set_centroids(kmeans.get_centriods())
 
-        tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDataset.get_test_events_as_np()))
+        tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDataset.get_test_events_text_as_np()))
         newAnomDetector = KmeansAnomalyDetector()
         predictions, anomalies = np.array(
             newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test, kmeans, self._options.sim_threshold))
@@ -43,7 +44,7 @@ class SplunkIntel(object):
         self.splunkDataset.set_anomalies(anomalies)
 
         combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, 1, 1.0)
-        combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDataset.get_all_events_as_np())
+        combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDataset.get_all_events_text_as_np())
 
         combined_dist = combined_vectorizer.get_cosine_dist_matrix(combined_tfidf_matrix)
 
@@ -52,7 +53,9 @@ class SplunkIntel(object):
         control_groups = self.splunkDataset.get_control_values_pd().groupby('label')
         test_groups = self.splunkDataset.get_test_values_pd().groupby('label')
 
-        classifier = IsolationForestClassifier()
+        #classifier = IsolationForestClassifier()
+
+        classifier = ThreeSigmaClassifier()
 
         for name, group in control_groups:
             classifier.fit_transform(str(name), np.column_stack((group.x, group.y)))
