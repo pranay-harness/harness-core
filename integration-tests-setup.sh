@@ -39,10 +39,21 @@ if [[ $datagen_status -ne 0 ]] ; then
 fi
 cd ../
 
+#Delegate integration test
+cd rest
+mvn test -Dtest=software.wings.integration.DelegateIntegrationTest
+delegateIntegrationTestResult=$?
+if [[ $delegateIntegrationTestResult -ne 0 ]] ; then
+  echo 'Delegate integration test failed';
+  exit $delegateIntegrationTestResult
+fi
+cd ../
+
+
 #run delegate
 export MAVEN_OPTS="-Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0"
 cd delegate
-sed -ie 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
+sed -i -e 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
 nohup mvn exec:java > delegate.out 2>&1 &
 echo $! > delegate.pid
 cd ../
