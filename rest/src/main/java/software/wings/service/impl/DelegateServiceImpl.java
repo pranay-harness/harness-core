@@ -189,8 +189,8 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       String delegateMatadata = Request.Get(delegateMetadataUrl)
-                                    .connectTimeout(5000)
-                                    .socketTimeout(5000)
+                                    .connectTimeout(10000)
+                                    .socketTimeout(10000)
                                     .execute()
                                     .returnContent()
                                     .asString()
@@ -201,13 +201,13 @@ public class DelegateServiceImpl implements DelegateService {
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
       delegateJarDownloadUrl = "http://" + (delegateMetadataUrl.split("/")[2]).trim() + "/" + jarRelativePath;
       jarFileExists = Request.Head(delegateJarDownloadUrl)
-                          .connectTimeout(5000)
-                          .socketTimeout(5000)
+                          .connectTimeout(10000)
+                          .socketTimeout(10000)
                           .execute()
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
       logger.error("Unable to fetch delegate version information ", e);
-      logger.error("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
+      logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);
     }
 
