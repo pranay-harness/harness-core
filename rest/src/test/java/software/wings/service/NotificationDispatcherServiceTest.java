@@ -271,6 +271,6 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     notificationDispatcherService.dispatchNotification(notification, Arrays.asList(notificationRule));
     channels.forEach(channel
         -> verify(slackNotificationService)
-               .sendMessage(slackConfig, channel, "Harness Notification Bot", ENTITY_CREATE_NOTIFICATION.name()));
+               .sendMessage(slackConfig, channel, "harness", ENTITY_CREATE_NOTIFICATION.name()));
   }
 }

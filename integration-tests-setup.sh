@@ -39,15 +39,19 @@ if [[ $datagen_status -ne 0 ]] ; then
 fi
 cd ../
 
-#Delegate integration test
-cd rest
-mvn test -Dtest=software.wings.integration.DelegateIntegrationTest
-delegateIntegrationTestResult=$?
-if [[ $delegateIntegrationTestResult -ne 0 ]] ; then
-  echo 'Delegate integration test failed';
-  exit $delegateIntegrationTestResult
+#Delegate integration test. Don't run with UI integration tests
+if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
+then
+  cd rest
+  mvn test -Dtest=software.wings.integration.DelegateIntegrationTest
+  delegateIntegrationTestResult=$?
+  if [[ $delegateIntegrationTestResult -ne 0 ]] ;
+  then
+    echo 'Delegate integration test failed';
+    exit $delegateIntegrationTestResult
+  fi
+  cd ../
 fi
-cd ../
 
 
 #run delegate
