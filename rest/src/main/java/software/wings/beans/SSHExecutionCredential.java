@@ -7,6 +7,10 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 
 /**
  * The type Ssh execution credential.
@@ -14,12 +18,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * @author Rishi
  */
 @JsonTypeName("SSH")
-public class SSHExecutionCredential extends ExecutionCredential {
+public class SSHExecutionCredential extends ExecutionCredential implements Encryptable {
   private String sshUser;
-  private char[] sshPassword;
+  @Encrypted private char[] sshPassword;
   private String appAccount;
-  private char[] appAccountPassword;
-  private char[] keyPassphrase;
+  @Encrypted private char[] appAccountPassword;
+  @Encrypted private char[] keyPassphrase;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Ssh execution credential.
@@ -118,6 +123,17 @@ public class SSHExecutionCredential extends ExecutionCredential {
     this.keyPassphrase = keyPassphrase;
   }
 
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  @Override
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
@@ -135,6 +151,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
     private String appAccount;
     private char[] appAccountPassword;
     private char[] keyPassphrase;
+    private String accountId;
     private ExecutionType executionType;
 
     private Builder() {}
@@ -214,6 +231,11 @@ public class SSHExecutionCredential extends ExecutionCredential {
       return this;
     }
 
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -226,7 +248,8 @@ public class SSHExecutionCredential extends ExecutionCredential {
           .withAppAccount(appAccount)
           .withAppAccountPassword(appAccountPassword)
           .withKeyPassphrase(keyPassphrase)
-          .withExecutionType(executionType);
+          .withExecutionType(executionType)
+          .withAccountId(accountId);
     }
 
     /**
@@ -242,6 +265,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
       sSHExecutionCredential.setAppAccountPassword(appAccountPassword);
       sSHExecutionCredential.setKeyPassphrase(keyPassphrase);
       sSHExecutionCredential.setExecutionType(executionType);
+      sSHExecutionCredential.setAccountId(accountId);
       return sSHExecutionCredential;
     }
   }
