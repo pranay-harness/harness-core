@@ -50,10 +50,4 @@ public class SplunkLogRequest {
         + "applicationId='" + applicationId + '\'' + ", startTime=" + startTime + ", endTime=" + endTime
         + ", nodes=" + nodes + '}';
   }
-
-  public static void main(String[] args) {
-    SplunkLogRequest logRequest = new SplunkLogRequest(
-        "m9XTWIcnS2OVk-ys0wiX-Q", 1497945240000L, 1497945241000L, Collections.singletonList("ip-172-31-11-228"));
-    System.out.println(JsonUtils.asJson(logRequest));
-  }
 }

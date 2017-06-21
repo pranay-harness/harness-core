@@ -126,7 +126,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         for (String query : dataCollectionInfo.getQueries()) {
           final String searchQuery = "search " + query + " | bin _time span=1m | cluster showcount=t labelonly=t"
               + "| table _time, _raw,cluster_label, host | "
-              + "stats latest(_raw) count by _time,cluster_label,host";
+              + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
+
           JobArgs jobargs = new JobArgs();
           jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
 
@@ -150,8 +151,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
             final SplunkLogElement splunkLogElement = new SplunkLogElement();
             splunkLogElement.setClusterLabel(event.get("cluster_label"));
             splunkLogElement.setHost(event.get("host"));
-            splunkLogElement.setCount(Integer.parseInt(event.get("count")));
-            splunkLogElement.setLogMessage(event.get("latest(_raw)"));
+            splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
+            splunkLogElement.setLogMessage(event.get("_raw"));
             splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
             logElements.add(splunkLogElement);
           }
@@ -164,14 +165,5 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         logger.error("error fetching splunk logs", e);
       }
     }
-  }
-
-  public static void main(String[] args) throws ParseException {
-    String dateString = "2017-06-19T18:02:00.000-07:00";
-    String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
-    SimpleDateFormat sdf = new SimpleDateFormat(pattern);
-    Date date = sdf.parse(dateString);
-    System.out.println(date);
-    System.out.println(sdf.format(new Date()));
   }
 }
