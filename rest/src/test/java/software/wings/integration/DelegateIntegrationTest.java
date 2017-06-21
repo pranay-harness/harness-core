@@ -119,7 +119,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
   httpRequestExecutor.execute(Request.Get(zipDownloadUrl)).saveContent(new File("delegate.zip"));
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "unzip delegate.zip && cd harness-delegate && sed -i '' 's/doUpgrade: true/doUpgrade: false/' run.sh")
+          "unzip delegate.zip && cd harness-delegate && sed -i'' 's/doUpgrade: true/doUpgrade: false/' run.sh")
       .readOutput(true)
       .execute()
       .getOutput()
@@ -162,7 +162,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
 
   new ProcessExecutor()
       .command("/bin/sh", "-c",
-          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i '' 's/REMOTE_DELEGATE_URL=.*/REMOTE_DELEGATE_URL=https:\\/\\/s3.amazonaws.com\\/wingsdelegates\\/jobs\\/test-delegate\\/delegate.jar/' run.sh && sed -i '' 's/doUpgrade: false/doUpgrade: true/' run.sh")
+          "cd harness-delegate && rm delegate.jar config-delegate.yml && sed -i'' 's/REMOTE_DELEGATE_URL=.*/REMOTE_DELEGATE_URL=https:\\/\\/s3.amazonaws.com\\/wingsdelegates\\/jobs\\/test-delegate\\/delegate.jar/' run.sh && sed -i'' 's/doUpgrade: false/doUpgrade: true/' run.sh")
       .readOutput(true)
       .execute()
       .getOutput()
