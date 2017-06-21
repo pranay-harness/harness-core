@@ -144,6 +144,36 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
+    } catch (WingsException e) {
+      if (e.getResponseMessageList().size() > 0) {
+        if (e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_KEY
+            || e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
+          logService.save(context.getAccountId(),
+              aLog()
+                  .withAppId(context.getAppId())
+                  .withActivityId(activityId)
+                  .withHostName(host.getPublicDns())
+                  .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+                  .withLogLine("Command execution failed: invalid key")
+                  .withCommandUnitName(commandUnit.getName())
+                  .withExecutionResult(commandExecutionStatus)
+                  .build());
+          throw e;
+        }
+      } else {
+        logger.error("Error while executing command ", e);
+        logService.save(context.getAccountId(),
+            aLog()
+                .withAppId(context.getAppId())
+                .withActivityId(activityId)
+                .withHostName(host.getPublicDns())
+                .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+                .withLogLine("Command execution failed")
+                .withCommandUnitName(commandUnit.getName())
+                .withExecutionResult(commandExecutionStatus)
+                .build());
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
+      }
     } catch (Exception e) {
       logger.error("Error while executing command ", e);
       logService.save(context.getAccountId(),
