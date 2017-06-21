@@ -99,7 +99,7 @@ public class AppContainerResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(Base.GLOBAL_APP_ID);
     appContainer.setAccountId(accountId);
-    appContainer.setFileName(fileDetail.getFileName());
+    appContainer.setFileName(new File(fileDetail.getFileName()).getName());
 
     uploadedInputStream = new BufferedInputStream(
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
@@ -128,7 +128,7 @@ public class AppContainerResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(Base.GLOBAL_APP_ID);
     appContainer.setUuid(appContainerId);
-    appContainer.setFileName(fileDetail.getFileName());
+    appContainer.setFileName(new File(fileDetail.getFileName()).getName());
     appContainer.setAccountId(accountId);
     uploadedInputStream = new BufferedInputStream(
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));

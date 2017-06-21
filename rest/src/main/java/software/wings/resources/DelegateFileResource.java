@@ -24,6 +24,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.File;
 import java.io.InputStream;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
@@ -71,7 +72,7 @@ public class DelegateFileResource {
     // TODO: Do more check, so one delegate does not overload system
 
     FileMetadata fileMetadata = new FileMetadata();
-    fileMetadata.setFileName(fileDetail.getFileName());
+    fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
     String fileId = fileService.saveFile(fileMetadata,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()),
         ARTIFACTS);
