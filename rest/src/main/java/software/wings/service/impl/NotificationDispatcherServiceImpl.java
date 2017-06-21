@@ -175,8 +175,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     });
 
     String concatenatedMessage = String.join("\n\n", messages);
-    channels.forEach(channel
-        -> slackNotificationService.sendMessage(slackConfig, channel, "Harness Notification Bot", concatenatedMessage));
+    channels.forEach(
+        channel -> slackNotificationService.sendMessage(slackConfig, channel, "harness", concatenatedMessage));
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {
