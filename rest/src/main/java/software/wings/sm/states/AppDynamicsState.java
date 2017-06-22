@@ -74,6 +74,8 @@ public class AppDynamicsState extends State {
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
+  @Attributes(title = "Ignore verification failure") private Boolean ignoreVerificationFailure = false;
+
   @Inject @Transient private WaitNotifyEngine waitNotifyEngine;
 
   @Inject @Transient private WorkflowExecutionService workflowExecutionService;
@@ -159,6 +161,14 @@ public class AppDynamicsState extends State {
     this.appDynamicsConfigId = appDynamicsConfigId;
   }
 
+  public Boolean getIgnoreVerificationFailure() {
+    return ignoreVerificationFailure;
+  }
+
+  public void setIgnoreVerificationFailure(Boolean ignoreVerificationFailure) {
+    this.ignoreVerificationFailure = ignoreVerificationFailure;
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
@@ -195,18 +205,23 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     AppdynamicsAnalysisResponse executionResponse = (AppdynamicsAnalysisResponse) response.values().iterator().next();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
     MetricSummary finalMetrics =
         appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
-    // TODO: add check for null finalMetrics and throw exception if no data was generated
-    finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
-    String id = wingsPersistence.save(finalMetrics);
+    if (finalMetrics == null) {
+      logger.error("No data for appdynamics verification was generated");
+      if (!ignoreVerificationFailure) {
+        executionStatus = ExecutionStatus.FAILED;
+      }
+    } else {
+      finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
+      wingsPersistence.save(finalMetrics);
+    }
 
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    // TODO: success, failed or manual intervention option should be determined based on preferences
-    if (finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
+    if (!ignoreVerificationFailure && finalMetrics != null && finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
       executionStatus = ExecutionStatus.FAILED;
     }
     return anExecutionResponse()
