@@ -210,9 +210,9 @@ PLUGIN_CATEGORY:
       value: APP_DYNAMICS
 
 CLOUD_PROVIDERS:
-    - name: Gcp
+    - name: Google Cloud Provider
       value: GCP
-    - name: Aws
+    - name: Amazon Web Services
       value: AWS
     - name: Physical Data Center
       value: PHYSICAL_DATA_CENTER
