@@ -36,7 +36,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,11 +80,13 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public JobWithDetails getJob(String jobname) throws IOException {
+    Exception ex;
     try {
       return with()
+          .timeout(new Duration(20L, TimeUnit.SECONDS))
           .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
           .await()
-          .atMost(new Duration(25L, TimeUnit.SECONDS))
+          .atMost(new Duration(20L, TimeUnit.SECONDS))
           .until(
               ()
                   -> {
@@ -106,7 +107,8 @@ public class JenkinsImpl implements Jenkins {
               notNullValue())
           .get(0);
     } catch (ConditionTimeoutException e) {
-      return null;
+      logger.warn("Get Job request did not succeed within 20 secs");
+      throw new IOException("Jenkins server request did not succeed within 20 secs");
     }
   }
 
@@ -114,6 +116,7 @@ public class JenkinsImpl implements Jenkins {
   public Map<String, Job> getJobs() throws IOException {
     try {
       return with()
+          .timeout(new Duration(20L, TimeUnit.SECONDS))
           .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
           .await()
           .atMost(new Duration(25L, TimeUnit.SECONDS))
@@ -130,7 +133,8 @@ public class JenkinsImpl implements Jenkins {
             }
           }, notNullValue());
     } catch (ConditionTimeoutException e) {
-      return new HashMap<>();
+      logger.warn("Get Jobs request did not succeed within 20 secs");
+      throw new IOException("Jenkins server request did not succeed within 20 secs");
     }
   }
 
