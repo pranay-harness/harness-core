@@ -28,6 +28,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -84,6 +85,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("NEXUS")
             .withPluginCategories(asList(Artifact))
             .withUiSchema(readUiSchema("NEXUS"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ArtifactoryConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Artifactory")
+            .withType("ARTIFACTORY")
+            .withPluginCategories(asList(Artifact))
+            .withUiSchema(readUiSchema("ARTIFACTORY"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)

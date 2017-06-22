@@ -14,6 +14,7 @@ import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -29,6 +30,8 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
@@ -49,6 +52,7 @@ import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
+import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
@@ -100,6 +104,7 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BambooBuildService;
@@ -232,6 +237,8 @@ public class WingsModule extends AbstractModule {
     bind(SplunkService.class).to(SplunkServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
+    bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
+    bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -250,6 +257,7 @@ public class WingsModule extends AbstractModule {
     buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
     buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
     buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
+    buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
