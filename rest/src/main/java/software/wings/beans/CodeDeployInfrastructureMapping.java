@@ -79,7 +79,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     private String region;
     private String applicationName;
     private String deploymentGroup;
-    private String deploymentContext;
+    private String deploymentConfig;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -114,8 +114,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public CodeDeployInfrastructureMappingBuilder withDeploymentContext(String deploymentContext) {
-      this.deploymentContext = deploymentContext;
+    public CodeDeployInfrastructureMappingBuilder withDeploymentConfig(String deploymentConfig) {
+      this.deploymentConfig = deploymentConfig;
       return this;
     }
 
@@ -184,7 +184,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
           .withRegion(region)
           .withApplicationName(applicationName)
           .withDeploymentGroup(deploymentGroup)
-          .withDeploymentContext(deploymentContext)
+          .withDeploymentConfig(deploymentConfig)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -204,7 +204,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setRegion(region);
       codeDeployInfrastructureMapping.setApplicationName(applicationName);
       codeDeployInfrastructureMapping.setDeploymentGroup(deploymentGroup);
-      codeDeployInfrastructureMapping.setDeploymentConfig(deploymentContext);
+      codeDeployInfrastructureMapping.setDeploymentConfig(deploymentConfig);
       codeDeployInfrastructureMapping.setCreatedBy(createdBy);
       codeDeployInfrastructureMapping.setCreatedAt(createdAt);
       codeDeployInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
