@@ -496,6 +496,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         appId, serviceTemplateId, infrastructureMapping.getUuid(), selectionParams);
   }
 
+  @Override
+  public List<String> listCodeDeployApplicationNames(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("App 1", "App 2", "App 3");
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentGroups(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("DepGroup 1", "DepGroup 2", "DepGroup 3");
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentConfigs(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("DepConfig 1", "DepConfig 2", "DepConfig 3");
+  }
+
   private void syncAwsHostsAndUpdateInstances(
       InfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsInfrastructureProvider awsInfrastructureProvider =
