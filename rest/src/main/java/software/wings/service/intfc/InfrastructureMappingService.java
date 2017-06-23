@@ -284,4 +284,8 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region);
+
+  List<String> listCodeDeployApplicationNames(String appId, String computeProviderId, String region);
+  List<String> listCodeDeployDeploymentGroups(String appId, String computeProviderId, String region);
+  List<String> listCodeDeployDeploymentConfigs(String appId, String computeProviderId, String region);
 }

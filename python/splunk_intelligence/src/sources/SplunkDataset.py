@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from sources.SplunkFileSource import SplunkFileSource
+from SplunkFileSource import SplunkFileSource
+from SplunkHarnessLoader import SplunkHarnessLoader
 
 
 class SplunkDataset(object):
@@ -21,28 +22,56 @@ class SplunkDataset(object):
     centroids = []
     feature_names = []
 
+    def add_event(self, dict, type):
+        if type == 'control':
+            self.all_events.append(
+                pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0, dict.get('_time')],
+                          index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
+                                 'anomaly_count_label', 'time']))
+            self.control_events.append(
+                pd.Series([dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
+                           len(self.all_events) - 1],
+                          index=['text', 'local_id', 'count', 'global_id']))
+        else:
+            self.all_events.append(
+                pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1, dict.get('_time')]
+                          , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
+                                   'anomaly_count_label', 'time']))
+            self.test_events.append(
+                pd.Series([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
+                           len(self.all_events) - 1],
+                          index=['text', 'local_id', 'count', 'global_id']))
+
+    def load_from_harness(self, options):
+        control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+                                                                    options.application_id,
+                                                                    options.control_window[0],
+                                                                    options.control_window[1],
+                                                                    options.control_nodes)
+        for dict in control_events:
+            self.add_event(dict, 'control')
+
+        test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+                                                                 options.application_id,
+                                                                 options.test_window[0],
+                                                                 options.test_window[1],
+                                                                 options.test_nodes)
+        for dict in test_events:
+            self.add_event(dict, 'test')
+
+        self.raw_events.extend(control_events)
+        self.raw_events.extend(test_events)
+
+    # New files grouped by host
     def load_from_file_slice_by_nodes(self, file_name, test_nodes):
         self.raw_events = SplunkFileSource.load_data(file_name)
         for dict in self.raw_events:
             if dict.get('host') in test_nodes:
-                self.all_events.append(
-                    pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1]
-                              , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                       'anomaly_count_label']))
-                self.test_events.append(
-                    pd.Series([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
-                               len(self.all_events) - 1],
-                              index=['text', 'local_id', 'count', 'global_id']))
+                self.add_event(dict, 'test')
             else:
-                self.all_events.append(
-                    pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0],
-                              index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                     'anomaly_count_label']))
-                self.control_events.append(
-                    pd.Series([dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
-                               len(self.all_events) - 1],
-                              index=['text', 'local_id', 'count', 'global_id']))
+                self.add_event(dict, 'control')
 
+    # old files that are not grouped by host
     def load_from_file(self, file_name, control_window, test_window):
         self.raw_events = SplunkFileSource.load_data(file_name)
         minute = 0
@@ -50,21 +79,9 @@ class SplunkDataset(object):
             if dict.get('cluster_label') == '1':
                 minute = minute + 1
             if control_window[0] <= minute <= control_window[1]:
-                self.all_events.append(
-                    pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0]
-                              , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                       'anomaly_count_label']))
-                self.control_events.append(
-                    pd.Series([dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
-                               len(self.all_events) - 1], index=['text', 'local_id', 'count', 'global_id']))
+                self.add_event(dict, 'control')
             if test_window[0] <= minute <= test_window[1]:
-                self.all_events.append(
-                    pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1]
-                              , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                       'anomaly_count_label']))
-                self.test_events.append(
-                    pd.Series([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
-                               len(self.all_events) - 1], index=['text', 'local_id', 'count', 'global_id']))
+                self.add_event(dict, 'test')
 
     def get_all_events(self):
         return self.all_events
@@ -79,13 +96,13 @@ class SplunkDataset(object):
         return self.control_events
 
     def get_control_events_text_as_np(self):
-        return np.array([ event['text'] for event in self.control_events])
+        return np.array([event['text'] for event in self.control_events])
 
     def get_test_events(self):
         return self.test_events
 
     def get_test_events_text_as_np(self):
-        return np.array([ event['text'] for event in self.test_events])
+        return np.array([event['text'] for event in self.test_events])
 
     def set_control_clusters(self, clusters):
         self.control_clusters = clusters
@@ -173,3 +190,11 @@ class SplunkDataset(object):
 
     def get_raw_events(self):
         return self.raw_events
+
+    def get_all_events_as_json(self):
+        result = []
+        for event in self.get_all_events():
+            result.append(dict(logMessage=event['text'], timestamp=event['time'], count=event['count'],
+                          cluster_id=event['cluster_id'], anomalyLabel=event['anomaly_label'],
+                          anomalyCountLabel=event['anomaly_count_label']))
+        return result

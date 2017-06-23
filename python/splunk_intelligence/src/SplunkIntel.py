@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import sys
 
@@ -53,7 +54,7 @@ class SplunkIntel(object):
         control_groups = self.splunkDataset.get_control_values_pd().groupby('label')
         test_groups = self.splunkDataset.get_test_values_pd().groupby('label')
 
-        #classifier = IsolationForestClassifier()
+        # classifier = IsolationForestClassifier()
 
         classifier = ThreeSigmaClassifier()
 
@@ -77,21 +78,39 @@ class SplunkIntel(object):
         return parser.parse_args(cli_args)
 
 
+def parse(cli_args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", required=True)
+    parser.add_argument("--application_id", required=True)
+    parser.add_argument("--control_window", nargs='+', type=int, required=True)
+    parser.add_argument("--test_window", nargs='+', type=int, required=True)
+    parser.add_argument("--sim_threshold", type=float, required=True)
+    parser.add_argument("--control_nodes", nargs='+', type=str, required=True)
+    parser.add_argument("--test_nodes", nargs='+', type=str, required=True)
+    return parser.parse_args(cli_args)
+
+
 def main(args):
     # simple log format
     format = "%(asctime)-15s %(levelname)s %(message)s"
     logging.basicConfig(level=logging.INFO, format=format)
 
     # create options
-    options = SplunkIntel.parse(args[1:])
+    options = parse(args[1:])
     logging.info(options)
 
     splunkDataset = SplunkDataset()
+
+    splunkDataset.load_from_harness(options)
 
     # Add the production flow to load data here
 
     splunkIntel = SplunkIntel(splunkDataset, options)
     splunkIntel.run()
+
+    result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
+
+    #TODO post this to wings server once the api is available
 
 
 if __name__ == "__main__":

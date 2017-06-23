@@ -5,7 +5,7 @@ import static software.wings.api.DeploymentType.CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMappingType.AWS_CD;
+import static software.wings.beans.InfrastructureMappingType.AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
@@ -496,6 +496,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         appId, serviceTemplateId, infrastructureMapping.getUuid(), selectionParams);
   }
 
+  @Override
+  public List<String> listCodeDeployApplicationNames(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("App 1", "App 2", "App 3");
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentGroups(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("DepGroup 1", "DepGroup 2", "DepGroup 3");
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentConfigs(String appId, String computeProviderId, String region) {
+    return ImmutableList.of("DepConfig 1", "DepConfig 2", "DepConfig 3");
+  }
+
   private void syncAwsHostsAndUpdateInstances(
       InfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsInfrastructureProvider awsInfrastructureProvider =
@@ -725,7 +740,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(GCP.name(), ImmutableMap.of(KUBERNETES.name(), GCP_KUBERNETES.name()));
     } else {
       infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
-      infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), CODEDEPLOY.name(), AWS_CD.name()));
+      infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), CODEDEPLOY.name(), AWS_CODEDEPLOY.name()));
     }
     return infraTypes;
   }

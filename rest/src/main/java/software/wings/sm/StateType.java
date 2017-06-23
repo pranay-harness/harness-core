@@ -195,13 +195,13 @@ public enum StateType implements StateTypeDescriptor {
    */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
-  AWS_CD_SETUP(AwsCodeDeploySetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_CD),
+  AWS_CD_SETUP(AwsCodeDeploySetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
       asList(CODE_DEPLOY_SETUP), ORCHESTRATION_STENCILS),
 
-  AWS_CD_DEPLOY(AwsCodeDeployDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CD),
+  AWS_CD_DEPLOY(AwsCodeDeployDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
       asList(CODE_DEPLOY_DEPLOY), ORCHESTRATION_STENCILS),
 
-  AWS_CD_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CD),
+  AWS_CD_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
       asList(CODE_DEPLOY_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),

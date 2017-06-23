@@ -133,7 +133,7 @@ PHASE_STEP_TYPE:
       value: WRAP_UP
 
 DEPLOYMENT_TYPE:
-    - name: Secure Shell(SSH)
+    - name: Secure Shell (SSH)
       value: SSH
     - name: AWS CodeDeploy
       value: CODEDEPLOY
