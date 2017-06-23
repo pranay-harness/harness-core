@@ -63,6 +63,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsHost;
 import software.wings.beans.infrastructure.Host;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -92,6 +93,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsHelperService awsHelperService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private AwsCodeDeployService awsCodeDeployService;
 
   public static void main(String... args) {
     ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(
@@ -456,5 +458,18 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .getTargetGroups()
         .stream()
         .collect(Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
+  }
+
+  public List<String> listCodeDeployApplicationNames(SettingAttribute computeProviderSetting, String region) {
+    return awsCodeDeployService.listApplications(region, computeProviderSetting);
+  }
+
+  public List<String> listCodeDeployDeploymentGroups(
+      SettingAttribute computeProviderSetting, String region, String applicationName) {
+    return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting);
+  }
+
+  public List<String> listCodeDeployDeploymentConfigurations(SettingAttribute computeProviderSetting, String region) {
+    return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting);
   }
 }

@@ -498,17 +498,41 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
-    return ImmutableList.of("App 1", "App 2", "App 3");
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listCodeDeployApplicationNames(computeProviderSetting, region);
+    }
+    return ImmutableList.of();
   }
 
   @Override
   public List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName) {
-    return ImmutableList.of("DepGroup 1", "DepGroup 2", "DepGroup 3");
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listCodeDeployDeploymentGroups(computeProviderSetting, region, applicationName);
+    }
+    return ImmutableList.of();
   }
 
   @Override
   public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region) {
-    return ImmutableList.of("DepConfig 1", "DepConfig 2", "DepConfig 3");
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listCodeDeployDeploymentConfigurations(computeProviderSetting, region);
+    }
+    return ImmutableList.of();
   }
 
   private void syncAwsHostsAndUpdateInstances(
