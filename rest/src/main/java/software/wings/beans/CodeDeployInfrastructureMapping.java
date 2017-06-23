@@ -1,224 +1,210 @@
 package software.wings.beans;
 
-import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+import static java.util.stream.Collectors.toMap;
 
+import com.google.common.collect.ImmutableMap;
+
+import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.app.MainConfiguration;
+import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import javax.inject.Inject;
 
 /**
  * Created by brett on 6/22/17
  */
-@JsonTypeName("AWS_CD")
-public class CodeDeployInfrastructureMapping extends ContainerInfrastructureMapping {
+@JsonTypeName("AWS_CODEDEPLOY")
+public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
+  @Attributes(title = "Restrictions") @SchemaIgnore private String restrictionType;
+  @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
+
   @Attributes(title = "Region")
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
 
-  @SchemaIgnore private String vpc;
-
-  @SchemaIgnore private List<String> subnet;
-
-  @SchemaIgnore private String securityGroup;
-
-  @SchemaIgnore private String type;
-
-  @SchemaIgnore private String role;
-
-  @SchemaIgnore private int diskSize;
-
-  @SchemaIgnore private String ami;
-
-  @SchemaIgnore private int numberOfNodes;
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
+  @Attributes(title = "Connection Type", required = true)
+  @NotEmpty
+  private String hostConnectionAttrs;
+  @Attributes(title = "Load Balancer") private String loadBalancerId;
+  @Transient @SchemaIgnore private String loadBalancerName;
 
   /**
-   * Instantiates a new Infrastructure mapping.
+   * Instantiates a new Aws CodeDeploy infrastructure mapping.
    */
   public CodeDeployInfrastructureMapping() {
-    super(InfrastructureMappingType.AWS_CD.name());
+    super(InfrastructureMappingType.AWS_CODEDEPLOY.name());
   }
 
   /**
-   * Getter for property 'region'.
+   * Gets restriction type.
    *
-   * @return Value for property 'region'.
+   * @return the restriction type
    */
+  public String getRestrictionType() {
+    return restrictionType;
+  }
+
+  /**
+   * Sets restriction type.
+   *
+   * @param restrictionType the restriction type
+   */
+  public void setRestrictionType(String restrictionType) {
+    this.restrictionType = restrictionType;
+  }
+
+  /**
+   * Gets restriction expression.
+   *
+   * @return the restriction expression
+   */
+  public String getRestrictionExpression() {
+    return restrictionExpression;
+  }
+
+  /**
+   * Sets restriction expression.
+   *
+   * @param restrictionExpression the restriction expression
+   */
+  public void setRestrictionExpression(String restrictionExpression) {
+    this.restrictionExpression = restrictionExpression;
+  }
+
+  public String getLoadBalancerId() {
+    return loadBalancerId;
+  }
+
+  public void setLoadBalancerId(String loadBalancerId) {
+    this.loadBalancerId = loadBalancerId;
+  }
+
+  @Override
+  public String getHostConnectionAttrs() {
+    return hostConnectionAttrs;
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getDisplayName() {
+    return String.format("%s(%s/%s)",
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        this.getComputeProviderType(), this.getDeploymentType());
+  }
+
   public String getRegion() {
-    return isNullOrEmpty(region) ? "us-east-1" : region;
+    return region;
   }
 
-  /**
-   * Setter for property 'region'.
-   *
-   * @param region Value to set for property 'region'.
-   */
   public void setRegion(String region) {
     this.region = region;
   }
 
-  /**
-   * Getter for property 'vpc'.
-   *
-   * @return Value for property 'vpc'.
-   */
-  public String getVpc() {
-    return vpc;
+  public void setHostConnectionAttrs(String hostConnectionAttrs) {
+    this.hostConnectionAttrs = hostConnectionAttrs;
+  }
+
+  public String getLoadBalancerName() {
+    return loadBalancerName;
+  }
+
+  public void setLoadBalancerName(String loadBalancerName) {
+    this.loadBalancerName = loadBalancerName;
   }
 
   /**
-   * Setter for property 'vpc'.
-   *
-   * @param vpc Value to set for property 'vpc'.
+   * The enum Restriction type.
    */
-  public void setVpc(String vpc) {
-    this.vpc = vpc;
+  public enum RestrictionType {
+    /**
+     * None restriction type.
+     */
+    NONE("None"), /**
+                   * Instance restriction type.
+                   */
+    INSTANCE("By specific instances"), /**
+                                        * Custom restriction type.
+                                        */
+    CUSTOM("By zone/tags etc");
+
+    private String displayName;
+
+    RestrictionType(String displayName) {
+      this.displayName = displayName;
+    }
+
+    /**
+     * Gets display name.
+     *
+     * @return the display name
+     */
+    public String getDisplayName() {
+      return displayName;
+    }
+
+    /**
+     * Sets display name.
+     *
+     * @param displayName the display name
+     */
+    public void setDisplayName(String displayName) {
+      this.displayName = displayName;
+    }
   }
 
   /**
-   * Getter for property 'subnet'.
-   *
-   * @return Value for property 'subnet'.
+   * The type Aws infrastructure restriction provider.
    */
-  public List<String> getSubnet() {
-    return subnet;
+  public static class AwsInfrastructureRestrictionProvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return Arrays.stream(RestrictionType.values())
+          .collect(toMap(RestrictionType::name, RestrictionType::getDisplayName));
+    }
   }
 
-  /**
-   * Setter for property 'subnet'.
-   *
-   * @param subnet Value to set for property 'subnet'.
-   */
-  public void setSubnet(List<String> subnet) {
-    this.subnet = subnet;
-  }
+  public static class AwsRegionDataProvider implements DataProvider {
+    @Inject private MainConfiguration mainConfiguration;
 
-  /**
-   * Getter for property 'securityGroup'.
-   *
-   * @return Value for property 'securityGroup'.
-   */
-  public String getSecurityGroup() {
-    return securityGroup;
-  }
-
-  /**
-   * Setter for property 'securityGroup'.
-   *
-   * @param securityGroup Value to set for property 'securityGroup'.
-   */
-  public void setSecurityGroup(String securityGroup) {
-    this.securityGroup = securityGroup;
-  }
-
-  /**
-   * Getter for property 'type'.
-   *
-   * @return Value for property 'type'.
-   */
-  public String getType() {
-    return type;
-  }
-
-  /**
-   * Setter for property 'type'.
-   *
-   * @param type Value to set for property 'type'.
-   */
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  /**
-   * Getter for property 'role'.
-   *
-   * @return Value for property 'role'.
-   */
-  public String getRole() {
-    return role;
-  }
-
-  /**
-   * Setter for property 'role'.
-   *
-   * @param role Value to set for property 'role'.
-   */
-  public void setRole(String role) {
-    this.role = role;
-  }
-
-  /**
-   * Getter for property 'diskSize'.
-   *
-   * @return Value for property 'diskSize'.
-   */
-  public int getDiskSize() {
-    return diskSize;
-  }
-
-  /**
-   * Setter for property 'diskSize'.
-   *
-   * @param diskSize Value to set for property 'diskSize'.
-   */
-  public void setDiskSize(int diskSize) {
-    this.diskSize = diskSize;
-  }
-
-  /**
-   * Getter for property 'ami'.
-   *
-   * @return Value for property 'ami'.
-   */
-  public String getAmi() {
-    return ami;
-  }
-
-  /**
-   * Setter for property 'ami'.
-   *
-   * @param ami Value to set for property 'ami'.
-   */
-  public void setAmi(String ami) {
-    this.ami = ami;
-  }
-
-  /**
-   * Getter for property 'numberOfNodes'.
-   *
-   * @return Value for property 'numberOfNodes'.
-   */
-  public int getNumberOfNodes() {
-    return numberOfNodes;
-  }
-
-  /**
-   * Setter for property 'numberOfNodes'.
-   *
-   * @param numberOfNodes Value to set for property 'numberOfNodes'.
-   */
-  public void setNumberOfNodes(int numberOfNodes) {
-    this.numberOfNodes = numberOfNodes;
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return Arrays.stream(Regions.values())
+          .filter(regions -> regions != Regions.GovCloud)
+          .collect(toMap(Regions::getName,
+              regions
+              -> Optional.ofNullable(mainConfiguration.getAwsRegionIdToName())
+                     .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
+                     .get(regions.getName())));
+    }
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private String clusterName;
-    private String region;
+    private String restrictionType;
+    private String restrictionExpression;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
     private String serviceId;
     private String computeProviderType;
     private String deploymentType;
+    private String hostConnectionAttrs;
     private String computeProviderName;
+    private String region;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -229,30 +215,33 @@ public class CodeDeployInfrastructureMapping extends ContainerInfrastructureMapp
     private Builder() {}
 
     /**
-     * An ecs infrastructure mapping builder.
+     * An aws infrastructure mapping builder.
      *
      * @return the builder
      */
-    public static Builder anEcsInfrastructureMapping() {
+    public static Builder aCodeDeployInfrastructureMapping() {
       return new Builder();
     }
 
     /**
-     * With cluster name builder.
+     * With restriction type builder.
      *
-     * @param clusterName the cluster name
+     * @param restrictionType the restriction type
      * @return the builder
      */
-    public Builder withClusterName(String clusterName) {
-      this.clusterName = clusterName;
+    public Builder withRestrictionType(String restrictionType) {
+      this.restrictionType = restrictionType;
       return this;
     }
 
     /**
-     * With region builder.
+     * With restriction expression builder.
+     *
+     * @param restrictionExpression the restriction expression
+     * @return the builder
      */
-    public Builder withRegion(String region) {
-      this.region = region;
+    public Builder withRestrictionExpression(String restrictionExpression) {
+      this.restrictionExpression = restrictionExpression;
       return this;
     }
 
@@ -323,6 +312,17 @@ public class CodeDeployInfrastructureMapping extends ContainerInfrastructureMapp
     }
 
     /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
      * With compute provider name name builder.
      *
      * @param computeProviderName the display name
@@ -330,6 +330,11 @@ public class CodeDeployInfrastructureMapping extends ContainerInfrastructureMapp
      */
     public Builder withComputeProviderName(String computeProviderName) {
       this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    public Builder withRegion(String region) {
+      this.region = region;
       return this;
     }
 
@@ -405,47 +410,51 @@ public class CodeDeployInfrastructureMapping extends ContainerInfrastructureMapp
      * @return the builder
      */
     public Builder but() {
-      return anEcsInfrastructureMapping()
-          .withClusterName(clusterName)
-          .withRegion(region)
+      return aCodeDeployInfrastructureMapping()
+          .withRestrictionType(restrictionType)
+          .withRestrictionExpression(restrictionExpression)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
+          .withHostConnectionAttrs(hostConnectionAttrs)
           .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
+          .withRegion(region)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
-     * Build ecs infrastructure mapping.
+     * Build aws infrastructure mapping.
      *
-     * @return the ecs infrastructure mapping
+     * @return the aws infrastructure mapping
      */
     public CodeDeployInfrastructureMapping build() {
-      CodeDeployInfrastructureMapping ecsInfrastructureMapping = new CodeDeployInfrastructureMapping();
-      ecsInfrastructureMapping.setClusterName(clusterName);
-      ecsInfrastructureMapping.setRegion(region);
-      ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      ecsInfrastructureMapping.setEnvId(envId);
-      ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      ecsInfrastructureMapping.setServiceId(serviceId);
-      ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
-      ecsInfrastructureMapping.setDeploymentType(deploymentType);
-      ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
-      ecsInfrastructureMapping.setUuid(uuid);
-      ecsInfrastructureMapping.setAppId(appId);
-      ecsInfrastructureMapping.setCreatedBy(createdBy);
-      ecsInfrastructureMapping.setCreatedAt(createdAt);
-      ecsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      ecsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
-      return ecsInfrastructureMapping;
+      CodeDeployInfrastructureMapping awsInfrastructureMapping = new CodeDeployInfrastructureMapping();
+      awsInfrastructureMapping.setRestrictionType(restrictionType);
+      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
+      awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      awsInfrastructureMapping.setEnvId(envId);
+      awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsInfrastructureMapping.setServiceId(serviceId);
+      awsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      awsInfrastructureMapping.setDeploymentType(deploymentType);
+      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      awsInfrastructureMapping.setComputeProviderName(computeProviderName);
+      awsInfrastructureMapping.setRegion(region);
+      awsInfrastructureMapping.setUuid(uuid);
+      awsInfrastructureMapping.setAppId(appId);
+      awsInfrastructureMapping.setCreatedBy(createdBy);
+      awsInfrastructureMapping.setCreatedAt(createdAt);
+      awsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      awsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      return awsInfrastructureMapping;
     }
   }
 }
