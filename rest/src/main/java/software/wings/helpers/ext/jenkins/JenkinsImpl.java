@@ -27,9 +27,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
-import org.awaitility.pollinterval.FibonacciPollInterval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,13 +81,10 @@ public class JenkinsImpl implements Jenkins {
    */
   @Override
   public JobWithDetails getJob(String jobname) throws IOException {
-    Exception ex;
     try {
       return with()
-          .timeout(new Duration(20L, TimeUnit.SECONDS))
-          .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
-          .await()
-          .atMost(new Duration(20L, TimeUnit.SECONDS))
+          .pollInterval(3L, TimeUnit.SECONDS)
+          .atMost(new Duration(16L, TimeUnit.SECONDS))
           .until(
               ()
                   -> {
@@ -107,34 +105,35 @@ public class JenkinsImpl implements Jenkins {
               notNullValue())
           .get(0);
     } catch (ConditionTimeoutException e) {
-      logger.warn("Get Job request did not succeed within 20 secs");
-      throw new IOException("Jenkins server request did not succeed within 20 secs");
+      logger.warn("Jenkins server request did not succeed within 15 secs even after 5 retries");
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      wingsException.addParam("message", "Failed to get job details for " + jobname);
+      wingsException.addParam("jenkinsResponse", "Server Error");
+      throw wingsException;
     }
   }
 
   @Override
   public Map<String, Job> getJobs() throws IOException {
     try {
-      return with()
-          .timeout(new Duration(20L, TimeUnit.SECONDS))
-          .pollInterval(FibonacciPollInterval.fibonacci(2, TimeUnit.SECONDS))
-          .await()
-          .atMost(new Duration(25L, TimeUnit.SECONDS))
-          .until(() -> {
-            try {
-              return jenkinsServer.getJobs();
-            } catch (HttpResponseException e) {
-              if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-                logger.warn("Error occurred while retrieving jobs. Reason: {}. Retrying", e.getMessage());
-                return null;
-              } else {
-                throw e;
-              }
-            }
-          }, notNullValue());
+      return with().pollInterval(3L, TimeUnit.SECONDS).atMost(new Duration(16L, TimeUnit.SECONDS)).until(() -> {
+        try {
+          return jenkinsServer.getJobs();
+        } catch (HttpResponseException e) {
+          if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
+            logger.warn("Error occurred while retrieving jobs. Reason: {}. Retrying", e.getMessage());
+            return null;
+          } else {
+            throw e;
+          }
+        }
+      }, notNullValue());
     } catch (ConditionTimeoutException e) {
-      logger.warn("Get Jobs request did not succeed within 20 secs");
-      throw new IOException("Jenkins server request did not succeed within 20 secs");
+      logger.warn("Jenkins server request did not succeed within 15 secs even after 5 retries");
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      wingsException.addParam("message", "Failed to get jobs from jenkins sever");
+      wingsException.addParam("jenkinsResponse", "Server Error");
+      throw wingsException;
     }
   }
 
