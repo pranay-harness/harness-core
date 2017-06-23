@@ -9,10 +9,12 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.ExternalServiceAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
+import software.wings.service.impl.splunk.SplunkMLAnalysisResponse;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
@@ -50,5 +52,15 @@ public class SplunkResource {
   public RestResponse<List<SplunkLogDataRecord>> getSplunkLogData(
       @QueryParam("accountId") String accountId, SplunkLogRequest logRequest) throws IOException {
     return new RestResponse<>(splunkService.getSplunkLogData(logRequest));
+  }
+
+  @POST
+  @Path("/save-analysis-records")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Boolean> saveSplunkAnalysisRecords(
+      @QueryParam("accountId") String accountId, SplunkMLAnalysisResponse mlAnalysisResponse) throws IOException {
+    return new RestResponse<>(splunkService.saveSplunkAnalysisRecords(mlAnalysisResponse));
   }
 }

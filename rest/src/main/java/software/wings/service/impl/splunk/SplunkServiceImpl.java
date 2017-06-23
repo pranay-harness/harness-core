@@ -44,4 +44,25 @@ public class SplunkServiceImpl implements SplunkService {
                                                  .withLimit(PageRequest.UNLIMITED);
     return wingsPersistence.query(SplunkLogDataRecord.class, amdrRequestBuilder.build());
   }
+
+  @Override
+  public Boolean saveSplunkAnalysisRecords(SplunkMLAnalysisResponse mlAnalysisResponse) {
+    logger.debug("inserting " + mlAnalysisResponse.getEvents().size() + " pieces of splunk ml analysis response");
+    final List<SplunkLogAnalysisRecord> logAnalysisRecords = mlAnalysisResponse.generateRecords();
+    if (logAnalysisRecords.isEmpty()) {
+      logger.error("No analysis response were sent by the ML platform for app: " + mlAnalysisResponse.getAppId()
+          + ". State execution: " + mlAnalysisResponse.getStateExecutionInstanceId());
+      return false;
+    }
+
+    wingsPersistence.delete(wingsPersistence.createQuery(SplunkLogAnalysisRecord.class)
+                                .field("appId")
+                                .equal(mlAnalysisResponse.getAppId())
+                                .field("stateExecutionInstanceId")
+                                .equal(mlAnalysisResponse.getStateExecutionInstanceId()));
+
+    wingsPersistence.save(logAnalysisRecords);
+    logger.debug("inserted " + logAnalysisRecords.size() + " SplunkLogAnalysisRecord to persistence layer");
+    return true;
+  }
 }

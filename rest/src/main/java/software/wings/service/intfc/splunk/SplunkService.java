@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
+import software.wings.service.impl.splunk.SplunkMLAnalysisResponse;
 import software.wings.utils.validation.Create;
 
 import java.io.IOException;
@@ -19,4 +20,6 @@ public interface SplunkService {
   Boolean saveLogData(@NotNull String appId, @Valid List<SplunkLogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class) List<SplunkLogDataRecord> getSplunkLogData(@Valid SplunkLogRequest logRequest);
+
+  Boolean saveSplunkAnalysisRecords(SplunkMLAnalysisResponse mlAnalysisResponse);
 }

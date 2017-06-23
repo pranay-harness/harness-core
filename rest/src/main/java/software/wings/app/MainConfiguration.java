@@ -52,6 +52,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  private int applicationPort;
+  private boolean sslEnabled;
 
   /**
    * Instantiates a new Main configuration.
@@ -294,6 +296,22 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setSmtpConfig(SmtpConfig smtpConfig) {
     this.smtpConfig = smtpConfig;
+  }
+
+  public int getApplicationPort() {
+    return applicationPort;
+  }
+
+  public void setApplicationPort(int applicationPort) {
+    this.applicationPort = applicationPort;
+  }
+
+  public boolean isSslEnabled() {
+    return sslEnabled;
+  }
+
+  public void setSslEnabled(boolean sslEnabled) {
+    this.sslEnabled = sslEnabled;
   }
 
   /**
