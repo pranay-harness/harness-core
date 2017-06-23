@@ -254,8 +254,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> getCodeDeployApplicationNames(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(
-        infrastructureMappingService.listCodeDeployApplicationNames(appId, computeProviderId, region));
+    return new RestResponse<>(infrastructureMappingService.listCodeDeployApplicationNames(computeProviderId, region));
   }
 
   @GET
@@ -263,9 +262,10 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> getCodeDeployDeploymentGroups(@QueryParam("appId") String appId,
-      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+      @QueryParam("region") String region, @QueryParam("applicationName") String applicationName,
+      @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
-        infrastructureMappingService.listCodeDeployDeploymentGroups(appId, computeProviderId, region));
+        infrastructureMappingService.listCodeDeployDeploymentGroups(computeProviderId, region, applicationName));
   }
 
   @GET
@@ -274,7 +274,6 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> getCodeDeployDeploymentConfigs(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(
-        infrastructureMappingService.listCodeDeployDeploymentConfigs(appId, computeProviderId, region));
+    return new RestResponse<>(infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region));
   }
 }

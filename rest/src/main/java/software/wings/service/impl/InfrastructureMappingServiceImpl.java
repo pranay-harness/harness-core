@@ -497,17 +497,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listCodeDeployApplicationNames(String appId, String computeProviderId, String region) {
+  public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
     return ImmutableList.of("App 1", "App 2", "App 3");
   }
 
   @Override
-  public List<String> listCodeDeployDeploymentGroups(String appId, String computeProviderId, String region) {
+  public List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName) {
     return ImmutableList.of("DepGroup 1", "DepGroup 2", "DepGroup 3");
   }
 
   @Override
-  public List<String> listCodeDeployDeploymentConfigs(String appId, String computeProviderId, String region) {
+  public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region) {
     return ImmutableList.of("DepConfig 1", "DepConfig 2", "DepConfig 3");
   }
 
