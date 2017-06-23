@@ -43,6 +43,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -96,6 +97,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private AwsCodeDeployService awsCodeDeployService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -502,9 +504,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listCodeDeployApplicationNames(computeProviderSetting, region);
+      return awsCodeDeployService.listApplications(region, computeProviderSetting);
     }
     return ImmutableList.of();
   }
@@ -515,9 +515,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listCodeDeployDeploymentGroups(computeProviderSetting, region, applicationName);
+      return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting);
     }
     return ImmutableList.of();
   }
@@ -528,9 +526,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listCodeDeployDeploymentConfigurations(computeProviderSetting, region);
+      return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting);
     }
     return ImmutableList.of();
   }
