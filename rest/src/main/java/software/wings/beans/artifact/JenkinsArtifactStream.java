@@ -21,7 +21,9 @@ import java.util.List;
 public class JenkinsArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Metadata Only (Do not download artifact)") private boolean metadataOnly;
+
+  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -72,16 +74,24 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @UIOrder(6)
+  @UIOrder(7)
   @Attributes(title = "Automatic Download")
   public boolean getAutoDownload() {
     return super.isAutoDownload();
   }
 
-  @UIOrder(7)
+  @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  public boolean isMetadataOnly() {
+    return metadataOnly;
+  }
+
+  public void setMetadataOnly(boolean metadataOnly) {
+    this.metadataOnly = metadataOnly;
   }
 
   @Override
