@@ -21,7 +21,7 @@ import java.util.List;
 public class JenkinsArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Metadata Only (Do not download artifact)") private boolean metadataOnly;
+  @UIOrder(5) @Attributes(title = "Metadata Only (Do not download artifact)") private boolean metadataOnly;
 
   @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
