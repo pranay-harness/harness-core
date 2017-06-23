@@ -25,20 +25,13 @@ import javax.inject.Inject;
  */
 @JsonTypeName("AWS_CODEDEPLOY")
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Restrictions") @SchemaIgnore private String restrictionType;
-  @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
-
   @Attributes(title = "Region")
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
-
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
-  @Attributes(title = "Connection Type", required = true)
-  @NotEmpty
-  private String hostConnectionAttrs;
-  @Attributes(title = "Load Balancer") private String loadBalancerId;
-  @Transient @SchemaIgnore private String loadBalancerName;
+  @Attributes(title = "Application Name") private String applicationName;
+  @Attributes(title = "Deployment Group") private String deploymentGroup;
+  @Attributes(title = "Deployment Context") private String deploymentContext;
 
   /**
    * Instantiates a new Aws CodeDeploy infrastructure mapping.
@@ -47,53 +40,11 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.AWS_CODEDEPLOY.name());
   }
 
-  /**
-   * Gets restriction type.
-   *
-   * @return the restriction type
-   */
-  public String getRestrictionType() {
-    return restrictionType;
-  }
-
-  /**
-   * Sets restriction type.
-   *
-   * @param restrictionType the restriction type
-   */
-  public void setRestrictionType(String restrictionType) {
-    this.restrictionType = restrictionType;
-  }
-
-  /**
-   * Gets restriction expression.
-   *
-   * @return the restriction expression
-   */
-  public String getRestrictionExpression() {
-    return restrictionExpression;
-  }
-
-  /**
-   * Sets restriction expression.
-   *
-   * @param restrictionExpression the restriction expression
-   */
-  public void setRestrictionExpression(String restrictionExpression) {
-    this.restrictionExpression = restrictionExpression;
-  }
-
-  public String getLoadBalancerId() {
-    return loadBalancerId;
-  }
-
-  public void setLoadBalancerId(String loadBalancerId) {
-    this.loadBalancerId = loadBalancerId;
-  }
-
+  @SchemaIgnore
   @Override
+  @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
-    return hostConnectionAttrs;
+    return null;
   }
 
   @SchemaIgnore
@@ -112,67 +63,28 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     this.region = region;
   }
 
-  public void setHostConnectionAttrs(String hostConnectionAttrs) {
-    this.hostConnectionAttrs = hostConnectionAttrs;
+  public String getApplicationName() {
+    return applicationName;
   }
 
-  public String getLoadBalancerName() {
-    return loadBalancerName;
+  public void setApplicationName(String applicationName) {
+    this.applicationName = applicationName;
   }
 
-  public void setLoadBalancerName(String loadBalancerName) {
-    this.loadBalancerName = loadBalancerName;
+  public String getDeploymentGroup() {
+    return deploymentGroup;
   }
 
-  /**
-   * The enum Restriction type.
-   */
-  public enum RestrictionType {
-    /**
-     * None restriction type.
-     */
-    NONE("None"), /**
-                   * Instance restriction type.
-                   */
-    INSTANCE("By specific instances"), /**
-                                        * Custom restriction type.
-                                        */
-    CUSTOM("By zone/tags etc");
-
-    private String displayName;
-
-    RestrictionType(String displayName) {
-      this.displayName = displayName;
-    }
-
-    /**
-     * Gets display name.
-     *
-     * @return the display name
-     */
-    public String getDisplayName() {
-      return displayName;
-    }
-
-    /**
-     * Sets display name.
-     *
-     * @param displayName the display name
-     */
-    public void setDisplayName(String displayName) {
-      this.displayName = displayName;
-    }
+  public void setDeploymentGroup(String deploymentGroup) {
+    this.deploymentGroup = deploymentGroup;
   }
 
-  /**
-   * The type Aws infrastructure restriction provider.
-   */
-  public static class AwsInfrastructureRestrictionProvider implements DataProvider {
-    @Override
-    public Map<String, String> getData(String appId, String... params) {
-      return Arrays.stream(RestrictionType.values())
-          .collect(toMap(RestrictionType::name, RestrictionType::getDisplayName));
-    }
+  public String getDeploymentContext() {
+    return deploymentContext;
+  }
+
+  public void setDeploymentContext(String deploymentContext) {
+    this.deploymentContext = deploymentContext;
   }
 
   public static class AwsRegionDataProvider implements DataProvider {
@@ -194,8 +106,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
-    private String restrictionType;
-    private String restrictionExpression;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
