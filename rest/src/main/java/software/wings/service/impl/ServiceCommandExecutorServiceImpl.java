@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
@@ -15,10 +16,10 @@ import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
-import javax.inject.Inject;
-import javax.validation.executable.ValidateOnExecution;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by anubhaw on 6/2/16.
@@ -38,33 +39,16 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
-    if (DeploymentType.ECS.name().equals(command.getDeploymentType())) {
-      return executeEcsCommand(command, context);
-    } else if (DeploymentType.KUBERNETES.name().equals(command.getDeploymentType())) {
-      return executeKubernetesCommand(command, context);
-    } else {
+    if (SSH.name().equals(command.getDeploymentType())) {
       return executeSshCommand(command, context);
+    } else {
+      return executeNonSshDeploymentCommand(
+          command, context, commandUnitExecutorServiceMap.get(command.getDeploymentType()));
     }
   }
 
-  private CommandExecutionStatus executeEcsCommand(Command command, CommandExecutionContext context) {
-    CommandUnitExecutorService commandUnitExecutorService =
-        commandUnitExecutorServiceMap.get(DeploymentType.ECS.name());
-    try {
-      CommandExecutionStatus commandExecutionStatus = commandUnitExecutorService.execute(
-          context.getHost(), command.getCommandUnits().get(0), context); // TODO:: do it recursively
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      return commandExecutionStatus;
-    } catch (Exception ex) {
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      ex.printStackTrace();
-      throw ex;
-    }
-  }
-
-  private CommandExecutionStatus executeKubernetesCommand(Command command, CommandExecutionContext context) {
-    CommandUnitExecutorService commandUnitExecutorService =
-        commandUnitExecutorServiceMap.get(DeploymentType.KUBERNETES.name());
+  private CommandExecutionStatus executeNonSshDeploymentCommand(
+      Command command, CommandExecutionContext context, CommandUnitExecutorService commandUnitExecutorService) {
     try {
       CommandExecutionStatus commandExecutionStatus = commandUnitExecutorService.execute(
           context.getHost(), command.getCommandUnits().get(0), context); // TODO:: do it recursively

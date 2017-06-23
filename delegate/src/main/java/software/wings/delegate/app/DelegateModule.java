@@ -13,6 +13,8 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.cloudprovider.aws.AwsCodeDeployServiceImpl;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -103,6 +105,7 @@ public class DelegateModule extends AbstractModule {
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
+    bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);

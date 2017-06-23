@@ -85,6 +85,11 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   RESIZE(ResizeCommandUnit.class, "Resize Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
 
   /**
+   * The Code deploy.
+   */
+  CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
+
+  /**
    * The Install.
    */
   RESIZE_KUBERNETES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Controller", StencilCategory.CONTAINERS,
