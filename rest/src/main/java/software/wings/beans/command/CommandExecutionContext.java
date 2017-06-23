@@ -42,6 +42,7 @@ public class CommandExecutionContext {
   private String clusterName;
   private String serviceName;
   private String region;
+  private CodoDeployParams codoDeployParams;
   private Integer desiredCount;
   private Integer desiredPercentage;
   private CommandExecutionData commandExecutionData;
@@ -494,10 +495,20 @@ public class CommandExecutionContext {
     this.serviceName = serviceName;
   }
 
+  /**
+   * Gets region.
+   *
+   * @return the region
+   */
   public String getRegion() {
     return region;
   }
 
+  /**
+   * Sets region.
+   *
+   * @param region the region
+   */
   public void setRegion(String region) {
     this.region = region;
   }
@@ -572,6 +583,14 @@ public class CommandExecutionContext {
    */
   public void setAppContainer(AppContainer appContainer) {
     this.appContainer = appContainer;
+  }
+
+  public CodoDeployParams getCodoDeployParams() {
+    return codoDeployParams;
+  }
+
+  public void setCodoDeployParams(CodoDeployParams codoDeployParams) {
+    this.codoDeployParams = codoDeployParams;
   }
 
   /**
@@ -943,6 +962,141 @@ public class CommandExecutionContext {
       commandExecutionContext.setCommandExecutionData(commandExecutionData);
       commandExecutionContext.envVariables = this.envVariables;
       return commandExecutionContext;
+    }
+  }
+
+  /**
+   * The type Codo deploy params.
+   */
+  public static class CodoDeployParams {
+    private String applicationName;
+    private String deploymentConfigurationName;
+    private String deploymentGroupName;
+    private String region;
+
+    private CodoDeployParams(Builder builder) {
+      setApplicationName(builder.applicationName);
+      setDeploymentConfigurationName(builder.deploymentConfigurationName);
+      setDeploymentGroupName(builder.deploymentGroupName);
+      setRegion(builder.region);
+    }
+
+    public static Builder newBuilder() {
+      return new Builder();
+    }
+
+    public static Builder newBuilder(CodoDeployParams copy) {
+      Builder builder = new Builder();
+      builder.applicationName = copy.applicationName;
+      builder.deploymentConfigurationName = copy.deploymentConfigurationName;
+      builder.deploymentGroupName = copy.deploymentGroupName;
+      builder.region = copy.region;
+      return builder;
+    }
+
+    /**
+     * Gets application name.
+     *
+     * @return the application name
+     */
+    public String getApplicationName() {
+      return applicationName;
+    }
+
+    /**
+     * Sets application name.
+     *
+     * @param applicationName the application name
+     */
+    public void setApplicationName(String applicationName) {
+      this.applicationName = applicationName;
+    }
+
+    /**
+     * Gets deployment configuration name.
+     *
+     * @return the deployment configuration name
+     */
+    public String getDeploymentConfigurationName() {
+      return deploymentConfigurationName;
+    }
+
+    /**
+     * Sets deployment configuration name.
+     *
+     * @param deploymentConfigurationName the deployment configuration name
+     */
+    public void setDeploymentConfigurationName(String deploymentConfigurationName) {
+      this.deploymentConfigurationName = deploymentConfigurationName;
+    }
+
+    /**
+     * Gets deployment group name.
+     *
+     * @return the deployment group name
+     */
+    public String getDeploymentGroupName() {
+      return deploymentGroupName;
+    }
+
+    /**
+     * Sets deployment group name.
+     *
+     * @param deploymentGroupName the deployment group name
+     */
+    public void setDeploymentGroupName(String deploymentGroupName) {
+      this.deploymentGroupName = deploymentGroupName;
+    }
+
+    /**
+     * Gets region.
+     *
+     * @return the region
+     */
+    public String getRegion() {
+      return region;
+    }
+
+    /**
+     * Sets region.
+     *
+     * @param region the region
+     */
+    public void setRegion(String region) {
+      this.region = region;
+    }
+
+    public static final class Builder {
+      private String applicationName;
+      private String deploymentConfigurationName;
+      private String deploymentGroupName;
+      private String region;
+
+      private Builder() {}
+
+      public Builder withApplicationName(String applicationName) {
+        this.applicationName = applicationName;
+        return this;
+      }
+
+      public Builder withDeploymentConfigurationName(String deploymentConfigurationName) {
+        this.deploymentConfigurationName = deploymentConfigurationName;
+        return this;
+      }
+
+      public Builder withDeploymentGroupName(String deploymentGroupName) {
+        this.deploymentGroupName = deploymentGroupName;
+        return this;
+      }
+
+      public Builder withRegion(String region) {
+        this.region = region;
+        return this;
+      }
+
+      public CodoDeployParams build() {
+        return new CodoDeployParams(this);
+      }
     }
   }
 }
