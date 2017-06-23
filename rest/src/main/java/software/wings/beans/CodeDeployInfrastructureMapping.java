@@ -13,12 +13,12 @@ import java.util.Optional;
  */
 @JsonTypeName("AWS_CODEDEPLOY")
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Region")
+  @Attributes(title = "Region", required = true)
   @NotEmpty
   @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
   private String region;
-  @Attributes(title = "Application Name") @NotEmpty private String applicationName;
-  @Attributes(title = "Deployment Group") @NotEmpty private String deploymentGroup;
+  @Attributes(title = "Application Name", required = true) @NotEmpty private String applicationName;
+  @Attributes(title = "Deployment Group", required = true) @NotEmpty private String deploymentGroup;
   @Attributes(title = "Deployment Configuration") private String deploymentConfig;
 
   /**
