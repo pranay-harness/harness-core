@@ -32,6 +32,8 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 4/24/17.
  */
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
+  private final String validEmail = "raghu" + System.currentTimeMillis() + "@wings.software";
+
   @Test
   public void testBlankEmail() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=");
@@ -74,7 +76,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testValidEmail() throws IOException {
-    WebTarget target = client.target(API_BASE + "/users/verify-email?email=raghu@wings.software");
+    WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
     Assert.assertTrue(restResponse.getResource());
@@ -82,7 +84,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testValidEmailWithSpace() throws IOException {
-    WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20raghu@wings.software%20");
+    WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
     Assert.assertTrue(restResponse.getResource());
@@ -91,10 +93,10 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupSuccess() throws IOException {
     final String name = "Raghu Singh";
-    final String email = "abc@wings.software";
+    final String email = "abc" + System.currentTimeMillis() + "@wings.software";
     final char[] pwd = "somepwd".toCharArray();
-    final String accountName = "some account";
-    final String companyName = "some company";
+    final String accountName = "some account" + System.currentTimeMillis();
+    final String companyName = "some company" + System.currentTimeMillis();
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(
         Entity.entity(
@@ -128,10 +130,10 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
-    final String email = "xyz@wings.software";
+    final String email = "xyz" + System.currentTimeMillis() + "@wings.software";
     final char[] pwd = "somepwd".toCharArray();
-    final String accountName = " star   wars   ";
-    final String companyName = "  star   wars    enterprise   ";
+    final String accountName = " star   wars   " + System.currentTimeMillis();
+    final String companyName = "  star   wars    enterprise   " + System.currentTimeMillis();
     WebTarget target = client.target(API_BASE + "/users");
 
     RestResponse<User> response = null;
