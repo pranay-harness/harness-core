@@ -5,6 +5,7 @@ package software.wings.api;
  */
 public enum DeploymentType {
   SSH("Secure Shell(SSH)"),
+  CODEDEPLOY("AWS CodeDeploy"),
   ECS("EC2 Container Services(ECS)"),
   KUBERNETES("Kubernetes");
 

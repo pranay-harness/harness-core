@@ -29,18 +29,21 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
    */
   AWS_SSH(AwsInfrastructureMapping.class, "AWS_SSH", StencilCategory.OTHERS, 2),
   /**
+   * Aws CodeDeploy infra mapping type.
+   */
+  AWS_CD(CodeDeployInfrastructureMapping.class, "AWS_CD", StencilCategory.OTHERS, 3),
+  /**
    * Aws ecs infra mapping type.
    */
-  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS, 3),
+  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS, 4),
   /**
    * Aws kubernetes infra mapping type.
    */
-  AWS_KUBERNETES(AwsKubernetesInfrastructureMapping.class, "AWS_KUBERNETES", StencilCategory.OTHERS, 4),
+  AWS_KUBERNETES(AwsKubernetesInfrastructureMapping.class, "AWS_KUBERNETES", StencilCategory.OTHERS, 5),
   /**
    * Gcp kubernetes infra mapping type.
    */
-  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 5),
-  ;
+  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 6);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
