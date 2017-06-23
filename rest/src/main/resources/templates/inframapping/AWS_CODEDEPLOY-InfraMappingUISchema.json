@@ -3,5 +3,5 @@
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
   "ui:order": [ "computeProviderSettingId", "deploymentType",
-    "region", "applicationName", "deploymentGroup", "deploymentContext" ,"infraMappingType","computeProviderType"]
+    "region", "applicationName", "deploymentGroup", "deploymentConfig" ,"infraMappingType","computeProviderType"]
 }

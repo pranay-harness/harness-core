@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.stencils.DefaultValue;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
 
 import java.util.Optional;
@@ -14,12 +14,12 @@ import java.util.Optional;
 @JsonTypeName("AWS_CODEDEPLOY")
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region")
-  @DefaultValue("us-east-1")
+  @NotEmpty
   @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
   private String region;
-  @Attributes(title = "Application Name") private String applicationName;
-  @Attributes(title = "Deployment Group") private String deploymentGroup;
-  @Attributes(title = "Deployment Context") private String deploymentContext;
+  @Attributes(title = "Application Name") @NotEmpty private String applicationName;
+  @Attributes(title = "Deployment Group") @NotEmpty private String deploymentGroup;
+  @Attributes(title = "Deployment Configuration") private String deploymentConfig;
 
   /**
    * Instantiates a new Aws CodeDeploy infrastructure mapping.
@@ -67,12 +67,12 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     this.deploymentGroup = deploymentGroup;
   }
 
-  public String getDeploymentContext() {
-    return deploymentContext;
+  public String getDeploymentConfig() {
+    return deploymentConfig;
   }
 
-  public void setDeploymentContext(String deploymentContext) {
-    this.deploymentContext = deploymentContext;
+  public void setDeploymentConfig(String deploymentConfig) {
+    this.deploymentConfig = deploymentConfig;
   }
 
   public static final class CodeDeployInfrastructureMappingBuilder {
@@ -204,7 +204,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setRegion(region);
       codeDeployInfrastructureMapping.setApplicationName(applicationName);
       codeDeployInfrastructureMapping.setDeploymentGroup(deploymentGroup);
-      codeDeployInfrastructureMapping.setDeploymentContext(deploymentContext);
+      codeDeployInfrastructureMapping.setDeploymentConfig(deploymentContext);
       codeDeployInfrastructureMapping.setCreatedBy(createdBy);
       codeDeployInfrastructureMapping.setCreatedAt(createdAt);
       codeDeployInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
