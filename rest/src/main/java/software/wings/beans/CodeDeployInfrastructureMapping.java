@@ -8,8 +8,6 @@ import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -131,28 +129,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
      */
     public static Builder aCodeDeployInfrastructureMapping() {
       return new Builder();
-    }
-
-    /**
-     * With restriction type builder.
-     *
-     * @param restrictionType the restriction type
-     * @return the builder
-     */
-    public Builder withRestrictionType(String restrictionType) {
-      this.restrictionType = restrictionType;
-      return this;
-    }
-
-    /**
-     * With restriction expression builder.
-     *
-     * @param restrictionExpression the restriction expression
-     * @return the builder
-     */
-    public Builder withRestrictionExpression(String restrictionExpression) {
-      this.restrictionExpression = restrictionExpression;
-      return this;
     }
 
     /**
@@ -321,8 +297,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder but() {
       return aCodeDeployInfrastructureMapping()
-          .withRestrictionType(restrictionType)
-          .withRestrictionExpression(restrictionExpression)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
@@ -347,15 +321,12 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
      */
     public CodeDeployInfrastructureMapping build() {
       CodeDeployInfrastructureMapping awsInfrastructureMapping = new CodeDeployInfrastructureMapping();
-      awsInfrastructureMapping.setRestrictionType(restrictionType);
-      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
       awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setEnvId(envId);
       awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       awsInfrastructureMapping.setServiceId(serviceId);
       awsInfrastructureMapping.setComputeProviderType(computeProviderType);
       awsInfrastructureMapping.setDeploymentType(deploymentType);
-      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setRegion(region);
       awsInfrastructureMapping.setUuid(uuid);
