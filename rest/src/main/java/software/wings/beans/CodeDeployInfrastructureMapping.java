@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * Created by brett on 6/22/17
  */
-@JsonTypeName("AWS_CODEDEPLOY")
+@JsonTypeName("AWS_AWS_CODEDEPLOY")
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region", required = true)
   @NotEmpty
@@ -25,7 +25,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Aws CodeDeploy infrastructure mapping.
    */
   public CodeDeployInfrastructureMapping() {
-    super(InfrastructureMappingType.AWS_CODEDEPLOY.name());
+    super(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
   }
 
   @SchemaIgnore

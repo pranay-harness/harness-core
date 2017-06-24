@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
 import static software.wings.beans.command.CommandUnitType.EXEC;
@@ -292,6 +293,20 @@ public enum ArtifactType {
                               .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
                               .build())
                       .buildPipeline())
+              .build(),
+          aCommand()
+              .withCommandType(CommandType.INSTALL)
+              .withGraph(aGraph()
+                             .withGraphName("Amazon Code Deploy")
+                             .addNodes(aNode()
+                                           .withOrigin(true)
+                                           .withX(50)
+                                           .withY(50)
+                                           .withId(UUIDGenerator.graphIdGenerator("node"))
+                                           .withName("Amazon Code Deploy")
+                                           .withType(CODE_DEPLOY.name())
+                                           .build())
+                             .buildPipeline())
               .build());
     }
   },
@@ -347,6 +362,20 @@ public enum ArtifactType {
                               .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
                               .build())
                       .buildPipeline())
+              .build(),
+          aCommand()
+              .withCommandType(CommandType.INSTALL)
+              .withGraph(aGraph()
+                             .withGraphName("Amazon Code Deploy")
+                             .addNodes(aNode()
+                                           .withOrigin(true)
+                                           .withX(50)
+                                           .withY(50)
+                                           .withId(UUIDGenerator.graphIdGenerator("node"))
+                                           .withName("Amazon Code Deploy")
+                                           .withType(CODE_DEPLOY.name())
+                                           .build())
+                             .buildPipeline())
               .build());
     }
   },

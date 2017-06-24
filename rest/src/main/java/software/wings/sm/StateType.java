@@ -6,8 +6,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
-import static software.wings.beans.PhaseStepType.CODE_DEPLOY_DEPLOY;
-import static software.wings.beans.PhaseStepType.CODE_DEPLOY_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -42,9 +41,7 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
-import software.wings.sm.states.AwsCodeDeployDeploy;
-import software.wings.sm.states.AwsCodeDeployRollback;
-import software.wings.sm.states.AwsCodeDeploySetup;
+import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
@@ -195,14 +192,9 @@ public enum StateType implements StateTypeDescriptor {
    */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
-  AWS_CD_SETUP(AwsCodeDeploySetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
-      asList(CODE_DEPLOY_SETUP), ORCHESTRATION_STENCILS),
-
-  AWS_CD_DEPLOY(AwsCodeDeployDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
-      asList(CODE_DEPLOY_DEPLOY), ORCHESTRATION_STENCILS),
-
-  AWS_CD_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_CODEDEPLOY),
-      asList(CODE_DEPLOY_DEPLOY), ORCHESTRATION_STENCILS),
+  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
+      ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

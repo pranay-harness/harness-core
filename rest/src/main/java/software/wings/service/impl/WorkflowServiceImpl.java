@@ -19,6 +19,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
@@ -931,9 +932,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == DeploymentType.KUBERNETES) {
       generateNewWorkflowPhaseStepsForKubernetes(appId, envId, workflowPhase, !serviceRepeat);
+    } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
+      generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, envId, workflowPhase);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, envId, workflowPhase);
     }
+  }
+
+  private void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, String envId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
+                                   .addStep(aNode()
+                                                .withId(getUuid())
+                                                .withType(AWS_CODEDEPLOY_STATE.name())
+                                                .withName(Constants.AWS_CODE_DEPLOY)
+                                                //.addProperty()
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
   }
 
   private void generateNewWorkflowPhaseStepsForECS(
@@ -1089,6 +1110,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == DeploymentType.KUBERNETES) {
       return generateRollbackWorkflowPhaseForContainerService(
           workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+    } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
+      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_STATE.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
@@ -1113,6 +1136,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                        .addProperty("rollback", true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .build();
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(
+      WorkflowPhase workflowPhase, String containerServiceType) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
+                          .addStep(aNode()
+                                       .withId(getUuid())
+                                       .withType(containerServiceType)
+                                       .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())

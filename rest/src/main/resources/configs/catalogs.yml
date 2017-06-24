@@ -136,7 +136,7 @@ DEPLOYMENT_TYPE:
     - name: Secure Shell (SSH)
       value: SSH
     - name: AWS CodeDeploy
-      value: CODEDEPLOY
+      value: AWS_CODEDEPLOY
     - name: Amazon EC2 Container
       value: ECS
     - name: Kubernetes

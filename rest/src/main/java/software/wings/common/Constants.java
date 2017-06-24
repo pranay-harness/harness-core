@@ -171,9 +171,17 @@ public interface Constants {
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
   /**
+   * The constant AWS_CODE_DEPLOY.
+   */
+  String AWS_CODE_DEPLOY = "AWS Code Deploy";
+  /**
    * The constant UPGRADE_CONTAINERS.
    */
   String UPGRADE_CONTAINERS = "Upgrade Containers";
+  /**
+   * The constant ROLLBACK_AWS_CODE_DEPLOY.
+   */
+  String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS Code Deploy";
   /**
    * The constant ROLLBACK_CONTAINERS.
    */

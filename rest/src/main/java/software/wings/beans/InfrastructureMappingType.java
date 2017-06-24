@@ -31,7 +31,7 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Aws CodeDeploy infra mapping type.
    */
-  AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_CODEDEPLOY", StencilCategory.OTHERS, 3),
+  AWS_AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_AWS_CODEDEPLOY", StencilCategory.OTHERS, 3),
   /**
    * Aws ecs infra mapping type.
    */

@@ -27,7 +27,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   public CodeDeployCommandUnit() {
     super(CommandUnitType.CODE_DEPLOY);
     setArtifactNeeded(true);
-    setDeploymentType(DeploymentType.CODEDEPLOY.name());
+    setDeploymentType(DeploymentType.AWS_CODEDEPLOY.name());
   }
 
   @Override

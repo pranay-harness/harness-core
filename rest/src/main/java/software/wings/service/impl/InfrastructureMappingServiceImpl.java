@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
-import static software.wings.api.DeploymentType.CODEDEPLOY;
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMappingType.AWS_CODEDEPLOY;
+import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
@@ -760,7 +760,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(GCP.name(), ImmutableMap.of(KUBERNETES.name(), GCP_KUBERNETES.name()));
     } else {
       infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
-      infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), CODEDEPLOY.name(), AWS_CODEDEPLOY.name()));
+      infraTypes.put(
+          AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), AWS_CODEDEPLOY.name(), AWS_AWS_CODEDEPLOY.name()));
     }
     return infraTypes;
   }

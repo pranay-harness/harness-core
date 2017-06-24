@@ -160,6 +160,16 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         }
         break;
       }
+
+        //      case AWS_AWS_CODEDEPLOY: {
+        //        State infraState = getInfraState(rootStateMachine, phaseStateMachine, DEPLOY_AWSCODEDEPLOY,
+        //        AWS_CODEDEPLOY_STATE.name()); if (infraState != null) {
+        //          AwsCodeDeployState awsCodeDeployDeploy = (AwsCodeDeployState) infraState;
+        //          return
+        //          anInfraNodeRequest().withDeploymentType(DeploymentType.AWS_AWS_CODEDEPLOY).withProvisionNodes(true).withPhaseElement(phaseElement).build();
+        //        }
+        //        break;
+        //      }
     }
 
     return null;
