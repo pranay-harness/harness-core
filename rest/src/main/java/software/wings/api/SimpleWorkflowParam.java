@@ -6,6 +6,7 @@ package software.wings.api;
 
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.Constants;
+import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -57,8 +58,8 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
-    Map<String, Object> map = super.paramMap();
+  public Map<String, Object> paramMap(ExecutionContext context) {
+    Map<String, Object> map = super.paramMap(context);
     if (map == null) {
       map = new HashMap<>();
     }

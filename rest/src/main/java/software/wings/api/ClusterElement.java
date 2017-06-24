@@ -4,6 +4,7 @@ import static software.wings.sm.ContextElementType.CLUSTER;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class ClusterElement implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 

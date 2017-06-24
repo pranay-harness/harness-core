@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import org.apache.commons.io.IOUtils;
@@ -25,7 +26,6 @@ import javax.inject.Inject;
  */
 public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNotifyResponseData> {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsCollectionTask.class);
-  public static final String BUILD_NO = "buildNo";
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private DelegateFileManager delegateFileManager;

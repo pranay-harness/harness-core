@@ -270,7 +270,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     while (it.hasNext()) {
       ContextElement contextElement = it.next();
 
-      Map<String, Object> map = contextElement.paramMap();
+      Map<String, Object> map = contextElement.paramMap(this);
       if (map != null) {
         context.putAll(map);
       }

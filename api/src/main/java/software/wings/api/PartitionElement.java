@@ -6,6 +6,7 @@ package software.wings.api;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +96,7 @@ public class PartitionElement implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 }

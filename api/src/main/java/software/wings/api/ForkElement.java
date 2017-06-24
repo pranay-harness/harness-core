@@ -6,6 +6,7 @@ package software.wings.api;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class ForkElement implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 

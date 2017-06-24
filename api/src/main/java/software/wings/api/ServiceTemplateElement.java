@@ -6,6 +6,7 @@ package software.wings.api;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,10 +81,10 @@ public class ServiceTemplateElement implements ContextElement {
    * @see software.wings.sm.ContextElement#paramMap()
    */
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(SERVICE_TEMPLATE, this);
-    map.putAll(serviceElement.paramMap());
+    map.putAll(serviceElement.paramMap(context));
     return map;
   }
 

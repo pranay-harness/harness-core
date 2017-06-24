@@ -41,6 +41,15 @@ public interface ContextElement {
   String INSTANCE = "instance";
 
   /**
+   * The constant ARTIFACT.
+   */
+  String ARTIFACT = "artifact";
+
+  /**
+   * The constant SERVICE_VARIABLE.
+   */
+  String SERVICE_VARIABLE = "serviceVariable";
+  /**
    * The constant TIMESTAMP_ID.
    */
   String TIMESTAMP_ID = "timestampId";
@@ -71,5 +80,5 @@ public interface ContextElement {
    *
    * @return the map
    */
-  Map<String, Object> paramMap();
+  Map<String, Object> paramMap(ExecutionContext context);
 }

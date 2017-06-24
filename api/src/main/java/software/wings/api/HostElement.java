@@ -8,6 +8,7 @@ import com.google.common.base.MoreObjects;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class HostElement implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(ContextElement.HOST, this);
     return map;

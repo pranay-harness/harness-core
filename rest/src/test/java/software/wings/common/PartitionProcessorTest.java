@@ -12,6 +12,7 @@ import org.junit.Test;
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -250,7 +251,7 @@ public class PartitionProcessorTest {
     }
 
     @Override
-    public Map<String, Object> paramMap() {
+    public Map<String, Object> paramMap(ExecutionContext context) {
       return null;
     }
   }

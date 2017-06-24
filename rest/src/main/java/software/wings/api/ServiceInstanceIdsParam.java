@@ -7,6 +7,7 @@ package software.wings.api;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class ServiceInstanceIdsParam implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 

@@ -253,9 +253,12 @@ public interface Constants {
   /**
    * The constant DEFAULT_SYNC_CALL_TIMEOUT.
    */
-  public static final int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
+  int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
   /**
    * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
    */
-  public static final int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+  int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+  String BUILD_NO = "buildNo";
+  String REVISION = "revision";
 }

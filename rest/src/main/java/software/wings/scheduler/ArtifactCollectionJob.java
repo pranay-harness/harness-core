@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -65,7 +66,7 @@ public class ArtifactCollectionJob implements Job {
                                      .getResponse();
 
       Map<String, String> existingBuilds =
-          artifacts.stream().collect(Collectors.toMap(a -> a.getMetadata().get("buildNo"), a -> a.getUuid()));
+          artifacts.stream().collect(Collectors.toMap(a -> a.getMetadata().get(Constants.BUILD_NO), a -> a.getUuid()));
 
       builds.forEach(buildDetails -> {
         if (!existingBuilds.containsKey(buildDetails.getNumber())) {
@@ -77,7 +78,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withArtifactStreamId(artifactStreamId)
                                   .withArtifactSourceName(artifactStream.getSourceName())
                                   .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of("buildNo", buildDetails.getNumber()))
+                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
                                   .withRevision(buildDetails.getRevision())
                                   .build();
           artifactService.create(artifact);
@@ -89,8 +90,9 @@ public class ArtifactCollectionJob implements Job {
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (latestVersion != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-        String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
-            ? lastCollectedArtifact.getMetadata().get("buildNo")
+        String buildNo =
+            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+            ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
             : "";
         if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
           logger.info(
@@ -101,7 +103,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withArtifactStreamId(artifactStreamId)
                                   .withArtifactSourceName(artifactStream.getSourceName())
                                   .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
-                                  .withMetadata(ImmutableMap.of("buildNo", latestVersion.getNumber()))
+                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
                                   .withRevision(latestVersion.getRevision())
                                   .build();
           artifactService.create(artifact);
@@ -115,8 +117,9 @@ public class ArtifactCollectionJob implements Job {
 
       if (lastSuccessfulBuild != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-        int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
-            ? Integer.parseInt(lastCollectedArtifact.getMetadata().get("buildNo"))
+        int buildNo =
+            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+            ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO))
             : 0;
         if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
           logger.info(
@@ -128,7 +131,7 @@ public class ArtifactCollectionJob implements Job {
                   .withArtifactStreamId(artifactStreamId)
                   .withArtifactSourceName(artifactStream.getSourceName())
                   .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
-                  .withMetadata(ImmutableMap.of("buildNo", lastSuccessfulBuild.getNumber()))
+                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
                   .withRevision(lastSuccessfulBuild.getRevision())
                   .build();
           artifactService.create(artifact);

@@ -7,8 +7,11 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.inject.MembersInjector;
@@ -18,6 +21,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
@@ -51,6 +55,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
   @Mock SettingsService settingsService;
   @Mock private JobScheduler jobScheduler;
+  @Mock private ExecutionContext context;
 
   @Before
   public void setup() {
@@ -76,7 +81,10 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());
 
-    Map<String, Object> map = std.paramMap();
+    ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
+
+    Map<String, Object> map = std.paramMap(context);
     assertThat(map).isNotNull().containsEntry(ContextElement.APP, app).containsEntry(ContextElement.ENV, env);
   }
 }

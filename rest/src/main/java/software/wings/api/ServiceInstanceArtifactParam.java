@@ -3,6 +3,7 @@ package software.wings.api;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class ServiceInstanceArtifactParam implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 }

@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
@@ -13,11 +14,14 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.ArrayList;
@@ -40,6 +44,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Transient @Inject private transient EnvironmentService environmentService;
 
   @Transient @Inject private transient SettingsService settingsService;
+
+  @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
 
   private String appId;
   private String envId;
@@ -68,7 +74,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * {@inheritDoc}
    */
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     if (workflowElement != null) {
       map.put(WORKFLOW, workflowElement);
@@ -76,6 +82,30 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     map.put(APP, getApp());
     map.put(ENV, getEnv());
     map.put(TIMESTAMP_ID, timestampId);
+
+    ServiceElement serviceElement = context.getContextElement(ContextElementType.SERVICE);
+    if (serviceElement != null && artifactIds != null && artifactIds.contains(serviceElement.getUuid())) {
+      Artifact artifact = getArtifactForService(serviceElement.getUuid());
+      if (artifact != null) {
+        map.put(ARTIFACT, artifact);
+
+        List<Key<ServiceTemplate>> templateRefKeysByService =
+            serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
+        if (templateRefKeysByService == null || templateRefKeysByService.isEmpty()
+            || templateRefKeysByService.get(0).getId() == null) {
+          return map;
+        }
+        String templateId = (String) templateRefKeysByService.get(0).getId();
+        List<ServiceVariable> serviceVariables =
+            serviceTemplateService.computeServiceVariables(appId, envId, templateId, null);
+        if (serviceVariables == null || serviceVariables.isEmpty()) {
+          return map;
+        }
+
+        serviceVariables.forEach(
+            serviceVariable -> { map.put(SERVICE_VARIABLE + serviceVariable.getName(), serviceVariable.getValue()); });
+      }
+    }
 
     return map;
   }

@@ -4,6 +4,7 @@ import static software.wings.sm.ContextElementType.CONTAINER_SERVICE;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public class ContainerServiceElement implements ContextElement {
   }
 
   @Override
-  public Map<String, Object> paramMap() {
+  public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
   }
 

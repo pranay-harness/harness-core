@@ -42,6 +42,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -325,14 +326,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return;
     }
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
-    int latestArtifactBuildNo = (latestArtifact != null && latestArtifact.getMetadata().get("buildNo") != null)
-        ? Integer.parseInt(latestArtifact.getMetadata().get("buildNo"))
+    int latestArtifactBuildNo = (latestArtifact != null && latestArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+        ? Integer.parseInt(latestArtifact.getMetadata().get(Constants.BUILD_NO))
         : 0;
 
     Artifact lastSuccessfullyDeployedArtifact = getLastSuccessfullyDeployedArtifact(appId, artifactStreamAction);
-    int lastDeployedArtifactBuildNo = (lastSuccessfullyDeployedArtifact != null
-                                          && lastSuccessfullyDeployedArtifact.getMetadata().get("buildNo") != null)
-        ? Integer.parseInt(lastSuccessfullyDeployedArtifact.getMetadata().get("buildNo"))
+    int lastDeployedArtifactBuildNo =
+        (lastSuccessfullyDeployedArtifact != null
+            && lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+        ? Integer.parseInt(lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO))
         : 0;
 
     logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
