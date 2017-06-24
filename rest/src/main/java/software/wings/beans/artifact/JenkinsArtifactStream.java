@@ -21,7 +21,13 @@ import java.util.List;
 public class JenkinsArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
+  @UIOrder(5)
+  @Attributes(title = "Metadata Only (Artifact download not required)")
+  public boolean getMetadataOnly() {
+    return super.isMetadataOnly();
+  }
+
+  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -72,13 +78,13 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @UIOrder(6)
+  @UIOrder(7)
   @Attributes(title = "Automatic Download")
   public boolean getAutoDownload() {
     return super.isAutoDownload();
   }
 
-  @UIOrder(7)
+  @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
@@ -139,6 +145,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     private long lastUpdatedAt;
     private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
+    private boolean metadataOnly = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}
@@ -296,6 +303,14 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
+     *
+     */
+    public Builder withMetadataOnly(boolean metadataOnly) {
+      this.metadataOnly = metadataOnly;
+      return this;
+    }
+
+    /**
      * With stream actions builder.
      *
      * @param streamActions the stream actions
@@ -326,6 +341,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoDownload(autoDownload)
           .withAutoApproveForProduction(autoApproveForProduction)
+          .withMetadataOnly(metadataOnly)
           .withStreamActions(streamActions);
     }
 
@@ -349,6 +365,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       jenkinsArtifactStream.setAutoDownload(autoDownload);
       jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      jenkinsArtifactStream.setMetadataOnly(metadataOnly);
       jenkinsArtifactStream.setStreamActions(streamActions);
       return jenkinsArtifactStream;
     }

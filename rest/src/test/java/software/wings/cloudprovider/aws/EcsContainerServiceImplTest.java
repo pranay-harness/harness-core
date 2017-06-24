@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.AwsHelperService;
@@ -68,6 +69,8 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    when(awsHelperService.validateAndGetAwsConfig(any(SettingAttribute.class)))
+        .thenReturn((AwsConfig) connectorConfig.getValue());
     when(awsHelperService.getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
         .thenReturn(amazonEC2Client);
     when(awsHelperService.getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))

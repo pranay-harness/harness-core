@@ -247,4 +247,33 @@ public class InfrastructureMappingResource {
     return new RestResponse<>(
         infrastructureMappingService.listElasticLoadBalancer(accessKey, secretKey.toCharArray(), region));
   }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/codedeploy/application-names")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getCodeDeployApplicationNames(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listCodeDeployApplicationNames(computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/codedeploy/deployment-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getCodeDeployDeploymentGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @QueryParam("applicationName") String applicationName,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listCodeDeployDeploymentGroups(computeProviderId, region, applicationName));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/codedeploy/deployment-configs")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getCodeDeployDeploymentConfigs(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region));
+  }
 }

@@ -12,6 +12,8 @@ import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
+import com.amazonaws.services.codedeploy.AmazonCodeDeployClientBuilder;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -28,7 +30,9 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 
 import java.io.IOException;
@@ -65,6 +69,7 @@ public class AwsHelperService {
   /**
    * Gets amazon ecs client.
    *
+   * @param region    the region
    * @param accessKey the access key
    * @param secretKey the secret key
    * @return the amazon ecs client
@@ -79,6 +84,7 @@ public class AwsHelperService {
   /**
    * Gets amazon ec 2 client.
    *
+   * @param region    the region
    * @param accessKey the access key
    * @param secretKey the secret key
    * @return the amazon ec 2 client
@@ -90,8 +96,30 @@ public class AwsHelperService {
         .build();
   }
 
+  /**
+   * Gets amazon identity management client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon identity management client
+   */
   public AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, char[] secretKey) {
     return new AmazonIdentityManagementClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
+  }
+
+  /**
+   * Gets amazon code deploy client.
+   *
+   * @param region    the region
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon code deploy client
+   */
+  public AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, String accessKey, char[] secretKey) {
+    return (AmazonCodeDeployClient) AmazonCodeDeployClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   /**
@@ -105,6 +133,14 @@ public class AwsHelperService {
     return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
+  /**
+   * Gets amazon auto scaling client.
+   *
+   * @param region    the region
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon auto scaling client
+   */
   public AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, String accessKey, char[] secretKey) {
     return (AmazonAutoScalingClient) AmazonAutoScalingClientBuilder.standard()
         .withRegion(region)
@@ -112,10 +148,25 @@ public class AwsHelperService {
         .build();
   }
 
+  /**
+   * Gets amazon elastic load balancing client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon elastic load balancing client
+   */
   public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, char[] secretKey) {
     return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
+  /**
+   * Gets classic elb client.
+   *
+   * @param region    the region
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the classic elb client
+   */
   public com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
       Regions region, String accessKey, char[] secretKey) {
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient)
@@ -126,6 +177,12 @@ public class AwsHelperService {
             .build();
   }
 
+  /**
+   * Gets hostname from dns name.
+   *
+   * @param dnsName the dns name
+   * @return the hostname from dns name
+   */
   public String getHostnameFromDnsName(String dnsName) {
     return (!isNullOrEmpty(dnsName) && dnsName.endsWith(".ec2.internal"))
         ? dnsName.substring(0, dnsName.length() - ".ec2.internal".length())
@@ -135,7 +192,7 @@ public class AwsHelperService {
   /**
    * Gets instance id.
    *
-   * @param region
+   * @param region    the region
    * @param accessKey the access key
    * @param secretKey the secret key
    * @param hostName  the host name
@@ -221,5 +278,13 @@ public class AwsHelperService {
     } finally {
       IOUtils.closeQuietly(client);
     }
+  }
+
+  public AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
+    if (connectorConfig == null || connectorConfig.getValue() == null
+        || !(connectorConfig.getValue() instanceof AwsConfig)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
+    }
+    return (AwsConfig) connectorConfig.getValue();
   }
 }

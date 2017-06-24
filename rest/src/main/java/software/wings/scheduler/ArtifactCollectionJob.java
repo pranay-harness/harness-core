@@ -46,7 +46,7 @@ public class ArtifactCollectionJob implements Job {
     try {
       collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
     } catch (Exception ex) {
-      logger.error("Artifact collection cron failed with error : {}", ex);
+      logger.warn("Artifact collection cron failed with error : {}", ex);
     }
   }
 

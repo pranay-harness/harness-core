@@ -9,10 +9,10 @@ if [ ! -d ".pyenv" ]; then
 fi
 
 make dist
-
+echo $@
 #Running locally
 if [ -d "dist" ]; then
-    source .pyenv/bin/activate; cd dist/splunk_pyml; python SplunkIntel.pyc	
+    source .pyenv/bin/activate; cd dist/splunk_pyml; python SplunkIntel.pyc $@	
 else
-    source .pyenv/bin/activate; python SplunkIntel.pyc 
+    source .pyenv/bin/activate; python SplunkIntel.pyc $@
 fi

@@ -7,16 +7,18 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SystemCatalog;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.cloudprovider.aws.AwsCodeDeployServiceImpl;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -225,6 +227,7 @@ public class WingsModule extends AbstractModule {
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
+    bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

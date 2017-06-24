@@ -49,7 +49,6 @@ import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -773,7 +772,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void provisionNodes(String region, SettingAttribute connectorConfig, Integer clusterSize,
       String launchConfigName, Map<String, Object> params) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
     AmazonECSClient amazonEcsClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -856,7 +855,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   @Override
   public String deployService(String region, SettingAttribute connectorConfig, String serviceDefinition) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     CreateServiceRequest createServiceRequest = null;
@@ -915,7 +914,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   @Override
   public void deleteService(String region, SettingAttribute connectorConfig, String clusterName, String serviceName) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     DeleteServiceResult deleteServiceResult =
@@ -925,7 +924,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig, String clusterName,
       String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -1004,7 +1003,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void createService(
       String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(cloudProviderSetting);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     amazonECSClient.createService(clusterConfiguration);
@@ -1013,7 +1012,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public TaskDefinition createTask(
       String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(settingAttribute);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     return amazonECSClient.registerTaskDefinition(registerTaskDefinitionRequest).getTaskDefinition();
@@ -1021,7 +1020,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   @Override
   public List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(cloudProviderSetting);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
@@ -1042,13 +1041,5 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
 
     return services;
-  }
-
-  private AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
-    if (connectorConfig == null || connectorConfig.getValue() == null
-        || !(connectorConfig.getValue() instanceof AwsConfig)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
-    }
-    return (AwsConfig) connectorConfig.getValue();
   }
 }

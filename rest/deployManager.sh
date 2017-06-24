@@ -15,9 +15,6 @@ mkdir -p $HOME/backup; cp $HOME/rest-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/res
 mkdir -p $HOME/backup; cp $HOME/config.yml $HOME/backup/config-$(date +%F-%H:%M).yml
 mkdir -p $HOME/backup; cp $HOME/portal.log $HOME/backup/portal-$(date +%F-%H:%M).log
 
-cp $HOME/staging/rest-0.0.1-SNAPSHOT-capsule.jar $HOME
-cp $HOME/staging/config.yml $HOME
-
 sed -i 's/port: 9090/port: 3456/' config.yml
 sed -i 's/keyStorePath: keystore.jks/keyStorePath: \/home\/ubuntu\/keystore.jks/' config.yml
 sed -i 's/keyStorePassword: password/keyStorePassword: W!ngs@123/' config.yml

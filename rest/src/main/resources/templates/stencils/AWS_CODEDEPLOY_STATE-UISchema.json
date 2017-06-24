@@ -1,0 +1,4 @@
+{
+  "commandName": { "ui:widget": "hidden" },
+  "ui:order": ["bucket", "key", "bundleType", "commandName"]
+}

@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -40,6 +41,7 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
+import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
@@ -189,6 +191,10 @@ public enum StateType implements StateTypeDescriptor {
    * Phase state type.
    */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
+
+  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
+      ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

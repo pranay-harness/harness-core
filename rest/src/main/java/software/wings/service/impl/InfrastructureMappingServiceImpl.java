@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
@@ -41,6 +43,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -94,6 +97,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private AwsCodeDeployService awsCodeDeployService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -494,6 +498,39 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         appId, serviceTemplateId, infrastructureMapping.getUuid(), selectionParams);
   }
 
+  @Override
+  public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      return awsCodeDeployService.listApplications(region, computeProviderSetting);
+    }
+    return ImmutableList.of();
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting);
+    }
+    return ImmutableList.of();
+  }
+
+  @Override
+  public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting);
+    }
+    return ImmutableList.of();
+  }
+
   private void syncAwsHostsAndUpdateInstances(
       InfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsInfrastructureProvider awsInfrastructureProvider =
@@ -723,7 +760,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(GCP.name(), ImmutableMap.of(KUBERNETES.name(), GCP_KUBERNETES.name()));
     } else {
       infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
-      infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name()));
+      infraTypes.put(
+          AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), AWS_CODEDEPLOY.name(), AWS_AWS_CODEDEPLOY.name()));
     }
     return infraTypes;
   }
