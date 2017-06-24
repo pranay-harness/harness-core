@@ -45,6 +45,8 @@ public abstract class ArtifactStream extends Base {
 
   @SchemaIgnore private boolean autoApproveForProduction = false;
 
+  @SchemaIgnore private boolean metadataOnly = false;
+
   @SchemaIgnore private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   /**
@@ -158,6 +160,22 @@ public abstract class ArtifactStream extends Base {
     this.autoApproveForProduction = autoApproveForProduction;
   }
 
+  /**
+   * Is metadata only
+   * @return
+   */
+  @SchemaIgnore
+  public boolean isMetadataOnly() {
+    return metadataOnly;
+  }
+
+  /**
+   * Set metadata only
+   * @param metadataOnly
+   */
+  public void setMetadataOnly(boolean metadataOnly) {
+    this.metadataOnly = metadataOnly;
+  }
   /**
    * Gets stream actions.
    *
