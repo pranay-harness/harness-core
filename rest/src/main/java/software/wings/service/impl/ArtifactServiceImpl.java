@@ -105,13 +105,20 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
     if (status.equals(QUEUED)) {
-      collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
+      if (artifactStream.isMetadataOnly()) {
+        logger.info("Artifact stream setup as metadata only. So, not collecting artifact");
+      } else {
+        collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
+      }
     }
 
     return savedArtifact;
   }
 
   private Status getArtifactStatus(ArtifactStream artifactStream) {
+    if (artifactStream.isMetadataOnly()) {
+      return APPROVED;
+    }
     return DOCKER.name().equals(artifactStream.getArtifactStreamType())
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
         : QUEUED;
