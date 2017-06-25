@@ -42,7 +42,7 @@ public class CommandExecutionContext {
   private String clusterName;
   private String serviceName;
   private String region;
-  private CodoDeployParams codoDeployParams;
+  private CodeDeployParams codeDeployParams;
   private Integer desiredCount;
   private Integer desiredPercentage;
   private CommandExecutionData commandExecutionData;
@@ -75,6 +75,7 @@ public class CommandExecutionContext {
     this.hostConnectionAttributes = other.hostConnectionAttributes;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
+    this.codeDeployParams = other.codeDeployParams;
   }
 
   /**
@@ -585,413 +586,36 @@ public class CommandExecutionContext {
     this.appContainer = appContainer;
   }
 
-  public CodoDeployParams getCodoDeployParams() {
-    return codoDeployParams;
+  public CodeDeployParams getCodeDeployParams() {
+    return codeDeployParams;
   }
 
-  public void setCodoDeployParams(CodoDeployParams codoDeployParams) {
-    this.codoDeployParams = codoDeployParams;
-  }
-
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
-    private String accountId;
-    private String envId;
-    private Host host;
-    private String appId;
-    private String activityId;
-    private String runtimePath;
-    private String stagingPath;
-    private String backupPath;
-    private String serviceTemplateId;
-    private ExecutionCredential executionCredential;
-    private AppContainer appContainer;
-    private List<ArtifactFile> artifactFiles;
-    private Map<String, String> serviceVariables = Maps.newHashMap();
-    private Map<String, String> envVariables = Maps.newHashMap();
-    private SettingAttribute hostConnectionAttributes;
-    private SettingAttribute bastionConnectionAttributes;
-    private ArtifactStreamAttributes artifactStreamAttributes;
-    private SettingAttribute cloudProviderSetting;
-    private String clusterName;
-    private String serviceName;
-    private String region;
-    private Integer desiredCount;
-    private Integer desiredPercentage;
-    private CommandExecutionData commandExecutionData;
-
-    private Builder() {}
-
-    /**
-     * A command execution context builder.
-     *
-     * @return the builder
-     */
-    public static Builder aCommandExecutionContext() {
-      return new Builder();
-    }
-
-    /**
-     * With account id builder.
-     *
-     * @param accountId the account id
-     * @return the builder
-     */
-    public Builder withAccountId(String accountId) {
-      this.accountId = accountId;
-      return this;
-    }
-
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
-    /**
-     * With host builder.
-     *
-     * @param host the host
-     * @return the builder
-     */
-    public Builder withHost(Host host) {
-      this.host = host;
-      return this;
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
-     * With activity id builder.
-     *
-     * @param activityId the activity id
-     * @return the builder
-     */
-    public Builder withActivityId(String activityId) {
-      this.activityId = activityId;
-      return this;
-    }
-
-    /**
-     * With runtime path builder.
-     *
-     * @param runtimePath the runtime path
-     * @return the builder
-     */
-    public Builder withRuntimePath(String runtimePath) {
-      this.runtimePath = runtimePath;
-      return this;
-    }
-
-    /**
-     * With staging path builder.
-     *
-     * @param stagingPath the staging path
-     * @return the builder
-     */
-    public Builder withStagingPath(String stagingPath) {
-      this.stagingPath = stagingPath;
-      return this;
-    }
-
-    /**
-     * With backup path builder.
-     *
-     * @param backupPath the backup path
-     * @return the builder
-     */
-    public Builder withBackupPath(String backupPath) {
-      this.backupPath = backupPath;
-      return this;
-    }
-
-    /**
-     * With service template id builder.
-     *
-     * @param serviceTemplateId the service template id
-     * @return the builder
-     */
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
-      return this;
-    }
-
-    /**
-     * With execution credential builder.
-     *
-     * @param executionCredential the execution credential
-     * @return the builder
-     */
-    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
-      this.executionCredential = executionCredential;
-      return this;
-    }
-
-    /**
-     * With app container builder.
-     *
-     * @param appContainer the app container
-     * @return the builder
-     */
-    public Builder withAppContainer(AppContainer appContainer) {
-      this.appContainer = appContainer;
-      return this;
-    }
-
-    /**
-     * With artifact files builder.
-     *
-     * @param artifactFiles the artifact files
-     * @return the builder
-     */
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
-      this.artifactFiles = artifactFiles;
-      return this;
-    }
-
-    /**
-     * With service variables builder.
-     *
-     * @param serviceVariables the service variables
-     * @return the builder
-     */
-    public Builder withServiceVariables(Map<String, String> serviceVariables) {
-      this.serviceVariables = serviceVariables;
-      return this;
-    }
-
-    /**
-     * With env variables builder.
-     *
-     * @param envVariables the env variables
-     * @return the builder
-     */
-    public Builder withEnvVariables(Map<String, String> envVariables) {
-      this.envVariables = envVariables;
-      return this;
-    }
-
-    /**
-     * With host connection attributes builder.
-     *
-     * @param hostConnectionAttributes the host connection attributes
-     * @return the builder
-     */
-    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
-      this.hostConnectionAttributes = hostConnectionAttributes;
-      return this;
-    }
-
-    /**
-     * With bastion connection attributes builder.
-     *
-     * @param bastionConnectionAttributes the bastion connection attributes
-     * @return the builder
-     */
-    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
-      this.bastionConnectionAttributes = bastionConnectionAttributes;
-      return this;
-    }
-
-    /**
-     * With artifact stream attributes builder.
-     *
-     * @param artifactStreamAttributes the artifact stream attributes
-     * @return the builder
-     */
-    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
-      this.artifactStreamAttributes = artifactStreamAttributes;
-      return this;
-    }
-
-    /**
-     * With cloud provider setting builder.
-     *
-     * @param cloudProviderSetting the cloud provider setting
-     * @return the builder
-     */
-    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
-      this.cloudProviderSetting = cloudProviderSetting;
-      return this;
-    }
-
-    /**
-     * With cluster name builder.
-     *
-     * @param clusterName the cluster name
-     * @return the builder
-     */
-    public Builder withClusterName(String clusterName) {
-      this.clusterName = clusterName;
-      return this;
-    }
-
-    /**
-     * With service name builder.
-     *
-     * @param serviceName the service name
-     * @return the builder
-     */
-    public Builder withServiceName(String serviceName) {
-      this.serviceName = serviceName;
-      return this;
-    }
-
-    /**
-     * With region builder.
-     *
-     * @param region the region
-     * @return the builder
-     */
-    public Builder withRegion(String region) {
-      this.region = region;
-      return this;
-    }
-
-    /**
-     * With desired count builder.
-     *
-     * @param desiredCount the desired count
-     * @return the builder
-     */
-    public Builder withDesiredCount(Integer desiredCount) {
-      this.desiredCount = desiredCount;
-      return this;
-    }
-
-    /**
-     * With desired percentage builder.
-     *
-     * @param desiredPercentage the desired percentage
-     * @return the builder
-     */
-    public Builder withDesiredPercentage(Integer desiredPercentage) {
-      this.desiredPercentage = desiredPercentage;
-      return this;
-    }
-
-    /**
-     * With command execution data builder.
-     *
-     * @param commandExecutionData the command execution data
-     * @return the builder
-     */
-    public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
-      this.commandExecutionData = commandExecutionData;
-      return this;
-    }
-
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aCommandExecutionContext()
-          .withAccountId(accountId)
-          .withEnvId(envId)
-          .withHost(host)
-          .withAppId(appId)
-          .withActivityId(activityId)
-          .withRuntimePath(runtimePath)
-          .withStagingPath(stagingPath)
-          .withBackupPath(backupPath)
-          .withServiceTemplateId(serviceTemplateId)
-          .withExecutionCredential(executionCredential)
-          .withAppContainer(appContainer)
-          .withArtifactFiles(artifactFiles)
-          .withServiceVariables(serviceVariables)
-          .withEnvVariables(envVariables)
-          .withHostConnectionAttributes(hostConnectionAttributes)
-          .withBastionConnectionAttributes(bastionConnectionAttributes)
-          .withArtifactStreamAttributes(artifactStreamAttributes)
-          .withCloudProviderSetting(cloudProviderSetting)
-          .withClusterName(clusterName)
-          .withServiceName(serviceName)
-          .withRegion(region)
-          .withDesiredCount(desiredCount)
-          .withDesiredPercentage(desiredPercentage)
-          .withCommandExecutionData(commandExecutionData);
-    }
-
-    /**
-     * Build command execution context.
-     *
-     * @return the command execution context
-     */
-    public CommandExecutionContext build() {
-      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
-      commandExecutionContext.setAccountId(accountId);
-      commandExecutionContext.setEnvId(envId);
-      commandExecutionContext.setHost(host);
-      commandExecutionContext.setAppId(appId);
-      commandExecutionContext.setActivityId(activityId);
-      commandExecutionContext.setRuntimePath(runtimePath);
-      commandExecutionContext.setStagingPath(stagingPath);
-      commandExecutionContext.setBackupPath(backupPath);
-      commandExecutionContext.setServiceTemplateId(serviceTemplateId);
-      commandExecutionContext.setExecutionCredential(executionCredential);
-      commandExecutionContext.setAppContainer(appContainer);
-      commandExecutionContext.setArtifactFiles(artifactFiles);
-      commandExecutionContext.setServiceVariables(serviceVariables);
-      commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
-      commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
-      commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
-      commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
-      commandExecutionContext.setClusterName(clusterName);
-      commandExecutionContext.setServiceName(serviceName);
-      commandExecutionContext.setRegion(region);
-      commandExecutionContext.setDesiredCount(desiredCount);
-      commandExecutionContext.setDesiredPercentage(desiredPercentage);
-      commandExecutionContext.setCommandExecutionData(commandExecutionData);
-      commandExecutionContext.envVariables = this.envVariables;
-      return commandExecutionContext;
-    }
+  public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
+    this.codeDeployParams = codeDeployParams;
   }
 
   /**
    * The type Codo deploy params.
    */
-  public static class CodoDeployParams {
+  public static class CodeDeployParams {
     private String applicationName;
     private String deploymentConfigurationName;
     private String deploymentGroupName;
     private String region;
+    private String bucket;
+    private String key;
+    private String bundleType;
 
-    private CodoDeployParams(Builder builder) {
+    public CodeDeployParams() {}
+
+    private CodeDeployParams(Builder builder) {
       setApplicationName(builder.applicationName);
       setDeploymentConfigurationName(builder.deploymentConfigurationName);
       setDeploymentGroupName(builder.deploymentGroupName);
       setRegion(builder.region);
-    }
-
-    public static Builder newBuilder() {
-      return new Builder();
-    }
-
-    public static Builder newBuilder(CodoDeployParams copy) {
-      Builder builder = new Builder();
-      builder.applicationName = copy.applicationName;
-      builder.deploymentConfigurationName = copy.deploymentConfigurationName;
-      builder.deploymentGroupName = copy.deploymentGroupName;
-      builder.region = copy.region;
-      return builder;
+      setBucket(builder.bucket);
+      setKey(builder.key);
+      setBundleType(builder.bundleType);
     }
 
     /**
@@ -1066,13 +690,40 @@ public class CommandExecutionContext {
       this.region = region;
     }
 
+    public String getBucket() {
+      return bucket;
+    }
+
+    public void setBucket(String bucket) {
+      this.bucket = bucket;
+    }
+
+    public String getBundleType() {
+      return bundleType;
+    }
+
+    public void setBundleType(String bundleType) {
+      this.bundleType = bundleType;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
     public static final class Builder {
       private String applicationName;
       private String deploymentConfigurationName;
       private String deploymentGroupName;
       private String region;
+      private String bucket;
+      private String key;
+      private String bundleType;
 
-      private Builder() {}
+      public Builder() {}
 
       public Builder withApplicationName(String applicationName) {
         this.applicationName = applicationName;
@@ -1094,9 +745,242 @@ public class CommandExecutionContext {
         return this;
       }
 
-      public CodoDeployParams build() {
-        return new CodoDeployParams(this);
+      public Builder withBucket(String bucket) {
+        this.bucket = bucket;
+        return this;
       }
+
+      public Builder withKey(String key) {
+        this.key = key;
+        return this;
+      }
+
+      public Builder withBundleType(String bundleType) {
+        this.bundleType = bundleType;
+        return this;
+      }
+
+      public CodeDeployParams build() {
+        return new CodeDeployParams(this);
+      }
+    }
+  }
+
+  public static final class Builder {
+    private String accountId;
+    private String envId;
+    private Host host;
+    private String appId;
+    private String activityId;
+    private String runtimePath;
+    private String stagingPath;
+    private String backupPath;
+    private String serviceTemplateId;
+    private ExecutionCredential executionCredential;
+    private AppContainer appContainer;
+    private List<ArtifactFile> artifactFiles;
+    private Map<String, String> serviceVariables = Maps.newHashMap();
+    private Map<String, String> envVariables = Maps.newHashMap();
+    private SettingAttribute hostConnectionAttributes;
+    private SettingAttribute bastionConnectionAttributes;
+    private ArtifactStreamAttributes artifactStreamAttributes;
+    private SettingAttribute cloudProviderSetting;
+    private String clusterName;
+    private String serviceName;
+    private String region;
+    private CodeDeployParams codeDeployParams;
+    private Integer desiredCount;
+    private Integer desiredPercentage;
+    private CommandExecutionData commandExecutionData;
+
+    private Builder() {}
+
+    public static Builder aCommandExecutionContext() {
+      return new Builder();
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withHost(Host host) {
+      this.host = host;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withActivityId(String activityId) {
+      this.activityId = activityId;
+      return this;
+    }
+
+    public Builder withRuntimePath(String runtimePath) {
+      this.runtimePath = runtimePath;
+      return this;
+    }
+
+    public Builder withStagingPath(String stagingPath) {
+      this.stagingPath = stagingPath;
+      return this;
+    }
+
+    public Builder withBackupPath(String backupPath) {
+      this.backupPath = backupPath;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
+      this.executionCredential = executionCredential;
+      return this;
+    }
+
+    public Builder withAppContainer(AppContainer appContainer) {
+      this.appContainer = appContainer;
+      return this;
+    }
+
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
+      return this;
+    }
+
+    public Builder withServiceVariables(Map<String, String> serviceVariables) {
+      this.serviceVariables = serviceVariables;
+      return this;
+    }
+
+    public Builder withEnvVariables(Map<String, String> envVariables) {
+      this.envVariables = envVariables;
+      return this;
+    }
+
+    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
+      this.hostConnectionAttributes = hostConnectionAttributes;
+      return this;
+    }
+
+    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
+      this.bastionConnectionAttributes = bastionConnectionAttributes;
+      return this;
+    }
+
+    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+      this.artifactStreamAttributes = artifactStreamAttributes;
+      return this;
+    }
+
+    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
+      this.cloudProviderSetting = cloudProviderSetting;
+      return this;
+    }
+
+    public Builder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
+      return this;
+    }
+
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
+    public Builder withRegion(String region) {
+      this.region = region;
+      return this;
+    }
+
+    public Builder withCodeDeployParams(CodeDeployParams codeDeployParams) {
+      this.codeDeployParams = codeDeployParams;
+      return this;
+    }
+
+    public Builder withDesiredCount(Integer desiredCount) {
+      this.desiredCount = desiredCount;
+      return this;
+    }
+
+    public Builder withDesiredPercentage(Integer desiredPercentage) {
+      this.desiredPercentage = desiredPercentage;
+      return this;
+    }
+
+    public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
+      this.commandExecutionData = commandExecutionData;
+      return this;
+    }
+
+    public Builder but() {
+      return aCommandExecutionContext()
+          .withAccountId(accountId)
+          .withEnvId(envId)
+          .withHost(host)
+          .withAppId(appId)
+          .withActivityId(activityId)
+          .withRuntimePath(runtimePath)
+          .withStagingPath(stagingPath)
+          .withBackupPath(backupPath)
+          .withServiceTemplateId(serviceTemplateId)
+          .withExecutionCredential(executionCredential)
+          .withAppContainer(appContainer)
+          .withArtifactFiles(artifactFiles)
+          .withServiceVariables(serviceVariables)
+          .withEnvVariables(envVariables)
+          .withHostConnectionAttributes(hostConnectionAttributes)
+          .withBastionConnectionAttributes(bastionConnectionAttributes)
+          .withArtifactStreamAttributes(artifactStreamAttributes)
+          .withCloudProviderSetting(cloudProviderSetting)
+          .withClusterName(clusterName)
+          .withServiceName(serviceName)
+          .withRegion(region)
+          .withCodeDeployParams(codeDeployParams)
+          .withDesiredCount(desiredCount)
+          .withDesiredPercentage(desiredPercentage)
+          .withCommandExecutionData(commandExecutionData);
+    }
+
+    public CommandExecutionContext build() {
+      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
+      commandExecutionContext.setAccountId(accountId);
+      commandExecutionContext.setEnvId(envId);
+      commandExecutionContext.setHost(host);
+      commandExecutionContext.setAppId(appId);
+      commandExecutionContext.setActivityId(activityId);
+      commandExecutionContext.setRuntimePath(runtimePath);
+      commandExecutionContext.setStagingPath(stagingPath);
+      commandExecutionContext.setBackupPath(backupPath);
+      commandExecutionContext.setServiceTemplateId(serviceTemplateId);
+      commandExecutionContext.setExecutionCredential(executionCredential);
+      commandExecutionContext.setAppContainer(appContainer);
+      commandExecutionContext.setArtifactFiles(artifactFiles);
+      commandExecutionContext.setServiceVariables(serviceVariables);
+      commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
+      commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
+      commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
+      commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
+      commandExecutionContext.setClusterName(clusterName);
+      commandExecutionContext.setServiceName(serviceName);
+      commandExecutionContext.setRegion(region);
+      commandExecutionContext.setCodeDeployParams(codeDeployParams);
+      commandExecutionContext.setDesiredCount(desiredCount);
+      commandExecutionContext.setDesiredPercentage(desiredPercentage);
+      commandExecutionContext.setCommandExecutionData(commandExecutionData);
+      commandExecutionContext.envVariables = this.envVariables;
+      return commandExecutionContext;
     }
   }
 }

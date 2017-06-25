@@ -1,15 +1,19 @@
 package software.wings.beans.command;
 
+import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.inject.Inject;
 
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.RevisionLocation;
+import com.amazonaws.services.codedeploy.model.S3Location;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.CommandExecutionContext.CodoDeployParams;
+import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -33,29 +37,41 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    CodoDeployParams codoDeployParams = context.getCodoDeployParams();
-    String region = codoDeployParams.getRegion();
-    String deploymentGroupName = codoDeployParams.getDeploymentGroupName();
-    String applicationName = codoDeployParams.getApplicationName();
-    String deploymentConfigurationName = codoDeployParams.getDeploymentConfigurationName();
+    CodeDeployParams codeDeployParams = context.getCodeDeployParams();
+    String region = context.getRegion();
+    String deploymentGroupName = codeDeployParams.getDeploymentGroupName();
+    String applicationName = codeDeployParams.getApplicationName();
+    String deploymentConfigurationName = codeDeployParams.getDeploymentConfigurationName();
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      CreateDeploymentRequest createDeploymentRequest = new CreateDeploymentRequest()
-                                                            .withApplicationName(applicationName)
-                                                            .withDeploymentGroupName(deploymentGroupName)
-                                                            .withDeploymentConfigName(deploymentConfigurationName);
+      executionLogCallback.saveExecutionLog(
+          String.format("Deploying application [%s]", applicationName), LogLevel.INFO);
+      CreateDeploymentRequest createDeploymentRequest =
+          new CreateDeploymentRequest()
+              .withApplicationName(applicationName)
+              .withDeploymentGroupName(deploymentGroupName)
+              .withDeploymentConfigName(deploymentConfigurationName)
+              .withRevision(new RevisionLocation().withRevisionType("S3").withS3Location(
+                  new S3Location()
+                      .withBucket(codeDeployParams.getBucket())
+                      .withBundleType(codeDeployParams.getBundleType())
+                      .withKey(codeDeployParams.getKey())));
       CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
           region, cloudProviderSetting, createDeploymentRequest, executionLogCallback);
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
       // go over instance data in command execution data and prepare execution data
-      context.setCommandExecutionData(new CodeDeployCommndExecutionData());
+      context.setCommandExecutionData(
+          aCodeDeployCommandExecutionData().withInstances(codeDeployDeploymentInfo.getInstances()).build());
     } catch (Exception ex) {
+      ex.printStackTrace();
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
     }
+    executionLogCallback.saveExecutionLog(
+        String.format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
     return commandExecutionStatus;
   }
 }

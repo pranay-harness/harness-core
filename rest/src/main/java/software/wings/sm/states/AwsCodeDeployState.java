@@ -1,6 +1,11 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -11,25 +16,47 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
+import software.wings.beans.command.CodeDeployCommandExecutionData;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
+import software.wings.beans.command.CommandExecutionContext.CodeDeployParams.Builder;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.NotifyResponseData;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 6/22/17
@@ -46,13 +73,23 @@ public class AwsCodeDeployState extends State {
   @DefaultValue("Amazon Code Deploy")
   private String commandName = "Amazon Code Deploy";
 
+  @Inject @Transient protected transient AwsCodeDeployService awsCodeDeployService;
+
+  @Inject @Transient protected transient SettingsService settingsService;
+
+  @Inject @Transient protected transient DelegateService delegateService;
+
+  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
+
+  @Inject @Transient protected transient ActivityService activityService;
+
+  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
+
+  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
+
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
   }
-
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -69,22 +106,139 @@ public class AwsCodeDeployState extends State {
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName()).getCommand();
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    CodeDeployInfrastructureMapping infrastructureMapping =
+        (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
+            app.getUuid(), phaseElement.getInfraMappingId());
+
+    SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    String region = infrastructureMapping.getRegion();
 
     logger.info("Revision :{}, Build No: ", context.evaluateExpression("${artifact.revision}"),
         context.evaluateExpression("${artifact.buildNo}"));
-    //    logger.info("Service Variables: svcConfig:{}, envConfig: {}, overridingConfig: {}",
-    //        context.evaluateExpression("${serviceVariable.svcConfig}"),
-    //        context.evaluateExpression("${serviceVariable.envConfig}"),
-    //        context.evaluateExpression("${serviceVariable.overridingConfig}")
-    //        );
-    return anExecutionResponse().build();
+
+    Activity.Builder activityBuilder = anActivity()
+                                           .withAppId(app.getUuid())
+                                           .withApplicationName(app.getName())
+                                           .withEnvironmentId(env.getUuid())
+                                           .withEnvironmentName(env.getName())
+                                           .withEnvironmentType(env.getEnvironmentType())
+                                           .withServiceId(service.getUuid())
+                                           .withServiceName(service.getName())
+                                           .withCommandName(command.getName())
+                                           .withType(Type.Command)
+                                           .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                                           .withWorkflowType(context.getWorkflowType())
+                                           .withWorkflowExecutionName(context.getWorkflowExecutionName())
+                                           .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                           .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                           .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
+                                               app.getUuid(), serviceId, env.getUuid(), command.getName()))
+                                           .withCommandType(command.getCommandUnitType().name())
+                                           .withServiceVariables(context.getServiceVariables());
+
+    Activity activity = activityService.save(activityBuilder.build());
+
+    executionDataBuilder.withServiceId(service.getUuid())
+        .withServiceName(service.getName())
+        .withAppId(app.getUuid())
+        .withCommandName(getCommandName())
+        .withActivityId(activity.getUuid());
+
+    CodeDeployParams codeDeployParams =
+        new Builder()
+            .withApplicationName(infrastructureMapping.getApplicationName())
+            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
+            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
+            .withBucket(bucket)
+            .withKey(key)
+            .withBundleType(bundleType)
+            .build();
+
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                          .withAccountId(app.getAccountId())
+                                                          .withAppId(app.getUuid())
+                                                          .withEnvId(env.getUuid())
+                                                          .withServiceName(service.getName())
+                                                          .withRegion(region)
+                                                          .withActivityId(activity.getUuid())
+                                                          .withCloudProviderSetting(cloudProviderSetting)
+                                                          .withCodeDeployParams(codeDeployParams)
+                                                          .build();
+
+    String delegateTaskId =
+        delegateService.queueTask(DelegateTask.Builder.aDelegateTask()
+                                      .withAccountId(app.getAccountId())
+                                      .withAppId(app.getAppId())
+                                      .withTaskType(TaskType.COMMAND)
+                                      .withWaitId(activity.getUuid())
+                                      .withParameters(new Object[] {command, commandExecutionContext})
+                                      .build());
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(singletonList(activity.getUuid()))
+        .withStateExecutionData(executionDataBuilder.build())
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+
+    /*    CreateDeploymentRequest createDeploymentRequest = new
+       CreateDeploymentRequest().withApplicationName(infrastructureMapping.getApplicationName())
+            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup()).withDeploymentConfigName(infrastructureMapping.getDeploymentConfig()).withRevision(
+                new RevisionLocation().withRevisionType("S3").withS3Location(new
+       S3Location().withBucket(bucket).withBundleType(bundleType).withKey(key))); CodeDeployDeploymentInfo
+       codeDeployDeploymentInfo = awsCodeDeployService .deployApplication(Regions.US_EAST_1.getName(),
+       settingsService.get(infrastructureMapping.getComputeProviderSettingId()), createDeploymentRequest, new
+       ExecutionLogCallback()); logger.info(codeDeployDeploymentInfo.toString());
+        //    logger.info("Service Variables: svcConfig:{}, envConfig: {}, overridingConfig: {}",
+        //        context.evaluateExpression("${serviceVariable.svcConfig}"),
+        //        context.evaluateExpression("${serviceVariable.envConfig}"),
+        //        context.evaluateExpression("${serviceVariable.overridingConfig}")
+        //        );
+        return anExecutionResponse().withAsync(false)
+            .withExecutionStatus(codeDeployDeploymentInfo.getStatus().equals(CommandExecutionStatus.FAILURE) ?
+       ExecutionStatus.FAILED : ExecutionStatus.SUCCESS) .build();
+            */
   }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+    CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
+
+    ExecutionStatus status =
+        commandExecutionResult != null && CommandExecutionStatus.SUCCESS.equals(commandExecutionResult.getStatus())
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+    activityService.updateStatus(
+        commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
+
+    InstanceElementListParam instanceElementListParam = anInstanceElementListParam().build();
+    if (commandExecutionResult != null && commandExecutionResult.getCommandExecutionData() != null) {
+      CodeDeployCommandExecutionData commandExecutionData =
+          (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
+      List<InstanceElement> instanceElements =
+          commandExecutionData.getInstances()
+              .stream()
+              .map(instance
+                  -> InstanceElement.Builder.anInstanceElement()
+                         .withUuid(instance.getInstanceId())
+                         .withHostName(instance.getPublicDnsName())
+                         .withHostElement(aHostElement().withHostName(instance.getPublicDnsName()).build())
+                         .build())
+              .collect(Collectors.toList());
+      instanceElementListParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+    }
+
+    return anExecutionResponse()
+        .withStateExecutionData(commandStateExecutionData)
+        .withExecutionStatus(status)
+        .addContextElement(instanceElementListParam)
+        .addNotifyElement(instanceElementListParam)
+        .build();
+  }
 
   @SchemaIgnore
   public String getCommandName() {

@@ -1,5 +1,7 @@
 package software.wings.cloudprovider;
 
+import com.google.common.base.MoreObjects;
+
 import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
@@ -46,5 +48,10 @@ public class CodeDeployDeploymentInfo {
    */
   public void setInstances(List<Instance> instances) {
     this.instances = instances;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("status", status).add("instances", instances).toString();
   }
 }

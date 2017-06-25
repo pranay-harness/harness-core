@@ -45,6 +45,7 @@ import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
+import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
@@ -118,5 +119,7 @@ public class DelegateModule extends AbstractModule {
         .to(ContainerCommandUnitExecutorServiceImpl.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.SSH.name())
         .to(SshCommandUnitExecutorServiceImpl.class);
+    serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.AWS_CODEDEPLOY.name())
+        .to(CodeDeployCommandUnitExecutorServiceImpl.class);
   }
 }
