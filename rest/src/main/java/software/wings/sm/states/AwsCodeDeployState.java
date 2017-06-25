@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
@@ -33,6 +35,8 @@ import software.wings.stencils.EnumData;
  * Created by brett on 6/22/17
  */
 public class AwsCodeDeployState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployState.class);
+
   @Attributes(title = "Bucket") private String bucket;
   @Attributes(title = "Key") private String key;
   @Attributes(title = "Bundle Type") private String bundleType;
@@ -69,6 +73,13 @@ public class AwsCodeDeployState extends State {
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
+    logger.info("Revision :{}, Build No: ", context.evaluateExpression("${artifact.revision}"),
+        context.evaluateExpression("${artifact.buildNo}"));
+    //    logger.info("Service Variables: svcConfig:{}, envConfig: {}, overridingConfig: {}",
+    //        context.evaluateExpression("${serviceVariable.svcConfig}"),
+    //        context.evaluateExpression("${serviceVariable.envConfig}"),
+    //        context.evaluateExpression("${serviceVariable.overridingConfig}")
+    //        );
     return anExecutionResponse().build();
   }
 

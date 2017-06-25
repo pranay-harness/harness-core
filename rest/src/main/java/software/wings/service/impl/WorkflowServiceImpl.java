@@ -887,7 +887,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (workflowPhase.getDeploymentType() == DeploymentType.ECS
-        || workflowPhase.getDeploymentType() == DeploymentType.KUBERNETES) {
+        || workflowPhase.getDeploymentType() == DeploymentType.KUBERNETES
+        || workflowPhase.getDeploymentType() == DeploymentType.AWS_CODEDEPLOY) {
       requiredEntityTypes.add(EntityType.ARTIFACT);
       return requiredEntityTypes;
     }

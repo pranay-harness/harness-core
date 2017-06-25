@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
+import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +98,25 @@ public class Artifact extends Base {
   public void setRevision(String revision) {
     this.revision = revision;
   }
+
+  /**
+   * Gets buildNo.
+   *
+   * @return the buildNo
+   */
+  public String getBuildNo() {
+    if (getMetadata() != null) {
+      return getMetadata().get(Constants.BUILD_NO);
+    }
+    return null;
+  }
+
+  /**
+   * Sets buildNo.
+   *
+   * @param buildNo the buildNo
+   */
+  public void setBuildNo(String buildNo) {}
 
   /**
    * Gets status.
