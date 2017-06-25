@@ -375,11 +375,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * @return the artifact for service
    */
   public Artifact getArtifactForService(String serviceId) {
-    return getArtifacts()
-        .stream()
-        .filter(artifact -> artifact.getServiceIds().contains(serviceId))
-        .findFirst()
-        .orElse(null);
+    getArtifacts();
+    if (artifacts == null) {
+      return null;
+    }
+    return artifacts.stream().filter(artifact -> artifact.getServiceIds().contains(serviceId)).findFirst().orElse(null);
   }
 
   @Override
