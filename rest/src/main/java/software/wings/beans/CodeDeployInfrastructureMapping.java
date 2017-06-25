@@ -38,9 +38,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s(%s/%s)",
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getComputeProviderType(), this.getDeploymentType());
+    return String.format("%s(AWS CodeDeploy)",
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 
   public String getRegion() {
