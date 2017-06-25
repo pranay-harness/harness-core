@@ -144,6 +144,8 @@ public class AwsCodeDeployState extends State {
         .withCommandName(getCommandName())
         .withActivityId(activity.getUuid());
 
+    String key = context.renderExpression(this.key);
+    String bucket = context.renderExpression(this.bucket);
     CodeDeployParams codeDeployParams =
         new Builder()
             .withApplicationName(infrastructureMapping.getApplicationName())
@@ -180,24 +182,6 @@ public class AwsCodeDeployState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withDelegateTaskId(delegateTaskId)
         .build();
-
-    /*    CreateDeploymentRequest createDeploymentRequest = new
-       CreateDeploymentRequest().withApplicationName(infrastructureMapping.getApplicationName())
-            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup()).withDeploymentConfigName(infrastructureMapping.getDeploymentConfig()).withRevision(
-                new RevisionLocation().withRevisionType("S3").withS3Location(new
-       S3Location().withBucket(bucket).withBundleType(bundleType).withKey(key))); CodeDeployDeploymentInfo
-       codeDeployDeploymentInfo = awsCodeDeployService .deployApplication(Regions.US_EAST_1.getName(),
-       settingsService.get(infrastructureMapping.getComputeProviderSettingId()), createDeploymentRequest, new
-       ExecutionLogCallback()); logger.info(codeDeployDeploymentInfo.toString());
-        //    logger.info("Service Variables: svcConfig:{}, envConfig: {}, overridingConfig: {}",
-        //        context.evaluateExpression("${serviceVariable.svcConfig}"),
-        //        context.evaluateExpression("${serviceVariable.envConfig}"),
-        //        context.evaluateExpression("${serviceVariable.overridingConfig}")
-        //        );
-        return anExecutionResponse().withAsync(false)
-            .withExecutionStatus(codeDeployDeploymentInfo.getStatus().equals(CommandExecutionStatus.FAILURE) ?
-       ExecutionStatus.FAILED : ExecutionStatus.SUCCESS) .build();
-            */
   }
 
   @Override
