@@ -5,7 +5,6 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -105,6 +104,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
@@ -153,7 +153,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     app = wingsPersistence.saveAndGet(
         Application.class, anApplication().withName(APP_NAME).withAccountId(account.getUuid()).build());
     env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    artifact = anArtifact().withAppId(app.getAppId()).withUuid(getUuid()).withDisplayName(ARTIFACT_NAME).build();
+    artifact = anArtifact()
+                   .withAppId(app.getAppId())
+                   .withUuid(getUuid())
+                   .withDisplayName(ARTIFACT_NAME)
+                   .withServiceIds(new ArrayList<>())
+                   .build();
     artifactPageResponse = aPageResponse().withResponse(asList(artifact)).build();
     when(artifactService.list(any(PageRequest.class), eq(false))).thenReturn(artifactPageResponse);
   }
@@ -534,7 +539,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(workflow.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(singletonList(artifact));
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
         app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
