@@ -12,6 +12,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.service.impl.AwsHelperService;
 
 import javax.inject.Inject;
 
@@ -21,16 +22,17 @@ import javax.inject.Inject;
 @Ignore
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @Inject private AwsCodeDeployService awsCodeDeployService;
+  @Inject private AwsHelperService awsHelperService;
 
+  SettingAttribute cloudProvider =
+      SettingAttribute.Builder.aSettingAttribute()
+          .withValue(anAwsConfig()
+                         .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
+                         .withSecretKey("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".toCharArray())
+                         .build())
+          .build();
   @Test
   public void shouldListApplication() {
-    SettingAttribute cloudProvider =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withValue(anAwsConfig()
-                           .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                           .withSecretKey("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".toCharArray())
-                           .build())
-            .build();
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider).forEach(application -> {
       System.out.println(application.toString());
     });
@@ -59,7 +61,10 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldName() {}
+  public void shouldListApplicationRevisions() {
+    awsCodeDeployService.getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "S3", cloudProvider)
+        .forEach(revisionLocation -> { System.out.println(revisionLocation.toString()); });
+  }
 
   //    CreateDeploymentResult srinivasApplication = codeDeployClient
   //        .createDeployment(new

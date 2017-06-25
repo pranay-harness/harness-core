@@ -12,6 +12,8 @@ import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
 import com.amazonaws.services.codedeploy.model.GetDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.ListApplicationRevisionsRequest;
+import com.amazonaws.services.codedeploy.model.ListApplicationRevisionsResult;
 import com.amazonaws.services.codedeploy.model.ListApplicationsRequest;
 import com.amazonaws.services.codedeploy.model.ListApplicationsResult;
 import com.amazonaws.services.codedeploy.model.ListDeploymentConfigsRequest;
@@ -20,6 +22,7 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentGroupsRequest;
 import com.amazonaws.services.codedeploy.model.ListDeploymentGroupsResult;
 import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesRequest;
 import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
+import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import org.slf4j.Logger;
@@ -135,6 +138,20 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
 
     codeDeployDeploymentInfo.setInstances(instances);
     return codeDeployDeploymentInfo;
+  }
+
+  public List<RevisionLocation> getApplicationRevisionList(
+      String region, String appName, String revisionType, SettingAttribute cloudProviderSetting) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
+    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
+        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    ListApplicationRevisionsResult deployedRevision = amazonCodeDeployClient.listApplicationRevisions(
+        new ListApplicationRevisionsRequest().withApplicationName(appName).withDeployed("include").withSortBy(
+            "lastUsedTime"));
+    return deployedRevision.getRevisions()
+        .stream()
+        .filter(revisionLocation -> revisionLocation.getRevisionType().equals(revisionType))
+        .collect(Collectors.toList());
   }
 
   private List<String> fetchAllDeploymentInstances(AmazonCodeDeployClient amazonCodeDeployClient, String deploymentId) {
