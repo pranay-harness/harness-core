@@ -29,9 +29,9 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/3/17.
  */
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
-  private static final char[] JENKINS_PASSWORD = "06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray();
-  private static final String JENKINS_URL = "https://jenkins.wings.software";
-  private static final String JENKINS_USERNAME = "wingsbuild";
+  private static final char[] JENKINS_PASSWORD = "admin".toCharArray();
+  private static final String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
+  private static final String JENKINS_USERNAME = "admin";
   private static final String NEXUS_URL = "https://nexus.wings.software";
   private static final String NEXUS_USERNAME = "admin";
   private static final char[] NEXUS_PASSWORD = "wings123!".toCharArray();
