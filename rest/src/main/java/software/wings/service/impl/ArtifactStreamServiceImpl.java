@@ -121,9 +121,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
     String id = wingsPersistence.save(artifactStream);
-    if (artifactStream.isAutoDownload() || artifactStream.isMetadataOnly()) {
-      addCronForAutoArtifactCollection(artifactStream);
-    }
+    addCronForAutoArtifactCollection(artifactStream);
+
     return get(artifactStream.getAppId(), id);
   }
 

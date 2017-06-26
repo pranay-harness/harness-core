@@ -41,7 +41,7 @@ public abstract class ArtifactStream extends Base {
 
   @UIOrder(3) private String serviceId;
 
-  @SchemaIgnore private boolean autoDownload = false;
+  @SchemaIgnore private boolean autoDownload = true;
 
   @SchemaIgnore private boolean autoApproveForProduction = false;
 

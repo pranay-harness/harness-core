@@ -58,12 +58,6 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   @UIOrder(7)
-  @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
-    return super.isAutoDownload();
-  }
-
-  @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
@@ -143,7 +137,6 @@ public class NexusArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
@@ -291,17 +284,6 @@ public class NexusArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
-    public NexusArtifactStream.Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    /**
      * With auto approve for production builder.
      *
      * @param autoApproveForProduction the auto approve for production
@@ -342,7 +324,6 @@ public class NexusArtifactStream extends ArtifactStream {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withAutoDownload(autoDownload)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions);
     }
@@ -366,7 +347,6 @@ public class NexusArtifactStream extends ArtifactStream {
       nexusArtifactStream.setCreatedAt(createdAt);
       nexusArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       nexusArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      nexusArtifactStream.setAutoDownload(autoDownload);
       nexusArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       nexusArtifactStream.setStreamActions(streamActions);
       return nexusArtifactStream;

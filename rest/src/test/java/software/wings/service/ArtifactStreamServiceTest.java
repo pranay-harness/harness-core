@@ -79,7 +79,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                             .withSourceName("SOURCE_NAME")
                                                             .withSettingId(SETTING_ID)
                                                             .withJobname("JOB")
-                                                            .withAutoDownload(true)
                                                             .withServiceId(SERVICE_ID)
                                                             .withArtifactPaths(Arrays.asList("*WAR"))
                                                             .build();
@@ -192,9 +191,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .withWorkflowId(WORKFLOW_ID)
                                                     .withEnvId(ENV_ID)
                                                     .build();
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID, null)).thenReturn(aWorkflow().withName("NAME").build());
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID, null))
+        .thenReturn(aWorkflow().withName("NAME").withEnvId(ENV_ID).build());
     when(environmentService.get(APP_ID, ENV_ID, false))
-        .thenReturn(Environment.Builder.anEnvironment().withName(ENV_NAME).build());
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).build());
     artifactStreamService.addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
     verify(wingsPersistence).createQuery(any());
     verify(query).field("appId");

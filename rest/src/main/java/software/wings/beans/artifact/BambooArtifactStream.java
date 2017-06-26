@@ -67,12 +67,6 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @UIOrder(6)
-  @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
-    return super.isAutoDownload();
-  }
-
-  @UIOrder(7)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
@@ -109,7 +103,6 @@ public class BambooArtifactStream extends ArtifactStream {
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
         .withServiceId(getServiceId())
-        .withAutoDownload(getAutoDownload())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
@@ -132,7 +125,6 @@ public class BambooArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
@@ -269,17 +261,6 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    /**
      * With auto approve for production builder.
      *
      * @param autoApproveForProduction the auto approve for production
@@ -319,7 +300,6 @@ public class BambooArtifactStream extends ArtifactStream {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withAutoDownload(autoDownload)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions);
     }
@@ -342,7 +322,6 @@ public class BambooArtifactStream extends ArtifactStream {
       bambooArtifactStream.setCreatedAt(createdAt);
       bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      bambooArtifactStream.setAutoDownload(autoDownload);
       bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       bambooArtifactStream.setStreamActions(streamActions);
       return bambooArtifactStream;

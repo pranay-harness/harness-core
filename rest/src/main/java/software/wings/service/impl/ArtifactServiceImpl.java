@@ -117,7 +117,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private Status getArtifactStatus(ArtifactStream artifactStream) {
     if (artifactStream.isMetadataOnly()) {
-      return APPROVED;
+      return READY;
     }
     return DOCKER.name().equals(artifactStream.getArtifactStreamType())
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)

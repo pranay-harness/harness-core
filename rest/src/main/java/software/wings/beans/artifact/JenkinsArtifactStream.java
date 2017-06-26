@@ -78,13 +78,13 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @UIOrder(7)
+  /*@UIOrder(7)
   @Attributes(title = "Automatic Download")
   public boolean getAutoDownload() {
     return super.isAutoDownload();
-  }
+  }*/
 
-  @UIOrder(8)
+  @UIOrder(7)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
@@ -120,7 +120,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
         .withServiceId(getServiceId())
-        .withAutoDownload(getAutoDownload())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
@@ -143,7 +142,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
     private boolean metadataOnly = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
@@ -281,17 +279,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    /**
      * With auto approve for production builder.
      *
      * @param autoApproveForProduction the auto approve for production
@@ -339,7 +326,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withAutoDownload(autoDownload)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withMetadataOnly(metadataOnly)
           .withStreamActions(streamActions);
@@ -363,7 +349,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setCreatedAt(createdAt);
       jenkinsArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      jenkinsArtifactStream.setAutoDownload(autoDownload);
       jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       jenkinsArtifactStream.setMetadataOnly(metadataOnly);
       jenkinsArtifactStream.setStreamActions(streamActions);
