@@ -37,6 +37,14 @@ if [[ $datagen_status -ne 0 ]] ; then
   echo 'Datagen failed';
   exit $datagen_status
 fi
+
+mvn test -Dtest=software.wings.integration.JenkinsSettingOverWriteTest
+jenkins_overwrite_status=$?
+if [[ jenkins_overwrite_status -ne 0 ]] ; then
+  echo 'jenkins overwrite failed';
+  exit $jenkins_overwrite_status
+fi
+
 cd ../
 
 #Delegate integration test. Don't run with UI integration tests
