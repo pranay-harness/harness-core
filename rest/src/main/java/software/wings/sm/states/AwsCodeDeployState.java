@@ -71,9 +71,9 @@ import java.util.Map;
 public class AwsCodeDeployState extends State {
   private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployState.class);
 
-  @Attributes(title = "Bucket") private String bucket;
-  @Attributes(title = "Key") private String key;
-  @Attributes(title = "Bundle Type") private String bundleType;
+  @Attributes(title = "Bucket", required = true) private String bucket;
+  @Attributes(title = "Key", required = true) private String key;
+  @Attributes(title = "Bundle Type", required = true) private String bundleType;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
