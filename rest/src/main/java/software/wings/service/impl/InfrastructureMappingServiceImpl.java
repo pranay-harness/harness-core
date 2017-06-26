@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsKubernetesInfrastructureMapping;
+import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -219,6 +220,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+    } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
+      CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
+          ((CodeDeployInfrastructureMapping) infrastructureMapping);
+      updateOperations.set("region", codeDeployInfrastructureMapping.getRegion());
+      updateOperations.set("applicationName", codeDeployInfrastructureMapping.getApplicationName());
+      updateOperations.set("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
+      updateOperations.set("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
