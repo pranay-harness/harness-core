@@ -292,7 +292,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
             elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
         executionResponse.setContextElements(singletonList(containerServiceElement));
         executionResponse.setNotifyElements(singletonList(containerServiceElement));
-      } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+      } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY
+          || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
         InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
             elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
         executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
