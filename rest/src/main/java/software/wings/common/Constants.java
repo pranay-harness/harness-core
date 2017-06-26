@@ -60,6 +60,12 @@ public interface Constants {
    * The constant CONTAINER_UPGRADE_REQUEST_PARAM.
    */
   String CONTAINER_UPGRADE_REQUEST_PARAM = "CONTAINER_UPGRADE_REQUEST_PARAM";
+
+  /**
+   * The constant AWS_CODE_DEPLOY_REQUEST_PARAM.
+   */
+  String AWS_CODE_DEPLOY_REQUEST_PARAM = "AWS_CODE_DEPLOY_REQUEST_PARAM";
+
   /**
    * The constant INSTANCE_LIST_PARAMS.
    */
@@ -269,4 +275,6 @@ public interface Constants {
 
   String BUILD_NO = "buildNo";
   String REVISION = "revision";
+
+  String S3 = "S3";
 }

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;
@@ -44,6 +45,9 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String clusterName;
 
   private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
+
+  private CodeDeployParams codeDeployParams;
+  private CodeDeployParams oldCodeDeployParams;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -317,6 +321,22 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.clusterName = clusterName;
   }
 
+  public CodeDeployParams getCodeDeployParams() {
+    return codeDeployParams;
+  }
+
+  public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
+    this.codeDeployParams = codeDeployParams;
+  }
+
+  public CodeDeployParams getOldCodeDeployParams() {
+    return oldCodeDeployParams;
+  }
+
+  public void setOldCodeDeployParams(CodeDeployParams oldCodeDeployParams) {
+    this.oldCodeDeployParams = oldCodeDeployParams;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
@@ -381,6 +401,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     commandStepExecutionSummary.setOldServicePreviousInstanceCount(oldServicePreviousInstanceCount);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
+    commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);
+    commandStepExecutionSummary.setOldCodeDeployParams(oldCodeDeployParams);
     return commandStepExecutionSummary;
   }
 
@@ -431,6 +453,9 @@ public class CommandStateExecutionData extends StateExecutionData {
     private int newServicePreviousInstanceCount;
     private int oldServicePreviousInstanceCount;
     private String clusterName;
+
+    private CodeDeployParams codeDeployParams;
+    private CodeDeployParams oldCodeDeployParams;
 
     private Builder() {}
 
@@ -705,6 +730,24 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
 
     /**
+     * @param codeDeployParams the codeDeployParams
+     * @return the builder
+     */
+    public Builder withCodeDeployParams(CodeDeployParams codeDeployParams) {
+      this.codeDeployParams = codeDeployParams;
+      return this;
+    }
+
+    /**
+     * @param oldCodeDeployParams the oldCodeDeployParams
+     * @return the builder
+     */
+    public Builder withOldCodeDeployParams(CodeDeployParams oldCodeDeployParams) {
+      this.oldCodeDeployParams = oldCodeDeployParams;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -735,7 +778,9 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withNewServicePreviousInstanceCount(newServicePreviousInstanceCount)
           .withOldServicePreviousInstanceCount(oldServicePreviousInstanceCount)
           .withClusterName(clusterName)
-          .withPublicDns(publicDns);
+          .withPublicDns(publicDns)
+          .withCodeDeployParams(codeDeployParams)
+          .withOldCodeDeployParams(oldCodeDeployParams);
     }
 
     /**
@@ -770,6 +815,8 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setNewServicePreviousInstanceCount(newServicePreviousInstanceCount);
       commandStateExecutionData.setOldServicePreviousInstanceCount(oldServicePreviousInstanceCount);
       commandStateExecutionData.setClusterName(clusterName);
+      commandStateExecutionData.setCodeDeployParams(codeDeployParams);
+      commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);
       return commandStateExecutionData;
     }
   }

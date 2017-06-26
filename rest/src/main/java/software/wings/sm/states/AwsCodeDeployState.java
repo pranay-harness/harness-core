@@ -12,6 +12,8 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.codedeploy.model.RevisionLocation;
+import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.Key;
@@ -98,6 +100,10 @@ public class AwsCodeDeployState extends State {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
   }
 
+  protected AwsCodeDeployState(String name, String type) {
+    super(name, type);
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
@@ -148,17 +154,8 @@ public class AwsCodeDeployState extends State {
         .withCommandName(getCommandName())
         .withActivityId(activity.getUuid());
 
-    String key = context.renderExpression(this.key);
-    String bucket = context.renderExpression(this.bucket);
     CodeDeployParams codeDeployParams =
-        new Builder()
-            .withApplicationName(infrastructureMapping.getApplicationName())
-            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
-            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
-            .withBucket(bucket)
-            .withKey(key)
-            .withBundleType(bundleType)
-            .build();
+        prepareCodeDeployParams(context, infrastructureMapping, cloudProviderSetting, executionDataBuilder);
 
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .withAccountId(app.getAccountId())
@@ -186,6 +183,43 @@ public class AwsCodeDeployState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  protected CodeDeployParams prepareCodeDeployParams(ExecutionContext context,
+      CodeDeployInfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting,
+      CommandStateExecutionData.Builder executionDataBuilder) {
+    String key = context.renderExpression(this.key);
+    String bucket = context.renderExpression(this.bucket);
+
+    CodeDeployParams codeDeployParams =
+        new Builder()
+            .withApplicationName(infrastructureMapping.getApplicationName())
+            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
+            .withRegion(infrastructureMapping.getRegion())
+            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
+            .withBucket(bucket)
+            .withKey(key)
+            .withBundleType(bundleType)
+            .build();
+    executionDataBuilder.withCodeDeployParams(codeDeployParams);
+
+    List<RevisionLocation> revisionLocations = awsCodeDeployService.getApplicationRevisionList(
+        codeDeployParams.getRegion(), codeDeployParams.getApplicationName(), Constants.S3, cloudProviderSetting);
+    if (revisionLocations != null && !revisionLocations.isEmpty() && revisionLocations.get(0) != null
+        && revisionLocations.get(0).getS3Location() != null) {
+      S3Location s3Location = revisionLocations.get(0).getS3Location();
+      CodeDeployParams oldCodeDeployParams =
+          new Builder()
+              .withApplicationName(codeDeployParams.getApplicationName())
+              .withDeploymentGroupName(codeDeployParams.getDeploymentGroupName())
+              .withDeploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
+              .withBucket(s3Location.getBucket())
+              .withKey(s3Location.getKey())
+              .withBundleType(s3Location.getBundleType())
+              .build();
+      executionDataBuilder.withOldCodeDeployParams(oldCodeDeployParams);
+    }
+    return codeDeployParams;
   }
 
   @Override

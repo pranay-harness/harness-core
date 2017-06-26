@@ -1,11 +1,13 @@
 package software.wings.sm.states;
 
 import static java.util.Collections.singletonList;
+import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
@@ -20,6 +22,7 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceElement;
@@ -178,6 +181,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .withContainerServiceElement(contextElement)
               .build();
       return singletonList(containerUpgradeRequestElement);
+    } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      AwsCodeDeployRequestElement deployRequestElement =
+          anAwsCodeDeployRequestElement()
+              .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
+              .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
+              .build();
+      return singletonList(deployRequestElement);
     }
     return null;
   }
