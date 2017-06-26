@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
-import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
@@ -18,6 +18,7 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -39,7 +40,9 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
-    if (SSH.name().equals(command.getDeploymentType())) {
+    Set<String> nonSshDeploymentType = Sets.newHashSet(
+        DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
+    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return executeSshCommand(command, context);
     } else {
       return executeNonSshDeploymentCommand(
@@ -56,9 +59,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       return commandExecutionStatus;
     } catch (Exception ex) {
       ex.printStackTrace();
-      if (context != null) {
-        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      }
+      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }
   }
@@ -76,9 +77,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       return commandExecutionStatus;
     } catch (Exception ex) {
       ex.printStackTrace();
-      if (context != null) {
-        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      }
+      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }
   }
