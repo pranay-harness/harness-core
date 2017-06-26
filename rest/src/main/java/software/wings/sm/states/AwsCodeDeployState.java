@@ -16,6 +16,7 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -62,6 +63,7 @@ import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -275,6 +277,26 @@ public class AwsCodeDeployState extends State {
         .addContextElement(instanceElementListParam)
         .addNotifyElement(instanceElementListParam)
         .build();
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (!isRollback()) {
+      if (StringUtils.isBlank(bucket)) {
+        invalidFields.put("bucket", "Bucket should not be empty");
+      }
+      if (StringUtils.isBlank(key)) {
+        invalidFields.put("bucket", "Key should not be empty");
+      }
+      if (StringUtils.isBlank(bundleType)) {
+        invalidFields.put("bucket", "Bundle Type should not be empty");
+      }
+    }
+    if (getCommandName() == null) {
+      invalidFields.put("commandName", "Command Name should not be null");
+    }
+    return invalidFields;
   }
 
   @SchemaIgnore
