@@ -203,11 +203,10 @@ public class AwsCodeDeployState extends State {
             .build();
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
-    List<RevisionLocation> revisionLocations = awsCodeDeployService.getApplicationRevisionList(
-        codeDeployParams.getRegion(), codeDeployParams.getApplicationName(), Constants.S3, cloudProviderSetting);
-    if (revisionLocations != null && !revisionLocations.isEmpty() && revisionLocations.get(0) != null
-        && revisionLocations.get(0).getS3Location() != null) {
-      S3Location s3Location = revisionLocations.get(0).getS3Location();
+    RevisionLocation revisionLocation = awsCodeDeployService.getApplicationRevisionList(codeDeployParams.getRegion(),
+        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName(), cloudProviderSetting);
+    if (revisionLocation != null && revisionLocation.getS3Location() != null) {
+      S3Location s3Location = revisionLocation.getS3Location();
       CodeDeployParams oldCodeDeployParams =
           new Builder()
               .withApplicationName(codeDeployParams.getApplicationName())

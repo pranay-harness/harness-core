@@ -57,10 +57,9 @@ public interface AwsCodeDeployService {
    *
    * @param region               the region
    * @param appName              the app name
-   * @param revisionType         the revision type
    * @param cloudProviderSetting the cloud provider setting
    * @return the application current revision info
    */
-  List<RevisionLocation> getApplicationRevisionList(
-      String region, String appName, String revisionType, SettingAttribute cloudProviderSetting);
+  RevisionLocation getApplicationRevisionList(
+      String region, String appName, String deploymentGroupName, SettingAttribute cloudProviderSetting);
 }

@@ -11,9 +11,9 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
+import com.amazonaws.services.codedeploy.model.DeploymentGroupInfo;
+import com.amazonaws.services.codedeploy.model.GetDeploymentGroupRequest;
 import com.amazonaws.services.codedeploy.model.GetDeploymentRequest;
-import com.amazonaws.services.codedeploy.model.ListApplicationRevisionsRequest;
-import com.amazonaws.services.codedeploy.model.ListApplicationRevisionsResult;
 import com.amazonaws.services.codedeploy.model.ListApplicationsRequest;
 import com.amazonaws.services.codedeploy.model.ListApplicationsResult;
 import com.amazonaws.services.codedeploy.model.ListDeploymentConfigsRequest;
@@ -140,18 +140,17 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     return codeDeployDeploymentInfo;
   }
 
-  public List<RevisionLocation> getApplicationRevisionList(
-      String region, String appName, String revisionType, SettingAttribute cloudProviderSetting) {
+  public RevisionLocation getApplicationRevisionList(
+      String region, String appName, String deploymentGroupName, SettingAttribute cloudProviderSetting) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
     AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
         Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    ListApplicationRevisionsResult deployedRevision = amazonCodeDeployClient.listApplicationRevisions(
-        new ListApplicationRevisionsRequest().withApplicationName(appName).withDeployed("include").withSortBy(
-            "lastUsedTime"));
-    return deployedRevision.getRevisions()
-        .stream()
-        .filter(revisionLocation -> revisionLocation.getRevisionType().equals(revisionType))
-        .collect(Collectors.toList());
+    DeploymentGroupInfo deploymentGroupInfo =
+        amazonCodeDeployClient
+            .getDeploymentGroup(new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(
+                deploymentGroupName))
+            .getDeploymentGroupInfo();
+    return deploymentGroupInfo.getTargetRevision();
   }
 
   private List<String> fetchAllDeploymentInstances(AmazonCodeDeployClient amazonCodeDeployClient, String deploymentId) {

@@ -31,6 +31,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
                          .withSecretKey("nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray())
                          .build())
           .build();
+
   @Test
   public void shouldListApplication() {
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider).forEach(application -> {
@@ -62,8 +63,8 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListApplicationRevisions() {
-    awsCodeDeployService.getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "S3", cloudProvider)
-        .forEach(revisionLocation -> { System.out.println(revisionLocation.toString()); });
+    System.out.println(awsCodeDeployService.getApplicationRevisionList(
+        Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG", cloudProvider));
   }
 
   //    CreateDeploymentResult srinivasApplication = codeDeployClient
