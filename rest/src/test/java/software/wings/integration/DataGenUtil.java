@@ -161,9 +161,9 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(aJenkinsConfig()
                            .withAccountId(accountId)
-                           .withJenkinsUrl("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/")
-                           .withUsername("admin")
-                           .withPassword("admin".toCharArray())
+                           .withJenkinsUrl("https://jenkins.wings.software")
+                           .withUsername("wingsbuild")
+                           .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
