@@ -55,8 +55,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       ex.printStackTrace();
+      if (context != null) {
+        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      }
       throw ex;
     }
   }
@@ -73,8 +75,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
-      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       ex.printStackTrace();
+      if (context != null) {
+        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      }
       throw ex;
     }
   }
