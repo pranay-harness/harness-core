@@ -173,7 +173,7 @@ public interface Constants {
   /**
    * The constant AWS_CODE_DEPLOY.
    */
-  String AWS_CODE_DEPLOY = "AWS Code Deploy";
+  String AWS_CODE_DEPLOY = "AWS CodeDeploy";
   /**
    * The constant UPGRADE_CONTAINERS.
    */
@@ -181,7 +181,7 @@ public interface Constants {
   /**
    * The constant ROLLBACK_AWS_CODE_DEPLOY.
    */
-  String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS Code Deploy";
+  String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS CodeDeploy";
   /**
    * The constant ROLLBACK_CONTAINERS.
    */
