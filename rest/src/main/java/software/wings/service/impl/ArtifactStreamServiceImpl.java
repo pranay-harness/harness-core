@@ -200,8 +200,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
       Workflow workflow = workflowService.readWorkflow(appId, artifactStreamAction.getWorkflowId(), null);
-      artifactStreamAction.setWorkflowName(workflow.getName());
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
+
+      if (!workflow.getEnvId().equals(environment.getUuid())) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+            String.format("Workflow [%s] can not be added to Env [%s]", workflow.getName(), environment.getName()));
+      }
+      artifactStreamAction.setWorkflowName(workflow.getName());
       artifactStreamAction.setEnvName(environment.getName());
     } else {
       Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), false);
