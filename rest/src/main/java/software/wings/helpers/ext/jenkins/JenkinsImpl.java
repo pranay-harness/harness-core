@@ -302,15 +302,13 @@ public class JenkinsImpl implements Jenkins {
   }
 
   private String extractRevision(BuildWithDetails buildWithDetails) {
-    Optional<String> gitRevOpt = buildWithDetails.getActions()
-                                     .stream()
-                                     .filter(o -> ((Map<String, Object>) o).containsKey("lastBuiltRevision"))
-                                     .map(o
-                                         -> ((Map<String, Object>) (((Map<String, Object>) o).get("lastBuiltRevision")))
-                                                .get("SHA1")
-                                                .toString()
-                                                .substring(0, 8))
-                                     .findFirst();
+    Optional<String> gitRevOpt =
+        buildWithDetails.getActions()
+            .stream()
+            .filter(o -> ((Map<String, Object>) o).containsKey("lastBuiltRevision"))
+            .map(o
+                -> ((Map<String, Object>) (((Map<String, Object>) o).get("lastBuiltRevision"))).get("SHA1").toString())
+            .findFirst();
     if (gitRevOpt.isPresent()) {
       return gitRevOpt.get();
     } else if ("svn".equals(buildWithDetails.getChangeSet().getKind())) {
