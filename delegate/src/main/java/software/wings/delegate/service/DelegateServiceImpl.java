@@ -349,7 +349,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
-    if (currentlyExecutingTasks.contains(delegateTaskEvent.getDelegateTaskId())) {
+    if (delegateTaskEvent.getDelegateTaskId() != null
+        && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
       logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
       return;
     }
@@ -360,7 +361,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateTask != null) {
         logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
             delegateTask.getAccountId(), delegateTask.getTaskType());
-        DelegateTask finalDelegateTask = delegateTask;
         DelegateRunnableTask delegateRunnableTask =
             delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask,
                 notifyResponseData
@@ -368,18 +368,18 @@ public class DelegateServiceImpl implements DelegateService {
                   Response<ResponseBody> response = null;
                   try {
                     response = managerClient
-                                   .sendTaskStatus(delegateId, finalDelegateTask.getUuid(), accountId,
+                                   .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
                                        aDelegateTaskResponse()
-                                           .withTask(finalDelegateTask)
+                                           .withTask(delegateTask)
                                            .withAccountId(accountId)
                                            .withResponse(notifyResponseData)
                                            .build())
                                    .execute();
-                    logger.info("Task [{}] response sent to manager", finalDelegateTask.getUuid());
+                    logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
                   } catch (IOException e) {
                     logger.error("Unable to send response to manager ", e);
                   } finally {
-                    currentlyExecutingTasks.remove(finalDelegateTask.getUuid());
+                    currentlyExecutingTasks.remove(delegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
                       response.errorBody().close();
                     }
