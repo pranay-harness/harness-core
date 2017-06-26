@@ -22,7 +22,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
 
   @UIOrder(5)
-  @Attributes(title = "Metadata Only (Artifact download not required)")
+  @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
   }
