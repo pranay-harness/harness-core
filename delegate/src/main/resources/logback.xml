@@ -37,6 +37,7 @@
         <port>6514</port>
         <programName>delegate</programName>
         <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>
+        <threshold>TRACE</threshold>
     </appender>
 
 
