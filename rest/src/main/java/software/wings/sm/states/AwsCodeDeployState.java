@@ -3,15 +3,20 @@ package software.wings.sm.states;
 import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.codedeploy.model.RevisionLocation;
+import com.amazonaws.services.codedeploy.model.S3Location;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +31,7 @@ import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployCommandExecutionData;
@@ -37,6 +43,7 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -54,9 +61,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 6/22/17
@@ -87,8 +94,14 @@ public class AwsCodeDeployState extends State {
 
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
+  @Inject @Transient private transient AwsHelperService awsHelperService;
+
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
+  }
+
+  protected AwsCodeDeployState(String name, String type) {
+    super(name, type);
   }
 
   @Override
@@ -112,9 +125,6 @@ public class AwsCodeDeployState extends State {
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String region = infrastructureMapping.getRegion();
-
-    logger.info("Revision :{}, Build No: ", context.evaluateExpression("${artifact.revision}"),
-        context.evaluateExpression("${artifact.buildNo}"));
 
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(app.getUuid())
@@ -144,17 +154,8 @@ public class AwsCodeDeployState extends State {
         .withCommandName(getCommandName())
         .withActivityId(activity.getUuid());
 
-    String key = context.renderExpression(this.key);
-    String bucket = context.renderExpression(this.bucket);
     CodeDeployParams codeDeployParams =
-        new Builder()
-            .withApplicationName(infrastructureMapping.getApplicationName())
-            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
-            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
-            .withBucket(bucket)
-            .withKey(key)
-            .withBundleType(bundleType)
-            .build();
+        prepareCodeDeployParams(context, infrastructureMapping, cloudProviderSetting, executionDataBuilder);
 
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .withAccountId(app.getAccountId())
@@ -184,6 +185,43 @@ public class AwsCodeDeployState extends State {
         .build();
   }
 
+  protected CodeDeployParams prepareCodeDeployParams(ExecutionContext context,
+      CodeDeployInfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting,
+      CommandStateExecutionData.Builder executionDataBuilder) {
+    String key = context.renderExpression(this.key);
+    String bucket = context.renderExpression(this.bucket);
+
+    CodeDeployParams codeDeployParams =
+        new Builder()
+            .withApplicationName(infrastructureMapping.getApplicationName())
+            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
+            .withRegion(infrastructureMapping.getRegion())
+            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
+            .withBucket(bucket)
+            .withKey(key)
+            .withBundleType(bundleType)
+            .build();
+    executionDataBuilder.withCodeDeployParams(codeDeployParams);
+
+    List<RevisionLocation> revisionLocations = awsCodeDeployService.getApplicationRevisionList(
+        codeDeployParams.getRegion(), codeDeployParams.getApplicationName(), Constants.S3, cloudProviderSetting);
+    if (revisionLocations != null && !revisionLocations.isEmpty() && revisionLocations.get(0) != null
+        && revisionLocations.get(0).getS3Location() != null) {
+      S3Location s3Location = revisionLocations.get(0).getS3Location();
+      CodeDeployParams oldCodeDeployParams =
+          new Builder()
+              .withApplicationName(codeDeployParams.getApplicationName())
+              .withDeploymentGroupName(codeDeployParams.getDeploymentGroupName())
+              .withDeploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
+              .withBucket(s3Location.getBucket())
+              .withKey(s3Location.getKey())
+              .withBundleType(s3Location.getBundleType())
+              .build();
+      executionDataBuilder.withOldCodeDeployParams(oldCodeDeployParams);
+    }
+    return codeDeployParams;
+  }
+
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
@@ -199,20 +237,36 @@ public class AwsCodeDeployState extends State {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
 
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
+
     InstanceElementListParam instanceElementListParam = anInstanceElementListParam().build();
     if (commandExecutionResult != null && commandExecutionResult.getCommandExecutionData() != null) {
       CodeDeployCommandExecutionData commandExecutionData =
           (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
-      List<InstanceElement> instanceElements =
-          commandExecutionData.getInstances()
-              .stream()
-              .map(instance
-                  -> InstanceElement.Builder.anInstanceElement()
-                         .withUuid(instance.getInstanceId())
-                         .withHostName(instance.getPublicDnsName())
-                         .withHostElement(aHostElement().withHostName(instance.getPublicDnsName()).build())
-                         .build())
-              .collect(Collectors.toList());
+      List<InstanceElement> instanceElements = new ArrayList<>();
+      commandExecutionData.getInstances().forEach(instance -> {
+        String hostName = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
+        instanceElements.add(
+            anInstanceElement()
+                .withUuid(instance.getInstanceId())
+                .withHostName(hostName)
+                .withDisplayName(instance.getPublicDnsName())
+                .withHostElement(
+                    aHostElement().withHostName(hostName).withPublicDns(instance.getPublicDnsName()).build())
+                .withServiceTemplateElement(aServiceTemplateElement()
+                                                .withUuid(serviceTemplateKey.getId().toString())
+                                                .withServiceElement(phaseElement.getServiceElement())
+                                                .build())
+                .build());
+
+      });
       instanceElementListParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
     }
 

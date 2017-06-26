@@ -1070,10 +1070,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       StateExecutionInstance last = stateExecutionInstance;
       for (StateExecutionInstance next = stateExecutionInstance; next != null;
            next = prevInstanceIdMap.get(next.getUuid())) {
-        if ((StateType.REPEAT.name().equals(next.getStateType()) || StateType.FORK.name().equals(next.getStateType())
-                || StateType.PHASE.name().equals(next.getStateType())
-                || StateType.PHASE_STEP.name().equals(next.getStateType())
-                || StateType.SUB_WORKFLOW.name().equals(next.getStateType()))
+        StateType nextStateType = StateType.valueOf(next.getStateType());
+        if (nextStateType == null) {
+          continue;
+        }
+        if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK || nextStateType == StateType.PHASE
+                || nextStateType == StateType.PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
             && next.getStateExecutionData() instanceof ElementStateExecutionData) {
           ElementStateExecutionData elementStateExecutionData =
               (ElementStateExecutionData) next.getStateExecutionData();
@@ -1082,8 +1084,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .filter(e -> e.getInstanceStatusSummaries() != null)
                                              .flatMap(l -> l.getInstanceStatusSummaries().stream())
                                              .collect(Collectors.toList()));
-        } else if ((StateType.ECS_SERVICE_DEPLOY.name().equals(next.getStateType())
-                       || StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name().equals(next.getStateType()))
+        } else if ((nextStateType == StateType.ECS_SERVICE_DEPLOY
+                       || nextStateType == StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY
+                       || nextStateType == StateType.AWS_CODEDEPLOY_STATE)
             && next.getStateExecutionData() instanceof CommandStateExecutionData) {
           CommandStateExecutionData commandStateExecutionData =
               (CommandStateExecutionData) next.getStateExecutionData();

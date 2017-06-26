@@ -19,6 +19,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
@@ -1112,7 +1113,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return generateRollbackWorkflowPhaseForContainerService(
           workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
-      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_STATE.name());
+      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }

@@ -37,8 +37,12 @@ public class InstanceElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(INSTANCE, this);
-    map.putAll(hostElement.paramMap(context));
-    map.putAll(serviceTemplateElement.paramMap(context));
+    if (hostElement != null) {
+      map.putAll(hostElement.paramMap(context));
+    }
+    if (serviceTemplateElement != null) {
+      map.putAll(serviceTemplateElement.paramMap(context));
+    }
     return map;
   }
 

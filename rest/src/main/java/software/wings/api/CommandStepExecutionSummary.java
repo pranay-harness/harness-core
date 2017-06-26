@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
 import software.wings.sm.StepExecutionSummary;
 
 /**
@@ -14,6 +15,9 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private Integer newServicePreviousInstanceCount;
   private Integer oldServicePreviousInstanceCount;
   private String clusterName;
+
+  private CodeDeployParams codeDeployParams;
+  private CodeDeployParams oldCodeDeployParams;
 
   public String getServiceId() {
     return serviceId;
@@ -77,5 +81,21 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
 
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
+  }
+
+  public CodeDeployParams getCodeDeployParams() {
+    return codeDeployParams;
+  }
+
+  public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
+    this.codeDeployParams = codeDeployParams;
+  }
+
+  public CodeDeployParams getOldCodeDeployParams() {
+    return oldCodeDeployParams;
+  }
+
+  public void setOldCodeDeployParams(CodeDeployParams oldCodeDeployParams) {
+    this.oldCodeDeployParams = oldCodeDeployParams;
   }
 }
