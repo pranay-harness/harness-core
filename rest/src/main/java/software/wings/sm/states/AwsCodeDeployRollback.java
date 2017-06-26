@@ -16,7 +16,7 @@ import software.wings.sm.StateType;
  */
 public class AwsCodeDeployRollback extends AwsCodeDeployState {
   public AwsCodeDeployRollback(String name) {
-    super(name, StateType.AWS_NODE_SELECT.name());
+    super(name, StateType.AWS_CODEDEPLOY_ROLLBACK.name());
   }
 
   @Override
