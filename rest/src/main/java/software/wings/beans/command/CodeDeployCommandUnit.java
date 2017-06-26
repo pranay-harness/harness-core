@@ -42,6 +42,11 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
     String deploymentGroupName = codeDeployParams.getDeploymentGroupName();
     String applicationName = codeDeployParams.getApplicationName();
     String deploymentConfigurationName = codeDeployParams.getDeploymentConfigurationName();
+    RevisionLocation revision = new RevisionLocation().withRevisionType("S3").withS3Location(
+        new S3Location()
+            .withBucket(codeDeployParams.getBucket())
+            .withBundleType(codeDeployParams.getBundleType())
+            .withKey(codeDeployParams.getKey()));
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
@@ -49,17 +54,22 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
 
     try {
       executionLogCallback.saveExecutionLog(
-          String.format("Deploying application [%s]", applicationName), LogLevel.INFO);
-      CreateDeploymentRequest createDeploymentRequest =
-          new CreateDeploymentRequest()
-              .withApplicationName(applicationName)
-              .withDeploymentGroupName(deploymentGroupName)
-              .withDeploymentConfigName(deploymentConfigurationName)
-              .withRevision(new RevisionLocation().withRevisionType("S3").withS3Location(
-                  new S3Location()
-                      .withBucket(codeDeployParams.getBucket())
-                      .withBundleType(codeDeployParams.getBundleType())
-                      .withKey(codeDeployParams.getKey())));
+          String.format("Deploying application [%s] with following configuration.", applicationName), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(String.format("Application Name: [%s]", applicationName), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(String.format("Aws Region: [%s]", region), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
+          String.format("Deployment Group: [%s]", deploymentGroupName), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
+          String.format("Deployment Configuration: [%s]",
+              deploymentConfigurationName == null ? "DEFAULT" : deploymentConfigurationName),
+          LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(String.format("Revision : [%s]", revision.toString()), LogLevel.INFO);
+
+      CreateDeploymentRequest createDeploymentRequest = new CreateDeploymentRequest()
+                                                            .withApplicationName(applicationName)
+                                                            .withDeploymentGroupName(deploymentGroupName)
+                                                            .withDeploymentConfigName(deploymentConfigurationName)
+                                                            .withRevision(revision);
       CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
           region, cloudProviderSetting, createDeploymentRequest, executionLogCallback);
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
