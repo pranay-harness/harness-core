@@ -15,6 +15,7 @@ import software.wings.beans.SettingAttribute.Category;
 public class JenkinsSettingOverWriteTest extends BaseIntegrationTest {
   @Test
   public void configureJenkinsWithTestServer() throws Exception {
+    loginAdminUser();
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Wings Jenkins"));
     SettingAttribute jenkinsSettingAttribute =
         aSettingAttribute()
