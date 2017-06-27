@@ -11,7 +11,7 @@ public class AwsKubernetesInfrastructureMapping extends ContainerInfrastructureM
    * Instantiates a new Infrastructure mapping.
    */
   public AwsKubernetesInfrastructureMapping() {
-    super(InfrastructureMappingType.AWS_KUBERNETES.name());
+    super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
   }
 
   /**

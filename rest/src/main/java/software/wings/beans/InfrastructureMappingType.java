@@ -39,7 +39,7 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Aws kubernetes infra mapping type.
    */
-  AWS_KUBERNETES(AwsKubernetesInfrastructureMapping.class, "AWS_KUBERNETES", StencilCategory.OTHERS, 5),
+  DIRECT_KUBERNETES(AwsKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS, 5),
   /**
    * Gcp kubernetes infra mapping type.
    */

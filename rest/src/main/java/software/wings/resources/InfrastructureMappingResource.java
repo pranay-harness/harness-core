@@ -7,6 +7,7 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
@@ -16,6 +17,7 @@ import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;
@@ -123,7 +125,7 @@ public class InfrastructureMappingResource {
   @Path("infra-types")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Map<String, String>>> infrastructureTypes(
+  public RestResponse<Map<DeploymentType, List<SettingVariableTypes>>> infrastructureTypes(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(infrastructureMappingService.listInfraTypes(appId, envId, serviceId));
   }
