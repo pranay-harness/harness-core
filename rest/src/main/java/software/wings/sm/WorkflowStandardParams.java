@@ -107,8 +107,9 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
         HashMap<Object, Object> serviceVariableMap = new HashMap<>();
         map.put(SERVICE_VARIABLE, serviceVariableMap);
-        serviceVariables.forEach(
-            serviceVariable -> { serviceVariableMap.put(serviceVariable.getName(), serviceVariable.getValue()); });
+        serviceVariables.forEach(serviceVariable -> {
+          serviceVariableMap.put(serviceVariable.getName(), new String(serviceVariable.getValue()));
+        });
       }
     }
 
