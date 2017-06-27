@@ -162,7 +162,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Jenkins state type.
    */
-  JENKINS(JenkinsState.class, VERIFICATIONS, asList(), ORCHESTRATION_STENCILS),
+  JENKINS(JenkinsState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Select state.
