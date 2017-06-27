@@ -90,18 +90,18 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     ClientConfig config = new ClientConfig(new JacksonJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     SSLContext sslcontext = SSLContext.getInstance("TLS");
-    TrustManager[] trustAllCerts =
-        new TrustManager[] {new X509TrustManager(){public X509Certificate[] getAcceptedIssuers(){return null;
+    sslcontext.init(null, new TrustManager[] {new X509TrustManager() {
+      public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+      }
+
+      public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+      }
+
+      public X509Certificate[] getAcceptedIssuers() {
+        return new X509Certificate[0];
   }
-
-  public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-
-  public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 }
-}
-;
-
-sslcontext.init(null, trustAllCerts, new java.security.SecureRandom());
+}, new java.security.SecureRandom());
 
 ObjectMapper objectMapper = new ObjectMapper();
 objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
