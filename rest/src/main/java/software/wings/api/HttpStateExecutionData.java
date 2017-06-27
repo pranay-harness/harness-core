@@ -15,6 +15,7 @@ import org.xml.sax.SAXException;
 import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -183,6 +184,20 @@ public class HttpStateExecutionData extends StateExecutionData implements Notify
   public String xpath(String path) {
     try {
       return XmlUtils.xpath(document(), path);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * json path.
+   *
+   * @param path the path
+   * @return the string
+   */
+  public String jsonpath(String path) {
+    try {
+      return JsonUtils.jsonPath(httpResponseBody, path);
     } catch (Exception e) {
       return null;
     }
