@@ -460,6 +460,12 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @Override
+  public void logout(String userId) {
+    authService.invalidateAllTokensForUser(userId);
+    evictUserFromCache(userId);
+  }
+
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {
     User user = getUserByEmail(email);
     if (user == null) {

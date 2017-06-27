@@ -174,7 +174,8 @@ public class UserResource {
   /**
    * Update password rest response.
    *
-   * @param resetPasswordToken the reset password token
+   * @param resetPasswordToken    the reset password token
+   * @param updatePasswordRequest the update password request
    * @return the rest response
    */
   @PublicApi
@@ -220,6 +221,7 @@ public class UserResource {
   /**
    * Get rest response.
    *
+   * @param accountId the account id
    * @return the rest response
    */
   @GET
@@ -235,6 +237,7 @@ public class UserResource {
   /**
    * Get rest response.
    *
+   * @param appId the app id
    * @return the rest response
    */
   @GET
@@ -260,6 +263,22 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> login(@Auth User user) {
     return new RestResponse<>(user);
+  }
+
+  /**
+   * Logout.
+   *
+   * @param userId the user id
+   * @return the rest response
+   */
+  @POST
+  @Path("{userId}/logout")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse logout(@PathParam("userId") String userId) {
+    userService.logout(userId);
+    return new RestResponse();
   }
 
   /**

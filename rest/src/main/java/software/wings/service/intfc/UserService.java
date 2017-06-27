@@ -205,4 +205,6 @@ public interface UserService {
    * @return the boolean
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
+
+  void logout(String userId);
 }
