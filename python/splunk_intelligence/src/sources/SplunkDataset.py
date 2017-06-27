@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 
@@ -23,20 +25,29 @@ class SplunkDataset(object):
     feature_names = []
 
     def add_event(self, dict, type):
+
+        if 'host' in dict:
+            host = dict.get('host')
+        else:
+            host = None
+
         if type == 'control':
             self.all_events.append(
-                pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0, dict.get('_time')],
+                pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 0, 0,
+                           dict.get('_time'), host],
                           index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                 'anomaly_count_label', 'time']))
+                                 'anomaly_count_label', 'time', 'host']))
             self.control_events.append(
                 pd.Series([dict.get('_raw'), len(self.control_events) - 1, dict.get('cluster_count'),
                            len(self.all_events) - 1],
                           index=['text', 'local_id', 'count', 'global_id']))
         else:
             self.all_events.append(
-                pd.Series([dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1, dict.get('_time')]
-                          , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
-                                   'anomaly_count_label', 'time']))
+                pd.Series(
+                    [dict.get('_raw'), len(self.all_events) - 1, dict.get('cluster_count'), -1, 1, 1, dict.get('_time'),
+                     host]
+                    , index=['text', 'local_id', 'count', 'cluster_id', 'anomaly_label',
+                             'anomaly_count_label', 'time', 'host']))
             self.test_events.append(
                 pd.Series([dict.get('_raw'), len(self.test_events) - 1, dict.get('cluster_count'),
                            len(self.all_events) - 1],
@@ -75,9 +86,15 @@ class SplunkDataset(object):
     def load_from_file(self, file_name, control_window, test_window):
         self.raw_events = SplunkFileSource.load_data(file_name)
         minute = 0
+        count = 0
         for id, dict in enumerate(self.raw_events):
+            count = count + 1
             if dict.get('cluster_label') == '1':
+                if minute > 0:
+                    print(str(minute) + ' min : ' + str(count))
+
                 minute = minute + 1
+
             if control_window[0] <= minute <= control_window[1]:
                 self.add_event(dict, 'control')
             if test_window[0] <= minute <= test_window[1]:
@@ -193,8 +210,18 @@ class SplunkDataset(object):
 
     def get_all_events_as_json(self):
         result = []
-        for event in self.get_all_events():
+        clusters = {}
+        for idx, event in enumerate(self.get_all_events()):
+            if event['cluster_id'] not in clusters:
+                clusters[event['cluster_id']] = dict(x=self.get_xyz_matrix_all()[idx, 0],
+                                                     y=self.get_xyz_matrix_all()[idx, 1],
+                                                     z=self.get_xyz_matrix_all()[idx, 2])
+
             result.append(dict(logMessage=event['text'], timestamp=event['time'], count=event['count'],
-                          cluster_id=event['cluster_id'], anomalyLabel=event['anomaly_label'],
-                          anomalyCountLabel=event['anomaly_count_label']))
-        return result
+                               cluster_id=event['cluster_id'], anomalyLabel=event['anomaly_label'],
+                               anomalyCountLabel=event['anomaly_count_label'],
+                               host=event['host'],
+                               x=clusters[event['cluster_id']].get('x'),
+                               y=clusters[event['cluster_id']].get('y'),
+                               z=clusters[event['cluster_id']].get('z')))
+        return json.dumps(result)

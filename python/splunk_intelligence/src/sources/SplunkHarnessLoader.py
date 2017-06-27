@@ -36,9 +36,14 @@ class SplunkHarnessLoader(object):
         text = SplunkHarnessLoader.send_request(url, payload, headers, False, 3)
         data = json.loads(text)
         raw_events = []
+
+        if data is None or data['resource'] is None:
+            logging.error("Server returned no data for " + json.dumps(payload))
+            sys.exit(1)
+
         for resp in data['resource']['response']:
             raw_event = {'cluster_count': resp['count'], 'cluster_label': resp['clusterLabel'],
-                         '_time': resp['timeStamp'], '_raw': resp['logMessage']}
+                         '_time': resp['timeStamp'], '_raw': resp['logMessage'], 'host': resp['host']}
             raw_events.append(raw_event)
 
         return raw_events
