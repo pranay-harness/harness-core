@@ -63,7 +63,11 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
           String.format("Deployment Configuration: [%s]",
               deploymentConfigurationName == null ? "DEFAULT" : deploymentConfigurationName),
           LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(String.format("Revision : [%s]", revision.toString()), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
+          String.format("Revision: [Type: %s, Bucket: %s, Bundle: %s, Key: %s]", revision.getRevisionType(),
+              revision.getS3Location().getBucket(), revision.getS3Location().getBundleType(),
+              revision.getS3Location().getKey()),
+          LogLevel.INFO);
 
       CreateDeploymentRequest createDeploymentRequest = new CreateDeploymentRequest()
                                                             .withApplicationName(applicationName)
