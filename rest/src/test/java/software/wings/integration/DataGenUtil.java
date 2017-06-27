@@ -124,8 +124,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     Map<String, List<Service>> services = new HashMap<>();
     Map<String, List<Environment>> appEnvs = new HashMap<>();
 
-    //    containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID)); // TODO:: upload Real Tomcat and Jboss server.
-
     for (Application application : apps) {
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));

@@ -39,7 +39,6 @@ import com.google.inject.Injector;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -125,8 +124,6 @@ public class HttpStateTest extends WingsBaseTest {
       activity.setUuid(ACTIVITY_ID);
       return activity;
     });
-
-    // context.getWorkflowExecutionId()
   }
 
   /**

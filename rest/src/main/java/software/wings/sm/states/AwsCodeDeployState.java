@@ -287,10 +287,10 @@ public class AwsCodeDeployState extends State {
         invalidFields.put("bucket", "Bucket should not be empty");
       }
       if (StringUtils.isBlank(key)) {
-        invalidFields.put("bucket", "Key should not be empty");
+        invalidFields.put("key", "Key should not be empty");
       }
       if (StringUtils.isBlank(bundleType)) {
-        invalidFields.put("bucket", "Bundle Type should not be empty");
+        invalidFields.put("bundleType", "Bundle Type should not be empty");
       }
     }
     if (getCommandName() == null) {
