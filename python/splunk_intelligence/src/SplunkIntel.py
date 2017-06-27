@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import sys
 
@@ -13,28 +12,45 @@ from core.Tokenizer import Tokenizer
 from sources.SplunkDataset import SplunkDataset
 from core.ThreeSigmaClassifier import ThreeSigmaClassifier
 
+format = "%(asctime)-15s %(levelname)s %(message)s"
+logging.basicConfig(level=logging.INFO, format=format)
+logger = logging.getLogger(__name__)
 
 class SplunkIntel(object):
     def __init__(self, splunk_dataset, _options):
         self.splunkDataset = splunk_dataset
         self._options = _options
 
-    def detect_anomaly(self):
-        logging.info('Running splunk anomaly detection')
-
     def run(self):
-        logging.info('Running using file source')
+        logger.info('Running using file source')
 
-        vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, 1, 1.0)
+        total_events = len(self.splunkDataset.get_all_events())
+
+        logger.info("Total events = " + str(total_events))
+
+        min_df = 1.0
+        max_df = 1.0
+
+        if total_events > 100:
+            logger.info("setting min_df = 0.05 and max_df = 0.9")
+            min_df = 0.05
+            max_df = 1.0
+
+        logging.info("Start vectorization....")
+        vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
         tfidf_feature_matrix = vectorizer.fit_transform(self.splunkDataset.get_control_events_text_as_np())
         self.splunkDataset.set_feature_names(vectorizer.get_feature_names())
         self.splunkDataset.set_xy_matrix_control(vectorizer.get_cosine_dist_matrix(tfidf_feature_matrix))
+
+        logger.info("Start clustering....")
 
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()
 
         self.splunkDataset.set_control_clusters(kmeans.get_clusters())
         self.splunkDataset.set_centroids(kmeans.get_centriods())
+
+        logger.info("Detect unknown events....")
 
         tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDataset.get_test_events_text_as_np()))
         newAnomDetector = KmeansAnomalyDetector()
@@ -44,12 +60,16 @@ class SplunkIntel(object):
         self.splunkDataset.set_test_clusters(predictions)
         self.splunkDataset.set_anomalies(anomalies)
 
-        combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, 1, 1.0)
+        logger.info("Combined Vectorizer....")
+
+        combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
         combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDataset.get_all_events_text_as_np())
 
         combined_dist = combined_vectorizer.get_cosine_dist_matrix(combined_tfidf_matrix)
 
         self.splunkDataset.set_xy_matrix_all(combined_dist)
+
+        logger.info("Detect Count Anomalies....")
 
         control_groups = self.splunkDataset.get_control_values_pd().groupby('label')
         test_groups = self.splunkDataset.get_test_values_pd().groupby('label')
@@ -65,8 +85,8 @@ class SplunkIntel(object):
             anomolous_values_predictions = classifier.predict(str(name), np.column_stack((group.x, group.y)))
             self.splunkDataset.set_anomalous_values(group.idx.tolist(), anomolous_values_predictions)
 
+        logger.info("done")
         return self.splunkDataset
-        logging.info("done")
 
     def run_from_splunk(self):
         logging.info('Running using splunk')
@@ -91,9 +111,6 @@ def parse(cli_args):
 
 
 def main(args):
-    # simple log format
-    format = "%(asctime)-15s %(levelname)s %(message)s"
-    logging.basicConfig(level=logging.INFO, format=format)
 
     # create options
     options = parse(args[1:])

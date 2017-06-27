@@ -1,10 +1,14 @@
 import numpy as np
+import logging
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
 """
 Wrapper class for Kmeans clustering
 """
+
+logger = logging.getLogger(__name__)
+
 class KmeansCluster(object):
 
     km = None
@@ -38,6 +42,7 @@ class KmeansCluster(object):
         upper = self.feature_matrix.shape[0]
         while (lower <= upper):
             mid = (int)(lower + (upper - lower) / 2)
+            logger.info("Running kemans with k = " + str(mid))
             curr_km = KMeans(n_clusters=mid)
             curr_km.fit(self.feature_matrix)
             clusters = np.array(curr_km.labels_.tolist())
@@ -48,6 +53,7 @@ class KmeansCluster(object):
                     found = False
                     lower = mid + 1
             if found == True:
+                logger.info("found k = " + str(mid))
                 self.num_clusters = mid
                 self.km = curr_km
                 upper = mid - 1

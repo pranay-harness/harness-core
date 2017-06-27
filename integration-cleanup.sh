@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #kill delegate
-kill -9 `cat delegate/delegate.pid`
+pgrep -f "integration-test/wings/delegate" | xargs kill -9
 
 #kill manager
-kill -9 `cat rest/manager.pid`
+pgrep -f "integration-test/wings/rest" | xargs kill -9
 
