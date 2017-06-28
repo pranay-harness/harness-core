@@ -10,6 +10,7 @@ import java.util.Objects;
 public class BuildDetails {
   private String number;
   private String revision;
+  private String description;
 
   /**
    * Gets number.
@@ -70,11 +71,30 @@ public class BuildDetails {
   }
 
   /**
+   * Gets description.
+   *
+   * @return the description
+   */
+  public String getDescription() {
+    return description;
+  }
+
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String number;
     private String revision;
+    private String description;
 
     private Builder() {}
 
@@ -110,12 +130,23 @@ public class BuildDetails {
     }
 
     /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return aBuildDetails().withNumber(number).withRevision(revision);
+      return aBuildDetails().withNumber(number).withRevision(revision).withDescription(description);
     }
 
     /**
@@ -127,6 +158,7 @@ public class BuildDetails {
       BuildDetails buildDetails = new BuildDetails();
       buildDetails.setNumber(number);
       buildDetails.setRevision(revision);
+      buildDetails.setDescription(description);
       return buildDetails;
     }
   }

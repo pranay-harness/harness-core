@@ -45,6 +45,8 @@ public class Artifact extends Base {
 
   @Indexed private Status status;
 
+  private String description;
+
   /**
    * Gets metadata.
    *
@@ -190,10 +192,20 @@ public class Artifact extends Base {
     this.artifactStreamId = artifactStreamId;
   }
 
+  /**
+   * Gets artifact source name.
+   *
+   * @return the artifact source name
+   */
   public String getArtifactSourceName() {
     return artifactSourceName;
   }
 
+  /**
+   * Sets artifact source name.
+   *
+   * @param artifactSourceName the artifact source name
+   */
   public void setArtifactSourceName(String artifactSourceName) {
     this.artifactSourceName = artifactSourceName;
   }
@@ -214,6 +226,24 @@ public class Artifact extends Base {
    */
   public void setServiceIds(List<String> serviceIds) {
     this.serviceIds = serviceIds;
+  }
+
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
+  public String getDescription() {
+    return description;
+  }
+
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   /**
@@ -302,8 +332,10 @@ public class Artifact extends Base {
     private String displayName;
     private String revision;
     private List<String> serviceIds = new ArrayList<>();
+    private List<Service> services;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
     private Status status;
+    private String description;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -333,6 +365,12 @@ public class Artifact extends Base {
       return this;
     }
 
+    /**
+     * With artifact source name builder.
+     *
+     * @param artifactSourceName the artifact source name
+     * @return the builder
+     */
     public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
@@ -383,6 +421,17 @@ public class Artifact extends Base {
     }
 
     /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    /**
      * With artifact files builder.
      *
      * @param artifactFiles the artifact files
@@ -401,6 +450,17 @@ public class Artifact extends Base {
      */
     public Builder withStatus(Status status) {
       this.status = status;
+      return this;
+    }
+
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
+    public Builder withDescription(String description) {
+      this.description = description;
       return this;
     }
 
@@ -483,8 +543,10 @@ public class Artifact extends Base {
           .withDisplayName(displayName)
           .withRevision(revision)
           .withServiceIds(serviceIds)
+          .withServices(services)
           .withArtifactFiles(artifactFiles)
           .withStatus(status)
+          .withDescription(description)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -506,8 +568,10 @@ public class Artifact extends Base {
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setServiceIds(serviceIds);
+      artifact.setServices(services);
       artifact.setArtifactFiles(artifactFiles);
       artifact.setStatus(status);
+      artifact.setDescription(description);
       artifact.setUuid(uuid);
       artifact.setAppId(appId);
       artifact.setCreatedBy(createdBy);
