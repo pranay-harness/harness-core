@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsKubernetesInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -204,9 +204,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
       updateOperations.set("region", ecsInfrastructureMapping.getRegion());
-    } else if (infrastructureMapping instanceof AwsKubernetesInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      updateOperations.set("masterUrl", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getMasterUrl());
+      updateOperations.set("username", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getUsername());
+      updateOperations.set("password", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getPassword());
       updateOperations.set(
-          "clusterName", ((AwsKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+          "clusterName", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
@@ -761,7 +764,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
-      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT_KUBERNETES));
+      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
     } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));

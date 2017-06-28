@@ -8,12 +8,12 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -36,18 +36,26 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    Validator.equalCheck(cloudProviderSetting.getValue().getType(), getSettingVariableType());
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
     String region = context.getRegion();
+    KubernetesConfig kubernetesConfig = null;
+    if (context.getDirectKubernetesParams() != null) {
+      kubernetesConfig = KubernetesConfig.Builder.aKubernetesConfig()
+                             .withMasterUrl(context.getDirectKubernetesParams().getMasterUrl())
+                             .withUsername(context.getDirectKubernetesParams().getUsername())
+                             .withPassword(context.getDirectKubernetesParams().getPassword().toCharArray())
+                             .build();
+    }
+
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      List<ContainerInfo> containerInfos =
-          executeInternal(region, cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
+      List<ContainerInfo> containerInfos = executeInternal(
+          region, cloudProviderSetting, kubernetesConfig, clusterName, serviceName, desiredCount, executionLogCallback);
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       boolean allContainersSuccess = true;
       for (ContainerInfo info : containerInfos) {
@@ -62,8 +70,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     return commandExecutionStatus;
   }
 
-  protected abstract String getSettingVariableType();
-
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback);
+      KubernetesConfig kubernetesConfig, String clusterName, String serviceName, Integer desiredCount,
+      ExecutionLogCallback executionLogCallback);
 }

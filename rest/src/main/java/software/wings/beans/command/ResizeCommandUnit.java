@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 
@@ -23,13 +23,9 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
   }
 
   @Override
-  protected String getSettingVariableType() {
-    return SettingVariableTypes.AWS.name();
-  }
-
-  @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
+      KubernetesConfig kubernetesConfig, String clusterName, String serviceName, Integer desiredCount,
+      ExecutionLogCallback executionLogCallback) {
     return awsClusterService.resizeCluster(
         region, cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
   }

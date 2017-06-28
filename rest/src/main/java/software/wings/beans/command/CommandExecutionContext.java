@@ -43,6 +43,7 @@ public class CommandExecutionContext {
   private String serviceName;
   private String region;
   private CodeDeployParams codeDeployParams;
+  private DirectKubernetesParams directKubernetesParams;
   private Integer desiredCount;
   private Integer desiredPercentage;
   private CommandExecutionData commandExecutionData;
@@ -76,6 +77,7 @@ public class CommandExecutionContext {
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.codeDeployParams = other.codeDeployParams;
+    this.directKubernetesParams = other.directKubernetesParams;
   }
 
   /**
@@ -594,8 +596,16 @@ public class CommandExecutionContext {
     this.codeDeployParams = codeDeployParams;
   }
 
+  public DirectKubernetesParams getDirectKubernetesParams() {
+    return directKubernetesParams;
+  }
+
+  public void setDirectKubernetesParams(DirectKubernetesParams directKubernetesParams) {
+    this.directKubernetesParams = directKubernetesParams;
+  }
+
   /**
-   * The type Codo deploy params.
+   * The type Code deploy params.
    */
   public static class CodeDeployParams {
     private String applicationName;
@@ -766,6 +776,71 @@ public class CommandExecutionContext {
     }
   }
 
+  public static final class DirectKubernetesParams {
+    private String masterUrl;
+    private String username;
+    private String password;
+
+    public DirectKubernetesParams() {}
+
+    private DirectKubernetesParams(Builder builder) {
+      setMasterUrl(builder.masterUrl);
+      setUsername(builder.username);
+      setPassword(builder.password);
+    }
+
+    public String getMasterUrl() {
+      return masterUrl;
+    }
+
+    public void setMasterUrl(String masterUrl) {
+      this.masterUrl = masterUrl;
+    }
+
+    public String getUsername() {
+      return username;
+    }
+
+    public void setUsername(String username) {
+      this.username = username;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public void setPassword(String password) {
+      this.password = password;
+    }
+
+    public static final class Builder {
+      private String masterUrl;
+      private String username;
+      private String password;
+
+      public Builder() {}
+
+      public Builder withMasterUrl(String masterUrl) {
+        this.masterUrl = masterUrl;
+        return this;
+      }
+
+      public Builder withUsername(String username) {
+        this.username = username;
+        return this;
+      }
+
+      public Builder withPassword(String password) {
+        this.password = password;
+        return this;
+      }
+
+      public DirectKubernetesParams build() {
+        return new DirectKubernetesParams(this);
+      }
+    }
+  }
+
   public static final class Builder {
     private String accountId;
     private String envId;
@@ -789,6 +864,7 @@ public class CommandExecutionContext {
     private String serviceName;
     private String region;
     private CodeDeployParams codeDeployParams;
+    private DirectKubernetesParams directKubernetesParams;
     private Integer desiredCount;
     private Integer desiredPercentage;
     private CommandExecutionData commandExecutionData;
@@ -909,6 +985,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withDirectKubernetesParams(DirectKubernetesParams directKubernetesParams) {
+      this.directKubernetesParams = directKubernetesParams;
+      return this;
+    }
+
     public Builder withDesiredCount(Integer desiredCount) {
       this.desiredCount = desiredCount;
       return this;
@@ -948,6 +1029,7 @@ public class CommandExecutionContext {
           .withServiceName(serviceName)
           .withRegion(region)
           .withCodeDeployParams(codeDeployParams)
+          .withDirectKubernetesParams(directKubernetesParams)
           .withDesiredCount(desiredCount)
           .withDesiredPercentage(desiredPercentage)
           .withCommandExecutionData(commandExecutionData);
@@ -976,6 +1058,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setServiceName(serviceName);
       commandExecutionContext.setRegion(region);
       commandExecutionContext.setCodeDeployParams(codeDeployParams);
+      commandExecutionContext.setDirectKubernetesParams(directKubernetesParams);
       commandExecutionContext.setDesiredCount(desiredCount);
       commandExecutionContext.setDesiredPercentage(desiredPercentage);
       commandExecutionContext.setCommandExecutionData(commandExecutionData);

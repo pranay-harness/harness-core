@@ -1,0 +1,6 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "ui:order": ["deploymentType", "computeProviderSettingId", "masterUrl", "username", "password", "clusterName","infraMappingType","computeProviderType"]
+}

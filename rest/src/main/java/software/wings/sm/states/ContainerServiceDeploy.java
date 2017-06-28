@@ -27,10 +27,12 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -201,7 +203,7 @@ public abstract class ContainerServiceDeploy extends State {
     }
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       buildInstanceStatusSummaries(context, response, commandStateExecutionData);
-      cleanupOldVersions(context, commandStateExecutionData);
+      cleanupOldVersions(context);
       return downsizeOldInstances(context, commandStateExecutionData);
     } else {
       CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
@@ -225,7 +227,13 @@ public abstract class ContainerServiceDeploy extends State {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute;
+    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      settingAttribute =
+          createKubernetesSettingAttribute((DirectKubernetesInfrastructureMapping) infrastructureMapping);
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    }
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
@@ -284,12 +292,32 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private void cleanupOldVersions(ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+  private SettingAttribute createKubernetesSettingAttribute(
+      DirectKubernetesInfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute;
+    DirectKubernetesInfrastructureMapping directMapping = infrastructureMapping;
+    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                           .withValue(KubernetesConfig.Builder.aKubernetesConfig()
+                                          .withMasterUrl(directMapping.getMasterUrl())
+                                          .withUsername(directMapping.getUsername())
+                                          .withPassword(directMapping.getPassword().toCharArray())
+                                          .build())
+                           .build();
+    return settingAttribute;
+  }
+
+  private void cleanupOldVersions(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute;
+    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      settingAttribute =
+          createKubernetesSettingAttribute((DirectKubernetesInfrastructureMapping) infrastructureMapping);
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    }
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String serviceName = serviceElement.getName();
     String clusterName = serviceElement.getClusterName();
@@ -391,6 +419,14 @@ public abstract class ContainerServiceDeploy extends State {
     commandExecutionContext.setActivityId(activityId);
     commandExecutionContext.setCloudProviderSetting(settingAttribute);
     commandExecutionContext.setDesiredCount(desiredCount);
+    if (settingAttribute.getValue() instanceof KubernetesConfig) {
+      KubernetesConfig kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
+      commandExecutionContext.setDirectKubernetesParams(new CommandExecutionContext.DirectKubernetesParams.Builder()
+                                                            .withMasterUrl(kubernetesConfig.getMasterUrl())
+                                                            .withUsername(kubernetesConfig.getUsername())
+                                                            .withPassword(new String(kubernetesConfig.getPassword()))
+                                                            .build());
+    }
 
     return commandExecutionContext;
   }

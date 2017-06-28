@@ -108,9 +108,9 @@ public abstract class SettingValue implements ExtensionPoint {
     GCP("Google Cloud Platform"),
 
     /**
-     * Direct Kubernetes variable types.
+     * Direct connection setting variable types.
      */
-    DIRECT_KUBERNETES("Direct Kubernetes"),
+    DIRECT("Direct Connection"),
 
     /**
      * Docker registry setting variable types.

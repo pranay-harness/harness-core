@@ -37,9 +37,9 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
    */
   AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS, 4),
   /**
-   * Aws kubernetes infra mapping type.
+   * Direct connection to kubernetes infra mapping type.
    */
-  DIRECT_KUBERNETES(AwsKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS, 5),
+  DIRECT_KUBERNETES(DirectKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS, 5),
   /**
    * Gcp kubernetes infra mapping type.
    */
