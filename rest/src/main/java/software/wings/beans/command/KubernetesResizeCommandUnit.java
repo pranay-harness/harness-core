@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
@@ -28,9 +27,11 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      KubernetesConfig kubernetesConfig, String clusterName, String serviceName, Integer desiredCount,
-      ExecutionLogCallback executionLogCallback) {
-    if (cloudProviderSetting.getValue() instanceof GcpConfig) {
+      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
+    KubernetesConfig kubernetesConfig;
+    if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
+      kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
+    } else {
       kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
     }
     return kubernetesContainerService.setControllerPodCount(

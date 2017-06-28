@@ -88,7 +88,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GCP Cluster Name").build());
+        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("Cluster Name").build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)
@@ -116,7 +116,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GCP Cluster Name").build());
+        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("Cluster Name").build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)

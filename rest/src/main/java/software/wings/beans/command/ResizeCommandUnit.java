@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -24,8 +23,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      KubernetesConfig kubernetesConfig, String clusterName, String serviceName, Integer desiredCount,
-      ExecutionLogCallback executionLogCallback) {
+      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     return awsClusterService.resizeCluster(
         region, cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
   }

@@ -33,7 +33,6 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -407,14 +406,6 @@ public abstract class ContainerServiceDeploy extends State {
     commandExecutionContext.setActivityId(activityId);
     commandExecutionContext.setCloudProviderSetting(settingAttribute);
     commandExecutionContext.setDesiredCount(desiredCount);
-    if (settingAttribute.getValue() instanceof KubernetesConfig) {
-      KubernetesConfig kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
-      commandExecutionContext.setDirectKubernetesParams(new CommandExecutionContext.DirectKubernetesParams.Builder()
-                                                            .withMasterUrl(kubernetesConfig.getMasterUrl())
-                                                            .withUsername(kubernetesConfig.getUsername())
-                                                            .withPassword(new String(kubernetesConfig.getPassword()))
-                                                            .build());
-    }
 
     return commandExecutionContext;
   }
