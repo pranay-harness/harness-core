@@ -231,7 +231,9 @@ public class SplunkState extends State {
       try {
         final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
         final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
-        final String logAnalysisUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
+        final String logAnalysisSaveUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
+            + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
+        final String logAnalysisGetUrl = this.serverUrl + "/api/splunk/get-analysis-records?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
         final List<String> command = new ArrayList<>();
         command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
@@ -254,9 +256,9 @@ public class SplunkState extends State {
         command.add("--state_execution_id");
         command.add(context.getStateExecutionInstanceId());
         command.add("--log_analysis_save_url");
-        command.add(logAnalysisUrl);
+        command.add(logAnalysisSaveUrl);
         command.add("--log_analysis_get_url");
-        command.add(logAnalysisUrl);
+        command.add(logAnalysisGetUrl);
 
         final ProcessResult result =
             new ProcessExecutor(command)

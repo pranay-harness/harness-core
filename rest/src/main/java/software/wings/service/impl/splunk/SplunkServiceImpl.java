@@ -53,13 +53,13 @@ public class SplunkServiceImpl implements SplunkService {
     wingsPersistence.delete(wingsPersistence.createQuery(SplunkLogMLAnalysisRecord.class)
                                 .field("applicationId")
                                 .equal(mlAnalysisResponse.getApplicationId())
-                                .field("stateExecutionInstanceId")
-                                .equal(mlAnalysisResponse.getStateExecutionInstanceId()));
+                                .field("stateExecutionId")
+                                .equal(mlAnalysisResponse.getStateExecutionId()));
 
     wingsPersistence.save(mlAnalysisResponse);
     logger.debug(
         "inserted ml SplunkLogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
-        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionInstanceId());
+        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     return true;
   }
 

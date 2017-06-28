@@ -13,7 +13,7 @@ import java.util.Map;
  */
 @Entity(value = "splunkAnalysisRecords", noClassnameStored = true)
 public class SplunkLogMLAnalysisRecord extends Base {
-  @NotEmpty @Indexed private String stateExecutionInstanceId;
+  @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private String applicationId;
 
@@ -24,12 +24,12 @@ public class SplunkLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
 
-  public String getStateExecutionInstanceId() {
-    return stateExecutionInstanceId;
+  public String getStateExecutionId() {
+    return stateExecutionId;
   }
 
-  public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
-    this.stateExecutionInstanceId = stateExecutionInstanceId;
+  public void setStateExecutionId(String stateExecutionId) {
+    this.stateExecutionId = stateExecutionId;
   }
 
   public String getApplicationId() {

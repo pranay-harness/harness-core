@@ -64,7 +64,7 @@ public class SplunkResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       SplunkLogMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
-    mlAnalysisResponse.setStateExecutionInstanceId(stateExecutionId);
+    mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     return new RestResponse<>(splunkService.saveSplunkAnalysisRecords(mlAnalysisResponse));
   }
 
