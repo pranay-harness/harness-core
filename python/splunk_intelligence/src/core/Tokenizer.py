@@ -43,6 +43,7 @@ class Tokenizer(object):
                 filtered_tokens.append(token)
         if len(filtered_tokens) == 0:
             filtered_tokens.append(text)
+
         return filtered_tokens
 
 

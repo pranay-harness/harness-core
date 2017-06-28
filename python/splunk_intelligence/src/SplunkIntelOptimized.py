@@ -25,15 +25,15 @@ class SplunkIntelOptimized(object):
         logger.info('Running using file source')
 
         control_events = self.splunkDatasetNew.get_control_events()
-        min_df = 1.0
+        min_df = 1
         max_df = 1.0
 
         if len(control_events) > 50:
-            logger.info("setting min_df = 0.05 and max_df = 0.9")
             min_df = 0.05
             max_df = 1.0
 
         logging.info("Start vectorization....")
+        logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
         vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
         tfidf_feature_matrix = vectorizer.fit_transform(self.splunkDatasetNew.get_control_events_text_as_np())
 
@@ -77,7 +77,7 @@ class SplunkIntelOptimized(object):
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
-                values.extend(np.array([ count.get('count') for count in data.get('count')]))
+                values.extend(np.array([ freq.get('count') for freq in data.get('message_frequencies')]))
 
             # print(idx)
             # print(values)
@@ -87,7 +87,7 @@ class SplunkIntelOptimized(object):
             classifier.fit_transform(idx, values_control)
 
             for host, data in group.items():
-                values_test = np.array([count.get('count') for count in data.get('count')])
+                values_test = np.array([freq.get('count') for freq in data.get('message_frequencies')])
                 # print(values_test)
                 anomalous_counts, score = classifier.predict(idx, np.column_stack(([idx] * len(values_test), values_test)))
                 # print(anomalous_counts)
@@ -117,6 +117,10 @@ def parse(cli_args):
     parser.add_argument("--sim_threshold", type=float, required=True)
     parser.add_argument("--control_nodes", nargs='+', type=str, required=True)
     parser.add_argument("--test_nodes", nargs='+', type=str, required=True)
+    parser.add_argument("--state_execution_id", type=str, required=True)
+    parser.add_argument("--log_analysis_save_url", required=True)
+    parser.add_argument("--log_analysis_get_url", required=True)
+
     return parser.parse_args(cli_args)
 
 
@@ -155,19 +159,24 @@ def run_debug():
 
 def main(args):
 
-    run_debug()
-# create options
-# options = parse(args[1:])
-# logging.info(options)
+ #run_debug()
 
-# splunkDataset = SplunkDatasetNew()
+ #create options
+ print(args)
+ options = parse(args[1:])
+ logging.info(options)
 
-# splunkDataset.load_from_harness(options)
+ splunkDataset = SplunkDatasetNew()
+
+ splunkDataset.load_from_harness(options)
 
 # Add the production flow to load data here
 
-# splunkIntel = SplunkIntelOptimized(splunkDataset, options)
-# splunkIntel.run()
+ splunkIntel = SplunkIntelOptimized(splunkDataset, options)
+ splunkDataset = splunkIntel.run()
+
+ logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, splunkDataset.get_output_as_json))
+
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
 
