@@ -3,5 +3,6 @@
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
   "password":{"ui:widget":"password"},
+  "custom:encryptedFields": [ "password" ],
   "ui:order": ["deploymentType", "computeProviderSettingId", "masterUrl", "username", "password", "clusterName","infraMappingType","computeProviderType"]
 }
