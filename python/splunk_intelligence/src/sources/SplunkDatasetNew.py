@@ -26,14 +26,14 @@ class SplunkDatasetNew(object):
                 self.control_events[event['cluster_label']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['cluster_label']].append(
-                dict(text=event.get('_raw'), count=[event.get('cluster_count'), event.get('_time'), host,
-                                                    event['cluster_label']]))
+                dict(text=event.get('_raw'), count=dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
+                                                    old_label=event['cluster_label'])))
         elif event_type == 'test':
             if event['cluster_label'] not in self.test_events:
                 self.test_events[event['cluster_label']] = []
             self.test_events[event['cluster_label']].append(
                 dict(text=event.get('_raw'),
-                     count=[event.get('cluster_count'), event.get('_time'), host, event['cluster_label']]))
+                     count=dict(count=event.get('cluster_count'), time=event.get('_time'), host=host, label=event['cluster_label'])))
         elif event_type == 'control_prev':
             label = 10000 + event['cluster_label']
             if label not in self.control_events:
@@ -124,11 +124,12 @@ class SplunkDatasetNew(object):
             if clusters[index] not in self.anom_clusters:
                 self.anom_clusters[clusters[index]] = {}
             for anom in anomal:
-                host = anom.get('count')[2]
+                host = anom.get('count').get('host')
                 if host not in self.anom_clusters[clusters[index]]:
                     self.anom_clusters[clusters[index]][host] = dict(x=anom.get('x'),
                                                                      y=anom.get('y'),
                                                                      text=anom.get('text'),
+                                                                     cluster_label=anom.get('cluster_label'),
                                                                      count=[])
 
                 self.anom_clusters[clusters[index]][host].get('count').append(anom.get('count'))
@@ -146,7 +147,7 @@ class SplunkDatasetNew(object):
                 if val.get('cluster_label') not in self.control_clusters:
                     self.control_clusters[val.get('cluster_label')] = {}
 
-                host = val.get('count')[2]
+                host = val.get('count').get('host')
                 if host not in self.control_clusters[val.get('cluster_label')]:
                     self.control_clusters[val.get('cluster_label')][host] = dict(x=combined_dist[index, 0],
                                                                                  y=combined_dist[index, 1],
@@ -177,7 +178,7 @@ class SplunkDatasetNew(object):
                     if val.get('cluster_label') not in self.test_clusters:
                         self.test_clusters[val.get('cluster_label')] = {}
 
-                    host = val.get('count')[2]
+                    host = val.get('count').get('count')
                     if host not in self.test_clusters[val.get('cluster_label')]:
                         self.test_clusters[val.get('cluster_label')][host] = dict(
                             x=combined_dist[index + dist_offset, 0],
@@ -218,6 +219,7 @@ class SplunkDatasetNew(object):
         y = []
         labels = []
         tooltips = []
+        sizes=[]
         ind = 0
         for index, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
@@ -226,6 +228,10 @@ class SplunkDatasetNew(object):
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
                 labels.append(0)
+                size=0
+                for count in val.get('count'):
+                    size = size + int(count.get('count'))
+                    sizes.append(size)
 
         for index, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
@@ -233,17 +239,29 @@ class SplunkDatasetNew(object):
                 y.append(val.get('y'))
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
-                labels.append(1)
+                if val.get('unexpected_freq'):
+                    labels.append(3)
+                else:
+                    labels.append(1)
+                #labels.append(1)
+                size = 0
+                for count in val.get('count'):
+                    size = size + int(count.get('count'))
+                    sizes.append(size)
 
-        for anomal in self.anomalies:
-            for val in anomal:
+        for key, value in self.anom_clusters.items():
+            for host, val in value.items():
                 x.append(val.get('x'))
                 y.append(val.get('y'))
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
                 labels.append(2)
+                size = 0
+                for count in val.get('count'):
+                    size = size + int(count.get('count'))
+                    sizes.append(size)
 
-        return np.column_stack((x, y)), tooltips, labels
+        return np.column_stack((x, y)), tooltips, labels, sizes
 
     def count_scatter_plot(self):
 
@@ -261,7 +279,7 @@ class SplunkDatasetNew(object):
                 ind = ind + 1
                 size = 0
                 for count in val.get('count'):
-                    size = size + count[0]
+                    size = size + int(count.get('count'))
                     sizes.append(size)
                 if val.get('unexpected_freq'):
                     labels.append(1)
@@ -284,7 +302,7 @@ class SplunkDatasetNew(object):
                 for count in val.get('count'):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
-                    z.append(count[0])
+                    z.append(count.get('count'))
                     tooltips.append([host + ' ' + val.get('text'), ind])
                     labels.append(0)
                     clusters.append(key)
@@ -295,7 +313,7 @@ class SplunkDatasetNew(object):
                 for idx, count in enumerate(val.get('count')):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
-                    z.append(count[0])
+                    z.append(count.get('count'))
                     tooltips.append([host + ' ' + val.get('text'), ind])
                     if val.get('anomalous_counts')[idx] == 1:
                         labels.append(1)

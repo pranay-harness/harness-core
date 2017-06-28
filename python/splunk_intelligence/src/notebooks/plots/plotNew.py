@@ -25,10 +25,13 @@ def scatter_plot(xy_matrix, tooltips):
     py.offline.iplot(figure)
 
 
-def scatter_plot_groups(xy_matrix, labels, tooltips, legends=None, cc=None):
+def scatter_plot_groups(xy_matrix, labels, tooltips, legends=None, cc=None, sizes=None):
     if cc is None:
         cc = ["'rgb " + str(randint(0, 255)) + "," + str(randint(0, 255)) + "," + str(randint(0, 255)) + "'" for c in
               range(len(set(labels)))]
+
+    if sizes is None:
+        sizes = [5 for i in range(xy_matrix.shape[0])]
 
     # create data frame that has the result of the MDS plus the cluster numbers and titles
     df = pd.DataFrame(dict(x=xy_matrix[:, 0], y=xy_matrix[:, 1], label=labels, tooltip=tooltips))
@@ -44,7 +47,7 @@ def scatter_plot_groups(xy_matrix, labels, tooltips, legends=None, cc=None):
                     text=[split(s[0], min(100, len(s[0])), 100) + '<br> id = ' + str(s[1]) for s in group.tooltip],
                     mode='markers',
                     name=legends[name],
-                    marker=Marker(color=cc[name], opacity=0.3)) for name, group in groups
+                    marker=Marker(color=cc[name], size=sizes, opacity=0.3)) for name, group in groups
         ],
         'layout': Layout(hovermode='closest')
     }, show_link=False, filename='123')

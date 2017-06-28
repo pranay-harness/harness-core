@@ -9,7 +9,7 @@ from core.KmeansCluster import KmeansCluster
 from core.TFIDFVectorizer import TFIDFVectorizer
 from core.Tokenizer import Tokenizer
 from sources.SplunkDatasetNew import SplunkDatasetNew
-from core.ThreeSigmaClassifier import ThreeSigmaClassifier
+from core.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -57,13 +57,14 @@ class SplunkIntelOptimized(object):
 
         unknown_anomalies_text = self.splunkDatasetNew.get_unknown_anomalies_text()
 
-        anom_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
-        tfidf_feature_matrix_anom = anom_vectorizer.fit_transform(np.array(unknown_anomalies_text))
+        if len(unknown_anomalies_text) > 0:
+            anom_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
+            tfidf_feature_matrix_anom = anom_vectorizer.fit_transform(np.array(unknown_anomalies_text))
 
-        anom_kmeans = KmeansCluster(tfidf_feature_matrix_anom, self._options.sim_threshold)
-        anom_kmeans.cluster_cosine_threshold()
+            anom_kmeans = KmeansCluster(tfidf_feature_matrix_anom, self._options.sim_threshold)
+            anom_kmeans.cluster_cosine_threshold()
 
-        self.splunkDatasetNew.create_anom_clusters(anom_kmeans.get_clusters())
+            self.splunkDatasetNew.create_anom_clusters(anom_kmeans.get_clusters())
 
         logger.info("Detect Count Anomalies....")
 
@@ -72,26 +73,29 @@ class SplunkIntelOptimized(object):
 
         # classifier = IsolationForestClassifier()
 
-        classifier = ThreeSigmaClassifier()
+        classifier = FrequencyAnomalyDetector()
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
-                values.extend(np.array(data.get('count'))[:, 0])
+                values.extend(np.array([ count.get('count') for count in data.get('count')]))
 
             # print(idx)
             # print(values)
 
-            values = np.column_stack(([idx] * len(values), values))
+            values_control = np.column_stack(([idx] * len(values), values))
 
-            classifier.fit_transform(idx, values)
+            classifier.fit_transform(idx, values_control)
 
             for host, data in group.items():
-                values_test = np.array(data.get('count'))[:, 0]
+                values_test = np.array([count.get('count') for count in data.get('count')])
                 # print(values_test)
                 anomalous_counts, score = classifier.predict(idx, np.column_stack(([idx] * len(values_test), values_test)))
                 # print(anomalous_counts)
                 data.get('anomalous_counts').extend(anomalous_counts)
                 if score < 0.5:
+                    print(values)
+                    print(values_test)
+                    print(anomalous_counts)
                     data['unexpected_freq'] = True
 
         logger.info("done")
