@@ -110,7 +110,13 @@ public abstract class ContainerServiceDeploy extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute;
+    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      settingAttribute =
+          createKubernetesSettingAttribute((DirectKubernetesInfrastructureMapping) infrastructureMapping);
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    }
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
