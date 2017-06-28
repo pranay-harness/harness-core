@@ -164,8 +164,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                   .build();
     environmentService.update(environment);
     verify(wingsPersistence)
-        .updateFields(Environment.class, ENV_ID,
-            ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION, "environmentType", PROD));
+        .updateFields(Environment.class, ENV_ID, ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION));
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
