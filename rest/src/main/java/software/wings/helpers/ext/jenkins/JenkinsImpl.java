@@ -166,6 +166,7 @@ public class JenkinsImpl implements Jenkins {
                 -> aBuildDetails()
                        .withNumber(String.valueOf(buildWithDetails.getNumber()))
                        .withRevision(extractRevision(buildWithDetails))
+                       .withDescription(buildWithDetails.getDescription())
                        .build())
             .collect(toList()));
   }
@@ -186,6 +187,7 @@ public class JenkinsImpl implements Jenkins {
     return aBuildDetails()
         .withNumber(String.valueOf(buildWithDetails.getNumber()))
         .withRevision(extractRevision(buildWithDetails))
+        .withDescription(buildWithDetails.getDescription())
         .build();
   }
 
