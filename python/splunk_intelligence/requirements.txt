@@ -1,3 +1,4 @@
+pyOpenSSL
 nose
 sphinx
 splunk-sdk
