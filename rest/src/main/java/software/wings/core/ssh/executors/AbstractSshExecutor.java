@@ -137,7 +137,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     long start = System.currentTimeMillis();
     try {
       channel = getCachedSession(this.config).openChannel("exec");
-      logger.error("Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+      logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
       OutputStream outputStream = channel.getOutputStream();

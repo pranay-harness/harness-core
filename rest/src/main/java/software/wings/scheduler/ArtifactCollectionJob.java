@@ -131,6 +131,7 @@ public class ArtifactCollectionJob implements Job {
                   .withArtifactStreamId(artifactStreamId)
                   .withArtifactSourceName(artifactStream.getSourceName())
                   .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
+                  .withDescription(lastSuccessfulBuild.getDescription())
                   .withMetadata(ImmutableMap.of(Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
                   .withRevision(lastSuccessfulBuild.getRevision())
                   .build();

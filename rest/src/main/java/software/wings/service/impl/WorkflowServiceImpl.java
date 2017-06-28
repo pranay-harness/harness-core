@@ -945,6 +945,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
                                    .addStep(aNode()
                                                 .withId(getUuid())

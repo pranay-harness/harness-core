@@ -56,7 +56,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testDomainNotAllowed() throws IOException {
-    WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@harness.io");
+    WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     Assert.assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
@@ -254,7 +254,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupBadEmailDomain() throws IOException {
     final String name = "Brad  Pitt    ";
-    final String email = "xyz@harness.io";
+    final String email = "xyz@some-email.io";
     final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
