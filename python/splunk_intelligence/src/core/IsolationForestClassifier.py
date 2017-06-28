@@ -34,4 +34,5 @@ class IsolationForestClassifier(object):
         :return: a list of containing -1 or 1. -1 denotes anomaly
         """
         pq = self.scaler[label].transform(values)
-        return self.klassifier[label].predict(pq)
+        score = (len(values) - len(np.where(pq < 1))) / len(values)
+        return self.klassifier[label].predict(pq), score
