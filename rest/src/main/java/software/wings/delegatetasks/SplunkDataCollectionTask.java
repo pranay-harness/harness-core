@@ -18,9 +18,9 @@ import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult.SplunkDataCollectionTaskStatus;
 import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.time.WingsTimeUtils;
 
 import java.io.InputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -38,7 +38,7 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<SplunkDataCollectionTaskResult> {
-  private static final int DURATION_TO_ASK_MINUTES = 5;
+  public static final int DELAY_MINUTES = 2;
   private static final SimpleDateFormat SPLUNK_START_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
@@ -81,7 +81,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
       synchronized (lockObject) {
         lockObject.notifyAll();
       }
-    }, dataCollectionInfo.getCollectionTime() + 1, TimeUnit.MINUTES);
+    }, dataCollectionInfo.getCollectionTime() + DELAY_MINUTES, TimeUnit.MINUTES);
     logger.info("going to collect splunk data for " + dataCollectionInfo);
 
     synchronized (lockObject) {
@@ -100,7 +100,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
       SplunkDataCollectionInfo dataCollectionInfo, Service splunkService) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        new SplunkDataCollector(dataCollectionInfo, splunkService, splunkMetricStoreService), 0, 1, TimeUnit.MINUTES);
+        new SplunkDataCollector(dataCollectionInfo, splunkService, splunkMetricStoreService), DELAY_MINUTES, 1,
+        TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
@@ -108,12 +109,14 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
     private final SplunkDataCollectionInfo dataCollectionInfo;
     private final Service splunkService;
     private final SplunkMetricStoreService splunkMetricStoreService;
+    private long collectionStartTime;
 
     private SplunkDataCollector(SplunkDataCollectionInfo dataCollectionInfo, Service splunkService,
         SplunkMetricStoreService splunkMetricStoreService) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.splunkService = splunkService;
       this.splunkMetricStoreService = splunkMetricStoreService;
+      this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
     }
 
     @Override
@@ -131,9 +134,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           JobArgs jobargs = new JobArgs();
           jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
 
-          final Date startTime = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
-          jobargs.setEarliestTime(SPLUNK_START_DATE_FORMATER.format(startTime));
-          jobargs.setLatestTime("now");
+          jobargs.setEarliestTime(SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime)));
+          jobargs.setLatestTime(
+              SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1)));
 
           // A blocking search returns the job when the search is done
           logger.debug("triggering query " + searchQuery);
@@ -157,8 +160,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
             logElements.add(splunkLogElement);
           }
           resultsReader.close();
-          splunkMetricStoreService.save(
-              dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(), logElements);
+          splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
+              dataCollectionInfo.getStateExecutionId(), logElements);
+          this.collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {

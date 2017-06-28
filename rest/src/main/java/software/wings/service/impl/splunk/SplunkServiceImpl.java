@@ -2,6 +2,7 @@ package software.wings.service.impl.splunk;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
@@ -25,9 +26,10 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public Boolean saveLogData(String appId, List<SplunkLogElement> logData) throws IOException {
+  public Boolean saveLogData(String appId, String stateExecutionId, List<SplunkLogElement> logData) throws IOException {
     logger.debug("inserting " + logData.size() + " pieces of splunk log data");
-    final List<SplunkLogDataRecord> logDataRecords = SplunkLogDataRecord.generateDataRecords(appId, logData);
+    final List<SplunkLogDataRecord> logDataRecords =
+        SplunkLogDataRecord.generateDataRecords(appId, stateExecutionId, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.debug("inserted " + logDataRecords.size() + " SplunkLogDataRecord to persistence layer.");
     return true;
@@ -39,6 +41,7 @@ public class SplunkServiceImpl implements SplunkService {
                                                  .addFilter("applicationId", Operator.EQ, logRequest.getApplicationId())
                                                  .addFilter("timeStamp", Operator.GT, logRequest.getStartTime() - 1)
                                                  .addFilter("timeStamp", Operator.LT, logRequest.getEndTime() - 1)
+                                                 .addFilter("processed", Operator.EQ, false)
                                                  .addFilter("host", Operator.IN, logRequest.getNodes().toArray())
                                                  .addOrder("timeStamp", OrderType.ASC)
                                                  .withLimit(PageRequest.UNLIMITED);
@@ -46,23 +49,43 @@ public class SplunkServiceImpl implements SplunkService {
   }
 
   @Override
-  public Boolean saveSplunkAnalysisRecords(SplunkMLAnalysisResponse mlAnalysisResponse) {
-    logger.debug("inserting " + mlAnalysisResponse.getEvents().size() + " pieces of splunk ml analysis response");
-    final List<SplunkLogAnalysisRecord> logAnalysisRecords = mlAnalysisResponse.generateRecords();
-    if (logAnalysisRecords.isEmpty()) {
-      logger.error("No analysis response were sent by the ML platform for app: " + mlAnalysisResponse.getAppId()
-          + ". State execution: " + mlAnalysisResponse.getStateExecutionInstanceId());
-      return false;
-    }
-
-    wingsPersistence.delete(wingsPersistence.createQuery(SplunkLogAnalysisRecord.class)
-                                .field("appId")
-                                .equal(mlAnalysisResponse.getAppId())
+  public Boolean saveSplunkAnalysisRecords(SplunkLogMLAnalysisRecord mlAnalysisResponse) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SplunkLogMLAnalysisRecord.class)
+                                .field("applicationId")
+                                .equal(mlAnalysisResponse.getApplicationId())
                                 .field("stateExecutionInstanceId")
                                 .equal(mlAnalysisResponse.getStateExecutionInstanceId()));
 
-    wingsPersistence.save(logAnalysisRecords);
-    logger.debug("inserted " + logAnalysisRecords.size() + " SplunkLogAnalysisRecord to persistence layer");
+    wingsPersistence.save(mlAnalysisResponse);
+    logger.debug(
+        "inserted ml SplunkLogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
+        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionInstanceId());
+    return true;
+  }
+
+  @Override
+  public SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId) {
+    Query<SplunkLogMLAnalysisRecord> splunkLogMLAnalysisRecords =
+        wingsPersistence.createQuery(SplunkLogMLAnalysisRecord.class)
+            .field("stateExecutionId")
+            .equal(stateExecutionId)
+            .field("applicationId")
+            .equal("applicationId");
+    return wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
+  }
+
+  @Override
+  public Boolean markProcessed(String stateExecutionId, String applicationId, long tillTimeStamp) {
+    Query<SplunkLogDataRecord> splunkLogDataRecords = wingsPersistence.createQuery(SplunkLogDataRecord.class)
+                                                          .field("stateExecutionId")
+                                                          .equal(stateExecutionId)
+                                                          .field("applicationId")
+                                                          .equal("applicationId")
+                                                          .field("timeStamp")
+                                                          .lessThanOrEq(tillTimeStamp);
+
+    wingsPersistence.update(splunkLogDataRecords,
+        wingsPersistence.createUpdateOperations(SplunkLogDataRecord.class).set("processed", true));
     return true;
   }
 }

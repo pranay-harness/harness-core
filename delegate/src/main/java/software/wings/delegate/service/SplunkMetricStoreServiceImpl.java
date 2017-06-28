@@ -19,7 +19,8 @@ public class SplunkMetricStoreServiceImpl implements SplunkMetricStoreService {
   @Inject private ManagerClient managerClient;
 
   @Override
-  public void save(String accountId, String appId, List<SplunkLogElement> splunkLogs) throws IOException {
-    execute(managerClient.saveSplunkLogs(accountId, appId, splunkLogs));
+  public void save(String accountId, String appId, String stateExecutionId, List<SplunkLogElement> splunkLogs)
+      throws IOException {
+    execute(managerClient.saveSplunkLogs(accountId, appId, stateExecutionId, splunkLogs));
   }
 }

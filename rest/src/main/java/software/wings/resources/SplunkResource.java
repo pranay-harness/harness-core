@@ -9,16 +9,16 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ExternalServiceAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
-import software.wings.service.impl.splunk.SplunkMLAnalysisResponse;
+import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
 import java.util.List;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -40,8 +40,9 @@ public class SplunkResource {
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveSplunkLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") final String appId, List<SplunkLogElement> logData) throws IOException {
-    return new RestResponse<>(splunkService.saveLogData(appId, logData));
+      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("appId") final String appId,
+      List<SplunkLogElement> logData) throws IOException {
+    return new RestResponse<>(splunkService.saveLogData(appId, stateExecutionId, logData));
   }
 
   @POST
@@ -59,8 +60,22 @@ public class SplunkResource {
   @Timed
   @ExceptionMetered
   @PublicApi
-  public RestResponse<Boolean> saveSplunkAnalysisRecords(
-      @QueryParam("accountId") String accountId, SplunkMLAnalysisResponse mlAnalysisResponse) throws IOException {
+  public RestResponse<Boolean> saveSplunkAnalysisRecords(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      SplunkLogMLAnalysisRecord mlAnalysisResponse) throws IOException {
+    mlAnalysisResponse.setApplicationId(applicationId);
+    mlAnalysisResponse.setStateExecutionInstanceId(stateExecutionId);
     return new RestResponse<>(splunkService.saveSplunkAnalysisRecords(mlAnalysisResponse));
+  }
+
+  @GET
+  @Path("/get-analysis-records")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<SplunkLogMLAnalysisRecord> getplunkAnalysisRecords(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
+      throws IOException {
+    return new RestResponse<>(splunkService.getSplunkAnalysisRecords(applicationId, stateExecutionId));
   }
 }

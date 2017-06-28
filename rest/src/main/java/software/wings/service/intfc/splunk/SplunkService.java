@@ -3,8 +3,8 @@ package software.wings.service.intfc.splunk;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkLogRequest;
-import software.wings.service.impl.splunk.SplunkMLAnalysisResponse;
 import software.wings.utils.validation.Create;
 
 import java.io.IOException;
@@ -17,9 +17,14 @@ import javax.validation.constraints.NotNull;
  */
 public interface SplunkService {
   @ValidationGroups(Create.class)
-  Boolean saveLogData(@NotNull String appId, @Valid List<SplunkLogElement> logData) throws IOException;
+  Boolean saveLogData(@NotNull String appId, @NotNull String stateExecutionId, @Valid List<SplunkLogElement> logData)
+      throws IOException;
 
   @ValidationGroups(Create.class) List<SplunkLogDataRecord> getSplunkLogData(@Valid SplunkLogRequest logRequest);
 
-  Boolean saveSplunkAnalysisRecords(SplunkMLAnalysisResponse mlAnalysisResponse);
+  Boolean markProcessed(@NotNull String stateExecutionId, @NotNull String applicationId, long timeStamp);
+
+  Boolean saveSplunkAnalysisRecords(SplunkLogMLAnalysisRecord mlAnalysisResponse);
+
+  SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId);
 }

@@ -9,5 +9,6 @@ import java.util.List;
  * Created by rsingh on 5/18/17.
  */
 public interface SplunkMetricStoreService {
-  void save(String accountId, String appId, List<SplunkLogElement> splunkLogs) throws IOException;
+  void save(String accountId, String appId, String stateExecutionId, List<SplunkLogElement> splunkLogs)
+      throws IOException;
 }

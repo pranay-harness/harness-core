@@ -25,6 +25,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
@@ -34,6 +35,7 @@ import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -42,6 +44,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -79,6 +82,8 @@ public class SplunkState extends State {
   @Transient @Inject private AppService appService;
 
   @Transient @Inject private DelegateService delegateService;
+
+  @Transient @Inject private SplunkService splunkService;
 
   @Transient @Inject private MainConfiguration configuration;
 
@@ -123,7 +128,7 @@ public class SplunkState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing splunk state");
-    triggerSplunkDataCollection(context);
+    final long logCollectionStartTime = triggerSplunkDataCollection(context);
     final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
                                                   .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                                   .withSplunkConfigID(splunkConfigId)
@@ -135,7 +140,7 @@ public class SplunkState extends State {
                                                 .withSplunkExecutionData(executionData)
                                                 .withExecutionStatus(ExecutionStatus.SUCCESS)
                                                 .build();
-    final ScheduledExecutorService pythonExecutorService = createPythonExecutorService(context);
+    final ScheduledExecutorService pythonExecutorService = createPythonExecutorService(context, logCollectionStartTime);
     final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.schedule(() -> {
       try {
@@ -145,7 +150,7 @@ public class SplunkState extends State {
       } catch (InterruptedException e) {
         pythonExecutorService.shutdown();
       }
-    }, Long.parseLong(timeDuration), TimeUnit.MINUTES);
+    }, Long.parseLong(timeDuration) + SplunkDataCollectionTask.DELAY_MINUTES, TimeUnit.MINUTES);
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
@@ -167,13 +172,14 @@ public class SplunkState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context) {
+  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context, long logCollectionStartTime) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(new SplunkAnalysisGenerator(context), 0, 1, TimeUnit.MINUTES);
+    scheduledExecutorService.scheduleAtFixedRate(new SplunkAnalysisGenerator(context, logCollectionStartTime),
+        SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
-  private void triggerSplunkDataCollection(ExecutionContext context) {
+  private long triggerSplunkDataCollection(ExecutionContext context) {
     final SettingAttribute settingAttribute = settingsService.get(splunkConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No splunk setting with id: " + splunkConfigId + " found");
@@ -181,9 +187,10 @@ public class SplunkState extends State {
 
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     final List<String> queries = Lists.newArrayList(query.split(","));
-    final SplunkDataCollectionInfo dataCollectionInfo =
-        new SplunkDataCollectionInfo(appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            splunkConfig, queries, Integer.parseInt(timeDuration));
+    final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
+    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
+        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
+        splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
@@ -194,19 +201,21 @@ public class SplunkState extends State {
                                     .build();
     waitNotifyEngine.waitForAll(new SplunkLogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
+    return logCollectionStartTimeStamp;
   }
 
   private class SplunkAnalysisGenerator implements Runnable {
     private final ExecutionContext context;
+    private final long logCollectionStartTime;
     private final String pythonScriptRoot;
     private final String serverUrl;
     private final String accountId;
     private final String applicationId;
-    private final long startTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1);
     private final List<String> newNodes;
 
-    public SplunkAnalysisGenerator(ExecutionContext context) {
+    public SplunkAnalysisGenerator(ExecutionContext context, long logCollectionStartTime) {
       this.context = context;
+      this.logCollectionStartTime = logCollectionStartTime;
       this.pythonScriptRoot = System.getenv(SPLUNKML_ROOT);
       Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
 
@@ -220,7 +229,10 @@ public class SplunkState extends State {
     @Override
     public void run() {
       try {
+        final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
         final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
+        final String logAnalysisUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
+            + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
         final List<String> command = new ArrayList<>();
         command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
         command.add("--url");
@@ -228,19 +240,23 @@ public class SplunkState extends State {
         command.add("--application_id");
         command.add(applicationId);
         command.add("--control_window");
-        command.add(String.valueOf(startTime));
-        command.add(String.valueOf(System.currentTimeMillis()));
+        command.add(String.valueOf(logCollectionStartTime));
+        command.add(String.valueOf(endTime));
         command.add("--control_nodes");
         command.addAll(newNodes);
         command.add("--test_window");
-        command.add(String.valueOf(startTime));
-        command.add(String.valueOf(System.currentTimeMillis()));
+        command.add(String.valueOf(logCollectionStartTime));
+        command.add(String.valueOf(endTime));
         command.add("--test_nodes");
         command.addAll(newNodes);
         command.add("--sim_threshold");
         command.add(String.valueOf(0.5));
         command.add("--state_execution_id");
         command.add(context.getStateExecutionInstanceId());
+        command.add("--log_analysis_save_url");
+        command.add(logAnalysisUrl);
+        command.add("--log_analysis_get_url");
+        command.add(logAnalysisUrl);
 
         final ProcessResult result =
             new ProcessExecutor(command)
@@ -252,6 +268,8 @@ public class SplunkState extends State {
 
         if (result.getExitValue() != 0) {
           logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId());
+        } else {
+          splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
         }
 
       } catch (Exception e) {
