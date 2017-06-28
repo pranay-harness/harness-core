@@ -119,14 +119,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
     Validator.notNullCheck("Service Template", serviceTemplate);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
-    infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    if (computeProviderSetting != null) {
+      infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    }
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 

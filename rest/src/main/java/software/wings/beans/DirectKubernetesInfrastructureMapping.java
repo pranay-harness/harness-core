@@ -12,7 +12,7 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
   @Attributes(title = "Master URL", required = true) private String masterUrl;
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) private String password;
-  @Attributes(title = "Cluster Name") private String clusterName;
+  @Attributes(title = "Display Name", required = true) private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
