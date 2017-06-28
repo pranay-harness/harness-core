@@ -84,7 +84,7 @@ public class kube {
                   .build())
           .build();
 
-  private static final String ZONE_CLUSTER = "us-west1-a" + ZONE_DELIMITER + "foo-bar";
+  private static final String ZONE_CLUSTER = "us-central1-a" + ZONE_DELIMITER + "brett-test";
 
   public static void main(String[] args) throws InterruptedException {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();

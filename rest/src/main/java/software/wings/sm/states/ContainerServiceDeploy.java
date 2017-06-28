@@ -73,7 +73,7 @@ import javax.annotation.Nullable;
  * Created by brett on 4/7/17
  */
 public abstract class ContainerServiceDeploy extends State {
-  protected static final int KEEP_N_REVISIONS = 3;
+  static final int KEEP_N_REVISIONS = 3;
 
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
@@ -89,7 +89,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
-  public ContainerServiceDeploy(String name, String type) {
+  ContainerServiceDeploy(String name, String type) {
     super(name, type);
   }
 
@@ -110,7 +110,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
@@ -193,6 +193,24 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
+  private SettingAttribute getSettingAttribute(InfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute;
+    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directMapping =
+          (DirectKubernetesInfrastructureMapping) infrastructureMapping;
+      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                             .withValue(KubernetesConfig.Builder.aKubernetesConfig()
+                                            .withMasterUrl(directMapping.getMasterUrl())
+                                            .withUsername(directMapping.getUsername())
+                                            .withPassword(directMapping.getPassword().toCharArray())
+                                            .build())
+                             .build();
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    }
+    return settingAttribute;
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -227,13 +245,7 @@ public abstract class ContainerServiceDeploy extends State {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute;
-    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      settingAttribute =
-          createKubernetesSettingAttribute((DirectKubernetesInfrastructureMapping) infrastructureMapping);
-    } else {
-      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    }
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
@@ -292,32 +304,12 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private SettingAttribute createKubernetesSettingAttribute(
-      DirectKubernetesInfrastructureMapping infrastructureMapping) {
-    SettingAttribute settingAttribute;
-    DirectKubernetesInfrastructureMapping directMapping = infrastructureMapping;
-    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                           .withValue(KubernetesConfig.Builder.aKubernetesConfig()
-                                          .withMasterUrl(directMapping.getMasterUrl())
-                                          .withUsername(directMapping.getUsername())
-                                          .withPassword(directMapping.getPassword().toCharArray())
-                                          .build())
-                           .build();
-    return settingAttribute;
-  }
-
   private void cleanupOldVersions(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute;
-    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      settingAttribute =
-          createKubernetesSettingAttribute((DirectKubernetesInfrastructureMapping) infrastructureMapping);
-    } else {
-      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    }
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String serviceName = serviceElement.getName();
     String clusterName = serviceElement.getClusterName();
