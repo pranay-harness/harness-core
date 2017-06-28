@@ -13,7 +13,6 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.settings.SettingValue;
 
-import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -33,7 +32,7 @@ public class SettingValidationService {
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential(((GcpConfig) settingValue).getServiceAccountKeyFileContent());
     } else if (settingValue instanceof AwsConfig) {
-      awsHelperService.validateCredential(
+      awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig) {
