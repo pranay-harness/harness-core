@@ -9,6 +9,7 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
 
@@ -55,6 +56,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -248,13 +250,14 @@ public class AwsCodeDeployState extends State {
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 
     InstanceElementListParam instanceElementListParam = anInstanceElementListParam().build();
+    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (commandExecutionResult != null && commandExecutionResult.getCommandExecutionData() != null) {
       CodeDeployCommandExecutionData commandExecutionData =
           (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
       List<InstanceElement> instanceElements = new ArrayList<>();
       commandExecutionData.getInstances().forEach(instance -> {
         String hostName = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
-        instanceElements.add(
+        InstanceElement instanceElement =
             anInstanceElement()
                 .withUuid(instance.getInstanceId())
                 .withHostName(hostName)
@@ -265,10 +268,14 @@ public class AwsCodeDeployState extends State {
                                                 .withUuid(serviceTemplateKey.getId().toString())
                                                 .withServiceElement(phaseElement.getServiceElement())
                                                 .build())
-                .build());
+                .build();
+        instanceElements.add(instanceElement);
 
+        instanceStatusSummaries.add(
+            anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(ExecutionStatus.SUCCESS).build());
       });
       instanceElementListParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
+      commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
     }
 
     return anExecutionResponse()

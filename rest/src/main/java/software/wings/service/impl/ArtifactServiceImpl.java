@@ -31,7 +31,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
@@ -64,7 +63,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private BuildSourceService buildSourceService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
   private final Logger logger = LoggerFactory.getLogger(getClass());
