@@ -110,7 +110,7 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Direct connection setting variable types.
      */
-    DIRECT("Direct Connection"),
+    DIRECT("Direct Kubernetes"),
 
     /**
      * Docker registry setting variable types.

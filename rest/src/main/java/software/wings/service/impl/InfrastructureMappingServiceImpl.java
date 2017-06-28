@@ -206,17 +206,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
       updateOperations.set("region", ecsInfrastructureMapping.getRegion());
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      updateOperations.set("masterUrl", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getMasterUrl());
-      updateOperations.set("username", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getUsername());
-      updateOperations.set("password", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getPassword());
-      updateOperations.set(
-          "clusterName", ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+      DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
+          (DirectKubernetesInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
+      updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
+      updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      updateOperations.set("region", ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
-      updateOperations.set("loadBalancerId", ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("region", awsInfrastructureMapping.getRegion());
+      updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());

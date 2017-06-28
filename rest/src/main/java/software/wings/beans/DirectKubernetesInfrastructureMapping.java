@@ -14,7 +14,7 @@ import software.wings.security.annotations.Encrypted;
 @JsonTypeName("DIRECT_KUBERNETES")
 public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @Attributes(title = "Display Name", required = true) @NotEmpty private String clusterName;
 
@@ -77,7 +77,7 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return clusterName;
+    return clusterName + " (Direct Kubernetes)";
   }
 
   @SchemaIgnore
