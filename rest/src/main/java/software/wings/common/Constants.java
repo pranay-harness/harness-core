@@ -177,6 +177,10 @@ public interface Constants {
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
   /**
+   * The constant PREPARE_STEPS.
+   */
+  String PREPARE_STEPS = "Prepare Steps";
+  /**
    * The constant AWS_CODE_DEPLOY.
    */
   String AWS_CODE_DEPLOY = "AWS CodeDeploy";
