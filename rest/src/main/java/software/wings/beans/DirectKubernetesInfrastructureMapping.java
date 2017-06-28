@@ -80,6 +80,7 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
     return clusterName;
   }
 
+  @SchemaIgnore
   public KubernetesConfig getKubernetesConfig() {
     return aKubernetesConfig().withMasterUrl(masterUrl).withUsername(username).withPassword(password).build();
   }
