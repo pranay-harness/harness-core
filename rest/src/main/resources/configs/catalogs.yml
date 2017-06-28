@@ -212,7 +212,7 @@ PLUGIN_CATEGORY:
       value: APP_DYNAMICS
 
 CLOUD_PROVIDERS:
-    - name: Google Cloud Provider
+    - name: Google Cloud Platform
       value: GCP
     - name: Amazon Web Services
       value: AWS
