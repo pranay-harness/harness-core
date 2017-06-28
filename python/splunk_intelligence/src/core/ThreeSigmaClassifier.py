@@ -13,11 +13,13 @@ class ThreeSigmaClassifier(object):
         mean = self.klassifier[label][0]
         std = self.klassifier[label][1]
         vals = map(int, values[:, 1])
+        score = 0.0
         predictions = [1] * len(vals)
         for i, value in enumerate(vals):
             if abs(value - mean) > 3 * std:
                 predictions[i] = -1
-        return predictions
+                score = score + 1
+        return predictions, ((len(values) - score) / len(values))
 
 # threeSigmaClassifier =    ThreeSigmaClassifier()
 
