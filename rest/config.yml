@@ -82,7 +82,7 @@ delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/de
 
 portal:
   url: https://localhost:8000
-  allowedDomains: wings.software
+  allowedDomains: harness.io
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
