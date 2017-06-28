@@ -4,7 +4,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
-import static software.wings.beans.KubernetesConfig.Builder.aKubernetesConfig;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
@@ -129,14 +128,8 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
     } else {
-      DirectKubernetesInfrastructureMapping directMapping =
-          (DirectKubernetesInfrastructureMapping) infrastructureMapping;
-      clusterName = directMapping.getClusterName();
-      kubernetesConfig = aKubernetesConfig()
-                             .withMasterUrl(directMapping.getMasterUrl())
-                             .withUsername(directMapping.getUsername())
-                             .withPassword(directMapping.getPassword().toCharArray())
-                             .build();
+      clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig();
     }
 
     String lastReplicationControllerName = lastReplicationController(

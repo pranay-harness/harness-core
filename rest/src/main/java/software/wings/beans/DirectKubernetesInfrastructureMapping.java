@@ -1,17 +1,21 @@
 package software.wings.beans;
 
+import static software.wings.beans.KubernetesConfig.Builder.aKubernetesConfig;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.annotations.Encrypted;
 
 /**
  * Created by brett on 2/27/17
  */
 @JsonTypeName("DIRECT_KUBERNETES")
 public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Master URL", required = true) private String masterUrl;
-  @Attributes(title = "Username", required = true) private String username;
-  @Attributes(title = "Password", required = true) private String password;
+  @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @Attributes(title = "Display Name", required = true) private String clusterName;
 
   /**
@@ -37,11 +41,11 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
     this.username = username;
   }
 
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
   }
 
@@ -76,10 +80,14 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
     return clusterName;
   }
 
+  public KubernetesConfig getKubernetesConfig() {
+    return aKubernetesConfig().withMasterUrl(masterUrl).withUsername(username).withPassword(password).build();
+  }
+
   public static final class DirectKubernetesInfrastructureMappingBuilder {
     private String masterUrl;
     private String username;
-    private String password;
+    private char[] password;
     private String clusterName;
     private EmbeddedUser createdBy;
     private long createdAt;
@@ -109,7 +117,7 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
       return this;
     }
 
-    public DirectKubernetesInfrastructureMappingBuilder withPassword(String password) {
+    public DirectKubernetesInfrastructureMappingBuilder withPassword(char[] password) {
       this.password = password;
       return this;
     }

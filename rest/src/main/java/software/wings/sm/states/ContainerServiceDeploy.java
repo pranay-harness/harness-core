@@ -9,6 +9,7 @@ import static software.wings.api.InstanceElementListParam.InstanceElementListPar
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -196,15 +197,10 @@ public abstract class ContainerServiceDeploy extends State {
   private SettingAttribute getSettingAttribute(InfrastructureMapping infrastructureMapping) {
     SettingAttribute settingAttribute;
     if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      DirectKubernetesInfrastructureMapping directMapping =
-          (DirectKubernetesInfrastructureMapping) infrastructureMapping;
-      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                             .withValue(KubernetesConfig.Builder.aKubernetesConfig()
-                                            .withMasterUrl(directMapping.getMasterUrl())
-                                            .withUsername(directMapping.getUsername())
-                                            .withPassword(directMapping.getPassword().toCharArray())
-                                            .build())
-                             .build();
+      settingAttribute =
+          aSettingAttribute()
+              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig())
+              .build();
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     }
