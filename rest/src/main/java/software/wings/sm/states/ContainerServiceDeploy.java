@@ -198,7 +198,7 @@ public abstract class ContainerServiceDeploy extends State {
     if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       settingAttribute =
           aSettingAttribute()
-              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig())
+              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
               .build();
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());

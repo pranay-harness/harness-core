@@ -81,7 +81,7 @@ public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping
   }
 
   @SchemaIgnore
-  public KubernetesConfig getKubernetesConfig() {
+  public KubernetesConfig createKubernetesConfig() {
     return aKubernetesConfig().withMasterUrl(masterUrl).withUsername(username).withPassword(password).build();
   }
 

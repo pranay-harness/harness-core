@@ -129,7 +129,7 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
     } else {
       clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig();
+      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }
 
     String lastReplicationControllerName = lastReplicationController(
