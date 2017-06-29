@@ -34,6 +34,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -109,19 +110,27 @@ public class KubernetesReplicationControllerSetup extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
+    if (infrastructureMapping == null
+        || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+               || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-    if (Constants.RUNTIME.equals(clusterName)) {
-      clusterName = getClusterElement(context).getName();
+    String clusterName;
+    KubernetesConfig kubernetesConfig;
+    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+      clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+      if (Constants.RUNTIME.equals(clusterName)) {
+        clusterName = getClusterElement(context).getName();
+      }
+      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    } else {
+      clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig();
     }
-
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
 
     String lastReplicationControllerName = lastReplicationController(
         kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));

@@ -5,6 +5,6 @@
   "applicationName" : {"ui:disabled":true},
   "deploymentGroup": {"ui:disabled":true},
   "deploymentConfig": {"ui:disabled":true},
-  "ui:order": [ "computeProviderSettingId", "deploymentType",
+  "ui:order": [  "deploymentType","computeProviderSettingId",
     "region", "applicationName", "deploymentGroup", "deploymentConfig" ,"infraMappingType","computeProviderType"]
 }

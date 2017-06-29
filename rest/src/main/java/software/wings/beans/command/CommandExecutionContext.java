@@ -595,7 +595,7 @@ public class CommandExecutionContext {
   }
 
   /**
-   * The type Codo deploy params.
+   * The type Code deploy params.
    */
   public static class CodeDeployParams {
     private String applicationName;

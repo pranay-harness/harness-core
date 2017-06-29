@@ -9,6 +9,7 @@ import static software.wings.api.InstanceElementListParam.InstanceElementListPar
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -27,6 +28,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
@@ -71,7 +73,7 @@ import javax.annotation.Nullable;
  * Created by brett on 4/7/17
  */
 public abstract class ContainerServiceDeploy extends State {
-  protected static final int KEEP_N_REVISIONS = 3;
+  static final int KEEP_N_REVISIONS = 3;
 
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
@@ -87,7 +89,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
-  public ContainerServiceDeploy(String name, String type) {
+  ContainerServiceDeploy(String name, String type) {
     super(name, type);
   }
 
@@ -108,7 +110,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
@@ -191,6 +193,19 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
+  private SettingAttribute getSettingAttribute(InfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute;
+    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      settingAttribute =
+          aSettingAttribute()
+              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).getKubernetesConfig())
+              .build();
+    } else {
+      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    }
+    return settingAttribute;
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -201,7 +216,7 @@ public abstract class ContainerServiceDeploy extends State {
     }
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       buildInstanceStatusSummaries(context, response, commandStateExecutionData);
-      cleanupOldVersions(context, commandStateExecutionData);
+      cleanupOldVersions(context);
       return downsizeOldInstances(context, commandStateExecutionData);
     } else {
       CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
@@ -225,7 +240,7 @@ public abstract class ContainerServiceDeploy extends State {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
 
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
@@ -284,12 +299,12 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private void cleanupOldVersions(ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+  private void cleanupOldVersions(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
     ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String serviceName = serviceElement.getName();
     String clusterName = serviceElement.getClusterName();

@@ -1,15 +1,11 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
-import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -27,9 +23,10 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsKubernetesInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -66,7 +63,6 @@ import software.wings.utils.Validator;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -123,14 +119,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
     Validator.notNullCheck("Service Template", serviceTemplate);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
-    infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    if (computeProviderSetting != null) {
+      infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    }
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
@@ -208,15 +205,20 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
       updateOperations.set("region", ecsInfrastructureMapping.getRegion());
-    } else if (infrastructureMapping instanceof AwsKubernetesInfrastructureMapping) {
-      updateOperations.set(
-          "clusterName", ((AwsKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+    } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
+          (DirectKubernetesInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
+      updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
+      updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+      updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      updateOperations.set("region", ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
-      updateOperations.set("loadBalancerId", ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("region", awsInfrastructureMapping.getRegion());
+      updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
@@ -466,7 +468,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
 
-    return Arrays.asList(infrastructureProvider.validateHost(
+    return asList(infrastructureProvider.validateHost(
         validationRequest.getHostNames().get(0), hostConnectionSetting, validationRequest.getExecutionCredential()));
   }
 
@@ -756,20 +758,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId) {
+  public Map<DeploymentType, List<SettingVariableTypes>> listInfraTypes(String appId, String envId, String serviceId) {
     // TODO:: use serviceId and envId to narrow down list ??
 
     Service service = serviceResourceService.get(appId, serviceId);
     ArtifactType artifactType = service.getArtifactType();
-    Map<String, Map<String, String>> infraTypes = new HashMap<>();
+    Map<DeploymentType, List<SettingVariableTypes>> infraTypes = new HashMap<>();
 
-    if (artifactType.equals(ArtifactType.DOCKER)) {
-      infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name()));
-      infraTypes.put(GCP.name(), ImmutableMap.of(KUBERNETES.name(), GCP_KUBERNETES.name()));
+    if (artifactType == ArtifactType.DOCKER) {
+      infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
+      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
+    } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
+      infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
+      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     } else {
-      infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
-      infraTypes.put(
-          AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name(), AWS_CODEDEPLOY.name(), AWS_AWS_CODEDEPLOY.name()));
+      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
     return infraTypes;
   }

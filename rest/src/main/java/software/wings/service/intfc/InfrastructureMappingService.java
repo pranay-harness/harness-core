@@ -2,12 +2,14 @@ package software.wings.service.intfc;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -148,7 +150,7 @@ public interface InfrastructureMappingService {
    * @param serviceId the service id
    * @return the map
    */
-  Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId);
+  Map<DeploymentType, List<SettingVariableTypes>> listInfraTypes(String appId, String envId, String serviceId);
 
   /**
    * Select service instances list.

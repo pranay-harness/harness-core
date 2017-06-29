@@ -7,6 +7,7 @@ import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
@@ -25,6 +26,7 @@ public class SettingValidationService {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppdynamicsService appdynamicsService;
+  @Inject private KubernetesHelperService kubernetesHelperService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -39,6 +41,8 @@ public class SettingValidationService {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
       appdynamicsService.validateConfig(settingAttribute);
+    } else if (settingValue instanceof KubernetesConfig) {
+      kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     }
     return true;
   }

@@ -4,6 +4,6 @@
   "deploymentType": { "ui:widget": "hidden" },
   "restrictionType": { "ui:widget": "hidden" },
   "restrictionExpression": { "ui:widget": "hidden" },
-  "ui:order": [ "computeProviderSettingId", "deploymentType", "hostConnectionAttrs",
+  "ui:order": [  "deploymentType","computeProviderSettingId", "hostConnectionAttrs",
     "region", "loadBalancerId","infraMappingType","computeProviderType"]
 }

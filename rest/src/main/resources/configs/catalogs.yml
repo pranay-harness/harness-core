@@ -218,3 +218,5 @@ CLOUD_PROVIDERS:
       value: AWS
     - name: Physical Data Center
       value: PHYSICAL_DATA_CENTER
+    - name: Direct Kubernetes
+      value: DIRECT

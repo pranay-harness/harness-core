@@ -7,7 +7,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 
@@ -20,11 +19,6 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
   public ResizeCommandUnit() {
     super(CommandUnitType.RESIZE);
     setDeploymentType(DeploymentType.ECS.name());
-  }
-
-  @Override
-  protected String getSettingVariableType() {
-    return SettingVariableTypes.AWS.name();
   }
 
   @Override

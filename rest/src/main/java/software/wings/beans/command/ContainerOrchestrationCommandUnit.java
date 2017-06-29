@@ -13,7 +13,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -36,11 +35,11 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    Validator.equalCheck(cloudProviderSetting.getValue().getType(), getSettingVariableType());
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
     String region = context.getRegion();
+
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -61,8 +60,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     }
     return commandExecutionStatus;
   }
-
-  protected abstract String getSettingVariableType();
 
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
       String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback);

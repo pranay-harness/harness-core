@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -46,7 +47,12 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   protected Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
     if (StringUtils.isNotEmpty(serviceName)) {
-      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      KubernetesConfig kubernetesConfig;
+      if (settingAttribute.getValue() instanceof GcpConfig) {
+        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      } else {
+        kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
+      }
       ReplicationController replicationController =
           kubernetesContainerService.getController(kubernetesConfig, serviceName);
       if (replicationController != null) {
@@ -61,7 +67,12 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     int revision = getRevisionFromControllerName(serviceName);
     if (revision >= ContainerServiceDeploy.KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS + 1;
-      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      KubernetesConfig kubernetesConfig;
+      if (settingAttribute.getValue() instanceof GcpConfig) {
+        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      } else {
+        kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
+      }
       String controllerNamePrefix =
           KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(serviceName);
       ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
