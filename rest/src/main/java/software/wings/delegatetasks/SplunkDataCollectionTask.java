@@ -81,7 +81,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
       synchronized (lockObject) {
         lockObject.notifyAll();
       }
-    }, dataCollectionInfo.getCollectionTime() + DELAY_MINUTES, TimeUnit.MINUTES);
+    }, dataCollectionInfo.getCollectionTime() + DELAY_MINUTES + 1, TimeUnit.MINUTES);
     logger.info("going to collect splunk data for " + dataCollectionInfo);
 
     synchronized (lockObject) {
@@ -110,6 +110,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
     private final Service splunkService;
     private final SplunkMetricStoreService splunkMetricStoreService;
     private long collectionStartTime;
+    private int logCollectionMinute = 0;
 
     private SplunkDataCollector(SplunkDataCollectionInfo dataCollectionInfo, Service splunkService,
         SplunkMetricStoreService splunkMetricStoreService) {
@@ -157,13 +158,15 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
             splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
             splunkLogElement.setLogMessage(event.get("_raw"));
             splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
+            splunkLogElement.setLogCollectionMinute(logCollectionMinute);
             logElements.add(splunkLogElement);
           }
           resultsReader.close();
           splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getStateExecutionId(), logElements);
-          this.collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         }
+        collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+        logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
         logger.error("error fetching splunk logs", e);

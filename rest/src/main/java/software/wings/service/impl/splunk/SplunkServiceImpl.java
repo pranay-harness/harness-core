@@ -1,13 +1,8 @@
 package software.wings.service.impl.splunk;
 
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder.OrderType;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.splunk.SplunkService;
 
@@ -37,15 +32,30 @@ public class SplunkServiceImpl implements SplunkService {
 
   @Override
   public List<SplunkLogDataRecord> getSplunkLogData(SplunkLogRequest logRequest) {
-    PageRequest.Builder amdrRequestBuilder = aPageRequest()
-                                                 .addFilter("applicationId", Operator.EQ, logRequest.getApplicationId())
-                                                 .addFilter("timeStamp", Operator.GT, logRequest.getStartTime() - 1)
-                                                 .addFilter("timeStamp", Operator.LT, logRequest.getEndTime() - 1)
-                                                 .addFilter("processed", Operator.EQ, false)
-                                                 .addFilter("host", Operator.IN, logRequest.getNodes().toArray())
-                                                 .addOrder("timeStamp", OrderType.ASC)
-                                                 .withLimit(PageRequest.UNLIMITED);
-    return wingsPersistence.query(SplunkLogDataRecord.class, amdrRequestBuilder.build());
+    Query<SplunkLogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
+                                                              .field("stateExecutionId")
+                                                              .equal(logRequest.getStateExecutionId())
+                                                              .field("applicationId")
+                                                              .equal(logRequest.getApplicationId())
+                                                              .field("processed")
+                                                              .equal(false)
+                                                              .field("logCollectionMinute")
+                                                              .equal(logRequest.getLogCollectionMinute())
+                                                              .field("host")
+                                                              .hasAnyOf(logRequest.getNodes());
+    return splunkLogDataRecordQuery.asList();
+  }
+
+  @Override
+  public boolean isLogDataCollected(String applicationId, String stateExecutionId, int logCollectionMinute) {
+    Query<SplunkLogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
+                                                              .field("stateExecutionId")
+                                                              .equal(stateExecutionId)
+                                                              .field("applicationId")
+                                                              .equal(applicationId)
+                                                              .field("logCollectionMinute")
+                                                              .equal(logCollectionMinute);
+    return splunkLogDataRecordQuery.asList().size() > 0;
   }
 
   @Override
@@ -70,7 +80,7 @@ public class SplunkServiceImpl implements SplunkService {
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("applicationId")
-            .equal("applicationId");
+            .equal(applicationId);
     return wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
   }
 
@@ -80,7 +90,7 @@ public class SplunkServiceImpl implements SplunkService {
                                                           .field("stateExecutionId")
                                                           .equal(stateExecutionId)
                                                           .field("applicationId")
-                                                          .equal("applicationId")
+                                                          .equal(applicationId)
                                                           .field("timeStamp")
                                                           .lessThanOrEq(tillTimeStamp);
 

@@ -9,6 +9,7 @@ public class SplunkLogElement {
   private long timeStamp;
   private int count;
   private String logMessage;
+  private int logCollectionMinute;
 
   public String getClusterLabel() {
     return clusterLabel;
@@ -48,5 +49,13 @@ public class SplunkLogElement {
 
   public void setLogMessage(String logMessage) {
     this.logMessage = logMessage;
+  }
+
+  public int getLogCollectionMinute() {
+    return logCollectionMinute;
+  }
+
+  public void setLogCollectionMinute(int logCollectionMinute) {
+    this.logCollectionMinute = logCollectionMinute;
   }
 }

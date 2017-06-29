@@ -27,4 +27,6 @@ public interface SplunkService {
   Boolean saveSplunkAnalysisRecords(SplunkLogMLAnalysisRecord mlAnalysisResponse);
 
   SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId);
+
+  boolean isLogDataCollected(String applicationId, String stateExecutionId, int logCollectionMinute);
 }

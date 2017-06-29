@@ -78,4 +78,15 @@ public class SplunkResource {
       throws IOException {
     return new RestResponse<>(splunkService.getSplunkAnalysisRecords(applicationId, stateExecutionId));
   }
+
+  @GET
+  @Path("/mark-processed")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Boolean> markProcessed(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("timeStamp") long timeStamp) throws IOException {
+    return new RestResponse<>(splunkService.markProcessed(stateExecutionId, applicationId, timeStamp));
+  }
 }

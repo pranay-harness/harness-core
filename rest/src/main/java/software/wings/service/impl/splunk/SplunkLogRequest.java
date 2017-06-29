@@ -1,8 +1,5 @@
 package software.wings.service.impl.splunk;
 
-import software.wings.utils.JsonUtils;
-
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,21 +7,21 @@ import java.util.List;
  */
 public class SplunkLogRequest {
   private final String applicationId;
-  private final long startTime;
-  private final long endTime;
+  private final String stateExecutionId;
   private final List<String> nodes;
+  private final int logCollectionMinute;
 
   public SplunkLogRequest() {
     applicationId = null;
-    startTime = -1;
-    endTime = -1;
+    stateExecutionId = null;
     nodes = null;
+    logCollectionMinute = -1;
   }
 
-  public SplunkLogRequest(String applicationId, long startTime, long endTime, List<String> nodes) {
+  public SplunkLogRequest(String applicationId, String stateExecutionId, int logCollectionMinute, List<String> nodes) {
     this.applicationId = applicationId;
-    this.startTime = startTime;
-    this.endTime = endTime;
+    this.stateExecutionId = stateExecutionId;
+    this.logCollectionMinute = logCollectionMinute;
     this.nodes = nodes;
   }
 
@@ -32,12 +29,12 @@ public class SplunkLogRequest {
     return applicationId;
   }
 
-  public long getStartTime() {
-    return startTime;
+  public String getStateExecutionId() {
+    return stateExecutionId;
   }
 
-  public long getEndTime() {
-    return endTime;
+  public int getLogCollectionMinute() {
+    return logCollectionMinute;
   }
 
   public List<String> getNodes() {
@@ -47,7 +44,7 @@ public class SplunkLogRequest {
   @Override
   public String toString() {
     return "SplunkLogRequest{"
-        + "applicationId='" + applicationId + '\'' + ", startTime=" + startTime + ", endTime=" + endTime
-        + ", nodes=" + nodes + '}';
+        + "applicationId='" + applicationId + '\'' + ", stateExecutionId='" + stateExecutionId + '\''
+        + ", nodes=" + nodes + ", logCollectionMinute=" + logCollectionMinute + '}';
   }
 }

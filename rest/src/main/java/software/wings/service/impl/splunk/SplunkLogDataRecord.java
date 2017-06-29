@@ -34,9 +34,10 @@ public class SplunkLogDataRecord extends Base {
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
   @Indexed private boolean processed;
+  @Indexed private int logCollectionMinute;
 
   public SplunkLogDataRecord(String applicationId, String stateExecutionId, String clusterLabel, String host,
-      long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed) {
+      long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed, int logCollectionMinute) {
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;
     this.clusterLabel = clusterLabel;
@@ -46,6 +47,7 @@ public class SplunkLogDataRecord extends Base {
     this.logMessage = logMessage;
     this.logMD5Hash = logMD5Hash;
     this.processed = processed;
+    this.logCollectionMinute = logCollectionMinute;
   }
 
   public static List<SplunkLogDataRecord> generateDataRecords(
@@ -54,7 +56,7 @@ public class SplunkLogDataRecord extends Base {
     for (SplunkLogElement logElement : logElements) {
       records.add(new SplunkLogDataRecord(applicationId, stateExecutionId, logElement.getClusterLabel(),
           logElement.getHost(), logElement.getTimeStamp(), logElement.getCount(), logElement.getLogMessage(),
-          DigestUtils.md5Hex(logElement.getLogMessage()), false));
+          DigestUtils.md5Hex(logElement.getLogMessage()), false, logElement.getLogCollectionMinute()));
     }
     return records;
   }
@@ -129,5 +131,13 @@ public class SplunkLogDataRecord extends Base {
 
   public void setProcessed(boolean processed) {
     this.processed = processed;
+  }
+
+  public int getLogCollectionMinute() {
+    return logCollectionMinute;
+  }
+
+  public void setLogCollectionMinute(int logCollectionMinute) {
+    this.logCollectionMinute = logCollectionMinute;
   }
 }
