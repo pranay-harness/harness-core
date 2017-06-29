@@ -85,8 +85,9 @@ class SplunkDatasetNew(object):
         for dict in test_events:
             self.add_event(dict, 'test')
 
-        prev_state = SplunkHarnessLoader.get_request(options.log_analysis_get_url, 3)
-        print(prev_state['resource'])
+        prev_state, status_code = SplunkHarnessLoader.get_request(options.log_analysis_get_url, 3)
+        if status_code != 200:
+            logger.error('Got bad status code ' + str(status_code) + ' for url ' + options.log_analysis_get_url)
         if prev_state['resource'] is not None:
             for key, events in prev_state['resource'].get('control_events').items():
                 for event in events:
@@ -180,7 +181,7 @@ class SplunkDatasetNew(object):
                                                                      cluster_label=anom.get('cluster_label'),
                                                                      message_frequencies=[])
 
-                self.anom_clusters[clusters[index]][host].get('message_frequencies').append(
+                self.anom_clusters[clusters[index]][host].get('message_frequencies').extend(
                     anom.get('message_frequencies'))
 
     def get_anom_clusters(self):
