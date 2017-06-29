@@ -61,8 +61,8 @@ class SplunkDatasetNew(object):
     def load_from_harness(self, options):
         control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
                                                                     options.application_id,
-                                                                    options.control_window[0],
-                                                                    options.control_window[1],
+                                                                    options.state_execution_id,
+                                                                    options.log_collection_minute,
                                                                     options.control_nodes)
 
         if control_events is None:
@@ -74,8 +74,8 @@ class SplunkDatasetNew(object):
 
         test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
                                                                  options.application_id,
-                                                                 options.test_window[0],
-                                                                 options.test_window[1],
+                                                                 options.state_execution_id,
+                                                                 options.log_collection_minute,
                                                                  options.test_nodes)
 
         if test_events is None:

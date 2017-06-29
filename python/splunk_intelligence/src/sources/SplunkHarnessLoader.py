@@ -60,9 +60,9 @@ class SplunkHarnessLoader(object):
             sys.exit(-1)
 
     @staticmethod
-    def load_from_wings_server(url, app_id, start_time, end_time, nodes):
+    def load_from_wings_server(url, app_id, state_execution_id, log_collection_minute, nodes):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        payload = dict(applicationId=app_id, startTime=start_time, endTime=end_time, nodes=nodes)
+        payload = dict(applicationId=app_id, stateExecutionId=state_execution_id, logCollectionMinute=log_collection_minute, nodes=nodes)
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
         if status_code != 200:
@@ -75,8 +75,7 @@ class SplunkHarnessLoader(object):
         if data is None or data['resource'] is None:
             logging.error("Server returned no data for " + json.dumps(payload))
             sys.exit(1)
-
-        for resp in data['resource']['response']:
+        for resp in data['resource']:
             raw_event = {'cluster_count': resp['count'], 'cluster_label': resp['clusterLabel'],
                          '_time': resp['timeStamp'], '_raw': resp['logMessage'], 'host': resp['host']}
             raw_events.append(raw_event)
