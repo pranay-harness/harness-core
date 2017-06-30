@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static software.wings.utils.Validator.equalCheck;
 
-import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -26,8 +25,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
-    List<BuildDetails> builds =
-        artifactoryService.getBuilds(artifactoryConfig, artifactStreamAttributes.getImageName(), 50);
+    List<BuildDetails> builds = artifactoryService.getBuilds(
+        artifactoryConfig, artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), 50);
     return builds;
   }
 
@@ -49,12 +48,12 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config) {
-    return null;
+    return artifactoryService.getRepositories(config);
   }
 
   @Override
   public List<String> getGroupIds(String repoType, ArtifactoryConfig config) {
-    return null;
+    return artifactoryService.getRepoPaths(config, repoType);
   }
 
   @Override
@@ -64,16 +63,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public boolean validateArtifactSource(ArtifactoryConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
-    return false;
-  }
-
-  @Override
-  public boolean validateArtifactServer(DockerConfig config) {
-    return false;
-  }
-
-  @Override
-  public boolean validateArtifactSource(DockerConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
     return false;
   }
 }

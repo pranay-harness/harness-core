@@ -13,6 +13,7 @@ public class ArtifactStreamAttributes {
   // TODO : Refactoring has to be done
   private String groupId; // For nexus integration
   private String artifactName;
+  private String serviceId;
 
   /**
    * Gets job name.

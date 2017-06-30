@@ -7,11 +7,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClient;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
-import org.jfrog.artifactory.client.Repositories;
 import org.jfrog.artifactory.client.impl.ArtifactoryRequestImpl;
 import org.jfrog.artifactory.client.model.LightweightRepository;
 import org.jfrog.artifactory.client.model.PackageType;
-import org.jfrog.artifactory.client.model.RepoPath;
 import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.impl.RepositoryTypeImpl;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
@@ -20,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,13 +31,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public List<BuildDetails> getBuilds(
-      ArtifactoryConfig artifactoryConfig, String repositoryPath, int maxNumberOfBuilds) {
+      ArtifactoryConfig artifactoryConfig, String repoKey, String imageName, int maxNumberOfBuilds) {
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
-    int index = repositoryPath.indexOf("/");
-    String repository = repositoryPath.substring(0, index);
-    String imageName = repositoryPath.substring(index);
-    String apiUrl = "api/docker/" + repository + "/v2" + imageName + "/tags/list";
-
+    String apiUrl = "api/docker/" + repoKey + "/v2" + imageName + "/tags/list";
     ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
                                                .apiUrl(apiUrl)
                                                .method(ArtifactoryRequest.Method.GET)
@@ -59,24 +54,44 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return null;
   }
 
-  public void getRepositories(ArtifactoryConfig artifactoryConfig) {
-    Repositories repositories = getArtifactoryClient(artifactoryConfig).repositories();
+  @Override
+  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
+    Map<String, String> repositories = new HashMap<>();
     List<LightweightRepository> repoList =
         getArtifactoryClient(artifactoryConfig).repositories().list(RepositoryTypeImpl.LOCAL);
-    repoList.forEach(lightweightRepository -> {
-      System.out.println("Key: " + lightweightRepository.getKey());
+    for (LightweightRepository lightweightRepository : repoList) {
       Repository repo = getArtifactoryClient(artifactoryConfig).repository(lightweightRepository.getKey()).get();
       RepositorySettings settings = repo.getRepositorySettings();
       PackageType packageType = settings.getPackageType();
-      System.out.println("PackageType:" + packageType);
-    });
+      if (packageType.equals(PackageType.docker)) {
+        repositories.put(lightweightRepository.getKey(), lightweightRepository.getKey());
+      }
+    }
+    return repositories;
+  }
 
-    List<RepoPath> searchItems =
-        getArtifactoryClient(artifactoryConfig).searches().artifactsByGavc().repositories("harness-maven").doSearch();
-    searchItems.forEach(repoPath -> {
-      System.out.println("Repo Path Key" + repoPath.getRepoKey());
-      System.out.println("Item Path:" + repoPath.getItemPath());
-    });
+  @Override
+  public List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey) {
+    return listDockerImages(artifactoryConfig, repoKey);
+  }
+
+  public List<String> listDockerImages(ArtifactoryConfig artifactoryConfig, String repoKey) {
+    String apiUrl = "api/docker/" + repoKey + "/v2"
+        + "/_catalog";
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
+                                               .apiUrl(apiUrl)
+                                               .method(ArtifactoryRequest.Method.GET)
+                                               .responseType(ArtifactoryRequest.ContentType.JSON);
+    Map response = artifactory.restCall(repositoryRequest);
+    if (response != null) {
+      List<String> repositories = (List<String>) response.get("repositories");
+      if (CollectionUtils.isEmpty(repositories)) {
+        return null;
+      }
+      return repositories;
+    }
+    return null;
   }
 
   /**
@@ -111,6 +126,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
      Number" +  buildDetail.getNumber());
      }*/
 
-    artifactoryService.getRepositories(artifactoryConfig);
+    // artifactoryService.getRepositories(artifactoryConfig);
+
+    List<String> images = artifactoryService.listDockerImages(artifactoryConfig, "docker-local");
+    images.forEach(s -> System.out.println(s));
   }
 }

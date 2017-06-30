@@ -15,7 +15,11 @@ import java.util.Date;
  */
 @JsonTypeName("ARTIFACTORY")
 public class ArtifactoryArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Repository Path", required = true) private String imageName;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
+
+  @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String groupId;
+
+  @SchemaIgnore @Attributes(title = "Image Name", required = true) private String imageName;
 
   public ArtifactoryArtifactStream() {
     super(ArtifactStreamType.ARTIFACTORY.name());
@@ -29,6 +33,21 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
+  /**
+   * Get Repository
+   * @return the Repository
+   */
+  public String getJobname() {
+    return jobname;
+  }
+
+  /**
+   * Set repository
+   * @param jobname
+   */
+  public void setJobname(String jobname) {
+    this.jobname = jobname;
+  }
   /**
    * Gets image name.
    *
@@ -45,6 +64,21 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
    */
   public void setImageName(String imageName) {
     this.imageName = imageName;
+  }
+
+  /**
+   * @return groupId
+   */
+  public String getGroupId() {
+    return groupId;
+  }
+
+  /**
+   * Set Group Id
+   */
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+    this.imageName = groupId;
   }
 
   @SchemaIgnore
