@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 
 import org.junit.Ignore;
@@ -35,6 +34,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
   @Test
+  @Ignore
   public void shouldGetBuilds() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.Builder.aDockerArtifactStream()
                                                     .withAppId("UXGI1f4vQa6nt5eXBcnv7A")
