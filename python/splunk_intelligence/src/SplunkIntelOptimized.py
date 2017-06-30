@@ -28,7 +28,7 @@ class SplunkIntelOptimized(object):
         min_df = 1
         max_df = 1.0
 
-        if len(control_events) > 50:
+        if len(control_events) > 500:
             min_df = 0.05
             max_df = 1.0
 
