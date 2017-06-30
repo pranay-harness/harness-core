@@ -46,12 +46,14 @@ import java.net.Socket;
 public class AwsHelperService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public void validateCredential(String accessKey, char[] secretKey) {
+  public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
       getAmazonEc2Client(Regions.US_EAST_1.getName(), accessKey, secretKey)
           .describeAccountAttributes(new DescribeAccountAttributesRequest());
     } catch (AmazonEC2Exception amazonEC2Exception) {
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
+      if (amazonEC2Exception.getStatusCode() == 401) {
+        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
+      }
     }
   }
 

@@ -49,7 +49,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s(%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
+    return String.format("%s (%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
         this.getDeploymentType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }

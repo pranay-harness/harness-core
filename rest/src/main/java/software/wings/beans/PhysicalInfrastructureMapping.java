@@ -60,8 +60,8 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s(Data Center/%s)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center"),
-        this.getDeploymentType());
+    return String.format(
+        "%s (Data Center/SSH)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center"));
   }
 
   @Override

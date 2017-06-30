@@ -2,6 +2,11 @@ import json
 
 from SplunkFileSource import SplunkFileSource
 import numpy as np
+import logging
+from SplunkHarnessLoader import SplunkHarnessLoader
+import sys
+
+logger = logging.getLogger(__name__)
 
 
 class SplunkDatasetNew(object):
@@ -26,27 +31,72 @@ class SplunkDatasetNew(object):
                 self.control_events[event['cluster_label']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['cluster_label']].append(
-                dict(text=event.get('_raw'), count=[event.get('cluster_count'), event.get('_time'), host,
-                                                    event['cluster_label']]))
+                dict(text=event.get('_raw'),
+                     message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
+                                               old_label=event['cluster_label'])]))
         elif event_type == 'test':
             if event['cluster_label'] not in self.test_events:
                 self.test_events[event['cluster_label']] = []
             self.test_events[event['cluster_label']].append(
                 dict(text=event.get('_raw'),
-                     count=[event.get('cluster_count'), event.get('_time'), host, event['cluster_label']]))
+                     message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
+                                               label=event['cluster_label'])]))
         elif event_type == 'control_prev':
             label = 10000 + event['cluster_label']
             if label not in self.control_events:
                 self.control_events[label] = []
             self.control_events[label].append(
-                dict(text=event.get('text'), count=event.get('count')))
+                dict(text=event.get('text'), message_frequencies=event.get('message_frequencies')))
         elif event_type == 'test_prev':
             label = 10000 + event['cluster_label']
             if label not in self.test_events:
                 self.test_events[label] = []
             # event.get('count').append(label)
             self.test_events[label].append(
-                dict(text=event.get('text'), count=event.get('count')))
+                dict(text=event.get('text'), message_frequencies=event.get('message_frequencies')))
+
+    def save_to_harness(self, url, payload):
+        SplunkHarnessLoader.post_to_wings_server(url, payload)
+
+    def load_from_harness(self, options):
+        control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+                                                                    options.application_id,
+                                                                    options.state_execution_id,
+                                                                    options.log_collection_minute,
+                                                                    options.control_nodes)
+
+        if control_events is None:
+            logger.error("Did not get any control events")
+            sys.exit(-1)
+
+        for dict in control_events:
+            self.add_event(dict, 'control')
+
+        test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+                                                                 options.application_id,
+                                                                 options.state_execution_id,
+                                                                 options.log_collection_minute,
+                                                                 options.test_nodes)
+
+        if test_events is None:
+            logger.error("Did not get any test events")
+            sys.exit(-1)
+
+        for dict in test_events:
+            self.add_event(dict, 'test')
+
+        prev_state, status_code = SplunkHarnessLoader.get_request(options.log_analysis_get_url, 3)
+        if status_code != 200:
+            logger.error('Got bad status code ' + str(status_code) + ' for url ' + options.log_analysis_get_url)
+
+        if prev_state['resource'] is not None:
+            for key, events in prev_state['resource'].get('control_events').items():
+                for event in events:
+                    self.add_event(event, 'control_prev')
+
+            for key, events in prev_state['resource'].get('test_events').items():
+                for event in events:
+                    self.add_event(event, 'test_prev')
 
     # old files that are not grouped by host
     def load_from_file(self, file_name, control_window, test_window, prev_out_file=None):
@@ -124,14 +174,16 @@ class SplunkDatasetNew(object):
             if clusters[index] not in self.anom_clusters:
                 self.anom_clusters[clusters[index]] = {}
             for anom in anomal:
-                host = anom.get('count')[2]
+                host = anom.get('message_frequencies')[0].get('host')
                 if host not in self.anom_clusters[clusters[index]]:
                     self.anom_clusters[clusters[index]][host] = dict(x=anom.get('x'),
                                                                      y=anom.get('y'),
                                                                      text=anom.get('text'),
-                                                                     count=[])
+                                                                     cluster_label=anom.get('cluster_label'),
+                                                                     message_frequencies=[])
 
-                self.anom_clusters[clusters[index]][host].get('count').append(anom.get('count'))
+                self.anom_clusters[clusters[index]][host].get('message_frequencies').extend(
+                    anom.get('message_frequencies'))
 
     def get_anom_clusters(self):
         return self.anom_clusters
@@ -139,26 +191,26 @@ class SplunkDatasetNew(object):
     def create_clusters(self, combined_dist, clusters, centroids,
                         feature_names,
                         predictions, anomalies):
-
         for index, (key, value) in enumerate(self.control_events.items()):
             for val in value:
                 val['cluster_label'] = clusters[index]
                 if val.get('cluster_label') not in self.control_clusters:
                     self.control_clusters[val.get('cluster_label')] = {}
 
-                host = val.get('count')[2]
+                host = val.get('message_frequencies')[0].get('host')
                 if host not in self.control_clusters[val.get('cluster_label')]:
                     self.control_clusters[val.get('cluster_label')][host] = dict(x=combined_dist[index, 0],
                                                                                  y=combined_dist[index, 1],
                                                                                  text=val.get('text'),
                                                                                  cluster_label=val.get('cluster_label'),
-                                                                                 count=[],
+                                                                                 message_frequencies=[],
                                                                                  tags=self.get_cluster_tags(
                                                                                      val.get('cluster_label'),
                                                                                      centroids,
                                                                                      feature_names,
                                                                                      5))
-                self.control_clusters[val.get('cluster_label')][host].get('count').append(val.get('count'))
+                self.control_clusters[val.get('cluster_label')][host].get('message_frequencies').extend(
+                    val.get('message_frequencies'))
 
         dist_offset = len(self.control_events)
         anomaly_index = 1000000
@@ -177,14 +229,14 @@ class SplunkDatasetNew(object):
                     if val.get('cluster_label') not in self.test_clusters:
                         self.test_clusters[val.get('cluster_label')] = {}
 
-                    host = val.get('count')[2]
+                    host = val.get('message_frequencies')[0].get('host')
                     if host not in self.test_clusters[val.get('cluster_label')]:
                         self.test_clusters[val.get('cluster_label')][host] = dict(
                             x=combined_dist[index + dist_offset, 0],
                             y=combined_dist[index + dist_offset, 1],
                             text=val.get('text'),
                             cluster_label=val.get('cluster_label'),
-                            count=[],
+                            message_frequencies=[],
                             anomalous_counts=[],
                             unexpected_freq=False,
                             tags=self.get_cluster_tags(
@@ -193,14 +245,15 @@ class SplunkDatasetNew(object):
                                 feature_names,
                                 5))
 
-                    self.test_clusters[val.get('cluster_label')][host].get('count').append(val.get('count'))
+                    self.test_clusters[val.get('cluster_label')][host].get('message_frequencies').extend(
+                        val.get('message_frequencies'))
 
                 else:
                     anomal.append(dict(x=combined_dist[index + dist_offset, 0],
                                        y=combined_dist[index + dist_offset, 1],
                                        text=val.get('text'),
                                        cluster_label=predictions[index],
-                                       count=val.get('count')))
+                                       message_frequencies=val.get('message_frequencies')))
             if len(anomal) > 0:
                 self.anomalies.append(anomal)
 
@@ -218,6 +271,7 @@ class SplunkDatasetNew(object):
         y = []
         labels = []
         tooltips = []
+        sizes = []
         ind = 0
         for index, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
@@ -226,6 +280,10 @@ class SplunkDatasetNew(object):
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
                 labels.append(0)
+                size = 0
+                for freq in val.get('message_frequencies'):
+                    size = size + int(freq.get('count'))
+                    sizes.append(size)
 
         for index, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
@@ -233,17 +291,29 @@ class SplunkDatasetNew(object):
                 y.append(val.get('y'))
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
-                labels.append(1)
+                if val.get('unexpected_freq'):
+                    labels.append(3)
+                else:
+                    labels.append(1)
+                # labels.append(1)
+                size = 0
+                for freq in val.get('message_frequencies'):
+                    size = size + int(freq.get('count'))
+                    sizes.append(size)
 
-        for anomal in self.anomalies:
-            for val in anomal:
+        for key, value in self.anom_clusters.items():
+            for host, val in value.items():
                 x.append(val.get('x'))
                 y.append(val.get('y'))
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
                 labels.append(2)
+                size = 0
+                for freq in val.get('message_frequencies'):
+                    size = size + int(freq.get('count'))
+                    sizes.append(size)
 
-        return np.column_stack((x, y)), tooltips, labels
+        return np.column_stack((x, y)), tooltips, labels, sizes
 
     def count_scatter_plot(self):
 
@@ -260,8 +330,8 @@ class SplunkDatasetNew(object):
                 tooltips.append([host + '<br>' + str(val.get('cluster_label')) + '<br>' + val.get('text'), ind])
                 ind = ind + 1
                 size = 0
-                for count in val.get('count'):
-                    size = size + count[0]
+                for freq in val.get('message_frequencies'):
+                    size = size + int(freq.get('count'))
                     sizes.append(size)
                 if val.get('unexpected_freq'):
                     labels.append(1)
@@ -281,10 +351,10 @@ class SplunkDatasetNew(object):
         clusters = []
         for index, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
-                for count in val.get('count'):
+                for freq in val.get('message_frequencies'):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
-                    z.append(count[0])
+                    z.append(freq.get('count'))
                     tooltips.append([host + ' ' + val.get('text'), ind])
                     labels.append(0)
                     clusters.append(key)
@@ -292,10 +362,10 @@ class SplunkDatasetNew(object):
 
         for index, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
-                for idx, count in enumerate(val.get('count')):
+                for idx, freq in enumerate(val.get('message_frequencies')):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
-                    z.append(count[0])
+                    z.append(freq.get('count'))
                     tooltips.append([host + ' ' + val.get('text'), ind])
                     if val.get('anomalous_counts')[idx] == 1:
                         labels.append(1)

@@ -108,7 +108,7 @@ public class ArtifactCollectionJob implements Job {
                                   .build();
           artifactService.create(artifact);
         } else {
-          logger.debug("Artifact of the version {} already collected.", buildNo);
+          logger.info("Artifact of the version {} already collected.", buildNo);
         }
       }
     } else {
@@ -136,6 +136,8 @@ public class ArtifactCollectionJob implements Job {
                   .withRevision(lastSuccessfulBuild.getRevision())
                   .build();
           artifactService.create(artifact);
+        } else {
+          logger.info("Artifact of the version {} already collected.", buildNo);
         }
       }
     }

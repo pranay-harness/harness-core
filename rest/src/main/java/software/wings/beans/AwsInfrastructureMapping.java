@@ -99,9 +99,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s(%s/%s)",
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getComputeProviderType(), this.getDeploymentType());
+    return String.format("%s (AWS/SSH)",
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 
   public String getRegion() {

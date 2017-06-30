@@ -212,9 +212,11 @@ PLUGIN_CATEGORY:
       value: APP_DYNAMICS
 
 CLOUD_PROVIDERS:
-    - name: Google Cloud Provider
+    - name: Google Cloud Platform
       value: GCP
     - name: Amazon Web Services
       value: AWS
     - name: Physical Data Center
       value: PHYSICAL_DATA_CENTER
+    - name: Direct Kubernetes
+      value: DIRECT

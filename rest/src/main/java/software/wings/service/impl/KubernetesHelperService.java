@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import com.google.inject.Singleton;
+
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -9,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by bzane on 2/22/17.
+ * Created by brett on 2/22/17
  */
 @Singleton
 public class KubernetesHelperService {
@@ -29,7 +31,7 @@ public class KubernetesHelperService {
     if (clientCacheMap.containsKey(masterUrl)) {
       Config config = clientCacheMap.get(masterUrl).getConfiguration();
       if (kubernetesConfig.getUsername().equals(config.getUsername())
-          && kubernetesConfig.getPassword().equals(config.getPassword())) {
+          && Arrays.equals(kubernetesConfig.getPassword(), config.getPassword().toCharArray())) {
         clientCached = clientCacheMap.get(masterUrl);
       }
     }
@@ -45,5 +47,9 @@ public class KubernetesHelperService {
       clientCacheMap.put(masterUrl, clientCached);
     }
     return clientCached;
+  }
+
+  public void validateCredential(KubernetesConfig kubernetesConfig) {
+    getKubernetesClient(kubernetesConfig).replicationControllers().list();
   }
 }

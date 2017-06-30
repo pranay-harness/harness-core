@@ -59,6 +59,7 @@ import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DirectInfrastructureProvider;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
@@ -235,6 +236,8 @@ public class WingsModule extends AbstractModule {
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.GCP.name()).to(GcpInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(StaticInfrastructureProvider.class);
+    infrastructureProviderMapBinder.addBinding(SettingVariableTypes.DIRECT.name())
+        .to(DirectInfrastructureProvider.class);
 
     MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
         MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},

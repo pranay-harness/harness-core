@@ -397,6 +397,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    logger.info("Post Artifact Collection action triggered");
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(artifact));
     executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
