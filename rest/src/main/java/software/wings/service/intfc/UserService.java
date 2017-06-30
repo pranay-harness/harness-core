@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
@@ -98,6 +99,8 @@ public interface UserService {
    * @return the user
    */
   User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
+
+  Account addAccount(Account account, User user);
 
   /**
    * Verify registered or allowed.

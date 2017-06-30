@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -123,6 +124,19 @@ public class UserResource {
     return new RestResponse<>(userService.register(user));
   }
 
+  @POST
+  @Path("account")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  public RestResponse<Account> addAccount(Account account) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid User");
+    }
+    return new RestResponse<>(userService.addAccount(account, existingUser));
+  }
+
   /**
    * Update.
    *
@@ -136,6 +150,10 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
+    User authUser = UserThreadLocal.get();
+    if (!authUser.getUuid().equals(userId)) {
+      throw new WingsException(ErrorCode.ACCESS_DENIED);
+    }
     user.setUuid(userId);
     return new RestResponse<>(userService.update(user));
   }
