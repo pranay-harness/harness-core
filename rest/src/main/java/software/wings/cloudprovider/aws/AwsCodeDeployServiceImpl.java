@@ -7,8 +7,6 @@ import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Sets;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
 import com.amazonaws.services.codedeploy.model.DeploymentGroupInfo;
@@ -58,14 +56,12 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listApplications(String region, SettingAttribute cloudProviderSetting) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<String> applications = new ArrayList<>();
     ListApplicationsResult listApplicationsResult;
     ListApplicationsRequest listApplicationsRequest = new ListApplicationsRequest();
     do {
-      listApplicationsResult = amazonCodeDeployClient.listApplications(listApplicationsRequest);
+      listApplicationsResult = awsHelperService.listApplicationsResult(awsConfig, region, listApplicationsRequest);
       applications.addAll(listApplicationsResult.getApplications());
       listApplicationsRequest.setNextToken(listApplicationsResult.getNextToken());
     } while (listApplicationsRequest.getNextToken() != null);
@@ -75,15 +71,14 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listDeploymentGroup(String region, String appName, SettingAttribute cloudProviderSetting) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<String> deploymentGroups = new ArrayList<>();
     ListDeploymentGroupsResult listDeploymentGroupsResult;
     ListDeploymentGroupsRequest listDeploymentGroupsRequest =
         new ListDeploymentGroupsRequest().withApplicationName(appName);
     do {
-      listDeploymentGroupsResult = amazonCodeDeployClient.listDeploymentGroups(listDeploymentGroupsRequest);
+      listDeploymentGroupsResult =
+          awsHelperService.listDeploymentGroupsResult(awsConfig, region, listDeploymentGroupsRequest);
       deploymentGroups.addAll(listDeploymentGroupsResult.getDeploymentGroups());
       listDeploymentGroupsResult.setNextToken(listDeploymentGroupsResult.getNextToken());
     } while (listDeploymentGroupsResult.getNextToken() != null);
@@ -93,14 +88,13 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public List<String> listDeploymentConfiguration(String region, SettingAttribute cloudProviderSetting) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<String> deploymentConfigurations = new ArrayList<>();
     ListDeploymentConfigsResult listDeploymentConfigsResult;
     ListDeploymentConfigsRequest listDeploymentConfigsRequest = new ListDeploymentConfigsRequest();
     do {
-      listDeploymentConfigsResult = amazonCodeDeployClient.listDeploymentConfigs(listDeploymentConfigsRequest);
+      listDeploymentConfigsResult =
+          awsHelperService.listDeploymentConfigsResult(awsConfig, region, listDeploymentConfigsRequest);
       deploymentConfigurations.addAll(listDeploymentConfigsResult.getDeploymentConfigsList());
       listDeploymentConfigsRequest.setNextToken(listDeploymentConfigsResult.getNextToken());
     } while (listDeploymentConfigsRequest.getNextToken() != null);
@@ -110,66 +104,73 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public CodeDeployDeploymentInfo deployApplication(String region, SettingAttribute cloudProviderSetting,
       CreateDeploymentRequest createDeploymentRequest, ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    CreateDeploymentResult deploymentResult = amazonCodeDeployClient.createDeployment(createDeploymentRequest);
+    try {
+      AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
 
-    executionLogCallback.saveExecutionLog(
-        String.format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
-    waitForDeploymentToComplete(deploymentResult.getDeploymentId(), amazonCodeDeployClient);
-    String finalDeploymentStatus =
-        amazonCodeDeployClient
-            .getDeployment(new GetDeploymentRequest().withDeploymentId(deploymentResult.getDeploymentId()))
-            .getDeploymentInfo()
-            .getStatus();
-    CodeDeployDeploymentInfo codeDeployDeploymentInfo = new CodeDeployDeploymentInfo();
-    codeDeployDeploymentInfo.setStatus(
-        Failed.name().equals(finalDeploymentStatus) ? CommandExecutionStatus.FAILURE : CommandExecutionStatus.SUCCESS);
+      CreateDeploymentResult deploymentResult =
+          awsHelperService.createCodeDeployDeployment(awsConfig, region, createDeploymentRequest);
 
-    List<String> instanceIds = fetchAllDeploymentInstances(amazonCodeDeployClient, deploymentResult.getDeploymentId());
-    List<Instance> instances =
-        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-            .describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds))
-            .getReservations()
-            .stream()
-            .flatMap(reservation -> reservation.getInstances().stream())
-            .collect(Collectors.toList());
+      executionLogCallback.saveExecutionLog(
+          String.format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
+      waitForDeploymentToComplete(awsConfig, region, deploymentResult.getDeploymentId());
+      String finalDeploymentStatus =
+          awsHelperService
+              .getCodeDeployDeployment(
+                  awsConfig, region, new GetDeploymentRequest().withDeploymentId(deploymentResult.getDeploymentId()))
+              .getDeploymentInfo()
+              .getStatus();
+      CodeDeployDeploymentInfo codeDeployDeploymentInfo = new CodeDeployDeploymentInfo();
+      codeDeployDeploymentInfo.setStatus(Failed.name().equals(finalDeploymentStatus) ? CommandExecutionStatus.FAILURE
+                                                                                     : CommandExecutionStatus.SUCCESS);
 
-    codeDeployDeploymentInfo.setInstances(instances);
-    return codeDeployDeploymentInfo;
+      List<String> instanceIds = fetchAllDeploymentInstances(awsConfig, region, deploymentResult.getDeploymentId());
+      DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
+      List<Instance> instances = awsHelperService.describeEc2Instances(awsConfig, region, describeInstancesRequest)
+                                     .getReservations()
+                                     .stream()
+                                     .flatMap(reservation -> reservation.getInstances().stream())
+                                     .collect(Collectors.toList());
+
+      codeDeployDeploymentInfo.setInstances(instances);
+      return codeDeployDeploymentInfo;
+    } catch (WingsException wex) {
+      executionLogCallback.saveExecutionLog("Deployment failed ", LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(
+          wex.getCause() != null ? wex.getCause().getMessage() : (String) wex.getParams().get("message"),
+          LogLevel.ERROR);
+      throw wex;
+    }
   }
 
   public RevisionLocation getApplicationRevisionList(
       String region, String appName, String deploymentGroupName, SettingAttribute cloudProviderSetting) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonCodeDeployClient amazonCodeDeployClient = awsHelperService.getAmazonCodeDeployClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    GetDeploymentGroupRequest getDeploymentGroupRequest =
+        new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
     DeploymentGroupInfo deploymentGroupInfo =
-        amazonCodeDeployClient
-            .getDeploymentGroup(new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(
-                deploymentGroupName))
+        awsHelperService.getCodeDeployDeploymentGroup(awsConfig, region, getDeploymentGroupRequest)
             .getDeploymentGroupInfo();
     return deploymentGroupInfo.getTargetRevision();
   }
 
-  private List<String> fetchAllDeploymentInstances(AmazonCodeDeployClient amazonCodeDeployClient, String deploymentId) {
+  private List<String> fetchAllDeploymentInstances(AwsConfig awsConfig, String region, String deploymentId) {
     List<String> instances = new ArrayList<>();
     ListDeploymentInstancesResult listDeploymentInstancesResult;
     ListDeploymentInstancesRequest listDeploymentInstancesRequest =
         new ListDeploymentInstancesRequest().withDeploymentId(deploymentId);
     do {
-      listDeploymentInstancesResult = amazonCodeDeployClient.listDeploymentInstances(listDeploymentInstancesRequest);
+      listDeploymentInstancesResult =
+          awsHelperService.listDeploymentInstances(awsConfig, region, listDeploymentInstancesRequest);
       instances.addAll(listDeploymentInstancesResult.getInstancesList());
       listDeploymentInstancesResult.setNextToken(listDeploymentInstancesResult.getNextToken());
     } while (listDeploymentInstancesResult.getNextToken() != null);
     return instances;
   }
 
-  private void waitForDeploymentToComplete(String deploymentId, AmazonCodeDeployClient amazonCodeDeployClient) {
+  private void waitForDeploymentToComplete(AwsConfig awsConfig, String region, String deploymentId) {
     int retryCount = RETRY_COUNTER;
     Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
-    while (!deploymentCompleted(deploymentId, amazonCodeDeployClient, finalDeploymentStatus)) {
+    while (!deploymentCompleted(awsConfig, region, deploymentId, finalDeploymentStatus)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
       }
@@ -178,9 +179,10 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   }
 
   private boolean deploymentCompleted(
-      String deploymentId, AmazonCodeDeployClient amazonCodeDeployClient, Set<String> finalDeploymentStatus) {
+      AwsConfig awsConfig, String region, String deploymentId, Set<String> finalDeploymentStatus) {
     return finalDeploymentStatus.contains(
-        amazonCodeDeployClient.getDeployment(new GetDeploymentRequest().withDeploymentId(deploymentId))
+        awsHelperService
+            .getCodeDeployDeployment(awsConfig, region, new GetDeploymentRequest().withDeploymentId(deploymentId))
             .getDeploymentInfo()
             .getStatus());
   }

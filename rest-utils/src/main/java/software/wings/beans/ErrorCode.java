@@ -370,7 +370,10 @@ public enum ErrorCode {
   WORKFLOW_EXECUTION_IN_PROGRESS("WORKFLOW_EXECUTION_IN_PROGRESS"), /**
                                                                      * Workflow execution in progress
                                                                      */
-  PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS");
+  PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"), /**
+                                                                     * Aws access denied error code.
+                                                                     */
+  AWS_ACCESS_DENIED("AWS_ACCESS_DENIED");
 
   /**
    * The constant ARGS_NAME.

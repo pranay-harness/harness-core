@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -14,6 +15,21 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClientBuilder;
+import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
+import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
+import com.amazonaws.services.codedeploy.model.GetDeploymentGroupRequest;
+import com.amazonaws.services.codedeploy.model.GetDeploymentGroupResult;
+import com.amazonaws.services.codedeploy.model.GetDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.GetDeploymentResult;
+import com.amazonaws.services.codedeploy.model.ListApplicationsRequest;
+import com.amazonaws.services.codedeploy.model.ListApplicationsResult;
+import com.amazonaws.services.codedeploy.model.ListDeploymentConfigsRequest;
+import com.amazonaws.services.codedeploy.model.ListDeploymentConfigsResult;
+import com.amazonaws.services.codedeploy.model.ListDeploymentGroupsRequest;
+import com.amazonaws.services.codedeploy.model.ListDeploymentGroupsResult;
+import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesRequest;
+import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -24,6 +40,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
+import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
@@ -117,7 +134,7 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon code deploy client
    */
-  public AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, String accessKey, char[] secretKey) {
+  private AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, String accessKey, char[] secretKey) {
     return (AmazonCodeDeployClient) AmazonCodeDeployClientBuilder.standard()
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
@@ -288,5 +305,106 @@ public class AwsHelperService {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
     }
     return (AwsConfig) connectorConfig.getValue();
+  }
+
+  private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
+    logger.error("AWS API call exception {}", amazonServiceException);
+    if (amazonServiceException instanceof AmazonCodeDeployException) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
+    } else if (amazonServiceException instanceof AmazonEC2Exception) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    } else if (amazonServiceException instanceof AmazonECSException) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    }
+    logger.error("Unhandled aws exception");
+    throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+  }
+
+  public ListDeploymentGroupsResult listDeploymentGroupsResult(
+      AwsConfig awsConfig, String region, ListDeploymentGroupsRequest listDeploymentGroupsRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .listDeploymentGroups(listDeploymentGroupsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListDeploymentGroupsResult();
+  }
+
+  public ListApplicationsResult listApplicationsResult(
+      AwsConfig awsConfig, String region, ListApplicationsRequest listApplicationsRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .listApplications(listApplicationsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListApplicationsResult();
+  }
+
+  public ListDeploymentConfigsResult listDeploymentConfigsResult(
+      AwsConfig awsConfig, String region, ListDeploymentConfigsRequest listDeploymentConfigsRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .listDeploymentConfigs(listDeploymentConfigsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListDeploymentConfigsResult();
+  }
+
+  public GetDeploymentResult getCodeDeployDeployment(
+      AwsConfig awsConfig, String region, GetDeploymentRequest getDeploymentRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .getDeployment(getDeploymentRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new GetDeploymentResult();
+  }
+
+  public GetDeploymentGroupResult getCodeDeployDeploymentGroup(
+      AwsConfig awsConfig, String region, GetDeploymentGroupRequest getDeploymentGroupRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .getDeploymentGroup(getDeploymentGroupRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new GetDeploymentGroupResult();
+  }
+
+  public CreateDeploymentResult createCodeDeployDeployment(
+      AwsConfig awsConfig, String region, CreateDeploymentRequest createDeploymentRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .createDeployment(createDeploymentRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new CreateDeploymentResult();
+  }
+
+  public ListDeploymentInstancesResult listDeploymentInstances(
+      AwsConfig awsConfig, String region, ListDeploymentInstancesRequest listDeploymentInstancesRequest) {
+    try {
+      return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .listDeploymentInstances(listDeploymentInstancesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListDeploymentInstancesResult();
+  }
+
+  public DescribeInstancesResult describeEc2Instances(
+      AwsConfig awsConfig, String region, DescribeInstancesRequest describeInstancesRequest) {
+    try {
+      return getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeInstances(describeInstancesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeInstancesResult();
   }
 }
