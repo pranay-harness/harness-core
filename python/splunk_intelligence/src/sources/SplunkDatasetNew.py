@@ -88,6 +88,7 @@ class SplunkDatasetNew(object):
         prev_state, status_code = SplunkHarnessLoader.get_request(options.log_analysis_get_url, 3)
         if status_code != 200:
             logger.error('Got bad status code ' + str(status_code) + ' for url ' + options.log_analysis_get_url)
+
         if prev_state['resource'] is not None:
             for key, events in prev_state['resource'].get('control_events').items():
                 for event in events:
@@ -190,7 +191,6 @@ class SplunkDatasetNew(object):
     def create_clusters(self, combined_dist, clusters, centroids,
                         feature_names,
                         predictions, anomalies):
-
         for index, (key, value) in enumerate(self.control_events.items()):
             for val in value:
                 val['cluster_label'] = clusters[index]
@@ -229,7 +229,7 @@ class SplunkDatasetNew(object):
                     if val.get('cluster_label') not in self.test_clusters:
                         self.test_clusters[val.get('cluster_label')] = {}
 
-                    host = val.get('message_frequencies')[0].get('count')
+                    host = val.get('message_frequencies')[0].get('host')
                     if host not in self.test_clusters[val.get('cluster_label')]:
                         self.test_clusters[val.get('cluster_label')][host] = dict(
                             x=combined_dist[index + dist_offset, 0],

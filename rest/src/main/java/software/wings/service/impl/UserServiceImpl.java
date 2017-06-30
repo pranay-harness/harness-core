@@ -142,6 +142,23 @@ public class UserServiceImpl implements UserService {
     return savedUser;
   }
 
+  @Override
+  public Account addAccount(Account account, User user) {
+    if (!StringUtils.isBlank(account.getAccountName())) {
+      account.setAccountName(account.getAccountName().trim());
+    }
+
+    if (!StringUtils.isBlank(account.getCompanyName())) {
+      account.setCompanyName(account.getCompanyName().trim());
+    }
+
+    account = setupAccount(account.getAccountName(), account.getCompanyName());
+    addAccountAdminRole(user, account);
+    sendSuccessfullyAddedToNewAccountEmail(user, account);
+    evictUserFromCache(user.getUuid());
+    return account;
+  }
+
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",

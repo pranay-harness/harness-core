@@ -72,7 +72,6 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
-import software.wings.beans.Role.Builder;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
@@ -409,7 +408,7 @@ public class UserServiceTest extends WingsBaseTest {
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(USER_EMAIL))
-                                .withRoles(asList(Builder.aRole().withUuid(ROLE_ID).build()))
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
                                 .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -439,7 +438,7 @@ public class UserServiceTest extends WingsBaseTest {
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(USER_EMAIL))
-                                .withRoles(asList(Builder.aRole().withUuid(ROLE_ID).build()))
+                                .withRoles(asList(aRole().withUuid(ROLE_ID).build()))
                                 .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -602,5 +601,24 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).update(eq(userBuilder.withUuid(USER_ID).build()), any(UpdateOperations.class));
     verify(updateOperations).set(eq("passwordHash"), anyString());
     verify(updateOperations).set(eq("passwordChangedAt"), anyLong());
+  }
+
+  /**
+   * Should add Account.
+   *
+   * @throws UnsupportedEncodingException the unsupported encoding exception
+   */
+  @Test
+  @Ignore
+  public void shouldAddAccount() throws UnsupportedEncodingException {
+    Account account =
+        anAccount().withUuid(ACCOUNT_ID).withCompanyName(COMPANY_NAME).withAccountName(ACCOUNT_NAME).build();
+    when(accountService.save(any(Account.class))).thenReturn(account);
+    when(roleService.getAccountAdminRole(ACCOUNT_ID)).thenReturn(aRole().build());
+    when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
+    User user = anUser().withUuid(USER_ID).withEmail(USER_EMAIL).build();
+    Account created = userService.addAccount(account, user);
+    assertThat(created).isEqualTo(account);
+    verify(accountService).exists(eq(ACCOUNT_NAME));
   }
 }
