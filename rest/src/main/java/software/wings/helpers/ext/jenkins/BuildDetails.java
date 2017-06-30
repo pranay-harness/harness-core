@@ -2,6 +2,8 @@ package software.wings.helpers.ext.jenkins;
 
 import com.google.common.base.MoreObjects;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -11,6 +13,7 @@ public class BuildDetails {
   private String number;
   private String revision;
   private String description;
+  private Map<String, String> buildParameters = new HashMap<>();
 
   /**
    * Gets number.
@@ -89,12 +92,31 @@ public class BuildDetails {
   }
 
   /**
+   * Gets build parameters.
+   *
+   * @return the build parameters
+   */
+  public Map<String, String> getBuildParameters() {
+    return buildParameters;
+  }
+
+  /**
+   * Sets build parameters.
+   *
+   * @param buildParameters the build parameters
+   */
+  public void setBuildParameters(Map<String, String> buildParameters) {
+    this.buildParameters = buildParameters;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String number;
     private String revision;
     private String description;
+    private Map<String, String> buildParameters = new HashMap<>();
 
     private Builder() {}
 
@@ -141,12 +163,27 @@ public class BuildDetails {
     }
 
     /**
+     * With build parameters builder.
+     *
+     * @param buildParameters the build parameters
+     * @return the builder
+     */
+    public Builder withBuildParameters(Map<String, String> buildParameters) {
+      this.buildParameters = buildParameters;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return aBuildDetails().withNumber(number).withRevision(revision).withDescription(description);
+      return aBuildDetails()
+          .withNumber(number)
+          .withRevision(revision)
+          .withDescription(description)
+          .withBuildParameters(buildParameters);
     }
 
     /**
@@ -159,6 +196,7 @@ public class BuildDetails {
       buildDetails.setNumber(number);
       buildDetails.setRevision(revision);
       buildDetails.setDescription(description);
+      buildDetails.setBuildParameters(buildParameters);
       return buildDetails;
     }
   }

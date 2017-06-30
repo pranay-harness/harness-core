@@ -15,6 +15,7 @@ import software.wings.beans.Service;
 import software.wings.common.Constants;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,6 +112,13 @@ public class Artifact extends Base {
       return getMetadata().get(Constants.BUILD_NO);
     }
     return null;
+  }
+
+  public Map<String, String> getBuildParameters() {
+    if (getMetadata() != null) {
+      return getMetadata();
+    }
+    return new HashMap<>();
   }
 
   /**

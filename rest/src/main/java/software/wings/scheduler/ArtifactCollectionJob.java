@@ -125,6 +125,10 @@ public class ArtifactCollectionJob implements Job {
           logger.info(
               "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
               buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
+
+          Map<String, String> metadata = lastSuccessfulBuild.getBuildParameters();
+          metadata.put(Constants.BUILD_NO, lastSuccessfulBuild.getNumber());
+
           Artifact artifact =
               anArtifact()
                   .withAppId(appId)
@@ -132,7 +136,7 @@ public class ArtifactCollectionJob implements Job {
                   .withArtifactSourceName(artifactStream.getSourceName())
                   .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
                   .withDescription(lastSuccessfulBuild.getDescription())
-                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
+                  .withMetadata(metadata)
                   .withRevision(lastSuccessfulBuild.getRevision())
                   .build();
           artifactService.create(artifact);

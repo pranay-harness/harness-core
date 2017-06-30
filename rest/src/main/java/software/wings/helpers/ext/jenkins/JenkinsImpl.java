@@ -162,13 +162,17 @@ public class JenkinsImpl implements Jenkins {
             .filter(build
                 -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
                     && isNotEmpty(build.getArtifacts()))
-            .map(buildWithDetails
-                -> aBuildDetails()
-                       .withNumber(String.valueOf(buildWithDetails.getNumber()))
-                       .withRevision(extractRevision(buildWithDetails))
-                       .withDescription(buildWithDetails.getDescription())
-                       .build())
+            .map(buildWithDetails -> getBuildDetails(buildWithDetails))
             .collect(toList()));
+  }
+
+  public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails) {
+    return aBuildDetails()
+        .withNumber(String.valueOf(buildWithDetails.getNumber()))
+        .withRevision(extractRevision(buildWithDetails))
+        .withDescription(buildWithDetails.getDescription())
+        .withBuildParameters(buildWithDetails.getParameters())
+        .build();
   }
 
   @Override
@@ -184,11 +188,7 @@ public class JenkinsImpl implements Jenkins {
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
-    return aBuildDetails()
-        .withNumber(String.valueOf(buildWithDetails.getNumber()))
-        .withRevision(extractRevision(buildWithDetails))
-        .withDescription(buildWithDetails.getDescription())
-        .build();
+    return getBuildDetails(buildWithDetails);
   }
 
   /* (non-Javadoc)

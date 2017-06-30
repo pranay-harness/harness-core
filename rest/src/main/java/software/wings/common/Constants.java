@@ -279,6 +279,7 @@ public interface Constants {
 
   String BUILD_NO = "buildNo";
   String REVISION = "revision";
+  String BUILD_PARAMS = "buildParameters";
 
   String S3 = "S3";
 }
