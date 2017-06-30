@@ -5,6 +5,7 @@ import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkLogRequest;
+import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
 import software.wings.utils.validation.Create;
 
 import java.io.IOException;
@@ -29,4 +30,6 @@ public interface SplunkService {
   SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId);
 
   boolean isLogDataCollected(String applicationId, String stateExecutionId, int logCollectionMinute);
+
+  SplunkMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId);
 }

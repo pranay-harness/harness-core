@@ -14,6 +14,7 @@ import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
 import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
+import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
@@ -80,13 +81,12 @@ public class SplunkResource {
   }
 
   @GET
-  @Path("/mark-processed")
+  @Path("/get-splunk-analysis-summary")
   @Timed
   @ExceptionMetered
-  @PublicApi
-  public RestResponse<Boolean> markProcessed(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("timeStamp") long timeStamp) throws IOException {
-    return new RestResponse<>(splunkService.markProcessed(stateExecutionId, applicationId, timeStamp));
+  public RestResponse<SplunkMLAnalysisSummary> getAnalysisSummary(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
+      throws IOException {
+    return new RestResponse<>(splunkService.getAnalysisSummary(stateExecutionId, applicationId));
   }
 }
