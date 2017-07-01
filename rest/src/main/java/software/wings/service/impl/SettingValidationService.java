@@ -9,9 +9,11 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.settings.SettingValue;
 
 import javax.inject.Inject;
@@ -27,6 +29,7 @@ public class SettingValidationService {
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private KubernetesHelperService kubernetesHelperService;
+  @Inject private SplunkService splunkService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -43,6 +46,8 @@ public class SettingValidationService {
       appdynamicsService.validateConfig(settingAttribute);
     } else if (settingValue instanceof KubernetesConfig) {
       kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
+    } else if (settingValue instanceof SplunkConfig) {
+      splunkService.validateConfig(settingAttribute);
     }
     return true;
   }

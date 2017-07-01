@@ -60,6 +60,7 @@ public enum TaskType {
   APPDYNAMICS_GET_METRICES_OF_BT(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class),
+  SPLUNK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;

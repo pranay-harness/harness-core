@@ -1,9 +1,21 @@
 package software.wings.service.impl.splunk;
 
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Base;
+import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SplunkConfig;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
@@ -25,6 +37,7 @@ public class SplunkServiceImpl implements SplunkService {
   private final Random random = new Random();
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
   public Boolean saveLogData(String appId, String stateExecutionId, List<SplunkLogElement> logData) throws IOException {
@@ -119,6 +132,18 @@ public class SplunkServiceImpl implements SplunkService {
     analysisSummary.setTestClusters(computeCluster(analysisRecord.getTest_clusters()));
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
     return analysisSummary;
+  }
+
+  @Override
+  public void validateConfig(final SettingAttribute settingAttribute) {
+    try {
+      SyncTaskContext syncTaskContext =
+          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      delegateProxyFactory.get(SplunkDelegateService.class, syncTaskContext)
+          .validateConfig((SplunkConfig) settingAttribute.getValue());
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.SPLUNK_CONFIGURATION_ERROR, "reason", e.getMessage());
+    }
   }
 
   private List<SplunkMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster) {
