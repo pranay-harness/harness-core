@@ -13,6 +13,7 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -36,8 +37,8 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
@@ -174,10 +175,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand);
     });
 
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService
+                                                 .list(aPageRequest()
+                                                           .addFilter("appId", EQ, originalService.getAppId())
+                                                           .addFilter("serviceId", EQ, originalService.getUuid())
+                                                           .build(),
+                                                     false)
+                                                 .getResponse();
+
+    serviceTemplates.forEach(serviceTemplate -> {
+      ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+      clonedServiceTemplate.setName(savedCloneService.getName());
+      clonedServiceTemplate.setServiceId(savedCloneService.getUuid());
+      serviceTemplateService.save(clonedServiceTemplate);
+    });
+
     List<ArtifactStream> artifactStreams = artifactStreamService
                                                .list(aPageRequest()
-                                                         .addFilter("appId", Operator.EQ, originalService.getAppId())
-                                                         .addFilter("serviceId", Operator.EQ, originalService.getUuid())
+                                                         .addFilter("appId", EQ, originalService.getAppId())
+                                                         .addFilter("serviceId", EQ, originalService.getUuid())
                                                          .build())
                                                .getResponse();
     artifactStreams.forEach(originalArtifactStream -> {
@@ -357,7 +373,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // Ensure service is safe to delete
 
     List<Workflow> workflows =
-        workflowService.listWorkflows(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
+        workflowService.listWorkflows(aPageRequest().addFilter("appId", EQ, appId).build()).getResponse();
 
     List<Workflow> serviceWorkflows =
         workflows.stream()

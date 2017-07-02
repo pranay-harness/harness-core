@@ -22,6 +22,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
@@ -317,6 +318,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(asList(aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).build()));
 
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class)))
+        .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
     when(artifactStreamService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(aJenkinsArtifactStream().build())).build());
 

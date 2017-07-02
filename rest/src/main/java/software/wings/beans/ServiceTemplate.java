@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+
 import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -34,6 +36,15 @@ public class ServiceTemplate extends Base {
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
+  public ServiceTemplate clone() {
+    return aServiceTemplate()
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withDescription(getDescription())
+        .withServiceId(getServiceId())
+        .withDefaultServiceTemplate(isDefaultServiceTemplate())
+        .build();
+  }
   /**
    * Gets name.
    *
