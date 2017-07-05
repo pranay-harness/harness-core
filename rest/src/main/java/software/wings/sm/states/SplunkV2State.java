@@ -21,11 +21,15 @@ import software.wings.api.InfraNodeRequest;
 import software.wings.api.InstanceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
@@ -35,6 +39,7 @@ import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -86,6 +91,8 @@ public class SplunkV2State extends State {
   @Transient @Inject private SplunkService splunkService;
 
   @Transient @Inject private MainConfiguration configuration;
+
+  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
@@ -229,6 +236,8 @@ public class SplunkV2State extends State {
     public void run() {
       if (!splunkService.isLogDataCollected(
               applicationId, context.getStateExecutionInstanceId(), logCollectionMinute)) {
+        logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
+            + " stateExecution: " + context.getStateExecutionInstanceId() + ". No ML analysis will be run this minute");
         return;
       }
 
@@ -254,7 +263,7 @@ public class SplunkV2State extends State {
         command.add("--test_nodes");
         command.addAll(testNodes);
         command.add("--sim_threshold");
-        command.add(String.valueOf(0.5));
+        command.add(String.valueOf(0.8));
         command.add("--log_collection_minute");
         command.add(String.valueOf(logCollectionMinute));
         command.add("--state_execution_id");
@@ -283,6 +292,20 @@ public class SplunkV2State extends State {
       } catch (Exception e) {
         logger.error("error fetching splunk logs", e);
       }
+    }
+
+    private List<String> getLastExecutionNodes(ExecutionContext context) {
+      //      PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest().addFilter("appId",
+      //      Operator.EQ, "")
+      //          .addFilter("_id", ).build();
+      //
+      //      PageResponse<WorkflowExecution> workflowExecutions = workflowExecutionService.listExecutions(pageRequest,
+      //      false);
+      //
+      //      WorkflowExecution workflowExecution = null;
+      //
+      //      workflowExecution.getServiceExecutionSummaries().stream().filter();
+      return null;
     }
 
     private List<String> getCanaryNewHostNames(ExecutionContext context) {

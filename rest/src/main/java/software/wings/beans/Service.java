@@ -8,6 +8,10 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
@@ -25,7 +29,8 @@ import java.util.Objects;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-//@Indexes(@Index(fields = {@Field("appId"), @Field("name")}, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Service extends Base {
   private String name;
   private String description;
