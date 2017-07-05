@@ -43,7 +43,6 @@
 
     <logger name="software.wings" level="INFO"/>
     <logger name="org.zeroturnaround" level="DEBUG"/>
-    <logger name="software.wings.delegatetasks" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="file"/>

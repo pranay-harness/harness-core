@@ -135,14 +135,17 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           JobArgs jobargs = new JobArgs();
           jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
 
-          jobargs.setEarliestTime(SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime)));
-          jobargs.setLatestTime(
-              SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1)));
+          final String startTime = SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime));
+          final String endTime =
+              SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1));
+          jobargs.setEarliestTime(startTime);
+          jobargs.setLatestTime(endTime);
 
           // A blocking search returns the job when the search is done
-          logger.debug("triggering query " + searchQuery);
+          logger.info(
+              "triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + searchQuery);
           Job job = splunkService.getJobs().create(searchQuery, jobargs);
-          logger.debug("splunk query done. Num of events: " + job.getEventCount());
+          logger.info("splunk query done. Num of events: " + job.getEventCount());
 
           JobResultsArgs resultsArgs = new JobResultsArgs();
           resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
@@ -164,6 +167,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           resultsReader.close();
           splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getStateExecutionId(), logElements);
+          logger.info("sent splunk search records to server. Num of events: " + job.getEventCount());
         }
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;
