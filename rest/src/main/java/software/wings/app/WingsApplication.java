@@ -235,8 +235,6 @@ public class WingsApplication extends Application<MainConfiguration> {
             configuration.setApplicationPort(serverConnector.getLocalPort());
             return;
           }
-          System.out.println(serverConnector.getName() + " " + serverConnector.getLocalPort());
-          // Do something useful with serverConnector.getLocalPort()
         }
       }
     });

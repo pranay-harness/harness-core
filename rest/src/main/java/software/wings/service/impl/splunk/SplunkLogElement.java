@@ -1,8 +1,11 @@
 package software.wings.service.impl.splunk;
 
+import lombok.Data;
+
 /**
  * Created by rsingh on 6/20/17.
  */
+@Data
 public class SplunkLogElement {
   private String clusterLabel;
   private String host;
@@ -10,52 +13,4 @@ public class SplunkLogElement {
   private int count;
   private String logMessage;
   private int logCollectionMinute;
-
-  public String getClusterLabel() {
-    return clusterLabel;
-  }
-
-  public void setClusterLabel(String clusterLabel) {
-    this.clusterLabel = clusterLabel;
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public long getTimeStamp() {
-    return timeStamp;
-  }
-
-  public void setTimeStamp(long timeStamp) {
-    this.timeStamp = timeStamp;
-  }
-
-  public int getCount() {
-    return count;
-  }
-
-  public void setCount(int count) {
-    this.count = count;
-  }
-
-  public String getLogMessage() {
-    return logMessage;
-  }
-
-  public void setLogMessage(String logMessage) {
-    this.logMessage = logMessage;
-  }
-
-  public int getLogCollectionMinute() {
-    return logCollectionMinute;
-  }
-
-  public void setLogCollectionMinute(int logCollectionMinute) {
-    this.logCollectionMinute = logCollectionMinute;
-  }
 }
