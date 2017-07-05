@@ -3,12 +3,18 @@
 BASEDIR=$(dirname "$0")
 cd $BASEDIR
 
-if [ ! -d ".pyenv" ]; then
-   easy_install virtualenv
-   make init
+env="x"${SPLUNKML_ENVIROMENT}
+
+if [ env=="x" ]; then
+    if [ ! -d ".pyenv" ]; then
+       easy_install virtualenv
+       make init
+    fi
+    make dist
+else
+
 fi
 
-make dist
 echo $@
 #Running locally
 if [ -d "dist" ]; then
