@@ -95,7 +95,7 @@ then
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
+  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
@@ -121,5 +121,19 @@ else
   export CAPSULE_CACHE_DIR="$DIR/.cache"
   rm -rf "$CAPSULE_CACHE_DIR"
   nohup $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
-  echo "Delegate started"
+  sleep 1
+  if [ -s nohup.out ]
+  then
+    echo "Failed to start Delegate."
+    echo "$(cat nohup.out)"
+  else
+    sleep 3
+    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+    then
+      echo "Delegate started"
+    else
+      echo "Failed to start Delegate."
+      echo "$(tail delegate.log)"
+    fi
+  fi
 fi
