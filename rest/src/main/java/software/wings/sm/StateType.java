@@ -65,6 +65,7 @@ import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SplunkState;
+import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
@@ -126,9 +127,14 @@ public enum StateType implements StateTypeDescriptor {
   SPLUNK(SplunkState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
+   * Splunk V2 state type.
+   */
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+
+  /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
