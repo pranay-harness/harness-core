@@ -1,4 +1,4 @@
-package software.wings.collect;
+package software.wings.service.impl.appdynamics;
 
 import software.wings.beans.AppDynamicsConfig;
 

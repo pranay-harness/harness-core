@@ -29,12 +29,14 @@ import software.wings.delegate.service.DelegateFileManagerImpl;
 import software.wings.delegate.service.DelegateLogServiceImpl;
 import software.wings.delegate.service.DelegateService;
 import software.wings.delegate.service.DelegateServiceImpl;
+import software.wings.delegate.service.SplunkMetricStoreServiceImpl;
 import software.wings.delegate.service.UpgradeService;
 import software.wings.delegate.service.UpgradeServiceImpl;
 import software.wings.delegatetasks.AppdynamicsMetricStoreService;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.SplunkMetricStoreService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
@@ -53,6 +55,7 @@ import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
+import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.DockerBuildService;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.splunk.SplunkDelegateService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -94,6 +98,7 @@ public class DelegateModule extends AbstractModule {
     bind(SshExecutorFactory.class);
     bind(DelegateLogService.class).to(DelegateLogServiceImpl.class);
     bind(AppdynamicsMetricStoreService.class).to(AppdynamicsMetricStoreServiceImpl.class);
+    bind(SplunkMetricStoreService.class).to(SplunkMetricStoreServiceImpl.class);
     bind(DelegateConfigService.class).to(DelegateConfigServiceImpl.class);
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
@@ -110,6 +115,7 @@ public class DelegateModule extends AbstractModule {
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
+    bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

@@ -149,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    logger.info("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
+    logger.debug("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
     Account account = accountService.get(accountId);
     if (account == null) {
       throw new WingsException(ACCESS_DENIED);
@@ -184,6 +184,11 @@ public class AuthServiceImpl implements AuthService {
     } catch (JOSEException e) {
       throw new WingsException(INVALID_TOKEN);
     }
+  }
+
+  @Override
+  public void validateExternalServiceToken(String accountId, String tokenString) {
+    //
   }
 
   @Override

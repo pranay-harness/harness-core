@@ -126,6 +126,7 @@ def main(args):
     splunkIntel.run()
 
     result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
+    print(json.dumps(result))
 
     #TODO post this to wings server once the api is available
 

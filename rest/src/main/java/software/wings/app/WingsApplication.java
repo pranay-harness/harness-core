@@ -28,10 +28,14 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.lifecycle.ServerLifecycleListener;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -128,7 +132,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   @Override
-  public void run(MainConfiguration configuration, Environment environment) {
+  public void run(final MainConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
     DatabaseModule databaseModule = new DatabaseModule(configuration);
 
@@ -220,6 +224,20 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
 
     startPlugins(injector);
+
+    environment.lifecycle().addServerLifecycleListener(server -> {
+      for (Connector connector : server.getConnectors()) {
+        if (connector instanceof ServerConnector) {
+          ServerConnector serverConnector = (ServerConnector) connector;
+          if (serverConnector.getName().equalsIgnoreCase("application")) {
+            configuration.setSslEnabled(
+                serverConnector.getDefaultConnectionFactory().getProtocol().equalsIgnoreCase("ssl"));
+            configuration.setApplicationPort(serverConnector.getLocalPort());
+            return;
+          }
+        }
+      }
+    });
 
     logger.info("Starting app done");
   }

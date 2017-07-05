@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.impl.appdynamics;
 
 import static java.util.stream.Collectors.toMap;
 

@@ -29,6 +29,7 @@ import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.ExternalServiceAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
@@ -106,6 +107,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
       authService.validateDelegateToken(
           accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
+      return; // do nothing
+    }
+
+    if (isExternalServiceRequest(requestContext)) {
+      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+      authService.validateExternalServiceToken(
+          accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService "));
       return; // do nothing
     }
 
@@ -199,6 +207,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return delegateAPI() && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate ");
   }
 
+  private boolean isExternalServiceRequest(ContainerRequestContext requestContext) {
+    return externalServiceAPI()
+        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService ");
+  }
+
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     return publicAPI() || requestContext.getMethod().equals(OPTIONS)
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
@@ -225,6 +238,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(DelegateAuth.class) != null
         || resourceClass.getAnnotation(DelegateAuth.class) != null;
+  }
+
+  private boolean externalServiceAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ExternalServiceAuth.class) != null
+        || resourceClass.getAnnotation(ExternalServiceAuth.class) != null;
   }
 
   private List<String> getAppIds(List<Role> roles) {
