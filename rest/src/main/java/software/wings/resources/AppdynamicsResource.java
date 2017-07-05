@@ -6,7 +6,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.metrics.BucketData;
 import software.wings.metrics.MetricSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -21,7 +20,6 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

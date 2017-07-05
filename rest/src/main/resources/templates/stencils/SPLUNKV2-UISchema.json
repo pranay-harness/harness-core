@@ -1,0 +1,6 @@
+{
+  "ui:order": ["splunkConfigId", "query", "timeDuration"],
+  "query": {
+    "ui:widget": "textarea"
+  }
+}

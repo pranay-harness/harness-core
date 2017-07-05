@@ -18,14 +18,14 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.collect.AppdynamicsDataCollectionInfo;
 import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
-import software.wings.service.impl.AppDynamicsSettingProvider;
+import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
+import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -59,8 +59,6 @@ import javax.inject.Inject;
  */
 public class AppDynamicsState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
-
-  @Transient public static final int EXTRA_DATA_COLLECTION_TIME_MINUTES = 5;
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
@@ -198,7 +196,7 @@ public class AppDynamicsState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .withErrorMessage("Verification running")
+        .withErrorMessage("Appdynamics Verification running")
         .withStateExecutionData(executionData)
         .build();
   }

@@ -93,6 +93,7 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.splunk.SplunkServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppContainerService;
@@ -141,6 +142,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
@@ -227,6 +229,7 @@ public class WingsModule extends AbstractModule {
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
+    bind(SplunkService.class).to(SplunkServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
 

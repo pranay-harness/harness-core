@@ -34,4 +34,6 @@ public interface AuthService {
   void validateDelegateToken(String accountId, String tokenString);
 
   void invalidateAllTokensForUser(String userId);
+
+  void validateExternalServiceToken(String accountId, String tokenString);
 }
