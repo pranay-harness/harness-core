@@ -250,6 +250,7 @@ public class SplunkV2State extends AbstractAnalysisState {
       this.accountId = SplunkV2State.this.appService.get(this.applicationId).getAccountId();
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
+      this.controlNodes.removeAll(this.testNodes);
     }
 
     @Override
