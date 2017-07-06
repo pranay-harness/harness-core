@@ -167,7 +167,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
               dataCollectionInfo.getStateExecutionId(), logElements);
           logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
               + " application: " + dataCollectionInfo.getApplicationId()
-              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
         }
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;
