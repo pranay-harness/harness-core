@@ -358,6 +358,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
+    // Service service = serviceResourceService.get(appId, serviceId);
+    // List<Stencil> stencils = stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId,
+    // serviceId);
+    // stencils.forEach(stencil -> ((OverridingArtifactStreamDescriptor)
+    // stencil).setArtifactType(service.getArtifactType()));
     return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
   }
 

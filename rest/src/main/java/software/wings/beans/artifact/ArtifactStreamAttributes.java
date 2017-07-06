@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.utils.ArtifactType;
 
 /**
  * Created by anubhaw on 1/27/17.
@@ -13,7 +14,7 @@ public class ArtifactStreamAttributes {
   // TODO : Refactoring has to be done
   private String groupId; // For nexus integration
   private String artifactName;
-  private String serviceId;
+  private ArtifactType artifactType;
 
   /**
    * Gets job name.
@@ -120,6 +121,22 @@ public class ArtifactStreamAttributes {
   }
 
   /**
+   * Get Artifact type
+   * @return
+   */
+  public ArtifactType getArtifactType() {
+    return artifactType;
+  }
+
+  /**
+   * Set artifact type
+   * @param artifactType
+   */
+  public void setArtifactType(ArtifactType artifactType) {
+    this.artifactType = artifactType;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -127,9 +144,9 @@ public class ArtifactStreamAttributes {
     private String imageName;
     private String artifactStreamType;
     private SettingAttribute serverSetting;
-    // TODO : Refactoring has to be done
     private String groupId; // For nexus integration
     private String artifactName;
+    private ArtifactType artifactType;
 
     private Builder() {}
 
@@ -205,6 +222,16 @@ public class ArtifactStreamAttributes {
       this.artifactName = artifactName;
       return this;
     }
+
+    /**
+     * With artifact type
+     * @param artifactType
+     * @return
+     */
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
     /**
      * But builder.
      *
@@ -217,7 +244,8 @@ public class ArtifactStreamAttributes {
           .withArtifactStreamType(artifactStreamType)
           .withServerSetting(serverSetting)
           .withGroupId(groupId)
-          .withArtifactName(artifactName);
+          .withArtifactName(artifactName)
+          .withArtifactType(artifactType);
     }
 
     /**
@@ -233,6 +261,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setServerSetting(serverSetting);
       artifactStreamAttributes.setGroupId(groupId);
       artifactStreamAttributes.setArtifactName(artifactName);
+      artifactStreamAttributes.setArtifactType(artifactType);
       return artifactStreamAttributes;
     }
   }

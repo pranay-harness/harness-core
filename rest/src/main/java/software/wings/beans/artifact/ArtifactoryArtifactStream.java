@@ -86,6 +86,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
+        .withJobName(jobname)
         .withImageName(imageName)
         .build();
   }
