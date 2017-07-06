@@ -16,36 +16,28 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.api.CanaryWorkflowStandardParams;
-import software.wings.api.InfraNodeRequest;
-import software.wings.api.InstanceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.WorkflowExecution;
 import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkExecutionData;
 import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
+import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
+import software.wings.service.impl.splunk.SplunkMLClusterSummary;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.splunk.SplunkService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -57,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -65,8 +58,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
-public class SplunkV2State extends State {
+public class SplunkV2State extends AbstractAnalysisState {
   private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
+
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";
   private static final int PYTHON_JOB_RETRIES = 3;
@@ -92,8 +86,6 @@ public class SplunkV2State extends State {
   @Transient @Inject private SplunkService splunkService;
 
   @Transient @Inject private MainConfiguration configuration;
-
-  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
@@ -137,6 +129,7 @@ public class SplunkV2State extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing splunk state");
     triggerSplunkDataCollection(context);
+
     final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
                                                   .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                                   .withSplunkConfigID(splunkConfigId)
@@ -170,11 +163,35 @@ public class SplunkV2State extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    final SplunkMLAnalysisSummary analysisSummary =
+        splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+
+    if (analysisSummary.getUnknownClusters().size() > 0) {
+      logger.error("Found unknown events in log analysis. Marking it failed.");
+      executionStatus = ExecutionStatus.FAILED;
+    }
+
+    if (isUnexpectedFrequency(analysisSummary)) {
+      logger.error("Found unexpected frequencies in log analysis. Marking it failed.");
+      executionStatus = ExecutionStatus.FAILED;
+    }
+
     SplunkAnalysisResponse executionResponse = (SplunkAnalysisResponse) response.values().iterator().next();
     return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getSplunkExecutionData())
         .build();
+  }
+
+  private boolean isUnexpectedFrequency(SplunkMLAnalysisSummary analysisSummary) {
+    for (SplunkMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
+      if (clusterSummary.isUnexpectedFreq()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override
@@ -218,7 +235,8 @@ public class SplunkV2State extends State {
     private final String serverUrl;
     private final String accountId;
     private final String applicationId;
-    private final List<String> newNodes;
+    private final Set<String> testNodes;
+    private final Set<String> controlNodes;
     private int logCollectionMinute = 0;
 
     public SplunkAnalysisGenerator(ExecutionContext context) {
@@ -230,7 +248,9 @@ public class SplunkV2State extends State {
       this.serverUrl = protocol + "://localhost:" + SplunkV2State.this.configuration.getApplicationPort();
       this.applicationId = context.getAppId();
       this.accountId = SplunkV2State.this.appService.get(this.applicationId).getAccountId();
-      this.newNodes = getCanaryNewHostNames(context);
+      this.testNodes = getCanaryNewHostNames(context);
+      this.controlNodes = getLastExecutionNodes(context);
+      this.controlNodes.removeAll(this.testNodes);
     }
 
     @Override
@@ -243,10 +263,6 @@ public class SplunkV2State extends State {
       }
 
       try {
-        final List<String> testNodes = Collections.singletonList("ip-172-31-12-79");
-        final List<String> controlNodes = new ArrayList<>();
-        controlNodes.add("ip-172-31-13-153");
-        controlNodes.add("ip-172-31-8-144");
         final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
         final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
         final String logAnalysisSaveUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
@@ -300,35 +316,6 @@ public class SplunkV2State extends State {
             "Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute " + logCollectionMinute,
             e);
       }
-    }
-
-    private List<String> getLastExecutionNodes(ExecutionContext context) {
-      //      PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest().addFilter("appId",
-      //      Operator.EQ, "")
-      //          .addFilter("_id", ).build();
-      //
-      //      PageResponse<WorkflowExecution> workflowExecutions = workflowExecutionService.listExecutions(pageRequest,
-      //      false);
-      //
-      //      WorkflowExecution workflowExecution = null;
-      //
-      //      workflowExecution.getServiceExecutionSummaries().stream().filter();
-      return null;
-    }
-
-    private List<String> getCanaryNewHostNames(ExecutionContext context) {
-      CanaryWorkflowStandardParams canaryWorkflowStandardParams =
-          context.getContextElement(ContextElementType.STANDARD);
-      List<InfraNodeRequest> infraNodeRequests = canaryWorkflowStandardParams.getInfraNodeRequests();
-      logger.info("infraNodeRequests: {}", infraNodeRequests);
-      logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
-      final List<String> rv = new ArrayList<>();
-
-      for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
-        rv.add(instanceElement.getHostName());
-      }
-
-      return rv;
     }
   }
 }

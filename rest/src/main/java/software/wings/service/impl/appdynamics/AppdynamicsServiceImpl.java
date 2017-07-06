@@ -162,7 +162,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     long appdynamicsAppId = appDynamicsExecutionData.getAppDynamicsApplicationId();
     long tierId = appDynamicsExecutionData.getAppdynamicsTierId();
     List<String> btList = appDynamicsExecutionData.getBtNames();
-    List<String> newNodeNames = appDynamicsExecutionData.getCanaryNewHostNames();
+    Set<String> newNodeNames = appDynamicsExecutionData.getCanaryNewHostNames();
     long startTime = appDynamicsExecutionData.getStartTs();
     PageRequest.Builder amdrRequestBuilder = aPageRequest()
                                                  .addFilter("accountId", Operator.EQ, accountId)

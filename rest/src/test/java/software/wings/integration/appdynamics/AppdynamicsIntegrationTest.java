@@ -4,6 +4,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
@@ -506,7 +507,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                                        .withAppDynamicsApplicationId(appId)
                                        .withAppdynamicsTierId(tier.getId())
                                        .withBtNames(Arrays.asList(btName))
-                                       .withCanaryNewHostNames(Arrays.asList("beta"))
+                                       .withCanaryNewHostNames(Sets.newHashSet("beta"))
                                        .withStartTs(METRIC_VALUE_1.getStartTimeInMillis())
                                        .withEndTs(METRIC_VALUE_3.getStartTimeInMillis() + TimeUnit.MINUTES.toMillis(1))
                                        .withCorrelationId("correlation_id")
