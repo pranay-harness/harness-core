@@ -5,14 +5,11 @@ import com.google.common.math.Stats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.Threshold;
 import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
-import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
 import java.util.ArrayList;
@@ -22,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -34,10 +32,11 @@ public class MetricCalculator {
    * Generate the per-BT/per-metric data.
    * @param metricDefinitions A list of MetricDefinitions that are represented in the metric data.
    * @param data A Multimap of metric names to all of the data records for that name.
+   * @param newNodeNames
    * @return A Map of BT names to a map of metric names to metric data.
    */
   public static MetricSummary calculateMetrics(List<MetricDefinition> metricDefinitions,
-      ArrayListMultimap<String, AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
+      ArrayListMultimap<String, AppdynamicsMetricDataRecord> data, Set<String> newNodeNames) {
     if (data == null || data.keys() == null || data.values() == null || data.size() == 0) {
       return null;
     }
@@ -175,7 +174,7 @@ public class MetricCalculator {
    * @return A list of two lists; the first is a list of records for the old build, the second is the list for the new.
    */
   public static List<List<AppdynamicsMetricDataRecord>> splitDataIntoOldAndNew(
-      List<AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
+      List<AppdynamicsMetricDataRecord> data, Set<String> newNodeNames) {
     List<List<AppdynamicsMetricDataRecord>> output = new ArrayList<>();
     List<AppdynamicsMetricDataRecord> oldData = new ArrayList<>();
     List<AppdynamicsMetricDataRecord> newData = new ArrayList<>();

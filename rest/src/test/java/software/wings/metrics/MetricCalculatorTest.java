@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -145,7 +146,8 @@ public class MetricCalculatorTest {
     data.put("login", BT4_ART_RECORD_2);
     data.put("login", BT4_ART_RECORD_3);
     data.put("login", BT4_ART_RECORD_4);
-    MetricSummary output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
+    MetricSummary output =
+        MetricCalculator.calculateMetrics(metricDefinitions, data, Sets.newHashSet("node3", "node4"));
     assertEquals(ACCOUNT_ID, output.getAccountId());
     assertEquals(60000, output.getStartTimeMillis());
     assertEquals(180000, output.getEndTimeMillis());
@@ -177,7 +179,7 @@ public class MetricCalculatorTest {
 
     // with missing metric definition
     metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION);
-    output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
+    output = MetricCalculator.calculateMetrics(metricDefinitions, data, Sets.newHashSet("node3", "node4"));
     assertEquals(2, output.getBtMetricsMap().size());
     todolistMetrics = output.getBtMetricsMap().get("todolist");
     assertEquals(3, todolistMetrics.getMetricsMap().size());
@@ -201,7 +203,7 @@ public class MetricCalculatorTest {
     dataMerge.put("todolist", BT2_SLOW_CALL_RECORD_1);
     dataMerge.put("todolist", BT2_VERY_SLOW_CALL_RECORD_1);
     dataMerge.put("todolist", BT2_VERY_SLOW_CALL_RECORD_2);
-    output = MetricCalculator.calculateMetrics(metricDefinitions, dataMerge, Arrays.asList("node2"));
+    output = MetricCalculator.calculateMetrics(metricDefinitions, dataMerge, Sets.newHashSet("node2"));
     todolistMetrics = output.getBtMetricsMap().get("todolist");
     BucketData slowData = todolistMetrics.getMetricsMap().get(NUMBER_OF_SLOW_CALLS);
     assertEquals(25, slowData.getOldData().getValue(), 0.05);
@@ -330,7 +332,7 @@ public class MetricCalculatorTest {
         }
       }
     }
-    MetricSummary output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("alpha", "beta"));
+    MetricSummary output = MetricCalculator.calculateMetrics(metricDefinitions, data, Sets.newHashSet("alpha", "beta"));
     ObjectMapper mapper = new ObjectMapper();
     try {
       String b = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output);

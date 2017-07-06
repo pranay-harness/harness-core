@@ -10,6 +10,7 @@ import java.util.List;
 
 @Data
 public class SplunkMLAnalysisSummary {
+  private String query;
   private List<SplunkMLClusterSummary> controlClusters;
   private List<SplunkMLClusterSummary> testClusters;
   private List<SplunkMLClusterSummary> unknownClusters;
