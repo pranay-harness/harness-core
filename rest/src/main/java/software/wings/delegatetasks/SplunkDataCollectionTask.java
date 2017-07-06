@@ -23,7 +23,6 @@ import software.wings.time.WingsTimeUtils;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -39,7 +38,6 @@ import javax.inject.Inject;
  */
 public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<SplunkDataCollectionTaskResult> {
   public static final int DELAY_MINUTES = 2;
-  private static final SimpleDateFormat SPLUNK_START_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private final Object lockObject = new Object();
@@ -135,17 +133,17 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           JobArgs jobargs = new JobArgs();
           jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
 
-          final String startTime = SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime));
-          final String endTime =
-              SPLUNK_START_DATE_FORMATER.format(new Date(collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1));
-          jobargs.setEarliestTime(startTime);
-          jobargs.setLatestTime(endTime);
+          jobargs.setEarliestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(collectionStartTime)));
+          final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+          jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
 
           // A blocking search returns the job when the search is done
-          logger.info(
-              "triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + searchQuery);
+          logger.info("triggering splunk query startTime: " + collectionStartTime + " endTime: " + endTime
+              + " query: " + searchQuery);
           Job job = splunkService.getJobs().create(searchQuery, jobargs);
-          logger.info("splunk query done. Num of events: " + job.getEventCount());
+          logger.info("splunk query done. Num of events: " + job.getEventCount()
+              + " application: " + dataCollectionInfo.getApplicationId()
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId());
 
           JobResultsArgs resultsArgs = new JobResultsArgs();
           resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
@@ -167,7 +165,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           resultsReader.close();
           splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
               dataCollectionInfo.getStateExecutionId(), logElements);
-          logger.info("sent splunk search records to server. Num of events: " + job.getEventCount());
+          logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
+              + " application: " + dataCollectionInfo.getApplicationId()
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
         }
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;

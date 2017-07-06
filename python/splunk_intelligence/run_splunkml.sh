@@ -3,16 +3,22 @@
 BASEDIR=$(dirname "$0")
 cd $BASEDIR
 
-if [ ! -d ".pyenv" ]; then
-   easy_install virtualenv
-   make init
+env="x"${SPLUNKML_ENVIROMENT}
+echo $env
+if [ $env == "x" ]; then
+    if [ ! -d ".pyenv" ]; then
+       echo 'i am here 1'
+       easy_install virtualenv
+       make init
+    fi
+    make dist
 fi
 
-make dist
 echo $@
 #Running locally
 if [ -d "dist" ]; then
     source .pyenv/bin/activate; cd dist/splunk_pyml; python SplunkIntelOptimized.pyc $@
 else
+    cd $SPLUNKML_ROOT
     source .pyenv/bin/activate; python SplunkIntelOptimized.pyc $@
 fi

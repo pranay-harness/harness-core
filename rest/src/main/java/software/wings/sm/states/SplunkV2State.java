@@ -69,6 +69,7 @@ public class SplunkV2State extends State {
   private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";
+  private static final int PYTHON_JOB_RETRIES = 3;
 
   @EnumData(enumDataProvider = SplunkSettingProvider.class)
   @Attributes(required = true, title = "Splunk Server")
@@ -273,24 +274,31 @@ public class SplunkV2State extends State {
         command.add("--log_analysis_get_url");
         command.add(logAnalysisGetUrl);
 
-        final ProcessResult result =
-            new ProcessExecutor(command)
-                .redirectOutput(
-                    Slf4jStream
-                        .of(LoggerFactory.getLogger(getClass().getName() + "." + context.getStateExecutionInstanceId()))
-                        .asInfo())
-                .execute();
+        for (int i = 0; i < PYTHON_JOB_RETRIES; i++) {
+          final ProcessResult result = new ProcessExecutor(command)
+                                           .redirectOutput(Slf4jStream
+                                                               .of(LoggerFactory.getLogger(getClass().getName() + "."
+                                                                   + context.getStateExecutionInstanceId()))
+                                                               .asInfo())
+                                           .execute();
 
-        if (result.getExitValue() != 0) {
-          logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
-              + logCollectionMinute);
-        } else {
-          splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
+          if (result.getExitValue() != 0) {
+            logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+                + logCollectionMinute + " trial: " + (i + 1));
+            Thread.sleep(2000);
+          } else {
+            splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
+            logCollectionMinute++;
+            logger.info("Splunk analysis done for " + context.getStateExecutionInstanceId() + "for minute "
+                + logCollectionMinute);
+            return;
+          }
         }
 
-        logCollectionMinute++;
       } catch (Exception e) {
-        logger.error("error fetching splunk logs", e);
+        logger.error(
+            "Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute " + logCollectionMinute,
+            e);
       }
     }
 
