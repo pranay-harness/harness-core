@@ -159,7 +159,7 @@ echo " "
 echo -e "${r"${bold}"}Starting tail log verification${r"${normal}"}"
 
 #Wait for tail outputs.
-TAIL_TIMEOUT=120
+TAIL_TIMEOUT=300
 TAIL_COUNT=${tailPatterns?size}
 while [ "$TAIL_TIMEOUT" -gt 0 -a "$TAIL_COUNT" -gt 0 ]
 do
