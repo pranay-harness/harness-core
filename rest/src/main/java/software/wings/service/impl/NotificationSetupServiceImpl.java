@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Base;
@@ -120,23 +121,21 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                                .addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION)
                                .build())
             .getResponse();
-    List<Workflow> inUse = workflows.stream()
-                               .filter(workflow
-                                   -> workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow
-                                       && ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
-                                              .getNotificationRules()
-                                              .stream()
-                                              .anyMatch(notificationRule
-                                                  -> notificationRule.getNotificationGroups().stream().anyMatch(
-                                                      ng -> ng.getUuid().equals(notificationGroupId))))
-                               .collect(Collectors.toList());
+    List<String> inUse = workflows.stream()
+                             .filter(workflow
+                                 -> workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow
+                                     && ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
+                                            .getNotificationRules()
+                                            .stream()
+                                            .anyMatch(notificationRule
+                                                -> notificationRule.getNotificationGroups().stream().anyMatch(
+                                                    ng -> ng.getUuid().equals(notificationGroupId))))
+                             .map(Workflow::getName)
+                             .collect(Collectors.toList());
     if (!inUse.isEmpty()) {
-      String message =
-          "'" + notificationGroup.getName() + "' is still in use by workflow '" + inUse.get(0).getName() + "'";
-      if (inUse.size() > 1) {
-        message += " and " + (inUse.size() - 1) + " other" + (inUse.size() > 2 ? "s" : "");
-      }
-      throw new WingsException(INVALID_REQUEST, "message", message);
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("'%s' is in use by %s workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
+              inUse.size() == 1 ? "" : "s", Joiner.on("', '").join(inUse)));
     }
     return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }
