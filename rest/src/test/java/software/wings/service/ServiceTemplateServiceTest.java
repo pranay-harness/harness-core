@@ -14,7 +14,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -38,7 +38,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -46,9 +45,10 @@ import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -68,9 +68,11 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private HostService hostService;
-  @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private ServiceVariableService serviceVariableService;
+
   @Inject @InjectMocks private ServiceTemplateService templateService;
   @Spy @InjectMocks private ServiceTemplateService spyTemplateService = new ServiceTemplateServiceImpl();
   private ServiceTemplate.Builder builder = aServiceTemplate()
@@ -101,16 +103,16 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListSavedServiceTemplates() {
-    PageResponse<ServiceTemplate> pageResponse = new PageResponse<>();
-    Host host = Host.Builder.aHost().withUuid(HOST_ID).build();
+    PageResponse<ServiceTemplate> pageResponse =
+        PageResponse.Builder.aPageResponse()
+            .withResponse(asList(builder.but().withServiceId(SERVICE_ID).build()))
+            .build();
 
-    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageResponse.setResponse(asList(builder.but().withServiceId(SERVICE_ID).build()));
+    when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
+    when(infrastructureMappingService.list(any(PageRequest.class)))
+        .thenReturn(PageResponse.Builder.aPageResponse().build());
 
-    when(wingsPersistence.query(ServiceTemplate.class, pageRequest)).thenReturn(pageResponse);
-    when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(asList(host)).build());
-
-    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest, true);
+    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(aPageRequest().build(), true);
 
     ServiceTemplate expectedServiceTemplate = builder.but().withServiceId(SERVICE_ID).build();
 
@@ -177,6 +179,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
+    when(infrastructureMappingService.list(any(PageRequest.class)))
+        .thenReturn(PageResponse.Builder.aPageResponse().build());
     templateService.update(template);
     verify(wingsPersistence)
         .updateFields(
@@ -197,7 +201,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(end).equal(ENV_ID);
     verify(query).field(ID_KEY);
     verify(end).equal(TEMPLATE_ID);
-    verify(serviceInstanceService).deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(infrastructureMappingService).deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(configService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
+    verify(serviceVariableService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
   }
 
   /**

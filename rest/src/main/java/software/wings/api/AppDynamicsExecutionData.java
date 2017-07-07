@@ -7,6 +7,7 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -17,7 +18,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
   private String appDynamicsConfigId;
   private long appDynamicsApplicationId;
   private long appdynamicsTierId;
-  private List<String> canaryNewHostNames;
+  private Set<String> canaryNewHostNames;
   private List<String> btNames;
 
   public String getAppDynamicsConfigId() {
@@ -60,11 +61,11 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
-  public List<String> getCanaryNewHostNames() {
+  public Set<String> getCanaryNewHostNames() {
     return canaryNewHostNames;
   }
 
-  public void setCanaryNewHostNames(List<String> canaryNewHostNames) {
+  public void setCanaryNewHostNames(Set<String> canaryNewHostNames) {
     this.canaryNewHostNames = canaryNewHostNames;
   }
 
@@ -170,7 +171,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     private Long endTs;
     private ExecutionStatus status;
     private String errorMsg;
-    private List<String> canaryNewHostNames;
+    private Set<String> canaryNewHostNames;
     private List<String> btNames;
 
     private Builder() {}
@@ -209,7 +210,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withCanaryNewHostNames(List<String> canaryNewHostNames) {
+    public Builder withCanaryNewHostNames(Set<String> canaryNewHostNames) {
       this.canaryNewHostNames = canaryNewHostNames;
       return this;
     }

@@ -16,6 +16,7 @@ import net.redhogs.cronparser.CronExpressionDescriptor;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -239,10 +240,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private String getCronDescription(String cronExpression) {
     try {
-      return CronExpressionDescriptor.getDescription(
+      String description = CronExpressionDescriptor.getDescription(
           DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
+      return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (ParseException e) {
-      logger.error("Error in translating corn expression " + cronExpression);
+      logger.error("Error parsing cron expression: " + cronExpression);
       return cronExpression;
     }
   }
@@ -356,6 +358,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
+    // Service service = serviceResourceService.get(appId, serviceId);
+    // List<Stencil> stencils = stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId,
+    // serviceId);
+    // stencils.forEach(stencil -> ((OverridingArtifactStreamDescriptor)
+    // stencil).setArtifactType(service.getArtifactType()));
     return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
   }
 
@@ -418,11 +425,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name());
+      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name(),
+          ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-          ArtifactStreamType.NEXUS.name());
+          ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(),
+          ArtifactStreamType.ARTIFACTORY.name());
     }
   }
 

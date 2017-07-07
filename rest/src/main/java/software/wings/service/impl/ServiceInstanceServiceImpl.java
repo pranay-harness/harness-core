@@ -174,4 +174,10 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                 .field("infraMappingId")
                                 .equal(infraMappingId));
   }
+
+  @Override
+  public void deleteByHost(String appId, String hostId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ServiceInstance.class).field("appId").equal(appId).field("hostId").equal(hostId));
+  }
 }

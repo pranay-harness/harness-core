@@ -5,6 +5,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -118,7 +119,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (artifactStream.isMetadataOnly()) {
       return READY;
     }
-    return DOCKER.name().equals(artifactStream.getArtifactStreamType())
+    return (DOCKER.name().equals(artifactStream.getArtifactStreamType())
+               || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType()))
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
         : QUEUED;
   }

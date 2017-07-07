@@ -41,6 +41,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
     if (new File(Constants.MAINTENANCE).exists()) {
+      logger.info("In maintenance mode, responding RESOURCE_NOT_FOUND for load balancer health check.");
       throw new WingsException(ErrorCode.RESOURCE_NOT_FOUND);
     }
     return wingsPersistence.query(EntityVersionCollection.class, pageRequest);

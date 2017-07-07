@@ -123,7 +123,7 @@ public interface HostService {
    *
    * @param appId          the app id
    * @param infraMappingId the infra mapping id
-   * @param publicDns       the public dns
+   * @param publicDns      the public dns
    */
   void deleteByPublicDns(String appId, String infraMappingId, String publicDns);
 
@@ -143,4 +143,13 @@ public interface HostService {
    * @param infraMappingId the infra mapping id
    */
   void deleteByInfraMappingId(String appId, String infraMappingId);
+
+  /**
+   * Delete by service.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceTemplateId the service template id
+   */
+  void deleteByService(String appId, String envId, String serviceTemplateId);
 }

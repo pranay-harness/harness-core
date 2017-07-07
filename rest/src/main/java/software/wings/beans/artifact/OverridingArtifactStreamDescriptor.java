@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
+import software.wings.utils.ArtifactType;
 
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ public class OverridingArtifactStreamDescriptor
   private ArtifactStreamTypeDescriptor artifactStreamTypeDescriptor;
   private Optional<String> overridingName = Optional.empty();
   private Optional<JsonNode> overridingJsonSchema = Optional.empty();
+
+  private ArtifactType artifactType;
 
   public OverridingArtifactStreamDescriptor(ArtifactStreamTypeDescriptor artifactStreamTypeDescriptor) {
     this.artifactStreamTypeDescriptor = artifactStreamTypeDescriptor;
@@ -91,5 +94,13 @@ public class OverridingArtifactStreamDescriptor
   public Integer getDisplayOrder() {
     return artifactStreamTypeDescriptor == null ? DEFAULT_DISPLAY_ORDER
                                                 : artifactStreamTypeDescriptor.getDisplayOrder();
+  }
+
+  public ArtifactType getArtifactType() {
+    return artifactType;
+  }
+
+  public void setArtifactType(ArtifactType artifactType) {
+    this.artifactType = artifactType;
   }
 }

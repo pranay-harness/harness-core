@@ -2,16 +2,19 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -27,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -44,15 +48,19 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig.Builder;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.HostService;
@@ -61,6 +69,7 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
@@ -84,6 +93,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Mock private Query<InfrastructureMapping> query;
   @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
+  @Mock private WorkflowService workflowService;
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
@@ -276,6 +286,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
     when(wingsPersistence.delete(physicalInfrastructureMapping)).thenReturn(true);
+    when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
     infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID);
 
@@ -283,6 +294,40 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(wingsPersistence).delete(physicalInfrastructureMapping);
     verify(staticInfrastructureProvider).deleteHostByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
     verify(serviceInstanceService).deleteByInfraMappingId(APP_ID, INFRA_MAPPING_ID);
+  }
+
+  @Test
+  public void shouldThrowExceptionOnReferencedInfraMappingDelete() {
+    PhysicalInfrastructureMapping physicalInfrastructureMapping =
+        aPhysicalInfrastructureMapping()
+            .withUuid(INFRA_MAPPING_ID)
+            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+            .withComputeProviderSettingId(SETTING_ID)
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+            .withUuid(INFRA_MAPPING_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withHostNames(asList(HOST_NAME))
+            .build();
+
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(physicalInfrastructureMapping);
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withWorkflowPhaseIdMap(ImmutableMap.of(
+                        "PHASE_ID", WorkflowPhaseBuilder.aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).build()))
+                    .build())
+            .build();
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(workflow)).build());
+
+    assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
   @Test

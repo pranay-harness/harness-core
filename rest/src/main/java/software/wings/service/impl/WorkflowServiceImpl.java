@@ -567,6 +567,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
   }
 
+  @Override
+  public void deleteWorkflowByEnvironment(String appId, String envId) {
+    wingsPersistence.createQuery(Workflow.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .asKeyList()
+        .forEach(key -> deleteWorkflow(appId, key.getId().toString()));
+  }
+
   private Workflow createDefaultSimpleWorkflow(String appId, String envId) {
     Workflow workflow = new Workflow();
     workflow.setName(Constants.SIMPLE_ORCHESTRATION_NAME);

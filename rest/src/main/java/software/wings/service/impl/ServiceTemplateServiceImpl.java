@@ -30,6 +30,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -63,6 +64,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private HostService hostService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
@@ -249,9 +251,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                                   .field(ID_KEY)
                                                   .equal(serviceTemplateId));
     if (deleted) {
-      executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
-      configService.deleteByTemplateId(appId, serviceTemplateId);
-      serviceVariableService.deleteByTemplateId(appId, serviceTemplateId);
+      executorService.submit(
+          () -> infrastructureMappingService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+      executorService.submit(() -> configService.deleteByTemplateId(appId, serviceTemplateId));
+      executorService.submit(() -> serviceVariableService.deleteByTemplateId(appId, serviceTemplateId));
     }
   }
 

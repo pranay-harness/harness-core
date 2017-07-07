@@ -37,6 +37,8 @@ import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.SplunkMetricStoreService;
+import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
@@ -46,6 +48,7 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
+import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
@@ -56,6 +59,7 @@ import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
+import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.DockerBuildService;
@@ -116,6 +120,8 @@ public class DelegateModule extends AbstractModule {
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
     bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
+    bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
+    bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

@@ -2,9 +2,9 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -14,6 +14,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -34,7 +35,9 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Notification;
+import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
@@ -42,10 +45,11 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import javax.inject.Inject;
@@ -63,9 +67,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private AppService appService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private NotificationService notificationService;
+  @Mock private PipelineService pipelineService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -174,14 +178,29 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteEnvironment() {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withUuid(ENV_ID).withName("PROD").build());
-    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
+    when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     environmentService.delete(APP_ID, ENV_ID);
     InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
-    inOrder.verify(wingsPersistence).delete(any(Query.class));
+    inOrder.verify(wingsPersistence).delete(any(Environment.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any());
+  }
+
+  @Test
+  public void shouldThrowExceptionOnReferencedEnvironmentDelete() {
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class)))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(Pipeline.Builder.aPipeline().withName("PIPELINE_NAME").build()))
+                        .build());
+    assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
   /**
@@ -189,12 +208,17 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteByApp() {
-    when(query.asList()).thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build()));
-    doNothing().when(spyEnvService).delete(APP_ID, ENV_ID);
-    spyEnvService.deleteByApp(APP_ID);
+    when(query.asList())
+        .thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build()));
+    when(wingsPersistence.delete(any(Environment.class))).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    environmentService.deleteByApp(APP_ID);
+    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
+    inOrder.verify(wingsPersistence).delete(any(Environment.class));
+    inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any());
     verify(query).field("appId");
     verify(end).equal(APP_ID);
-    verify(spyEnvService).delete(APP_ID, ENV_ID);
   }
 
   /**

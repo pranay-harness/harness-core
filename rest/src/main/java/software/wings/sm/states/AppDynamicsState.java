@@ -10,9 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.AppdynamicsAnalysisResponse;
-import software.wings.api.CanaryWorkflowStandardParams;
-import software.wings.api.InfraNodeRequest;
-import software.wings.api.InstanceElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
@@ -36,7 +33,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
@@ -48,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,7 +54,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 8/4/16.
  */
-public class AppDynamicsState extends State {
+public class AppDynamicsState extends AbstractAnalysisState {
   @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
@@ -171,7 +168,7 @@ public class AppDynamicsState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
     triggerAppdynamicsDataCollection(context);
-    final List<String> canaryNewHostNames = getCanaryNewHostNames(context);
+    final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
         AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
@@ -247,20 +244,6 @@ public class AppDynamicsState extends State {
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
-  }
-
-  private List<String> getCanaryNewHostNames(ExecutionContext context) {
-    CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    List<InfraNodeRequest> infraNodeRequests = canaryWorkflowStandardParams.getInfraNodeRequests();
-    logger.info("infraNodeRequests: {}", infraNodeRequests);
-    logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
-    final List<String> rv = new ArrayList<>();
-
-    for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
-      rv.add(instanceElement.getHostName());
-    }
-
-    return rv;
   }
 
   private List<String> getBtNames() {

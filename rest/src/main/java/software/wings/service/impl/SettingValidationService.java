@@ -10,6 +10,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -40,7 +41,8 @@ public class SettingValidationService {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
-        || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig) {
+        || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
+        || settingValue instanceof ArtifactoryConfig) {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
       appdynamicsService.validateConfig(settingAttribute);

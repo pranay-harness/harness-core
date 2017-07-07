@@ -268,6 +268,8 @@ public interface Constants {
 
   String DELEGATE_DIR = "harness-delegate";
 
+  String DELEGATE_NAME = "Harness delegate";
+
   /**
    * The constant DEFAULT_SYNC_CALL_TIMEOUT.
    */
