@@ -128,6 +128,11 @@ public class SplunkServiceImpl implements SplunkService {
             .equal(applicationId);
     SplunkLogMLAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
     final SplunkMLAnalysisSummary analysisSummary = new SplunkMLAnalysisSummary();
+
+    if (analysisRecord == null) {
+      return analysisSummary;
+    }
+
     analysisSummary.setControlClusters(computeCluster(analysisRecord.getControl_clusters()));
     analysisSummary.setTestClusters(computeCluster(analysisRecord.getTest_clusters()));
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
