@@ -109,6 +109,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             String.format("Pod [%s] failed to start. Current status: %s. Reason(s): [%s]", podName, phase, message),
             Log.LogLevel.ERROR);
       }
+      containerInfos.add(containerInfo);
     }
     if (hasErrors) {
       logger.error("Completed resize operation with errors");
