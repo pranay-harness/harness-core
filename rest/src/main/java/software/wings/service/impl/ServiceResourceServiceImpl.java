@@ -371,13 +371,33 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     // Ensure service is safe to delete
+    ensureServiceSafeToDelete(service);
 
+    // safe to delete
+    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
+    if (deleted) {
+      executorService.submit(() -> deleteCommand(service));
+      executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
+      executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
+      executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
+      executorService.submit(() -> serviceVariableService.deleteByEntityId(appId, serviceId));
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(service.getAppId())
+              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+              .withNotificationTemplateVariables(
+                  ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
+              .build());
+    }
+  }
+
+  private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows =
-        workflowService.listWorkflows(aPageRequest().addFilter("appId", EQ, appId).build()).getResponse();
+        workflowService.listWorkflows(aPageRequest().addFilter("appId", EQ, service.getAppId()).build()).getResponse();
 
     List<Workflow> serviceWorkflows =
         workflows.stream()
-            .filter(wfl -> wfl.getServices().stream().anyMatch(s -> serviceId.equals(s.getUuid())))
+            .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
             .collect(Collectors.toList());
 
     if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
@@ -386,24 +406,39 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           "Service:[%s] couldn't be deleted. Remove Service reference from following workflows [" + workflowNames + "]",
           service.getName());
       throw new WingsException(INVALID_REQUEST, "message", message);
-    } else {
-      // safe to delete
-      boolean deleted = wingsPersistence.delete(Service.class, serviceId);
-      if (deleted) {
-        executorService.submit(() -> {
-          notificationService.sendNotificationAsync(
-              anInformationNotification()
-                  .withAppId(service.getAppId())
-                  .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-                  .withNotificationTemplateVariables(
-                      ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
-                  .build());
-          serviceTemplateService.deleteByService(appId, serviceId);
-          artifactStreamService.deleteByService(appId, serviceId);
-          configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
-          serviceVariableService.deleteByEntityId(appId, serviceId);
-        });
-      }
+    }
+  }
+
+  private void deleteCommand(Service service) {
+    service.getServiceCommands().forEach(serviceCommand
+        -> deleteCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid()));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Service deleteCommand(String appId, String serviceId, String commandId) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Validator.notNullCheck("service", service);
+
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
+        wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", commandId));
+
+    deleteServiceCommand(appId, commandId);
+    return get(appId, serviceId);
+  }
+
+  private void deleteServiceCommand(String appId, String commandId) {
+    boolean serviceCommandDeleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(ServiceCommand.class).field("appId").equal(appId).field(ID_KEY).equal(commandId));
+    if (serviceCommandDeleted) {
+      wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
+                                  .field("appId")
+                                  .equal(appId)
+                                  .field("originEntityId")
+                                  .equal(commandId));
     }
   }
 
@@ -494,21 +529,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.getServiceCommands().add(serviceCommand);
 
     wingsPersistence.save(service);
-    return get(appId, serviceId);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Service deleteCommand(String appId, String serviceId, String commandId) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
-
-    wingsPersistence.update(
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
-        wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", commandId));
-
     return get(appId, serviceId);
   }
 
