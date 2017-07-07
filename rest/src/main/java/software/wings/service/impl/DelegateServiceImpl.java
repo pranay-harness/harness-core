@@ -381,6 +381,7 @@ public class DelegateServiceImpl implements DelegateService {
             .map(delegateKey -> delegateKey.getId().toString())
             .collect(Collectors.joining(", ")));
     if (availableDelegates.size() == 0) {
+      logger.warn("No delegate available to execute the task for the accountId: {}", task.getAccountId());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
   }
