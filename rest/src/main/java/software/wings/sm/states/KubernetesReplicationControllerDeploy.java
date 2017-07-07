@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +30,8 @@ import javax.annotation.Nullable;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerDeploy extends ContainerServiceDeploy {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
+
   @Attributes(title = "Number of instances") private int instanceCount;
 
   @Attributes(title = "Command")
@@ -83,8 +87,10 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
                 .filter(
                     c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
                 .collect(Collectors.toList())) {
-          if (getRevisionFromControllerName(controller.getMetadata().getName()) < minRevisionToKeep) {
-            kubernetesContainerService.deleteController(kubernetesConfig, controller.getMetadata().getName());
+          String controllerName = controller.getMetadata().getName();
+          if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
+            logger.info("Deleting old version: " + controllerName);
+            kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
           }
         }
       }
