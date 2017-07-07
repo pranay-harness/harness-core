@@ -39,6 +39,8 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -307,14 +309,16 @@ public class EcsServiceSetup extends State {
   private String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-    if (!(artifactStream instanceof DockerArtifactStream)) {
+    if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
+      return dockerArtifactStream.getImageName();
+    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
+      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+      return artifactoryArtifactStream.getImageName();
+    } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
     }
-
-    DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-
-    return dockerArtifactStream.getImageName();
   }
 
   private ClusterElement getClusterElement(ExecutionContext context) {
