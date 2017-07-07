@@ -1,7 +1,6 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -15,55 +14,85 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * The Class JenkinsArtifactStream.
+ * Created by sgurubelli on 6/21/17.
  */
-@JsonTypeName("JENKINS")
-public class JenkinsArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
+@JsonTypeName("ARTIFACTORYDOCKER")
+public class ArtifactoryDockerArtifactStream extends ArtifactStream {
+  @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
 
-  @UIOrder(5)
-  @Attributes(title = "Meta-data Only (Artifact download not required)")
-  public boolean getMetadataOnly() {
-    return super.isMetadataOnly();
+  @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String groupId;
+
+  @SchemaIgnore @Attributes(title = "Image Name", required = true) private String imageName;
+
+  public ArtifactoryDockerArtifactStream() {
+    super(ArtifactStreamType.ARTIFACTORY.name());
+    super.setAutoApproveForProduction(true);
+    super.setAutoDownload(true);
   }
 
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
-
-  /**
-   * Instantiates a new jenkins artifact source.
-   */
-  public JenkinsArtifactStream() {
-    super(ArtifactStreamType.JENKINS.name());
-  }
-
-  /**
-   * Gets artifact display name.
-   *
-   * @param buildNo the build no
-   * @return the artifact display name
-   */
-  @Override
   @SchemaIgnore
+  @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getJobname(), buildNo, getDateFormat().format(new Date()));
+    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
-   * Gets jobname.
-   *
-   * @return the jobname
+   * Get Repository
+   * @return the Repository
    */
   public String getJobname() {
     return jobname;
   }
 
   /**
-   * Sets jobname.
-   *
-   * @param jobname the jobname
+   * Set repository
+   * @param jobname
    */
   public void setJobname(String jobname) {
     this.jobname = jobname;
+  }
+  /**
+   * Gets image name.
+   *
+   * @return the image name
+   */
+  @SchemaIgnore
+  public String getImageName() {
+    return imageName;
+  }
+
+  /**
+   * Sets image name.
+   *
+   * @param imageName the image name
+   */
+  public void setImageName(String imageName) {
+    this.imageName = imageName;
+  }
+
+  /**
+   * @return groupId
+   */
+  public String getGroupId() {
+    return groupId;
+  }
+
+  /**
+   * Set Group Id
+   */
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+    this.imageName = groupId;
+  }
+
+  @SchemaIgnore
+  @Override
+  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+    return anArtifactStreamAttributes()
+        .withArtifactStreamType(getArtifactStreamType())
+        .withJobName(jobname)
+        .withImageName(imageName)
+        .build();
   }
 
   @Attributes(title = "Source Type")
@@ -78,44 +107,15 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  /*@UIOrder(7)
-  @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
-    return super.isAutoDownload();
-  }*/
-
-  @UIOrder(7)
+  @UIOrder(5)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 
   @Override
-  @SchemaIgnore
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
-  }
-
-  /**
-   * Gets artifact paths.
-   *
-   * @return the artifact paths
-   */
-  public List<String> getArtifactPaths() {
-    return artifactPaths;
-  }
-
-  /**
-   * Sets artifact paths.
-   *
-   * @param artifactPaths the artifact paths
-   */
-  public void setArtifactPaths(List<String> artifactPaths) {
-    this.artifactPaths = artifactPaths;
-  }
-
-  public JenkinsArtifactStream clone() {
-    return aJenkinsArtifactStream()
+  public ArtifactStream clone() {
+    return ArtifactoryDockerArtifactStream.Builder.anArtifactoryDockerArtifactStream()
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
@@ -123,8 +123,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
-        .withArtifactPaths(getArtifactPaths())
-        .withMetadataOnly(getMetadataOnly())
         .build();
   }
 
@@ -132,8 +130,9 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * The type Builder.
    */
   public static final class Builder {
+    private String groupId;
+    private String imageName;
     private String jobname;
-    private List<String> artifactPaths;
     private String sourceName;
     private String settingId;
     private String serviceId;
@@ -154,8 +153,8 @@ public class JenkinsArtifactStream extends ArtifactStream {
      *
      * @return the builder
      */
-    public static Builder aJenkinsArtifactStream() {
-      return new Builder();
+    public static Builder anArtifactoryDockerArtifactStream() {
+      return new ArtifactoryDockerArtifactStream.Builder();
     }
 
     /**
@@ -170,13 +169,13 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With artifact paths builder.
+     * With imageName builder.
      *
-     * @param artifactPaths the artifact paths
+     * @param imageName the imageName
      * @return the builder
      */
-    public Builder withArtifactPaths(List<String> artifactPaths) {
-      this.artifactPaths = artifactPaths;
+    public Builder withImageName(String imageName) {
+      this.imageName = imageName;
       return this;
     }
 
@@ -230,7 +229,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param appId the app id
      * @return the builder
      */
-    public Builder withAppId(String appId) {
+    public ArtifactoryDockerArtifactStream.Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -241,7 +240,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public ArtifactoryDockerArtifactStream.Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -252,7 +251,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param createdAt the created at
      * @return the builder
      */
-    public Builder withCreatedAt(long createdAt) {
+    public ArtifactoryDockerArtifactStream.Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -263,7 +262,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public ArtifactoryDockerArtifactStream.Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -274,7 +273,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param lastUpdatedAt the last updated at
      * @return the builder
      */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public ArtifactoryDockerArtifactStream.Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -285,7 +284,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param autoApproveForProduction the auto approve for production
      * @return the builder
      */
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+    public ArtifactoryDockerArtifactStream.Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
       this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
@@ -293,7 +292,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     /**
      *
      */
-    public Builder withMetadataOnly(boolean metadataOnly) {
+    public ArtifactoryDockerArtifactStream.Builder withMetadataOnly(boolean metadataOnly) {
       this.metadataOnly = metadataOnly;
       return this;
     }
@@ -304,7 +303,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param streamActions the stream actions
      * @return the builder
      */
-    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
+    public ArtifactoryDockerArtifactStream.Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
       this.streamActions = streamActions;
       return this;
     }
@@ -314,11 +313,11 @@ public class JenkinsArtifactStream extends ArtifactStream {
      *
      * @return the builder
      */
-    public Builder but() {
-      return aJenkinsArtifactStream()
+    public ArtifactoryDockerArtifactStream.Builder but() {
+      return anArtifactoryDockerArtifactStream()
           .withJobname(jobname)
-          .withArtifactPaths(artifactPaths)
           .withSourceName(sourceName)
+          .withImageName(imageName)
           .withSettingId(settingId)
           .withServiceId(serviceId)
           .withUuid(uuid)
@@ -328,32 +327,31 @@ public class JenkinsArtifactStream extends ArtifactStream {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
-          .withMetadataOnly(metadataOnly)
-          .withStreamActions(streamActions);
+          .withStreamActions(streamActions)
+          .withMetadataOnly(metadataOnly);
     }
 
     /**
-     * Build jenkins artifact stream.
-     *
-     * @return the jenkins artifact stream
+     * Artifactory Artifact Stream
      */
-    public JenkinsArtifactStream build() {
-      JenkinsArtifactStream jenkinsArtifactStream = new JenkinsArtifactStream();
-      jenkinsArtifactStream.setJobname(jobname);
-      jenkinsArtifactStream.setArtifactPaths(artifactPaths);
-      jenkinsArtifactStream.setSourceName(sourceName);
-      jenkinsArtifactStream.setSettingId(settingId);
-      jenkinsArtifactStream.setServiceId(serviceId);
-      jenkinsArtifactStream.setUuid(uuid);
-      jenkinsArtifactStream.setAppId(appId);
-      jenkinsArtifactStream.setCreatedBy(createdBy);
-      jenkinsArtifactStream.setCreatedAt(createdAt);
-      jenkinsArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      jenkinsArtifactStream.setMetadataOnly(metadataOnly);
-      jenkinsArtifactStream.setStreamActions(streamActions);
-      return jenkinsArtifactStream;
+    public ArtifactoryDockerArtifactStream build() {
+      ArtifactoryDockerArtifactStream artifactoryDockerArtifactStream = new ArtifactoryDockerArtifactStream();
+      artifactoryDockerArtifactStream.setJobname(jobname);
+      artifactoryDockerArtifactStream.setGroupId(groupId);
+      artifactoryDockerArtifactStream.setSourceName(sourceName);
+      artifactoryDockerArtifactStream.setSettingId(settingId);
+      artifactoryDockerArtifactStream.setServiceId(serviceId);
+      artifactoryDockerArtifactStream.setUuid(uuid);
+      artifactoryDockerArtifactStream.setAppId(appId);
+      artifactoryDockerArtifactStream.setCreatedBy(createdBy);
+      artifactoryDockerArtifactStream.setCreatedAt(createdAt);
+      artifactoryDockerArtifactStream.setLastUpdatedBy(lastUpdatedBy);
+      artifactoryDockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      artifactoryDockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      artifactoryDockerArtifactStream.setStreamActions(streamActions);
+      artifactoryDockerArtifactStream.setMetadataOnly(metadataOnly);
+      artifactoryDockerArtifactStream.setImageName(imageName);
+      return artifactoryDockerArtifactStream;
     }
   }
 }
