@@ -17,6 +17,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 
@@ -50,7 +51,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("appId", Operator.EQ, context.getAppId())
             .addFilter("workflowId", Operator.EQ, executionDetails.getWorkflowId())
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
-            .addFilter("status", Operator.EQ, "SUCCESS")
+            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
             .addOrder("createdAt", OrderType.DESC)
             .withLimit("1")
             .build();

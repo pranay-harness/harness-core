@@ -126,7 +126,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
 
       try {
         for (String query : dataCollectionInfo.getQueries()) {
-          final String searchQuery = "search " + query + " | bin _time span=1m | cluster showcount=t labelonly=t"
+          final String searchQuery = "search " + query + " | bin _time span=1m | cluster t=0.95 showcount=t labelonly=t"
               + "| table _time, _raw,cluster_label, host | "
               + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
 
