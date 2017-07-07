@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.artifactory;
 
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClient;
@@ -13,7 +15,10 @@ import org.jfrog.artifactory.client.model.Repository;
 import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.HashMap;
@@ -72,34 +77,52 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           repositories.put(repository.get("key").toString(), repository.get("key").toString());
         }
       }
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      System.out.print("Hello");
+    } catch (IllegalArgumentException e) {
+      logger.error("Error occurred while retrieving Repositories from Artifactory server {} ",
+          artifactoryConfig.getArtifactoryUrl(), e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving Repositories from Artifactory server {} ",
+          artifactoryConfig.getArtifactoryUrl(), e);
+      if (e instanceof HttpResponseException) {
+        HttpResponseException httpResponseException = (HttpResponseException) e;
+        if (httpResponseException.getStatusCode() == 401) {
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+        }
+      }
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
     return repositories;
+  }
 
-    /* Map<String, String> repositories = new HashMap<>();
-     List<LightweightRepository> repoList =
-     getArtifactoryClient(artifactoryConfig).repositories().list(RepositoryTypeImpl.VIRTUAL); for (LightweightRepository
-     lightweightRepository : repoList) { Repository repo =
-     getArtifactoryClient(artifactoryConfig).repository(lightweightRepository.getKey()).get(); RepositorySettings
-     settings = repo.getRepositorySettings(); PackageType packageType = settings.getPackageType(); if
-     (packageType.equals(PackageType.docker)) { repositories.put(lightweightRepository.getKey(),
-     lightweightRepository.getKey());
-       }
-     }
-     return repositories;*/
+  /**
+   * prepareResponseMessage
+   */
+  private ResponseMessage prepareResponseMessage(final ErrorCode errorCode, final String errorMsg) {
+    final ResponseMessage responseMessage = new ResponseMessage();
+    responseMessage.setCode(errorCode);
+    responseMessage.setErrorType(ERROR);
+    responseMessage.setMessage(errorMsg);
+    return responseMessage;
   }
 
   @Override
   public List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey) {
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
-    Repository repository = artifactory.repository(repoKey).get();
-    RepositorySettings settings = repository.getRepositorySettings();
-    PackageType packageType = settings.getPackageType();
-    if (packageType.equals(PackageType.docker)) {
+    try {
+      Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+      Repository repository = artifactory.repository(repoKey).get();
+      RepositorySettings settings = repository.getRepositorySettings();
+      PackageType packageType = settings.getPackageType();
+      if (packageType.equals(PackageType.docker)) {
+        return listDockerImages(artifactory, repoKey);
+      }
+
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving images  from Artifactory server {} ",
+          artifactoryConfig.getArtifactoryUrl(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
-    return listDockerImages(artifactory, repoKey);
+    return null;
   }
 
   public List<String> listDockerImages(Artifactory artifactory, String repoKey) {
@@ -127,6 +150,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   /**
    * Get Artifactory Client
+   *
    * @param artifactoryConfig
    * @return Artifactory returns artifactory client
    */
@@ -153,7 +177,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
                                               .withArtifactoryUrl(url)
                                               .withUsername("admin")
-                                              .withPassword("harness123!".toCharArray())
+                                              .withPassword("harness123ww!".toCharArray())
                                               .build();
     /* List<BuildDetails> buildDetails = new ArtifactoryServiceImpl().getBuilds(artifactoryConfig,
      "docker-local/wingsplugins/todolist", 1); for (BuildDetails buildDetail : buildDetails) { System.out.println("Build

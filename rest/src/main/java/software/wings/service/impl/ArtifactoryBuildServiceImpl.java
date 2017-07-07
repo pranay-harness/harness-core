@@ -1,10 +1,14 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
+import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
+import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactoryBuildService;
@@ -58,7 +62,14 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public boolean validateArtifactServer(ArtifactoryConfig config) {
-    return false;
+    if (!validUrl(config.getArtifactoryUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Artifactory URL must be a valid URL");
+    }
+    if (!connectableHttpUrl(config.getArtifactoryUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
+    }
+    return artifactoryService.getRepositories(config) != null;
   }
 
   @Override
