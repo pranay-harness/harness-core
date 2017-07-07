@@ -128,6 +128,26 @@ public class SplunkV2State extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing splunk state");
+    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
+    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
+      logger.error("Could not find control nodes to compare the data");
+      return anExecutionResponse()
+          .withAsync(false)
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Could not find control nodes to compare the data")
+          .build();
+    }
+
+    Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
+    if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
+      logger.error("Could not find control test nodes to compare the data");
+      return anExecutionResponse()
+          .withAsync(false)
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Could not find test nodes to compare the data")
+          .build();
+    }
+
     triggerSplunkDataCollection(context);
 
     final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
@@ -167,12 +187,13 @@ public class SplunkV2State extends AbstractAnalysisState {
         splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
 
-    if (analysisSummary.getUnknownClusters().size() > 0) {
+    if (analysisSummary != null && analysisSummary.getUnknownClusters() != null
+        && analysisSummary.getUnknownClusters().size() > 0) {
       logger.error("Found unknown events in log analysis. Marking it failed.");
       executionStatus = ExecutionStatus.FAILED;
     }
 
-    if (isUnexpectedFrequency(analysisSummary)) {
+    if (analysisSummary != null && isUnexpectedFrequency(analysisSummary)) {
       logger.error("Found unexpected frequencies in log analysis. Marking it failed.");
       executionStatus = ExecutionStatus.FAILED;
     }
@@ -185,6 +206,10 @@ public class SplunkV2State extends AbstractAnalysisState {
   }
 
   private boolean isUnexpectedFrequency(SplunkMLAnalysisSummary analysisSummary) {
+    if (analysisSummary.getTestClusters() == null) {
+      return false;
+    }
+
     for (SplunkMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
       if (clusterSummary.isUnexpectedFreq()) {
         return true;
