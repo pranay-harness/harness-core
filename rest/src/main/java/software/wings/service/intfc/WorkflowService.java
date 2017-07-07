@@ -150,6 +150,8 @@ public interface WorkflowService {
    */
   void deleteStateMachinesByApplication(String appId);
 
+  void deleteWorkflowByEnvironment(String appId, String uuid);
+
   /**
    * Stencil map map.
    *

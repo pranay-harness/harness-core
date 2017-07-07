@@ -57,9 +57,9 @@ public interface ServiceInstanceService {
   /**
    * Update host mappings.
    *
-   * @param template     the template
-   * @param infraMapping the infra mapping
-   * @param addedHosts   the added hosts
+   * @param template              the template
+   * @param infraMapping          the infra mapping
+   * @param addedHosts            the added hosts
    * @param deletedPublicDnsNames the deleted public dns names
    */
   void updateInstanceMappings(@NotNull ServiceTemplate template, InfrastructureMapping infraMapping,
@@ -96,4 +96,12 @@ public interface ServiceInstanceService {
    * @param infraMappingId the infra mapping id
    */
   void deleteByInfraMappingId(String appId, String infraMappingId);
+
+  /**
+   * Delete by host.
+   *
+   * @param appId  the app id
+   * @param hostId the host id
+   */
+  void deleteByHost(String appId, String hostId);
 }
