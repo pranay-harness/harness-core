@@ -95,6 +95,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    logger.info("Executing container service deploy");
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -151,6 +152,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     int desiredCount;
     if (isRollback()) {
+      logger.info("Executing for rollback");
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
       desiredCount = containerUpgradeRequestElement.getNewServiceInstanceCount();
@@ -208,6 +210,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    logger.info("Received async response");
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
     CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
@@ -236,6 +239,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   private ExecutionResponse downsizeOldInstances(
       ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    logger.info("Downsizing old instances");
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
@@ -255,6 +259,7 @@ public abstract class ContainerServiceDeploy extends State {
     int desiredCount;
 
     if (isRollback()) {
+      logger.info("Downsizing for rollback");
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
       desiredCount = containerUpgradeRequestElement.getOldServiceInstanceCount();
@@ -300,6 +305,7 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   private void cleanupOldVersions(ExecutionContext context) {
+    logger.info("Cleaning up old versions");
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
