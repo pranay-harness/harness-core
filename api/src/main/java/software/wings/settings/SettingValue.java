@@ -135,7 +135,12 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Encryption setting variable types.
      */
-    ENCRYPTION;
+    ENCRYPTION,
+
+    /**
+     * Artifactory setting variable types
+     */
+    ARTIFACTORY("Artifactory");
 
     private String displayName;
 

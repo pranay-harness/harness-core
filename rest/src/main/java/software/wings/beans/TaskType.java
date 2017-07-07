@@ -3,6 +3,7 @@ package software.wings.beans;
 import static org.joor.Reflect.on;
 
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
+import software.wings.delegatetasks.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
@@ -61,7 +62,17 @@ public enum TaskType {
   APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
-  SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class);
+  SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
+  ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
+  ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
+  ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),
+  ARTIFACTORY_GET_ARTIFACTORY_PATHS(ServiceImplDelegateTask.class),
+  ARTIFACTORY_GET_GROUP_IDS(ServiceImplDelegateTask.class),
+  ARTIFACTORY_GET_ARTIFACT_NAMES(ServiceImplDelegateTask.class),
+  ARTIFACTORY_LAST_SUCCSSFUL_BUILD(ServiceImplDelegateTask.class),
+  ARTIFACTORY_COLLECTION(ArtifactoryCollectionTask.class),
+  ARTIFACTORY_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
+  ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

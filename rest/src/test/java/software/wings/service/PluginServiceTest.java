@@ -22,6 +22,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
@@ -38,7 +39,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(13)
+        .hasSize(14)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -69,6 +70,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Nexus")
                 .withType("NEXUS")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(ArtifactoryConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Artifactory")
+                .withType("ARTIFACTORY")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -150,8 +159,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(13)
+        .hasSize(14)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GCP",
-            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS");
+            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
   }
 }

@@ -358,6 +358,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
+    // Service service = serviceResourceService.get(appId, serviceId);
+    // List<Stencil> stencils = stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId,
+    // serviceId);
+    // stencils.forEach(stencil -> ((OverridingArtifactStreamDescriptor)
+    // stencil).setArtifactType(service.getArtifactType()));
     return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
   }
 
@@ -420,11 +425,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name());
+      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name(),
+          ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-          ArtifactStreamType.NEXUS.name());
+          ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(),
+          ArtifactStreamType.ARTIFACTORY.name());
     }
   }
 

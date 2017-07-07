@@ -29,6 +29,8 @@ ARTIFACT_SOURCE_TYPE:
       value: DOCKER
     - name: Nexus Repository
       value: NEXUS
+    - name: Arifactory Server
+      value: ARTIFACTORY
 
 DEPLOYMENT_STRATEGY:
     - name: Serial

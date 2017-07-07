@@ -20,6 +20,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
@@ -43,6 +44,7 @@ public class HostServiceImpl implements HostService {
   @Inject private EnvironmentService environmentService;
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
+  @Inject private ServiceInstanceService serviceInstanceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -171,12 +173,12 @@ public class HostServiceImpl implements HostService {
     }
   }
 
-  private boolean delete(Host applicationHost) {
-    if (applicationHost != null) {
-      boolean delete = wingsPersistence.delete(applicationHost);
+  private boolean delete(Host host) {
+    if (host != null) {
+      boolean delete = wingsPersistence.delete(host);
       if (delete) {
-        executorService.submit(
-            () -> configService.deleteByEntityId(applicationHost.getAppId(), applicationHost.getUuid()));
+        executorService.submit(() -> serviceInstanceService.deleteByHost(host.getAppId(), host.getUuid()));
+        executorService.submit(() -> configService.deleteByEntityId(host.getAppId(), host.getUuid()));
       }
       return delete;
     }
@@ -225,5 +227,14 @@ public class HostServiceImpl implements HostService {
                                 .equal(appId)
                                 .field("infraMappingId")
                                 .equal(infraMappingId));
+  }
+
+  @Override
+  public void deleteByService(String appId, String envId, String serviceTemplateId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("serviceTemplateId")
+                                .equal(serviceTemplateId));
   }
 }

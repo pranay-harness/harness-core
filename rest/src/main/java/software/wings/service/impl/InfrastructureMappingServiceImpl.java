@@ -6,13 +6,16 @@ import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -20,15 +23,16 @@ import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
@@ -40,6 +44,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageRequest;
@@ -54,6 +60,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -95,6 +102,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private AwsCodeDeployService awsCodeDeployService;
+  @Inject private WorkflowService workflowService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -247,6 +255,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void delete(String appId, String envId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     if (infrastructureMapping != null) {
+      ensureInfraMappingSafeToDelete(infrastructureMapping);
       boolean deleted = wingsPersistence.delete(infrastructureMapping);
       if (deleted) {
         InfrastructureProvider infrastructureProvider =
@@ -257,44 +266,52 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private void ensureInfraMappingSafeToDelete(InfrastructureMapping infrastructureMapping) {
+    List<Workflow> workflows = workflowService
+                                   .listWorkflows(aPageRequest()
+                                                      .withLimit(UNLIMITED)
+                                                      .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
+                                                      .build())
+                                   .getResponse();
+
+    List<String> referencingWorkflowNames =
+        workflows.stream()
+            .filter(wfl -> {
+              if (wfl.getOrchestrationWorkflow() != null
+                  && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+                Map<String, WorkflowPhase> workflowPhaseIdMap =
+                    ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
+                return workflowPhaseIdMap.values().stream().anyMatch(
+                    workflowPhase -> workflowPhase.getInfraMappingId().equals(infrastructureMapping.getUuid()));
+              }
+              return false;
+            })
+            .map(Workflow::getName)
+            .collect(Collectors.toList());
+
+    if (referencingWorkflowNames.size() > 0) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
+              referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));
+    }
+  }
+
+  @Override
+  public void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId) {
+    List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                .field("appId")
+                                                .equal(appId)
+                                                .field("serviceTemplateId")
+                                                .equal(serviceTemplateId)
+                                                .asKeyList();
+    keys.forEach(key -> delete(appId, envId, key.toString()));
+  }
+
   @Override
   public Map<String, Object> getInfraMappingStencils(String appId) {
     return stencilPostProcessor.postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId)
         .stream()
         .collect(toMap(Stencil::getName, Function.identity()));
-
-    /*System.out.println();
-    //TODO:: dynamically read
-    Map<String, Map<String, Object>> infraStencils = new HashMap<>();
-
-    //TODO:: InfraMapping remove this hack and use stencils model
-
-    JsonNode physicalJsonSchema = JsonUtils.jsonSchema(PhysicalInfrastructureMapping.class);
-    List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(appId,
-    SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
-
-    Map<String, String> data = settingAttributes.stream().collect(toMap(SettingAttribute::getUuid,
-    SettingAttribute::getName));
-
-    ObjectNode jsonSchemaField = ((ObjectNode) physicalJsonSchema.get("properties").get("hostConnectionAttrs"));
-    jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
-    jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
-
-    infraStencils
-        .put(PHYSICAL_DATA_CENTER_SSH.name(), ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema",
-    readUiSchema(PHYSICAL_DATA_CENTER_SSH.name())));
-
-    JsonNode awsJsonSchema = JsonUtils.jsonSchema(AwsInfrastructureMapping.class);
-    jsonSchemaField = ((ObjectNode) awsJsonSchema.get("properties").get("hostConnectionAttrs"));
-    jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
-    jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
-
-    infraStencils.put(AWS_SSH.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema",
-    readUiSchema(AWS_SSH.name()))); infraStencils .put(AWS_ECS.name(), ImmutableMap.of("jsonSchema",
-    JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema", readUiSchema(AWS_ECS.name())));
-    infraStencils.put(GCP_KUBERNETES.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(GcpKubernetesInfrastructureMapping.class), "uiSchema",
-    readUiSchema(GCP_KUBERNETES.name()))); return infraStencils;*/
   }
 
   @Override
@@ -461,7 +478,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure provider");
+      throw new WingsException(INVALID_REQUEST, "message", "Invalid infrastructure provider");
     }
     StaticInfrastructureProvider infrastructureProvider =
         (StaticInfrastructureProvider) getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name());
@@ -550,7 +567,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                            .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting, new PageRequest<>())
                            .getResponse();
     PageRequest<Host> pageRequest = aPageRequest()
-                                        .withLimit(PageRequest.UNLIMITED)
+                                        .withLimit(UNLIMITED)
                                         .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
                                         .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
                                         .build();
@@ -605,7 +622,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         selectionParams.containsKey("specificHosts") && (boolean) selectionParams.get("specificHosts");
     String instanceCount = selectionParams.containsKey("instanceCount")
         ? Integer.toString((int) selectionParams.get("instanceCount"))
-        : PageRequest.UNLIMITED;
+        : UNLIMITED;
 
     if (specificHosts) {
       List<String> hostNames = (List<String>) selectionParams.get("hostNames");
@@ -717,7 +734,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
     } else {
       throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
+          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
     }
   }
 
@@ -753,7 +770,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateHostsAndServiceInstances(infrastructureMapping, ImmutableList.of(), hostNames);
     } else {
       throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
+          INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
     }
   }
 

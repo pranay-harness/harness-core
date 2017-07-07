@@ -50,6 +50,7 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("appId", Operator.EQ, context.getAppId())
             .addFilter("workflowId", Operator.EQ, executionDetails.getWorkflowId())
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
+            .addFilter("status", Operator.EQ, "SUCCESS")
             .addOrder("createdAt", OrderType.DESC)
             .withLimit("1")
             .build();

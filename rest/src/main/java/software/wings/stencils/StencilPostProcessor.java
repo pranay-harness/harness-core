@@ -69,7 +69,7 @@ public class StencilPostProcessor {
     return stencils.stream().flatMap(t -> processStencil(t, appId, args)).collect(toList());
   }
 
-  private <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, String... args) {
+  public <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, String... args) {
     Stencil stencil = t.getOverridingStencil();
     for (Field field : t.getTypeClass().getDeclaredFields()) {
       EnumData enumData = field.getAnnotation(EnumData.class);

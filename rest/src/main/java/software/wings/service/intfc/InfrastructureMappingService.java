@@ -65,6 +65,15 @@ public interface InfrastructureMappingService {
   void delete(String appId, String envId, String infraMappingId);
 
   /**
+   * Delete by service template.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceTemplateId the service template id
+   */
+  void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId);
+
+  /**
    * Gets infra mapping stencils.
    *
    * @param appId the app id
@@ -287,7 +296,31 @@ public interface InfrastructureMappingService {
    */
   List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region);
 
+  /**
+   * List code deploy application names list.
+   *
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
   List<String> listCodeDeployApplicationNames(String computeProviderId, String region);
+
+  /**
+   * List code deploy deployment groups list.
+   *
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @param applicationName   the application name
+   * @return the list
+   */
   List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName);
+
+  /**
+   * List code deploy deployment configs list.
+   *
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
   List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region);
 }
