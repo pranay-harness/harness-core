@@ -209,16 +209,16 @@ public class ServiceResource {
    *
    * @param appId       the app id
    * @param serviceId   the service id
-   * @param commandName the command name
+   * @param serviceCommandId the command name
    * @return the rest response
    */
   @DELETE
-  @Path("{serviceId}/commands/{commandName}")
+  @Path("{serviceId}/commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName) {
-    return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, commandName));
+      @PathParam("serviceId") String serviceId, @PathParam("serviceCommandId") String serviceCommandId) {
+    return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, serviceCommandId));
   }
 
   /**
