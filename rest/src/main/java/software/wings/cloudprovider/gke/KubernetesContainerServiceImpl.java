@@ -102,7 +102,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         String message = Joiner.on("], [").join(pod.getStatus()
                                                     .getConditions()
                                                     .stream()
-                                                    .map(cond -> cond.getReason() + ": " + cond.getMessage())
+                                                    .map(cond -> {
+                                                      String msg = cond.getType() + ": " + cond.getStatus();
+                                                      if (cond.getReason() != null) {
+                                                        msg += " - Reason: " + cond.getReason();
+                                                      }
+                                                      if (cond.getMessage() != null) {
+                                                        msg += " - Message: " + cond.getMessage();
+                                                      }
+                                                      return msg;
+                                                    })
                                                     .collect(Collectors.toList()));
         logger.error("Pod {} failed to start. Current status: {}. Reason(s): [{}]", podName, phase, message);
         executionLogCallback.saveExecutionLog(
