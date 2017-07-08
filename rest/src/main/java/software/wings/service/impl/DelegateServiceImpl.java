@@ -355,7 +355,7 @@ public class DelegateServiceImpl implements DelegateService {
         task.getTaskType(), task.isAsync());
     T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
     if (responseData == null) {
-      logger.error("Task [{}] timed out. remove it from cache", task.toString());
+      logger.warn("Task [{}] timed out. remove it from cache", task.toString());
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_DIR);
     }
