@@ -3,7 +3,6 @@ import logging
 import sys
 
 import numpy as np
-from core.ConnectedSetClassifier import ConnectedSetClassifier
 
 from core.KmeansAnomalyDetector import KmeansAnomalyDetector
 from core.KmeansCluster import KmeansCluster
@@ -87,7 +86,7 @@ class SplunkIntelOptimized(object):
 
             values_control = np.column_stack(([idx] * len(values), values))
 
-            classifier.fit_transform(idx, values_control, 0.2)
+            classifier.fit_transform(idx, values_control)
 
             for host, data in group.items():
                 values_test = np.array([freq.get('count') for freq in data.get('message_frequencies')])

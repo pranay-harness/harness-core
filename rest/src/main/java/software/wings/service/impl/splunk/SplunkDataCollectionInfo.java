@@ -3,8 +3,8 @@ package software.wings.service.impl.splunk;
 import lombok.Data;
 import software.wings.beans.SplunkConfig;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -15,14 +15,14 @@ public class SplunkDataCollectionInfo {
   private String applicationId;
   private String stateExecutionId;
   private SplunkConfig splunkConfig;
-  private List<String> queries = new ArrayList<>();
+  private Set<String> queries = new HashSet<>();
   private long startTime;
   private int collectionTime;
 
   public SplunkDataCollectionInfo() {}
 
   public SplunkDataCollectionInfo(String accountId, String applicationId, String stateExecutionId,
-      SplunkConfig splunkConfig, List<String> queries, long startTime, int collectionTime) {
+      SplunkConfig splunkConfig, Set<String> queries, long startTime, int collectionTime) {
     this.accountId = accountId;
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;

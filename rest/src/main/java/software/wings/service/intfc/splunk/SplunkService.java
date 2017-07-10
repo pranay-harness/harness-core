@@ -2,7 +2,6 @@ package software.wings.service.intfc.splunk;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
@@ -29,9 +28,9 @@ public interface SplunkService {
 
   Boolean saveSplunkAnalysisRecords(SplunkLogMLAnalysisRecord mlAnalysisResponse);
 
-  SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId);
+  SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId, String query);
 
-  boolean isLogDataCollected(String applicationId, String stateExecutionId, int logCollectionMinute);
+  boolean isLogDataCollected(String applicationId, String stateExecutionId, String query, int logCollectionMinute);
 
   SplunkMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId);
 

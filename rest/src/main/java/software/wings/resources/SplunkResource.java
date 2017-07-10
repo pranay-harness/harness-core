@@ -14,6 +14,7 @@ import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
 import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
+import software.wings.service.impl.splunk.SplunkMLAnalysisRequest;
 import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
 import software.wings.service.intfc.splunk.SplunkService;
 
@@ -69,15 +70,15 @@ public class SplunkResource {
     return new RestResponse<>(splunkService.saveSplunkAnalysisRecords(mlAnalysisResponse));
   }
 
-  @GET
+  @POST
   @Path("/get-analysis-records")
   @Timed
   @ExceptionMetered
   @PublicApi
-  public RestResponse<SplunkLogMLAnalysisRecord> getplunkAnalysisRecords(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
-      throws IOException {
-    return new RestResponse<>(splunkService.getSplunkAnalysisRecords(applicationId, stateExecutionId));
+  public RestResponse<SplunkLogMLAnalysisRecord> getplunkAnalysisRecords(
+      @QueryParam("accountId") String accountId, SplunkMLAnalysisRequest mlAnalysisRequest) throws IOException {
+    return new RestResponse<>(splunkService.getSplunkAnalysisRecords(
+        mlAnalysisRequest.getApplicationId(), mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery()));
   }
 
   @GET

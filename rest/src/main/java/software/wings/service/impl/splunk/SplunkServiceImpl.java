@@ -5,7 +5,6 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
@@ -14,13 +13,13 @@ import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.splunk.SplunkService;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -56,13 +55,18 @@ public class SplunkServiceImpl implements SplunkService {
                                                               .equal(logRequest.getStateExecutionId())
                                                               .field("applicationId")
                                                               .equal(logRequest.getApplicationId())
+                                                              .field("query")
+                                                              .equal(logRequest.getQuery())
                                                               .field("processed")
                                                               .equal(false)
                                                               .field("logCollectionMinute")
                                                               .equal(logRequest.getLogCollectionMinute())
                                                               .field("host")
                                                               .hasAnyOf(logRequest.getNodes());
-    return splunkLogDataRecordQuery.asList();
+
+    List<SplunkLogDataRecord> records = splunkLogDataRecordQuery.asList();
+    logger.info("returning " + records.size() + " records for request: " + logRequest);
+    return records;
   }
 
   @Override
@@ -81,12 +85,15 @@ public class SplunkServiceImpl implements SplunkService {
   }
 
   @Override
-  public boolean isLogDataCollected(String applicationId, String stateExecutionId, int logCollectionMinute) {
+  public boolean isLogDataCollected(
+      String applicationId, String stateExecutionId, String query, int logCollectionMinute) {
     Query<SplunkLogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
                                                               .field("stateExecutionId")
                                                               .equal(stateExecutionId)
                                                               .field("applicationId")
                                                               .equal(applicationId)
+                                                              .field("query")
+                                                              .equal(query)
                                                               .field("logCollectionMinute")
                                                               .equal(logCollectionMinute);
     return splunkLogDataRecordQuery.asList().size() > 0;
@@ -108,13 +115,16 @@ public class SplunkServiceImpl implements SplunkService {
   }
 
   @Override
-  public SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(String applicationId, String stateExecutionId) {
+  public SplunkLogMLAnalysisRecord getSplunkAnalysisRecords(
+      String applicationId, String stateExecutionId, String query) {
     Query<SplunkLogMLAnalysisRecord> splunkLogMLAnalysisRecords =
         wingsPersistence.createQuery(SplunkLogMLAnalysisRecord.class)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("applicationId")
-            .equal(applicationId);
+            .equal(applicationId)
+            .field("query")
+            .equal(query);
     return wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
   }
 
@@ -133,6 +143,7 @@ public class SplunkServiceImpl implements SplunkService {
       return analysisSummary;
     }
 
+    analysisSummary.setQuery(analysisRecord.getQuery());
     analysisSummary.setControlClusters(computeCluster(analysisRecord.getControl_clusters()));
     analysisSummary.setTestClusters(computeCluster(analysisRecord.getTest_clusters()));
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
@@ -157,17 +168,18 @@ public class SplunkServiceImpl implements SplunkService {
     }
     final List<SplunkMLClusterSummary> analysisSummaries = new ArrayList<>();
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : cluster.entrySet()) {
+      final SplunkMLClusterSummary clusterSummary = new SplunkMLClusterSummary();
+      clusterSummary.setHostSummary(new HashMap<>());
       for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
-        final SplunkMLClusterSummary clusterSummary = new SplunkMLClusterSummary();
+        final SplunkMLHostSummary hostSummary = new SplunkMLHostSummary();
         final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
-
-        clusterSummary.setHost(hostEntry.getKey());
+        hostSummary.setXCordinate(sprinkalizedCordinate(analysisCluster.getX()));
+        hostSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
+        hostSummary.setUnexpectedFreq((analysisCluster.isUnexpected_freq()));
+        hostSummary.setCount(computeCountFromFrequencies(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
-        clusterSummary.setXCordinate(sprinkalizedCordinate(analysisCluster.getX()));
-        clusterSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
-        clusterSummary.setCount(computeCountFromFrequencies(analysisCluster));
-        clusterSummary.setUnexpectedFreq((analysisCluster.isUnexpected_freq()));
+        clusterSummary.getHostSummary().put(hostEntry.getKey(), hostSummary);
         analysisSummaries.add(clusterSummary);
       }
     }
