@@ -138,4 +138,12 @@ public interface ArtifactStreamService {
    * @param serviceId the service id
    */
   void deleteByService(String appId, String serviceId);
+
+  /**
+   * Delete stream action for workflow.
+   *
+   * @param appId      the app id
+   * @param workflowId the workflow id
+   */
+  void deleteStreamActionForWorkflow(String appId, String workflowId);
 }

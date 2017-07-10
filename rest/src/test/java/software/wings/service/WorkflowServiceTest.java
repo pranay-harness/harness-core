@@ -2,7 +2,9 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.util.Lists.newArrayList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -22,6 +24,7 @@ import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNot
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -29,6 +32,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -37,6 +41,8 @@ import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +62,7 @@ import software.wings.beans.Application;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
@@ -65,6 +72,9 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -75,6 +85,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -84,6 +95,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -131,6 +143,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private Application application;
   @Mock private Account account;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private PipelineService pipelineService;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
@@ -307,9 +320,27 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldDeleteWorkflow() {
     Workflow workflow = createWorkflow();
     String uuid = workflow.getUuid();
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     workflowService.deleteWorkflow(APP_ID, uuid);
     workflow = workflowService.readWorkflow(APP_ID, uuid, null);
     assertThat(workflow).isNull();
+  }
+
+  @Test
+  public void shouldThrowExceptionOnReferencedWorkflowDelete() {
+    Workflow workflow = createWorkflow();
+    String uuid = workflow.getUuid();
+    Pipeline pipeline =
+        aPipeline()
+            .withName("PIPELINE_NAME")
+            .withPipelineStages(asList(new PipelineStage(
+                asList(new PipelineStageElement("STAGE", "ENV_STATE", ImmutableMap.of("workflowId", workflowId))))))
+            .build();
+    when(pipelineService.listPipelines(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
+    assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, uuid))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
   /**
@@ -320,6 +351,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow = createWorkflow();
     String uuid = workflow.getUuid();
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, uuid)).thenReturn(true);
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(aPageResponse().build());
     workflowService.deleteWorkflow(APP_ID, uuid);
     workflow = workflowService.readWorkflow(APP_ID, uuid, null);
     assertThat(workflow).isNull();
@@ -487,6 +519,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     logger.info(JsonUtils.asJson(workflow2));
   }
+
   @Test
   public void shouldCreateBasicDeploymentWorkflow() {
     Workflow workflow =
@@ -568,6 +601,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     logger.info(JsonUtils.asJson(workflow2));
   }
+
   @Test
   public void shouldCreateMultiServiceWorkflow() {
     Workflow workflow =
@@ -612,6 +646,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     logger.info(JsonUtils.asJson(workflow2));
   }
+
   @Test
   public void shouldValidateWorkflow() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
@@ -946,6 +981,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
   }
+
   @Test
   public void shouldDeleteWorkflowPhase() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());

@@ -17,6 +17,7 @@ import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -296,6 +297,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     jobScheduler.deleteJob(workflowId, streamId);
 
     return get(appId, streamId);
+  }
+
+  @Override
+  public void deleteStreamActionForWorkflow(String appId, String workflowId) {
+    List<Key<ArtifactStream>> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
+                                                    .field("appId")
+                                                    .equal(appId)
+                                                    .field("streamActions.workflowId")
+                                                    .equal(workflowId)
+                                                    .asKeyList();
+    artifactStreams.forEach(
+        artifactStreamKey -> deleteStreamAction(appId, artifactStreamKey.getId().toString(), workflowId));
   }
 
   @Override
