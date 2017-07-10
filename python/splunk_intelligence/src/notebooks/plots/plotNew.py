@@ -31,7 +31,7 @@ def scatter_plot_groups(xy_matrix, labels, tooltips, legends=None, cc=None, size
               range(len(set(labels)))]
 
     if sizes is None:
-        sizes = [5 for i in range(xy_matrix.shape[0])]
+        sizes = [10 for i in range(xy_matrix.shape[0])]
 
     # create data frame that has the result of the MDS plus the cluster numbers and titles
     df = pd.DataFrame(dict(x=xy_matrix[:, 0], y=xy_matrix[:, 1], label=labels, tooltip=tooltips))
