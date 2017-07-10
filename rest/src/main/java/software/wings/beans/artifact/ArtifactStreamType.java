@@ -34,7 +34,10 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   NEXUS(NexusArtifactStream.class, "NEXUS"), /**
                                               * Artifactory Artifact source type.
                                               */
-  ARTIFACTORY(ArtifactoryArtifactStream.class, "ARTIFACTORY");
+  ARTIFACTORY(ArtifactoryArtifactStream.class, "ARTIFACTORY"), /**
+
+   */
+  ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class, "ARTIFACTORYDOCKER");
 
   private static final String stencilsPath = "/templates/artifactstreams/";
   private static final String uiSchemaSuffix = "-ArtifactStreamUISchema.json";

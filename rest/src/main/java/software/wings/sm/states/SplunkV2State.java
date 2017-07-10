@@ -128,15 +128,6 @@ public class SplunkV2State extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing splunk state");
-    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
-    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
-      logger.error("Could not find control nodes to compare the data");
-      return anExecutionResponse()
-          .withAsync(false)
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("Could not find control nodes to compare the data")
-          .build();
-    }
 
     Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
@@ -145,6 +136,27 @@ public class SplunkV2State extends AbstractAnalysisState {
           .withAsync(false)
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withErrorMessage("Could not find test nodes to compare the data")
+          .build();
+    }
+
+    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
+    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
+      logger.error("Could not find control nodes to compare the data");
+      return anExecutionResponse()
+          .withAsync(false)
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .withErrorMessage("Could not find control nodes to compare the data")
+          .build();
+    }
+
+    lastExecutionNodes.removeAll(canaryNewHostNames);
+
+    if (lastExecutionNodes.isEmpty()) {
+      logger.error("Control and test nodes are same. Will not be running splunk analysis");
+      return anExecutionResponse()
+          .withAsync(false)
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Control and test nodes are same")
           .build();
     }
 

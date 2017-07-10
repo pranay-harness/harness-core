@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static org.awaitility.Awaitility.with;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,6 +25,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +37,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
-  private static final String DASH_STRING = "----------";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
@@ -77,18 +78,57 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .withName(replicationControllerName)
         .scale(number);
     logger.info("Scaled controller {} to {} instances", replicationControllerName, number);
-    List<ContainerInfo> containerInfos =
-        waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number)
-            .stream()
-            .map(pod
-                -> new ContainerInfo(pod.getMetadata().getName(),
-                    !pod.getStatus().getContainerStatuses().isEmpty()
-                        ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
-                        : "",
-                    pod.getStatus().getPhase().equals(RUNNING) ? Status.SUCCESS : Status.FAILURE))
-            .collect(Collectors.toList());
-    executionLogCallback.saveExecutionLog(
-        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), Log.LogLevel.INFO);
+    logger.info("Waiting for pods to be ready...");
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number);
+    List<ContainerInfo> containerInfos = new ArrayList<>();
+    boolean hasErrors = false;
+    for (Pod pod : pods) {
+      String podName = pod.getMetadata().getName();
+      ContainerInfo containerInfo = new ContainerInfo();
+      containerInfo.setHostName(podName);
+      containerInfo.setContainerId(!pod.getStatus().getContainerStatuses().isEmpty()
+              ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
+              : "");
+      String phase = pod.getStatus().getPhase();
+      if (phase.equals(RUNNING)) {
+        containerInfo.setStatus(Status.SUCCESS);
+        logger.info("Pod {} started successfully", podName);
+        executionLogCallback.saveExecutionLog(String.format("Pod [%s] started successfully. Host IP: %s. Pod IP: %s",
+                                                  podName, pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
+            Log.LogLevel.INFO);
+      } else {
+        containerInfo.setStatus(Status.FAILURE);
+        hasErrors = true;
+        String message = Joiner.on("], [").join(pod.getStatus()
+                                                    .getConditions()
+                                                    .stream()
+                                                    .map(cond -> {
+                                                      String msg = cond.getType() + ": " + cond.getStatus();
+                                                      if (cond.getReason() != null) {
+                                                        msg += " - Reason: " + cond.getReason();
+                                                      }
+                                                      if (cond.getMessage() != null) {
+                                                        msg += " - Message: " + cond.getMessage();
+                                                      }
+                                                      return msg;
+                                                    })
+                                                    .collect(Collectors.toList()));
+        logger.error("Pod {} failed to start. Current status: {}. [{}]", podName, phase, message);
+        executionLogCallback.saveExecutionLog(
+            String.format("Pod [%s] failed to start. Current status: %s. [%s]", podName, phase, message),
+            Log.LogLevel.ERROR);
+      }
+      containerInfos.add(containerInfo);
+    }
+    if (hasErrors) {
+      logger.error("Completed resize operation with errors");
+      executionLogCallback.saveExecutionLog(
+          String.format("Completed resize operation with errors."), Log.LogLevel.ERROR);
+    } else {
+      logger.info("Successfully completed resize operation");
+      executionLogCallback.saveExecutionLog(
+          String.format("Successfully completed resize operation."), Log.LogLevel.INFO);
+    }
     return containerInfos;
   }
 
@@ -126,10 +166,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, String replicationControllerName, int number) {
     Map<String, String> labels = getController(kubernetesConfig, replicationControllerName).getMetadata().getLabels();
 
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     try {
       with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
-        List<Pod> pods =
-            kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();
+        List<Pod> pods = kubernetesClient.pods().withLabels(labels).list().getItems();
         if (pods.size() != number) {
           return false;
         }
@@ -140,7 +180,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         return allRunning;
       });
     } catch (ConditionTimeoutException e) {
-      // Ignore
+      logger.warn("Timed out waiting for pods to be ready.");
     }
 
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();

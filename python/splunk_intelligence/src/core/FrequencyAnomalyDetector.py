@@ -15,7 +15,7 @@ class FrequencyAnomalyDetector(object):
         vals = map(int, values[:, 1])
         np_values = np.array(vals)
         mean, std = np.mean(np_values, axis=0), np.std(np_values, axis=0)
-        if std == 0:
+        if std < 1:
             logger.info("Using ZeroDeviationClassifier for cluster " + str(label))
             self.klassifier[label] = ZeroDeviationClassifier()
             self.klassifier[label].fit_transform(label, values, 1)

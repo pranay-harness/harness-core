@@ -189,8 +189,8 @@ public class SplunkServiceImpl implements SplunkService {
   }
 
   private double sprinkalizedCordinate(double coordinate) {
-    final int sprinkleRatio = random.nextInt() % 10;
-    double adjustmentBase = (coordinate - Math.floor(coordinate)) / 10;
+    final int sprinkleRatio = random.nextInt() % 8;
+    double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
   }
 }

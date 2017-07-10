@@ -37,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -71,6 +72,7 @@ import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
@@ -157,6 +159,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(builder.but().build());
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
     when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+    when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
+
     when(wingsPersistence.createUpdateOperations(Service.class))
         .thenReturn(datastore.createUpdateOperations(Service.class));
   }
@@ -262,14 +267,33 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList()).build());
     srs.delete(APP_ID, SERVICE_ID);
-    InOrder inOrder =
-        inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService, configService);
+    InOrder inOrder = inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService,
+        configService, serviceVariableService, artifactStreamService);
     inOrder.verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     inOrder.verify(workflowService).listWorkflows(any(PageResponse.class));
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
-    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
+    inOrder.verify(artifactStreamService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    inOrder.verify(serviceVariableService).deleteByEntityId(APP_ID, SERVICE_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldThrowExceptionOnReferencedServiceDelete() {
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(
+            aPageResponse()
+                .withResponse(asList(Workflow.WorkflowBuilder.aWorkflow()
+                                         .withName(WORKFLOW_NAME)
+                                         .withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build()))
+                                         .build()))
+                .build());
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    verify(workflowService).listWorkflows(any(PageResponse.class));
   }
 
   @Test
@@ -674,11 +698,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteCommand() {
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     srs.deleteCommand(APP_ID, SERVICE_ID, "START");
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence, times(1)).createUpdateOperations(Service.class);
     verify(wingsPersistence, times(1)).createQuery(Service.class);
+    verify(wingsPersistence, times(1)).createQuery(ServiceCommand.class);
+    verify(wingsPersistence, times(1)).createQuery(Command.class);
+    verify(wingsPersistence, times(2)).delete(any(Query.class));
     verify(wingsPersistence, times(1)).update(any(Query.class), any());
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }

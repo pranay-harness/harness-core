@@ -124,6 +124,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
+        .withMetadataOnly(getMetadataOnly())
         .build();
   }
 

@@ -142,9 +142,10 @@ public class NexusServiceImpl implements NexusService {
                   getBaseUrl(nexusConfig) + "service/local/repositories/" + repoType + "/content" + artifact.getPath();
               logger.info("Resource url " + resourceUrl);
               try {
+                URL server = new URL(resourceUrl); // works for https and not for http, i needed https in  my case.
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
-                throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path");
+                throw new WingsException(ErrorCode.INVALID_REQUEST, "message", ex.getMessage());
               }
             }
           }

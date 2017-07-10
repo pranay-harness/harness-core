@@ -9,6 +9,8 @@ import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
@@ -26,6 +28,8 @@ import javax.annotation.Nullable;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
+  private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
+
   @Attributes(title = "Number of instances") private int instanceCount;
 
   @Attributes(title = "Command")
@@ -67,8 +71,10 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
           services.stream()
               .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
               .collect(Collectors.toList())) {
-        if (getRevisionFromServiceName(service.getServiceName()) < minRevisionToKeep) {
-          ecsContainerService.deleteService(region, settingAttribute, clusterName, service.getServiceName());
+        String oldServiceName = service.getServiceName();
+        if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
+          logger.info("Deleting old version: " + oldServiceName);
+          ecsContainerService.deleteService(region, settingAttribute, clusterName, oldServiceName);
         }
       }
     }
