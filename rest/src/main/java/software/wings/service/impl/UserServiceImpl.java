@@ -133,6 +133,7 @@ public class UserServiceImpl implements UserService {
     }
 
     if (!domainAllowedToRegister(user.getEmail())) {
+      logger.warn("DOMAIN_NOT_ALLOWED_TO_REGISTER for user - {}", user.toString());
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
     verifyRegisteredOrAllowed(user.getEmail());
@@ -248,10 +249,12 @@ public class UserServiceImpl implements UserService {
     User existingUser = getUserByEmail(emailAddress);
 
     if (existingUser != null && existingUser.isEmailVerified()) {
+      logger.warn("USER_ALREADY_REGISTERED error for existingUser - {}", existingUser.toString());
       throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
     }
 
     if (!domainAllowedToRegister(emailAddress)) {
+      logger.warn("USER_DOMAIN_NOT_ALLOWED error for emailAddress - {}", emailAddress);
       throw new WingsException(ErrorCode.USER_DOMAIN_NOT_ALLOWED);
     }
   }
