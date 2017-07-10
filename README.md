@@ -53,7 +53,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 
 2) Start Delegate : Open a new terminal and navigate to the same directory. And run following command:
 
-`mvn clean install -DskipTests && java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar &delegate/config-delegate.yml &`
+`mvn clean install -DskipTests && java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml &`
 
 
 ### IDE Setup
