@@ -41,6 +41,26 @@ class SplunkDatasetNew(object):
                 dict(text=event.get('_raw'),
                      message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
                                                label=event['cluster_label'])]))
+        elif event_type == 'control_prod':
+            if event['clusterLabel'] not in self.control_events:
+                self.control_events[event['clusterLabel']] = []
+            # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
+            self.control_events[event['clusterLabel']].append(
+                dict(text=event.get('logMessage'),
+                     message_frequencies=[dict(count=event.get('count'), time=event.get('timeStamp').get('$numberLong'),
+                                               host=host,
+                                               old_label=event['clusterLabel'])]))
+        elif event_type == 'test_prod':
+            if event['clusterLabel'] not in self.test_events:
+                self.test_events[event['clusterLabel']] = []
+            # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
+            self.test_events[event['clusterLabel']].append(
+                dict(text=event.get('logMessage'),
+                     message_frequencies=[dict(count=event.get('count'),
+                                               time=event.get('timeStamp').get('$numberLong'),
+                                               host=host,
+                                               old_label=event['clusterLabel'])]))
+
         elif event_type == 'control_prev':
             label = 10000 + event['cluster_label']
             if label not in self.control_events:
@@ -123,17 +143,45 @@ class SplunkDatasetNew(object):
                 for event in events:
                     self.add_event(event, 'test_prev')
 
+                    # old files that are not grouped by host
+
+    def load_from_prod_file(self, file_name, control_window, test_window,
+                            control_nodes, test_nodes, prev_out_file=None):
+        raw_events = SplunkFileSource.load_prod_data(file_name)
+        print(control_window, test_window, control_nodes, test_nodes)
+        for idx, event in enumerate(raw_events):
+
+            minute = event.get('logCollectionMinute')
+            if control_window[0] <= minute <= control_window[1] \
+                    and event.get('host') in control_nodes:
+                self.add_event(event, 'control_prod')
+            if test_window[0] <= minute <= test_window[1] \
+                    and event.get('host') in test_nodes:
+                self.add_event(event, 'test_prod')
+
+        if prev_out_file is not None:
+            prev_out = SplunkFileSource.load_data(prev_out_file)
+            for key, events in prev_out.get('control_events').items():
+                for event in events:
+                    self.add_event(event, 'control_prev')
+
+            for key, events in prev_out.get('test_events').items():
+                for event in events:
+                    self.add_event(event, 'test_prev')
+
     def get_control_events(self):
         return self.control_events
 
     def get_control_events_text_as_np(self):
         texts = []
+        print('control count = ', len(self.test_events))
         for key, value in self.control_events.items():
             texts.append(value[0].get('text'))
         return np.array(texts)
 
     def get_test_events_text_as_np(self):
         texts = []
+        print('test count = ', len(self.test_events))
         for key, value in self.test_events.items():
             texts.append(value[0].get('text'))
         return np.array(texts)
@@ -355,7 +403,7 @@ class SplunkDatasetNew(object):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
                     z.append(freq.get('count'))
-                    tooltips.append([host + ' ' + val.get('text'), ind])
+                    tooltips.append([host + '<br>' + self.split(val.get('text'), len(val.get('text')), 30), ind])
                     labels.append(0)
                     clusters.append(key)
                 ind = ind + 1
@@ -366,7 +414,7 @@ class SplunkDatasetNew(object):
                     x.append(val.get('x'))
                     y.append(val.get('y'))
                     z.append(freq.get('count'))
-                    tooltips.append([host + ' ' + val.get('text'), ind])
+                    tooltips.append([host + '<br>' + self.split(val.get('text'), len(val.get('text')), 30), ind])
                     if val.get('anomalous_counts')[idx] == 1:
                         labels.append(1)
                     else:
@@ -391,3 +439,7 @@ class SplunkDatasetNew(object):
                 texts.append(val)
 
         return texts
+    def split(self, input, length, size):
+        input.replace('\n', ' ')
+        input.replace('\tat', ' ')
+        return '<br>'.join([input[start:start + size] for start in range(0, length, size)])
