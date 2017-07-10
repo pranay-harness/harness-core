@@ -28,6 +28,7 @@ class SplunkIntelOptimized(object):
         min_df = 1
         max_df = 1.0
 
+        # Gracefully handle cases where min_df is too high
         if len(control_events) > 500:
             min_df = 0.05
             max_df = 1.0
@@ -77,7 +78,7 @@ class SplunkIntelOptimized(object):
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
-                values.extend(np.array([ freq.get('count') for freq in data.get('message_frequencies')]))
+                values.extend(np.array([freq.get('count') for freq in data.get('message_frequencies')]))
 
             # print(idx)
             # print(values)
@@ -89,7 +90,8 @@ class SplunkIntelOptimized(object):
             for host, data in group.items():
                 values_test = np.array([freq.get('count') for freq in data.get('message_frequencies')])
                 # print(values_test)
-                anomalous_counts, score = classifier.predict(idx, np.column_stack(([idx] * len(values_test), values_test)))
+                anomalous_counts, score = classifier.predict(idx,
+                                                             np.column_stack(([idx] * len(values_test), values_test)))
                 # print(anomalous_counts)
                 data.get('anomalous_counts').extend(anomalous_counts)
                 if score < 0.5:
@@ -157,24 +159,23 @@ def run_debug():
 
 
 def main(args):
+    # run_debug()
 
- #run_debug()
+    # create options
+    print(args)
+    options = parse(args[1:])
+    logging.info(options)
 
- #create options
- print(args)
- options = parse(args[1:])
- logging.info(options)
+    splunkDataset = SplunkDatasetNew()
 
- splunkDataset = SplunkDatasetNew()
+    splunkDataset.load_from_harness(options)
 
- splunkDataset.load_from_harness(options)
+    # Add the production flow to load data here
 
-# Add the production flow to load data here
+    splunkIntel = SplunkIntelOptimized(splunkDataset, options)
+    splunkDataset = splunkIntel.run()
 
- splunkIntel = SplunkIntelOptimized(splunkDataset, options)
- splunkDataset = splunkIntel.run()
-
- logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, splunkDataset.get_output_as_json))
+    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, splunkDataset.get_output_as_json))
 
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
