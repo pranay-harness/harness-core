@@ -120,6 +120,7 @@ def parse(cli_args):
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--log_analysis_save_url", required=True)
     parser.add_argument("--log_analysis_get_url", required=True)
+    parser.add_argument("--query", required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
 
     return parser.parse_args(cli_args)
@@ -159,7 +160,7 @@ def run_debug():
 
 
 def main(args):
-    # run_debug()
+    #run_debug()
 
     # create options
     print(args)
@@ -174,8 +175,9 @@ def main(args):
 
     splunkIntel = SplunkIntelOptimized(splunkDataset, options)
     splunkDataset = splunkIntel.run()
-
-    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, splunkDataset.get_output_as_json))
+    payload = splunkDataset.get_output_as_json
+    payload['query'] = options.query
+    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, payload))
 
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
