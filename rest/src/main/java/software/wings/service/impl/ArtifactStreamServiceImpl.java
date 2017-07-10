@@ -175,7 +175,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(streamAction.getWorkflowId(), artifactStreamId));
-      artifactService.deleteByArtifactStream(appId, artifactStreamId);
     }
     return deleted;
   }

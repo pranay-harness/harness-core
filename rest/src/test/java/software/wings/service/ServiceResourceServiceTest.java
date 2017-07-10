@@ -64,7 +64,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
-import software.wings.beans.History;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -146,8 +145,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Captor
   private ArgumentCaptor<ServiceCommand> serviceCommandArgumentCaptor = ArgumentCaptor.forClass(ServiceCommand.class);
-
-  @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
   /**
    * Sets the up.

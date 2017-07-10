@@ -47,11 +47,9 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -59,8 +57,6 @@ import javax.inject.Inject;
  */
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private ServiceResourceService serviceResourceService;
-  @Mock private ExecutorService executorService;
   @Mock private UpdateOperations<ArtifactStream> updateOperations;
   @Mock private JobScheduler jobScheduler;
   @Mock private WorkflowService workflowService;
