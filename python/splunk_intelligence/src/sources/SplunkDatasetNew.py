@@ -107,16 +107,16 @@ class SplunkDatasetNew(object):
         for dict in test_events:
             self.add_event(dict, 'test')
 
-        prev_state, status_code = SplunkHarnessLoader.get_request(options.log_analysis_get_url, 3)
-        if status_code != 200:
-            logger.error('Got bad status code ' + str(status_code) + ' for url ' + options.log_analysis_get_url)
-
-        if prev_state['resource'] is not None:
-            for key, events in prev_state['resource'].get('control_events').items():
+        prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
+                                                                                    options.application_id,
+                                                                                    options.state_execution_id,
+                                                                                    options.query)
+        if prev_state is not None:
+            for key, events in prev_state.get('control_events').items():
                 for event in events:
                     self.add_event(event, 'control_prev')
 
-            for key, events in prev_state['resource'].get('test_events').items():
+            for key, events in prev_state.get('test_events').items():
                 for event in events:
                     self.add_event(event, 'test_prev')
 
