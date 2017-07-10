@@ -83,7 +83,8 @@ class SplunkDatasetNew(object):
                                                                     options.application_id,
                                                                     options.state_execution_id,
                                                                     options.log_collection_minute,
-                                                                    options.control_nodes)
+                                                                    options.control_nodes,
+                                                                    options.query)
 
         if control_events is None:
             logger.error("Did not get any control events")
@@ -96,7 +97,8 @@ class SplunkDatasetNew(object):
                                                                  options.application_id,
                                                                  options.state_execution_id,
                                                                  options.log_collection_minute,
-                                                                 options.test_nodes)
+                                                                 options.test_nodes,
+                                                                 options.query)
 
         if test_events is None:
             logger.error("Did not get any test events")

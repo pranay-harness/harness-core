@@ -58,7 +58,8 @@ class SplunkDataset(object):
                                                                     options.application_id,
                                                                     options.control_window[0],
                                                                     options.control_window[1],
-                                                                    options.control_nodes)
+                                                                    options.control_nodes,
+                                                                    options.query)
         for dict in control_events:
             self.add_event(dict, 'control')
 
@@ -66,7 +67,8 @@ class SplunkDataset(object):
                                                                  options.application_id,
                                                                  options.test_window[0],
                                                                  options.test_window[1],
-                                                                 options.test_nodes)
+                                                                 options.test_nodes,
+                                                                 options.query)
         for dict in test_events:
             self.add_event(dict, 'test')
 
