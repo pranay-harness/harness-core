@@ -74,8 +74,8 @@ class SplunkIntelOptimized(object):
 
         # classifier = IsolationForestClassifier()
 
-        classifier = FrequencyAnomalyDetector()
-        #classifier = ConnectedSetClassifier(FrequencyAnomalyDetector())
+        #classifier = FrequencyAnomalyDetector()
+        classifier = ConnectedSetClassifier(FrequencyAnomalyDetector())
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
