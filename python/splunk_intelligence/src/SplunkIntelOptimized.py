@@ -3,6 +3,7 @@ import logging
 import sys
 
 import numpy as np
+from core.ConnectedSetClassifier import ConnectedSetClassifier
 
 from core.KmeansAnomalyDetector import KmeansAnomalyDetector
 from core.KmeansCluster import KmeansCluster
@@ -75,6 +76,7 @@ class SplunkIntelOptimized(object):
         # classifier = IsolationForestClassifier()
 
         classifier = FrequencyAnomalyDetector()
+        #classifier = ConnectedSetClassifier(FrequencyAnomalyDetector())
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
@@ -85,7 +87,7 @@ class SplunkIntelOptimized(object):
 
             values_control = np.column_stack(([idx] * len(values), values))
 
-            classifier.fit_transform(idx, values_control)
+            classifier.fit_transform(idx, values_control, 0.2)
 
             for host, data in group.items():
                 values_test = np.array([freq.get('count') for freq in data.get('message_frequencies')])
@@ -175,9 +177,8 @@ def main(args):
 
     splunkIntel = SplunkIntelOptimized(splunkDataset, options)
     splunkDataset = splunkIntel.run()
-    payload = splunkDataset.get_output_as_json
-    payload['query'] = options.query
-    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, payload))
+    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url,
+                                              splunkDataset.get_output_as_json(options)))
 
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}
