@@ -4,29 +4,39 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.Application;
-import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.Encryptable;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -40,6 +50,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingValidationService settingValidationService;
   @Inject private AppService appService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -117,18 +129,79 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId) {
-    delete(appId, GLOBAL_ENV_ID, varId);
+    SettingAttribute settingAttribute = get(varId);
+    Validator.notNullCheck("Setting Value", settingAttribute);
+    ensureSettingAttributeSafeToDelete(settingAttribute);
+    wingsPersistence.delete(settingAttribute);
   }
 
-  @Override
-  public void delete(String appId, String envId, String varId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("envId")
-                                .equal(envId)
-                                .field(ID_KEY)
-                                .equal(varId));
+  private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
+    if (settingAttribute.getCategory().equals(Category.CLOUD_PROVIDER)) {
+      ensureCloudProviderSafeToDelete(settingAttribute);
+    } else if (settingAttribute.getCategory().equals(Category.CONNECTOR)) {
+      ensureConnectorSafeToDelete(settingAttribute);
+    } else if (settingAttribute.getCategory().equals(Category.SETTING)) {
+      ensureSettingSafeToDelete(settingAttribute);
+    }
+  }
+
+  private void ensureSettingSafeToDelete(SettingAttribute settingAttribute) {
+    // TODO:: workflow scan for finding out usage in Steps/expression ???
+  }
+
+  private void ensureConnectorSafeToDelete(SettingAttribute connectorSetting) {
+    if (SettingVariableTypes.ELB.name().equals(connectorSetting.getValue().getType())) {
+      List<InfrastructureMapping> infrastructureMappings =
+          infrastructureMappingService
+              .list(aPageRequest()
+                        .addFilter("loadBalancerId", EQ, connectorSetting.getUuid())
+                        .withLimit(PageRequest.UNLIMITED)
+                        .build())
+              .getResponse();
+      if (infrastructureMappings.size() > 0) {
+        List<String> infraMappingNames =
+            infrastructureMappings.stream().map(InfrastructureMapping::getDisplayName).collect(Collectors.toList());
+        throw new WingsException(INVALID_REQUEST, "message",
+            String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
+                connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                Joiner.on(", ").join(infraMappingNames)));
+      }
+    } else {
+      List<ArtifactStream> artifactStreams =
+          artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
+              .getResponse();
+      if (artifactStreams.size() > 0) {
+        List<String> artifactStreamName = artifactStreams.stream()
+                                              .map(ArtifactStream::getSourceName)
+                                              .filter(java.util.Objects::nonNull)
+                                              .collect(Collectors.toList());
+        throw new WingsException(INVALID_REQUEST, "message",
+            String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
+                artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
+                Joiner.on(", ").join(artifactStreamName)));
+      }
+    }
+
+    // TODO:: workflow scan for finding out usage in Steps ???
+  }
+
+  private void ensureCloudProviderSafeToDelete(SettingAttribute clodProviderSetting) {
+    List<InfrastructureMapping> infrastructureMappings =
+        infrastructureMappingService
+            .list(aPageRequest()
+                      .addFilter("computeProviderSettingId", EQ, clodProviderSetting.getUuid())
+                      .withLimit(PageRequest.UNLIMITED)
+                      .build())
+            .getResponse();
+    if (infrastructureMappings.size() > 0) {
+      List<String> infraMappingNames =
+          infrastructureMappings.stream().map(InfrastructureMapping::getDisplayName).collect(Collectors.toList());
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
+              clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+              Joiner.on(", ").join(infraMappingNames)));
+    }
+    // TODO:: workflow scan for finding out usage in Steps ???
   }
 
   /* (non-Javadoc)
@@ -217,7 +290,6 @@ public class SettingsServiceImpl implements SettingsService {
                               .withAccountId(accountId)
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName("User/Password :: sudo - <app-account>")
-
                               .withValue(aHostConnectionAttributes()
                                              .withConnectionType(SSH)
                                              .withAccessType(USER_PASSWORD_SUDO_APP_USER)
@@ -240,16 +312,16 @@ public class SettingsServiceImpl implements SettingsService {
     PageRequest<SettingAttribute> pageRequest;
     if (appId == null || appId.equals(GLOBAL_APP_ID)) {
       pageRequest = aPageRequest()
-                        .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
-                        .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
-                        .addFilter("value.type", Operator.EQ, type)
+                        .addFilter("appId", EQ, GLOBAL_APP_ID)
+                        .addFilter("envId", EQ, GLOBAL_ENV_ID)
+                        .addFilter("value.type", EQ, type)
                         .build();
     } else {
       Application application = appService.get(appId);
       pageRequest = aPageRequest()
-                        .addFilter("accountId", Operator.EQ, application.getAccountId())
-                        .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
-                        .addFilter("value.type", Operator.EQ, type)
+                        .addFilter("accountId", EQ, application.getAccountId())
+                        .addFilter("envId", EQ, GLOBAL_ENV_ID)
+                        .addFilter("value.type", EQ, type)
                         .build();
     }
 
@@ -258,10 +330,8 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type) {
-    PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter("accountId", Operator.EQ, accountId)
-                                                    .addFilter("value.type", Operator.EQ, type)
-                                                    .build();
+    PageRequest<SettingAttribute> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("value.type", EQ, type).build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
   }
 

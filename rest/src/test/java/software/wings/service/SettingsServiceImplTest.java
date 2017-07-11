@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -8,17 +9,23 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.JENKINS_URL;
+import static software.wings.utils.WingsTestConstants.JOB_NAME;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,14 +37,22 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.StringValue;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -53,6 +68,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
   @Mock private Application application;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -143,12 +160,72 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldDelete() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(Category.CONNECTOR)
+                                            .withValue(JenkinsConfig.Builder.aJenkinsConfig()
+                                                           .withJenkinsUrl(JENKINS_URL)
+                                                           .withPassword(PASSWORD)
+                                                           .withUsername(USER_NAME)
+                                                           .withAccountId("ACCOUNT_ID")
+                                                           .build())
+                                            .build();
+    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+
     settingsService.delete(APP_ID, SETTING_ID);
-    verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
-    verify(spyQuery).field("appId");
-    verify(spyQuery).field("envId");
-    verify(spyQuery).field(ID_KEY);
-    verify(wingsPersistence).delete(spyQuery);
+    verify(wingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  public void shouldThroeExceptionIfReferencedConnectorDeleted() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(Category.CONNECTOR)
+                                            .withValue(JenkinsConfig.Builder.aJenkinsConfig()
+                                                           .withJenkinsUrl(JENKINS_URL)
+                                                           .withPassword(PASSWORD)
+                                                           .withUsername(USER_NAME)
+                                                           .withAccountId("ACCOUNT_ID")
+                                                           .build())
+                                            .build();
+    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(artifactStreamService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            JenkinsArtifactStream.Builder.aJenkinsArtifactStream().withSourceName(JOB_NAME).build()))
+                        .build());
+
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+  }
+
+  @Test
+  public void shouldThroeExceptionIfReferencedCloudProviderDeleted() {
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(Category.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.Builder.anAwsConfig().build())
+                                            .build();
+    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(infrastructureMappingService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(anAwsInfrastructureMapping()
+                                                 .withComputeProviderType(AWS.name())
+                                                 .withComputeProviderName("NAME")
+                                                 .build()))
+                        .build());
+
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }
 
   /**

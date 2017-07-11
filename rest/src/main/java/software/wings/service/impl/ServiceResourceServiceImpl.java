@@ -393,7 +393,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows =
-        workflowService.listWorkflows(aPageRequest().addFilter("appId", EQ, service.getAppId()).build()).getResponse();
+        workflowService
+            .listWorkflows(
+                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .getResponse();
 
     List<Workflow> serviceWorkflows =
         workflows.stream()

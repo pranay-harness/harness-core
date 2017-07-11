@@ -74,15 +74,6 @@ public interface SettingsService {
   void delete(String appId, String varId);
 
   /**
-   * Delete.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   * @param varId the var id
-   */
-  void delete(String appId, String envId, String varId);
-
-  /**
    * Gets the by name.
    *
    * @param appId         the app id
