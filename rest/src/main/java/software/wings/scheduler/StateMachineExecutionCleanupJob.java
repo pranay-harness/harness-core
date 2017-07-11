@@ -5,6 +5,7 @@ import static software.wings.sm.ExecutionInterrupt.Builder.aWorkflowExecutionInt
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 
@@ -37,7 +38,7 @@ public class StateMachineExecutionCleanupJob implements Job {
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
     PageResponse<StateExecutionInstance> pageResponse = wingsPersistence.query(StateExecutionInstance.class,
         aPageRequest()
-            .addFilter("status", Operator.IN, RUNNING, NEW, STARTING, PAUSED)
+            .addFilter("status", Operator.IN, RUNNING, NEW, STARTING, PAUSED, WAITING)
             .addFilter("expiryTs", Operator.LT, System.currentTimeMillis())
             .withLimit("1000")
             .addFilter("appId", Operator.EQ, appId)

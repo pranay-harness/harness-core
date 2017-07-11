@@ -245,15 +245,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, StateExecutionInstance> allInstancesIdMap =
           allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-      StateMachine sm =
-          wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-      List<StateExecutionInstance> pausedInstances =
-          allInstances.stream()
-              .filter(
-                  i -> (i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSED_ON_ERROR))
-              .collect(Collectors.toList());
-      if (pausedInstances != null && !pausedInstances.isEmpty()) {
+      if (allInstances.stream().anyMatch(
+              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
         workflowExecution.setStatus(ExecutionStatus.PAUSED);
+      } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+        workflowExecution.setStatus(ExecutionStatus.WAITING);
       } else {
         ExecutionInterrupt executionInterrupt = executionInterruptManager.checkForExecutionInterrupt(
             workflowExecution.getAppId(), workflowExecution.getUuid());
@@ -263,6 +259,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
       if (includeGraph) {
+        StateMachine sm = wingsPersistence.get(
+            StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
         workflowExecution.setExecutionNode(
             graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
       }

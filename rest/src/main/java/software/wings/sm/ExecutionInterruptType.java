@@ -36,7 +36,11 @@ public enum ExecutionInterruptType {
   MARK_FAILED("Mark the node as failed"), /**
                                            * Mark as success.
                                            */
-  MARK_SUCCESS("Mark the node as success");
+  MARK_SUCCESS("Mark the node as success"),
+
+  ROLLBACK("Rollback"),
+
+  ROLLBACK_DONE("Rollback Done");
 
   private String description;
 

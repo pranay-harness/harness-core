@@ -330,7 +330,7 @@ public class WorkflowExecution extends Base {
    * @return the boolean
    */
   public boolean isPausedStatus() {
-    return status != null && (status == ExecutionStatus.PAUSED || status == ExecutionStatus.PAUSED_ON_ERROR);
+    return status != null && (status == ExecutionStatus.PAUSED || status == ExecutionStatus.WAITING);
   }
 
   /**

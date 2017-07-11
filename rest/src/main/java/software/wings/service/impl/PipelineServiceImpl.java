@@ -17,7 +17,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.PAUSED_ON_ERROR;
+import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatus.PAUSING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.APPROVAL;
@@ -182,22 +182,25 @@ public class PipelineServiceImpl implements PipelineService {
       pipelineExecution.setStatus(executionDetails.getStatus());
       pipelineExecution.setEndTs(executionDetails.getEndTs());
     } else {
-      boolean anyStatePaused = stateExecutionInstanceMap.values().stream().anyMatch(stateExecutionInstance
-          -> stateExecutionInstance.getStatus().equals(PAUSED) || stateExecutionInstance.getStatus().equals(PAUSING)
-              || stateExecutionInstance.getStatus().equals(PAUSED_ON_ERROR));
-      if (anyStatePaused) {
+      if (stateExecutionInstanceMap.values().stream().anyMatch(stateExecutionInstance
+              -> stateExecutionInstance.getStatus() == PAUSED || stateExecutionInstance.getStatus() == PAUSING)) {
         pipelineExecution.setStatus(PAUSED);
+      } else if (stateExecutionInstanceMap.values().stream().anyMatch(
+                     stateExecutionInstance -> stateExecutionInstance.getStatus() == WAITING)) {
+        pipelineExecution.setStatus(WAITING);
       } else {
         // Verify if any workflow execution is in Paused state
-        anyStatePaused =
-            pipelineExecution.getPipelineStageExecutions()
+        if (pipelineExecution.getPipelineStageExecutions()
                 .stream()
                 .flatMap(executions -> executions.getWorkflowExecutions().stream())
                 .anyMatch(workflowExecution
-                    -> workflowExecution.getStatus().equals(PAUSED) || workflowExecution.getStatus().equals(PAUSING)
-                        || workflowExecution.getStatus().equals(PAUSED_ON_ERROR));
-        if (anyStatePaused) {
+                    -> workflowExecution.getStatus() == PAUSED || workflowExecution.getStatus() == PAUSING)) {
           pipelineExecution.setStatus(PAUSED);
+        } else if (pipelineExecution.getPipelineStageExecutions()
+                       .stream()
+                       .flatMap(executions -> executions.getWorkflowExecutions().stream())
+                       .anyMatch(workflowExecution -> workflowExecution.getStatus() == WAITING)) {
+          pipelineExecution.setStatus(WAITING);
         } else {
           pipelineExecution.setStatus(ExecutionStatus.RUNNING);
         }

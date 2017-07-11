@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -333,6 +334,214 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateC.getName()))
         .as("StateAB executed before StateC")
         .isEqualTo(true);
+  }
+
+  /**
+   * Should mark success .
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldAdviceToMarkSuccess() throws InterruptedException {
+    String appId = UUIDGenerator.getUuid();
+    StateMachine sm = new StateMachine();
+    sm.setAppId(appId);
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    sm.addState(stateB);
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+
+    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    sm.addState(stateAB);
+
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .withToState(stateC)
+                         .build());
+
+    sm = workflowService.createStateMachine(sm);
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+
+    System.out.println("Going to trigger state machine");
+    String executionUuid = UUIDGenerator.getUuid();
+
+    StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
+    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    callback.await();
+
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNull();
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
+        .as("StateA executed before StateAB")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateB.getName()))
+        .as("StateAB executed before StateB")
+        .isEqualTo(true);
+  }
+
+  /**
+   * Should mark failed
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldAdviceToMarkFailed() throws InterruptedException {
+    String appId = UUIDGenerator.getUuid();
+    StateMachine sm = new StateMachine();
+    sm.setAppId(appId);
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    sm.addState(stateB);
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+
+    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    sm.addState(stateAB);
+
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .withToState(stateC)
+                         .build());
+
+    sm = workflowService.createStateMachine(sm);
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+
+    System.out.println("Going to trigger state machine");
+    String executionUuid = UUIDGenerator.getUuid();
+
+    StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
+    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    callback.await();
+
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
+        .as("StateA executed before StateAB")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateC.getName()))
+        .as("StateAB executed before StateC")
+        .isEqualTo(true);
+  }
+
+  /**
+   * Should mark aborted
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldAdviceToMarkAborted() throws InterruptedException {
+    String appId = UUIDGenerator.getUuid();
+    StateMachine sm = new StateMachine();
+    sm.setAppId(appId);
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    sm.addState(stateB);
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+
+    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    sm.addState(stateAB);
+
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .withToState(stateC)
+                         .build());
+
+    sm = workflowService.createStateMachine(sm);
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
+
+    System.out.println("Going to trigger state machine");
+    String executionUuid = UUIDGenerator.getUuid();
+
+    StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
+    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.ABORT);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    callback.await();
+
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNull();
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
+        .as("StateA executed before StateAB")
+        .isEqualTo(true);
+  }
+
+  public static class CustomeExecutionEventAdvisor implements ExecutionEventAdvisor {
+    private ExecutionInterruptType executionInterruptType;
+
+    public CustomeExecutionEventAdvisor() {}
+
+    public CustomeExecutionEventAdvisor(ExecutionInterruptType executionInterruptType) {
+      this.executionInterruptType = executionInterruptType;
+    }
+    @Override
+    public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
+      if (executionEvent.getExecutionStatus() == ExecutionStatus.FAILED) {
+        return anExecutionEventAdvice().withExecutionInterruptType(executionInterruptType).build();
+      }
+      return null;
+    }
+
+    public ExecutionInterruptType getExecutionInterruptType() {
+      return executionInterruptType;
+    }
+
+    public void setExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+      this.executionInterruptType = executionInterruptType;
+    }
   }
 
   /**
