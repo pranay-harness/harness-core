@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -64,6 +65,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ExecutorService executorService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -212,8 +214,16 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public boolean delete(String appId, String artifactId) {
-    return wingsPersistence.delete(
-        wingsPersistence.createQuery(Artifact.class).field("appId").equal(appId).field(ID_KEY).equal(artifactId));
+    Artifact artifact = get(appId, artifactId);
+    Validator.notNullCheck("Artifact", artifact);
+
+    boolean deleted = wingsPersistence.delete(artifact);
+    if (deleted) {
+      executorService.submit(()
+                                 -> artifact.getArtifactFiles().forEach(
+                                     artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS)));
+    }
+    return deleted;
   }
 
   @Override

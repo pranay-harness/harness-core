@@ -57,8 +57,8 @@ import software.wings.exception.WingsException;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
@@ -95,7 +95,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactService artifactService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private UserService userService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -313,20 +313,27 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipeline == null) {
       return true;
     }
+    boolean deleted = false;
+
     if (forceDelete) {
-      return wingsPersistence.delete(pipeline);
-    }
-    PageRequest<PipelineExecution> pageRequest =
-        aPageRequest().addFilter("appId", EQ, appId).addFilter("pipelineId", EQ, pipelineId).build();
-    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
-    if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
-        || pageResponse.getResponse().stream().allMatch(
-               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
-      return wingsPersistence.delete(pipeline);
+      deleted = wingsPersistence.delete(pipeline);
     } else {
-      String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());
-      throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message", message);
+      PageRequest<PipelineExecution> pageRequest =
+          aPageRequest().addFilter("appId", EQ, appId).addFilter("pipelineId", EQ, pipelineId).build();
+      PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
+      if (pageResponse == null || CollectionUtils.isEmpty(pageResponse.getResponse())
+          || pageResponse.getResponse().stream().allMatch(
+                 pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
+        deleted = wingsPersistence.delete(pipeline);
+      } else {
+        String message = String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName());
+        throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, "message", message);
+      }
     }
+    if (deleted) {
+      executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, pipelineId));
+    }
+    return deleted;
   }
 
   @Override

@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -31,6 +32,7 @@ import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPL
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.values;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -69,6 +71,7 @@ import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
@@ -90,10 +93,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -122,6 +126,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -154,7 +159,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private PluginManager pluginManager;
   @Inject private StaticConfiguration staticConfiguration;
-  @Inject private EnvironmentService environmentService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -163,6 +167,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private AppService appService;
   @Inject private AccountService accountService;
+  @Inject private ExecutorService executorService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private PipelineService pipelineService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -467,14 +474,39 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflow == null) {
       return true;
     }
+
+    ensureWorkflowSafeToDelete(workflow);
+
+    boolean deleted = false;
     if (forceDelete) {
-      return wingsPersistence.delete(Workflow.class, appId, workflowId);
+      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
+    } else {
+      if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
+        String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
+        throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
+      }
+      deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
     }
-    if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
-      String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
-      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
+    if (deleted) {
+      executorService.submit(() -> artifactStreamService.deleteStreamActionForWorkflow(appId, workflowId));
     }
-    return wingsPersistence.delete(Workflow.class, appId, workflowId);
+    return deleted;
+  }
+
+  private void ensureWorkflowSafeToDelete(Workflow workflow) {
+    List<Pipeline> pipelines = pipelineService.listPipelines(
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", EQ, workflow.getAppId())
+            .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
+            .build());
+
+    if (pipelines.size() > 0) {
+      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format("Workflow is referenced by %s pipline%s [%s].", pipelines.size(),
+              pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
+    }
   }
 
   /**

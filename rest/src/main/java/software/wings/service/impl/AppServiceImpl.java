@@ -273,14 +273,14 @@ public class AppServiceImpl implements AppService {
         workflowService.deleteStateMachinesByApplication(appId);
         pipelineService.deletePipelineByApplication(appId);
         serviceResourceService.deleteByApp(appId);
+        notificationService.sendNotificationAsync(
+            anInformationNotification()
+                .withAppId(application.getUuid())
+                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+                .withNotificationTemplateVariables(
+                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
+                .build());
       });
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(application.getUuid())
-              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-              .withNotificationTemplateVariables(
-                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
-              .build());
       deleteCronForStateMachineExecutionCleanup(appId);
     }
   }
