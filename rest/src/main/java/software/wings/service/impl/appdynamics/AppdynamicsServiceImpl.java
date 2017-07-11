@@ -5,6 +5,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ArrayListMultimap;
 
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
@@ -128,18 +129,32 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public Boolean saveMetricData(
-      String accountId, long appdynamicsAppId, long tierId, List<AppdynamicsMetricData> metricDataList) {
+  public Boolean saveMetricData(String accountId, String applicationId, String stateExecutionId, long appdynamicsAppId,
+      long tierId, List<AppdynamicsMetricData> metricDataList) {
     logger.debug("inserting " + metricDataList.size() + " pieces of AppDynamics metrics data");
     int count = 0;
     for (AppdynamicsMetricData metricData : metricDataList) {
-      List<AppdynamicsMetricDataRecord> metricDataRecords =
-          AppdynamicsMetricDataRecord.generateDataRecords(accountId, appdynamicsAppId, tierId, metricData);
+      List<AppdynamicsMetricDataRecord> metricDataRecords = AppdynamicsMetricDataRecord.generateDataRecords(
+          accountId, applicationId, stateExecutionId, appdynamicsAppId, tierId, metricData);
       count += metricDataRecords.size();
       wingsPersistence.saveIgnoringDuplicateKeys(metricDataRecords);
     }
     logger.debug("inserted " + count + " AppDynamicsMetricDataRecords to persistence layer.");
     return true;
+  }
+
+  @Override
+  public List<AppdynamicsMetricDataRecord> getMetricData(AppdynamicsDataRequest dataRequest) {
+    Query<AppdynamicsMetricDataRecord> appdynamicsDataRecordQuery =
+        wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class)
+            .field("stateExecutionId")
+            .equal(dataRequest.getStateExecutionId())
+            .field("applicationId")
+            .equal(dataRequest.getApplicationId());
+
+    List<AppdynamicsMetricDataRecord> records = appdynamicsDataRecordQuery.asList();
+    logger.debug("returning " + records.size() + " records for request: " + dataRequest);
+    return records;
   }
 
   public MetricSummary generateMetrics(String stateExecutionInstanceId, String accountId, String appId) {

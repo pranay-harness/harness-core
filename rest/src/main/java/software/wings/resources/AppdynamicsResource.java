@@ -5,15 +5,19 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import retrofit2.http.Query;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.MetricSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsDataRequest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -102,9 +106,21 @@ public class AppdynamicsResource {
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
       List<AppdynamicsMetricData> metricData) throws IOException {
-    return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
+    return new RestResponse<>(appdynamicsService.saveMetricData(
+        accountId, applicationId, stateExecutionId, appdynamicsAppId, tierId, metricData));
+  }
+
+  @POST
+  @Path("/get-metrics")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<List<AppdynamicsMetricDataRecord>> getAppdynamicsData(
+      @QueryParam("accountId") String accountId, AppdynamicsDataRequest dataRequest) throws IOException {
+    return new RestResponse<>(appdynamicsService.getMetricData(dataRequest));
   }
 
   @GET

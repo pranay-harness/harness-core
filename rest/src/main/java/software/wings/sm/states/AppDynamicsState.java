@@ -232,8 +232,9 @@ public class AppDynamicsState extends AbstractAnalysisState {
     }
 
     final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    final AppdynamicsDataCollectionInfo dataCollectionInfo = new AppdynamicsDataCollectionInfo(
-        appDynamicsConfig, Long.parseLong(applicationId), Long.parseLong(tierId), Integer.parseInt(timeDuration));
+    final AppdynamicsDataCollectionInfo dataCollectionInfo =
+        new AppdynamicsDataCollectionInfo(appDynamicsConfig, context.getAppId(), context.getStateExecutionInstanceId(),
+            Long.parseLong(applicationId), Long.parseLong(tierId), Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)

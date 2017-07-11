@@ -19,12 +19,12 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
     while (true) {
       try {
         WebTarget btTarget = client.target(baseUrl + "/todolist/exception");
-        //        getRequestBuilder(btTarget).get();
-        //        btTarget = client.target(baseUrl + "/todolist");
-        //        getRequestBuilder(btTarget).get();
-        //        btTarget = client.target(baseUrl + "/todolist/register");
-        //        getRequestBuilder(btTarget).get();
-        //        btTarget = client.target(baseUrl + "/todolist/login");
+        getRequestBuilder(btTarget).get();
+        btTarget = client.target(baseUrl + "/todolist");
+        getRequestBuilder(btTarget).get();
+        btTarget = client.target(baseUrl + "/todolist/register");
+        getRequestBuilder(btTarget).get();
+        btTarget = client.target(baseUrl + "/todolist/login");
         System.out.println(getRequestBuilder(btTarget).get().getStatus());
       } catch (Throwable t) {
         System.out.println(t.fillInStackTrace());

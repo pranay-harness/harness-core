@@ -65,7 +65,7 @@ public class SplunkServiceImpl implements SplunkService {
                                                               .hasAnyOf(logRequest.getNodes());
 
     List<SplunkLogDataRecord> records = splunkLogDataRecordQuery.asList();
-    logger.info("returning " + records.size() + " records for request: " + logRequest);
+    logger.debug("returning " + records.size() + " records for request: " + logRequest);
     return records;
   }
 
