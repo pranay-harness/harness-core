@@ -315,6 +315,15 @@ class SplunkDatasetNew(object):
                                unknown_clusters=self.anom_clusters
                                ))
 
+    @property
+    def get_output_for_notebook_as_json(self):
+
+        return json.dumps(dict(control_events=self.control_events, test_events=self.test_events,
+                               unknown_events=self.anomalies,
+                               control_clusters=self.control_clusters, test_clusters=self.test_clusters,
+                               unknown_clusters=self.anom_clusters
+                               ))
+
     def control_scatter_plot(self):
 
         x = []
