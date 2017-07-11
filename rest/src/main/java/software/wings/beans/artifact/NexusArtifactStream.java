@@ -102,7 +102,7 @@ public class NexusArtifactStream extends ArtifactStream {
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)
         .withGroupId(groupId)
-        .withArtifactName(artifactPaths.get(0))
+        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
   }
 

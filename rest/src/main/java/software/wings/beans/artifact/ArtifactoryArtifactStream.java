@@ -5,6 +5,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.UIOrder;
@@ -20,13 +21,19 @@ import java.util.List;
 public class ArtifactoryArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
 
-  @UIOrder(5)
+  @SchemaIgnore private String groupId;
+
+  @SchemaIgnore private String imageName;
+
+  @SchemaIgnore @Attributes(title = "Artifact Path") private List<String> artifactPaths;
+
+  @UIOrder(5) @Attributes(title = "Artifact Path / File Filter") private String artifactPattern;
+
+  @UIOrder(6)
   @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
   }
-
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   public ArtifactoryArtifactStream() {
     super(ArtifactStreamType.ARTIFACTORY.name());
@@ -35,7 +42,10 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @SchemaIgnore
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
+    if (StringUtils.isBlank(getImageName())) {
+      return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
+    }
+    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
@@ -55,6 +65,21 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   /**
+   * Get Artifact Pattern
+   * @return
+   */
+  public String getArtifactPattern() {
+    return artifactPattern;
+  }
+
+  /**
+   * Set artifact pattern
+   * @param artifactPattern
+   */
+  public void setArtifactPattern(String artifactPattern) {
+    this.artifactPattern = artifactPattern;
+  }
+  /**
    * Gets artifact paths.
    *
    * @return the artifact paths
@@ -70,6 +95,40 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
    */
   public void setArtifactPaths(List<String> artifactPaths) {
     this.artifactPaths = artifactPaths;
+  }
+
+  /**
+   * Gets image name.
+   *
+   * @return the image name
+   */
+  @SchemaIgnore
+  public String getImageName() {
+    return imageName;
+  }
+
+  /**
+   * Sets image name.
+   *
+   * @param imageName the image name
+   */
+  public void setImageName(String imageName) {
+    this.imageName = imageName;
+  }
+
+  /**
+   * @return groupId
+   */
+  public String getGroupId() {
+    return groupId;
+  }
+
+  /**
+   * Set Group Id
+   */
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+    this.imageName = groupId;
   }
 
   @Attributes(title = "Source Type")
@@ -96,7 +155,9 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)
-        .withArtifactName(artifactPaths.get(0))
+        .withImageName(imageName)
+        .withArtifactPattern(artifactPattern)
+        .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
   }
 
@@ -111,6 +172,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
+        .withArtifactPattern(getArtifactPattern())
         .build();
   }
 
@@ -132,6 +194,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private boolean autoApproveForProduction = false;
     private boolean metadataOnly = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+    private String artifactPattern;
 
     private Builder() {}
 
@@ -277,7 +340,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     }
 
     /**
-     *
+     * With MetadataOnly
      */
     public Builder withMetadataOnly(boolean metadataOnly) {
       this.metadataOnly = metadataOnly;
@@ -292,6 +355,16 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
      */
     public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
       this.streamActions = streamActions;
+      return this;
+    }
+
+    /**
+     * With artifactpattern
+     * @param artifactPattern
+     * @return
+     */
+    public Builder withArtifactPattern(String artifactPattern) {
+      this.artifactPattern = artifactPattern;
       return this;
     }
 
@@ -314,7 +387,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions)
-          .withMetadataOnly(metadataOnly);
+          .withMetadataOnly(metadataOnly)
+          .withArtifactPattern(artifactPattern);
     }
 
     /**
@@ -336,6 +410,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       artifactoryArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       artifactoryArtifactStream.setStreamActions(streamActions);
       artifactoryArtifactStream.setMetadataOnly(metadataOnly);
+      artifactoryArtifactStream.setArtifactPattern(artifactPattern);
       return artifactoryArtifactStream;
     }
   }

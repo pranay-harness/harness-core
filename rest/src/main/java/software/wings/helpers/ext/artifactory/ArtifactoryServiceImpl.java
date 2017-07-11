@@ -6,6 +6,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClient;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
@@ -20,8 +21,13 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,12 +59,29 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
+  public List<BuildDetails> getVersions(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactName, ArtifactType artifactType, int maxVersions) {
+    return null;
+  }
+
+  @Override
   public BuildDetails getLastSuccessfulBuild(ArtifactoryConfig artifactoryConfig, String repositoryPath) {
     return null;
   }
 
   @Override
-  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
+  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType) {
+    switch (artifactType) {
+      case DOCKER:
+        return getRepositories(artifactoryConfig);
+      case RPM:
+        return getRepositories(artifactoryConfig, EnumSet.of(PackageType.rpm, PackageType.yum));
+      default:
+        return getRepositories(artifactoryConfig, EnumSet.of(PackageType.maven));
+    }
+  }
+
+  private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, EnumSet<PackageType> packageTypes) {
     Map<String, String> repositories = new HashMap<>();
     try {
       String apiUrl = "api/repositories/";
@@ -72,8 +95,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         String repoKey = repository.get("key").toString();
         Repository repo = artifactory.repository(repoKey).get();
         RepositorySettings settings = repo.getRepositorySettings();
-        PackageType packageType = settings.getPackageType();
-        if (packageType.equals(PackageType.docker)) {
+        if (packageTypes.contains(settings.getPackageType())) {
           repositories.put(repository.get("key").toString(), repository.get("key").toString());
         }
       }
@@ -95,6 +117,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return repositories;
   }
 
+  @Override
+  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
+    return getRepositories(artifactoryConfig, EnumSet.of(PackageType.docker));
+  }
+
   /**
    * prepareResponseMessage
    */
@@ -108,21 +135,158 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey) {
-    try {
-      Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
-      Repository repository = artifactory.repository(repoKey).get();
-      RepositorySettings settings = repository.getRepositorySettings();
-      PackageType packageType = settings.getPackageType();
-      if (packageType.equals(PackageType.docker)) {
-        return listDockerImages(artifactory, repoKey);
-      }
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Repository repository = artifactory.repository(repoKey).get();
+    String repoLayout = repository.getRepoLayoutRef();
+    RepositorySettings settings = repository.getRepositorySettings();
+    PackageType packageType = settings.getPackageType();
+    if (packageType.equals(PackageType.docker)) {
+      return listDockerImages(artifactory, repoKey);
+    } else {
+      return listArtifactPaths(artifactory, repoKey, packageType, repoLayout);
+    }
+  }
 
+  @Override
+  public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactPath, ArtifactType artifactType, int maxVersions) {
+    List<String> artifactPaths = new ArrayList<>();
+    try {
+      String aclQuery = "api/search/aql";
+      String requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"depth\": 1})";
+      if (!StringUtils.isBlank(artifactPath)) {
+        artifactPath = artifactPath + "*";
+        if (artifactPath.contains("/")) {
+          int index = artifactPath.lastIndexOf('/');
+          String subPath = artifactPath.substring(0, index);
+          String name = artifactPath.substring(index + 1);
+          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"path\": \"" + subPath
+              + "\"}, {\"name\": {\"$match\": \"" + name + "\"}})";
+        } else {
+          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"depth\": 1}, {\"name\": {\"$match\": \""
+              + artifactPath + "\"}})";
+        }
+      }
+      ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
+                                                 .apiUrl(aclQuery)
+                                                 .method(ArtifactoryRequest.Method.POST)
+                                                 .requestBody(requestBody)
+                                                 .requestType(ArtifactoryRequest.ContentType.TEXT)
+                                                 .responseType(ArtifactoryRequest.ContentType.JSON);
+      Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+      LinkedHashMap<String, List> response = artifactory.restCall(repositoryRequest);
+      if (response != null) {
+        List<LinkedHashMap<String, String>> results = response.get("results");
+        for (LinkedHashMap<String, String> result : results) {
+          if (!result.get("created_by").equals("_system_")) {
+            String path = result.get("path");
+            String name = result.get("name");
+            if (!path.equals(".")) {
+              artifactPaths.add(repoKey + "/" + path + "/" + name);
+            } else {
+              artifactPaths.add(repoKey + "/" + name);
+            }
+          }
+        }
+      }
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving images  from Artifactory server {} ",
+      logger.error("Error occurred while retrieving File Paths from Artifactory server {} ",
           artifactoryConfig.getArtifactoryUrl(), e);
+      if (e instanceof HttpResponseException) {
+        HttpResponseException httpResponseException = (HttpResponseException) e;
+        if (httpResponseException.getStatusCode() == 401) {
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+        }
+      }
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
+    logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
+    artifactPaths = artifactPaths.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+    logger.info("Artifact paths after reverse order sorting from Artifactory Server" + artifactPaths);
+    return artifactPaths.stream()
+        .map(s -> aBuildDetails().withNumber(s.substring(s.lastIndexOf('/') + 1)).withArtifactPath(s).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public BuildDetails getLatestFilePath(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactName, ArtifactType artifactType) {
+    List<BuildDetails> buildDetails = getFilePaths(artifactoryConfig, repoKey, groupId, artifactName, artifactType, 1);
+    if (!CollectionUtils.isEmpty(buildDetails) && buildDetails.size() > 0) {
+      return buildDetails.get(0);
+    }
     return null;
+  }
+
+  private List<String> listArtifactPaths(
+      Artifactory artifactory, String repoKey, PackageType packageType, String repoLayout) {
+    List<String> artifactNames = new ArrayList<>();
+    try {
+      String aclQuery = "api/search/aql";
+      String requestBody = "items.find({\"repo\":{\"$eq\":\"" + repoKey + "\"}})";
+      ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
+                                                 .apiUrl(aclQuery)
+                                                 .method(ArtifactoryRequest.Method.POST)
+                                                 .requestBody(requestBody)
+                                                 .requestType(ArtifactoryRequest.ContentType.TEXT)
+                                                 .responseType(ArtifactoryRequest.ContentType.JSON);
+      LinkedHashMap<String, List> response = artifactory.restCall(repositoryRequest);
+      Map<String, String> artifactPaths = new HashMap<>();
+      String propertyUrl = "api/storage/" + repoKey + "/";
+      if (response != null) {
+        List<LinkedHashMap<String, String>> results = response.get("results");
+        for (LinkedHashMap<String, String> result : results) {
+          if (!result.get("created_by").equals("_system_")) {
+            String path = result.get("path");
+            String name = result.get("name");
+            String artifactPath;
+            if (!path.equals(".")) {
+              artifactPath = path + "/" + name;
+              artifactPaths.put(path + "/" + name, name);
+            } else {
+              artifactPath = name;
+            }
+            if (packageType.equals(PackageType.rpm)) {
+              ArtifactoryRequest request = new ArtifactoryRequestImpl()
+                                               .apiUrl(propertyUrl + artifactPath)
+                                               .addQueryParam("properties", "rpm.metadata.name")
+                                               .method(ArtifactoryRequest.Method.GET)
+                                               .responseType(ArtifactoryRequest.ContentType.JSON);
+              try {
+                LinkedHashMap<String, LinkedHashMap<String, List<String>>> propertyResponse =
+                    artifactory.restCall(request);
+                if (propertyResponse != null) {
+                  LinkedHashMap<String, List<String>> properties = propertyResponse.get("properties");
+                  String artifactName = properties.get("rpm.metadata.name").get(0);
+                  if (!path.equals(".")) {
+                    artifactName = path + "/" + artifactName;
+                  }
+                  if (!artifactNames.contains(artifactName)) {
+                    artifactNames.add(artifactName);
+                  }
+                }
+              } catch (Exception e) {
+                if (e instanceof HttpResponseException) {
+                  HttpResponseException httpResponseException = (HttpResponseException) e;
+                  if (httpResponseException.getStatusCode() == 404) {
+                    logger.info(
+                        "Property [rpm.metadata.name] is not set for artifact path {} of artifactory server {} ",
+                        artifactory.getUri(), artifactPath);
+                    System.out.println("Artifact name: " + artifactPath);
+                    artifactNames.add(artifactPath);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      logger.error(
+          "Error occurred while retrieving artifact names from Artifactory server {} ", artifactory.getUri(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+    }
+    return artifactNames;
   }
 
   public List<String> listDockerImages(Artifactory artifactory, String repoKey) {
@@ -145,7 +309,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       ex.printStackTrace();
     }
 
-    return null;
+    return new ArrayList<>();
   }
 
   /**
@@ -154,6 +318,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    * @param artifactoryConfig
    * @return Artifactory returns artifactory client
    */
+
   private Artifactory getArtifactoryClient(ArtifactoryConfig artifactoryConfig) {
     Artifactory artifactory = ArtifactoryClient.create(
         getBaseUrl(artifactoryConfig), artifactoryConfig.getUsername(), new String(artifactoryConfig.getPassword()));
@@ -177,17 +342,37 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
                                               .withArtifactoryUrl(url)
                                               .withUsername("admin")
-                                              .withPassword("harness123ww!".toCharArray())
+                                              .withPassword("harness123!".toCharArray())
                                               .build();
     /* List<BuildDetails> buildDetails = new ArtifactoryServiceImpl().getBuilds(artifactoryConfig,
      "docker-local/wingsplugins/todolist", 1); for (BuildDetails buildDetail : buildDetails) { System.out.println("Build
      Number" +  buildDetail.getNumber());
      }*/
 
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
-    System.out.println("Repositories" + repositories);
+    // Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
+    // System.out.println("Repositories" + repositories);
 
     // List<String> images = artifactoryService.listDockerImages(artifactoryConfig, "docker");
     // images.forEach(s -> System.out.println(s));
+
+    // artifactoryService.getRepoPaths(artifactoryConfig, "harness-rpm");
+    String str = "todolist-1.0-1.x86_64.rpm";
+    str = str.replace("todolist", "");
+
+    str = StringUtils.substringBetween("todolist-1.0-1.x86_64.rpm", "todolist", "x86_64");
+    System.out.println("Substring: " + str.substring(1, str.length() - 1));
+    str = "todolist-1.0-1.rpm";
+    // int lastIndex = str.lastIndexOf(".");
+    str = str.replace("todolist", "");
+    int lastIndex = str.lastIndexOf(".");
+    System.out.println("Substring: " + str.substring(1, lastIndex));
+    // artifactoryService.doArtifactsSearch(artifactoryConfig, "harness-rpm", "todolist");
+
+    // artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "", ArtifactType.RPM, 50);
+
+    artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "todolist*", ArtifactType.RPM, 50);
+
+    System.out.println("Comparison: "
+        + "".compareTo("todolist-demo-25-0.x86_64.rpm"));
   }
 }

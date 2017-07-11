@@ -282,6 +282,8 @@ public interface Constants {
   String BUILD_NO = "buildNo";
   String REVISION = "revision";
   String BUILD_PARAMS = "buildParameters";
+  String ARTIFACT_PATH = "artifactPath";
+  String ARTIFACT_FILE_NAME = "artifactFileName";
 
   String S3 = "S3";
 }

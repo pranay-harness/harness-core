@@ -12,6 +12,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -29,30 +30,41 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
-    List<BuildDetails> builds = artifactoryService.getBuilds(
-        artifactoryConfig, artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), 50);
-    return builds;
+    if (artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+      return artifactoryService.getBuilds(
+          artifactoryConfig, artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), 50);
+    } else {
+      return artifactoryService.getFilePaths(artifactoryConfig, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactPattern(),
+          artifactStreamAttributes.getArtifactType(), 50);
+    }
   }
 
   @Override
-  public List<String> getJobs(ArtifactoryConfig jenkinsConfig) {
+  public List<String> getJobs(ArtifactoryConfig config) {
     return null;
   }
 
   @Override
   public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config) {
-    return null;
+    return artifactoryService.getRepoPaths(config, jobName);
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig config) {
-    return null;
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
+    return artifactoryService.getLatestFilePath(artifactoryConfig, artifactStreamAttributes.getJobName(),
+        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactPattern(),
+        artifactStreamAttributes.getArtifactType());
   }
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config) {
     return artifactoryService.getRepositories(config);
+  }
+  @Override
+  public Map<String, String> getPlans(ArtifactoryConfig config, ArtifactType artifactType) {
+    return artifactoryService.getRepositories(config, artifactType);
   }
 
   @Override

@@ -203,6 +203,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   @Override
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
+    if (fileNamesIds == null || fileNamesIds.isEmpty()) {
+      saveExecutionLog("There are no artifacts to copy.");
+      return CommandExecutionStatus.SUCCESS;
+    }
+
     return fileNamesIds.stream()
         .map(fileNamesId
             -> scpOneFile(destinationDirectoryPath,

@@ -6,6 +6,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.collect.Sets;
 
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -14,6 +15,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
@@ -34,6 +36,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public Set<String> getJobs(String appId, String settingId) {
@@ -47,6 +50,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     return getBuildService(settingAttribute, appId).getPlans(settingAttribute.getValue());
+  }
+
+  @Override
+  public Map<String, String> getPlans(String appId, String settingId, String serviceId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    notNullCheck("Setting", settingAttribute);
+    Service service = serviceResourceService.get(appId, serviceId);
+    notNullCheck("Service", service);
+    return getBuildService(settingAttribute, appId).getPlans(settingAttribute.getValue(), service.getArtifactType());
   }
 
   @Override
@@ -64,9 +76,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("Artifact Stream", artifactStream);
-
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return getBuildService(settingAttribute, appId)
-        .getBuilds(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
+        .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
   }
 
   @Override
@@ -75,6 +89,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     notNullCheck("Setting", settingAttribute);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("Artifact Stream", artifactStream);
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return getBuildService(settingAttribute, appId)
         .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }

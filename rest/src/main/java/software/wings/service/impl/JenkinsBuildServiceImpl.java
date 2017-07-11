@@ -20,6 +20,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.utils.ArtifactType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -122,6 +123,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       jobs.forEach(jobKey -> jobKeyMap.put(jobKey, jobKey));
     }
     return jobKeyMap;
+  }
+
+  @Override
+  public Map<String, String> getPlans(JenkinsConfig config, ArtifactType artifactType) {
+    return getPlans(config);
   }
 
   @Override

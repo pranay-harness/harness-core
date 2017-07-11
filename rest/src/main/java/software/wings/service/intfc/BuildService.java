@@ -1,9 +1,8 @@
 package software.wings.service.intfc;
 
-import java.util.Set;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -59,6 +58,15 @@ public interface BuildService<T> {
    * @return the plans
    */
   Map<String, String> getPlans(T config);
+
+  /**
+   * Gets plans.
+   *
+   * @param config the jenkins config
+   * @param config
+   * @return the plans
+   */
+  Map<String, String> getPlans(T config, ArtifactType artifactType);
 
   /**
    * Gets group Id paths.

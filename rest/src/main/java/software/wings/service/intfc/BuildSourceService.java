@@ -32,6 +32,15 @@ public interface BuildSourceService {
   Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId);
 
   /**
+   * Gets plans.
+   *
+   * @param appId     the app id
+   * @param settingId the setting id
+   * @return the plans
+   */
+  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId);
+
+  /**
    * Gets artifact paths.
    *
    * @param appId     the app id

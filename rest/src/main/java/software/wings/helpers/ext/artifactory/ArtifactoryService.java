@@ -2,6 +2,7 @@ package software.wings.helpers.ext.artifactory;
 
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,39 @@ public interface ArtifactoryService {
       ArtifactoryConfig artifactoryConfig, String repoKey, String imageName, int maxNumberOfBuilds);
 
   /**
+   * Get versions
+   * @param artifactoryConfig
+   * @param repoKey
+   * @param artifactName
+   * @param artifactType
+   * @return
+   */
+  List<BuildDetails> getVersions(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactName, ArtifactType artifactType, int maxVersions);
+
+  /**
+   * Get versions
+   * @param artifactoryConfig
+   * @param repoKey
+   * @param artifactName
+   * @param artifactType
+   * @return
+   */
+  List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactName, ArtifactType artifactType, int maxVersions);
+
+  /**
+   * Get versions
+   * @param artifactoryConfig
+   * @param repoKey
+   * @param artifactName
+   * @param artifactType
+   * @return
+   */
+  BuildDetails getLatestFilePath(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
+      String artifactName, ArtifactType artifactType);
+
+  /**
    * Gets last successful build.
    *
    * @param artifactoryConfig the docker config
@@ -36,6 +70,12 @@ public interface ArtifactoryService {
    * @return map RepoId and Name
    */
   Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig);
+
+  /**
+   * Get Repositories
+   * @return map RepoId and Name
+   */
+  Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType);
 
   /***
    * Get GroupId paths

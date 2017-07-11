@@ -22,7 +22,7 @@ public class ArtifactoryDockerArtifactStream extends ArtifactStream {
 
   @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String groupId;
 
-  @SchemaIgnore @Attributes(title = "Image Name", required = true) private String imageName;
+  @SchemaIgnore private String imageName;
 
   public ArtifactoryDockerArtifactStream() {
     super(ArtifactStreamType.ARTIFACTORY.name());
