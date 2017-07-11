@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.RestResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -55,9 +56,12 @@ public class BuildSourceResource {
   @Path("plans")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, String>> getBuildPlans(
-      @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getPlans(appId, settingId));
+  public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("appId") String appId,
+      @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId) {
+    if (StringUtils.isBlank(serviceId)) {
+      return new RestResponse<>(buildSourceService.getPlans(appId, settingId));
+    }
+    return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId));
   }
 
   /**

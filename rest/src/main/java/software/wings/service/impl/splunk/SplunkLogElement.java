@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class SplunkLogElement {
+  private String query;
   private String clusterLabel;
   private String host;
   private long timeStamp;

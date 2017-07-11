@@ -10,8 +10,9 @@ import java.util.Map;
  */
 
 @Data
-public class SplunkMLClusterSummary {
-  private Map<String, SplunkMLHostSummary> hostSummary;
-  private String logText;
-  private List<String> tags;
+public class SplunkMLHostSummary {
+  private int count;
+  private double xCordinate;
+  private double yCordinate;
+  private boolean unexpectedFreq;
 }

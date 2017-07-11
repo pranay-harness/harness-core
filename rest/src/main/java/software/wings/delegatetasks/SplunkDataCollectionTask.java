@@ -154,6 +154,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           final List<SplunkLogElement> logElements = new ArrayList<>();
           while ((event = resultsReader.getNextEvent()) != null) {
             final SplunkLogElement splunkLogElement = new SplunkLogElement();
+            splunkLogElement.setQuery(query);
             splunkLogElement.setClusterLabel(event.get("cluster_label"));
             splunkLogElement.setHost(event.get("host"));
             splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));

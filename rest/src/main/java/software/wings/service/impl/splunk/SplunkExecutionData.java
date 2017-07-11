@@ -2,14 +2,12 @@ package software.wings.service.impl.splunk;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
-import software.wings.api.AppDynamicsExecutionData;
-import software.wings.api.AppDynamicsExecutionData.Builder;
 import software.wings.api.ExecutionDataValue;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -18,7 +16,7 @@ public class SplunkExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;
   private String splunkConfigId;
-  private List<String> queries;
+  private Set<String> queries;
   private int timeDuration;
 
   public String getCorrelationId() {
@@ -45,11 +43,11 @@ public class SplunkExecutionData extends StateExecutionData {
     this.splunkConfigId = splunkConfigId;
   }
 
-  public List<String> getQueries() {
+  public Set<String> getQueries() {
     return queries;
   }
 
-  public void setQueries(List<String> queries) {
+  public void setQueries(Set<String> queries) {
     this.queries = queries;
   }
 
@@ -135,7 +133,7 @@ public class SplunkExecutionData extends StateExecutionData {
     private String correlationId;
     private String stateExecutionInstanceId;
     private String splunkConfigId;
-    private List<String> queries;
+    private Set<String> queries;
     private int timeDuration;
     private String stateName;
     private Long startTs;
@@ -169,7 +167,7 @@ public class SplunkExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withSplunkQueries(List<String> queries) {
+    public Builder withSplunkQueries(Set<String> queries) {
       this.queries = queries;
       return this;
     }

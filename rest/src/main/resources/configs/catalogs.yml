@@ -7,16 +7,18 @@ CARD_VIEW_SORT_BY:
       value: alphabeticalDescending
       
 ARTIFACT_TYPE:
-    - name: JAR File
+    - name: Docker Image
+      value: DOCKER
+    - name: Web Archive (WAR)
+      value: WAR
+    - name: Java Archive (JAR)
       value: JAR
     - name: TAR File
       value: TAR
-    - name: WAR File
-      value: WAR
     - name: ZIP File
       value: ZIP
-    - name: Docker Image
-      value: DOCKER
+    - name: RPM File
+      value: RPM
     - name: Other
       value: OTHER
 

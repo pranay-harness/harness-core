@@ -42,6 +42,7 @@ import software.wings.utils.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -56,6 +57,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   final long METRIC_ID = 4L;
   final String METRIC_NAME = AppdynamicsConstants.RESPONSE_TIME_95;
   final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  final String applicationId = UUID.randomUUID().toString();
+  final String stateExecutionId = UUID.randomUUID().toString();
 
   @Before
   public void setUp() throws Exception {
@@ -455,7 +458,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
             .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_2, METRIC_VALUE_3})
             .build();
     final List<AppdynamicsMetricDataRecord> METRIC_DATA_RECORDS_ALPHA_1 =
-        AppdynamicsMetricDataRecord.generateDataRecords(ACCOUNT_ID, appId, tier.getId(), METRIC_DATA_ALPHA_1);
+        AppdynamicsMetricDataRecord.generateDataRecords(
+            ACCOUNT_ID, applicationId, stateExecutionId, appId, tier.getId(), METRIC_DATA_ALPHA_1);
 
     // insert metric values 1 and 2 using the REST interface
     WebTarget target = client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + ACCOUNT_ID
@@ -481,7 +485,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     // insert metric values 2 and 3 using direct service call
     // this should result in 1, 2, and 3 all being stored
-    appdynamicsService.saveMetricData(ACCOUNT_ID, appId, tier.getId(), Arrays.asList(METRIC_DATA_ALPHA_2));
+    appdynamicsService.saveMetricData(
+        ACCOUNT_ID, applicationId, stateExecutionId, appId, tier.getId(), Arrays.asList(METRIC_DATA_ALPHA_2));
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("result not correct length", 3, result.size());
@@ -496,8 +501,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     // generate metrics using the REST interface
     // insert beta nodes
-    appdynamicsService.saveMetricData(
-        ACCOUNT_ID, appId, tier.getId(), Arrays.asList(METRIC_DATA_BETA_1, METRIC_DATA_BETA_2));
+    appdynamicsService.saveMetricData(ACCOUNT_ID, applicationId, stateExecutionId, appId, tier.getId(),
+        Arrays.asList(METRIC_DATA_BETA_1, METRIC_DATA_BETA_2));
 
     // requires sample StateExecutionInstance
     Query<Application> appQuery = wingsPersistence.createQuery(Application.class);

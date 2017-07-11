@@ -51,12 +51,12 @@ public class ExecutionInterruptManager {
 
       if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RESUME
           && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR) {
+          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
       }
 
       if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RETRY
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR
+          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING
           && stateExecutionInstance.getStatus() != ExecutionStatus.ERROR) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
       }
@@ -66,7 +66,7 @@ public class ExecutionInterruptManager {
           && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
           && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING
           && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR) {
+          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
       }
       if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE

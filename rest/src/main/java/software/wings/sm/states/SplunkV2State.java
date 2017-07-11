@@ -6,6 +6,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -30,6 +31,7 @@ import software.wings.service.impl.splunk.SplunkExecutionData;
 import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
 import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkMLClusterSummary;
+import software.wings.service.impl.splunk.SplunkMLHostSummary;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -49,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -165,7 +168,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
                                                   .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                                   .withSplunkConfigID(splunkConfigId)
-                                                  .withSplunkQueries(Lists.newArrayList(query.split(",")))
+                                                  .withSplunkQueries(Sets.newHashSet(query.split(",")))
                                                   .withAnalysisDuration(Integer.parseInt(timeDuration))
                                                   .withCorrelationId(UUID.randomUUID().toString())
                                                   .build();
@@ -223,8 +226,10 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
 
     for (SplunkMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
-      if (clusterSummary.isUnexpectedFreq()) {
-        return true;
+      for (Entry<String, SplunkMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
+        if (hostEntry.getValue().isUnexpectedFreq()) {
+          return true;
+        }
       }
     }
 
@@ -248,7 +253,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
 
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
-    final List<String> queries = Lists.newArrayList(query.split(","));
+    final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
@@ -274,6 +279,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     private final String applicationId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
+    private final Set<String> queries;
     private int logCollectionMinute = 0;
 
     public SplunkAnalysisGenerator(ExecutionContext context) {
@@ -288,70 +294,81 @@ public class SplunkV2State extends AbstractAnalysisState {
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
       this.controlNodes.removeAll(this.testNodes);
+      this.queries = Sets.newHashSet(query.split(","));
     }
 
     @Override
     public void run() {
-      if (!splunkService.isLogDataCollected(
-              applicationId, context.getStateExecutionInstanceId(), logCollectionMinute)) {
-        logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
-            + " stateExecution: " + context.getStateExecutionInstanceId() + ". No ML analysis will be run this minute");
-        return;
-      }
-
-      try {
-        final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
-        final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
-        final String logAnalysisSaveUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
-            + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
-        final String logAnalysisGetUrl = this.serverUrl + "/api/splunk/get-analysis-records?accountId=" + accountId
-            + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
-        final List<String> command = new ArrayList<>();
-        command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
-        command.add("--url");
-        command.add(logInputUrl);
-        command.add("--application_id");
-        command.add(applicationId);
-        command.add("--control_nodes");
-        command.addAll(controlNodes);
-        command.add("--test_nodes");
-        command.addAll(testNodes);
-        command.add("--sim_threshold");
-        command.add(String.valueOf(0.8));
-        command.add("--log_collection_minute");
-        command.add(String.valueOf(logCollectionMinute));
-        command.add("--state_execution_id");
-        command.add(context.getStateExecutionInstanceId());
-        command.add("--log_analysis_save_url");
-        command.add(logAnalysisSaveUrl);
-        command.add("--log_analysis_get_url");
-        command.add(logAnalysisGetUrl);
-
-        for (int i = 0; i < PYTHON_JOB_RETRIES; i++) {
-          final ProcessResult result = new ProcessExecutor(command)
-                                           .redirectOutput(Slf4jStream
-                                                               .of(LoggerFactory.getLogger(getClass().getName() + "."
-                                                                   + context.getStateExecutionInstanceId()))
-                                                               .asInfo())
-                                           .execute();
-
-          if (result.getExitValue() != 0) {
-            logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
-                + logCollectionMinute + " trial: " + (i + 1));
-            Thread.sleep(2000);
-          } else {
-            splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
-            logCollectionMinute++;
-            logger.info("Splunk analysis done for " + context.getStateExecutionInstanceId() + "for minute "
-                + logCollectionMinute);
-            return;
-          }
+      for (String query : queries) {
+        if (!splunkService.isLogDataCollected(
+                applicationId, context.getStateExecutionInstanceId(), query, logCollectionMinute)) {
+          logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
+              + " stateExecution: " + context.getStateExecutionInstanceId()
+              + ". No ML analysis will be run this minute");
+          return;
         }
 
-      } catch (Exception e) {
-        logger.error(
-            "Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute " + logCollectionMinute,
-            e);
+        try {
+          final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
+          final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
+          final String logAnalysisSaveUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
+              + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
+          final String logAnalysisGetUrl = this.serverUrl + "/api/splunk/get-analysis-records?accountId=" + accountId;
+          final List<String> command = new ArrayList<>();
+          command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
+          command.add("--query");
+          command.add(query);
+          command.add("--url");
+          command.add(logInputUrl);
+          command.add("--application_id");
+          command.add(applicationId);
+          command.add("--control_nodes");
+          command.addAll(controlNodes);
+          command.add("--test_nodes");
+          command.addAll(testNodes);
+          command.add("--sim_threshold");
+          command.add(String.valueOf(0.8));
+          command.add("--log_collection_minute");
+          command.add(String.valueOf(logCollectionMinute));
+          command.add("--state_execution_id");
+          command.add(context.getStateExecutionInstanceId());
+          command.add("--log_analysis_save_url");
+          command.add(logAnalysisSaveUrl);
+          command.add("--log_analysis_get_url");
+          command.add(logAnalysisGetUrl);
+
+          for (int i = 0; i < PYTHON_JOB_RETRIES; i++) {
+            final ProcessResult result = new ProcessExecutor(command)
+                                             .redirectOutput(Slf4jStream
+                                                                 .of(LoggerFactory.getLogger(getClass().getName() + "."
+                                                                     + context.getStateExecutionInstanceId()))
+                                                                 .asInfo())
+                                             .execute();
+
+            switch (result.getExitValue()) {
+              case 0:
+                splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
+                logCollectionMinute++;
+                logger.info("Splunk analysis done for " + context.getStateExecutionInstanceId() + "for minute "
+                    + logCollectionMinute);
+                return;
+              case 2:
+                logger.warn("No test data from the deployed nodes " + context.getStateExecutionInstanceId()
+                    + "for minute " + logCollectionMinute);
+                logCollectionMinute++;
+                return;
+              default:
+                logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+                    + logCollectionMinute + " trial: " + (i + 1));
+                Thread.sleep(2000);
+            }
+          }
+
+        } catch (Exception e) {
+          logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+                  + logCollectionMinute,
+              e);
+        }
       }
     }
   }

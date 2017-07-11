@@ -418,6 +418,62 @@ public enum ArtifactType {
     }
   },
   /**
+   * RPM artifact type
+   */
+  RPM {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(
+          aCommand()
+              .withCommandType(CommandType.INSTALL)
+              .withGraph(
+                  aGraph()
+                      .withGraphName("Install")
+                      .addNodes(
+                          aNode()
+                              .withOrigin(true)
+                              .withX(50)
+                              .withY(50)
+                              .withId(UUIDGenerator.graphIdGenerator("node"))
+                              .withName("Setup Runtime Paths")
+                              .withType(SETUP_ENV.name())
+                              .addProperty("commandString",
+                                  "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                              .build(),
+                          aNode()
+                              .withX(200)
+                              .withY(50)
+                              .withId(UUIDGenerator.graphIdGenerator("node"))
+                              .withName("Copy Artifact")
+                              .withType(SCP.name())
+                              .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                              .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                              .build(),
+                          aNode()
+                              .withX(350)
+                              .withY(50)
+                              .withId(UUIDGenerator.graphIdGenerator("node"))
+                              .withName("Copy Configs")
+                              .withType(COPY_CONFIGS.name())
+                              .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                              .build(),
+                          aNode()
+                              .withX(500)
+                              .withY(50)
+                              .withId(UUIDGenerator.graphIdGenerator("node"))
+                              .withName("Install")
+                              .withType(EXEC.name())
+                              .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                              .addProperty("commandString", "yum install \"$ARTIFACT_FILE_NAME\"")
+                              .build())
+                      .buildPipeline())
+              .build());
+    }
+  },
+
+  /**
    * Other artifact type.
    */
   OTHER {

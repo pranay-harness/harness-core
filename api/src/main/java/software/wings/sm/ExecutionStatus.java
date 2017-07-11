@@ -37,11 +37,11 @@ public enum ExecutionStatus {
               * Error execution status.
               */
   ERROR(true), /**
-                * Paused on error execution status.
+                * Waiting on error execution status.
                 */
-  PAUSED_ON_ERROR, /**
-                    * Pausing on execution
-                    */
+  WAITING, /**
+            * Pausing on execution
+            */
   PAUSING,
   /**
    * Paused execution status.

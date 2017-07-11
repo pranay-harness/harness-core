@@ -24,6 +24,9 @@ import java.util.List;
 })
 public class SplunkLogDataRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
+
+  @NotEmpty @Indexed private String query;
+
   @NotEmpty private String applicationId;
   @NotEmpty private String clusterLabel;
   @NotEmpty private String host;
@@ -36,10 +39,12 @@ public class SplunkLogDataRecord extends Base {
   @Indexed private boolean processed;
   @Indexed private int logCollectionMinute;
 
-  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String clusterLabel, String host,
-      long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed, int logCollectionMinute) {
+  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String query, String clusterLabel,
+      String host, long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed,
+      int logCollectionMinute) {
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;
+    this.query = query;
     this.clusterLabel = clusterLabel;
     this.host = host;
     this.timeStamp = timeStamp;
@@ -54,9 +59,10 @@ public class SplunkLogDataRecord extends Base {
       String applicationId, String stateExecutionId, List<SplunkLogElement> logElements) {
     final List<SplunkLogDataRecord> records = new ArrayList<>();
     for (SplunkLogElement logElement : logElements) {
-      records.add(new SplunkLogDataRecord(applicationId, stateExecutionId, logElement.getClusterLabel(),
-          logElement.getHost(), logElement.getTimeStamp(), logElement.getCount(), logElement.getLogMessage(),
-          DigestUtils.md5Hex(logElement.getLogMessage()), false, logElement.getLogCollectionMinute()));
+      records.add(
+          new SplunkLogDataRecord(applicationId, stateExecutionId, logElement.getQuery(), logElement.getClusterLabel(),
+              logElement.getHost(), logElement.getTimeStamp(), logElement.getCount(), logElement.getLogMessage(),
+              DigestUtils.md5Hex(logElement.getLogMessage()), false, logElement.getLogCollectionMinute()));
     }
     return records;
   }
@@ -75,6 +81,14 @@ public class SplunkLogDataRecord extends Base {
 
   public void setStateExecutionId(String stateExecutionId) {
     this.stateExecutionId = stateExecutionId;
+  }
+
+  public String getQuery() {
+    return query;
+  }
+
+  public void setQuery(String query) {
+    this.query = query;
   }
 
   public String getClusterLabel() {

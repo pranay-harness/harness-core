@@ -10,6 +10,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.DockerBuildService;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,11 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public Map<String, String> getPlans(DockerConfig config) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+  }
+
+  @Override
+  public Map<String, String> getPlans(DockerConfig config, ArtifactType artifactType) {
+    return getPlans(config);
   }
 
   @Override

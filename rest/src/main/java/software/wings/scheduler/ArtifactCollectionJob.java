@@ -15,6 +15,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.common.Constants;
@@ -22,6 +23,8 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -38,6 +41,7 @@ public class ArtifactCollectionJob implements Job {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private ExecutorService executorService;
+  @Inject private ServiceResourceService serviceResourceService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
@@ -113,37 +117,98 @@ public class ArtifactCollectionJob implements Job {
         }
       }
     } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
-      logger.debug("Collecting Artifact for artifact stream {} ", ARTIFACTORY.name());
-      List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-
-      Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
-          Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
-
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getNumber())) {
-          logger.info(
-              "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
-              buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
-                                  .withRevision(buildDetails.getRevision())
-                                  .build();
-          artifactService.create(artifact);
+      Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+      if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
+            service.getArtifactType());
+        List<BuildDetails> builds =
+            buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+        List<Artifact> artifacts = artifactService
+                                       .list(aPageRequest()
+                                                 .addFilter("appId", EQ, appId)
+                                                 .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                                 .withLimit(UNLIMITED)
+                                                 .build(),
+                                           false)
+                                       .getResponse();
+        Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
+            Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
+        builds.forEach(buildDetails -> {
+          if (!existingBuilds.containsKey(buildDetails.getNumber())) {
+            logger.info(
+                "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
+                buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
+                                    .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
+                                    .withRevision(buildDetails.getRevision())
+                                    .build();
+            artifactService.create(artifact);
+          }
+        });
+      } else if (service.getArtifactType().equals(ArtifactType.RPM)) {
+        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
+            service.getArtifactType());
+        List<BuildDetails> builds =
+            buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+        List<Artifact> artifacts = artifactService
+                                       .list(aPageRequest()
+                                                 .addFilter("appId", EQ, appId)
+                                                 .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                                 .withLimit(UNLIMITED)
+                                                 .build(),
+                                           false)
+                                       .getResponse();
+        Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
+            Collectors.toMap(Artifact::getArtifactPath, Artifact::getUuid, (s, s2) -> s));
+        builds.forEach(buildDetails -> {
+          if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                                    .withMetadata(ImmutableMap.of(Constants.ARTIFACT_PATH,
+                                        buildDetails.getArtifactPath(), Constants.ARTIFACT_FILE_NAME,
+                                        buildDetails.getNumber(), Constants.BUILD_NO, buildDetails.getNumber()))
+                                    .build();
+            artifactService.create(artifact);
+          }
+        });
+      } else {
+        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
+            service.getArtifactType());
+        BuildDetails lastSuccessfulBuild =
+            buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
+        if (lastSuccessfulBuild != null) {
+          Artifact lastCollectedArtifact =
+              artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+          String artifactPath = (lastCollectedArtifact != null
+                                    && lastCollectedArtifact.getMetadata().get(Constants.ARTIFACT_PATH) != null)
+              ? lastCollectedArtifact.getMetadata().get(Constants.ARTIFACT_PATH)
+              : "";
+          if (artifactPath.compareTo(lastSuccessfulBuild.getArtifactPath()) >= 0) {
+            logger.info("Latest artifact path {} already collected.", artifactPath);
+          } else {
+            logger.info(
+                "Existing artifact path {} is older than new artifact path {}. Collect new Artifact for ArtifactStream {}",
+                artifactPath, lastSuccessfulBuild.getArtifactPath(), artifactStreamId);
+            Artifact artifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                    .withMetadata(ImmutableMap.of(Constants.ARTIFACT_PATH, lastSuccessfulBuild.getArtifactPath(),
+                        Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
+                    .build();
+            artifactService.create(artifact);
+          }
         }
-      });
-
+      }
     } else {
       BuildDetails lastSuccessfulBuild =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());

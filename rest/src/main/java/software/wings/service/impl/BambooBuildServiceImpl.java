@@ -15,6 +15,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,11 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   @Override
   public Map<String, String> getPlans(BambooConfig bambooConfig) {
     return bambooService.getPlanKeys(bambooConfig);
+  }
+
+  @Override
+  public Map<String, String> getPlans(BambooConfig config, ArtifactType artifactType) {
+    return getPlans(config);
   }
 
   @Override

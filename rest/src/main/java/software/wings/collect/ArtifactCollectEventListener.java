@@ -16,9 +16,11 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
@@ -126,6 +128,22 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withParameters(new Object[] {nexusConfig.getNexusUrl(), nexusConfig.getUsername(),
                 nexusConfig.getPassword(), nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
                 nexusArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .build();
+      }
+      case ARTIFACTORY: {
+        ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(artifactoryArtifactStream.getSettingId());
+        ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
+
+        return aDelegateTask()
+            .withTaskType(TaskType.ARTIFACTORY_COLLECTION)
+            .withAccountId(accountId)
+            .withAppId(artifactoryArtifactStream.getAppId())
+            .withWaitId(waitId)
+            .withParameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
+                artifactoryConfig.getPassword(), artifactoryArtifactStream.getJobname(),
+                artifactoryArtifactStream.getGroupId(), artifactoryArtifactStream.getArtifactPaths(),
+                artifactoryArtifactStream.getArtifactPattern(), artifact.getMetadata()})
             .build();
       }
 

@@ -114,6 +114,29 @@ public class Artifact extends Base {
     return null;
   }
 
+  /**
+   * Gets Artifact Path
+   *
+   * @return the buildNo
+   */
+  public String getArtifactPath() {
+    if (getMetadata() != null) {
+      return getMetadata().get(Constants.ARTIFACT_PATH);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Artifact Path
+   *
+   * @return the buildNo
+   */
+  public String getArtifactFileName() {
+    if (getMetadata() != null) {
+      return getMetadata().get(Constants.ARTIFACT_FILE_NAME);
+    }
+    return null;
+  }
   public Map<String, String> getBuildParameters() {
     if (getMetadata() != null) {
       return getMetadata();

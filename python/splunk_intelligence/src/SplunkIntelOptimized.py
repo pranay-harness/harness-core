@@ -74,7 +74,8 @@ class SplunkIntelOptimized(object):
 
         # classifier = IsolationForestClassifier()
 
-        classifier = FrequencyAnomalyDetector()
+        #classifier = FrequencyAnomalyDetector()
+        classifier = ConnectedSetClassifier(FrequencyAnomalyDetector())
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
@@ -175,9 +176,8 @@ def main(args):
 
     splunkIntel = SplunkIntelOptimized(splunkDataset, options)
     splunkDataset = splunkIntel.run()
-    payload = splunkDataset.get_output_as_json
-    payload['query'] = options.query
-    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, payload))
+    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url,
+                                              splunkDataset.get_output_as_json(options)))
 
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}

@@ -43,7 +43,7 @@
         <newrelic.version>3.32.0</newrelic.version>
         <aws.sdk.version>1.11.70</aws.sdk.version>
         <nexus.version>2.14.3-02</nexus.version>
-        <artifactory.javaclient.version>2.3.5</artifactory.javaclient.version>
+        <artifactory.javaclient.version>2.5.0</artifactory.javaclient.version>
     </properties>
 
     <repositories>

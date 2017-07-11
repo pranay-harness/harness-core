@@ -15,6 +15,7 @@ public class ArtifactStreamAttributes {
   private String groupId; // For nexus integration
   private String artifactName;
   private ArtifactType artifactType;
+  private String artifactPattern;
 
   /**
    * Gets job name.
@@ -137,6 +138,22 @@ public class ArtifactStreamAttributes {
   }
 
   /**
+   * Get Artifact Pattern
+   * @return
+   */
+  public String getArtifactPattern() {
+    return artifactPattern;
+  }
+
+  /**
+   * Set artifact pattern
+   * @param artifactPattern
+   */
+  public void setArtifactPattern(String artifactPattern) {
+    this.artifactPattern = artifactPattern;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -147,6 +164,7 @@ public class ArtifactStreamAttributes {
     private String groupId; // For nexus integration
     private String artifactName;
     private ArtifactType artifactType;
+    private String artifactPattern;
 
     private Builder() {}
 
@@ -232,6 +250,11 @@ public class ArtifactStreamAttributes {
       this.artifactType = artifactType;
       return this;
     }
+
+    public Builder withArtifactPattern(String artifactPattern) {
+      this.artifactPattern = artifactPattern;
+      return this;
+    }
     /**
      * But builder.
      *
@@ -245,7 +268,8 @@ public class ArtifactStreamAttributes {
           .withServerSetting(serverSetting)
           .withGroupId(groupId)
           .withArtifactName(artifactName)
-          .withArtifactType(artifactType);
+          .withArtifactType(artifactType)
+          .withArtifactPattern(artifactPattern);
     }
 
     /**
@@ -262,6 +286,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setGroupId(groupId);
       artifactStreamAttributes.setArtifactName(artifactName);
       artifactStreamAttributes.setArtifactType(artifactType);
+      artifactStreamAttributes.setArtifactPattern(artifactPattern);
       return artifactStreamAttributes;
     }
   }

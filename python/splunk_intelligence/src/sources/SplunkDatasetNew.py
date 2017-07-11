@@ -86,9 +86,9 @@ class SplunkDatasetNew(object):
                                                                     options.control_nodes,
                                                                     options.query)
 
-        if control_events is None:
+        if control_events is None or len(control_events) == 0:
             logger.error("Did not get any control events")
-            sys.exit(-1)
+            sys.exit(2)
 
         for dict in control_events:
             self.add_event(dict, 'control')
@@ -100,17 +100,17 @@ class SplunkDatasetNew(object):
                                                                  options.test_nodes,
                                                                  options.query)
 
-        if test_events is None:
+        if test_events is None or len(test_events) == 0:
             logger.error("Did not get any test events")
-            sys.exit(-1)
+            sys.exit(2)
 
         for dict in test_events:
             self.add_event(dict, 'test')
 
         prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
-                                                                                    options.application_id,
-                                                                                    options.state_execution_id,
-                                                                                    options.query)
+                                                                       options.application_id,
+                                                                       options.state_execution_id,
+                                                                       options.query)
         if prev_state is not None:
             for key, events in prev_state.get('control_events').items():
                 for event in events:
@@ -176,7 +176,7 @@ class SplunkDatasetNew(object):
 
     def get_control_events_text_as_np(self):
         texts = []
-        print('control count = ', len(self.test_events))
+        print('control count = ', len(self.control_events))
         for key, value in self.control_events.items():
             texts.append(value[0].get('text'))
         return np.array(texts)
@@ -307,13 +307,22 @@ class SplunkDatasetNew(object):
             if len(anomal) > 0:
                 self.anomalies.append(anomal)
 
+    def get_output_as_json(self, options):
+
+        return json.dumps(dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
+                               unknown_events=self.anomalies,
+                               control_clusters=self.control_clusters, test_clusters=self.test_clusters,
+                               unknown_clusters=self.anom_clusters
+                               ))
+
     @property
-    def get_output_as_json(self):
-        return json.dumps(
-            dict(control_events=self.control_events, test_events=self.test_events, unknown_events=self.anomalies,
-                 control_clusters=self.control_clusters, test_clusters=self.test_clusters,
-                 unknown_clusters=self.anom_clusters
-                 ))
+    def get_output_for_notebook_as_json(self):
+
+        return json.dumps(dict(control_events=self.control_events, test_events=self.test_events,
+                               unknown_events=self.anomalies,
+                               control_clusters=self.control_clusters, test_clusters=self.test_clusters,
+                               unknown_clusters=self.anom_clusters
+                               ))
 
     def control_scatter_plot(self):
 
@@ -441,6 +450,7 @@ class SplunkDatasetNew(object):
                 texts.append(val)
 
         return texts
+
     def split(self, input, length, size):
         input.replace('\n', ' ')
         input.replace('\tat', ' ')

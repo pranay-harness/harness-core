@@ -1378,12 +1378,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should pause on error
+   * Should wait on error
    *
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldPauseOnError() throws InterruptedException {
+  public void shouldWaitOnError() throws InterruptedException {
     Host applicationHost1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
     Host applicationHost2 = wingsPersistence.saveAndGet(
@@ -1467,14 +1467,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED);
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
+        .containsExactly(ExecutionStatus.WAITING.name());
 
     Node installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
@@ -1491,20 +1491,19 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED);
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(2)
         .extracting("status")
-        .contains(ExecutionStatus.SUCCESS.name(), ExecutionStatus.PAUSED_ON_ERROR.name());
+        .contains(ExecutionStatus.SUCCESS.name(), ExecutionStatus.WAITING.name());
 
-    installNode =
-        installNodes.stream()
-            .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
-            .collect(Collectors.toList())
-            .get(0);
+    installNode = installNodes.stream()
+                      .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.WAITING.name()))
+                      .collect(Collectors.toList())
+                      .get(0);
     executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                              .withAppId(app.getUuid())
                              .withEnvId(env.getUuid())
@@ -1566,7 +1565,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                          .map(Node::getNext)
                          .collect(Collectors.toList());
       paused = !installNodes.stream()
-                    .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
+                    .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.WAITING.name()))
                     .collect(Collectors.toList())
                     .isEmpty();
     } while (!paused && i < 5);
@@ -1659,7 +1658,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED);
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
 
     assertThat(installNodes)
         .isNotNull()
@@ -1667,7 +1666,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
+        .containsExactly(ExecutionStatus.WAITING.name());
 
     Node installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
@@ -1684,14 +1683,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED);
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
+        .containsExactly(ExecutionStatus.WAITING.name());
 
     installNode = installNodes.get(0);
     executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()

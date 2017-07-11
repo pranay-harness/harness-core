@@ -146,7 +146,7 @@ public class StateExecutionData {
       case ERROR:
       case ABORTED:
       case ABORTING:
-      case PAUSED_ON_ERROR:
+      case WAITING:
         breakDown.setFailed(1);
         break;
       case NEW:

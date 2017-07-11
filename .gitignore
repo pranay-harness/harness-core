@@ -19,3 +19,6 @@ access*gz
 python/**/*.pyc
 python/**/*-checkpoint.ipynb
 python/**/.pyenv
+delegate.log
+mygclogfilename.gc
+portal.log

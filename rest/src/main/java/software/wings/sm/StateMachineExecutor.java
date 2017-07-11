@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -85,8 +86,27 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(
-        wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams, callback);
+    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams,
+        callback, null);
+  }
+
+  /**
+   * Execute.
+   *
+   * @param appId         the app id
+   * @param smId          the sm id
+   * @param executionUuid the execution uuid
+   * @param executionName the execution name
+   * @param contextParams the context params
+   * @param callback      the callback
+   * @param executionEventAdvisor      the executionEventAdvisor
+   * @return the state execution instance
+   */
+  public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
+      ExecutionEventAdvisor executionEventAdvisor) {
+    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams,
+        callback, executionEventAdvisor);
   }
 
   /**
@@ -100,7 +120,8 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(StateMachine sm, String executionUuid, String executionName,
-      List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
+      ExecutionEventAdvisor executionEventAdvisor) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT);
@@ -120,6 +141,9 @@ public class StateMachineExecutor {
 
     if (stateExecutionInstance.getStateName() == null) {
       stateExecutionInstance.setStateName(sm.getInitialStateName());
+    }
+    if (executionEventAdvisor != null) {
+      stateExecutionInstance.setExecutionEventAdvisors(asList(executionEventAdvisor));
     }
     return triggerExecution(sm, stateExecutionInstance);
   }
@@ -230,7 +254,7 @@ public class StateMachineExecutor {
 
     StateMachine stateMachine = context.getStateMachine();
     boolean updated = updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING,
-        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR));
+        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED, ExecutionStatus.WAITING));
     if (!updated) {
       WingsException ex =
           new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
@@ -367,18 +391,54 @@ public class StateMachineExecutor {
       }
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null) {
-        if (executionEventAdvice.getExecutionInterruptType() == ExecutionInterruptType.MARK_FAILED) {
-          endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, null);
-        } else if (executionEventAdvice.getNextChildStateMachineId() != null
-            || executionEventAdvice.getNextStateName() != null) {
-          executionEventAdviceTransition(context, executionEventAdvice);
-        }
+        return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
       } else if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR) {
         return failedTransition(context, null);
       } else if (status == ExecutionStatus.ABORTED) {
         endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
+      }
+    }
+    return stateExecutionInstance;
+  }
+
+  private StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
+      StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
+      ExecutionEventAdvice executionEventAdvice) {
+    switch (executionEventAdvice.getExecutionInterruptType()) {
+      case MARK_FAILED: {
+        return failedTransition(context, null);
+      }
+      case MARK_SUCCESS: {
+        if (status != ExecutionStatus.SUCCESS) {
+          updateEndStatus(stateExecutionInstance, ExecutionStatus.SUCCESS, asList(status));
+        }
+        return successTransition(context);
+      }
+      case ABORT: {
+        endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
+        break;
+      }
+      case PAUSE: {
+        updateStatus(stateExecutionInstance, ExecutionStatus.WAITING, Lists.newArrayList(ExecutionStatus.FAILED));
+        break;
+      }
+      case ROLLBACK: {
+        if (executionEventAdvice.getNextChildStateMachineId() != null
+            || executionEventAdvice.getNextStateName() != null) {
+          executionEventAdviceTransition(context, executionEventAdvice);
+          break;
+        }
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "rollbackStateMachineId or rollbackStateName");
+      }
+      case ROLLBACK_DONE: {
+        endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, null);
+        break;
+      }
+      default: {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "executionEventAdvice.getExecutionInterruptType: " + executionEventAdvice.getExecutionInterruptType());
       }
     }
 
@@ -460,8 +520,7 @@ public class StateMachineExecutor {
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
         logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
-        updateStatus(
-            stateExecutionInstance, ExecutionStatus.PAUSED_ON_ERROR, Lists.newArrayList(ExecutionStatus.FAILED));
+        updateStatus(stateExecutionInstance, ExecutionStatus.WAITING, Lists.newArrayList(ExecutionStatus.FAILED));
       } else {
         // TODO: handle more strategy
         logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}"
@@ -494,8 +553,8 @@ public class StateMachineExecutor {
   private void abortExecution(ExecutionContextImpl context) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     boolean updated = updateStatus(stateExecutionInstance, ExecutionStatus.ABORTING,
-        Lists.newArrayList(
-            ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING, ExecutionStatus.PAUSED));
+        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING,
+            ExecutionStatus.PAUSED, ExecutionStatus.WAITING));
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
     }
@@ -516,7 +575,7 @@ public class StateMachineExecutor {
       }
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
-          Lists.newArrayList(ExecutionStatus.ABORTING), null, null, null);
+          asList(ExecutionStatus.ABORTING), null, null, null);
       invokeAdvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
@@ -711,7 +770,7 @@ public class StateMachineExecutor {
 
     if (isEmpty(runningStatusLists)) {
       runningStatusLists = Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING,
-          ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR, ExecutionStatus.ABORTING);
+          ExecutionStatus.PAUSED, ExecutionStatus.WAITING, ExecutionStatus.ABORTING);
     }
 
     if (isNotBlank(delegateTaskId)) {
@@ -890,7 +949,7 @@ public class StateMachineExecutor {
                                               .field(ID_KEY)
                                               .equal(stateExecutionInstance.getUuid())
                                               .field("status")
-                                              .equal(ExecutionStatus.PAUSED_ON_ERROR);
+                                              .equal(ExecutionStatus.WAITING);
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
@@ -909,7 +968,7 @@ public class StateMachineExecutor {
             .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
             .addFilter("status", Operator.IN, ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
-                ExecutionStatus.PAUSED, ExecutionStatus.PAUSING, ExecutionStatus.PAUSED_ON_ERROR)
+                ExecutionStatus.PAUSED, ExecutionStatus.PAUSING, ExecutionStatus.WAITING)
             .addFieldsIncluded("uuid", "stateType")
             .build();
 

@@ -15,6 +15,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(NexusConfig config) {
     return nexusService.getRepositories(config);
+  }
+
+  @Override
+  public Map<String, String> getPlans(NexusConfig config, ArtifactType artifactType) {
+    return getPlans(config);
   }
 
   @Override

@@ -21,12 +21,10 @@ import java.util.Objects;
 @JsonTypeName("ARTIFACTORY")
 public class ArtifactoryConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Password", required = true)
-  @Encrypted
-  @NotEmpty
-  private char[] password;
+
+  @Attributes(title = "User Name") private String username;
+
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

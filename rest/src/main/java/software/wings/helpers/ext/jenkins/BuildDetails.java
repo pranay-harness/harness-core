@@ -13,11 +13,13 @@ public class BuildDetails {
   private String number;
   private String revision;
   private String description;
+  private String artifactPath;
   private Map<String, String> buildParameters = new HashMap<>();
 
   /**
    * Gets number.
    *
+
    * @return the number
    */
   public String getNumber() {
@@ -49,6 +51,22 @@ public class BuildDetails {
    */
   public void setRevision(String revision) {
     this.revision = revision;
+  }
+
+  /**
+   * Get Artifact Path
+   * @return
+   */
+  public String getArtifactPath() {
+    return artifactPath;
+  }
+
+  /**
+   * Set File name
+   * @param artifactPath
+   */
+  public void setArtifactPath(String artifactPath) {
+    this.artifactPath = artifactPath;
   }
 
   @Override
@@ -117,6 +135,7 @@ public class BuildDetails {
     private String revision;
     private String description;
     private Map<String, String> buildParameters = new HashMap<>();
+    private String artifactPath;
 
     private Builder() {}
 
@@ -174,6 +193,14 @@ public class BuildDetails {
     }
 
     /**
+     * With artifact path
+     */
+    public Builder withArtifactPath(String artifactPath) {
+      this.artifactPath = artifactPath;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -183,6 +210,7 @@ public class BuildDetails {
           .withNumber(number)
           .withRevision(revision)
           .withDescription(description)
+          .withArtifactPath(artifactPath)
           .withBuildParameters(buildParameters);
     }
 
@@ -197,6 +225,7 @@ public class BuildDetails {
       buildDetails.setRevision(revision);
       buildDetails.setDescription(description);
       buildDetails.setBuildParameters(buildParameters);
+      buildDetails.setArtifactPath(artifactPath);
       return buildDetails;
     }
   }
