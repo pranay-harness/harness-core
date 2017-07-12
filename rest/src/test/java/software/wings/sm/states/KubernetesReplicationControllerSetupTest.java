@@ -221,7 +221,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
-    when(kubernetesContainerService.createService(
+    when(kubernetesContainerService.createOrReplaceService(
              eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
   }

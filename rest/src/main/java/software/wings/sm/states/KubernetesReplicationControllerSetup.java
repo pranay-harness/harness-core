@@ -155,42 +155,32 @@ public class KubernetesReplicationControllerSetup extends State {
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageName, app));
 
-    String kubernetesServiceName = null;
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     String serviceClusterIP = null;
     String serviceLoadBalancerIP = null;
 
+    Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
+
     if (serviceType != null && serviceType != ServiceType.None) {
-      kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-      Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
-      if (service == null) {
-        logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
-        service = kubernetesContainerService.createService(
-            kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
-      }
-      serviceClusterIP = service.getSpec().getClusterIP();
-      LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-
-      if (loadBalancer != null) {
-        if (loadBalancer.getIngress().isEmpty()) {
-          String finalKubernetesServiceName = kubernetesServiceName;
-
-          with()
-              .pollInterval(1, TimeUnit.SECONDS)
-              .await()
-              .atMost(60, TimeUnit.SECONDS)
-              .until(()
-                         -> !kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
-                                 .getStatus()
-                                 .getLoadBalancer()
-                                 .getIngress()
-                                 .isEmpty());
-
-          loadBalancer = kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
-                             .getStatus()
-                             .getLoadBalancer();
+      Service serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+      if (service != null) {
+        // Keep the previous load balancer IP if it exists and a new one was not specified
+        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+        if (serviceType == ServiceType.LoadBalancer && isNullOrEmpty(loadBalancerIP) && loadBalancer != null
+            && !loadBalancer.getIngress().isEmpty()) {
+          loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
+          serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
         }
-        serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
       }
+      service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceDefinition);
+      serviceClusterIP = service.getSpec().getClusterIP();
+
+      if (serviceType == ServiceType.LoadBalancer) {
+        serviceLoadBalancerIP = waitForLoadBalancerIP(kubernetesConfig, service);
+      }
+    } else if (service != null) {
+      logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
+      kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
     }
 
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
@@ -215,6 +205,31 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withDockerImageName(imageName)
                                     .build())
         .build();
+  }
+
+  private String waitForLoadBalancerIP(KubernetesConfig kubernetesConfig, Service service) {
+    String loadBalancerIP = null;
+    LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+    if (loadBalancer != null) {
+      if (loadBalancer.getIngress().isEmpty()) {
+        String serviceName = service.getMetadata().getName();
+        logger.info("Waiting for [{}] load balancer to be ready", serviceName);
+        with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+          LoadBalancerStatus loadBalancerStatus =
+              kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+          boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
+          if (loadBalancerReady && !isNullOrEmpty(this.loadBalancerIP)) {
+            loadBalancerReady = this.loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
+          }
+          return loadBalancerReady;
+        });
+
+        loadBalancer =
+            kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+      }
+      loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
+    }
+    return loadBalancerIP;
   }
 
   private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {

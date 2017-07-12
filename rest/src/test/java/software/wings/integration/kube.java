@@ -145,7 +145,7 @@ public class kube {
             .endSpec()
             .build());
 
-    kubernetesService.createService(config,
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -200,7 +200,7 @@ public class kube {
             .endSpec()
             .build());
 
-    kubernetesService.createService(config,
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
