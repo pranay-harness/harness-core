@@ -462,8 +462,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
             ACCOUNT_ID, applicationId, stateExecutionId, appId, tier.getId(), METRIC_DATA_ALPHA_1);
 
     // insert metric values 1 and 2 using the REST interface
-    WebTarget target = client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + ACCOUNT_ID
-        + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+    WebTarget target =
+        client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + ACCOUNT_ID + "&applicationId=" + applicationId
+            + "&stateExecutionId=" + stateExecutionId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(Arrays.asList(METRIC_DATA_ALPHA_1), APPLICATION_JSON),
         new GenericType<RestResponse<Boolean>>() {});

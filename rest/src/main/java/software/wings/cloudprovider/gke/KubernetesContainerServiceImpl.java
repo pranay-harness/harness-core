@@ -6,7 +6,6 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
@@ -14,7 +13,6 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
 import org.apache.commons.lang.StringUtils;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -106,10 +104,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                     .map(cond -> {
                                                       String msg = cond.getType() + ": " + cond.getStatus();
                                                       if (cond.getReason() != null) {
-                                                        msg += " - Reason: " + cond.getReason();
+                                                        msg += " - " + cond.getReason();
                                                       }
                                                       if (cond.getMessage() != null) {
-                                                        msg += " - Message: " + cond.getMessage();
+                                                        msg += " - " + cond.getMessage();
                                                       }
                                                       return msg;
                                                     })
@@ -123,12 +121,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
     if (hasErrors) {
       logger.error("Completed resize operation with errors");
-      executionLogCallback.saveExecutionLog(
-          String.format("Completed resize operation with errors."), Log.LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog("Completed resize operation with errors.", Log.LogLevel.ERROR);
     } else {
       logger.info("Successfully completed resize operation");
-      executionLogCallback.saveExecutionLog(
-          String.format("Successfully completed resize operation."), Log.LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Successfully completed resize operation.", Log.LogLevel.INFO);
     }
     return containerInfos;
   }
@@ -139,8 +135,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service createService(KubernetesConfig kubernetesConfig, Service definition) {
-    logger.info("Creating service {}", definition.getMetadata().getName());
+  public Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition) {
+    String name = definition.getMetadata().getName();
+    Service service = kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name).get();
+    logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", name);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().createOrReplace(definition);
   }
 
@@ -157,10 +155,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteService(KubernetesConfig kubernetesConfig, String name) {
-    ClientResource<Service, DoneableService> service =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
-    service.delete();
-    logger.info("Deleted service {}", name);
+    logger.info("Deleting service {}", name);
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name).delete();
   }
 
   @Override

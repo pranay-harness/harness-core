@@ -25,6 +25,7 @@ import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.exception.WingsException;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkExecutionData;
@@ -202,14 +203,8 @@ public class SplunkV2State extends AbstractAnalysisState {
         splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
 
-    if (analysisSummary != null && analysisSummary.getUnknownClusters() != null
-        && analysisSummary.getUnknownClusters().size() > 0) {
-      logger.error("Found unknown events in log analysis. Marking it failed.");
-      executionStatus = ExecutionStatus.FAILED;
-    }
-
-    if (analysisSummary != null && isUnexpectedFrequency(analysisSummary)) {
-      logger.error("Found unexpected frequencies in log analysis. Marking it failed.");
+    if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
+      logger.error("Found anomolies. Marking it failed." + analysisSummary.getAnalysisSummaryMessage());
       executionStatus = ExecutionStatus.FAILED;
     }
 
@@ -218,22 +213,6 @@ public class SplunkV2State extends AbstractAnalysisState {
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getSplunkExecutionData())
         .build();
-  }
-
-  private boolean isUnexpectedFrequency(SplunkMLAnalysisSummary analysisSummary) {
-    if (analysisSummary.getTestClusters() == null) {
-      return false;
-    }
-
-    for (SplunkMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
-      for (Entry<String, SplunkMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
-        if (hostEntry.getValue().isUnexpectedFreq()) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
   @Override

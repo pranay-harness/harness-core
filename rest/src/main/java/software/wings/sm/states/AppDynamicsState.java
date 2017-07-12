@@ -178,6 +178,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .withAppDynamicsConfigID(appDynamicsConfigId)
             .withAppDynamicsApplicationId(Long.parseLong(applicationId))
             .withAppdynamicsTierId(Long.parseLong(tierId))
+            .withAnalysisDuration(Integer.parseInt(timeDuration))
             .withCorrelationId(UUID.randomUUID().toString())
             .build();
     final AppdynamicsAnalysisResponse response = anAppdynamicsAnalysisResponse()

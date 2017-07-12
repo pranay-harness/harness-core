@@ -78,7 +78,7 @@ public interface KubernetesContainerService {
    * @param definition       the definition
    * @return the service
    */
-  Service createService(KubernetesConfig kubernetesConfig, Service definition);
+  Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
   /**
    * Gets a service.
