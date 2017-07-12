@@ -116,8 +116,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
     if (repositories.size() == 0) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
+      // Better way of handling Unauthorized access
+      logger.info("Repositories are not available of package types {} or User not authorized to access artifactory",
+          packageTypes);
+      // throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access
+      // artifactory");
     }
     return repositories;
   }
