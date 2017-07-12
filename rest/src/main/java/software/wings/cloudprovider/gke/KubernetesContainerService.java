@@ -1,7 +1,9 @@
 package software.wings.cloudprovider.gke;
 
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
@@ -64,4 +66,11 @@ public interface KubernetesContainerService {
    * Deletes a service.
    */
   void deleteService(KubernetesConfig kubernetesConfig, String name);
+
+  /**
+   * Creates a secret.
+   */
+  Secret createSecret(KubernetesConfig kubernetesConfig, Secret secret);
+
+  Namespace createNamespace(KubernetesConfig kubernetesConfig);
 }

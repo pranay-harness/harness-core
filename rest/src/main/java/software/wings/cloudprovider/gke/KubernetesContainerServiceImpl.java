@@ -7,9 +7,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.DoneableService;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -122,12 +125,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
     if (hasErrors) {
       logger.error("Completed resize operation with errors");
-      executionLogCallback.saveExecutionLog(
-          String.format("Completed resize operation with errors."), Log.LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog("Completed resize operation with errors.", Log.LogLevel.ERROR);
     } else {
       logger.info("Successfully completed resize operation");
-      executionLogCallback.saveExecutionLog(
-          String.format("Successfully completed resize operation."), Log.LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Successfully completed resize operation.", Log.LogLevel.INFO);
     }
     return containerInfos;
   }
@@ -160,6 +161,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
     service.delete();
     logger.info("Deleted service {}", name);
+  }
+
+  @Override
+  public Secret createSecret(KubernetesConfig kubernetesConfig, Secret secret) {
+    logger.info("Creating secret {}", secret.getMetadata().getName());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().createOrReplace(secret);
+  }
+
+  @Override
+  public Namespace createNamespace(KubernetesConfig kubernetesConfig) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
+        .namespaces()
+        .create(new NamespaceBuilder().withNewMetadata().withName("harness").endMetadata().build());
   }
 
   private List<Pod> waitForPodsToBeRunning(
