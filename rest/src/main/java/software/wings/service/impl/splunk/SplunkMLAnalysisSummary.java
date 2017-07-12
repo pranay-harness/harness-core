@@ -1,6 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import lombok.Data;
+import software.wings.metrics.RiskLevel;
 
 import java.util.List;
 
@@ -11,6 +12,8 @@ import java.util.List;
 @Data
 public class SplunkMLAnalysisSummary {
   private String query;
+  private RiskLevel riskLevel;
+  private String analysisSummaryMessage;
   private List<SplunkMLClusterSummary> controlClusters;
   private List<SplunkMLClusterSummary> testClusters;
   private List<SplunkMLClusterSummary> unknownClusters;

@@ -2,12 +2,14 @@ package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import software.wings.beans.CountsByStatuses;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -16,6 +18,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;
   private String appDynamicsConfigId;
+  private int timeDuration;
   private long appDynamicsApplicationId;
   private long appdynamicsTierId;
   private Set<String> canaryNewHostNames;
@@ -31,6 +34,14 @@ public class AppDynamicsExecutionData extends StateExecutionData {
 
   public long getAppDynamicsApplicationId() {
     return appDynamicsApplicationId;
+  }
+
+  public int getTimeDuration() {
+    return timeDuration;
+  }
+
+  public void setTimeDuration(int timeDuration) {
+    this.timeDuration = timeDuration;
   }
 
   public void setAppDynamicsApplicationId(long appDynamicsApplicationId) {
@@ -125,7 +136,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
         anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
     putNotNull(executionDetails, "appDynamicsConfigId",
@@ -143,17 +154,16 @@ public class AppDynamicsExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "stateExecutionInstanceId",
-        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
-    putNotNull(executionDetails, "appDynamicsConfigId",
-        anExecutionDataValue().withValue(appDynamicsConfigId).withDisplayName("Appdynamics Config Id").build());
-    putNotNull(executionDetails, "appDynamicsApplicationId",
-        anExecutionDataValue()
-            .withValue(appDynamicsApplicationId)
-            .withDisplayName("Appdynamics Application Id")
-            .build());
-    putNotNull(executionDetails, "appdynamicsTierId",
-        anExecutionDataValue().withValue(appdynamicsTierId).withDisplayName("Appdynamics Tier Id").build());
+    putNotNull(executionDetails, "errorMsg",
+        anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
+    putNotNull(
+        executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(timeDuration + 1).build());
+    final CountsByStatuses breakdown = new CountsByStatuses();
+    breakdown.setSuccess((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()));
+    putNotNull(executionDetails, "breakdown",
+        anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
+    putNotNull(executionDetails, "timeDuration",
+        anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
     return executionDetails;
   }
 
@@ -164,6 +174,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     private String correlationId;
     private String stateExecutionInstanceId;
     private String appDynamicsConfigId;
+    private int timeDuration;
     private long appDynamicsApplicationId;
     private long appdynamicsTierId;
     private String stateName;
@@ -192,6 +203,11 @@ public class AppDynamicsExecutionData extends StateExecutionData {
 
     public Builder withAppDynamicsConfigID(String appDynamicsConfigId) {
       this.appDynamicsConfigId = appDynamicsConfigId;
+      return this;
+    }
+
+    public Builder withAnalysisDuration(int timeDuration) {
+      this.timeDuration = timeDuration;
       return this;
     }
 
@@ -304,6 +320,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       appDynamicsExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
       appDynamicsExecutionData.setCanaryNewHostNames(canaryNewHostNames);
       appDynamicsExecutionData.setAppDynamicsConfigId(appDynamicsConfigId);
+      appDynamicsExecutionData.setTimeDuration(timeDuration);
       appDynamicsExecutionData.setAppDynamicsApplicationId(appDynamicsApplicationId);
       appDynamicsExecutionData.setAppdynamicsTierId(appdynamicsTierId);
       appDynamicsExecutionData.setStateName(stateName);
