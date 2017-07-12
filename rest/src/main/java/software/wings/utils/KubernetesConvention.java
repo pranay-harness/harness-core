@@ -16,6 +16,10 @@ public class KubernetesConvention {
     return getReplicationControllerNamePrefix(appName, serviceName, envName) + revision;
   }
 
+  public static String getReplicationControllerName(String name, String serviceName, String env) {
+    return getReplicationControllerName(name, serviceName, env, 0);
+  }
+
   public static String getReplicationControllerNamePrefix(String appName, String serviceName, String envName) {
     return normalize(appName + DOT + serviceName + DOT + envName + DOT);
   }

@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -160,6 +161,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
     service.delete();
     logger.info("Deleted service {}", name);
+  }
+
+  @Override
+  public Secret getSecret(KubernetesConfig kubernetesConfig, String secretName) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().withName(secretName).get();
+  }
+
+  @Override
+  public Secret createSecret(KubernetesConfig kubernetesConfig, Secret secret) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().create(secret);
   }
 
   private List<Pod> waitForPodsToBeRunning(
