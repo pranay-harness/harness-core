@@ -7,7 +7,6 @@ env="x"${SPLUNKML_ENVIROMENT}
 echo $env
 if [ $env == "x" ]; then
     if [ ! -d ".pyenv" ]; then
-       echo 'i am here 1'
        easy_install virtualenv
        make init
     fi
