@@ -349,6 +349,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withActivityId(ACTIVITY_ID)
                                .withEnvId(ENV_ID)
                                .withArtifactFiles(artifact.getArtifactFiles())
+                               .withMetadata(artifact.getMetadata())
                                .withHost(HOST)
                                .withServiceTemplateId(TEMPLATE_ID)
                                .withServiceVariables(Collections.emptyMap())

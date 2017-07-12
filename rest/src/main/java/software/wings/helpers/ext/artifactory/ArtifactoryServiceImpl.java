@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.artifactory;
 
-import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -17,7 +16,6 @@ import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -110,9 +108,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 401) {
           throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+        } else if (httpResponseException.getStatusCode() == 403) {
+          throw new WingsException(
+              ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
         }
       }
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+    }
+    if (repositories.size() == 0) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
     }
     return repositories;
   }
@@ -120,17 +125,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
     return getRepositories(artifactoryConfig, EnumSet.of(PackageType.docker));
-  }
-
-  /**
-   * prepareResponseMessage
-   */
-  private ResponseMessage prepareResponseMessage(final ErrorCode errorCode, final String errorMsg) {
-    final ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setErrorType(ERROR);
-    responseMessage.setMessage(errorMsg);
-    return responseMessage;
   }
 
   @Override
@@ -196,6 +190,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 401) {
           throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+        } else if (httpResponseException.getStatusCode() == 403) {
+          throw new WingsException(
+              ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
         }
       }
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
@@ -272,7 +269,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                     logger.info(
                         "Property [rpm.metadata.name] is not set for artifact path {} of artifactory server {} ",
                         artifactory.getUri(), artifactPath);
-                    System.out.println("Artifact name: " + artifactPath);
                     artifactNames.add(artifactPath);
                   }
                 }
@@ -305,10 +301,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
         return repositories;
       }
-    } catch (Exception ex) {
-      ex.printStackTrace();
+    } catch (Exception e) {
+      logger.error("Error occurred while listing docker images from artifactory {} for Repo ", artifactory, repoKey, e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
-
     return new ArrayList<>();
   }
 
@@ -320,9 +316,24 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    */
 
   private Artifactory getArtifactoryClient(ArtifactoryConfig artifactoryConfig) {
-    Artifactory artifactory = ArtifactoryClient.create(
-        getBaseUrl(artifactoryConfig), artifactoryConfig.getUsername(), new String(artifactoryConfig.getPassword()));
-    return artifactory;
+    Artifactory artifactory = null;
+    try {
+      if (StringUtils.isBlank(artifactoryConfig.getUsername())) {
+        logger.info("Username is not for artifactory config { } . Will use anonymous access.");
+        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig));
+      } else if (artifactoryConfig.getPassword() == null
+          || StringUtils.isBlank(new String(artifactoryConfig.getPassword()))) {
+        logger.info("Username is set. However no password set for artifactory config { }");
+        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig), artifactory.getUsername());
+      } else {
+        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig), artifactoryConfig.getUsername(),
+            new String(artifactoryConfig.getPassword()));
+      }
+      return artifactory;
+    } catch (Exception ex) {
+      logger.error("Error occurred while trying to initialize artifactory", ex);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
+    }
   }
 
   private String getBaseUrl(ArtifactoryConfig artifactoryConfig) {
@@ -344,6 +355,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                               .withUsername("admin")
                                               .withPassword("harness123!".toCharArray())
                                               .build();
+
+    artifactoryConfig = anArtifactoryConfig().withArtifactoryUrl(url).build();
     /* List<BuildDetails> buildDetails = new ArtifactoryServiceImpl().getBuilds(artifactoryConfig,
      "docker-local/wingsplugins/todolist", 1); for (BuildDetails buildDetail : buildDetails) { System.out.println("Build
      Number" +  buildDetail.getNumber());

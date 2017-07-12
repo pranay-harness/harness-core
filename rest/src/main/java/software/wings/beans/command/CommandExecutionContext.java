@@ -43,6 +43,7 @@ public class CommandExecutionContext {
   private String serviceName;
   private String region;
   private CodeDeployParams codeDeployParams;
+  private Map<String, String> metadata = Maps.newHashMap();
   private Integer desiredCount;
   private Integer desiredPercentage;
   private CommandExecutionData commandExecutionData;
@@ -76,6 +77,7 @@ public class CommandExecutionContext {
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.codeDeployParams = other.codeDeployParams;
+    this.metadata = other.metadata;
   }
 
   /**
@@ -382,7 +384,7 @@ public class CommandExecutionContext {
     return Objects.hash(accountId, envId, host, appId, activityId, runtimePath, stagingPath, backupPath,
         serviceTemplateId, executionCredential, artifactFiles, serviceVariables, envVariables, hostConnectionAttributes,
         bastionConnectionAttributes, artifactStreamAttributes, cloudProviderSetting, clusterName, serviceName, region,
-        desiredCount, desiredPercentage, commandExecutionData);
+        desiredCount, desiredPercentage, metadata, commandExecutionData);
   }
 
   @Override
@@ -410,7 +412,8 @@ public class CommandExecutionContext {
         && Objects.equals(this.clusterName, other.clusterName) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.region, other.region) && Objects.equals(this.desiredCount, other.desiredCount)
         && Objects.equals(this.desiredPercentage, other.desiredPercentage)
-        && Objects.equals(this.commandExecutionData, other.commandExecutionData);
+        && Objects.equals(this.commandExecutionData, other.commandExecutionData)
+        && Objects.equals(this.metadata, other.metadata);
   }
 
   @Override
@@ -439,6 +442,7 @@ public class CommandExecutionContext {
         .add("desiredCount", desiredCount)
         .add("desiredPercentage", desiredPercentage)
         .add("commandExecutionData", commandExecutionData)
+        .add("metadata", metadata)
         .toString();
   }
 
@@ -592,6 +596,22 @@ public class CommandExecutionContext {
 
   public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
     this.codeDeployParams = codeDeployParams;
+  }
+
+  /**
+   * Get Artifact Meta data such build no artifact path etc
+   * @return
+   */
+  public Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  /**
+   * Set Meta Data
+   * @param metadata
+   */
+  public void setMetadata(Map<String, String> metadata) {
+    this.metadata = metadata;
   }
 
   /**
@@ -789,6 +809,7 @@ public class CommandExecutionContext {
     private String serviceName;
     private String region;
     private CodeDeployParams codeDeployParams;
+    private Map<String, String> metadata;
     private Integer desiredCount;
     private Integer desiredPercentage;
     private CommandExecutionData commandExecutionData;
@@ -924,6 +945,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -950,7 +976,8 @@ public class CommandExecutionContext {
           .withCodeDeployParams(codeDeployParams)
           .withDesiredCount(desiredCount)
           .withDesiredPercentage(desiredPercentage)
-          .withCommandExecutionData(commandExecutionData);
+          .withCommandExecutionData(commandExecutionData)
+          .withMetadata(metadata);
     }
 
     public CommandExecutionContext build() {
@@ -980,6 +1007,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setDesiredPercentage(desiredPercentage);
       commandExecutionContext.setCommandExecutionData(commandExecutionData);
       commandExecutionContext.envVariables = this.envVariables;
+      commandExecutionContext.setMetadata(metadata);
       return commandExecutionContext;
     }
   }

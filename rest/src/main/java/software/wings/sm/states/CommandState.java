@@ -289,6 +289,7 @@ public class CommandState extends State {
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
+        commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
         if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {

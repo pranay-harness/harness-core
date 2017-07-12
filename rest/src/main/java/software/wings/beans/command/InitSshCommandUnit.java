@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.common.Constants;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -77,6 +78,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
     if (!isEmpty(context.getArtifactFiles())) {
       envVariables.put("ARTIFACT_FILE_NAME", context.getArtifactFiles().get(0).getName());
+    } else if (!isEmpty(context.getMetadata())) {
+      envVariables.put("ARTIFACT_FILE_NAME", context.getMetadata().get(Constants.ARTIFACT_FILE_NAME));
     }
 
     if (context.getArtifactStreamAttributes() != null
