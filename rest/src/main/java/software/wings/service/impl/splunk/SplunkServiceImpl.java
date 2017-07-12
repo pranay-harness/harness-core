@@ -13,6 +13,7 @@ import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.splunk.SplunkService;
 
@@ -147,6 +148,27 @@ public class SplunkServiceImpl implements SplunkService {
     analysisSummary.setControlClusters(computeCluster(analysisRecord.getControl_clusters()));
     analysisSummary.setTestClusters(computeCluster(analysisRecord.getTest_clusters()));
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
+
+    RiskLevel riskLevel = RiskLevel.LOW;
+    String analysisSummaryMsg = "No anomaly found";
+
+    int unknownClusters = 0;
+    if (analysisSummary.getUnknownClusters() != null && analysisSummary.getUnknownClusters().size() > 0) {
+      riskLevel = RiskLevel.HIGH;
+      unknownClusters = analysisSummary.getUnknownClusters().size();
+    }
+
+    int unknownFrequency = getUnexpectedFrequency(analysisSummary);
+    if (unknownFrequency > 0) {
+      riskLevel = RiskLevel.HIGH;
+    }
+
+    if (unknownClusters > 0 || unknownFrequency > 0) {
+      analysisSummaryMsg = (unknownClusters + unknownFrequency) + " anomalous events found";
+    }
+
+    analysisSummary.setRiskLevel(riskLevel);
+    analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     return analysisSummary;
   }
 
@@ -198,6 +220,23 @@ public class SplunkServiceImpl implements SplunkService {
     }
 
     return count;
+  }
+
+  private int getUnexpectedFrequency(SplunkMLAnalysisSummary analysisSummary) {
+    int unexpectedFrequency = 0;
+    if (analysisSummary.getTestClusters() == null) {
+      return unexpectedFrequency;
+    }
+
+    for (SplunkMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
+      for (Entry<String, SplunkMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
+        if (hostEntry.getValue().isUnexpectedFreq()) {
+          unexpectedFrequency++;
+        }
+      }
+    }
+
+    return unexpectedFrequency;
   }
 
   private double sprinkalizedCordinate(double coordinate) {

@@ -3,11 +3,14 @@ package software.wings.service.impl.splunk;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.CountsByStatuses;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -100,25 +103,28 @@ public class SplunkExecutionData extends StateExecutionData {
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
         anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
     putNotNull(executionDetails, "splunkConfigId",
         anExecutionDataValue().withValue(splunkConfigId).withDisplayName("Splunk Config Id").build());
-    putNotNull(executionDetails, "timeDuration",
-        anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
-    putNotNull(executionDetails, "queries",
-        anExecutionDataValue().withValue(queries).withDisplayName("Splunk queries").build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(executionDetails, "stateExecutionInstanceId",
-        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
-    putNotNull(executionDetails, "splunkConfigId",
-        anExecutionDataValue().withValue(splunkConfigId).withDisplayName("Splunk Config Id").build());
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "errorMsg",
+        anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
+    putNotNull(executionDetails, "total",
+        anExecutionDataValue()
+            .withDisplayName("Total")
+            .withValue(timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1)
+            .build());
+    final CountsByStatuses breakdown = new CountsByStatuses();
+    breakdown.setSuccess((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()));
+    putNotNull(executionDetails, "breakdown",
+        anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
     putNotNull(executionDetails, "queries",
