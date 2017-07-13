@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
+import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.DockerConfig;
@@ -66,16 +68,15 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config) {
-    return true;
-    //    if(!validUrl(config.getDockerRegistryUrl())) {
-    //      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Docker Registry URL must be a valid
-    //      URL");
-    //    }
-    //    if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
-    //      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Could not reach Docker Registry at :
-    //      " + config.getDockerRegistryUrl());
-    //    }
-    //    return dockerRegistryService.validateCredentials(config);
+    //    return true;
+    if (!validUrl(config.getDockerRegistryUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Docker Registry URL must be a valid URL");
+    }
+    if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
+    }
+    return dockerRegistryService.validateCredentials(config);
   }
 
   @Override
