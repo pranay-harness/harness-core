@@ -222,7 +222,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
   private Secret createRegistrySecret(
       KubernetesConfig kubernetesConfig, String kubernetesServiceName, ImageDetails imageDetails) {
-    String secretName = kubernetesServiceName + "-" + imageDetails.sourceName;
+    String secretName = (kubernetesServiceName + "-" + imageDetails.sourceName).replaceAll("[^A-Za-z0-9]", "-");
     String credentialData = String.format(
         DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.registryUrl, imageDetails.username, imageDetails.password);
     logger.info("Setting secret [{}]", secretName);
