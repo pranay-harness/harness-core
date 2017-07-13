@@ -48,7 +48,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -481,7 +481,7 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
-      ArtifactoryDockerArtifactStream artifactoryArtifactStream = (ArtifactoryDockerArtifactStream) artifactStream;
+      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       imageDetails.name = artifactoryArtifactStream.getImageName();
       imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
