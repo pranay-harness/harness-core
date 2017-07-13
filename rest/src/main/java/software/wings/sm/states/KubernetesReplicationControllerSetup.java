@@ -224,38 +224,6 @@ public class KubernetesReplicationControllerSetup extends State {
         .build();
   }
 
-  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {
-    String loadBalancerEndpoint = null;
-    String serviceName = service.getMetadata().getName();
-    LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-    if (loadBalancer != null) {
-      if (loadBalancer.getIngress().isEmpty()) {
-        logger.info("Waiting for service [{}] load balancer to be ready.", serviceName);
-        try {
-          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
-            LoadBalancerStatus loadBalancerStatus =
-                kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
-            boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
-            if (loadBalancerReady && !isNullOrEmpty(this.loadBalancerIP)) {
-              loadBalancerReady = this.loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
-            }
-            return loadBalancerReady;
-          });
-        } catch (ConditionTimeoutException e) {
-          logger.warn("Timed out waiting for service [{}] load balancer to be ready.", serviceName);
-          return null;
-        }
-        loadBalancer =
-            kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
-      }
-      LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
-      loadBalancerEndpoint = !isNullOrEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
-                                                                               : loadBalancerIngress.getIp();
-    }
-    logger.info("Service [{}] load balancer is ready with endpoint [{}].", serviceName);
-    return loadBalancerEndpoint;
-  }
-
   private Secret getOrCreateRegistrySecret(
       KubernetesConfig kubernetesConfig, String replicationControllerName, ArtifactStream artifactStream) {
     SettingAttribute dockerBuildSource = settingsService.get(artifactStream.getSettingId());
@@ -289,6 +257,38 @@ public class KubernetesReplicationControllerSetup extends State {
       secret = kubernetesContainerService.createSecret(kubernetesConfig, newSecret);
     }
     return secret;
+  }
+
+  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {
+    String loadBalancerEndpoint = null;
+    String serviceName = service.getMetadata().getName();
+    LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+    if (loadBalancer != null) {
+      if (loadBalancer.getIngress().isEmpty()) {
+        logger.info("Waiting for service [{}] load balancer to be ready.", serviceName);
+        try {
+          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            LoadBalancerStatus loadBalancerStatus =
+                kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+            boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
+            if (loadBalancerReady && !isNullOrEmpty(this.loadBalancerIP)) {
+              loadBalancerReady = this.loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
+            }
+            return loadBalancerReady;
+          });
+        } catch (ConditionTimeoutException e) {
+          logger.warn("Timed out waiting for service [{}] load balancer to be ready.", serviceName);
+          return null;
+        }
+        loadBalancer =
+            kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+      }
+      LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
+      loadBalancerEndpoint = !isNullOrEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
+                                                                               : loadBalancerIngress.getIp();
+    }
+    logger.info("Service [{}] load balancer is ready with endpoint [{}].", serviceName);
+    return loadBalancerEndpoint;
   }
 
   private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
