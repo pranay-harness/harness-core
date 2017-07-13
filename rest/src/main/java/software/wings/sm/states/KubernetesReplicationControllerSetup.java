@@ -17,8 +17,6 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.LocalObjectReference;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
@@ -52,6 +50,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -83,9 +82,9 @@ import java.util.stream.Collectors;
  */
 public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
-  //{"https://index.docker.io/v1/":{"username":"wingsplugins","password":"password","email":"suport@harness.io"}}
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
-      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"support@harness.io\"}}";
+      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -116,9 +115,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-
-    String imageName = fetchArtifactImageName(artifactStream);
+    ImageDetails imageDetails = fetchArtifactDetails(artifact);
 
     Application app = workflowStandardParams.getApp();
     String env = workflowStandardParams.getEnv().getName();
@@ -154,9 +151,6 @@ public class KubernetesReplicationControllerSetup extends State {
     String replicationControllerName =
         KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env, revision);
 
-    Secret secret = getOrCreateRegistrySecret(kubernetesConfig,
-        KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env), artifactStream);
-
     Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
                                             .put("app", KubernetesConvention.getLabelValue(app.getName()))
                                             .put("service", KubernetesConvention.getLabelValue(serviceName))
@@ -168,11 +162,13 @@ public class KubernetesReplicationControllerSetup extends State {
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+    Secret secret = createRegistrySecret(kubernetesConfig, kubernetesServiceName, imageDetails);
+
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(
-            replicationControllerName, controllerLabels, serviceId, imageName, app, secret));
+            replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secret));
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
@@ -219,44 +215,27 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withKubernetesServiceName(kubernetesServiceName)
                                     .withKubernetesServiceClusterIP(serviceClusterIP)
                                     .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
-                                    .withDockerImageName(imageName)
+                                    .withDockerImageName(imageDetails.name)
                                     .build())
         .build();
   }
 
-  private Secret getOrCreateRegistrySecret(
-      KubernetesConfig kubernetesConfig, String replicationControllerName, ArtifactStream artifactStream) {
-    SettingAttribute dockerBuildSource = settingsService.get(artifactStream.getSettingId());
-    DockerConfig dockerConfig = null;
-    if (dockerBuildSource.getValue() instanceof DockerConfig) {
-      dockerConfig = (DockerConfig) dockerBuildSource.getValue();
-    } else { // TODO:: revisit this logic. Can be simplified
-      logger.error("Can't create registry secret for {}", replicationControllerName);
-      return null;
-    }
-
-    String dockerRegistryUrl = dockerConfig.getDockerRegistryUrl();
-    String username = dockerConfig.getUsername();
-    char[] password = dockerConfig.getPassword();
-
-    String credentialFormat =
-        String.format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, dockerRegistryUrl, username, new String(password));
-    byte[] base64EncodedCredentials = Base64.getEncoder().encode(credentialFormat.getBytes());
-
-    String secretName =
-        (replicationControllerName + "_" + artifactStream.getSourceName()).replaceAll("[^A-Za-z0-9]", "-");
-    Secret secret = kubernetesContainerService.getSecret(kubernetesConfig, secretName);
-    if (secret == null) { // TODO:: Deep compare for credential update
-      logger.info("No Secret found for replication controller [{}], creating new", replicationControllerName);
-      Secret newSecret = new SecretBuilder()
-                             .withData(ImmutableMap.of(".dockercfg", new String(base64EncodedCredentials)))
-                             .withMetadata(new ObjectMetaBuilder().withName(secretName).build())
-                             .withType("kubernetes.io/dockercfg")
-                             .withKind("Secret")
-                             .build();
-      secret = kubernetesContainerService.createSecret(kubernetesConfig, newSecret);
-    }
-    return secret;
+  private Secret createRegistrySecret(
+      KubernetesConfig kubernetesConfig, String kubernetesServiceName, ImageDetails imageDetails) {
+    String secretName = kubernetesServiceName + "-" + imageDetails.sourceName;
+    String credentialData = String.format(
+        DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.registryUrl, imageDetails.username, imageDetails.password);
+    logger.info("Setting secret [{}]", secretName);
+    Secret newSecret =
+        new SecretBuilder()
+            .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
+            .withNewMetadata()
+            .withName(secretName)
+            .endMetadata()
+            .withType("kubernetes.io/dockercfg")
+            .withKind("Secret")
+            .build();
+    return kubernetesContainerService.createSecret(kubernetesConfig, newSecret);
   }
 
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {
@@ -366,7 +345,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .addToLabels(controllerLabels)
         .endMetadata()
         .withNewSpec()
-        .withImagePullSecrets(new LocalObjectReference(secret.getMetadata().getName()))
+        .addNewImagePullSecret(secret.getMetadata().getName())
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
         .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
         .endSpec()
@@ -478,20 +457,42 @@ public class KubernetesReplicationControllerSetup extends State {
     return containerBuilder.build();
   }
 
+  private class ImageDetails {
+    String name;
+    String sourceName;
+    String registryUrl;
+    String username;
+    String password;
+  }
+
   /**
-   * Fetches artifact image name string
+   * Fetches artifact image details
    */
-  private String fetchArtifactImageName(ArtifactStream artifactStream) {
+  private ImageDetails fetchArtifactDetails(Artifact artifact) {
+    ImageDetails imageDetails = new ImageDetails();
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    String settingId = artifactStream.getSettingId();
     if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-      return dockerArtifactStream.getImageName();
+      imageDetails.name = dockerArtifactStream.getImageName();
+      imageDetails.sourceName = dockerArtifactStream.getSourceName();
+      DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
+      imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
+      imageDetails.username = dockerConfig.getUsername();
+      imageDetails.password = new String(dockerConfig.getPassword());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryDockerArtifactStream artifactoryArtifactStream = (ArtifactoryDockerArtifactStream) artifactStream;
-      return artifactoryArtifactStream.getImageName();
+      imageDetails.name = artifactoryArtifactStream.getImageName();
+      imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
+      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
+      imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
+      imageDetails.username = artifactoryConfig.getUsername();
+      imageDetails.password = new String(artifactoryConfig.getPassword());
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
     }
+    return imageDetails;
   }
 
   private ClusterElement getClusterElement(ExecutionContext context) {
