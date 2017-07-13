@@ -191,7 +191,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(ExecutionStatus.RUNNING)
         .withErrorMessage("Splunk Verification running")
         .withStateExecutionData(executionData)
         .build();

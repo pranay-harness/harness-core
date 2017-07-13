@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -85,7 +86,7 @@ public class ConfigServiceImpl implements ConfigService {
   public String save(ConfigFile configFile, InputStream inputStream) {
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
     InputStream toWrite = inputStream;
-    String envId = configFile.getEntityType().equals(SERVICE)
+    String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
 
