@@ -16,7 +16,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   private String kubernetesReplicationControllerName;
   private String kubernetesServiceName;
   private String kubernetesServiceClusterIP;
-  private String kubernetesServiceLoadBalancerIP;
+  private String kubernetesServiceLoadBalancerEndpoint;
   private String dockerImageName;
   private String commandName;
   private int instanceCount;
@@ -53,12 +53,12 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
     this.kubernetesServiceClusterIP = kubernetesServiceClusterIP;
   }
 
-  public String getKubernetesServiceLoadBalancerIP() {
-    return kubernetesServiceLoadBalancerIP;
+  public String getKubernetesServiceLoadBalancerEndpoint() {
+    return kubernetesServiceLoadBalancerEndpoint;
   }
 
-  public void setKubernetesServiceLoadBalancerIP(String kubernetesServiceLoadBalancerIP) {
-    this.kubernetesServiceLoadBalancerIP = kubernetesServiceLoadBalancerIP;
+  public void setKubernetesServiceLoadBalancerEndpoint(String kubernetesServiceLoadBalancerEndpoint) {
+    this.kubernetesServiceLoadBalancerEndpoint = kubernetesServiceLoadBalancerEndpoint;
   }
 
   public String getCommandName() {
@@ -98,10 +98,10 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
         anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
         anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
-    putNotNull(executionDetails, "kubernetesServiceLoadBalancerIP",
+    putNotNull(executionDetails, "kubernetesServiceLoadBalancerEndpoint",
         anExecutionDataValue()
-            .withValue(kubernetesServiceLoadBalancerIP)
-            .withDisplayName("Service Load Balancer IP")
+            .withValue(kubernetesServiceLoadBalancerEndpoint)
+            .withDisplayName("Load Balancer Endpoint")
             .build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
@@ -126,10 +126,10 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
         anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
         anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
-    putNotNull(executionDetails, "kubernetesServiceLoadBalancerIP",
+    putNotNull(executionDetails, "kubernetesServiceLoadBalancerEndpoint",
         anExecutionDataValue()
-            .withValue(kubernetesServiceLoadBalancerIP)
-            .withDisplayName("Service Load Balancer IP")
+            .withValue(kubernetesServiceLoadBalancerEndpoint)
+            .withDisplayName("Load Balancer Endpoint")
             .build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
@@ -150,7 +150,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
     private ExecutionStatus status;
     private String kubernetesServiceClusterIP;
     private String errorMsg;
-    private String kubernetesServiceLoadBalancerIP;
+    private String kubernetesServiceLoadBalancerEndpoint;
     private String dockerImageName;
     private String commandName;
     private int instanceCount;
@@ -208,9 +208,9 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
       return this;
     }
 
-    public KubernetesReplicationControllerExecutionDataBuilder withKubernetesServiceLoadBalancerIP(
-        String kubernetesServiceLoadBalancerIP) {
-      this.kubernetesServiceLoadBalancerIP = kubernetesServiceLoadBalancerIP;
+    public KubernetesReplicationControllerExecutionDataBuilder withKubernetesServiceLoadBalancerEndpoint(
+        String kubernetesServiceLoadBalancerEndpoint) {
+      this.kubernetesServiceLoadBalancerEndpoint = kubernetesServiceLoadBalancerEndpoint;
       return this;
     }
 
@@ -240,7 +240,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
           .withStatus(status)
           .withKubernetesServiceClusterIP(kubernetesServiceClusterIP)
           .withErrorMsg(errorMsg)
-          .withKubernetesServiceLoadBalancerIP(kubernetesServiceLoadBalancerIP)
+          .withKubernetesServiceLoadBalancerEndpoint(kubernetesServiceLoadBalancerEndpoint)
           .withDockerImageName(dockerImageName)
           .withCommandName(commandName)
           .withInstanceCount(instanceCount);
@@ -259,7 +259,8 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
       kubernetesReplicationControllerExecutionData.setStatus(status);
       kubernetesReplicationControllerExecutionData.setKubernetesServiceClusterIP(kubernetesServiceClusterIP);
       kubernetesReplicationControllerExecutionData.setErrorMsg(errorMsg);
-      kubernetesReplicationControllerExecutionData.setKubernetesServiceLoadBalancerIP(kubernetesServiceLoadBalancerIP);
+      kubernetesReplicationControllerExecutionData.setKubernetesServiceLoadBalancerEndpoint(
+          kubernetesServiceLoadBalancerEndpoint);
       kubernetesReplicationControllerExecutionData.setDockerImageName(dockerImageName);
       kubernetesReplicationControllerExecutionData.setCommandName(commandName);
       kubernetesReplicationControllerExecutionData.setInstanceCount(instanceCount);

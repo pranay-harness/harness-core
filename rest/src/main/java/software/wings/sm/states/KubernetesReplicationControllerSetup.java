@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
@@ -7,7 +8,6 @@ import static software.wings.api.KubernetesReplicationControllerExecutionData.Ku
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
-import com.google.api.client.util.Base64;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -16,7 +16,9 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
@@ -29,6 +31,8 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import org.awaitility.core.ConditionTimeoutException;
+import org.bouncycastle.asn1.dvcs.ServiceType;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +51,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -69,6 +74,7 @@ import software.wings.utils.KubernetesConvention;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +86,9 @@ import java.util.stream.Collectors;
  */
 public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
+  private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
+      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -157,55 +166,39 @@ public class KubernetesReplicationControllerSetup extends State {
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
-    //    kubernetesContainerService.createNamespace(kubernetesConfig);
-    String secretName = "";
-    if (isNotEmpty(imageDetails.username) && isNotEmpty(imageDetails.password)) {
-      secretName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env) + "-secret";
-      kubernetesContainerService.createSecret(kubernetesConfig, createSecret(imageDetails, secretName));
-    }
-
+    String secretName =
+        KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(serviceName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(
-            replicationControllerName, controllerLabels, serviceId, imageDetails.name, secretName, app));
+            replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secretName));
 
-    String kubernetesServiceName = null;
     String serviceClusterIP = null;
-    String serviceLoadBalancerIP = null;
+    String serviceLoadBalancerEndpoint = null;
+
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+    Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
     if (serviceType != null && serviceType != ServiceType.None) {
-      kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-      Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
-      // TODO(brett): Handle case where service definition has changed
-      if (service == null) {
-        logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
-        service = kubernetesContainerService.createService(
-            kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
-      }
-      serviceClusterIP = service.getSpec().getClusterIP();
-      LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-
-      if (loadBalancer != null) {
-        // TODO(brett): Handle AWS load balancer creation
-        if (loadBalancer.getIngress().isEmpty()) {
-          String finalKubernetesServiceName = kubernetesServiceName;
-
-          with()
-              .pollInterval(1, TimeUnit.SECONDS)
-              .await()
-              .atMost(60, TimeUnit.SECONDS)
-              .until(()
-                         -> !kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
-                                 .getStatus()
-                                 .getLoadBalancer()
-                                 .getIngress()
-                                 .isEmpty());
-
-          loadBalancer = kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
-                             .getStatus()
-                             .getLoadBalancer();
+      Service serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+      if (service != null) {
+        // Keep the previous load balancer IP if it exists and a new one was not specified
+        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+        if (serviceType == ServiceType.LoadBalancer && isEmpty(loadBalancerIP) && loadBalancer != null
+            && !loadBalancer.getIngress().isEmpty()) {
+          loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
+          serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
         }
-        serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
       }
+      service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceDefinition);
+      serviceClusterIP = service.getSpec().getClusterIP();
+
+      if (serviceType == ServiceType.LoadBalancer) {
+        serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(kubernetesConfig, service);
+      }
+    } else if (service != null) {
+      logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
+      kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
     }
 
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
@@ -226,10 +219,56 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withKubernetesReplicationControllerName(replicationControllerName)
                                     .withKubernetesServiceName(kubernetesServiceName)
                                     .withKubernetesServiceClusterIP(serviceClusterIP)
-                                    .withKubernetesServiceLoadBalancerIP(serviceLoadBalancerIP)
+                                    .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
                                     .withDockerImageName(imageDetails.name)
                                     .build())
         .build();
+  }
+
+  private Secret createRegistrySecret(String secretName, ImageDetails imageDetails) {
+    String credentialData = String.format(
+        DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.registryUrl, imageDetails.username, imageDetails.password);
+    logger.info("Setting secret [{}]", secretName);
+    return new SecretBuilder()
+        .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
+        .withNewMetadata()
+        .withName(secretName)
+        .endMetadata()
+        .withType("kubernetes.io/dockercfg")
+        .withKind("Secret")
+        .build();
+  }
+
+  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {
+    String loadBalancerEndpoint = null;
+    String serviceName = service.getMetadata().getName();
+    LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+    if (loadBalancer != null) {
+      if (loadBalancer.getIngress().isEmpty()) {
+        logger.info("Waiting for service [{}] load balancer to be ready.", serviceName);
+        try {
+          with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            LoadBalancerStatus loadBalancerStatus =
+                kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+            boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
+            if (loadBalancerReady && isNotEmpty(this.loadBalancerIP)) {
+              loadBalancerReady = this.loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
+            }
+            return loadBalancerReady;
+          });
+        } catch (ConditionTimeoutException e) {
+          logger.warn("Timed out waiting for service [{}] load balancer to be ready.", serviceName);
+          return null;
+        }
+        loadBalancer =
+            kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+      }
+      LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
+      loadBalancerEndpoint = isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
+                                                                           : loadBalancerIngress.getIp();
+    }
+    logger.info("Service [{}] load balancer is ready with endpoint [{}].", serviceName);
+    return loadBalancerEndpoint;
   }
 
   private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
@@ -257,7 +296,7 @@ public class KubernetesReplicationControllerSetup extends State {
    * Creates replication controller definition
    */
   private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
-      Map<String, String> controllerLabels, String serviceId, String imageName, String secretName, Application app) {
+      Map<String, String> controllerLabels, String serviceId, String imageName, Application app, String secretName) {
     KubernetesContainerTask kubernetesContainerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
@@ -309,8 +348,8 @@ public class KubernetesReplicationControllerSetup extends State {
         .endMetadata()
         .withNewSpec()
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
-        .addNewImagePullSecret(secretName)
         .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
+        .addNewImagePullSecret(secretName)
         .endSpec()
         .endTemplate()
         .endSpec()
@@ -423,36 +462,10 @@ public class KubernetesReplicationControllerSetup extends State {
 
   private class ImageDetails {
     String name;
+    String sourceName;
     String registryUrl;
     String username;
     String password;
-    String email;
-    String authToken;
-  }
-
-  private Secret createSecret(ImageDetails imageDetails, String name) {
-    //    String dockercfg = String.format("{\"%s\":{\"auth\":\"%s\",\"email\":\"%s\"}}", imageDetails.registryUrl,
-    //    imageDetails.authToken, imageDetails.email);
-    String dockercfg =
-        String.format("{\"%s\":{\"username\":\"%s\",\"password\":\"%s\", \"email\":\"%s\", \"auth\":\"%s\"}}",
-            imageDetails.registryUrl, imageDetails.username, imageDetails.password, imageDetails.email,
-            imageDetails.authToken);
-
-    //    return new
-    //    SecretBuilder().withApiVersion("v1").withKind("Secret").withNewMetadata().withName(name).endMetadata()
-    //        .withData(ImmutableMap.of(".dockerconfigjson",
-    //        "eyJodHRwczovL3JlZ2lzdHJ5Lmh1Yi5kb2NrZXIuY29tIjogeyJhdXRoIjogImQybHVaM053YkhWbmFXNXpPbGNoYm1kelFFUnZZMnRsY2toMVlnPT0ifX0K"))
-    //        .withType("kubernetes.io/dockerconfigjson").build();
-    return new SecretBuilder()
-        .withApiVersion("v1")
-        .withKind("Secret")
-        .withNewMetadata()
-        .withName(name)
-        .withNamespace("harness")
-        .endMetadata()
-        .withData(ImmutableMap.of(".dockerconfigjson", Base64.encodeBase64String(dockercfg.getBytes())))
-        .withType("kubernetes.io/dockerconfigjson")
-        .build();
   }
 
   /**
@@ -465,22 +478,19 @@ public class KubernetesReplicationControllerSetup extends State {
     if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
       imageDetails.name = dockerArtifactStream.getImageName();
+      imageDetails.sourceName = dockerArtifactStream.getSourceName();
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
       imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
-      // imageDetails.registryUrl = "registry.hub.docker.com";
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
-      imageDetails.email = "plugins@wings.software";
-      imageDetails.authToken = Base64.encodeBase64String(
-          String.format("%s:%s", dockerConfig.getUsername(), new String(dockerConfig.getPassword())).getBytes());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
-      ArtifactoryDockerArtifactStream artifactoryArtifactStream = (ArtifactoryDockerArtifactStream) artifactStream;
+      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       imageDetails.name = artifactoryArtifactStream.getImageName();
+      imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
       imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
       imageDetails.username = artifactoryConfig.getUsername();
       imageDetails.password = new String(artifactoryConfig.getPassword());
-      imageDetails.authToken = "???";
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");

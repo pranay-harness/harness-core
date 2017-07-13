@@ -12,6 +12,7 @@ import static software.wings.api.ContainerServiceElement.ContainerServiceElement
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.Service.Builder.aService;
@@ -21,6 +22,7 @@ import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDocker
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -33,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +45,8 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,12 +127,22 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                   .withUuid(ARTIFACT_ID)
                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
-  private ArtifactStream artifactStream = aDockerArtifactStream().withImageName(DOCKER_IMAGE).build();
+  private ArtifactStream artifactStream =
+      aDockerArtifactStream().withImageName(DOCKER_IMAGE).withSettingId(SETTING_ID).build();
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider = aSettingAttribute().build();
+  private SettingAttribute dockerConfigSettingAttribute = aSettingAttribute()
+                                                              .withValue(aDockerConfig()
+                                                                             .withDockerRegistryUrl("url")
+                                                                             .withUsername("name")
+                                                                             .withPassword("pass".toCharArray())
+                                                                             .withAccountId(ACCOUNT_ID)
+                                                                             .build())
+                                                              .build();
   private ReplicationController replicationController;
+  private Secret secret;
   private io.fabric8.kubernetes.api.model.Service kubernetesService;
 
   /**
@@ -157,6 +172,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     on(kubernetesReplicationControllerSetup).set("artifactStreamService", artifactStreamService);
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
+    when(settingsService.get(SETTING_ID)).thenReturn(dockerConfigSettingAttribute);
 
     replicationController =
         new ReplicationControllerBuilder()
@@ -190,6 +206,15 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
             .endSpec()
             .build();
 
+    secret = new SecretBuilder()
+                 .withApiVersion("v1")
+                 .withKind("Secret")
+                 .withData(ImmutableMap.of(".dockercfg", "aaa"))
+                 .withNewMetadata()
+                 .withName("secret-name")
+                 .endMetadata()
+                 .build();
+
     kubernetesService = new ServiceBuilder()
                             .withApiVersion("v1")
                             .withNewMetadata()
@@ -221,9 +246,10 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
-    when(kubernetesContainerService.createService(
+    when(kubernetesContainerService.createOrReplaceService(
              eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
+    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
   }
 
   @Test

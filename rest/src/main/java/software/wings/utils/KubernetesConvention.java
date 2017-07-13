@@ -28,6 +28,10 @@ public class KubernetesConvention {
     return normalize(appName + DASH + serviceName + DASH + envName);
   }
 
+  public static String getKubernetesSecretName(String appName, String serviceName, String envName, String imageSource) {
+    return normalize(appName + DASH + serviceName + DASH + envName + DASH + imageSource);
+  }
+
   public static int getRevisionFromControllerName(String name) {
     if (name != null) {
       int index = name.lastIndexOf(DOT);
