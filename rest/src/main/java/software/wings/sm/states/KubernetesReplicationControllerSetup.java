@@ -18,7 +18,6 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
@@ -32,7 +31,6 @@ import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.awaitility.core.ConditionTimeoutException;
-import org.bouncycastle.asn1.dvcs.ServiceType;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +50,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
-import software.wings.beans.artifact.ArtifactoryDockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -347,9 +344,9 @@ public class KubernetesReplicationControllerSetup extends State {
         .addToLabels(controllerLabels)
         .endMetadata()
         .withNewSpec()
+        .addNewImagePullSecret(secretName)
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
         .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
-        .addNewImagePullSecret(secretName)
         .endSpec()
         .endTemplate()
         .endSpec()
