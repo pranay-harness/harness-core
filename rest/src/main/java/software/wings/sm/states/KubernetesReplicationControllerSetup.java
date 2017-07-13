@@ -235,7 +235,7 @@ public class KubernetesReplicationControllerSetup extends State {
             .withType("kubernetes.io/dockercfg")
             .withKind("Secret")
             .build();
-    return kubernetesContainerService.createSecret(kubernetesConfig, newSecret);
+    return kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, newSecret);
   }
 
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {

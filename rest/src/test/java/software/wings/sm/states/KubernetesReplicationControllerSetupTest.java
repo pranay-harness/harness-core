@@ -249,7 +249,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     when(kubernetesContainerService.createOrReplaceService(
              eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
-    when(kubernetesContainerService.createSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
+    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
   }
 
   @Test

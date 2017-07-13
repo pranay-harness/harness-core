@@ -165,8 +165,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Secret createSecret(KubernetesConfig kubernetesConfig, Secret secret) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().create(secret);
+  public Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().createOrReplace(secret);
   }
 
   private List<Pod> waitForPodsToBeRunning(

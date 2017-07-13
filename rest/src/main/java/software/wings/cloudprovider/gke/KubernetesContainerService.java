@@ -121,5 +121,5 @@ public interface KubernetesContainerService {
    * @param secret           the secret
    * @return the secret
    */
-  Secret createSecret(KubernetesConfig kubernetesConfig, Secret secret);
+  Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret);
 }
