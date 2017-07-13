@@ -29,6 +29,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -67,6 +68,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private EnvironmentService environmentService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -107,6 +109,8 @@ public class ConfigServiceImpl implements ConfigService {
     boolean entityExist;
     if (EntityType.SERVICE.equals(entityType)) {
       entityExist = serviceResourceService.exist(appId, entityId);
+    } else if (EntityType.ENVIRONMENT.equals(entityType)) {
+      entityExist = environmentService.exist(appId, entityId);
     } else if (EntityType.HOST.equals(entityType)) {
       entityExist = hostService.exist(appId, entityId);
     } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {
