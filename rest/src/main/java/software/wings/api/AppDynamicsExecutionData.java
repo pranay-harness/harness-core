@@ -159,7 +159,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     putNotNull(
         executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(timeDuration + 1).build());
     final CountsByStatuses breakdown = new CountsByStatuses();
-    breakdown.setSuccess((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()));
+    breakdown.setSuccess(
+        Math.min((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()), timeDuration + 1));
     putNotNull(executionDetails, "breakdown",
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
     putNotNull(executionDetails, "timeDuration",

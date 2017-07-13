@@ -122,7 +122,8 @@ public class SplunkExecutionData extends StateExecutionData {
             .withValue(timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1)
             .build());
     final CountsByStatuses breakdown = new CountsByStatuses();
-    breakdown.setSuccess((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()));
+    breakdown.setSuccess(
+        Math.min((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()), timeDuration + 1));
     putNotNull(executionDetails, "breakdown",
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
