@@ -193,7 +193,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(ExecutionStatus.RUNNING)
         .withErrorMessage("Appdynamics Verification running")
         .withStateExecutionData(executionData)
         .build();
