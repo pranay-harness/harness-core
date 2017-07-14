@@ -153,7 +153,7 @@ public class DelegateServiceImpl implements DelegateService {
                 @Override
                 public void on(String message) {
                   logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                  fixedThreadPool.execute(() -> {
+                  fixedThreadPool.submit(() -> {
                     logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
                     if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
                       try {
@@ -356,6 +356,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
+      logger.info("DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
+          delegateTaskEvent.getAccountId());
       DelegateTask delegateTask =
           execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
       if (delegateTask != null) {
