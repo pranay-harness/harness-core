@@ -165,7 +165,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     String secretName =
         KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(serviceName, imageDetails));
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(
             replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secretName));
@@ -230,6 +230,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
         .withNewMetadata()
         .withName(secretName)
+        .withNamespace("default")
         .endMetadata()
         .withType("kubernetes.io/dockercfg")
         .withKind("Secret")
@@ -333,6 +334,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withApiVersion("v1")
         .withNewMetadata()
         .withName(replicationControllerName)
+        .withNamespace("default")
         .addToLabels(controllerLabels)
         .endMetadata()
         .withNewSpec()
@@ -390,6 +392,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withApiVersion("v1")
         .withNewMetadata()
         .withName(serviceName)
+        .withNamespace("default")
         .addToLabels(serviceLabels)
         .endMetadata()
         .withSpec(spec.build())
