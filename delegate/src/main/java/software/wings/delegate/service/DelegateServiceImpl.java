@@ -153,7 +153,7 @@ public class DelegateServiceImpl implements DelegateService {
                 @Override
                 public void on(String message) {
                   logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                  fixedThreadPool.execute(() -> {
+                  fixedThreadPool.submit(() -> {
                     logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
                     if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
                       try {
