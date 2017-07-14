@@ -6,6 +6,7 @@ import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.Archive;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,7 +32,7 @@ public class ArchivalManager {
     final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(() -> {
       for (Class<?> clazz : archivedClasses) {
-        if (clazz.getSuperclass() != Base.class) {
+        if (isExtendedFromBase(clazz)) {
           continue;
         }
 
@@ -45,5 +46,13 @@ public class ArchivalManager {
         this.wingsPersistence.delete(deletionQuery);
       }
     }, 1, 1, TimeUnit.MINUTES);
+  }
+
+  private boolean isExtendedFromBase(Class<?> clazz) {
+    while (clazz.getSuperclass() != null && clazz.getSuperclass() != Base.class) {
+      clazz = clazz.getSuperclass();
+    }
+
+    return clazz == Base.class;
   }
 }
