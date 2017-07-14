@@ -356,6 +356,8 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
+      logger.info("DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
+          delegateTaskEvent.getAccountId());
       DelegateTask delegateTask =
           execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
       if (delegateTask != null) {
