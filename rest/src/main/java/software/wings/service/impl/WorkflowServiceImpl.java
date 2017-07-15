@@ -910,6 +910,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .stream()
                                                 .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
                                                 .collect(Collectors.toSet());
+
+      Set<EntityType> rollbackRequiredEntityTypes =
+          ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+              .getRollbackWorkflowPhaseIdMap()
+              .values()
+              .stream()
+              .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
+              .collect(Collectors.toSet());
+      requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
+
       orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       return requiredEntityTypes;
     } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
@@ -918,6 +928,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .stream()
                                                 .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
                                                 .collect(Collectors.toSet());
+
+      Set<EntityType> rollbackRequiredEntityTypes =
+          ((BasicOrchestrationWorkflow) orchestrationWorkflow)
+              .getRollbackWorkflowPhaseIdMap()
+              .values()
+              .stream()
+              .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
+              .collect(Collectors.toSet());
+      requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
+
       orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
     }
     return null;

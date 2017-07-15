@@ -178,6 +178,7 @@ public class PhaseStep {
         .addProperty("phaseStepNameForRollback", phaseStepNameForRollback)
         .addProperty("statusForRollback", statusForRollback)
         .addProperty("waitInterval", waitInterval)
+        .addProperty("artifactNeeded", artifactNeeded)
         .build();
   }
 
