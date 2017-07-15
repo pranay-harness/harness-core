@@ -303,6 +303,9 @@ public class ServiceVariable extends Base implements Encryptable {
 
   @Override
   public String toString() {
+    if (type.equals(Type.ENCRYPTED_TEXT)) {
+      value = "******".toCharArray();
+    }
     return MoreObjects.toStringHelper(this)
         .add("templateId", templateId)
         .add("envId", envId)

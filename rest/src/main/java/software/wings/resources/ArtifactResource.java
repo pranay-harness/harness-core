@@ -1,5 +1,8 @@
 package software.wings.resources;
 
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.beans.SortOrder.OrderType.DESC;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -65,6 +68,7 @@ public class ArtifactResource {
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
+    pageRequest.addOrder(aSortOrder().withField("metadata.buildNo", DESC).build());
     return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 

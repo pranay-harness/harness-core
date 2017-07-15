@@ -278,6 +278,6 @@ public class ArtifactCollectionJob implements Job {
   }
 
   public static void main(String... args) {
-    System.out.println("Version compare " + versionCompare("3.0", "0.0"));
+    System.out.println("Version compare " + versionCompare("30", "40"));
   }
 }
