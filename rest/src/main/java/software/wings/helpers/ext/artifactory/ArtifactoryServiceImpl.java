@@ -22,7 +22,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -201,8 +200,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
     logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
-    artifactPaths = artifactPaths.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-    logger.info("Artifact paths after reverse order sorting from Artifactory Server" + artifactPaths);
+    // artifactPaths = artifactPaths.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+    // logger.info("Artifact paths after reverse order sorting from Artifactory Server" + artifactPaths);
     return artifactPaths.stream()
         .map(s -> aBuildDetails().withNumber(s.substring(s.lastIndexOf('/') + 1)).withArtifactPath(s).build())
         .collect(Collectors.toList());
@@ -359,7 +358,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                               .withPassword("harness123!".toCharArray())
                                               .build();
 
-    artifactoryConfig = anArtifactoryConfig().withArtifactoryUrl(url).build();
+    // artifactoryConfig = anArtifactoryConfig().withArtifactoryUrl(url).build();
     /* List<BuildDetails> buildDetails = new ArtifactoryServiceImpl().getBuilds(artifactoryConfig,
      "docker-local/wingsplugins/todolist", 1); for (BuildDetails buildDetail : buildDetails) { System.out.println("Build
      Number" +  buildDetail.getNumber());
@@ -389,6 +388,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "todolist*", ArtifactType.RPM, 50);
 
     System.out.println("Comparison: "
-        + "".compareTo("todolist-demo-25-0.x86_64.rpm"));
+        + "10".compareTo("1"));
   }
 }
