@@ -259,8 +259,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
       // TODO:: optimize this block.
-      ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false);
+      ServiceTemplate serviceTemplate = serviceTemplateService.get(
+          instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false, false);
       Service service = serviceResourceService.get(instance.getAppId(), serviceTemplate.getServiceId());
       Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
@@ -374,7 +374,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (!ArrayUtils.isEmpty(names)) {
       pageRequestBuilder.addFilter(aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
     }
-    return serviceTemplateService.list(pageRequestBuilder.build(), false).getResponse();
+    return serviceTemplateService.list(pageRequestBuilder.build(), false, false).getResponse();
   }
 
   private InstanceElementListParam getInstanceListParam() {

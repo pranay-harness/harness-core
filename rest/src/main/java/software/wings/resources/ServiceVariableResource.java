@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import com.google.inject.Inject;
 
@@ -57,7 +58,7 @@ public class ServiceVariableResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest) {
-    return new RestResponse<>(serviceVariablesService.list(pageRequest));
+    return new RestResponse<>(serviceVariablesService.list(pageRequest, true));
   }
 
   /**
@@ -72,7 +73,15 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
     serviceVariable.setAppId(appId);
-    return new RestResponse<>(serviceVariablesService.save(serviceVariable));
+    ServiceVariable savedServiceVariable = serviceVariablesService.save(serviceVariable);
+    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+      serviceVariable.setValue("******".toCharArray());
+    }
+    if (savedServiceVariable.getOverriddenServiceVariable() != null
+        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+      savedServiceVariable.getOverriddenServiceVariable().setValue("******".toCharArray());
+    }
+    return new RestResponse<>(savedServiceVariable);
   }
 
   /**
@@ -88,10 +97,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse<ServiceVariable> get(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
-    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId);
-    if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-      serviceVariable.setValue("<encrypted>".toCharArray());
-    }
+    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, true);
     return new RestResponse<>(serviceVariable);
   }
 
@@ -111,7 +117,15 @@ public class ServiceVariableResource {
       @PathParam("serviceVariableId") String serviceVariableId, ServiceVariable serviceVariable) {
     serviceVariable.setUuid(serviceVariableId);
     serviceVariable.setAppId(appId);
-    return new RestResponse<>(serviceVariablesService.update(serviceVariable));
+    ServiceVariable savedServiceVariable = serviceVariablesService.update(serviceVariable);
+    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+      serviceVariable.setValue("******".toCharArray());
+    }
+    if (savedServiceVariable.getOverriddenServiceVariable() != null
+        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+      savedServiceVariable.getOverriddenServiceVariable().setValue("******".toCharArray());
+    }
+    return new RestResponse<>(savedServiceVariable);
   }
 
   /**

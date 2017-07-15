@@ -106,13 +106,13 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     serviceTemplatePageRequest.addFilter("envId", environment.getUuid(), EQ);
     PageResponse<ServiceTemplate> serviceTemplatePageResponse = new PageResponse<>();
     serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false)).thenReturn(serviceTemplatePageResponse);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplatePageResponse);
 
     PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
-    verify(serviceTemplateService).list(serviceTemplatePageRequest, false);
+    verify(serviceTemplateService).list(serviceTemplatePageRequest, false, false);
   }
 
   /**
@@ -122,7 +122,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldGetEnvironment() {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
-    when(serviceTemplateService.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
