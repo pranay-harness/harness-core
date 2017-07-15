@@ -114,7 +114,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
     setUnset(updateOperations, "version", delegate.getVersion());
 
-    logger.debug("Updating delegate : {}", delegate.getUuid());
+    logger.info("Updating delegate : {}", delegate.getUuid());
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(delegate.getAccountId())
@@ -125,7 +125,7 @@ public class DelegateServiceImpl implements DelegateService {
     // Touch currently executing tasks.
     if (delegate.getCurrentlyExecutingDelegateTasks() != null
         && !isEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
-      logger.debug("Updating tasks");
+      logger.info("Updating tasks");
 
       Query<DelegateTask> delegateTaskQuery =
           wingsPersistence.createQuery(DelegateTask.class)
@@ -152,13 +152,13 @@ public class DelegateServiceImpl implements DelegateService {
   public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
     Delegate delegate = get(accountId, delegateId);
-    logger.debug("Checking delegate for upgrade: {}", delegate.getUuid());
+    logger.info("Checking delegate for upgrade: {}", delegate.getUuid());
 
     ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
     if (scriptParams != null && scriptParams.size() > 0) {
       delegate.setDoUpgrade(true);
-      logger.debug("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
+      logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
       delegate.setVersion((String) scriptParams.get("upgradeVersion"));
 
       try (StringWriter stringWriter = new StringWriter()) {
@@ -293,7 +293,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate add(Delegate delegate) {
-    logger.debug("Adding delegate: {}", delegate.getUuid());
+    logger.info("Adding delegate: {}", delegate.getUuid());
     delegate.setAppId(GLOBAL_APP_ID);
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     eventEmitter.send(Channel.DELEGATES,
@@ -303,7 +303,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void delete(String accountId, String delegateId) {
-    logger.debug("Deleting delegate: {}", delegateId);
+    logger.info("Deleting delegate: {}", delegateId);
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(accountId)
@@ -323,10 +323,10 @@ public class DelegateServiceImpl implements DelegateService {
             .addFieldsExcluded("supportedTaskTypes")
             .build());
     if (existingDelegate == null) {
-      logger.debug("No existing delegate, adding: {}", delegate.getUuid());
+      logger.info("No existing delegate, adding: {}", delegate.getUuid());
       return add(delegate);
     } else {
-      logger.debug("Delegate exists, updating: {}", delegate.getUuid());
+      logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus() == Status.DISABLED ? Status.DISABLED : delegate.getStatus());
       return update(delegate);
@@ -393,11 +393,11 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    logger.debug("Acquiring delegate task {} for delegate {}", taskId, delegateId);
+    logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
       // Async
-      logger.debug("Delegate task from cache is null for task {}", taskId);
+      logger.info("Delegate task from cache is null for task {}", taskId);
       Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                       .field("accountId")
                                       .equal(accountId)
@@ -412,13 +412,13 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
       // Sync
-      logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
       if (isBlank(delegateTask.getDelegateId())) {
-        logger.debug("Assigning task {} to delegate {}", taskId, delegateId);
+        logger.info("Assigning task {} to delegate {}", taskId, delegateId);
         delegateTask.setDelegateId(delegateId);
         Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
       } else {
-        logger.debug("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
+        logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
       }
     }
@@ -427,10 +427,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
-    logger.debug("Starting task {} with delegate {}", taskId, delegateId);
+    logger.info("Starting task {} with delegate {}", taskId, delegateId);
     DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
-      logger.debug("Delegate task from cache is null for task {}", taskId);
+      logger.info("Delegate task from cache is null for task {}", taskId);
       Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                       .field("accountId")
                                       .equal(accountId)
@@ -444,7 +444,7 @@ public class DelegateServiceImpl implements DelegateService {
           wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
-      logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
+      logger.info("Delegate task from cache: {}", delegateTask.getUuid());
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;
@@ -507,7 +507,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void abortTask(String accountId, String delegateTaskId) {
-    logger.debug("Aborting delegate task {}", delegateTaskId);
+    logger.info("Aborting delegate task {}", delegateTaskId);
     DelegateTask updatedTask =
         wingsPersistence.getDatastore().findAndModify(wingsPersistence.createQuery(DelegateTask.class)
                                                           .field(ID_KEY)
@@ -521,7 +521,7 @@ public class DelegateServiceImpl implements DelegateService {
                 .unset("delegateId"));
 
     if (updatedTask == null) {
-      logger.debug("Updated task null");
+      logger.info("Updated task null");
       broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
           .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
     }

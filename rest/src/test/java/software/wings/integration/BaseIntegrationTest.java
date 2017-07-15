@@ -72,7 +72,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final String API_BASE = StringUtils.isBlank(System.getenv().get("BASE_HTTP"))
       ? "https://localhost:9090/api"
       : "http://localhost:9090/api";
-  protected static final String adminUserName = "admin@wings.software";
+  protected static final String adminUserName = "admin@harness.io";
   protected static final char[] adminPassword = "admin".toCharArray();
 
   protected static String accountId = "INVALID_ID";

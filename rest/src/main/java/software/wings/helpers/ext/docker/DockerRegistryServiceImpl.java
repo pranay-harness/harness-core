@@ -190,6 +190,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     }
     return null;
   }
+
   private boolean isSuccessful(Response<?> response) throws IOException {
     int code = response.code();
     switch (code) {

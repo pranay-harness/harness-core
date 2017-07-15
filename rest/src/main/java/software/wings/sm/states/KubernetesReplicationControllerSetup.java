@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
@@ -162,16 +163,17 @@ public class KubernetesReplicationControllerSetup extends State {
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-    Secret secret = createRegistrySecret(kubernetesConfig, kubernetesServiceName, imageDetails);
-
+    String secretName =
+        KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(
-            replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secret));
+            replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secretName));
 
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
     if (serviceType != null && serviceType != ServiceType.None) {
@@ -179,7 +181,7 @@ public class KubernetesReplicationControllerSetup extends State {
       if (service != null) {
         // Keep the previous load balancer IP if it exists and a new one was not specified
         LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-        if (serviceType == ServiceType.LoadBalancer && isNullOrEmpty(loadBalancerIP) && loadBalancer != null
+        if (serviceType == ServiceType.LoadBalancer && isEmpty(loadBalancerIP) && loadBalancer != null
             && !loadBalancer.getIngress().isEmpty()) {
           loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
           serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
@@ -220,22 +222,19 @@ public class KubernetesReplicationControllerSetup extends State {
         .build();
   }
 
-  private Secret createRegistrySecret(
-      KubernetesConfig kubernetesConfig, String kubernetesServiceName, ImageDetails imageDetails) {
-    String secretName = (kubernetesServiceName + "-" + imageDetails.sourceName).replaceAll("[^A-Za-z0-9]", "-");
+  private Secret createRegistrySecret(String secretName, ImageDetails imageDetails) {
     String credentialData = String.format(
         DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.registryUrl, imageDetails.username, imageDetails.password);
     logger.info("Setting secret [{}]", secretName);
-    Secret newSecret =
-        new SecretBuilder()
-            .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
-            .withNewMetadata()
-            .withName(secretName)
-            .endMetadata()
-            .withType("kubernetes.io/dockercfg")
-            .withKind("Secret")
-            .build();
-    return kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, newSecret);
+    return new SecretBuilder()
+        .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
+        .withNewMetadata()
+        .withName(secretName)
+        .withNamespace("default")
+        .endMetadata()
+        .withType("kubernetes.io/dockercfg")
+        .withKind("Secret")
+        .build();
   }
 
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service) {
@@ -250,7 +249,7 @@ public class KubernetesReplicationControllerSetup extends State {
             LoadBalancerStatus loadBalancerStatus =
                 kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
             boolean loadBalancerReady = !loadBalancerStatus.getIngress().isEmpty();
-            if (loadBalancerReady && !isNullOrEmpty(this.loadBalancerIP)) {
+            if (loadBalancerReady && isNotEmpty(this.loadBalancerIP)) {
               loadBalancerReady = this.loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp());
             }
             return loadBalancerReady;
@@ -263,8 +262,8 @@ public class KubernetesReplicationControllerSetup extends State {
             kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
       }
       LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
-      loadBalancerEndpoint = !isNullOrEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
-                                                                               : loadBalancerIngress.getIp();
+      loadBalancerEndpoint = isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname()
+                                                                           : loadBalancerIngress.getIp();
     }
     logger.info("Service [{}] load balancer is ready with endpoint [{}].", serviceName);
     return loadBalancerEndpoint;
@@ -295,7 +294,7 @@ public class KubernetesReplicationControllerSetup extends State {
    * Creates replication controller definition
    */
   private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
-      Map<String, String> controllerLabels, String serviceId, String imageName, Application app, Secret secret) {
+      Map<String, String> controllerLabels, String serviceId, String imageName, Application app, String secretName) {
     KubernetesContainerTask kubernetesContainerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
@@ -335,6 +334,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withApiVersion("v1")
         .withNewMetadata()
         .withName(replicationControllerName)
+        .withNamespace("default")
         .addToLabels(controllerLabels)
         .endMetadata()
         .withNewSpec()
@@ -345,7 +345,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .addToLabels(controllerLabels)
         .endMetadata()
         .withNewSpec()
-        .addNewImagePullSecret(secret.getMetadata().getName())
+        .addNewImagePullSecret(secretName)
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
         .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
         .endSpec()
@@ -373,18 +373,18 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
 
-      if (serviceType == ServiceType.LoadBalancer && !isNullOrEmpty(loadBalancerIP)) {
+      if (serviceType == ServiceType.LoadBalancer && isNotEmpty(loadBalancerIP)) {
         spec.withLoadBalancerIP(loadBalancerIP);
       }
 
-      if (serviceType == ServiceType.ClusterIP && !isNullOrEmpty(clusterIP)) {
+      if (serviceType == ServiceType.ClusterIP && isNotEmpty(clusterIP)) {
         spec.withClusterIP(clusterIP);
       }
     } else {
       // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
     }
 
-    if (!isNullOrEmpty(externalIPs)) {
+    if (isNotEmpty(externalIPs)) {
       spec.withExternalIPs(Arrays.stream(externalIPs.split(",")).map(String::trim).collect(Collectors.toList()));
     }
 
@@ -392,6 +392,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withApiVersion("v1")
         .withNewMetadata()
         .withName(serviceName)
+        .withNamespace("default")
         .addToLabels(serviceLabels)
         .endMetadata()
         .withSpec(spec.build())

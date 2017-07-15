@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -29,6 +30,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -67,6 +69,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private EnvironmentService environmentService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -83,7 +86,7 @@ public class ConfigServiceImpl implements ConfigService {
   public String save(ConfigFile configFile, InputStream inputStream) {
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
     InputStream toWrite = inputStream;
-    String envId = configFile.getEntityType().equals(SERVICE)
+    String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
 
@@ -107,6 +110,8 @@ public class ConfigServiceImpl implements ConfigService {
     boolean entityExist;
     if (EntityType.SERVICE.equals(entityType)) {
       entityExist = serviceResourceService.exist(appId, entityId);
+    } else if (EntityType.ENVIRONMENT.equals(entityType)) {
+      entityExist = environmentService.exist(appId, entityId);
     } else if (EntityType.HOST.equals(entityType)) {
       entityExist = hostService.exist(appId, entityId);
     } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {

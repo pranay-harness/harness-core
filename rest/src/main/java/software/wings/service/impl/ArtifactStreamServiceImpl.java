@@ -344,26 +344,27 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return;
     }
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
-    int latestArtifactBuildNo = (latestArtifact != null && latestArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-        ? Integer.parseInt(latestArtifact.getMetadata().get(Constants.BUILD_NO))
-        : 0;
+    String latestArtifactBuildNo =
+        (latestArtifact != null && latestArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+        ? latestArtifact.getMetadata().get(Constants.BUILD_NO)
+        : "";
 
     Artifact lastSuccessfullyDeployedArtifact = getLastSuccessfullyDeployedArtifact(appId, artifactStreamAction);
-    int lastDeployedArtifactBuildNo =
+    String lastDeployedArtifactBuildNo =
         (lastSuccessfullyDeployedArtifact != null
             && lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-        ? Integer.parseInt(lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO))
-        : 0;
+        ? lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO)
+        : "";
 
     logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
         latestArtifactBuildNo, lastDeployedArtifactBuildNo);
 
-    if (latestArtifactBuildNo > lastDeployedArtifactBuildNo) {
+    if (latestArtifactBuildNo.compareTo(lastDeployedArtifactBuildNo) > 0) {
       logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
       triggerStreamAction(latestArtifact, artifactStreamAction);
     } else {
       logger.info(
-          "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same. So, not triggering deployment",
+          "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same or less. So, not triggering deployment",
           latestArtifactBuildNo, lastDeployedArtifactBuildNo);
     }
   }

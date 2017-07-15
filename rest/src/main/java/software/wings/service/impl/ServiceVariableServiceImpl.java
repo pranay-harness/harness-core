@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -50,12 +51,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
-    if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.SERVICE_TEMPLATE, EntityType.HOST)
+    if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
-    String envId = serviceVariable.getEntityType().equals(SERVICE)
+    // TODO:: revisit. for environment envId can be specific
+    String envId =
+        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
 

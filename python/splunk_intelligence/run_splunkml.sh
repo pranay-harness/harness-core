@@ -3,7 +3,7 @@
 BASEDIR=$(dirname "$0")
 cd $BASEDIR
 
-env="x"${SPLUNKML_ENVIROMENT}
+env="x"${SPLUNKML_ENVIRONMENT}
 echo $env
 if [ $env == "x" ]; then
     if [ ! -d ".pyenv" ]; then
