@@ -25,6 +25,15 @@ public interface ServiceVariableService {
   PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request);
 
   /**
+   * List page response.
+   *
+   * @param request the request
+   * @param  maskEncryptedFields boolean
+   * @return the page response
+   */
+  PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request, boolean maskEncryptedFields);
+
+  /**
    * Save service variable.
    *
    * @param serviceVariable the service variable
@@ -40,6 +49,16 @@ public interface ServiceVariableService {
    * @return the service variable
    */
   ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId);
+
+  /**
+   * Get service variable.
+   *
+   * @param appId     the app id
+   * @param settingId the setting id
+   * @param maskEncryptedFields boolean
+   * @return the service variable
+   */
+  ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId, boolean maskEncryptedFields);
 
   /**
    * Update service variable.
@@ -63,9 +82,11 @@ public interface ServiceVariableService {
    * @param appId      the app id
    * @param templateId the template id
    * @param entityId   the entity id
+   * @param maskEncryptedFields the boolean
    * @return the service variables for entity
    */
-  List<ServiceVariable> getServiceVariablesForEntity(String appId, String templateId, String entityId);
+  List<ServiceVariable> getServiceVariablesForEntity(
+      String appId, String templateId, String entityId, boolean maskEncryptedFields);
 
   /**
    * Gets service variables by template.
@@ -75,7 +96,8 @@ public interface ServiceVariableService {
    * @param serviceTemplate the service template
    * @return the service variables by template
    */
-  List<ServiceVariable> getServiceVariablesByTemplate(String appId, String envId, ServiceTemplate serviceTemplate);
+  List<ServiceVariable> getServiceVariablesByTemplate(
+      String appId, String envId, ServiceTemplate serviceTemplate, boolean maskEncryptedFields);
 
   /**
    * Delete by entity id.

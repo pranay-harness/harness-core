@@ -336,10 +336,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(asList(aConfigFile().withAppId(APP_ID).withUuid("CONFIG_FILE_ID").build()));
     when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
 
-    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false))
         .thenReturn(asList(aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).build()));
 
-    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class)))
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any(Boolean.class)))
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
     when(artifactStreamService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(aJenkinsArtifactStream().build())).build());
@@ -372,7 +372,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(configService).download(APP_ID, "CONFIG_FILE_ID");
     verify(configService).save(any(ConfigFile.class), any(InputStream.class));
-    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false);
     verify(serviceVariableService).save(any(ServiceVariable.class));
     verify(artifactStreamService).list(any(PageRequest.class));
     verify(artifactStreamService).create(any(ArtifactStream.class));

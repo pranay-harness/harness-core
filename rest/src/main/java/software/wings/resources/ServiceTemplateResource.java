@@ -59,7 +59,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("envId", envId, EQ);
-    return new RestResponse<>(serviceTemplateService.list(pageRequest, true));
+    return new RestResponse<>(serviceTemplateService.list(pageRequest, true, true));
   }
 
   /**
@@ -94,7 +94,7 @@ public class ServiceTemplateResource {
   @ExceptionMetered
   public RestResponse<ServiceTemplate> get(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId) {
-    return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId, true));
+    return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId, true, true));
   }
 
   /**

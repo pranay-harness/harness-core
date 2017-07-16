@@ -113,6 +113,8 @@ public class HttpStateTest extends WingsBaseTest {
     when(workflowStandardParams.getEnv())
         .thenReturn(
             anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withEnvironmentType(EnvironmentType.NON_PROD).build());
+    when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
+    when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
 
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);

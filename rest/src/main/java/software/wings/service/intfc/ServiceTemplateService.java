@@ -27,7 +27,8 @@ public interface ServiceTemplateService {
    * @param withDetails the with details
    * @return the page response
    */
-  PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails);
+  PageResponse<ServiceTemplate> list(
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, boolean maskEncryptedFields);
 
   /**
    * Save.
@@ -91,10 +92,11 @@ public interface ServiceTemplateService {
    * @param envId             the env id
    * @param serviceTemplateId the service template id
    * @param withDetails       the with details
+   * @param maskEncryptedFields the mask encryted fields
    * @return the service template
    */
-  ServiceTemplate get(
-      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId, boolean withDetails);
+  ServiceTemplate get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId,
+      boolean withDetails, boolean maskEncryptedFields);
 
   /**
    * Get service template.

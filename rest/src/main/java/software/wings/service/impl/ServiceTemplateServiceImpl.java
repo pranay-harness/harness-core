@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
@@ -37,8 +36,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +69,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
+  public PageResponse<ServiceTemplate> list(
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, boolean maskEncryptedFields) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
     List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
     setArtifactTypeAndInfraMappings(serviceTemplates);
@@ -78,7 +78,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (withDetails) {
       serviceTemplates.forEach(serviceTemplate -> {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
-        populateServiceAndOverrideServiceVariables(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
       });
     }
 
@@ -132,28 +132,29 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
         ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription()));
-    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
+    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
   }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#get(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
+  public ServiceTemplate get(
+      String appId, String envId, String serviceTemplateId, boolean withDetails, boolean maskEncryptedFields) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
-    setArtifactTypeAndInfraMappings(Arrays.asList(serviceTemplate));
-    if (withDetails) {
-      populateServiceAndOverrideConfigFiles(serviceTemplate);
-      populateServiceAndOverrideServiceVariables(serviceTemplate);
+    if (serviceTemplate != null) {
+      setArtifactTypeAndInfraMappings(Arrays.asList(serviceTemplate));
+      if (withDetails) {
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+      }
     }
     return serviceTemplate;
   }
 
   @Override
   public ServiceTemplate get(String appId, String serviceTemplateId) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
-    Validator.notNullCheck("Service Template", serviceTemplate);
-    return serviceTemplate;
+    return wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
   }
 
   @Override
@@ -216,13 +217,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     template.setConfigFilesOverrides(overrideConfigFiles);
   }
 
-  private void populateServiceAndOverrideServiceVariables(ServiceTemplate template) {
+  private void populateServiceAndOverrideServiceVariables(ServiceTemplate template, boolean maskEncryptedFields) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId(), maskEncryptedFields);
     template.setServiceVariables(serviceVariables);
 
-    List<ServiceVariable> overrideServiceVariables =
-        serviceVariableService.getServiceVariablesByTemplate(template.getAppId(), template.getEnvId(), template);
+    List<ServiceVariable> overrideServiceVariables = serviceVariableService.getServiceVariablesByTemplate(
+        template.getAppId(), template.getEnvId(), template, maskEncryptedFields);
 
     ImmutableMap<String, ServiceVariable> serviceVariablesMap =
         Maps.uniqueIndex(serviceVariables, ServiceVariable::getUuid);
@@ -314,11 +315,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId, String hostId) {
-    ServiceTemplate serviceTemplate;
-    try { // TODO:: remove it
-      serviceTemplate = get(appId, envId, templateId, false);
-    } catch (Exception ex) {
-      return emptyList();
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    if (serviceTemplate == null) {
+      return new ArrayList<>();
     }
 
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
@@ -339,14 +338,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false);
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    if (serviceTemplate == null) {
+      return new ArrayList<>();
+    }
 
-    List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
+    List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
+        appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), false);
     List<ServiceVariable> allServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, envId);
+        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, envId, false);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getUuid());
+        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getUuid(), false);
 
     return overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);

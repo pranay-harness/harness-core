@@ -180,7 +180,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                            .addFilter("appId", EQ, originalService.getAppId())
                                                            .addFilter("serviceId", EQ, originalService.getUuid())
                                                            .build(),
-                                                     false)
+                                                     false, false)
                                                  .getResponse();
 
     serviceTemplates.forEach(serviceTemplate -> {
@@ -216,8 +216,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     });
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
-      serviceVariableService.getServiceVariablesForEntity(
-          originalServiceVariable.getAppId(), originalServiceVariable.getTemplateId(), savedCloneService.getUuid());
+      serviceVariableService.getServiceVariablesForEntity(originalServiceVariable.getAppId(),
+          originalServiceVariable.getTemplateId(), savedCloneService.getUuid(), false);
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
       clonedServiceVariable.setEntityId(savedCloneService.getUuid());
 
@@ -339,7 +339,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (service != null && includeDetails) {
       service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
       service.setServiceVariables(
-          serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
+          serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid(), false));
       service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
       service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
       service.getServiceCommands().forEach(serviceCommand

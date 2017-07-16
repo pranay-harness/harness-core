@@ -163,7 +163,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                         .withEnvId(environment.getUuid())
                                         .withName("Catalog:8080")
                                         .build());
-    template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false);
+    template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false, false);
 
     // add hosts and tags to template
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
