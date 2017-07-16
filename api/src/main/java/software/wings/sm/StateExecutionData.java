@@ -18,6 +18,7 @@ import java.util.Map;
  */
 public class StateExecutionData {
   private String stateName;
+  private String stateType;
   private Long startTs;
   private Long endTs;
   private ExecutionStatus status;
@@ -41,6 +42,24 @@ public class StateExecutionData {
    */
   public void setStateName(String stateName) {
     this.stateName = stateName;
+  }
+
+  /**
+   * Gets state type.
+   *
+   * @return the state type
+   */
+  public String getStateType() {
+    return stateType;
+  }
+
+  /**
+   * Sets state type.
+   *
+   * @param stateType the state type
+   */
+  public void setStateType(String stateType) {
+    this.stateType = stateType;
   }
 
   /**

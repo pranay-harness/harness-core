@@ -731,6 +731,7 @@ public class StateMachineExecutor {
     }
 
     stateExecutionData.setStateName(stateExecutionInstance.getStateName());
+    stateExecutionData.setStateType(stateExecutionInstance.getStateType());
     stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
 
     UpdateOperations<StateExecutionInstance> ops =

@@ -59,6 +59,7 @@ public class DcNodeSelectState extends State {
       serviceInstances = infrastructureMappingService.selectServiceInstances(
           appId, envId, infraMappingId, ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
     } else {
+      List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
       serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
