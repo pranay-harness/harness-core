@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -22,6 +23,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -50,7 +52,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (CollectionUtils.isEmpty(tags)) {
         return null;
       }
-      return tags.stream().map(s -> aBuildDetails().withNumber(s).build()).collect(Collectors.toList());
+      return tags.stream().map(s -> aBuildDetails().withNumber(s).build()).collect(toList());
     }
     return null;
   }
@@ -204,7 +206,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     // logger.info("Artifact paths after reverse order sorting from Artifactory Server" + artifactPaths);
     return artifactPaths.stream()
         .map(s -> aBuildDetails().withNumber(s.substring(s.lastIndexOf('/') + 1)).withArtifactPath(s).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -385,8 +387,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     // artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "", ArtifactType.RPM, 50);
 
-    artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "todolist*", ArtifactType.RPM, 50);
+    List<BuildDetails> buildDetails =
+        artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "todolist*", ArtifactType.RPM, 50);
 
+    Comparator<BuildDetails> byFirst =
+        Comparator.comparing(buildDetails1 -> buildDetails1.getNumber(), Comparator.reverseOrder());
+    List<BuildDetails> sortedList = buildDetails.stream().sorted(byFirst).collect(toList());
+    sortedList.forEach(buildDetails1 -> System.out.println("Build" + buildDetails1.getNumber()));
     System.out.println("Comparison: "
         + "10".compareTo("1"));
   }
