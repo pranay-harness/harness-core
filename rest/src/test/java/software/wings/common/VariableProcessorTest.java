@@ -57,7 +57,7 @@ public class VariableProcessorTest {
    */
   @Test
   public void shouldGetVariablesForInstanceElement() throws Exception {
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, HOST_ID))
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID))
         .thenReturn(asList(aServiceVariable().withName("PORT").withValue("8080".toCharArray()).build()));
 
     WorkflowStandardParams workflowStandardParams =

@@ -249,65 +249,143 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(
-          aCommand()
-              .withCommandType(CommandType.INSTALL)
-              .withGraph(
-                  aGraph()
-                      .withGraphName("Install")
-                      .addNodes(
-                          aNode()
-                              .withOrigin(true)
-                              .withX(50)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Setup Runtime Paths")
-                              .withType(SETUP_ENV.name())
-                              .addProperty("commandString",
-                                  "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
-                              .build(),
-                          aNode()
-                              .withX(200)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Artifact")
-                              .withType(SCP.name())
-                              .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                              .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                              .build(),
-                          aNode()
-                              .withX(350)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Expand Artifact")
-                              .withType(EXEC.name())
-                              .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                              .addProperty("commandString", "tar -xvzf \"$ARTIFACT_FILE_NAME\"")
-                              .build(),
-                          aNode()
-                              .withX(500)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Configs")
-                              .withType(COPY_CONFIGS.name())
-                              .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                              .build())
-                      .buildPipeline())
-              .build(),
-          aCommand()
-              .withCommandType(CommandType.INSTALL)
-              .withGraph(aGraph()
-                             .withGraphName("Amazon Code Deploy")
-                             .addNodes(aNode()
-                                           .withOrigin(true)
-                                           .withX(50)
-                                           .withY(50)
-                                           .withId(UUIDGenerator.graphIdGenerator("node"))
-                                           .withName("Amazon Code Deploy")
-                                           .withType(CODE_DEPLOY.name())
-                                           .build())
-                             .buildPipeline())
-              .build());
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand());
+    }
+
+    /**
+     * Gets start command graph.
+     *
+     * @return the start command graph
+     */
+    private Command getStartCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Start Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service start\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Running")
+                                 .withType(PROCESS_CHECK_RUNNING.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Gets stop command graph.
+     *
+     * @return the stop command graph
+     */
+    private Command getStopCommand() {
+      return aCommand()
+          .withCommandType(CommandType.STOP)
+          .withGraph(aGraph()
+                         .withGraphName("Stop")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Stop Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service stop\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Stopped")
+                                 .withType(PROCESS_CHECK_STOPPED.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Install Command
+     * @return the install command graph
+     */
+    private Command getInstallCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(
+              aGraph()
+                  .withGraphName("Install")
+                  .addNodes(
+                      aNode()
+                          .withOrigin(true)
+                          .withX(50)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Setup Runtime Paths")
+                          .withType(SETUP_ENV.name())
+                          .addProperty("commandString",
+                              "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                          .build(),
+                      aNode()
+                          .withX(200)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Artifact")
+                          .withType(SCP.name())
+                          .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                          .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                          .build(),
+                      aNode()
+                          .withX(350)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Expand Artifact")
+                          .withType(EXEC.name())
+                          .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                          .addProperty("commandString", "tar -xvzf \"$ARTIFACT_FILE_NAME\"")
+                          .build(),
+                      aNode()
+                          .withX(500)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Configs")
+                          .withType(COPY_CONFIGS.name())
+                          .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                          .build())
+                  .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getCodeDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon Code Deploy")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon Code Deploy")
+                                       .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
     }
   },
   /**
@@ -318,65 +396,142 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(
-          aCommand()
-              .withCommandType(CommandType.START)
-              .withGraph(
-                  aGraph()
-                      .withGraphName("Install")
-                      .addNodes(
-                          aNode()
-                              .withOrigin(true)
-                              .withX(50)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Setup Runtime Paths")
-                              .withType(SETUP_ENV.name())
-                              .addProperty("commandString",
-                                  "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
-                              .build(),
-                          aNode()
-                              .withX(200)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Artifact")
-                              .withType(SCP.name())
-                              .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                              .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                              .build(),
-                          aNode()
-                              .withX(350)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Expand Artifact")
-                              .withType(EXEC.name())
-                              .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                              .addProperty("commandString", "unzip \"$ARTIFACT_FILE_NAME\"")
-                              .build(),
-                          aNode()
-                              .withX(500)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Configs")
-                              .withType(COPY_CONFIGS.name())
-                              .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                              .build())
-                      .buildPipeline())
-              .build(),
-          aCommand()
-              .withCommandType(CommandType.INSTALL)
-              .withGraph(aGraph()
-                             .withGraphName("Amazon Code Deploy")
-                             .addNodes(aNode()
-                                           .withOrigin(true)
-                                           .withX(50)
-                                           .withY(50)
-                                           .withId(UUIDGenerator.graphIdGenerator("node"))
-                                           .withName("Amazon Code Deploy")
-                                           .withType(CODE_DEPLOY.name())
-                                           .build())
-                             .buildPipeline())
-              .build());
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand());
+    }
+    /**
+     * Gets start command graph.
+     *
+     * @return the start command graph
+     */
+    private Command getStartCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Start Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service start\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Running")
+                                 .withType(PROCESS_CHECK_RUNNING.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Gets stop command graph.
+     *
+     * @return the stop command graph
+     */
+    private Command getStopCommand() {
+      return aCommand()
+          .withCommandType(CommandType.STOP)
+          .withGraph(aGraph()
+                         .withGraphName("Stop")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Stop Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service stop\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Stopped")
+                                 .withType(PROCESS_CHECK_STOPPED.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Install Command
+     * @return the install command graph
+     */
+    private Command getInstallCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(
+              aGraph()
+                  .withGraphName("Install")
+                  .addNodes(
+                      aNode()
+                          .withOrigin(true)
+                          .withX(50)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Setup Runtime Paths")
+                          .withType(SETUP_ENV.name())
+                          .addProperty("commandString",
+                              "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                          .build(),
+                      aNode()
+                          .withX(200)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Artifact")
+                          .withType(SCP.name())
+                          .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                          .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                          .build(),
+                      aNode()
+                          .withX(350)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Expand Artifact")
+                          .withType(EXEC.name())
+                          .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                          .addProperty("commandString", "unzip \"$ARTIFACT_FILE_NAME\"")
+                          .build(),
+                      aNode()
+                          .withX(500)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Configs")
+                          .withType(COPY_CONFIGS.name())
+                          .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                          .build())
+                  .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getCodeDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon Code Deploy")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon Code Deploy")
+                                       .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
     }
   },
   /**
@@ -425,51 +580,118 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(
-          aCommand()
-              .withCommandType(CommandType.INSTALL)
-              .withGraph(
-                  aGraph()
-                      .withGraphName("Install")
-                      .addNodes(
-                          aNode()
-                              .withOrigin(true)
-                              .withX(50)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Setup Runtime Paths")
-                              .withType(SETUP_ENV.name())
-                              .addProperty("commandString",
-                                  "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
-                              .build(),
-                          aNode()
-                              .withX(200)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Artifact")
-                              .withType(SCP.name())
-                              .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                              .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                              .build(),
-                          aNode()
-                              .withX(350)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Copy Configs")
-                              .withType(COPY_CONFIGS.name())
-                              .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                              .build(),
-                          aNode()
-                              .withX(500)
-                              .withY(50)
-                              .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withName("Install")
-                              .withType(EXEC.name())
-                              .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                              .addProperty("commandString", "yum install \"$ARTIFACT_FILE_NAME\"")
-                              .build())
-                      .buildPipeline())
-              .build());
+      return asList(getStartCommand(), getStopCommand(), getInstallCommand());
+    }
+
+    /**
+     * Gets start command graph.
+     *
+     * @return the start command graph
+     */
+    private Command getStartCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Start Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service start\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Running")
+                                 .withType(PROCESS_CHECK_RUNNING.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Gets stop command graph.
+     *
+     * @return the stop command graph
+     */
+    private Command getStopCommand() {
+      return aCommand()
+          .withCommandType(CommandType.STOP)
+          .withGraph(aGraph()
+                         .withGraphName("Stop")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Stop Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("commandString", "echo \"service stop\"")
+                                       .build(),
+                             aNode()
+                                 .withX(200)
+                                 .withY(50)
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Stopped")
+                                 .withType(PROCESS_CHECK_STOPPED.name())
+                                 .addProperty("commandString", "echo \"service status\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    private Command getInstallCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(
+              aGraph()
+                  .withGraphName("Install")
+                  .addNodes(
+                      aNode()
+                          .withOrigin(true)
+                          .withX(50)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Setup Runtime Paths")
+                          .withType(SETUP_ENV.name())
+                          .addProperty("commandString",
+                              "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                          .build(),
+                      aNode()
+                          .withX(200)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Artifact")
+                          .withType(SCP.name())
+                          .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                          .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                          .build(),
+                      aNode()
+                          .withX(350)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Copy Configs")
+                          .withType(COPY_CONFIGS.name())
+                          .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                          .build(),
+                      aNode()
+                          .withX(500)
+                          .withY(50)
+                          .withId(UUIDGenerator.graphIdGenerator("node"))
+                          .withName("Install")
+                          .withType(EXEC.name())
+                          .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                          .addProperty("commandString", "sudo yum install -y \"$ARTIFACT_FILE_NAME\"")
+                          .build())
+                  .buildPipeline())
+          .build();
     }
   },
 

@@ -154,13 +154,14 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(false)))
+        .thenReturn(new PageResponse<>());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
                .thenReturn(aHost().withHostName(instance.getHostName()).build()));
     SERVICE_TEMPLATE.setServiceId(SERVICE_ID);
-    when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean()))
+    when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(SERVICE_TEMPLATE);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
         .thenReturn(aService().withUuid("uuid1").withName("svc1").build());
@@ -213,7 +214,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(false)))
+        .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
@@ -262,7 +264,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(false)))
+        .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1, instance2, instance3);
@@ -312,7 +315,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(false)))
+        .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1);
@@ -384,13 +388,14 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false), eq(false)))
+        .thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
     processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
-    when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false))
+    when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false, false))
         .thenReturn(serviceTemplate);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
         .thenReturn(aService().withUuid("uuid1").withName("svc1").build());

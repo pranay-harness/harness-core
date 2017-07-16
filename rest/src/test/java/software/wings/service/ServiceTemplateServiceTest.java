@@ -112,7 +112,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(infrastructureMappingService.list(any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().build());
 
-    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(aPageRequest().build(), true);
+    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(aPageRequest().build(), true, false);
 
     ServiceTemplate expectedServiceTemplate = builder.but().withServiceId(SERVICE_ID).build();
 

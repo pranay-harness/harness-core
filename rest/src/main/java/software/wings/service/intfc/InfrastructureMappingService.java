@@ -3,10 +3,11 @@ package software.wings.service.intfc;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
-import software.wings.beans.HostValidationResponse;
 import software.wings.beans.HostValidationRequest;
+import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -82,19 +83,6 @@ public interface InfrastructureMappingService {
   Map<String, Object> getInfraMappingStencils(String appId);
 
   /**
-   * List service instances list.
-   *
-   * @param appId             the app id
-   * @param serviceId         the service id
-   * @param envId             the env id
-   * @param computeProviderId the compute provider id
-   * @param selectionParams   the selection params   @return the list
-   * @return the list
-   */
-  List<ServiceInstance> selectServiceInstances(
-      String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams);
-
-  /**
    * List compute provider hosts list.
    *
    * @param appId             the app id
@@ -164,14 +152,14 @@ public interface InfrastructureMappingService {
   /**
    * Select service instances list.
    *
-   * @param appId           the app id
-   * @param envId           the env id
-   * @param infraMappingId  the infra mapping id
-   * @param selectionParams the selection params
+   * @param appId                          the app id
+   * @param envId                          the env id
+   * @param infraMappingId                 the infra mapping id
+   * @param serviceInstanceSelectionParams the service instance selection params
    * @return the list
    */
   List<ServiceInstance> selectServiceInstances(
-      String appId, String envId, String infraMappingId, Map<String, Object> selectionParams);
+      String appId, String envId, String infraMappingId, ServiceInstanceSelectionParams serviceInstanceSelectionParams);
 
   /**
    * List clusters list.

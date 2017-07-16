@@ -152,7 +152,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateService.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(new PageResponse<>());
 
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
@@ -160,7 +160,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
-    when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean()))
+    when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean(), anyBoolean()))
         .thenReturn(serviceTemplate);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
         .thenReturn(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build());

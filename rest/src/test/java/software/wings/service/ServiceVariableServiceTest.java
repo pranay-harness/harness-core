@@ -183,7 +183,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
     List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate);
+        serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, false);
 
     verify(wingsPersistence).query(ServiceVariable.class, request);
     assertThat(serviceVariables.get(0)).isEqualTo(SERVICE_VARIABLE);
@@ -235,7 +235,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
 
-    serviceVariableService.getServiceVariablesForEntity(APP_ID, TEMPLATE_ID, "ENTITY_ID");
+    serviceVariableService.getServiceVariablesForEntity(APP_ID, TEMPLATE_ID, "ENTITY_ID", false);
     verify(wingsPersistence).query(ServiceVariable.class, pageRequest);
   }
 

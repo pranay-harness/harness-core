@@ -66,7 +66,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testUserExists() throws IOException {
-    WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@wings.software");
+    WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@harness.io");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
     Assert.assertEquals(1, restResponse.getResponseMessages().size());
     final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
@@ -93,7 +93,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupSuccess() throws IOException {
     final String name = "Raghu Singh";
-    final String email = "abc" + System.currentTimeMillis() + "@wings.software";
+    final String email = "abc" + System.currentTimeMillis() + "@harness.io";
     final char[] pwd = "somepwd".toCharArray();
     final String accountName = "some account" + System.currentTimeMillis();
     final String companyName = "some company" + System.currentTimeMillis();
@@ -130,7 +130,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
-    final String email = "xyz" + System.currentTimeMillis() + "@wings.software";
+    final String email = "xyz" + System.currentTimeMillis() + "@harness.io";
     final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   " + System.currentTimeMillis();
     final String companyName = "  star   wars    enterprise   " + System.currentTimeMillis();
@@ -295,7 +295,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testSignupEmailExists() throws IOException {
     final String name = "Brad  Pitt    ";
-    final String email = "admin@wings.software";
+    final String email = "admin@harness.io";
     final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";

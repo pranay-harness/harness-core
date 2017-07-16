@@ -22,6 +22,8 @@ import java.util.List;
  */
 public class CanaryUtils {
   static List<ServiceInstance> getHostExclusionList(ExecutionContext context, PhaseElement phaseElement) {
+    List<ServiceInstance> hostExclusionList = new ArrayList<>();
+
     ExecutionContextImpl impl = (ExecutionContextImpl) context;
     List<StateExecutionData> previousPhaseExecutionData =
         impl.getStateExecutionInstance()
@@ -33,10 +35,9 @@ public class CanaryUtils {
                     && !stateExecutionData.getStateName().equals(phaseElement.getName()))
             .collect(toList());
     if (previousPhaseExecutionData == null || previousPhaseExecutionData.isEmpty()) {
-      return null;
+      return hostExclusionList;
     }
 
-    List<ServiceInstance> hostExclusionList = new ArrayList<>();
     for (StateExecutionData stateExecutionData : previousPhaseExecutionData) {
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
       if (!phaseExecutionData.getInfraMappingId().equals(phaseElement.getInfraMappingId())) {
@@ -48,7 +49,7 @@ public class CanaryUtils {
       }
       for (PhaseStepExecutionSummary phaseStepExecutionSummary :
           phaseExecutionSummary.getPhaseStepExecutionSummaryMap().values()) {
-        if (phaseStepExecutionSummary.getStepExecutionSummaryList() == null
+        if (phaseStepExecutionSummary == null || phaseStepExecutionSummary.getStepExecutionSummaryList() == null
             || phaseStepExecutionSummary.getStepExecutionSummaryList().isEmpty()) {
           continue;
         }

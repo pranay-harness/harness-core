@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,7 +69,7 @@ public class ServiceVariableResourceTest {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
     pageResponse.setTotal(1);
-    when(VARIABLE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(VARIABLE_SERVICE.list(any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
     RestResponse<PageResponse<ServiceVariable>> restResponse =
         RESOURCES.client()
             .target("/service-variables/?appId=" + APP_ID)
@@ -77,7 +78,7 @@ public class ServiceVariableResourceTest {
     PageRequest<ServiceVariable> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
     pageRequest.setLimit("50");
-    verify(VARIABLE_SERVICE).list(pageRequest);
+    verify(VARIABLE_SERVICE).list(pageRequest, true);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }
@@ -106,14 +107,14 @@ public class ServiceVariableResourceTest {
    */
   @Test
   public void shouldGetVariable() throws Exception {
-    when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
+    when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, true)).thenReturn(SERVICE_VARIABLE);
     RestResponse<Service> restResponse =
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, APP_ID))
             .request()
             .get(new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(VARIABLE_SERVICE).get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID);
+    verify(VARIABLE_SERVICE).get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, true);
   }
 
   /**
