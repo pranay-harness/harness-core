@@ -2,9 +2,8 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
-import com.google.common.collect.ImmutableMap;
 
 import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
@@ -22,6 +21,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -54,14 +54,17 @@ public class DcNodeSelectState extends State {
         "serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
         serviceId, envId, infraMappingId, instanceCount, specificHosts, hostNames);
 
-    List<ServiceInstance> serviceInstances;
-    if (specificHosts) {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(
-          appId, envId, infraMappingId, ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
-    } else {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
-          ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
-    }
+    List<String> excludedServiceInstanceIds =
+        new ArrayList<>(); // TODO:: populate serviceInstances deployed in previous phases
+    List<ServiceInstance> serviceInstances =
+        infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
+            aServiceInstanceSelectionParams()
+                .withSelectSpecificHosts(specificHosts)
+                .withCount(instanceCount)
+                .withHostNames(hostNames)
+                .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
+                .build());
+
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
     selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());

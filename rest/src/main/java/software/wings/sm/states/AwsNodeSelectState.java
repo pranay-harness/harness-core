@@ -2,9 +2,8 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-
-import com.google.common.collect.ImmutableMap;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
@@ -23,6 +22,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -58,21 +58,28 @@ public class AwsNodeSelectState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
+    String infraMappingId = phaseElement.getInfraMappingId();
 
     List<ServiceInstance> serviceInstances;
 
     if (provisionNode) {
-      serviceInstances = infrastructureMappingService.provisionNodes(
-          appId, envId, phaseElement.getInfraMappingId(), launcherConfigName, instanceCount);
+      logger.info("serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, launcherConfigName: {}",
+          serviceId, envId, infraMappingId, instanceCount, launcherConfigName);
+      serviceInstances =
+          infrastructureMappingService.provisionNodes(appId, envId, infraMappingId, launcherConfigName, instanceCount);
     } else {
-      if (specificHosts) {
-        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId,
-            phaseElement.getInfraMappingId(), ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
-      } else {
-        serviceInstances =
-            infrastructureMappingService.selectServiceInstances(appId, envId, phaseElement.getInfraMappingId(),
-                ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
-      }
+      logger.info(
+          "serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
+          serviceId, envId, infraMappingId, instanceCount, specificHosts, hostNames);
+      List<String> excludedServiceInstanceIds =
+          new ArrayList<>(); // TODO:: populate serviceInstances deployed in previous phases
+      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
+          aServiceInstanceSelectionParams()
+              .withSelectSpecificHosts(specificHosts)
+              .withCount(instanceCount)
+              .withHostNames(hostNames)
+              .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
+              .build());
     }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();

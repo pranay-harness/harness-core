@@ -17,13 +17,13 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +42,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -145,6 +146,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return savedInfraMapping;
   }
 
+  /**
+   * Sync physical hosts and service instances infrastructure mapping.
+   *
+   * @param infrastructureMapping the infrastructure mapping
+   * @param serviceTemplate       the service template
+   * @param existingHostNames     the existing host names
+   * @return the infrastructure mapping
+   */
   public InfrastructureMapping syncPhysicalHostsAndServiceInstances(
       InfrastructureMapping infrastructureMapping, ServiceTemplate serviceTemplate, List<String> existingHostNames) {
     PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
@@ -315,8 +324,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> selectServiceInstances(
-      String appId, String envId, String infraMappingId, Map<String, Object> selectionParams) {
+  public List<ServiceInstance> selectServiceInstances(String appId, String envId, String infraMappingId,
+      ServiceInstanceSelectionParams serviceInstanceSelectionParams) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -327,8 +336,29 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       syncAwsHostsAndUpdateInstances(
           infrastructureMapping, computeProviderSetting); // TODO:: instead of on-demand do it periodically?
     }
-    return selectServiceInstancesByInfraMapping(
-        appId, infrastructureMapping.getServiceTemplateId(), infrastructureMapping.getUuid(), selectionParams);
+    return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
+        infrastructureMapping.getUuid(), serviceInstanceSelectionParams);
+  }
+
+  private List<ServiceInstance> selectServiceInstancesByInfraMapping(
+      String appId, String serviceTemplateId, String infraMappingId, ServiceInstanceSelectionParams selectionParams) {
+    Builder requestBuilder = aPageRequest()
+                                 .addFilter("appId", Operator.EQ, appId)
+                                 .addFilter("serviceTemplateId", Operator.EQ, serviceTemplateId)
+                                 .addFilter("infraMappingId", Operator.EQ, infraMappingId);
+
+    if (selectionParams.getExcludedServiceInstanceIds().size() > 0) {
+      requestBuilder.addFilter(
+          Mapper.ID_KEY, Operator.NOT_IN, selectionParams.getExcludedServiceInstanceIds().toArray());
+    }
+
+    if (selectionParams.isSelectSpecificHosts()) {
+      requestBuilder.addFilter("publicDns", Operator.IN, selectionParams.getHostNames().toArray());
+    } else {
+      requestBuilder.withLimit(selectionParams.getCount().toString());
+    }
+
+    return serviceInstanceService.list(requestBuilder.build()).getResponse();
   }
 
   @Override
@@ -497,35 +527,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> selectServiceInstances(
-      String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams) {
-    String serviceTemplateId =
-        (String) serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .field("appId")
-                                                      .equal(appId)
-                                                      .field("envId")
-                                                      .equal(envId)
-                                                      .field("serviceTemplateId")
-                                                      .equal(serviceTemplateId)
-                                                      .field("computeProviderSettingId")
-                                                      .equal(computeProviderId)
-                                                      .get();
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-
-    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
-
-    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      syncAwsHostsAndUpdateInstances(
-          infrastructureMapping, computeProviderSetting); // TODO:: instead of on-demand do it periodically?
-    }
-    return selectServiceInstancesByInfraMapping(
-        appId, serviceTemplateId, infrastructureMapping.getUuid(), selectionParams);
-  }
-
-  @Override
   public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
@@ -609,29 +610,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
     serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedPublicDnsNames);
-  }
-
-  private List<ServiceInstance> selectServiceInstancesByInfraMapping(
-      String appId, Object serviceTemplateId, String infraMappingId, Map<String, Object> selectionParams) {
-    Builder requestBuilder = aPageRequest()
-                                 .addFilter("appId", Operator.EQ, appId)
-                                 .addFilter("serviceTemplateId", Operator.EQ, serviceTemplateId)
-                                 .addFilter("infraMappingId", Operator.EQ, infraMappingId);
-
-    boolean specificHosts =
-        selectionParams.containsKey("specificHosts") && (boolean) selectionParams.get("specificHosts");
-    String instanceCount = selectionParams.containsKey("instanceCount")
-        ? Integer.toString((int) selectionParams.get("instanceCount"))
-        : UNLIMITED;
-
-    if (specificHosts) {
-      List<String> hostNames = (List<String>) selectionParams.get("hostNames");
-      requestBuilder.addFilter("publicDns", Operator.IN, hostNames.toArray());
-    } else {
-      requestBuilder.withLimit(instanceCount);
-    }
-
-    return serviceInstanceService.list(requestBuilder.build()).getResponse();
   }
 
   @Override
@@ -730,8 +708,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
       return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
           infrastructureMapping.getUuid(),
-          ImmutableMap.of(
-              "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
+          ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams()
+              .withSelectSpecificHosts(true)
+              .withHostNames(hosts.stream().map(Host::getHostName).collect(Collectors.toList()))
+              .build());
     } else {
       throw new WingsException(
           INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
