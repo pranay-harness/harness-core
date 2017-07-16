@@ -325,10 +325,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
+    List<ConfigFile> allServiceConfigFiles =
+        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, envId, envId);
     List<ConfigFile> templateConfigFiles =
         configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getUuid(), envId);
 
-    return overrideConfigFiles(serviceConfigFiles, templateConfigFiles);
+    return overrideConfigFiles(overrideConfigFiles(serviceConfigFiles, allServiceConfigFiles), templateConfigFiles);
   }
 
   /* (non-Javadoc)
@@ -336,20 +338,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId, String hostId) {
-    ServiceTemplate serviceTemplate;
-    try { // TODO:: remove it
-      serviceTemplate = get(appId, envId, templateId, false);
-    } catch (Exception ex) {
-      return emptyList();
-    }
+  public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false);
 
     List<ServiceVariable> serviceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
+    List<ServiceVariable> allServiceVariables =
+        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, envId);
     List<ServiceVariable> templateServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getUuid());
 
-    return overrideServiceSettings(serviceVariables, templateServiceVariables);
+    return overrideServiceSettings(
+        overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);
   }
 
   /* (non-Javadoc)
@@ -357,15 +357,19 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles) {
-    logger.info("Config files before overrides [{}]", existingFiles.toString());
-    logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
-    if (newFiles != null && !newFiles.isEmpty()) {
-      existingFiles = concat(newFiles.stream(), existingFiles.stream())
-                          .filter(new TreeSet<>(comparing(ConfigFile::getName))::add)
-                          .collect(toList());
+    List<ConfigFile> mergedConfigFiles = existingFiles;
+
+    if (existingFiles.size() != 0 || newFiles.size() != 0) {
+      logger.info("Config files before overrides [{}]", existingFiles.toString());
+      logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
+      if (newFiles != null && !newFiles.isEmpty()) {
+        mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
+                                .filter(new TreeSet<>(comparing(ConfigFile::getName))::add)
+                                .collect(toList());
+      }
     }
-    logger.info("Config files after overrides [{}]", existingFiles.toString());
-    return existingFiles;
+    logger.info("Config files after overrides [{}]", mergedConfigFiles.toString());
+    return mergedConfigFiles;
   }
 
   /**
@@ -375,17 +379,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * @param newServiceVariables      the new files
    * @return the list
    */
-  public List<ServiceVariable> overrideServiceSettings(
+  private List<ServiceVariable> overrideServiceSettings(
       List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
-    logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
-    logger.info(
-        "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
-    if (newServiceVariables != null && !newServiceVariables.isEmpty()) {
-      existingServiceVariables = concat(newServiceVariables.stream(), existingServiceVariables.stream())
-                                     .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
-                                     .collect(toList());
+    List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
+    if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
+      logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
+      logger.info(
+          "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
+      if (newServiceVariables != null && !newServiceVariables.isEmpty()) {
+        mergedServiceSettings = concat(newServiceVariables.stream(), existingServiceVariables.stream())
+                                    .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
+                                    .collect(toList());
+      }
     }
-    logger.info("Service variables after overrides [{}]", existingServiceVariables.toString());
-    return existingServiceVariables;
+    logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
+    return mergedServiceSettings;
   }
 }
