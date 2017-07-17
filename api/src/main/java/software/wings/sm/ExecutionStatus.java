@@ -46,7 +46,11 @@ public enum ExecutionStatus {
   /**
    * Paused execution status.
    */
-  PAUSED;
+  PAUSED,
+  /**
+   * Resumed execution status.
+   */
+  RESUMED;
 
   private boolean finalStatus = false;
 

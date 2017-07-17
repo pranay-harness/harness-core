@@ -2,8 +2,15 @@ package software.wings.service.impl;
 
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORTED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_RESUMED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
+import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
@@ -63,9 +70,30 @@ public class WorkflowNotificationHelper {
     placeHolders.put("ENV_NAME", env.getName());
     placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
 
-    if (status.equals(SUCCESS) || status.equals(PAUSED)) {
-      String messageTemplate = status.equals(SUCCESS) ? NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION.name()
-                                                      : NotificationMessageType.WORKFLOW_PAUSED_NOTIFICATION.name();
+    String messageTemplate = null;
+
+    switch (status) {
+      case SUCCESS:
+        messageTemplate = WORKFLOW_SUCCESSFUL_NOTIFICATION.name();
+        break;
+      case FAILED:
+        messageTemplate = WORKFLOW_FAILED_NOTIFICATION.name();
+        break;
+      case PAUSED:
+        messageTemplate = WORKFLOW_PAUSED_NOTIFICATION.name();
+        break;
+      case RESUMED:
+        messageTemplate = WORKFLOW_RESUMED_NOTIFICATION.name();
+        break;
+      case ABORTED:
+        messageTemplate = WORKFLOW_ABORTED_NOTIFICATION.name();
+        break;
+    }
+    if (messageTemplate == null) {
+      logger.error("No messageTemplate found for notification, status={}", status);
+      return;
+    }
+    if (status == SUCCESS || status == PAUSED || status == RESUMED) {
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
                                                  .withAppId(context.getAppId())
@@ -75,19 +103,18 @@ public class WorkflowNotificationHelper {
                                                  .withNotificationTemplateVariables(placeHolders)
                                                  .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
-    } else if (status.equals(FAILED)) {
-      FailureNotification notification =
-          aFailureNotification()
-              .withAccountId(app.getAccountId())
-              .withAppId(app.getUuid())
-              .withEnvironmentId(env.getUuid())
-              .withEntityId(context.getWorkflowExecutionId())
-              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-              .withEntityName("Deployment")
-              .withNotificationTemplateId(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name())
-              .withNotificationTemplateVariables(placeHolders)
-              .withExecutionId(context.getWorkflowExecutionId())
-              .build();
+    } else if (status == FAILED || status == ABORTED) {
+      FailureNotification notification = aFailureNotification()
+                                             .withAccountId(app.getAccountId())
+                                             .withAppId(app.getUuid())
+                                             .withEnvironmentId(env.getUuid())
+                                             .withEntityId(context.getWorkflowExecutionId())
+                                             .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                                             .withEntityName("Deployment")
+                                             .withNotificationTemplateId(messageTemplate)
+                                             .withNotificationTemplateVariables(placeHolders)
+                                             .withExecutionId(context.getWorkflowExecutionId())
+                                             .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
     } else {
       logger.info("No template found for workflow status " + status);

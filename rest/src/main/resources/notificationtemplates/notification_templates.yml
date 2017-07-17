@@ -41,11 +41,25 @@ WORKFLOW_FAILED_NOTIFICATION:
           body: ${WORKFLOW_NAME} failed in ${ENV_NAME} environment at ${DATE}
 
 WORKFLOW_PAUSED_NOTIFICATION:
-      web: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
-      slack: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
+      web: ${WORKFLOW_NAME} execution paused in ${ENV_NAME} environment at ${DATE}
+      slack: ${WORKFLOW_NAME} execution paused in ${ENV_NAME} environment at ${DATE}
       email:
-          subject: ${WORKFLOW_NAME} paused
-          body: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
+          subject: ${WORKFLOW_NAME} execution paused
+          body: ${WORKFLOW_NAME} execution paused in ${ENV_NAME} environment at ${DATE}
+
+WORKFLOW_RESUMED_NOTIFICATION:
+      web: ${WORKFLOW_NAME} execution resumed in ${ENV_NAME} environment at ${DATE}
+      slack: ${WORKFLOW_NAME} execution resumed in ${ENV_NAME} environment at ${DATE}
+      email:
+          subject: ${WORKFLOW_NAME} execution resumed
+          body: ${WORKFLOW_NAME} execution resumed in ${ENV_NAME} environment at ${DATE}
+
+WORKFLOW_ABORTED_NOTIFICATION:
+      web: ${WORKFLOW_NAME} execution aborted in ${ENV_NAME} environment at ${DATE}
+      slack: ${WORKFLOW_NAME} execution aborted in ${ENV_NAME} environment at ${DATE}
+      email:
+          subject: ${WORKFLOW_NAME} execution aborted
+          body: ${WORKFLOW_NAME} execution aborted in ${ENV_NAME} environment at ${DATE}
 
 WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully at ${DATE}

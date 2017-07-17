@@ -4,6 +4,11 @@
 
 package software.wings.sm;
 
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+
+import com.google.inject.Injector;
+
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -11,6 +16,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
@@ -21,9 +27,14 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class ExecutionInterruptManager {
+  private final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Inject private Injector injector;
+  @Inject private WorkflowNotificationHelper workflowNotificationHelper;
 
   /**
    * Register execution event execution event.
@@ -32,12 +43,10 @@ public class ExecutionInterruptManager {
    * @return the execution event
    */
   public ExecutionInterrupt registerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
-    boolean inlineHandle = false;
     if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE
         || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RESUME
         || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RETRY
         || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.ABORT) {
-      inlineHandle = true;
       if (executionInterrupt.getStateExecutionInstanceId() == null) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
       }
@@ -103,19 +112,53 @@ public class ExecutionInterruptManager {
           ExecutionStatusData.Builder.anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
     }
 
-    if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.ABORT_ALL) {
-      inlineHandle = true;
-    }
-
     executionInterrupt = wingsPersistence.saveAndGet(ExecutionInterrupt.class, executionInterrupt);
+    stateMachineExecutor.handleInterrupt(executionInterrupt);
 
-    if (inlineHandle) {
-      stateMachineExecutor.handleInterrupt(executionInterrupt);
-    }
+    sendNotificationIfRequired(executionInterrupt);
 
     return executionInterrupt;
   }
 
+  private void sendNotificationIfRequired(ExecutionInterrupt executionInterrupt) {
+    switch (executionInterrupt.getExecutionInterruptType()) {
+      case PAUSE_ALL: {
+        sendNotification(executionInterrupt, ExecutionStatus.PAUSED);
+        break;
+      }
+      case RESUME_ALL: {
+        sendNotification(executionInterrupt, ExecutionStatus.RESUMED);
+        break;
+      }
+      case ABORT_ALL: {
+        sendNotification(executionInterrupt, ExecutionStatus.ABORTED);
+        break;
+      }
+    }
+  }
+
+  private void sendNotification(ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit("1")
+            .addFilter("appId", Operator.EQ, executionInterrupt.getAppId())
+            .addFilter("executionUuid", Operator.EQ, executionInterrupt.getExecutionUuid())
+            .addOrder("createdAt", OrderType.DESC)
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (pageResponse == null || pageResponse.isEmpty()) {
+      logger.error("No StateExecutionInstance found for sendNotification");
+      return;
+    }
+    StateMachine sm = wingsPersistence.get(
+        StateMachine.class, executionInterrupt.getAppId(), pageResponse.get(0).getStateMachineId());
+    ExecutionContextImpl context = new ExecutionContextImpl(pageResponse.get(0), sm, injector);
+    injector.injectMembers(context);
+
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
+  }
   private void makeInactive(ExecutionInterrupt executionInterrupt) {
     wingsPersistence.delete(executionInterrupt);
   }
