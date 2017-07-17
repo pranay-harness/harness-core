@@ -135,7 +135,7 @@ public class EcsServiceSetup extends State {
       ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
-    String containerName = imageName.replace('/', '_');
+    String containerName = EcsConvention.getContainerName(imageName);
 
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
@@ -317,11 +317,12 @@ public class EcsServiceSetup extends State {
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
       EcrConfig ecrConfig = (EcrConfig) settingsService.get(ecrArtifactStream.getSettingId()).getValue();
-      String repository = ecrConfig.getEcrUrl().substring(8);
-      if (!repository.endsWith("/")) {
-        repository += "/";
+      String registry = ecrConfig.getEcrUrl().substring(8);
+      if (!registry.endsWith("/")) {
+        registry += "/";
       }
-      return repository + ecrArtifactStream.getImageName();
+      String imageName = registry + ecrArtifactStream.getImageName() + ":" + artifact.getBuildNo();
+      return imageName;
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       return artifactoryArtifactStream.getImageName();
