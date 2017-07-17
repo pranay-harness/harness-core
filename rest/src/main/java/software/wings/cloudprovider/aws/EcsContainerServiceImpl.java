@@ -971,6 +971,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               .getPrivateIpAddress();
 
       try {
+        executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
+        executionLogCallback.saveExecutionLog(
+            "requesting data from http://" + ipAddress + ":51678/v1/tasks", LogLevel.INFO);
         logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
         TaskMetadata taskMetadata =
             Request.Get("http://" + ipAddress + ":51678/v1/tasks")
