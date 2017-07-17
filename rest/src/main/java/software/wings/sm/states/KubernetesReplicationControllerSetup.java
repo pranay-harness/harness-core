@@ -41,6 +41,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -57,6 +58,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -465,7 +467,6 @@ public class KubernetesReplicationControllerSetup extends State {
     String username;
     String password;
   }
-
   /**
    * Fetches artifact image details
    */
@@ -481,6 +482,15 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
+    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
+      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
+      imageDetails.name = dockerArtifactStream.getImageName();
+      imageDetails.sourceName = dockerArtifactStream.getSourceName();
+      EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
+      imageDetails.registryUrl = ecrConfig.getEcrUrl();
+      imageDetails.username = "AWS";
+      imageDetails.password = AwsHelperService.getAmazonEcrAuthToken(
+          ecrConfig.getEcrUrl(), ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       imageDetails.name = artifactoryArtifactStream.getImageName();

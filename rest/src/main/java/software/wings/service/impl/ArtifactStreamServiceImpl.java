@@ -118,7 +118,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
-    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        || ArtifactStreamType.ECR.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
@@ -153,7 +154,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
-    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        || ArtifactStreamType.ECR.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
@@ -434,7 +436,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Service service = serviceResourceService.get(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name(),
-          ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name());
+          ArtifactStreamType.ECR.name(), ArtifactStreamType.ECR.name(), ArtifactStreamType.ARTIFACTORY.name(),
+          ArtifactStreamType.ARTIFACTORY.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),

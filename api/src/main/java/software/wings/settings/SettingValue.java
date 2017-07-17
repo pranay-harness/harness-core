@@ -118,6 +118,11 @@ public abstract class SettingValue implements ExtensionPoint {
     DOCKER("Docker Registry"),
 
     /**
+     * AWS ECR registry setting variable types.
+     */
+    ECR("Amazon EC2 Container Registry"),
+
+    /**
      * Physical data center setting variable types.
      */
     PHYSICAL_DATA_CENTER("Physical Data Center"),

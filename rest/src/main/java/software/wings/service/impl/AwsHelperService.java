@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.api.client.repackaged.com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
@@ -38,6 +39,9 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecr.AmazonECRClient;
+import com.amazonaws.services.ecr.AmazonECRClientBuilder;
+import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
@@ -55,6 +59,8 @@ import software.wings.exception.WingsException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+// import com.amazonaws.services.ecr.A
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -98,6 +104,31 @@ public class AwsHelperService {
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
+  }
+
+  /**
+   * Gets amazon ecr client.
+   *
+   * @param region    the region
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the auth token
+   */
+  public static String getAmazonEcrAuthToken(String url, String region, String accessKey, char[] secretKey) {
+    AmazonECRClient ecrClient = (AmazonECRClient) AmazonECRClientBuilder.standard()
+                                    .withRegion(region)
+                                    .withCredentials(new AWSStaticCredentialsProvider(
+                                        new BasicAWSCredentials(accessKey, new String(secretKey))))
+                                    .build();
+
+    // https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
+    String awsAccount = url.substring(8, url.indexOf("."));
+
+    return ecrClient
+        .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
+        .getAuthorizationData()
+        .get(0)
+        .getAuthorizationToken();
   }
 
   /**

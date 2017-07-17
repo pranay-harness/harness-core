@@ -29,8 +29,11 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
                                                  * Docker source type.
                                                  */
   DOCKER(DockerArtifactStream.class, "DOCKER"), /**
-                                                 * Nexus Artifact source type.
+                                                 * ECR source type.
                                                  */
+  ECR(EcrArtifactStream.class, "ECR"), /**
+                                        * Nexus Artifact source type.
+                                        */
   NEXUS(NexusArtifactStream.class, "NEXUS"), /**
                                               * Artifactory Artifact source type.
                                               */

@@ -15,6 +15,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -62,6 +63,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Docker Registry")
                 .withType("DOCKER")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(EcrConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Amazon EC2 Container Registry")
+                .withType("ECR")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()

@@ -13,6 +13,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
@@ -36,6 +37,8 @@ import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
+import software.wings.helpers.ext.ecr.EcrService;
+import software.wings.helpers.ext.ecr.EcrServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -66,6 +69,7 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.DirectInfrastructureProvider;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
+import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
@@ -117,6 +121,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
+import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -239,6 +244,8 @@ public class WingsModule extends AbstractModule {
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
+    bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
+    bind(EcrService.class).to(EcrServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -256,6 +263,7 @@ public class WingsModule extends AbstractModule {
     buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
     buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
     buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
+    buildServiceMapBinder.addBinding(EcrConfig.class).toInstance(EcrBuildService.class);
     buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
     buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
 

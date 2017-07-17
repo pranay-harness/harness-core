@@ -292,7 +292,8 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-        if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+        if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())
+            || artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
           ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
           artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
           commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
