@@ -27,6 +27,7 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -81,6 +82,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetAllApplications() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
@@ -102,6 +104,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetAllTiers() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
@@ -139,6 +142,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetAllNodes() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
@@ -201,6 +205,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetAllBusinessTransactions() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
@@ -240,6 +245,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testGetAllTierBTMetrics() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
