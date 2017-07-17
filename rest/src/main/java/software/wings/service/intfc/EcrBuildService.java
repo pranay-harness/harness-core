@@ -7,6 +7,7 @@ import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 7/16/17.
@@ -27,4 +28,6 @@ public interface EcrBuildService extends BuildService<EcrConfig> {
 
   @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(EcrConfig config, ArtifactStreamAttributes artifactStreamAttributes);
+
+  @DelegateTaskType(TaskType.ECR_GET_PLANS) Map<String, String> getPlans(EcrConfig config);
 }

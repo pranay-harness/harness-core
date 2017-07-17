@@ -6,6 +6,7 @@ import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
@@ -16,6 +17,7 @@ import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -52,7 +54,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public Map<String, String> getPlans(EcrConfig config) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    return getJobs(config).stream().collect(Collectors.toMap(o -> o, o -> o));
   }
 
   @Override
