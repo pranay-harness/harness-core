@@ -30,7 +30,7 @@ public class EcrConfig extends SettingValue implements Encryptable {
   @NotEmpty
   @Encrypted
   private char[] secretKey;
-  @Attributes(title = "Region")
+  @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
