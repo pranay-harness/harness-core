@@ -290,26 +290,27 @@ public class EcrArtifactStream extends ArtifactStream {
     }
 
     /**
+    /**
      * Build docker artifact stream.
      *
-     * @return the docker artifact stream
+     * @return the ecr artifact stream
      */
     public EcrArtifactStream build() {
-      EcrArtifactStream dockerArtifactStream = new EcrArtifactStream();
-      dockerArtifactStream.setImageName(imageName);
-      dockerArtifactStream.setSourceName(sourceName);
-      dockerArtifactStream.setSettingId(settingId);
-      dockerArtifactStream.setServiceId(serviceId);
-      dockerArtifactStream.setUuid(uuid);
-      dockerArtifactStream.setAppId(appId);
-      dockerArtifactStream.setCreatedBy(createdBy);
-      dockerArtifactStream.setCreatedAt(createdAt);
-      dockerArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      dockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      dockerArtifactStream.setAutoDownload(autoDownload);
-      dockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      dockerArtifactStream.setStreamActions(streamActions);
-      return dockerArtifactStream;
+      EcrArtifactStream ecrArtifactStream = new EcrArtifactStream();
+      ecrArtifactStream.setImageName(imageName);
+      ecrArtifactStream.setSourceName(sourceName);
+      ecrArtifactStream.setSettingId(settingId);
+      ecrArtifactStream.setServiceId(serviceId);
+      ecrArtifactStream.setUuid(uuid);
+      ecrArtifactStream.setAppId(appId);
+      ecrArtifactStream.setCreatedBy(createdBy);
+      ecrArtifactStream.setCreatedAt(createdAt);
+      ecrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
+      ecrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      ecrArtifactStream.setAutoDownload(autoDownload);
+      ecrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      ecrArtifactStream.setStreamActions(streamActions);
+      return ecrArtifactStream;
     }
   }
 }
