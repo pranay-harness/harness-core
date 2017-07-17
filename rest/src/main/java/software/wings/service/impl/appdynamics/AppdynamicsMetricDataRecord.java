@@ -9,10 +9,12 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.MetricType;
+import software.wings.security.annotations.Archive;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -41,6 +43,7 @@ import javax.validation.constraints.NotNull;
       }), @Index(fields = { @Field("accountId")
                             , @Field("appdAppId"), @Field("metricId") })
 })
+@Archive(retentionMills = 7 * 24 * 60 * 60 * 1000)
 public class AppdynamicsMetricDataRecord extends Base {
   // TODO: needs mapping from appd identifiers to harness id
 
