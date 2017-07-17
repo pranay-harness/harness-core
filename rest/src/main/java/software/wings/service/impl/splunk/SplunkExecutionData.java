@@ -116,14 +116,18 @@ public class SplunkExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "errorMsg",
         anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
-    putNotNull(executionDetails, "total",
-        anExecutionDataValue()
-            .withDisplayName("Total")
-            .withValue(timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1)
-            .build());
+    final int total = timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1;
+    putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
+    int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
+    if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
+      elapsedMinutes = 0;
+    }
     final CountsByStatuses breakdown = new CountsByStatuses();
-    breakdown.setSuccess(
-        Math.min((int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs()), timeDuration + 1));
+    if (getStatus() == ExecutionStatus.FAILED) {
+      breakdown.setFailed(Math.min(elapsedMinutes, total));
+    } else {
+      breakdown.setSuccess(Math.min(elapsedMinutes, total));
+    }
     putNotNull(executionDetails, "breakdown",
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
