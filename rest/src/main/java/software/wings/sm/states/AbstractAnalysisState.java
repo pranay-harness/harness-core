@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -58,7 +59,12 @@ public abstract class AbstractAnalysisState extends State {
 
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false);
-    Preconditions.checkState(workflowExecutions.size() == 1, "Could not get execution details");
+    if (workflowExecutions.isEmpty()) {
+      getLogger().error("Could not get a successful workflow to find control nodes");
+      return null;
+    }
+
+    Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
     final WorkflowExecution workflowExecution = workflowExecutions.get(0);
 
     ElementExecutionSummary executionSummary = null;
@@ -88,4 +94,6 @@ public abstract class AbstractAnalysisState extends State {
 
     return rv;
   }
+
+  abstract public Logger getLogger();
 }

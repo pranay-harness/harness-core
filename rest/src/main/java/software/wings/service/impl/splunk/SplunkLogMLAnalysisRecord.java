@@ -20,6 +20,7 @@ public class SplunkLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String applicationId;
 
   private String query;
+  private String analysisSummaryMessage;
   private List<List<SplunkAnalysisCluster>> unknown_events;
   private Map<String, List<SplunkAnalysisCluster>> test_events;
   private Map<String, List<SplunkAnalysisCluster>> control_events;

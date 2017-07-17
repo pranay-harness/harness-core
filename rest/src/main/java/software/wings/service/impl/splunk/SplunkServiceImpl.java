@@ -150,7 +150,10 @@ public class SplunkServiceImpl implements SplunkService {
     analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
 
     RiskLevel riskLevel = RiskLevel.LOW;
-    String analysisSummaryMsg = "No anomaly found";
+    String analysisSummaryMsg =
+        analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
+        ? "No anomaly found"
+        : analysisRecord.getAnalysisSummaryMessage();
 
     int unknownClusters = 0;
     if (analysisSummary.getUnknownClusters() != null && analysisSummary.getUnknownClusters().size() > 0) {
