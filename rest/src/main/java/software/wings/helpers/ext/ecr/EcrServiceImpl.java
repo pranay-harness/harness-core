@@ -31,9 +31,14 @@ public class EcrServiceImpl implements EcrService {
     ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
     do {
       listImagesResult = awsHelperService.listEcrImages(ecrConfig, listImagesRequest);
-      listImagesResult.getImageIds().forEach(imageIdentifier -> {
-        buildDetails.add(BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build());
-      });
+      listImagesResult.getImageIds()
+          .stream()
+          .filter(imageIdentifier
+              -> imageIdentifier != null && imageIdentifier.getImageTag() != null
+                  && !imageIdentifier.getImageTag().isEmpty())
+          .forEach(imageIdentifier
+              -> buildDetails.add(
+                  BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
       listImagesRequest.setNextToken(listImagesResult.getNextToken());
     } while (listImagesRequest.getNextToken() != null);
     return buildDetails;
