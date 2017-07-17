@@ -40,7 +40,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(14)
+        .hasSize(15)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -168,8 +168,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(14)
+        .hasSize(15)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GCP",
-            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
+            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "ECR");
   }
 }
