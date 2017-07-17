@@ -22,7 +22,20 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
 
   @Override
   public OrchestrationWorkflow clone() {
-    return aBasicOrchestrationWorkflow().withGraph(getGraph()).build();
+    return aBasicOrchestrationWorkflow()
+        .withGraph(getGraph())
+        .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withWorkflowPhaseIds(getWorkflowPhaseIds())
+        .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
+        .withPostDeploymentSteps(getPostDeploymentSteps())
+        .withRollbackWorkflowPhaseIdMap(getRollbackWorkflowPhaseIdMap())
+        .withNotificationRules(getNotificationRules())
+        .withFailureStrategies(getFailureStrategies())
+        .withSystemVariables(getSystemVariables())
+        .withUserVariables(getUserVariables())
+        .withDerivedVariables(getDerivedVariables())
+        .withRequiredEntityTypes(getRequiredEntityTypes())
+        .build();
   }
 
   public static final class BasicOrchestrationWorkflowBuilder {
