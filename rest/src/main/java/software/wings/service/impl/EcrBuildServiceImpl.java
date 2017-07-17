@@ -36,7 +36,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public List<String> getJobs(EcrConfig ecrConfig) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    return ecrService.listEcrRegistry(ecrConfig);
   }
 
   @Override
