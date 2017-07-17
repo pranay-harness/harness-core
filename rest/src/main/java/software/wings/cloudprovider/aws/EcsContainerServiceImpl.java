@@ -53,6 +53,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.JsonUtils;
@@ -993,7 +994,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
         logger.error(ex.getMessage());
         logger.error("Container meta data fetch failed on EC2 host: " + ipAddress);
-        containerInfos.add(new ContainerInfo(ipAddress, ContainerInfo.Status.FAILURE));
+        containerInfos.add(new ContainerInfo(ipAddress, Status.SUCCESS));
       }
     });
     logger.info("Docker container ids = " + containerInfos);
