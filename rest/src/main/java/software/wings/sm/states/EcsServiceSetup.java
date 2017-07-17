@@ -31,6 +31,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
@@ -315,7 +316,12 @@ public class EcsServiceSetup extends State {
       return dockerArtifactStream.getImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      return ecrArtifactStream.getImageName();
+      EcrConfig ecrConfig = (EcrConfig) settingsService.get(ecrArtifactStream.getSettingId()).getValue();
+      String repository = ecrConfig.getEcrUrl().substring(8);
+      if (!repository.endsWith("/")) {
+        repository += "/";
+      }
+      return repository + ecrArtifactStream.getImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       return artifactoryArtifactStream.getImageName();
