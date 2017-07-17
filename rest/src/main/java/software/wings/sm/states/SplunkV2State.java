@@ -171,6 +171,7 @@ public class SplunkV2State extends AbstractAnalysisState {
                                                   .withSplunkConfigID(splunkConfigId)
                                                   .withSplunkQueries(Sets.newHashSet(query.split(",")))
                                                   .withAnalysisDuration(Integer.parseInt(timeDuration))
+                                                  .withStatus(ExecutionStatus.RUNNING)
                                                   .withCorrelationId(UUID.randomUUID().toString())
                                                   .build();
     final SplunkAnalysisResponse response = anSplunkAnalysisResponse()
@@ -209,6 +210,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
 
     SplunkAnalysisResponse executionResponse = (SplunkAnalysisResponse) response.values().iterator().next();
+    executionResponse.getSplunkExecutionData().setStatus(executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getSplunkExecutionData())

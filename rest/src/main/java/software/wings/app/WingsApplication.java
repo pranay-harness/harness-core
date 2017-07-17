@@ -61,6 +61,7 @@ import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.ArchivalManager;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
@@ -239,6 +240,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
+    startArchival(injector);
+
     logger.info("Starting app done");
   }
 
@@ -327,5 +330,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     PluginManager pluginManager = injector.getInstance(PluginManager.class);
     pluginManager.loadPlugins();
     pluginManager.startPlugins();
+  }
+
+  private void startArchival(Injector injector) {
+    final ArchivalManager archivalManager = new ArchivalManager(injector.getInstance(WingsPersistence.class));
+    archivalManager.startArchival();
   }
 }

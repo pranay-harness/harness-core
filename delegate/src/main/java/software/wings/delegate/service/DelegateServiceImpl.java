@@ -122,7 +122,7 @@ public class DelegateServiceImpl implements DelegateService {
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
       Client client = ClientFactory.getDefault().newClient();
-      ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+      ExecutorService fixedThreadPool = Executors.newWorkStealingPool(5);
 
       // Stream the request body
       request =

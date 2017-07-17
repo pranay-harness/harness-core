@@ -179,6 +179,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .withAppDynamicsApplicationId(Long.parseLong(applicationId))
             .withAppdynamicsTierId(Long.parseLong(tierId))
             .withAnalysisDuration(Integer.parseInt(timeDuration))
+            .withStatus(ExecutionStatus.RUNNING)
             .withCorrelationId(UUID.randomUUID().toString())
             .build();
     final AppdynamicsAnalysisResponse response = anAppdynamicsAnalysisResponse()
@@ -220,6 +221,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
     if (!ignoreVerificationFailure && finalMetrics != null && finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
       executionStatus = ExecutionStatus.FAILED;
     }
+    executionResponse.getAppDynamicsExecutionData().setStatus(executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())

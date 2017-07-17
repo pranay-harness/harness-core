@@ -22,7 +22,20 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
 
   @Override
   public OrchestrationWorkflow clone() {
-    return aMultiServiceOrchestrationWorkflow().withGraph(getGraph()).build();
+    return aMultiServiceOrchestrationWorkflow()
+        .withGraph(getGraph())
+        .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withWorkflowPhaseIds(getWorkflowPhaseIds())
+        .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
+        .withPostDeploymentSteps(getPostDeploymentSteps())
+        .withRollbackWorkflowPhaseIdMap(getRollbackWorkflowPhaseIdMap())
+        .withNotificationRules(getNotificationRules())
+        .withFailureStrategies(getFailureStrategies())
+        .withSystemVariables(getSystemVariables())
+        .withUserVariables(getUserVariables())
+        .withDerivedVariables(getDerivedVariables())
+        .withRequiredEntityTypes(getRequiredEntityTypes())
+        .build();
   }
 
   public static final class MultiServiceOrchestrationWorkflowBuilder {

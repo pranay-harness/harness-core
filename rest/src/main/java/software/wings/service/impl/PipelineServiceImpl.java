@@ -212,7 +212,7 @@ public class PipelineServiceImpl implements PipelineService {
       executorService.submit(() -> updatePipelineEstimates(pipelineExecution));
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
-      logger.error("Pipeline execution update failed " + cex); // TODO: add retry
+      logger.warn("Pipeline execution update failed " + cex); // TODO: add retry
     }
   }
 
