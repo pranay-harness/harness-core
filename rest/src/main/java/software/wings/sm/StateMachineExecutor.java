@@ -916,9 +916,15 @@ public class StateMachineExecutor {
             }
           }
         }
-
         break;
       }
+      case PAUSE_ALL: {
+        break;
+      }
+      case RESUME_ALL: {
+        break;
+      }
+      default: {}
     }
     // TODO - more cases
   }

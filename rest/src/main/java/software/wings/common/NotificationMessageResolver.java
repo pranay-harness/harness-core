@@ -53,8 +53,14 @@ public class NotificationMessageResolver {
                                    * Workflow failed notification notification message type.
                                    */
     WORKFLOW_FAILED_NOTIFICATION, /**
-                                   * Workflow phase successful notification notification message type.
+                                   * Workflow resumed notification notification message type.
                                    */
+    WORKFLOW_RESUMED_NOTIFICATION, /**
+                                    * Workflow aborted notification notification message type.
+                                    */
+    WORKFLOW_ABORTED_NOTIFICATION, /**
+                                    * Workflow phase successful notification notification message type.
+                                    */
     WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION, /**
                                              * Workflow phase paused notification notification message type.
                                              */
