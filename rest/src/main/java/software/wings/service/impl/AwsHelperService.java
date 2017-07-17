@@ -41,7 +41,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
-import com.amazonaws.services.ecr.model.DescribeImagesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
@@ -122,6 +121,7 @@ public class AwsHelperService {
   /**
    * Gets amazon ecr client.
    *
+   * @param url    the url
    * @param region    the region
    * @param accessKey the access key
    * @param secretKey the secret key
