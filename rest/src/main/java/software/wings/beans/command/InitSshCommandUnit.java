@@ -17,9 +17,11 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
+import software.wings.service.impl.AwsHelperService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -87,6 +89,14 @@ public class InitSshCommandUnit extends SshCommandUnit {
       DockerConfig dockerConfig = (DockerConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
       envVariables.put("DOCKER_USER_ID", dockerConfig.getUsername());
       envVariables.put("DOCKER_USER_PASSWORD", new String(dockerConfig.getPassword()));
+      envVariables.put("DOCKER_IMAGE", context.getArtifactStreamAttributes().getImageName());
+    } else if (context.getArtifactStreamAttributes() != null
+        && context.getArtifactStreamAttributes().getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
+      EcrConfig ecrConfig = (EcrConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
+      envVariables.put("DOCKER_USER_ID", "AWS");
+      envVariables.put("DOCKER_USER_PASSWORD",
+          AwsHelperService.getAmazonEcrAuthToken(
+              ecrConfig.getEcrUrl(), ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey()));
       envVariables.put("DOCKER_IMAGE", context.getArtifactStreamAttributes().getImageName());
     }
 

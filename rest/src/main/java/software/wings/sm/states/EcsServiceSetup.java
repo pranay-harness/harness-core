@@ -309,7 +309,8 @@ public class EcsServiceSetup extends State {
   private String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-    if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+    if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())
+        || artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
       return dockerArtifactStream.getImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {

@@ -21,6 +21,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -76,6 +77,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("DOCKER")
             .withPluginCategories(asList(Artifact))
             .withUiSchema(readUiSchema("DOCKER"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(EcrConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Amazon EC2 Container Registry")
+            .withType("ECR")
+            .withPluginCategories(asList(Artifact))
+            .withUiSchema(readUiSchema("ECR"))
             .build(),
         anAccountPlugin()
             .withSettingClass(NexusConfig.class)

@@ -4,6 +4,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -59,7 +60,8 @@ public class ArtifactCollectionJob implements Job {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("Artifact Stream", artifactStream);
 
-    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
+    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
+        || artifactStream.getArtifactStreamType().equals(ECR.name())) {
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
       List<Artifact> artifacts = artifactService
                                      .list(aPageRequest()

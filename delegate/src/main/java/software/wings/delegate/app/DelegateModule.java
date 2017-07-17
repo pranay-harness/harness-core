@@ -43,6 +43,8 @@ import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
+import software.wings.helpers.ext.ecr.EcrService;
+import software.wings.helpers.ext.ecr.EcrServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -53,6 +55,7 @@ import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
+import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
@@ -63,6 +66,7 @@ import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.DockerBuildService;
+import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -122,6 +126,8 @@ public class DelegateModule extends AbstractModule {
     bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
+    bind(EcrService.class).to(EcrServiceImpl.class);
+    bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
