@@ -269,4 +269,9 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public Logger getLogger() {
+    return logger;
+  }
 }

@@ -251,6 +251,7 @@ public class JenkinsState extends State {
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
     jenkinsExecutionData.setFilePathAssertionMap(jenkinsExecutionResponse.getFilePathAssertionMap());
     jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
+    jenkinsExecutionData.setErrorMsg(jenkinsExecutionResponse.getErrorMessage());
     jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
