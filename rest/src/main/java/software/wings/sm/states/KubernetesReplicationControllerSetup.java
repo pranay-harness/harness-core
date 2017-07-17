@@ -52,6 +52,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -483,9 +484,9 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.username = dockerConfig.getUsername();
       imageDetails.password = new String(dockerConfig.getPassword());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
-      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-      imageDetails.name = dockerArtifactStream.getImageName();
-      imageDetails.sourceName = dockerArtifactStream.getSourceName();
+      EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
+      imageDetails.name = ecrArtifactStream.getImageName();
+      imageDetails.sourceName = ecrArtifactStream.getSourceName();
       EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
       imageDetails.registryUrl = ecrConfig.getEcrUrl();
       imageDetails.username = "AWS";
