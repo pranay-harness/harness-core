@@ -195,6 +195,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     int code = response.code();
     switch (code) {
       case 404:
+      case 400:
         return false;
       case 401:
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Docker Registry credentials");

@@ -67,7 +67,6 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public boolean validateArtifactServer(EcrConfig config) {
-    //    return true;
     if (!validUrl(config.getEcrUrl())) {
       throw new WingsException(
           ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Amazon EC2 Container Registry URL must be a valid URL");
@@ -81,6 +80,6 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public boolean validateArtifactSource(EcrConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
-    return ecrService.verifyImageName(config, artifactStreamAttributes.getImageName());
+    return ecrService.verifyRepository(config, artifactStreamAttributes.getImageName());
   }
 }

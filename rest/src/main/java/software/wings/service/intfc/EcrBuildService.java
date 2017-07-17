@@ -20,11 +20,11 @@ public interface EcrBuildService extends BuildService<EcrConfig> {
    * @param ecrConfig             the ecr config
    * @return the builds
    */
-  @DelegateTaskType(TaskType.DOCKER_GET_BUILDS)
+  @DelegateTaskType(TaskType.ECR_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig);
 
-  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(EcrConfig config);
+  @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(EcrConfig config);
 
-  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_STREAM)
+  @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(EcrConfig config, ArtifactStreamAttributes artifactStreamAttributes);
 }

@@ -68,7 +68,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config) {
-    //    return true;
     if (!validUrl(config.getDockerRegistryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Docker Registry URL must be a valid URL");
     }

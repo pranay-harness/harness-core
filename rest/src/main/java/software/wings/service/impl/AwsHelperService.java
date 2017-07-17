@@ -41,7 +41,12 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
+import com.amazonaws.services.ecr.model.DescribeImagesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
+import com.amazonaws.services.ecr.model.ListImagesRequest;
+import com.amazonaws.services.ecr.model.ListImagesResult;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
@@ -52,6 +57,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
@@ -101,6 +107,13 @@ public class AwsHelperService {
    */
   public AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey) {
     return (AmazonECSClient) AmazonECSClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
+  }
+
+  public AmazonECRClient getAmazonEcrClient(String region, String accessKey, char[] secretKey) {
+    return (AmazonECRClient) AmazonECRClientBuilder.standard()
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
@@ -437,5 +450,26 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeInstancesResult();
+  }
+
+  public ListImagesResult listEcrImages(EcrConfig ecrConfig, ListImagesRequest listImagesRequest) {
+    try {
+      return getAmazonEcrClient(ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey())
+          .listImages(listImagesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListImagesResult();
+  }
+
+  public DescribeRepositoriesResult listRepositories(
+      EcrConfig ecrConfig, DescribeRepositoriesRequest describeRepositoriesRequest) {
+    try {
+      return getAmazonEcrClient(ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey())
+          .describeRepositories(describeRepositoriesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeRepositoriesResult();
   }
 }
