@@ -6,7 +6,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 '''
-Uses the "canberra" distance along with a threshold to predict anomalies.
+Uses the "braycurtis" distance along with a threshold to predict anomalies.
 '''
 
 
@@ -66,10 +66,14 @@ class SimpleDistanceClassifier(object):
                 if x[i] < y[i]:
                     y[i] = x[i]
 
-        return dist.pdist(np.row_stack((x, y)), metric='canberra') / x.shape[0]
+        return dist.pdist(np.row_stack((x, y)), metric='braycurtis')
 
 # spc = SimpleDistanceClassifier()
 # spc.fit_transform(1, np.array([[7., 1., 1., 1., 5., 16., 5., 3., 2],
 #                                [8., 0., 0., 0., 2., 11., 5., 5., 2],
 #                                [11., 0., 0., 0., 4., 0., 0., 8., 0]]), 0.1)
 # print(spc.predict(1, np.array([[12., 2., 1., 0., 1., 14., 9., 3., 2]])))
+
+# spc = SimpleDistanceClassifier()
+# print(spc.dist(np.array([7., 1., 1., 1., 5., 16., 5., 3., 2.]),
+#     np.array([20., 0., 0., 10., 2., 11., 5., 5., 2])))
