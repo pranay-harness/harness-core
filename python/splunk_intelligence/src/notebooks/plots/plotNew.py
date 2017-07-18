@@ -2,7 +2,7 @@ from random import randint
 
 import pandas as pd
 import plotly as py
-from plotly.graph_objs import Scatter, Scatter3d, Layout, Figure, Marker
+from plotly.graph_objs import Scatter, Scatter3d, Layout, Figure, Marker, Histogram
 
 
 def split(input, length, size):
@@ -10,6 +10,19 @@ def split(input, length, size):
     input.replace('\tat', ' ')
     return '<br>'.join([input[start:start + size] for start in range(0, length, size)])
 
+
+def hist_plot(control_x, test_x):
+    data = [Histogram(x=control_x,
+    opacity=0.75),
+            Histogram(x=test_x,
+                      opacity=0.75)
+            ]
+
+    layout = Layout(hovermode='closest')
+
+    figure = Figure(data=data, layout=layout)
+
+    py.offline.iplot(figure)
 
 # TODO tooltips should be plain text
 def scatter_plot(xy_matrix, tooltips):

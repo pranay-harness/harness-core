@@ -374,6 +374,25 @@ class SplunkDatasetNew(object):
 
         return np.column_stack((x, y)), tooltips, labels, sizes
 
+    def count_hist_plot(self):
+
+        data = {}
+        for index, (key, value) in enumerate(self.control_clusters.items()):
+            for host, val in value.items():
+                for freq in val.get('message_frequencies'):
+                    if key not in data:
+                        data[key] = {}
+                        data[key]['control'] = []
+                        data[key]['test'] = []
+                    data[key]['control'].append(freq.get('count'))
+
+        for index, (key, value) in enumerate(self.test_clusters.items()):
+            for host, val in value.items():
+                for freq in val.get('message_frequencies'):
+                    data[key]['test'].append(freq.get('count'))
+
+        return data
+
     def count_scatter_plot(self):
 
         x = []
