@@ -74,7 +74,7 @@ public class DelegateFileResource {
     FileMetadata fileMetadata = new FileMetadata();
     fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
     String fileId = fileService.saveFile(fileMetadata,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()),
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
         ARTIFACTS);
     logger.debug("fileId: {}", fileId);
     return new RestResponse<>(fileId);
