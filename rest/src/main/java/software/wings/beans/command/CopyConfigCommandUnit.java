@@ -70,7 +70,10 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               .withLogLine("Unable to fetch config file information")
               .withExecutionResult(FAILURE)
               .build());
-      logger.error("Unable to fetch log file information ", e);
+      logger.error("Unable to fetch log file information: {}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
       return FAILURE;
     }
 

@@ -165,7 +165,10 @@ public class DelegateServiceImpl implements DelegateService {
                         }
                       } catch (Exception e) {
                         System.out.println(message);
-                        logger.error("Exception while decoding task: ", e);
+                        logger.error("Exception while decoding task: {}", e.getMessage(), e);
+                        for (StackTraceElement elem : e.getStackTrace()) {
+                          logger.error("Trace: {}", elem.toString());
+                        }
                       }
                     }
                   });
@@ -187,10 +190,16 @@ public class DelegateServiceImpl implements DelegateService {
                     try {
                       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
                     } catch (IOException ex) {
-                      logger.error("Unable to open socket: ", e);
+                      logger.error("Unable to open socket: {}", e.getMessage(), e);
+                      for (StackTraceElement elem : e.getStackTrace()) {
+                        logger.error("Trace: {}", elem.toString());
+                      }
                     }
                   } else {
-                    logger.error("Exception: ", e);
+                    logger.error("Exception: {}", e.getMessage(), e);
+                    for (StackTraceElement elem : e.getStackTrace()) {
+                      logger.error("Trace: {}", elem.toString());
+                    }
                     try {
                       socket.close();
                     } catch (Exception ex) {
@@ -239,7 +248,10 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
     } catch (Exception e) {
-      logger.error("Exception while starting/running delegate ", e);
+      logger.error("Exception while starting/running delegate: ", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
     }
   }
 
@@ -316,7 +328,10 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("delegate uptodate...");
         }
       } catch (Exception e) {
-        logger.error("Exception while checking for upgrade ", e);
+        logger.error("Exception while checking for upgrade: {}", e.getMessage(), e);
+        for (StackTraceElement elem : e.getStackTrace()) {
+          logger.error("Trace: {}", elem.toString());
+        }
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -336,7 +351,10 @@ public class DelegateServiceImpl implements DelegateService {
                   .build()));
         }
       } catch (IOException e) {
-        logger.error("Exception while sending heartbeat ", e);
+        logger.error("Exception while sending heartbeat: {}", e.getMessage(), e);
+        for (StackTraceElement elem : e.getStackTrace()) {
+          logger.error("Trace: {}", elem.toString());
+        }
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -379,7 +397,10 @@ public class DelegateServiceImpl implements DelegateService {
                                    .execute();
                     logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
                   } catch (IOException e) {
-                    logger.error("Unable to send response to manager ", e);
+                    logger.error("Unable to send response to manager {}", e.getMessage(), e);
+                    for (StackTraceElement elem : e.getStackTrace()) {
+                      logger.error("Trace: {}", elem.toString());
+                    }
                   } finally {
                     currentlyExecutingTasks.remove(delegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
@@ -404,7 +425,10 @@ public class DelegateServiceImpl implements DelegateService {
                     }
                     return taskAcquired;
                   } catch (IOException e) {
-                    logger.error("Unable to update task status on manager.", e);
+                    logger.error("Unable to update task status on manager: {}", e.getMessage(), e);
+                    for (StackTraceElement elem : e.getStackTrace()) {
+                      logger.error("Trace: {}", elem.toString());
+                    }
                     return false;
                   }
                 });
@@ -417,7 +441,10 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
       }
     } catch (IOException e) {
-      logger.error("Unable to acquire task ", e);
+      logger.error("Unable to acquire task: {}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
     }
   }
 
