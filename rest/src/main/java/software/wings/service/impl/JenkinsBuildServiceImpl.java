@@ -96,7 +96,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
                                     .distinct()
                                     .collect(Collectors.toList()));
     } catch (Exception ex) {
-      logger.error("Exception in generating artifact path suggestions for {}", ex);
+      logger.error("Exception in generating artifact path suggestions for {}: {}", jobName, ex.getMessage(), ex);
+      for (StackTraceElement elem : ex.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
     }
     return artifactPaths;
   }

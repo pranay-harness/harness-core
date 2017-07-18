@@ -104,7 +104,10 @@ public class RepeatState extends State {
         }
       }
     } catch (Exception ex) {
-      logger.error("Error in getting repeat elements", ex);
+      logger.error("Error in getting repeat elements: {}", ex.getMessage(), ex);
+      for (StackTraceElement elem : ex.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
       throw new WingsException(ex);
     }
 
@@ -124,7 +127,10 @@ public class RepeatState extends State {
       try {
         executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
       } catch (Exception ex) {
-        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
+        logger.error("Error in evaluating executionStrategy... default to SERIAL: {}", ex.getMessage(), ex);
+        for (StackTraceElement elem : ex.getStackTrace()) {
+          logger.error("Trace: {}", elem.toString());
+        }
       }
     }
 
