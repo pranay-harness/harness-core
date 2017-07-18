@@ -80,7 +80,10 @@ public class SshSessionFactory {
     //    } catch (IOException e) {
     //      logger.error(e.getMessage());
     //      e.printStackTrace();
-    //      throw new JSchException("timeout: socket is not established", e);
+    //      throw new JSchException("timeout: socket is not established: {}", e.getMessage(), e);
+    //      for (StackTraceElement elem : e.getStackTrace()) {
+    //        logger.error("Trace: {}", elem.toString());
+    //      }
     //    } finally {
     //      IOUtils.closeQuietly(client);
     //    }

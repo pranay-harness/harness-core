@@ -60,7 +60,10 @@ public class FileServiceImpl implements FileService {
       streamToDownload.close();
       return file;
     } catch (IOException ex) {
-      logger.error("Error in download", ex);
+      logger.error("Error in download: {}", ex.getMessage(), ex);
+      for (StackTraceElement elem : ex.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
       return null;
     }
   }

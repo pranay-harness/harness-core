@@ -580,7 +580,10 @@ public class StateMachineExecutor {
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
-      logger.error("Error in aborting", e);
+      logger.error("Error in aborting: {}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());

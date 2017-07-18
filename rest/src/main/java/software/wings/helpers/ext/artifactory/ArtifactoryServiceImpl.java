@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 6/27/17.
@@ -335,7 +334,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       return artifactory;
     } catch (Exception ex) {
-      logger.error("Error occurred while trying to initialize artifactory", ex);
+      logger.error("Error occurred while trying to initialize artifactory: {}", ex.getMessage(), ex);
+      for (StackTraceElement elem : ex.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
     }
   }

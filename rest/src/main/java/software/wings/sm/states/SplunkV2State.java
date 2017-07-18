@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 7/15/16.
  */
 public class SplunkV2State extends AbstractAnalysisState {
-  private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
+  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
 
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";

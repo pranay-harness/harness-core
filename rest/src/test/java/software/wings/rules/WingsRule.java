@@ -136,7 +136,7 @@ public class WingsRule implements MethodRule {
     initializeLogging();
 
     MongoClient mongoClient;
-    String dbName = "wings";
+    String dbName = "harness";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
@@ -149,7 +149,7 @@ public class WingsRule implements MethodRule {
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri =
-            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
+            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
         dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);
       } catch (NumberFormatException ex) {

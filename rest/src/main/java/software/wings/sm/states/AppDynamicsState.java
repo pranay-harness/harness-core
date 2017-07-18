@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/4/16.
  */
 public class AppDynamicsState extends AbstractAnalysisState {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
+  @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
@@ -262,7 +263,10 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
       return btNames;
     } catch (Exception e) {
-      logger.error("error fetching Appdynamics BTs", e);
+      logger.error("error fetching Appdynamics BTs: {}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
       throw new WingsException("error fetching Appdynamics BTs", e);
     }
   }

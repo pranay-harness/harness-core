@@ -52,7 +52,10 @@ public class ArtifactCollectionJob implements Job {
     try {
       collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
     } catch (Exception ex) {
-      logger.warn("Artifact collection cron failed with error : {}", ex);
+      logger.warn("Artifact collection cron failed with error : {}", ex.getMessage(), ex);
+      for (StackTraceElement elem : ex.getStackTrace()) {
+        logger.warn("Trace: {}", elem.toString());
+      }
     }
   }
 

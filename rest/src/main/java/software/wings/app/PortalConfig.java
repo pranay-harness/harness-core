@@ -17,6 +17,7 @@ import java.util.List;
 public class PortalConfig {
   @JsonProperty(defaultValue = "https://localhost:8000") private String url = "https://localhost:8000";
   private List<String> allowedDomains = Lists.newArrayList();
+  private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
   @JsonProperty(defaultValue = "/register/verify") private String verificationUrl = "/register/verify";
   @JsonProperty(defaultValue = "/app/%s/overview") private String applicationOverviewUrlPattern = "/app/%s/overview";
@@ -69,6 +70,32 @@ public class PortalConfig {
    */
   public List<String> getAllowedDomainsList() {
     return isEmpty(allowedDomains) ? Lists.newArrayList() : allowedDomains;
+  }
+
+  /**
+   * Gets allowed origins.
+   * @return the allowed origins
+   */
+  @JsonProperty(defaultValue = "")
+  public String getAllowedOrigins() {
+    return Joiner.on(",").join(allowedOrigins);
+  }
+
+  /**
+   * Gets Allowed origins list
+   * @return the allowed origins list
+   */
+  public List<String> getAllowedOriginsList() {
+    return isEmpty(allowedOrigins) ? Lists.newArrayList() : allowedOrigins;
+  }
+
+  /**
+   * Sets allowed orgins.
+   *
+   * @param allowedOrigins
+   */
+  public void setAllowedOrigins(String allowedOrigins) {
+    this.allowedOrigins = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(allowedOrigins);
   }
 
   /**

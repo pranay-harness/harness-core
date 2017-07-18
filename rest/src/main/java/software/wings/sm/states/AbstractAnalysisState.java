@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
@@ -95,5 +96,5 @@ public abstract class AbstractAnalysisState extends State {
     return rv;
   }
 
-  abstract public Logger getLogger();
+  @SchemaIgnore abstract public Logger getLogger();
 }

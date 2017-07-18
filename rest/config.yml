@@ -69,7 +69,7 @@ logging:
       programName: manager-saas
 
 mongo:
-  uri: mongodb://localhost:27017/wings
+  uri: mongodb://localhost:27017/harness
 
 metrics:
   reporters:
@@ -83,6 +83,7 @@ delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/de
 portal:
   url: https://localhost:8000
   allowedDomains: harness.io, wings.software
+  allowedOrigins: https://localhost:8000
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI

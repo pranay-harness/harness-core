@@ -99,7 +99,10 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
         log.warn("start() - Failed ({}) to set environment for command={}: {}", e.getClass().getSimpleName(), cmdValue,
             e.getMessage());
         if (log.isDebugEnabled()) {
-          log.debug("start(" + cmdValue + ") failure details", e);
+          log.debug("start(" + cmdValue + ") failure details: {}", e.getMessage(), e);
+          for (StackTraceElement elem : e.getStackTrace()) {
+            log.debug("Trace: {}", elem.toString());
+          }
         }
       }
     }
