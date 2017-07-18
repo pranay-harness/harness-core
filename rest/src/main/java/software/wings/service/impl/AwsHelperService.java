@@ -50,7 +50,11 @@ import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
+import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -64,6 +68,8 @@ import software.wings.exception.WingsException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 // import com.amazonaws.services.ecr.A
 
@@ -121,7 +127,7 @@ public class AwsHelperService {
   /**
    * Gets amazon ecr client.
    *
-   * @param url    the url
+   * @param url       the url
    * @param region    the region
    * @param accessKey the access key
    * @param secretKey the secret key
@@ -218,8 +224,13 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon elastic load balancing client
    */
-  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, char[] secretKey) {
-    return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
+  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(
+      Regions region, String accessKey, char[] secretKey) {
+    return (AmazonElasticLoadBalancingClient) com.amazonaws.services.elasticloadbalancingv2
+        .AmazonElasticLoadBalancingClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   /**
@@ -471,5 +482,39 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeRepositoriesResult();
+  }
+
+  public List<LoadBalancerDescription> getLoadBalancerDescriptions(String region, AwsConfig awsConfig) {
+    try {
+      return getClassicElbClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeLoadBalancers(
+              new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
+          .getLoadBalancerDescriptions();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
+  }
+
+  public List<TargetGroup> listTargetGroupsForElb(String region, String loadBalancerName, AwsConfig awsConfig) {
+    try {
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = getAmazonElasticLoadBalancingClient(
+          Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+      String loadBalancerArn =
+          amazonElasticLoadBalancingClient
+              .describeLoadBalancers(new DescribeLoadBalancersRequest().withNames(loadBalancerName))
+              .getLoadBalancers()
+              .get(0)
+              .getLoadBalancerArn();
+
+      return amazonElasticLoadBalancingClient
+          .describeTargetGroups(
+              new DescribeTargetGroupsRequest().withPageSize(400).withLoadBalancerArn(loadBalancerArn))
+          .getTargetGroups();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 }

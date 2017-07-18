@@ -211,6 +211,24 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("{infraMappingId}/load-balancers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listLoadBalancers(appId, infraMappingId));
+  }
+
+  @GET
+  @Path("{infraMappingId}/load-balancers/{loadbalancerName}/target-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
+      @PathParam("infraMappingId") String infraMappingId, @PathParam("loadbalancerName") String loadbalancerName) {
+    return new RestResponse<>(infrastructureMappingService.listTargetGroups(appId, infraMappingId, loadbalancerName));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/load-balancers")
   @Timed
   @ExceptionMetered

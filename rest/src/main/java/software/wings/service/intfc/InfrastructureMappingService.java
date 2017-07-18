@@ -311,4 +311,23 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region);
+
+  /**
+   * List load balancers map.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @return the map
+   */
+  Map<String, String> listLoadBalancers(String appId, String infraMappingId);
+
+  /**
+   * List target groups map.
+   *
+   * @param appId            the app id
+   * @param infraMappingId   the infra mapping id
+   * @param loadbalancerName the loadbalancer name
+   * @return the map
+   */
+  Map<String, String> listTargetGroups(String appId, String infraMappingId, String loadbalancerName);
 }

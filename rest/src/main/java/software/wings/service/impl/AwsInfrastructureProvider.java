@@ -1,17 +1,14 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import com.google.common.collect.Lists;
 
-import ch.qos.logback.classic.Level;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -36,22 +33,12 @@ import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
-import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import io.dropwizard.configuration.ConfigurationException;
-import io.dropwizard.configuration.ConfigurationFactory;
-import io.dropwizard.configuration.ConfigurationFactoryFactory;
-import io.dropwizard.configuration.DefaultConfigurationFactoryFactory;
-import io.dropwizard.jackson.DiscoverableSubtypeResolver;
-import io.dropwizard.jersey.validation.Validators;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +56,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
-import software.wings.utils.YamlUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -92,48 +76,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsHelperService awsHelperService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;
-
-  public static void main(String... args) {
-    ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(
-        ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-    root.setLevel(Level.OFF);
-
-    AwsInfrastructureProvider awsInfrastructureProvider = new AwsInfrastructureProvider();
-    awsInfrastructureProvider.awsHelperService = new AwsHelperService();
-    YamlUtils yamlUtils = new YamlUtils();
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSubtypeResolver(new DiscoverableSubtypeResolver());
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    try {
-      ConfigurationFactoryFactory<MainConfiguration> configurationFactoryFactory =
-          new DefaultConfigurationFactoryFactory<>();
-      ConfigurationFactory<MainConfiguration> configurationFactory = configurationFactoryFactory.create(
-          MainConfiguration.class, Validators.newValidatorFactory().getValidator(), objectMapper, "dw");
-      MainConfiguration configuration = configurationFactory.build(new File("config.yml"));
-      awsInfrastructureProvider.mainConfiguration = configuration;
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ConfigurationException e) {
-      e.printStackTrace();
-    }
-
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withValue(anAwsConfig()
-                           .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
-                           .withSecretKey("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".toCharArray())
-                           .build())
-            .build();
-    // System.out.println(awsInfrastructureProvider.listAMIs(settingAttribute, "us-east-1"));
-
-    // System.out.println(awsInfrastructureProvider.listRegions(settingAttribute));
-    System.out.println(awsInfrastructureProvider.listLoadBalancers(settingAttribute));
-    System.out.println(awsInfrastructureProvider.listTargetGroups(settingAttribute, "testecs"));
-
-    // System.out.println(awsInfrastructureProvider.listVPCs(settingAttribute));
-    // System.out.println(awsInfrastructureProvider.listInstanceTypes(settingAttribute));
-  }
 
   @Override
   public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
@@ -396,11 +338,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return results;
   }
 
-  public List<String> listLoadBalancers(SettingAttribute computeProviderSetting) {
+  public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getAmazonElasticLoadBalancingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonElasticLoadBalancingClient(
+            Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     return amazonElasticLoadBalancingClient.describeLoadBalancers(new DescribeLoadBalancersRequest().withPageSize(400))
         .getLoadBalancers()
@@ -413,15 +356,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getClassicElbClient(
-            Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-    return amazonElasticLoadBalancingClient
-        .describeLoadBalancers(
-            new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
-        .getLoadBalancerDescriptions()
-        .stream()
+    List<LoadBalancerDescription> describeLoadBalancers =
+        awsHelperService.getLoadBalancerDescriptions(region, awsConfig);
+    return describeLoadBalancers.stream()
         .map(LoadBalancerDescription::getLoadBalancerName)
         .collect(Collectors.toList());
   }
@@ -439,22 +376,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .collect(Collectors.toList());
   }
 
-  public Map<String, String> listTargetGroups(SettingAttribute computeProviderSetting, String loadBalancerName) {
+  public Map<String, String> listTargetGroups(
+      SettingAttribute computeProviderSetting, String region, String loadBalancerName) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getAmazonElasticLoadBalancingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-    String loadBalancerArn = amazonElasticLoadBalancingClient
-                                 .describeLoadBalancers(new DescribeLoadBalancersRequest().withNames(loadBalancerName))
-                                 .getLoadBalancers()
-                                 .get(0)
-                                 .getLoadBalancerArn();
-
-    return amazonElasticLoadBalancingClient
-        .describeTargetGroups(new DescribeTargetGroupsRequest().withPageSize(400).withLoadBalancerArn(loadBalancerArn))
-        .getTargetGroups()
-        .stream()
-        .collect(Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
+    List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForElb(region, loadBalancerName, awsConfig);
+    return targetGroups.stream().collect(
+        Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
   }
 }
