@@ -177,6 +177,13 @@ public class ExpressionEvaluator {
       }
 
       String evaluatedValue = String.valueOf(evaluate(variable, context));
+      if (evaluatedValue == null) {
+        continue;
+      }
+      Matcher matcher2 = wingsVariablePattern.matcher(evaluatedValue);
+      if (matcher2.find()) {
+        evaluatedValue = merge(evaluatedValue, context, defaultObjectPrefix);
+      }
       matcher.appendReplacement(sb, evaluatedValue);
     }
     matcher.appendTail(sb);
