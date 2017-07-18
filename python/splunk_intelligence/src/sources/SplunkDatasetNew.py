@@ -78,6 +78,7 @@ class SplunkDatasetNew(object):
     def save_to_harness(self, url, payload):
         SplunkHarnessLoader.post_to_wings_server(url, payload)
 
+    # Called with the production workflow
     def load_from_harness(self, options):
         control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
                                                                     options.application_id,
@@ -120,8 +121,8 @@ class SplunkDatasetNew(object):
                 for event in events:
                     self.add_event(event, 'test_prev')
 
-    # old files that are not grouped by host
-    def load_from_file(self, file_name, control_window, test_window, prev_out_file=None):
+    # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
+    def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
         raw_events = SplunkFileSource.load_data(file_name)
         minute = 0
         count = 0
@@ -145,9 +146,8 @@ class SplunkDatasetNew(object):
                 for event in events:
                     self.add_event(event, 'test_prev')
 
-                    # old files that are not grouped by host
-
-    def load_from_prod_file(self, file_name, control_window, test_window,
+    # Used in SplunkAnomaly : To debug prod runs
+    def load_prod_file(self, file_name, control_window, test_window,
                             control_nodes, test_nodes, prev_out_file=None):
         raw_events = SplunkFileSource.load_prod_data(file_name)
         print(control_window, test_window, control_nodes, test_nodes)
