@@ -130,7 +130,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
             dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
-        logger.error("error fetcing appdynamis metrics", e);
+        logger.error("error fetcing appdynamis metrics: {}", e.getMessage(), e);
+        for (StackTraceElement elem : e.getStackTrace()) {
+          logger.error("Trace: {}", elem.toString());
+        }
       }
     }
   }

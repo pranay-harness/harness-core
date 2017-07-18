@@ -5,11 +5,11 @@ import static software.wings.service.impl.splunk.SplunkAnalysisResponse.Builder.
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -30,9 +30,8 @@ import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkExecutionData;
 import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
+import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
-import software.wings.service.impl.splunk.SplunkMLClusterSummary;
-import software.wings.service.impl.splunk.SplunkMLHostSummary;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -52,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -63,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 7/15/16.
  */
 public class SplunkV2State extends AbstractAnalysisState {
-  private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
+  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
 
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";
@@ -135,44 +133,36 @@ public class SplunkV2State extends AbstractAnalysisState {
 
     Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
-      logger.error("Could not find control test nodes to compare the data");
-      return anExecutionResponse()
-          .withAsync(false)
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("Could not find test nodes to compare the data")
-          .build();
+      logger.error("Could not find test nodes to compare the data");
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
     Set<String> lastExecutionNodes = getLastExecutionNodes(context);
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
-      logger.error("Could not find control nodes to compare the data");
-      return anExecutionResponse()
-          .withAsync(false)
-          .withExecutionStatus(ExecutionStatus.SUCCESS)
-          .withErrorMessage("Could not find control nodes to compare the data")
-          .build();
+      logger.error("No nodes with older version found to compare the logs. Skipping analysis");
+      return generateAnalysisResponse(
+          context, ExecutionStatus.SUCCESS, "Skipping analysis due to lack of baseline data (First time deployment).");
     }
 
     lastExecutionNodes.removeAll(canaryNewHostNames);
 
     if (lastExecutionNodes.isEmpty()) {
       logger.error("Control and test nodes are same. Will not be running splunk analysis");
-      return anExecutionResponse()
-          .withAsync(false)
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("Control and test nodes are same")
-          .build();
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
+          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
     triggerSplunkDataCollection(context);
 
-    final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
-                                                  .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                                  .withSplunkConfigID(splunkConfigId)
-                                                  .withSplunkQueries(Sets.newHashSet(query.split(",")))
-                                                  .withAnalysisDuration(Integer.parseInt(timeDuration))
-                                                  .withCorrelationId(UUID.randomUUID().toString())
-                                                  .build();
+    SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
+                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                            .withSplunkConfigID(splunkConfigId)
+                                            .withSplunkQueries(Sets.newHashSet(query.split(",")))
+                                            .withAnalysisDuration(Integer.parseInt(timeDuration))
+                                            .withStatus(ExecutionStatus.RUNNING)
+                                            .withCorrelationId(UUID.randomUUID().toString())
+                                            .build();
+
     final SplunkAnalysisResponse response = anSplunkAnalysisResponse()
                                                 .withSplunkExecutionData(executionData)
                                                 .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -196,7 +186,6 @@ public class SplunkV2State extends AbstractAnalysisState {
         .withStateExecutionData(executionData)
         .build();
   }
-
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     final SplunkMLAnalysisSummary analysisSummary =
@@ -209,6 +198,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
 
     SplunkAnalysisResponse executionResponse = (SplunkAnalysisResponse) response.values().iterator().next();
+    executionResponse.getSplunkExecutionData().setStatus(executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getSplunkExecutionData())
@@ -217,6 +207,33 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  private ExecutionResponse generateAnalysisResponse(ExecutionContext context, ExecutionStatus status, String message) {
+    SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
+                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                            .withSplunkConfigID(splunkConfigId)
+                                            .withSplunkQueries(Sets.newHashSet(query.split(",")))
+                                            .withAnalysisDuration(Integer.parseInt(timeDuration))
+                                            .withStatus(status)
+                                            .withCorrelationId(UUID.randomUUID().toString())
+                                            .build();
+    for (String splunkQuery : query.split(",")) {
+      final SplunkLogMLAnalysisRecord analysisRecord = new SplunkLogMLAnalysisRecord();
+      analysisRecord.setApplicationId(context.getAppId());
+      analysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
+      executionData.setStatus(status);
+      analysisRecord.setQuery(splunkQuery);
+      analysisRecord.setAnalysisSummaryMessage(message);
+      splunkService.saveSplunkAnalysisRecords(analysisRecord);
+    }
+
+    return anExecutionResponse()
+        .withAsync(false)
+        .withExecutionStatus(status)
+        .withStateExecutionData(executionData)
+        .withErrorMessage(message)
+        .build();
+  }
 
   private ScheduledExecutorService createPythonExecutorService(ExecutionContext context) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -350,5 +367,10 @@ public class SplunkV2State extends AbstractAnalysisState {
         }
       }
     }
+  }
+
+  @Override
+  public Logger getLogger() {
+    return logger;
   }
 }

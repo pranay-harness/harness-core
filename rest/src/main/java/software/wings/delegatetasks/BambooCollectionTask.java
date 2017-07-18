@@ -73,7 +73,10 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
         res.addData(artifactFile);
       }
     } catch (Exception e) {
-      logger.warn("Exception: ", e);
+      logger.warn("Exception: {}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.warn("Trace: {}", elem.toString());
+      }
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

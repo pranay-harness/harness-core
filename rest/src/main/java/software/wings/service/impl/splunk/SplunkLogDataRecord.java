@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.security.annotations.Archive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
     @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash")
   }, options = @IndexOptions(unique = true, name = "splunkLogUniqueIdx"))
 })
+@Archive(retentionMills = 24 * 60 * 60 * 1000)
 public class SplunkLogDataRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
@@ -38,6 +40,10 @@ public class SplunkLogDataRecord extends Base {
   @NotEmpty private String logMD5Hash;
   @Indexed private boolean processed;
   @Indexed private int logCollectionMinute;
+
+  public SplunkLogDataRecord() {
+    // for json parsing
+  }
 
   public SplunkLogDataRecord(String applicationId, String stateExecutionId, String query, String clusterLabel,
       String host, long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed,

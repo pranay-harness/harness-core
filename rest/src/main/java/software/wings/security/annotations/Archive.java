@@ -6,11 +6,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by mike@ on 4/24/17.
+ * Created by anubhaw on 8/24/16.
  */
-
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Encrypted {
-  boolean value() default true;
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Archive {
+  /**
+   * milliseconds after which the values will be archived
+   *
+   * @return the resource type
+   */
+  long retentionMills() default - 1;
 }

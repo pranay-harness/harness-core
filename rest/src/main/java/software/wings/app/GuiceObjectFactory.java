@@ -55,7 +55,10 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
       AtmosphereProducers p = newClassInstance(AtmosphereProducers.class, AtmosphereProducers.class);
       p.configure(config);
     } catch (Exception e) {
-      logger.error("", e);
+      logger.error("{}", e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem.toString());
+      }
     }
   }
 
