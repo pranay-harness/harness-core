@@ -149,9 +149,10 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    logger.debug("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
+    logger.info("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
     Account account = accountService.get(accountId);
     if (account == null) {
+      logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
       throw new WingsException(ACCESS_DENIED);
     }
 
