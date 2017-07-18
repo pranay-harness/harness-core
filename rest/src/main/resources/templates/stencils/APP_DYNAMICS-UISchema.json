@@ -1,3 +1,4 @@
+
 {
-  "ui:order": ["appDynamicsConfigId", "applicationId", "tierId", "timeDuration", "ignoreVerificationFailure"]
+  "ui:order": ["appDynamicsConfigId", "applicationId", "tierId", "timeDuration", "ignoreVerificationFailure","*"]
 }

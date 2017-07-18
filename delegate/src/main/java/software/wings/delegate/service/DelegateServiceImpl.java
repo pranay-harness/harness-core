@@ -153,21 +153,24 @@ public class DelegateServiceImpl implements DelegateService {
                 @Override
                 public void on(String message) {
                   logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                  fixedThreadPool.submit(() -> {
-                    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
-                      try {
-                        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-                          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-                        } else {
-                          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
-                        }
-                      } catch (Exception e) {
-                        System.out.println(message);
-                        logger.error("Exception while decoding task: {}", e.getMessage(), e);
-                        for (StackTraceElement elem : e.getStackTrace()) {
-                          logger.error("Trace: {}", elem.toString());
+                  fixedThreadPool.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                      logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+                      if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+                        try {
+                          DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+                          if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+                            abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+                          } else {
+                            dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                          }
+                        } catch (Exception e) {
+                          System.out.println(message);
+                          logger.error("Exception while decoding task: {}", e.getMessage(), e);
+                          for (StackTraceElement elem : e.getStackTrace()) {
+                            logger.error("Trace: {}", elem.toString());
+                          }
                         }
                       }
                     }
