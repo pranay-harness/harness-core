@@ -49,6 +49,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,8 +145,18 @@ public class SplunkV2State extends AbstractAnalysisState {
           context, ExecutionStatus.SUCCESS, "Skipping analysis due to lack of baseline data (First time deployment).");
     }
 
-    lastExecutionNodes.removeAll(canaryNewHostNames);
+    final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
+                                                  .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                                  .withSplunkConfigID(splunkConfigId)
+                                                  .withSplunkQueries(Sets.newHashSet(query.split(",")))
+                                                  .withAnalysisDuration(Integer.parseInt(timeDuration))
+                                                  .withStatus(ExecutionStatus.RUNNING)
+                                                  .withCanaryNewHostNames(canaryNewHostNames)
+                                                  .withLastExecutionNodes(new HashSet<>(lastExecutionNodes))
+                                                  .withCorrelationId(UUID.randomUUID().toString())
+                                                  .build();
 
+    lastExecutionNodes.removeAll(canaryNewHostNames);
     if (lastExecutionNodes.isEmpty()) {
       logger.error("Control and test nodes are same. Will not be running splunk analysis");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED,
@@ -153,15 +164,6 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
 
     triggerSplunkDataCollection(context);
-
-    SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
-                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                            .withSplunkConfigID(splunkConfigId)
-                                            .withSplunkQueries(Sets.newHashSet(query.split(",")))
-                                            .withAnalysisDuration(Integer.parseInt(timeDuration))
-                                            .withStatus(ExecutionStatus.RUNNING)
-                                            .withCorrelationId(UUID.randomUUID().toString())
-                                            .build();
 
     final SplunkAnalysisResponse response = anSplunkAnalysisResponse()
                                                 .withSplunkExecutionData(executionData)

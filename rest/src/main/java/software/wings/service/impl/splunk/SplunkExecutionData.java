@@ -2,6 +2,7 @@ package software.wings.service.impl.splunk;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import lombok.Data;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
@@ -15,60 +16,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by anubhaw on 8/4/16.
  */
+@Data
 public class SplunkExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;
   private String splunkConfigId;
   private Set<String> queries;
   private int timeDuration;
-
-  public String getCorrelationId() {
-    return correlationId;
-  }
-
-  public void setCorrelationId(String correlationId) {
-    this.correlationId = correlationId;
-  }
-
-  public String getStateExecutionInstanceId() {
-    return stateExecutionInstanceId;
-  }
-
-  public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
-    this.stateExecutionInstanceId = stateExecutionInstanceId;
-  }
-
-  public String getSplunkConfigId() {
-    return splunkConfigId;
-  }
-
-  public void setSplunkConfigId(String splunkConfigId) {
-    this.splunkConfigId = splunkConfigId;
-  }
-
-  public Set<String> getQueries() {
-    return queries;
-  }
-
-  public void setQueries(Set<String> queries) {
-    this.queries = queries;
-  }
-
-  public int getTimeDuration() {
-    return timeDuration;
-  }
-
-  public void setTimeDuration(int timeDuration) {
-    this.timeDuration = timeDuration;
-  }
-
-  @Override
-  public String toString() {
-    return "SplunkExecutionData{"
-        + "correlationId='" + correlationId + '\'' + ", stateExecutionInstanceId='" + stateExecutionInstanceId + '\''
-        + ", splunkConfigId='" + splunkConfigId + '\'' + ", queries=" + queries + ", timeDuration=" + timeDuration
-        + '}';
-  }
+  private Set<String> canaryNewHostNames;
+  private Set<String> lastExecutionNodes;
 
   @Override
   public boolean equals(Object o) {
@@ -151,6 +107,8 @@ public class SplunkExecutionData extends StateExecutionData {
     private Long endTs;
     private ExecutionStatus status;
     private String errorMsg;
+    private Set<String> canaryNewHostNames;
+    private Set<String> lastExecutionNodes;
 
     private Builder() {}
 
@@ -243,6 +201,16 @@ public class SplunkExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withCanaryNewHostNames(Set<String> canaryNewHostNames) {
+      this.canaryNewHostNames = canaryNewHostNames;
+      return this;
+    }
+
+    public Builder withLastExecutionNodes(Set<String> lastExecutionNodes) {
+      this.lastExecutionNodes = lastExecutionNodes;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -278,6 +246,8 @@ public class SplunkExecutionData extends StateExecutionData {
       splunkExecutionData.setEndTs(endTs);
       splunkExecutionData.setStatus(status);
       splunkExecutionData.setErrorMsg(errorMsg);
+      splunkExecutionData.setCanaryNewHostNames(canaryNewHostNames);
+      splunkExecutionData.setLastExecutionNodes(lastExecutionNodes);
       return splunkExecutionData;
     }
   }
