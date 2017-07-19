@@ -23,7 +23,10 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
    */
   @Override
   public Response toResponse(Throwable exception) {
-    logger.error("Exception occurred: {}", exception.getMessage(), exception);
+    logger.error("Exception occurred: " + exception.getMessage(), exception);
+    for (StackTraceElement elem : exception.getStackTrace()) {
+      logger.error("Trace: {}", elem);
+    }
     RestResponse<T> restResponse = new RestResponse<>();
 
     // No known exception or error code

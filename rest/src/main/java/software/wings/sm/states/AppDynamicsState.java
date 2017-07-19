@@ -263,9 +263,9 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
       return btNames;
     } catch (Exception e) {
-      logger.error("error fetching Appdynamics BTs: {}", e.getMessage(), e);
+      logger.error("error fetching Appdynamics BTs: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException("error fetching Appdynamics BTs", e);
     }

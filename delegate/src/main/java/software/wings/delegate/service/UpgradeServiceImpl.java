@@ -93,9 +93,9 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("Exception while upgrading: {}", e.getMessage(), e);
+      logger.error("Exception while upgrading: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       if (process != null) {
         // Something went wrong restart yourself

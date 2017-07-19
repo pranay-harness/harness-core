@@ -167,9 +167,9 @@ public class CloudWatchState extends State {
       logger.info("assertion status: {}", status);
     } catch (Exception e) {
       errorMsg = getMessage(e);
-      logger.error("Error in Cloudwatch assertion evaluation: {}", e.getMessage(), e);
+      logger.error("Error in Cloudwatch assertion evaluation: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       status = false;
     }

@@ -236,9 +236,9 @@ public class AccountServiceImpl implements AccountService {
     try {
       keyGen = KeyGenerator.getInstance("AES");
     } catch (NoSuchAlgorithmException e) {
-      logger.error("Exception while generating account key: {}", e.getMessage(), e);
+      logger.error("Exception while generating account key: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }

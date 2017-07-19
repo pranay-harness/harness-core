@@ -206,9 +206,9 @@ public class DelegateServiceImpl implements DelegateService {
                           .execute()
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information: {}", e.getMessage(), e);
+      logger.error("Unable to fetch delegate version information: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);

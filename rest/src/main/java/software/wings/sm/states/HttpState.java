@@ -320,9 +320,9 @@ public class HttpState extends State {
           logger.error("Invalid assertion {} ", e.getMessage());
           executionData.setErrorMsg(ASSERTION_ERROR_MSG);
         } catch (JexlException e) {
-          logger.error("Error in httpStateAssertion: {}", e.getMessage(), e);
+          logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
           for (StackTraceElement elem : e.getStackTrace()) {
-            logger.error("Trace: {}", elem.toString());
+            logger.error("Trace: {}", elem);
           }
           assertionStatus = false;
           if (e instanceof Parsing) {
@@ -335,9 +335,9 @@ public class HttpState extends State {
             executionData.setErrorMsg(getMessage(e));
           }
         } catch (Exception e) {
-          logger.error("Error in httpStateAssertion: {}", e.getMessage(), e);
+          logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
           for (StackTraceElement elem : e.getStackTrace()) {
-            logger.error("Trace: {}", elem.toString());
+            logger.error("Trace: {}", elem);
           }
           executionData.setErrorMsg(getMessage(e));
           assertionStatus = false;

@@ -42,9 +42,9 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
       return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
           (String) parameters[4], (List<String>) parameters[5], (Map<String, String>) parameters[6]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact: {}", e.getMessage(), e);
+      logger.error("Exception occurred while collecting artifact: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       return new ListNotifyResponseData();
     }
@@ -80,9 +80,9 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
         res.addData(artifactFile);
       }
     } catch (Exception e) {
-      logger.warn("Exception: {}", e.getMessage(), e);
+      logger.warn("Exception: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem.toString());
+        logger.warn("Trace: {}", elem);
       }
       // TODO: better error handling
 

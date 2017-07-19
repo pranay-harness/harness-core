@@ -580,9 +580,9 @@ public class StateMachineExecutor {
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
-      logger.error("Error in aborting: {}", e.getMessage(), e);
+      logger.error("Error in aborting: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
     }
     if (!updated) {

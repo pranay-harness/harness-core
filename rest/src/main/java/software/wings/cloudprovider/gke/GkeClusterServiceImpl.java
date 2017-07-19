@@ -147,9 +147,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                         .getStatus()
                         .equals("RUNNING");
           } catch (IOException e) {
-            logger.error("Error checking operation status: {}", e.getMessage(), e);
+            logger.error("Error checking operation status: " + e.getMessage(), e);
             for (StackTraceElement elem : e.getStackTrace()) {
-              logger.error("Trace: {}", elem.toString());
+              logger.error("Trace: {}", elem);
             }
             return true;
           }

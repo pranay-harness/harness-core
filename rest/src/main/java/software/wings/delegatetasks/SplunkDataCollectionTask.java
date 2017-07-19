@@ -174,9 +174,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
-        logger.error("error fetching splunk logs: {}", e.getMessage(), e);
+        logger.error("error fetching splunk logs: " + e.getMessage(), e);
         for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem.toString());
+          logger.error("Trace: {}", elem);
         }
       }
     }
