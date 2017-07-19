@@ -45,6 +45,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact: " + e.getMessage(), e);
       Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      return new ListNotifyResponseData();
     }
   }
 
