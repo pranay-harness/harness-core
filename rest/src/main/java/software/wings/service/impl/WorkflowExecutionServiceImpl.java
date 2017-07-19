@@ -942,8 +942,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             || (summary.getEndTs() != null && serviceSummary.getEndTs() < summary.getEndTs())) {
           serviceSummary.setEndTs(summary.getEndTs());
         }
-        if (serviceSummary.getInstanceStatusSummaries() == null && summary.getInstanceStatusSummaries() != null) {
-          serviceSummary.setInstanceStatusSummaries(new ArrayList<>(summary.getInstanceStatusSummaries()));
+        if (serviceSummary.getInstanceStatusSummaries() == null) {
+          serviceSummary.setInstanceStatusSummaries(new ArrayList<>());
+        }
+        if (summary.getInstanceStatusSummaries() != null) {
+          serviceSummary.getInstanceStatusSummaries().addAll(summary.getInstanceStatusSummaries());
         }
         serviceSummary.setStatus(summary.getStatus());
       }
