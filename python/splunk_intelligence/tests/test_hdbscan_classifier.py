@@ -16,7 +16,6 @@ def test_anomaly():
     hdbscanKlassifier.fit_transform(1, control_data)
 
     predictions, score = hdbscanKlassifier.predict(1, test_data)
-    print(predictions, score)
     assert abs(score - 0.42857142857142855) < 0.00001
     np.testing.assert_array_equal(predictions.tolist(), [1, -1, -1, -1, -1, 1, 1])
 
@@ -48,6 +47,5 @@ def test_fit():
     hdbscanKlassifier.fit_transform(1, control_data)
 
     predictions, score = hdbscanKlassifier.predict(1, test_data)
-    print(predictions, score)
     assert abs(score - 0.0) < 0.00001
     np.testing.assert_array_equal(predictions.tolist(), [-1])
