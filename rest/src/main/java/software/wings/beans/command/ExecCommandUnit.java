@@ -53,7 +53,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   @Override
   public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
       String prefix) throws IOException, TemplateException {
-    String commandFileName = "wings" + DigestUtils.md5Hex(prefix + getName() + activityId);
+    String commandFileName = "harness" + DigestUtils.md5Hex(prefix + getName() + activityId);
     String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
     String commandDir = isNotBlank(commandPath) ? "-w '" + commandPath.trim() + "'" : "";
 
@@ -67,7 +67,7 @@ public class ExecCommandUnit extends SshCommandUnit {
 
     if (!isEmpty(tailPatterns)) {
       cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
-      String tailWrapperFileName = "wingstailwrapper" + DigestUtils.md5Hex(prefix + getName() + activityId);
+      String tailWrapperFileName = "harnesstailwrapper" + DigestUtils.md5Hex(prefix + getName() + activityId);
       String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();
       try (OutputStreamWriter fileWriter =
                new OutputStreamWriter(new FileOutputStream(tailWrapperFile), StandardCharsets.UTF_8)) {

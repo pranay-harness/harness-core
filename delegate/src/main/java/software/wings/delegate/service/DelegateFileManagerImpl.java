@@ -11,6 +11,8 @@ import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
@@ -30,6 +32,7 @@ import javax.inject.Inject;
  */
 @Singleton
 public class DelegateFileManagerImpl implements DelegateFileManager {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ManagerClient managerClient;
 
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -59,7 +62,20 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     IOUtils.copy(contentSource, fout);
     fout.close();
 
-    return upload(delegateFile, file);
+    DelegateFile uploaded = upload(delegateFile, file);
+
+    try {
+      if (!file.delete()) {
+        logger.warn("Could not delete file: {}", file.getName());
+      }
+    } catch (Exception e) {
+      logger.warn("Error deleting file: " + file.getName() + ": " + e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.warn("Trace: {}", elem);
+      }
+    }
+
+    return uploaded;
   }
 
   @Override
