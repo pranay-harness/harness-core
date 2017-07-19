@@ -375,7 +375,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                  .field("supportedTaskTypes")
                                                  .contains(task.getTaskType().name())
                                                  .field("lastHeartBeat")
-                                                 .greaterThanOrEq(System.currentTimeMillis() - 2 * 60 * 1000)
+                                                 .greaterThanOrEq(System.currentTimeMillis() - 3 * 60 * 1000)
                                                  .asKeyList(); // TODO:: make it more reliable. take out time factor
 
     logger.info("{} availableDelegates [{}] available to execute the task", availableDelegates.size(),
