@@ -18,6 +18,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +75,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       }
     } catch (Exception exception) {
       logger.error("Error in NotifyResponseCleanupHandler: " + exception.getMessage(), exception);
-      for (StackTraceElement elem : exception.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
     }
   }
 }

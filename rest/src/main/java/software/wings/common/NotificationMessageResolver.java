@@ -13,6 +13,7 @@ import software.wings.exception.WingsException;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -107,9 +108,7 @@ public class NotificationMessageResolver {
       templateMap = yamlUtils.read(yaml, new TypeReference<Map<String, ChannelTemplate>>() {});
     } catch (Exception e) {
       logger.error("Error in initializing catalog: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new WingsException(e);
     }
   }

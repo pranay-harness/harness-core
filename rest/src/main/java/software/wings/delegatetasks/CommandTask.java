@@ -16,6 +16,7 @@ import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -45,9 +46,7 @@ public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionRe
       commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
         errorMessage = Joiner.on(",").join(ex.getResponseMessageList()

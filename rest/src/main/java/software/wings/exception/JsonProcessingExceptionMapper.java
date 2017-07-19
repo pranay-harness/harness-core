@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 
+import java.util.Arrays;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -30,9 +31,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      */
     if (exception instanceof JsonGenerationException) {
       LOGGER.warn("Error generating JSON: " + exception.getMessage(), exception);
-      for (StackTraceElement elem : exception.getStackTrace()) {
-        LOGGER.warn("Trace: {}", elem);
-      }
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.error("Trace: {}", elem));
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -52,9 +51,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      */
     if (message.startsWith("No suitable constructor found")) {
       LOGGER.error("Unable to deserialize the specific type: " + exception.getMessage(), exception);
-      for (StackTraceElement elem : exception.getStackTrace()) {
-        LOGGER.error("Trace: {}", elem);
-      }
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.error("Trace: {}", elem));
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -69,10 +66,8 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     /*
      * Otherwise, it's those pesky users.
      */
-    LOGGER.debug("Unable to process JSON: " + exception.getMessage(), exception);
-    for (StackTraceElement elem : exception.getStackTrace()) {
-      LOGGER.debug("Trace: {}", elem);
-    }
+    LOGGER.info("Unable to process JSON: " + exception.getMessage(), exception);
+    Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.info("Trace: {}", elem));
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(aResponseMessage()

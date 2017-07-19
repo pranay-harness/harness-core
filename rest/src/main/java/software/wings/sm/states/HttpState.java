@@ -44,6 +44,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -321,9 +322,7 @@ public class HttpState extends State {
           executionData.setErrorMsg(ASSERTION_ERROR_MSG);
         } catch (JexlException e) {
           logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
-          for (StackTraceElement elem : e.getStackTrace()) {
-            logger.error("Trace: {}", elem);
-          }
+          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
           assertionStatus = false;
           if (e instanceof Parsing) {
             Parsing p = (Parsing) e;
@@ -336,9 +335,7 @@ public class HttpState extends State {
           }
         } catch (Exception e) {
           logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
-          for (StackTraceElement elem : e.getStackTrace()) {
-            logger.error("Trace: {}", elem);
-          }
+          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
           executionData.setErrorMsg(getMessage(e));
           assertionStatus = false;
         }

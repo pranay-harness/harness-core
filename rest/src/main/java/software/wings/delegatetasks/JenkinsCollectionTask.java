@@ -15,6 +15,7 @@ import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -71,9 +72,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
       }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

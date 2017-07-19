@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -94,9 +95,7 @@ public class UpgradeServiceImpl implements UpgradeService {
     } catch (Exception e) {
       e.printStackTrace();
       logger.error("Exception while upgrading: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       if (process != null) {
         // Something went wrong restart yourself
         try {

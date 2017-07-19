@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -327,9 +328,7 @@ public class JsonUtils {
       return schemaNode;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw Throwables.propagate(e);
     }
   }
@@ -356,9 +355,7 @@ public class JsonUtils {
       return objectMapper.valueToTree(object);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw Throwables.propagate(e);
     }
   }
@@ -385,9 +382,7 @@ public class JsonUtils {
       return objectMapper.readTree(json);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw Throwables.propagate(e);
     }
   }

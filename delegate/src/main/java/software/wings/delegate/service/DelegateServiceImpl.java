@@ -54,6 +54,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -168,9 +169,7 @@ public class DelegateServiceImpl implements DelegateService {
                         } catch (Exception e) {
                           System.out.println(message);
                           logger.error("Exception while decoding task: " + e.getMessage(), e);
-                          for (StackTraceElement elem : e.getStackTrace()) {
-                            logger.error("Trace: {}", elem);
-                          }
+                          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
                         }
                       }
                     }
@@ -194,15 +193,11 @@ public class DelegateServiceImpl implements DelegateService {
                       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
                     } catch (IOException ex) {
                       logger.error("Unable to open socket: " + e.getMessage(), e);
-                      for (StackTraceElement elem : e.getStackTrace()) {
-                        logger.error("Trace: {}", elem);
-                      }
+                      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
                     }
                   } else {
                     logger.error("Exception: " + e.getMessage(), e);
-                    for (StackTraceElement elem : e.getStackTrace()) {
-                      logger.error("Trace: {}", elem);
-                    }
+                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
                     try {
                       socket.close();
                     } catch (Exception ex) {
@@ -252,9 +247,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
     }
   }
 
@@ -324,6 +317,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("checking for upgrade");
       try {
         RestResponse<Delegate> restResponse = execute(managerClient.checkForUpgrade(version, delegateId, accountId));
+        // TODO(brett): Store the Delegate object to check for task filtering on acquire
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");
           upgradeService.doUpgrade(restResponse.getResource(), getVersion());
@@ -332,9 +326,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       } catch (Exception e) {
         logger.error("Exception while checking for upgrade: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -354,9 +346,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       } catch (IOException e) {
         logger.error("Exception while sending heartbeat: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -368,6 +358,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
+    // TODO(brett): Check whether to acquire based on task attributes
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
     if (delegateTaskEvent.getDelegateTaskId() != null
         && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
@@ -400,9 +391,7 @@ public class DelegateServiceImpl implements DelegateService {
                     logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
                   } catch (IOException e) {
                     logger.error("Unable to send response to manager: " + e.getMessage(), e);
-                    for (StackTraceElement elem : e.getStackTrace()) {
-                      logger.error("Trace: {}", elem);
-                    }
+                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
                   } finally {
                     currentlyExecutingTasks.remove(delegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
@@ -428,9 +417,7 @@ public class DelegateServiceImpl implements DelegateService {
                     return taskAcquired;
                   } catch (IOException e) {
                     logger.error("Unable to update task status on manager: " + e.getMessage(), e);
-                    for (StackTraceElement elem : e.getStackTrace()) {
-                      logger.error("Trace: {}", elem);
-                    }
+                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
                     return false;
                   }
                 });
@@ -444,9 +431,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (IOException e) {
       logger.error("Unable to acquire task: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
     }
   }
 

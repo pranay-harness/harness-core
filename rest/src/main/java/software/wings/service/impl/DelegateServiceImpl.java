@@ -65,6 +65,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -207,9 +208,7 @@ public class DelegateServiceImpl implements DelegateService {
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
       logger.error("Unable to fetch delegate version information: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);
     }
@@ -396,6 +395,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
+    // TODO(brett): Delegate task filtering, via service
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {

@@ -39,6 +39,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -237,9 +238,7 @@ public class AccountServiceImpl implements AccountService {
       keyGen = KeyGenerator.getInstance("AES");
     } catch (NoSuchAlgorithmException e) {
       logger.error("Exception while generating account key: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
     keyGen.init(128);

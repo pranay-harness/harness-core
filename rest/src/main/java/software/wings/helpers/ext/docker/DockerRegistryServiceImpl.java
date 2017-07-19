@@ -165,9 +165,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
     } catch (IOException e) {
       logger.warn("Exception occurred while fetching token: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
     }
     return null;
   }

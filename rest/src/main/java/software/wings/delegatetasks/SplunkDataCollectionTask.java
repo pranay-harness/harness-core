@@ -23,6 +23,7 @@ import software.wings.time.WingsTimeUtils;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -175,9 +176,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
         logger.error("error fetching splunk logs: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }
   }

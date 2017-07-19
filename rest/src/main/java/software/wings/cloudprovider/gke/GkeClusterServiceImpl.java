@@ -35,6 +35,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -148,9 +149,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                         .equals("RUNNING");
           } catch (IOException e) {
             logger.error("Error checking operation status: " + e.getMessage(), e);
-            for (StackTraceElement elem : e.getStackTrace()) {
-              logger.error("Trace: {}", elem);
-            }
+            Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
             return true;
           }
         });

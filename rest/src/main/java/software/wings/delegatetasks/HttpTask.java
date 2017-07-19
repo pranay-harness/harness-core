@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -138,9 +139,7 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
       logger.error("Exception occurred during HTTP task execution: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       executionDataBuilder.withHttpResponseCode(500)
           .withHttpResponseBody(getMessage(e))
           .withErrorMsg(getMessage(e))

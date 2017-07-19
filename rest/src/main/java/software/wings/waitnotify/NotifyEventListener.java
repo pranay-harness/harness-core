@@ -19,6 +19,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,9 +159,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
         wingsPersistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
         logger.error("Error in waitInstanceUpdate: " + exception.getMessage(), exception);
-        for (StackTraceElement elem : exception.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
@@ -171,9 +170,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
         } catch (Exception exception) {
           logger.error("Error in waitQueue cleanup: " + exception.getMessage(), exception);
-          for (StackTraceElement elem : exception.getStackTrace()) {
-            logger.error("Trace: {}", elem);
-          }
+          Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
         }
       }
     } finally {

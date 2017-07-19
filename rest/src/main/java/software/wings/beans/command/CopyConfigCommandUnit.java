@@ -25,6 +25,7 @@ import software.wings.stencils.DefaultValue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -71,9 +72,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               .withExecutionResult(FAILURE)
               .build());
       logger.error("Unable to fetch log file information: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       return FAILURE;
     }
 

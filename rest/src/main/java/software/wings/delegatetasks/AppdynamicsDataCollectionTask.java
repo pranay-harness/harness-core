@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult.AppdynamicsDataCollectionTaskStatus;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -15,6 +15,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -131,9 +132,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
         logger.error("error fetcing appdynamis metrics: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }
   }

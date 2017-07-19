@@ -21,6 +21,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
+import java.util.Arrays;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -68,9 +69,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
     } catch (Exception ex) {
       ex.printStackTrace();
       logger.error("Error while executing command: " + ex.getMessage(), ex);
-      for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())
