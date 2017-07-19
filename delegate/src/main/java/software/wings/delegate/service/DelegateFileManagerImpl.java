@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -37,8 +38,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   @Inject private DelegateConfiguration delegateConfiguration;
 
-  @Override
-  public DelegateFile upload(DelegateFile delegateFile, File content) throws IOException {
+  private void upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
 
     // create RequestBody instance from file
@@ -52,30 +52,34 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
             .uploadFile(delegateFile.getDelegateId(), delegateFile.getTaskId(), delegateFile.getAccountId(), part)
             .execute();
     delegateFile.setFileId(response.body().getResource());
-    return delegateFile;
   }
 
   @Override
-  public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) throws IOException {
+  public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
     File file = new File(delegateConfiguration.getLocalDiskPath(), String.valueOf(currentTimeMillis()));
-    FileOutputStream fout = new FileOutputStream(file);
-    IOUtils.copy(contentSource, fout);
-    fout.close();
-
-    DelegateFile uploaded = upload(delegateFile, file);
 
     try {
-      if (!file.delete()) {
-        logger.warn("Could not delete file: {}", file.getName());
-      }
+      FileOutputStream fout = new FileOutputStream(file);
+      IOUtils.copy(contentSource, fout);
+      fout.close();
+
+      upload(delegateFile, file);
+
     } catch (Exception e) {
-      logger.warn("Error deleting file: " + file.getName() + ": " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
+      logger.warn("Error uploading file: " + file.getName() + ": " + e.getMessage(), e);
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+    } finally {
+      try {
+        if (!file.delete()) {
+          logger.warn("Could not delete file: {}", file.getName());
+        }
+      } catch (Exception e) {
+        logger.warn("Error deleting file: " + file.getName() + ": " + e.getMessage(), e);
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
       }
     }
 
-    return uploaded;
+    return delegateFile;
   }
 
   @Override
