@@ -73,7 +73,10 @@ public final class NotifyResponseCleanupHandler implements Runnable {
         wingsPersistence.delete(notifyResponse);
       }
     } catch (Exception exception) {
-      logger.error("Error in NotifyResponseCleanupHandler", exception);
+      logger.error("Error in NotifyResponseCleanupHandler: " + exception.getMessage(), exception);
+      for (StackTraceElement elem : exception.getStackTrace()) {
+        logger.error("Trace: {}", elem);
+      }
     }
   }
 }

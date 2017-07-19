@@ -326,9 +326,9 @@ public class JsonUtils {
 
       return schemaNode;
     } catch (Exception e) {
-      logger.error("{}", e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw Throwables.propagate(e);
     }
@@ -355,9 +355,9 @@ public class JsonUtils {
     try {
       return objectMapper.valueToTree(object);
     } catch (Exception e) {
-      logger.error("{}", e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw Throwables.propagate(e);
     }
@@ -384,7 +384,10 @@ public class JsonUtils {
     try {
       return objectMapper.readTree(json);
     } catch (Exception e) {
-      logger.error("", e);
+      logger.error(e.getMessage(), e);
+      for (StackTraceElement elem : e.getStackTrace()) {
+        logger.error("Trace: {}", elem);
+      }
       throw Throwables.propagate(e);
     }
   }

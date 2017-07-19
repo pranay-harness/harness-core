@@ -157,7 +157,10 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
             wingsPersistence.createUpdateOperations(WaitInstance.class).set("status", status);
         wingsPersistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
-        logger.error("Error in waitInstanceUpdate", exception);
+        logger.error("Error in waitInstanceUpdate: " + exception.getMessage(), exception);
+        for (StackTraceElement elem : exception.getStackTrace()) {
+          logger.error("Trace: {}", elem);
+        }
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
@@ -167,7 +170,10 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
         } catch (Exception exception) {
-          logger.error("Error in waitQueue cleanup", exception);
+          logger.error("Error in waitQueue cleanup: " + exception.getMessage(), exception);
+          for (StackTraceElement elem : exception.getStackTrace()) {
+            logger.error("Trace: {}", elem);
+          }
         }
       }
     } finally {

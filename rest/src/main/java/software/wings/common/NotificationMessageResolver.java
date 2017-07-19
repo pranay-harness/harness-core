@@ -106,9 +106,9 @@ public class NotificationMessageResolver {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       templateMap = yamlUtils.read(yaml, new TypeReference<Map<String, ChannelTemplate>>() {});
     } catch (Exception e) {
-      logger.error("Error in initializing catalog: {}", e.getMessage(), e);
+      logger.error("Error in initializing catalog: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(e);
     }

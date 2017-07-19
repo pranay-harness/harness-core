@@ -167,7 +167,9 @@ public class SplunkServiceImpl implements SplunkService {
     }
 
     if (unknownClusters > 0 || unknownFrequency > 0) {
-      analysisSummaryMsg = (unknownClusters + unknownFrequency) + " anomalous events found";
+      final int totalAnomalies = unknownClusters + unknownFrequency;
+      analysisSummaryMsg =
+          totalAnomalies == 1 ? totalAnomalies + " anomalous event found" : totalAnomalies + " anomalous events found";
     }
 
     analysisSummary.setRiskLevel(riskLevel);

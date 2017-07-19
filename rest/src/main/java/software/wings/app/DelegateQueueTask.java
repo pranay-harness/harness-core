@@ -126,7 +126,10 @@ public class DelegateQueueTask implements Runnable {
                  .broadcast(delegateTask1));
 
     } catch (Exception exception) {
-      log().error("Error seen in the Notifier call", exception);
+      log().error("Error seen in the Notifier call: " + exception.getMessage(), exception);
+      for (StackTraceElement elem : exception.getStackTrace()) {
+        log().error("Trace: {}", elem);
+      }
     } finally {
       if (lockAcquired) {
         persistentLocker.releaseLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());

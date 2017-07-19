@@ -412,9 +412,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       if (ex instanceof FileNotFoundException) {
         saveExecutionLogError("File not found");
       } else if (ex instanceof JSchException) {
-        logger.error("Command execution failed with error: {}", ex.getMessage(), ex);
+        logger.error("Command execution failed with error: " + ex.getMessage(), ex);
         for (StackTraceElement elem : ex.getStackTrace()) {
-          logger.error("Trace: {}", elem.toString());
+          logger.error("Trace: {}", elem);
         }
         saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
       } else {

@@ -62,9 +62,9 @@ public class BambooServiceImpl implements BambooService {
       response = getHttpRequestExecutionResponse(request);
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (Exception ex) {
-      logger.error("Job keys fetch failed with exception: {}", ex.getMessage(), ex);
+      logger.error("Job keys fetch failed with exception: " + ex.getMessage(), ex);
       for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
@@ -124,9 +124,9 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Job keys fetch failed with exception: {}", ex.getMessage(), ex);
+      logger.error("Job keys fetch failed with exception: " + ex.getMessage(), ex);
       for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(
           ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching project plans from bamboo server", ex);
@@ -166,9 +166,9 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("BambooService job keys fetch failed with exception: {}", ex.getMessage(), ex);
+      logger.error("BambooService job keys fetch failed with exception: " + ex.getMessage(), ex);
       for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from bamboo server", ex);
     }
@@ -264,9 +264,9 @@ public class BambooServiceImpl implements BambooService {
         });
       }
     } catch (IOException ex) {
-      logger.error("Download artifact failed with exception: {}", ex.getMessage(), ex);
+      logger.error("Download artifact failed with exception: " + ex.getMessage(), ex);
       for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());

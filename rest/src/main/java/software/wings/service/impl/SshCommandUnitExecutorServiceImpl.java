@@ -161,9 +161,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           throw e;
         }
       } else {
-        logger.error("Error while executing command: {}", e.getMessage(), e);
+        logger.error("Error while executing command: " + e.getMessage(), e);
         for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem.toString());
+          logger.error("Trace: {}", elem);
         }
         logService.save(context.getAccountId(),
             aLog()
@@ -178,9 +178,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR);
       }
     } catch (Exception e) {
-      logger.error("Error while executing command: {}", e.getMessage(), e);
+      logger.error("Error while executing command: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       logService.save(context.getAccountId(),
           aLog()

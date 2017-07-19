@@ -49,9 +49,9 @@ public class CatalogServiceImpl implements CatalogService {
         Collections.sort(catalogItems, CatalogItem.displayOrderComparator);
       }
     } catch (Exception e) {
-      logger.error("Error in initializing catalog: {}", e.getMessage(), e);
+      logger.error("Error in initializing catalog: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(e);
     }

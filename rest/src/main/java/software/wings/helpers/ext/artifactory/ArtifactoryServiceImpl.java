@@ -334,9 +334,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       return artifactory;
     } catch (Exception ex) {
-      logger.error("Error occurred while trying to initialize artifactory: {}", ex.getMessage(), ex);
+      logger.error("Error occurred while trying to initialize artifactory: " + ex.getMessage(), ex);
       for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
     }

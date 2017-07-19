@@ -72,7 +72,11 @@ public class Notifier implements Runnable {
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
 
     } catch (Exception exception) {
-      log().error("Error seen in the Notifier call", exception);
+      log().error("Error seen in the Notifier call: " + exception.getMessage(), exception);
+      for (StackTraceElement elem : exception.getStackTrace()) {
+        log().error("Trace: {}", elem);
+      }
+
     } finally {
       if (lockAcquired) {
         persistentLocker.releaseLock(Notifier.class, Notifier.class.getName());

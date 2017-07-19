@@ -49,10 +49,19 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         if (exception instanceof InterruptedException
             || exception.getCause() != null
                 && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
-          logger.info("Thread interrupted, shutting down for queue {}, Exception: " + exception, queue.name());
+          logger.info(
+              "Thread interrupted, shutting down for queue " + queue.name() + ": " + exception.getMessage(), exception);
+          for (StackTraceElement elem : exception.getStackTrace()) {
+            logger.info("Trace: {}", elem);
+          }
           run = false;
         } else {
-          logger.error("Exception happened while fetching message from queue " + queue.name(), exception);
+          logger.error(
+              "Exception happened while fetching message from queue " + queue.name() + ": {}" + exception.getMessage(),
+              exception);
+          for (StackTraceElement elem : exception.getStackTrace()) {
+            logger.error("Trace: {}", elem);
+          }
         }
       }
 

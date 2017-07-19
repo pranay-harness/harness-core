@@ -323,9 +323,9 @@ public class CommandState extends State {
                                                      .withParameters(new Object[] {command, commandExecutionContext})
                                                      .build());
     } catch (Exception e) {
-      logger.error("Exception in command execution: {}", e.getMessage(), e);
+      logger.error("Exception in command execution: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem.toString());
+        logger.error("Trace: {}", elem);
       }
       handleCommandException(context, activityId, appId);
       updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);

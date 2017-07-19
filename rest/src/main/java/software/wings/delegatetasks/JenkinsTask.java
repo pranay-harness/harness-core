@@ -100,9 +100,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
         executionStatus = ExecutionStatus.FAILED;
       }
     } catch (Exception e) {
-      logger.warn("Exception: {}", e.getMessage(), e);
+      logger.warn("Exception: " + e.getMessage(), e);
       for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem.toString());
+        logger.warn("Trace: {}", elem);
       }
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
