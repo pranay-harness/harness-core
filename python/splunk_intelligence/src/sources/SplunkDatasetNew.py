@@ -113,10 +113,14 @@ class SplunkDatasetNew(object):
                                                                        options.state_execution_id,
                                                                        options.query)
         if prev_state is not None:
+            return
+
+        if prev_state.get('control_events') is not None:
             for key, events in prev_state.get('control_events').items():
                 for event in events:
                     self.add_event(event, 'control_prev')
 
+        if prev_state.get('test_events') is not None:
             for key, events in prev_state.get('test_events').items():
                 for event in events:
                     self.add_event(event, 'test_prev')
@@ -148,7 +152,7 @@ class SplunkDatasetNew(object):
 
     # Used in SplunkAnomaly : To debug prod runs
     def load_prod_file(self, file_name, control_window, test_window,
-                            control_nodes, test_nodes, prev_out_file=None):
+                       control_nodes, test_nodes, prev_out_file=None):
         raw_events = SplunkFileSource.load_prod_data(file_name)
         print(control_window, test_window, control_nodes, test_nodes)
         for idx, event in enumerate(raw_events):
