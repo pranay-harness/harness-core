@@ -1,11 +1,11 @@
 package software.wings.resources;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ExecutionArgs;
@@ -62,7 +62,7 @@ public class ExecutionResource {
   /**
    * List.
    *
-   * @param appId           the app id
+   * @param appIds           the app ids
    * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @param pageRequest     the page request
@@ -74,23 +74,22 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("appId") List<String> appIds, @QueryParam("envId") String envId,
       @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
       @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    if (isBlank(appId)) {
-      PageRequest<Application> applicationPageRequest =
-          aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
-      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
-      if (res == null || res.isEmpty()) {
-        return new RestResponse<PageResponse<WorkflowExecution>>(new PageResponse<WorkflowExecution>());
-      }
-      List<String> appIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
-      filter.setFieldValues(appIds.toArray());
-    } else {
-      filter.setFieldValues(appId);
+    PageRequest<Application> applicationPageRequest =
+        aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
+    PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
+    if (res == null || res.isEmpty()) {
+      return new RestResponse<PageResponse<WorkflowExecution>>(new PageResponse<WorkflowExecution>());
     }
+    List<String> authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
+    if (appIds != null && !appIds.isEmpty()) {
+      authorizedAppIds = (List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
+    }
+    filter.setFieldValues(authorizedAppIds.toArray());
     filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
 
