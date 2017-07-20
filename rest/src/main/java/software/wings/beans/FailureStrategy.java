@@ -13,6 +13,9 @@ public class FailureStrategy {
   @NotNull @Size(min = 1) private List<FailureType> failureTypes = new ArrayList<>();
   private ExecutionScope executionScope;
   private RepairActionCode repairActionCode;
+  private int retryCount;
+  private List<Integer> retryIntervals;
+  private RepairActionCode repairActionCodeAfterRetry;
 
   public List<FailureType> getFailureTypes() {
     return failureTypes;
@@ -38,6 +41,30 @@ public class FailureStrategy {
     this.repairActionCode = repairActionCode;
   }
 
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public List<Integer> getRetryIntervals() {
+    return retryIntervals;
+  }
+
+  public void setRetryIntervals(List<Integer> retryIntervals) {
+    this.retryIntervals = retryIntervals;
+  }
+
+  public RepairActionCode getRepairActionCodeAfterRetry() {
+    return repairActionCodeAfterRetry;
+  }
+
+  public void setRepairActionCodeAfterRetry(RepairActionCode repairActionCodeAfterRetry) {
+    this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -47,11 +74,17 @@ public class FailureStrategy {
 
     FailureStrategy that = (FailureStrategy) o;
 
+    if (retryCount != that.retryCount)
+      return false;
     if (failureTypes != null ? !failureTypes.equals(that.failureTypes) : that.failureTypes != null)
       return false;
     if (executionScope != that.executionScope)
       return false;
-    return repairActionCode == that.repairActionCode;
+    if (repairActionCode != that.repairActionCode)
+      return false;
+    if (retryIntervals != null ? !retryIntervals.equals(that.retryIntervals) : that.retryIntervals != null)
+      return false;
+    return repairActionCodeAfterRetry == that.repairActionCodeAfterRetry;
   }
 
   @Override
@@ -59,6 +92,9 @@ public class FailureStrategy {
     int result = failureTypes != null ? failureTypes.hashCode() : 0;
     result = 31 * result + (executionScope != null ? executionScope.hashCode() : 0);
     result = 31 * result + (repairActionCode != null ? repairActionCode.hashCode() : 0);
+    result = 31 * result + retryCount;
+    result = 31 * result + (retryIntervals != null ? retryIntervals.hashCode() : 0);
+    result = 31 * result + (repairActionCodeAfterRetry != null ? repairActionCodeAfterRetry.hashCode() : 0);
     return result;
   }
 
@@ -66,6 +102,9 @@ public class FailureStrategy {
     private List<FailureType> failureTypes = new ArrayList<>();
     private ExecutionScope executionScope;
     private RepairActionCode repairActionCode;
+    private int retryCount;
+    private List<Integer> retryIntervals;
+    private RepairActionCode repairActionCodeAfterRetry;
 
     private FailureStrategyBuilder() {}
 
@@ -88,11 +127,29 @@ public class FailureStrategy {
       return this;
     }
 
+    public FailureStrategyBuilder withRetryCount(int retryCount) {
+      this.retryCount = retryCount;
+      return this;
+    }
+
+    public FailureStrategyBuilder withRetryIntervals(List<Integer> retryIntervals) {
+      this.retryIntervals = retryIntervals;
+      return this;
+    }
+
+    public FailureStrategyBuilder withRepairActionCodeAfterRetry(RepairActionCode repairActionCodeAfterRetry) {
+      this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
+      return this;
+    }
+
     public FailureStrategy build() {
       FailureStrategy failureStrategy = new FailureStrategy();
       failureStrategy.setFailureTypes(failureTypes);
       failureStrategy.setExecutionScope(executionScope);
       failureStrategy.setRepairActionCode(repairActionCode);
+      failureStrategy.setRetryCount(retryCount);
+      failureStrategy.setRetryIntervals(retryIntervals);
+      failureStrategy.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
       return failureStrategy;
     }
   }
