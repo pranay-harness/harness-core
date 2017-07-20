@@ -220,4 +220,37 @@ public class ArtifactServiceTest extends WingsBaseTest {
     artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
   }
+
+  @Test
+  public void shouldNotDeleteArtifactsWithNoArtifactFiles() {
+    Artifact savedArtifact = artifactService.create(builder.but().build());
+    artifactService.deleteArtifacts(1000);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
+
+  @Test
+  public void shouldDeleteArtifactsWithArtifactFiles() {
+    Artifact savedArtifact = artifactService.create(builder.but().build());
+    ArtifactFile artifactFile =
+        anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
+    savedArtifact.setStatus(Status.READY);
+    wingsRule.getDatastore().save(savedArtifact);
+    artifactService.deleteArtifacts(1000);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+  }
+
+  @Test
+  public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
+    Artifact savedArtifact = artifactService.create(builder.but().build());
+    ArtifactFile artifactFile =
+        anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
+    savedArtifact.setStatus(Status.READY);
+    wingsRule.getDatastore().save(savedArtifact);
+    artifactService.deleteArtifacts(1 * 24 * 60 * 60 * 1000);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
 }

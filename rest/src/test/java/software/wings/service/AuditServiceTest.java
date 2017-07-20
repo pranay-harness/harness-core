@@ -1,8 +1,15 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
+
+import com.google.common.io.Files;
 
 import org.junit.Test;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -15,9 +22,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.FileService;
 import software.wings.utils.JsonUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import javax.inject.Inject;
 
 /**
@@ -27,6 +36,8 @@ public class AuditServiceTest extends WingsBaseTest {
   @Inject private AuditService auditService;
 
   @Inject private JsonUtils jsonUtils;
+
+  @Inject private FileService fileService;
 
   private String appId = UUIDGenerator.getUuid();
 
@@ -76,8 +87,8 @@ public class AuditServiceTest extends WingsBaseTest {
     header.setResponseTime(System.currentTimeMillis());
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();
-    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
     assertThat(header2.getRequestPayloadUuid()).isNotNull();
+    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
   }
 
   /**
@@ -145,5 +156,52 @@ public class AuditServiceTest extends WingsBaseTest {
     assertThat(header2).isNotNull();
     assertThat(header2.getResponsePayloadUuid()).isNotNull();
     assertThat(header2.getResponseStatusCode()).isEqualTo(200);
+  }
+
+  @Test
+  public void shouldDeleteAuditRecords() throws Exception {
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+
+    auditService.deleteAuditRecords(1000);
+    assertThat(auditService.list(new PageRequest<>())).hasSize(0);
+  }
+
+  @Test
+  public void shouldNotDeleteAuditRecordsWithInRetentionTime() throws Exception {
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+
+    auditService.deleteAuditRecords(1 * 24 * 60 * 60 * 1000);
+    assertThat(auditService.list(new PageRequest<>())).hasSize(4);
+  }
+
+  @Test
+  @RealMongo
+  public void shouldDeleteAuditRecordsRequestFiles() throws Exception {
+    AuditHeader header = createAuditHeader();
+    assertThat(header.getRequestTime()).isNull();
+    assertThat(header.getRequestPayloadUuid()).isNull();
+    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
+    String requestFileId = auditService.create(header, RequestType.REQUEST, new ByteArrayInputStream(httpBody));
+    String responseFileId = auditService.create(header, RequestType.RESPONSE, new ByteArrayInputStream(httpBody));
+
+    header.setResponseStatusCode(200);
+    header.setResponseTime(System.currentTimeMillis());
+    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+    assertThat(header2).isNotNull();
+    assertThat(header2.getRequestPayloadUuid()).isNotNull();
+    assertThat(header2.getRequestPayloadUuid()).isEqualTo(requestFileId);
+    assertThat(header2.getResponsePayloadUuid()).isNotNull();
+    assertThat(header2.getResponsePayloadUuid()).isEqualTo(responseFileId);
+
+    auditService.deleteAuditRecords(1000);
+    assertThat(auditService.list(new PageRequest<>())).hasSize(0);
+    assertThat(fileService.getAllFileIds(header2.getRequestPayloadUuid(), AUDITS)).hasSize(0);
+    assertThat(fileService.getAllFileIds(header2.getResponsePayloadUuid(), AUDITS)).hasSize(0);
   }
 }

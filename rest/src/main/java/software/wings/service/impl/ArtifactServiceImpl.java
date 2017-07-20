@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.awaitility.Awaitility.with;
+import static org.awaitility.Duration.FIVE_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
@@ -13,6 +15,8 @@ import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.awaitility.Duration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -43,9 +47,12 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -258,5 +265,57 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactStreamId)
         .asList()
         .forEach(artifact -> delete(appId, artifact.getUuid()));
+  }
+
+  @Override
+  public void deleteArtifacts(long retentionMillis) {
+    int days = (int) retentionMillis / (24 * 60 * 60 * 1000);
+    int batchSize = 200;
+    int limit = 1000;
+    logger.info("Start: Deleting  artifacts older than {} days", days);
+    try {
+      with().pollInterval(2, TimeUnit.SECONDS).await().atMost(FIVE_MINUTES).until(() -> {
+        List<Artifact> artifacts = wingsPersistence.createQuery(Artifact.class)
+                                       .limit(limit)
+                                       .batchSize(batchSize)
+                                       .field("createdAt")
+                                       .lessThan(System.currentTimeMillis() - retentionMillis)
+                                       .field("artifactFiles")
+                                       .exists()
+                                       .asList();
+        if (CollectionUtils.isEmpty(artifacts)) {
+          logger.info("No artifacts with artifact files older than {} days", days);
+          return true;
+        }
+        logger.info("Deleting artifacts of size: {} ", artifacts.size());
+        artifacts.forEach(artifact -> {
+          try {
+            if (!CollectionUtils.isEmpty(artifact.getArtifactFiles())) {
+              // logger.info("Deleting artifact {} ", artifact.getUuid());
+              delete(artifact);
+            }
+          } catch (Exception ex) {
+            logger.info("Deleting artifact {} failed", artifact.getUuid());
+          }
+        });
+        logger.info("Deleting artifacts of size: {} success", artifacts.size());
+        if (artifacts.size() < limit) {
+          return true;
+        }
+        return false;
+      });
+    } catch (Exception ex) {
+      logger.info("Failed to delete artifacts older than  {} days", days);
+    }
+    logger.info("End: Deleting artifacts older than {} days success", days);
+  }
+  private boolean delete(Artifact artifact) {
+    boolean deleted = wingsPersistence.delete(artifact);
+    if (deleted) {
+      executorService.submit(()
+                                 -> artifact.getArtifactFiles().forEach(
+                                     artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS)));
+    }
+    return deleted;
   }
 }

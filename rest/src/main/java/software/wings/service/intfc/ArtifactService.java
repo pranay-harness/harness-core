@@ -116,4 +116,11 @@ public interface ArtifactService {
    * @param artifactStreamId the artifact stream id
    */
   void deleteByArtifactStream(String appId, String artifactStreamId);
+
+  /**
+   * Delete by artifact stream.
+   *
+   * @param retentionMillis the retention millis
+   */
+  void deleteArtifacts(long retentionMillis);
 }

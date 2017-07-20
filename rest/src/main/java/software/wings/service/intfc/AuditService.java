@@ -64,4 +64,10 @@ public interface AuditService {
    * @return the audit header
    */
   AuditHeader read(String appId, String auditHeaderId);
+
+  /**
+   * Deletes the old audit records
+   * @param retentionMillis
+   */
+  void deleteAuditRecords(long retentionMillis);
 }
