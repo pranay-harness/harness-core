@@ -248,6 +248,8 @@ public class SplunkV2State extends AbstractAnalysisState {
       executionData.setStatus(status);
       analysisRecord.setQuery(splunkQuery);
       analysisRecord.setAnalysisSummaryMessage(message);
+      analysisRecord.setControl_events(Collections.emptyMap());
+      analysisRecord.setTest_events(Collections.emptyMap());
       splunkService.saveSplunkAnalysisRecords(analysisRecord);
     }
 
