@@ -7,6 +7,7 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -36,9 +37,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
           (Map<String, String>) parameters[7]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       return new ListNotifyResponseData();
     }
   }

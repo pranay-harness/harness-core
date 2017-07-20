@@ -36,6 +36,8 @@ public class DelegateTask extends Base {
   private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
   private boolean async = true;
 
+  // TODO(brett): Store envId, serviceID, etc, for delegate task filtering
+
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
   /**

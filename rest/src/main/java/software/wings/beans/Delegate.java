@@ -26,6 +26,8 @@ public class Delegate extends Base {
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
+  // TODO(brett): Add fields to filter delegate tasks, encapsulated in a class
+
   /**
    * Getter for property 'accountId'.
    *

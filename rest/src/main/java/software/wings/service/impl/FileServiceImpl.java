@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -61,9 +62,7 @@ public class FileServiceImpl implements FileService {
       return file;
     } catch (IOException ex) {
       logger.error("Error in download: " + ex.getMessage(), ex);
-      for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       return null;
     }
   }

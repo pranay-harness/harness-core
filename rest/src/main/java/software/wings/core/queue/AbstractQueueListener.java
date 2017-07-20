@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
 import software.wings.utils.ThreadContext;
 
+import java.util.Arrays;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -51,17 +52,13 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
                 && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
           logger.info(
               "Thread interrupted, shutting down for queue " + queue.name() + ": " + exception.getMessage(), exception);
-          for (StackTraceElement elem : exception.getStackTrace()) {
-            logger.info("Trace: {}", elem);
-          }
+          Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.info("Trace: {}", elem));
           run = false;
         } else {
           logger.error(
               "Exception happened while fetching message from queue " + queue.name() + ": {}" + exception.getMessage(),
               exception);
-          for (StackTraceElement elem : exception.getStackTrace()) {
-            logger.error("Trace: {}", elem);
-          }
+          Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
         }
       }
 

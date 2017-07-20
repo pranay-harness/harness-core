@@ -15,6 +15,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -73,9 +74,7 @@ public class Notifier implements Runnable {
 
     } catch (Exception exception) {
       log().error("Error seen in the Notifier call: " + exception.getMessage(), exception);
-      for (StackTraceElement elem : exception.getStackTrace()) {
-        log().error("Trace: {}", elem);
-      }
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> log().error("Trace: {}", elem));
 
     } finally {
       if (lockAcquired) {

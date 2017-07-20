@@ -19,8 +19,8 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.SshCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
@@ -34,6 +34,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.SshHelperUtil;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -162,9 +163,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         }
       } else {
         logger.error("Error while executing command: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())
@@ -179,9 +178,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       }
     } catch (Exception e) {
       logger.error("Error while executing command: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

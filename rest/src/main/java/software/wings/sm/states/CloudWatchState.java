@@ -50,6 +50,7 @@ import software.wings.sm.StateType;
 import software.wings.stencils.EnumData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -168,9 +169,7 @@ public class CloudWatchState extends State {
     } catch (Exception e) {
       errorMsg = getMessage(e);
       logger.error("Error in Cloudwatch assertion evaluation: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       status = false;
     }
 

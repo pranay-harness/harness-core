@@ -37,6 +37,7 @@ import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -105,9 +106,7 @@ public class RepeatState extends State {
       }
     } catch (Exception ex) {
       logger.error("Error in getting repeat elements: " + ex.getMessage(), ex);
-      for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new WingsException(ex);
     }
 
@@ -128,9 +127,7 @@ public class RepeatState extends State {
         executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
       } catch (Exception ex) {
         logger.error("Error in evaluating executionStrategy... default to SERIAL: " + ex.getMessage(), ex);
-        for (StackTraceElement elem : ex.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }
 

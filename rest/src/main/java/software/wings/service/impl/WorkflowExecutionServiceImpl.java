@@ -88,6 +88,7 @@ import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1026,9 +1027,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         logger.info("Updated : {} row", updated.getWriteResult().getN());
       } catch (java.lang.Exception e) {
         logger.error("Error in breakdown retrieval: " + e.getMessage(), e);
-        for (StackTraceElement elem : e.getStackTrace()) {
-          logger.error("Trace: {}", elem);
-        }
+        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       }
     }
   }

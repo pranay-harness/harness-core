@@ -100,7 +100,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       envVariables.put("DOCKER_IMAGE", context.getArtifactStreamAttributes().getImageName());
     }
 
-    launcherScriptFileName = "wingslauncher" + activityId + ".sh";
+    launcherScriptFileName = "harnesslauncher" + activityId + ".sh";
 
     CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
     try {

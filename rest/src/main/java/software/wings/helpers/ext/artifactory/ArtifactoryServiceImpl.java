@@ -23,6 +23,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -335,9 +336,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return artifactory;
     } catch (Exception ex) {
       logger.error("Error occurred while trying to initialize artifactory: " + ex.getMessage(), ex);
-      for (StackTraceElement elem : ex.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
     }
   }

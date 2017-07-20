@@ -24,6 +24,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.Arrays;
+
 /**
  * The Class EmailState.
  *
@@ -82,9 +84,7 @@ public class EmailState extends State {
       executionResponse.setErrorMessage(e.getCause() == null ? e.getMessage() : e.getCause().getMessage());
       executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
       logger.error("Exception while sending email: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
     }
 
     executionResponse.setStateExecutionData(emailStateExecutionData);

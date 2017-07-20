@@ -42,6 +42,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -264,9 +265,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
       return btNames;
     } catch (Exception e) {
       logger.error("error fetching Appdynamics BTs: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new WingsException("error fetching Appdynamics BTs", e);
     }
   }

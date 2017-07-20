@@ -15,6 +15,7 @@ import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -43,9 +44,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
           (String) parameters[4], (List<String>) parameters[5], (Map<String, String>) parameters[6]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.error("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       return new ListNotifyResponseData();
     }
   }
@@ -81,9 +80,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
       }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
-      }
+      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

@@ -150,6 +150,14 @@ public class WingsRule implements MethodRule {
       try {
         MongoClientURI clientUri =
             new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
+        // Protection against running tests on non-local databases such as prod or qa. Comment out this check if you're
+        // sure.
+        if (!clientUri.getURI().startsWith("mongodb://localhost:")) {
+          System.out.println("\n*** WARNING *** : Attempting to run test on non-local Mongo: " + clientUri.getURI());
+          System.out.println(
+              "*** Exiting *** : Comment out this check in WingsRule.java if you are sure you want to run against a remote Mongo.\n");
+          System.exit(1);
+        }
         dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);
       } catch (NumberFormatException ex) {
