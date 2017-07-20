@@ -90,6 +90,8 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   @Transient @Inject private MainConfiguration configuration;
 
+  @Transient @SchemaIgnore private ScheduledExecutorService pythonExecutorService;
+
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
   }
@@ -169,7 +171,7 @@ public class SplunkV2State extends AbstractAnalysisState {
                                                 .withSplunkExecutionData(executionData)
                                                 .withExecutionStatus(ExecutionStatus.SUCCESS)
                                                 .build();
-    final ScheduledExecutorService pythonExecutorService = createPythonExecutorService(context);
+    pythonExecutorService = createPythonExecutorService(context);
     final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.schedule(() -> {
       try {
@@ -188,12 +190,18 @@ public class SplunkV2State extends AbstractAnalysisState {
         .withStateExecutionData(executionData)
         .build();
   }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     final SplunkMLAnalysisSummary analysisSummary =
         splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    if (analysisSummary == null) {
+      logger.warn("No analysis summary. This can happen if there is no data with the given queries");
+      return generateAnalysisResponse(
+          context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
+    }
 
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
       logger.error("Found anomolies. Marking it failed." + analysisSummary.getAnalysisSummaryMessage());
       executionStatus = ExecutionStatus.FAILED;
@@ -208,7 +216,21 @@ public class SplunkV2State extends AbstractAnalysisState {
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    try {
+      pythonExecutorService.shutdown();
+      pythonExecutorService.awaitTermination(1, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+      pythonExecutorService.shutdown();
+    }
+
+    final SplunkMLAnalysisSummary analysisSummary =
+        splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+
+    if (analysisSummary == null) {
+      generateAnalysisResponse(context, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
+    }
+  }
 
   private ExecutionResponse generateAnalysisResponse(ExecutionContext context, ExecutionStatus status, String message) {
     SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
@@ -303,7 +325,7 @@ public class SplunkV2State extends AbstractAnalysisState {
           logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
               + " stateExecution: " + context.getStateExecutionInstanceId()
               + ". No ML analysis will be run this minute");
-          return;
+          continue;
         }
 
         try {
@@ -314,12 +336,10 @@ public class SplunkV2State extends AbstractAnalysisState {
           final String logAnalysisGetUrl = this.serverUrl + "/api/splunk/get-analysis-records?accountId=" + accountId;
           final List<String> command = new ArrayList<>();
           command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
-          command.add("--query");
-          command.add(query);
+          command.add("--query=" + query);
           command.add("--url");
           command.add(logInputUrl);
-          command.add("--application_id");
-          command.add(applicationId);
+          command.add("--application_id=" + applicationId);
           command.add("--control_nodes");
           command.addAll(controlNodes);
           command.add("--test_nodes");
@@ -328,14 +348,13 @@ public class SplunkV2State extends AbstractAnalysisState {
           command.add(String.valueOf(0.8));
           command.add("--log_collection_minute");
           command.add(String.valueOf(logCollectionMinute));
-          command.add("--state_execution_id");
-          command.add(context.getStateExecutionInstanceId());
+          command.add("--state_execution_id=" + context.getStateExecutionInstanceId());
           command.add("--log_analysis_save_url");
           command.add(logAnalysisSaveUrl);
           command.add("--log_analysis_get_url");
           command.add(logAnalysisGetUrl);
 
-          for (int i = 0; i < PYTHON_JOB_RETRIES; i++) {
+          for (int attempt = 0; attempt < PYTHON_JOB_RETRIES; attempt++) {
             final ProcessResult result = new ProcessExecutor(command)
                                              .redirectOutput(Slf4jStream
                                                                  .of(LoggerFactory.getLogger(getClass().getName() + "."
@@ -346,18 +365,18 @@ public class SplunkV2State extends AbstractAnalysisState {
             switch (result.getExitValue()) {
               case 0:
                 splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
-                logCollectionMinute++;
                 logger.info("Splunk analysis done for " + context.getStateExecutionInstanceId() + "for minute "
                     + logCollectionMinute);
-                return;
+                attempt += PYTHON_JOB_RETRIES;
+                break;
               case 2:
                 logger.warn("No test data from the deployed nodes " + context.getStateExecutionInstanceId()
                     + "for minute " + logCollectionMinute);
-                logCollectionMinute++;
-                return;
+                attempt += PYTHON_JOB_RETRIES;
+                break;
               default:
                 logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
-                    + logCollectionMinute + " trial: " + (i + 1));
+                    + logCollectionMinute + " trial: " + (attempt + 1));
                 Thread.sleep(2000);
             }
           }
@@ -367,6 +386,14 @@ public class SplunkV2State extends AbstractAnalysisState {
                   + logCollectionMinute,
               e);
         }
+      }
+      logCollectionMinute++;
+
+      // if no data generated till this time, generate a response
+      final SplunkMLAnalysisSummary analysisSummary =
+          splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+      if (analysisSummary == null) {
+        generateAnalysisResponse(context, ExecutionStatus.RUNNING, "No data with given queries has been found yet.");
       }
     }
   }
