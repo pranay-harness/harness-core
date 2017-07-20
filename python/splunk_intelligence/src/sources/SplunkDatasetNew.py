@@ -112,7 +112,7 @@ class SplunkDatasetNew(object):
                                                                        options.application_id,
                                                                        options.state_execution_id,
                                                                        options.query)
-        if prev_state is not None:
+        if prev_state is None:
             return
 
         if prev_state.get('control_events') is not None:
