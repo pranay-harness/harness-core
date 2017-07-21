@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-
+from JaccardDistance import jaccard_similarity
 """
-Detect anomalies based on kmeans cluster
+Detect anomalies based on kmeans clusters
 """
 class KmeansAnomalyDetector(object):
 
@@ -26,6 +26,9 @@ class KmeansAnomalyDetector(object):
             mat = feature_matrix[j]
             sim = cosine_similarity(km.get_feature_matrix()[clusters == i], mat)
             if len(np.where(sim < threshold)[0]) > 0:
+                anomalies.append(-1)
+            elif len(np.where(jaccard_similarity(km.get_feature_matrix()[clusters == i],
+                                                          mat) < threshold)[0]) > 0:
                 anomalies.append(-1)
             else:
                 anomalies.append(1)

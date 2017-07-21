@@ -24,14 +24,9 @@ class SplunkIntelOptimized(object):
     def run(self):
         logger.info('Running using file source')
 
-        control_events = self.splunkDatasetNew.get_control_events()
+        # TODO -Can min_df be set higher
         min_df = 1
         max_df = 1.0
-
-        # Gracefully handle cases where min_df is too high
-        if len(control_events) > 500:
-            min_df = 0.05
-            max_df = 1.0
 
         logging.info("Start vectorization....")
         logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
@@ -127,46 +122,49 @@ def parse(cli_args):
     return parser.parse_args(cli_args)
 
 
-def run_debug():
-    control_start = 1
-    test_start = 11
+def run_debug(options):
+    control_start = 0
+    test_start = 0
+
 
     prev_out_file = None
-    while (control_start <= 2 or test_start < 12):
-        splunkIntelargs = []
+    while (control_start <= 13 or test_start < 13):
+
         splunkDataset = SplunkDatasetNew()
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunkDataset.load_from_file('mzs.json',
+        splunkDataset.load_prod_file_v2('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut.json',
                                      [control_start, control_start],
-                                     [test_start, test_start], prev_out_file)
+                                     [test_start, test_start], ['ip-172-31-28-126'], ['ip-172-31-19-157'], prev_out_file)
 
-        splunkIntelargs.append('--sim_threshold')
-        splunkIntelargs.append(str(float(0.8)))
+        if bool(splunkDataset.get_control_events()):
 
-        print(splunkIntelargs)
 
-        splunkIntel = SplunkIntelOptimized(splunkDataset, SplunkIntelOptimized.parse(splunkIntelargs))
-        splunkDataset = splunkIntel.run()
 
-        file_object = open("result.json", "w")
-        file_object.write(splunkDataset.get_output_as_json)
-        file_object.close()
+            print(options)
 
-        prev_out_file = './result.json'
+            splunkIntel = SplunkIntelOptimized(splunkDataset, options)
+            splunkDataset = splunkIntel.run()
+
+            file_object = open("result.json", "w")
+            file_object.write(splunkDataset.get_output_as_json(options))
+            file_object.close()
+
+            prev_out_file = './result.json'
 
         control_start = control_start + 1
         test_start = test_start + 1
 
 
 def main(args):
-    #run_debug()
 
     # create options
     print(args)
     options = parse(args[1:])
     logging.info(options)
+
+    #run_debug(options)
 
     splunkDataset = SplunkDatasetNew()
 

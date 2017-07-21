@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
+from JaccardDistance import pairwise_jaccard_similarity
 
 """
 Wrapper class for Kmeans clustering
@@ -52,7 +53,13 @@ class KmeansCluster(object):
                 if len(np.where(sim < self.theshold)[0]) > 0:
                     found = False
                     lower = mid + 1
-            if found == True:
+                    break
+                elif len(np.where(pairwise_jaccard_similarity(self.feature_matrix[clusters == j])
+                                          < self.theshold)[0]) > 0:
+                    found = False
+                    lower = mid + 1
+                    break
+            if found:
                 logger.info("found k = " + str(mid))
                 self.num_clusters = mid
                 self.km = curr_km

@@ -47,9 +47,9 @@ class SplunkDatasetNew(object):
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['clusterLabel']].append(
                 dict(text=event.get('logMessage'),
-                     message_frequencies=[dict(count=event.get('count'), time=event.get('timeStamp').get('$numberLong'),
+                     message_frequencies=[dict(count=event.get('count'), time=event.get('timeStamp'),
                                                host=host,
-                                               old_label=event['clusterLabel'])]))
+                                               old_label=event.get('clusterLabel'))]))
         elif event_type == 'test_prod':
             if event['clusterLabel'] not in self.test_events:
                 self.test_events[event['clusterLabel']] = []
@@ -57,9 +57,9 @@ class SplunkDatasetNew(object):
             self.test_events[event['clusterLabel']].append(
                 dict(text=event.get('logMessage'),
                      message_frequencies=[dict(count=event.get('count'),
-                                               time=event.get('timeStamp').get('$numberLong'),
+                                               time=event.get('timeStamp'),
                                                host=host,
-                                               old_label=event['clusterLabel'])]))
+                                               old_label=event.get('clusterLabel'))]))
 
         elif event_type == 'control_prev':
             label = 10000 + event['cluster_label']
@@ -152,8 +152,8 @@ class SplunkDatasetNew(object):
 
     # Used in SplunkAnomaly : To debug prod runs
     def load_prod_file(self, file_name, control_window, test_window,
-                       control_nodes, test_nodes, prev_out_file=None):
-        raw_events = SplunkFileSource.load_prod_data(file_name)
+                          control_nodes, test_nodes, prev_out_file=None):
+        raw_events = SplunkFileSource.load_data(file_name)
         print(control_window, test_window, control_nodes, test_nodes)
         for idx, event in enumerate(raw_events):
 

@@ -2,7 +2,6 @@ import numpy as np
 import logging
 
 from ZeroDeviationClassifier import ZeroDeviationClassifier
-from IsolationForestClassifier import IsolationForestClassifier
 from ThreeSigmaClassifier import ThreeSigmaClassifier
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ class FrequencyAnomalyDetector(object):
         vals = map(int, values[:, 1])
         np_values = np.array(vals)
         mean, std = np.mean(np_values, axis=0), np.std(np_values, axis=0)
-        if std < 1:
+        if std < 0.1:
             logger.info("Using ZeroDeviationClassifier for cluster " + str(label))
             self.klassifier[label] = ZeroDeviationClassifier()
             # Anything greater than 25% will be an anomaly
@@ -33,21 +32,18 @@ class FrequencyAnomalyDetector(object):
 
 
 
-x = [47, 49, 52, 51, 51, 50, 53, 50, 50, 51, 51, 51,
- 52, 51, 51, 50, 47, 49, 51, 51, 51, 50, 52, 50, 50,
- 51, 51, 52, 52, 51, 50, 51, 47, 49, 51, 51, 51, 51, 52, 50,
- 51, 52, 51, 52, 52, 51, 51, 50, 48, 49, 51, 51, 51, 50, 53,
- 50, 50, 51, 51, 51, 52, 51, 50, 51]
-
-
-x = [[1,i] for i in x]
-
-y = [41, 43 , 45 , 44 , 45 , 44 , 37 , 45 , 44 , 45 , 45 , 45,  46, 45, 45, 44]
-
-y = [[1,i] for i in y]
-
-
-
+# x = [2,2,1,1]
+# y = [2,2,1]
+#
+#
+# x = [[1,i] for i in x]
+#
+# y = [[1,i] for i in y]
+#
+#
+# det = FrequencyAnomalyDetector()
+# det.fit_transform(1, np.array(x))
+# print(det.predict(1, np.array(y)))
 
 
 
