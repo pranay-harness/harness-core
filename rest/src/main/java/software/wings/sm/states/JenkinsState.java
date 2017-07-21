@@ -213,21 +213,15 @@ public class JenkinsState extends State {
       });
     }
 
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(getTaskType())
-                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                    .withWaitId(activityId)
-                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(),
-<<<<<<< HEAD
-                                        jenkinsConfig.getUsername(), jenkinsConfig.getPassword(), finalJobName,
-                                        evaluatedParameters, evaluatedFilePathsForAssertion})
-                                    .build();
-=======
-                                        jenkinsConfig.getUsername(), jenkinsConfig.getPassword(), finalJobName,
-                                        evaluatedParameters, evaluatedFilePathsForAssertion})
-                                    .build();
->>>>>>> parent of 7c19f508c... feature: Add delegate assignment based on environment.
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
+                jenkinsConfig.getPassword(), finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
+            .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
