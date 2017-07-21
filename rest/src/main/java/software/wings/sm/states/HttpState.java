@@ -246,7 +246,7 @@ public class HttpState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = workflowStandardParams.getEnv();
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
     String evaluatedUrl = context.renderExpression(getFinalUrl(context));
     logger.info("evaluatedUrl: {}", evaluatedUrl);
@@ -274,7 +274,7 @@ public class HttpState extends State {
                                       .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
                                       .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl,
                                           evaluatedBody, evaluatedHeader, socketTimeoutMillis})
-                                      .withEnvId(env.getUuid())
+                                      .withEnvId(envId)
                                       .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =

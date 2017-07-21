@@ -273,7 +273,7 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   private long triggerSplunkDataCollection(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = workflowStandardParams.getEnv();
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(splunkConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No splunk setting with id: " + splunkConfigId + " found");
@@ -292,7 +292,7 @@ public class SplunkV2State extends AbstractAnalysisState {
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(env.getUuid())
+                                    .withEnvId(envId)
                                     .build();
     waitNotifyEngine.waitForAll(new SplunkLogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);

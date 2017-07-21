@@ -14,7 +14,6 @@ import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.collect.AppdynamicsMetricDataCallback;
@@ -238,7 +237,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = workflowStandardParams.getEnv();
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
     final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
@@ -251,7 +250,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(env.getUuid())
+                                    .withEnvId(envId)
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
