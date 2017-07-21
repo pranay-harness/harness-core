@@ -14,7 +14,6 @@ import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.collect.AppdynamicsMetricDataCallback;
@@ -237,9 +236,6 @@ public class AppDynamicsState extends AbstractAnalysisState {
       throw new WingsException("No appdynamics setting with id: " + appDynamicsConfigId + " found");
     }
 
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = workflowStandardParams.getEnv();
-
     final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
         new AppdynamicsDataCollectionInfo(appDynamicsConfig, context.getAppId(), context.getStateExecutionInstanceId(),
@@ -251,7 +247,6 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
-                                    .withEnvId(env.getUuid())
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
