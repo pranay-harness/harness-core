@@ -35,6 +35,7 @@ public class DelegateTask extends Base {
   private String delegateId;
   private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
   private boolean async = true;
+  private String envId;
 
   // TODO(brett): Store envId, serviceID, etc, for delegate task filtering
 
@@ -193,10 +194,18 @@ public class DelegateTask extends Base {
     this.delegateId = delegateId;
   }
 
+  public String getEnvId() {
+    return envId;
+  }
+
+  public void setEnvId(String envId) {
+    this.envId = envId;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(taskType, parameters, tag, accountId, waitId, queueName, status, delegateId);
+        + Objects.hash(taskType, parameters, tag, accountId, waitId, queueName, status, delegateId, envId);
   }
 
   @Override
@@ -214,7 +223,8 @@ public class DelegateTask extends Base {
     return Objects.equals(this.taskType, other.taskType) && Objects.deepEquals(this.parameters, other.parameters)
         && Objects.equals(this.tag, other.tag) && Objects.equals(this.accountId, other.accountId)
         && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.queueName, other.queueName)
-        && Objects.equals(this.status, other.status) && Objects.equals(this.delegateId, other.delegateId);
+        && Objects.equals(this.status, other.status) && Objects.equals(this.delegateId, other.delegateId)
+        && Objects.equals(this.envId, other.envId);
   }
 
   @Override
@@ -227,6 +237,7 @@ public class DelegateTask extends Base {
         .add("queueName", queueName)
         .add("status", status)
         .add("delegateId", delegateId)
+        .add("envId", envId)
         .toString();
   }
 
@@ -465,6 +476,7 @@ public class DelegateTask extends Base {
     private String queueName;
     private Status status = Status.QUEUED;
     private String delegateId;
+    private String envId;
     private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
     private String uuid;
     private boolean async = true;
@@ -571,6 +583,11 @@ public class DelegateTask extends Base {
      */
     public Builder withDelegateId(String delegateId) {
       this.delegateId = delegateId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
       return this;
     }
 
@@ -688,6 +705,7 @@ public class DelegateTask extends Base {
           .withQueueName(queueName)
           .withStatus(status)
           .withDelegateId(delegateId)
+          .withEnvId(envId)
           .withTimeout(timeout)
           .withUuid(uuid)
           .withAsync(async)
@@ -714,6 +732,7 @@ public class DelegateTask extends Base {
       delegateTask.setQueueName(queueName);
       delegateTask.setStatus(status);
       delegateTask.setDelegateId(delegateId);
+      delegateTask.setEnvId(envId);
       delegateTask.setTimeout(timeout);
       delegateTask.setUuid(uuid);
       delegateTask.setAsync(async);
