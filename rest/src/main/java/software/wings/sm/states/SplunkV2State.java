@@ -353,7 +353,7 @@ public class SplunkV2State extends AbstractAnalysisState {
           command.add("--test_nodes");
           command.addAll(testNodes);
           command.add("--sim_threshold");
-          command.add(String.valueOf(0.8));
+          command.add(String.valueOf(0.9));
           command.add("--log_collection_minute");
           command.add(String.valueOf(logCollectionMinute));
           command.add("--state_execution_id=" + context.getStateExecutionInstanceId());
