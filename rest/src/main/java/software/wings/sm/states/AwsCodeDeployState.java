@@ -179,6 +179,7 @@ public class AwsCodeDeployState extends State {
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activity.getUuid())
                                       .withParameters(new Object[] {command, commandExecutionContext})
+                                      .withEnvId(env.getUuid())
                                       .build());
 
     return anExecutionResponse()

@@ -19,6 +19,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -37,10 +38,12 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.splunk.SplunkService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
@@ -269,6 +272,8 @@ public class SplunkV2State extends AbstractAnalysisState {
   }
 
   private long triggerSplunkDataCollection(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Environment env = workflowStandardParams.getEnv();
     final SettingAttribute settingAttribute = settingsService.get(splunkConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No splunk setting with id: " + splunkConfigId + " found");
@@ -287,6 +292,7 @@ public class SplunkV2State extends AbstractAnalysisState {
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
+                                    .withEnvId(env.getUuid())
                                     .build();
     waitNotifyEngine.waitForAll(new SplunkLogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
