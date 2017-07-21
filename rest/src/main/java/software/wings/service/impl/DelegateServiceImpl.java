@@ -419,7 +419,6 @@ public class DelegateServiceImpl implements DelegateService {
         UpdateOperations<DelegateTask> updateOperations =
             wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
         delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-        Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
       }
     } else {
       // Sync
