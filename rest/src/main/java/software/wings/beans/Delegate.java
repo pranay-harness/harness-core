@@ -26,15 +26,7 @@ public class Delegate extends Base {
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
-  private DelegateTaskProperties taskProperties = new DelegateTaskProperties();
-
-  public DelegateTaskProperties getTaskProperties() {
-    return taskProperties;
-  }
-
-  public void setTaskProperties(DelegateTaskProperties taskProperties) {
-    this.taskProperties = taskProperties;
-  }
+  // TODO(brett): Add fields to filter delegate tasks, encapsulated in a class
 
   /**
    * Getter for property 'accountId'.

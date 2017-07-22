@@ -7,7 +7,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -31,6 +30,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -119,10 +119,9 @@ public class AwsCodeDeployState extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
-    String envId = env.getUuid();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
-        serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
+        serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName()).getCommand();
 
     CodeDeployInfrastructureMapping infrastructureMapping =
         (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
@@ -134,7 +133,7 @@ public class AwsCodeDeployState extends State {
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(app.getUuid())
                                            .withApplicationName(app.getName())
-                                           .withEnvironmentId(envId)
+                                           .withEnvironmentId(env.getUuid())
                                            .withEnvironmentName(env.getName())
                                            .withEnvironmentType(env.getEnvironmentType())
                                            .withServiceId(service.getUuid())
@@ -147,7 +146,7 @@ public class AwsCodeDeployState extends State {
                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                            .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
                                            .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
-                                               app.getUuid(), serviceId, envId, command.getName()))
+                                               app.getUuid(), serviceId, env.getUuid(), command.getName()))
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 
@@ -165,7 +164,7 @@ public class AwsCodeDeployState extends State {
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .withAccountId(app.getAccountId())
                                                           .withAppId(app.getUuid())
-                                                          .withEnvId(envId)
+                                                          .withEnvId(env.getUuid())
                                                           .withServiceName(service.getName())
                                                           .withRegion(region)
                                                           .withActivityId(activity.getUuid())
@@ -174,13 +173,12 @@ public class AwsCodeDeployState extends State {
                                                           .build();
 
     String delegateTaskId =
-        delegateService.queueTask(aDelegateTask()
+        delegateService.queueTask(DelegateTask.Builder.aDelegateTask()
                                       .withAccountId(app.getAccountId())
                                       .withAppId(app.getAppId())
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activity.getUuid())
                                       .withParameters(new Object[] {command, commandExecutionContext})
-                                      .withEnvId(envId)
                                       .build());
 
     return anExecutionResponse()

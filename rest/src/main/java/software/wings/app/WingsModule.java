@@ -56,7 +56,6 @@ import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
-import software.wings.service.impl.AssignDelegateServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsHelperResourceServiceImpl;
@@ -111,7 +110,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactoryBuildService;
-import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.AwsHelperResourceService;
@@ -251,7 +249,6 @@ public class WingsModule extends AbstractModule {
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
     bind(EcrService.class).to(EcrServiceImpl.class);
     bind(AwsHelperResourceService.class).to(AwsHelperResourceServiceImpl.class);
-    bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

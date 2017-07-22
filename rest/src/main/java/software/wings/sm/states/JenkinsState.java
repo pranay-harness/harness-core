@@ -41,7 +41,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.XmlUtils;
@@ -176,8 +175,6 @@ public class JenkinsState extends State {
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
 
     String evaluatedJobName;
@@ -224,7 +221,6 @@ public class JenkinsState extends State {
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
                 jenkinsConfig.getPassword(), finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
-            .withEnvId(envId)
             .build();
 
     if (getTimeoutMillis() != null) {
