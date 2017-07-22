@@ -38,7 +38,7 @@ class Tokenizer(object):
         # filter out any tokens the contain punctuation other than dot(.), underscore(_), equals(=)
         # filter out any tokens less that 4 characters
         for token in tokens:
-            if not re.search('[^0-9a-zA-Z._=]', token) \
+            if len(token) > 3 and not re.search('[^0-9a-zA-Z._=]', token) \
                     and re.search('[a-zA-Z]', token) and token:
                 filtered_tokens.append(token)
         if len(filtered_tokens) == 0:
