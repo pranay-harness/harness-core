@@ -40,7 +40,10 @@ class SplunkIntelOptimized(object):
         newAnomDetector = KmeansAnomalyDetector()
 
         predictions, anomalies = np.array(
-            newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test, kmeans, self._options.sim_threshold))
+            newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
+                                                              self.splunkDatasetNew.get_control_events_text_as_np(),
+                                                              self.splunkDatasetNew.get_test_events_text_as_np(),
+                                                              kmeans, self._options.sim_threshold))
 
         combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
         combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDatasetNew.get_all_events_text_as_np())
@@ -134,7 +137,7 @@ def run_debug(options):
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunkDataset.load_prod_file_v2('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut.json',
+        splunkDataset.load_prod_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut1.json',
                                      [control_start, control_start],
                                      [test_start, test_start], ['ip-172-31-28-126'], ['ip-172-31-19-157'], prev_out_file)
 
@@ -150,7 +153,6 @@ def run_debug(options):
             file_object = open("result.json", "w")
             file_object.write(splunkDataset.get_output_as_json(options))
             file_object.close()
-
             prev_out_file = './result.json'
 
         control_start = control_start + 1
