@@ -38,6 +38,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -244,6 +245,9 @@ public class HttpState extends State {
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
     String evaluatedUrl = context.renderExpression(getFinalUrl(context));
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
@@ -270,6 +274,7 @@ public class HttpState extends State {
                                       .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
                                       .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl,
                                           evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+                                      .withEnvId(envId)
                                       .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =

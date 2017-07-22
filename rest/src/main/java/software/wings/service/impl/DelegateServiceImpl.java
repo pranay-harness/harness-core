@@ -54,6 +54,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
@@ -94,6 +95,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private HazelcastInstance hazelcastInstance;
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private CacheHelper cacheHelper;
+  @Inject private AssignDelegateService assignDelegateService;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -395,7 +397,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    // TODO(brett): Delegate task filtering, via service
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
     DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
@@ -410,19 +411,28 @@ public class DelegateServiceImpl implements DelegateService {
                                       .doesNotExist()
                                       .field(ID_KEY)
                                       .equal(taskId);
-      UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-      delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+      if (!assignDelegateService.assign(wingsPersistence.executeGetOneQuery(query), delegateId, accountId)) {
+        logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
+        delegateTask = null;
+      } else {
+        logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
+        UpdateOperations<DelegateTask> updateOperations =
+            wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
+        delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+      }
     } else {
       // Sync
       logger.info("Delegate task from cache: {}", delegateTask.getUuid());
-      if (isBlank(delegateTask.getDelegateId())) {
+      if (!isBlank(delegateTask.getDelegateId())) {
+        logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
+        delegateTask = null;
+      } else if (!assignDelegateService.assign(delegateTask, delegateId, accountId)) {
+        logger.info("Delegate {} does not accept task {}", delegateId, taskId);
+        delegateTask = null;
+      } else {
         logger.info("Assigning task {} to delegate {}", taskId, delegateId);
         delegateTask.setDelegateId(delegateId);
         Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
-      } else {
-        logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
-        delegateTask = null;
       }
     }
     return delegateTask;

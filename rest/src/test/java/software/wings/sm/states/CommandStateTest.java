@@ -255,6 +255,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
+                       .withEnvId(ENV_ID)
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
@@ -355,6 +356,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
+                       .withEnvId(ENV_ID)
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
