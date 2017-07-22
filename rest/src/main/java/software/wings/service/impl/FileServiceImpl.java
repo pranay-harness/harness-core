@@ -205,7 +205,9 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
+    logger.info("Deleting file {}", fileId);
     fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileId));
+    logger.info("Deleting file {} success", fileId);
   }
 
   @Override

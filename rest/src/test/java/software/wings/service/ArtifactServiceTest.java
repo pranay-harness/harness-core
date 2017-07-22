@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -20,17 +21,20 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import de.flapdoodle.embed.process.collections.Collections;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -39,6 +43,9 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
@@ -222,30 +229,91 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldNotDeleteArtifactsWithNoArtifactFiles() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
-    artifactService.deleteArtifacts(1000);
+  public void shouldNotDeleteArtifacts() {
+    Application savedApp = anApplication()
+                               .withUuid(APP_ID)
+                               .withAccountId("ACCOUNT_ID")
+                               .withName("AppA")
+                               .withDescription("Description1")
+                               .build();
+    PageResponse<Application> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
+    when(appService.list(any())).thenReturn(pageResponse);
+    artifactService.create(builder.but().build());
+    artifactService.deleteArtifacts(50);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
   }
 
   @Test
   public void shouldDeleteArtifactsWithArtifactFiles() {
+    Application savedApp = anApplication()
+                               .withUuid(APP_ID)
+                               .withAccountId("ACCOUNT_ID")
+                               .withName("AppA")
+                               .withDescription("Description1")
+                               .build();
+    PageResponse<Application> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
+    when(appService.list(any())).thenReturn(pageResponse);
     Artifact savedArtifact = artifactService.create(builder.but().build());
-    ArtifactFile artifactFile =
-        anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
     wingsRule.getDatastore().save(artifactFile);
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
     savedArtifact.setStatus(Status.READY);
     wingsRule.getDatastore().save(savedArtifact);
-    artifactService.deleteArtifacts(1000);
+    artifactService.deleteArtifacts(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+  }
+
+  @Test
+  public void shouldDeleteFailedArtifacts() {
+    Application savedApp = anApplication()
+                               .withUuid(APP_ID)
+                               .withAccountId("ACCOUNT_ID")
+                               .withName("AppA")
+                               .withDescription("Description1")
+                               .build();
+    PageResponse<Application> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
+    when(appService.list(any())).thenReturn(pageResponse);
+    Artifact savedArtifact = artifactService.create(builder.but().build());
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
+    savedArtifact.setStatus(Status.FAILED);
+    wingsRule.getDatastore().save(savedArtifact);
+    artifactService.deleteArtifacts(0);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
   }
 
   @Test
   public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
+    Application savedApp = anApplication()
+                               .withUuid(APP_ID)
+                               .withAccountId("ACCOUNT_ID")
+                               .withName("AppA")
+                               .withDescription("Description1")
+                               .build();
+    PageResponse<Application> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
+    when(appService.list(any())).thenReturn(pageResponse);
     Artifact savedArtifact = artifactService.create(builder.but().build());
-    ArtifactFile artifactFile =
-        anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
     wingsRule.getDatastore().save(artifactFile);
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
     savedArtifact.setStatus(Status.READY);

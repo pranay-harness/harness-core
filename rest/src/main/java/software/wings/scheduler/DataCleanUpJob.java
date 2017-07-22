@@ -1,6 +1,5 @@
 package software.wings.scheduler;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -17,8 +16,8 @@ import javax.inject.Inject;
  */
 public class DataCleanUpJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(DataCleanUpJob.class);
-  private static final long ARTIFACT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000;
-  private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000;
+  private static final long ARTIFACT_RETENTION_SIZE = 25L;
+  private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
 
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
@@ -32,7 +31,7 @@ public class DataCleanUpJob implements Job {
   }
   private void deleteArtifacts() {
     try {
-      artifactService.deleteArtifacts(ARTIFACT_RETENTION_TIME);
+      artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
     } catch (Exception e) {
       logger.warn("Deleting artifacts failed . Reason: {} ", e.getMessage());
     }

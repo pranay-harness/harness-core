@@ -4,26 +4,46 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.awaitility.Awaitility.with;
 import static org.awaitility.Duration.FIVE_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.EXISTS;
+import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.SortOrder.OrderType.DESC;
+import static software.wings.beans.artifact.Artifact.Status.ABORTED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.ERROR;
+import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.NEW;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.Artifact.Status.REJECTED;
+import static software.wings.beans.artifact.Artifact.Status.RUNNING;
+import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.dl.PageRequest.Builder.*;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.awaitility.Duration;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
+import software.wings.beans.SortOrder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
@@ -49,10 +69,14 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -225,12 +249,10 @@ public class ArtifactServiceImpl implements ArtifactService {
   public boolean delete(String appId, String artifactId) {
     Artifact artifact = get(appId, artifactId);
     Validator.notNullCheck("Artifact", artifact);
-
     boolean deleted = wingsPersistence.delete(artifact);
     if (deleted) {
-      executorService.submit(()
-                                 -> artifact.getArtifactFiles().forEach(
-                                     artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS)));
+      artifact.getArtifactFiles().forEach(
+          artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS));
     }
     return deleted;
   }
@@ -268,54 +290,101 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public void deleteArtifacts(long retentionMillis) {
-    int days = (int) retentionMillis / (24 * 60 * 60 * 1000);
-    int batchSize = 200;
-    int limit = 1000;
-    logger.info("Start: Deleting  artifacts older than {} days", days);
-    try {
-      with().pollInterval(2, TimeUnit.SECONDS).await().atMost(FIVE_MINUTES).until(() -> {
-        List<Artifact> artifacts = wingsPersistence.createQuery(Artifact.class)
-                                       .limit(limit)
-                                       .batchSize(batchSize)
-                                       .field("createdAt")
-                                       .lessThan(System.currentTimeMillis() - retentionMillis)
-                                       .field("artifactFiles")
-                                       .exists()
-                                       .asList();
-        if (CollectionUtils.isEmpty(artifacts)) {
-          logger.info("No artifacts with artifact files older than {} days", days);
-          return true;
+  public void deleteArtifacts(long retentionSize) {
+    List<Application> apps =
+        appService.list(aPageRequest().withLimit(UNLIMITED).addFieldsIncluded("uuid").build()).getResponse();
+    for (Application app : apps) {
+      String appId = app.getUuid();
+      List<Artifact> artifacts = list(aPageRequest()
+                                          .addFilter("appId", EQ, appId)
+                                          .addFieldsIncluded("appId")
+                                          .addFieldsIncluded("uuid")
+                                          .addFieldsIncluded("artifactStreamId")
+                                          .withLimit(UNLIMITED)
+                                          .build(),
+          false)
+                                     .getResponse();
+      Set<String> artifactStreamIds = artifacts.stream().map(Artifact::getArtifactStreamId).collect(Collectors.toSet());
+      for (String artifactStreamId : artifactStreamIds) {
+        List<Artifact> toBeDeletedArtifacts =
+            wingsPersistence
+                .query(Artifact.class,
+                    aPageRequest()
+                        .withLimit(UNLIMITED)
+                        .withOffset(String.valueOf(retentionSize))
+                        .addFilter("appId", EQ, appId)
+                        .addFilter("artifactStreamId", EQ, artifactStreamId)
+                        .addFilter("status", IN, NEW, RUNNING, QUEUED, WAITING, READY, APPROVED)
+                        .addFilter("artifactFiles", EXISTS)
+                        .build())
+                .getResponse();
+        if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
+          deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
+        } else {
+          logger.info(
+              "ArtifactStreamId {} for the app {} does not have more than {} successful artifacts. Not deleting",
+              artifactStreamId, appId, retentionSize);
         }
-        logger.info("Deleting artifacts of size: {} ", artifacts.size());
-        artifacts.forEach(artifact -> {
-          try {
-            if (!CollectionUtils.isEmpty(artifact.getArtifactFiles())) {
-              // logger.info("Deleting artifact {} ", artifact.getUuid());
-              delete(artifact);
-            }
-          } catch (Exception ex) {
-            logger.info("Deleting artifact {} failed", artifact.getUuid());
-          }
-        });
-        logger.info("Deleting artifacts of size: {} success", artifacts.size());
-        if (artifacts.size() < limit) {
-          return true;
+        toBeDeletedArtifacts = wingsPersistence
+                                   .query(Artifact.class,
+                                       aPageRequest()
+                                           .withLimit(UNLIMITED)
+                                           .addFilter("appId", EQ, appId)
+                                           .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                           .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED)
+                                           .build())
+                                   .getResponse();
+        if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
+          deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
+        } else {
+          logger.info("ArtifactStreamId {} for the app {} does not have more than {} artifacts. Not deleting",
+              artifactStreamId, appId, retentionSize);
         }
-        return false;
-      });
-    } catch (Exception ex) {
-      logger.info("Failed to delete artifacts older than  {} days", days);
+      }
     }
-    logger.info("End: Deleting artifacts older than {} days success", days);
   }
-  private boolean delete(Artifact artifact) {
-    boolean deleted = wingsPersistence.delete(artifact);
-    if (deleted) {
-      executorService.submit(()
-                                 -> artifact.getArtifactFiles().forEach(
-                                     artifactFile -> fileService.deleteFile(artifactFile.getFileUuid(), ARTIFACTS)));
+  private void deleteArtifacts(String appId, String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
+    logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
+        toBeDeletedArtifacts.size(), appId);
+    try {
+      List<String> artifactUuids = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toList());
+      List<ObjectId> artifactFileUuids =
+          toBeDeletedArtifacts.stream()
+              .flatMap(artifact -> artifact.getArtifactFiles().stream())
+              .map((ArtifactFile artifactFile) -> new ObjectId(artifactFile.getFileUuid()))
+              .collect(Collectors.toList());
+      wingsPersistence.getCollection("artifacts")
+          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactUuids.toArray())));
+      wingsPersistence.getCollection("artifacts.files")
+          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+      wingsPersistence.getCollection("artifacts.chunks")
+          .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+
+    } catch (Exception ex) {
+      logger.warn("Failed to purge(delete) artifacts for artifactStreamId {}  of size: {} for appId {}",
+          artifactStreamId, toBeDeletedArtifacts.size(), appId, ex);
     }
-    return deleted;
+    logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {} success", artifactStreamId,
+        toBeDeletedArtifacts.size(), appId);
+  }
+
+  @Override
+  public void deleteArtifactFiles() {
+    try {
+      List<String> fileUuids = wingsPersistence.getCollection("artifacts").distinct("artifactFiles.fileUuid");
+      logger.info("Artifact with files size {} and uuids {} ", fileUuids.size(), fileUuids);
+      List<ObjectId> artifactFileUuids = wingsPersistence.getCollection("artifacts.files").distinct("_id");
+      logger.info("Artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
+      List<ObjectId> fileObjectUuids =
+          fileUuids.stream().map((String s) -> new ObjectId(s)).collect(Collectors.toList());
+      artifactFileUuids.removeAll(fileObjectUuids);
+      logger.info("Dangling artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
+      wingsPersistence.getCollection("artifacts.files")
+          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+      wingsPersistence.getCollection("artifacts.chunks")
+          .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+    } catch (Exception ex) {
+      logger.warn("Failed to purge (delete) the artifact files", ex);
+    }
   }
 }

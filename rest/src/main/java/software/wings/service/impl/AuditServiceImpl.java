@@ -1,13 +1,18 @@
 package software.wings.service.impl;
 
 import static org.awaitility.Awaitility.with;
+import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import com.google.inject.Singleton;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.WriteResult;
+import org.apache.commons.collections.CollectionUtils;
 import org.awaitility.Duration;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -15,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.User;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -26,8 +32,10 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -138,68 +146,64 @@ public class AuditServiceImpl implements AuditService {
    */
   @Override
   public void deleteAuditRecords(long retentionMillis) {
-    int batchSize = 200;
-    int limit = 1000;
-    int days = (int) retentionMillis / (24 * 60 * 60 * 1000);
-    logger.info("Start: Deleting audit records older than {} days", days);
+    int batchSize = 1000;
+    int limit = 5000;
+    long days = retentionMillis / (24 * 60 * 60 * 1000L);
+    logger.info("Start: Deleting  audit records older than {} time", (System.currentTimeMillis() - retentionMillis));
     try {
-      with().pollInterval(2, TimeUnit.SECONDS).await().atMost(Duration.FIVE_MINUTES).until(() -> {
+      logger.info("Start: Deleting audit records less than {} days: ", days);
+      with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
         List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class)
                                              .limit(limit)
                                              .batchSize(batchSize)
                                              .field("createdAt")
                                              .lessThan(System.currentTimeMillis() - retentionMillis)
                                              .asList();
-        if (auditHeaders.size() == 0) {
-          logger.info("No audit records older than {} days", days);
+        if (CollectionUtils.isEmpty(auditHeaders)) {
+          logger.info("No more audit records older than {} days", days);
           return true;
         }
-        logger.info("Deleting audit records of size: {} ", auditHeaders.size());
-        for (AuditHeader auditHeader : auditHeaders) {
-          try {
-            delete(auditHeader);
-          } catch (Exception ex) {
-            logger.info("Failed to delete audit record {} ", auditHeader);
-          }
+        try {
+          logger.info("Deleting audit records of size: {} ", auditHeaders.size());
+
+          List<String> auditHeaderIds = auditHeaders.stream().map(AuditHeader::getUuid).collect(Collectors.toList());
+          List<ObjectId> requestPayloadIds =
+              auditHeaders.stream()
+                  .filter(auditHeader -> auditHeader.getRequestPayloadUuid() != null)
+                  .map((AuditHeader auditHeader) -> new ObjectId(auditHeader.getRequestPayloadUuid()))
+                  .collect(Collectors.toList());
+          List<ObjectId> responsePayloadIds =
+              auditHeaders.stream()
+                  .filter(auditHeader -> auditHeader.getResponsePayloadUuid() != null)
+                  .map((AuditHeader auditHeader) -> new ObjectId(auditHeader.getResponsePayloadUuid()))
+                  .collect(Collectors.toList());
+
+          wingsPersistence.getCollection("audits").remove(
+              new BasicDBObject("_id", new BasicDBObject("$in", auditHeaderIds.toArray())));
+
+          wingsPersistence.getCollection("audits.files")
+              .remove(new BasicDBObject("_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+          wingsPersistence.getCollection("audits.chunks")
+              .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+
+          wingsPersistence.getCollection("audits.files")
+              .remove(new BasicDBObject("_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+          wingsPersistence.getCollection("audits.chunks")
+              .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+
+        } catch (Exception ex) {
+          logger.info("Failed to delete audit audit records of size: {} ", auditHeaders.size());
         }
         logger.info("Deleting audit records of size: {} success", auditHeaders.size());
-        if (auditHeaders.size() < batchSize) {
+        if (auditHeaders.size() < limit) {
           return true;
         }
         return false;
       });
     } catch (Exception ex) {
-      logger.info("Failed to delete audit records older than last {} days", days);
+      logger.info(
+          "Failed to delete audit records older than last {} days within 10 minutes. Reason:{}", days, ex.getMessage());
     }
     logger.info("Deleted audit records  older than {} days", days);
-  }
-  private boolean delete(AuditHeader auditHeader) {
-    boolean deleted = wingsPersistence.delete(auditHeader);
-    if (deleted) {
-      deleteAuditPayLoad(auditHeader);
-    }
-    return deleted;
-  }
-
-  private boolean deleteAuditPayLoad(AuditHeader auditHeader) {
-    String requestPayloadUuid = auditHeader.getRequestPayloadUuid();
-    if (requestPayloadUuid != null) {
-      try {
-        logger.info("Deleting Request Payload File {}", requestPayloadUuid);
-        executorService.submit(() -> fileService.deleteFile(requestPayloadUuid, AUDITS));
-      } catch (Exception ex) {
-        logger.info("Failed to delete audit header request payload file {}", requestPayloadUuid);
-      }
-    }
-    String responsePayloadUuid = auditHeader.getResponsePayloadUuid();
-    if (responsePayloadUuid != null) {
-      try {
-        logger.info("Deleting Response Payload File {}", responsePayloadUuid);
-        executorService.submit(() -> fileService.deleteFile(responsePayloadUuid, AUDITS));
-      } catch (Exception ex) {
-        logger.info("Failed to delete audit header response payload file {}", responsePayloadUuid);
-      }
-    }
-    return false;
   }
 }

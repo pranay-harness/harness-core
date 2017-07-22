@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
@@ -29,14 +28,26 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private JobScheduler jobScheduler;
 
-  private static final long ARTIFACT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000;
-  private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000;
+  private static final long ARTIFACT_RETENTION_SIZE = 25L;
+  private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
 
   @Test
   public void deleteArtifacts() {
     System.out.println("Deleting artifacts");
     try {
-      artifactService.deleteArtifacts(ARTIFACT_RETENTION_TIME);
+      artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
+    } catch (Exception e) {
+      System.out.println("Deleting artifacts failed");
+      e.printStackTrace();
+    }
+    System.out.println("Deleting artifacts completed");
+  }
+
+  @Test
+  public void deleteArtifactFiles() {
+    System.out.println("Deleting artifact files");
+    try {
+      artifactService.deleteArtifactFiles();
     } catch (Exception e) {
       System.out.println("Deleting artifacts failed");
       e.printStackTrace();
@@ -61,16 +72,15 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
    */
   @Test
   public void addCronForSystemDataCleanup() {
-    String cronExpression = "0 59 23 * * ?";
     JobDetail job = JobBuilder.newJob(DataCleanUpJob.class)
                         .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
                         .build();
 
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
-                          .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-                          .build();
-
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(30).repeatForever())
+            .build();
     jobScheduler.scheduleJob(job, trigger);
   }
 }

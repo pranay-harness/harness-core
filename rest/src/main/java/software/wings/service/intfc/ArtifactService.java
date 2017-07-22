@@ -120,7 +120,14 @@ public interface ArtifactService {
   /**
    * Delete by artifact stream.
    *
-   * @param retentionMillis the retention millis
+   * @param retentionSize the size of the artifacts to be retained
    */
-  void deleteArtifacts(long retentionMillis);
+  void deleteArtifacts(long retentionSize);
+
+  /**
+   * Delete by artifact stream.
+   *
+   *
+   */
+  void deleteArtifactFiles();
 }
