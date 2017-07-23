@@ -33,14 +33,14 @@ class SplunkDatasetNew(object):
                 self.control_events[event['cluster_label']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['cluster_label']].append(
-                dict(prev_label=int(event['cluster_label']), text=event.get('_raw'),
+                dict(cluster_label=int(event['cluster_label']), text=event.get('_raw'),
                      message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
                                                old_label=event['cluster_label'])]))
         elif event_type == 'test':
             if event['cluster_label'] not in self.test_events:
                 self.test_events[event['cluster_label']] = []
             self.test_events[event['cluster_label']].append(
-                dict(prev_label=int(event['cluster_label']), text=event.get('_raw'),
+                dict(cluster_label=int(event['cluster_label']), text=event.get('_raw'),
                      message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
                                                old_label=event['cluster_label'])]))
         elif event_type == 'control_prod':
@@ -48,7 +48,7 @@ class SplunkDatasetNew(object):
                 self.control_events[event['clusterLabel']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['clusterLabel']].append(
-                dict(prev_label=int(event['clusterLabel']), text=event.get('logMessage'),
+                dict(cluster_label=int(event['clusterLabel']), text=event.get('logMessage'),
                      message_frequencies=[dict(count=event.get('count'), time=event.get('timeStamp'),
                                                host=host,
                                                old_label=event.get('clusterLabel'))]))
@@ -57,7 +57,7 @@ class SplunkDatasetNew(object):
                 self.test_events[event['clusterLabel']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.test_events[event['clusterLabel']].append(
-                dict(prev_label=int(event['clusterLabel']), text=event.get('logMessage'),
+                dict(cluster_label=int(event['clusterLabel']), text=event.get('logMessage'),
                      message_frequencies=[dict(count=event.get('count'),
                                                time=event.get('timeStamp'),
                                                host=host,
@@ -68,15 +68,14 @@ class SplunkDatasetNew(object):
             if label not in self.control_events:
                 self.control_events[label] = []
             self.control_events[label].append(
-                dict(prev_label=event['cluster_label'], text=event.get('text'), message_frequencies=event.get('message_frequencies')))
+                dict(cluster_label=event['cluster_label'], text=event.get('text'), message_frequencies=event.get('message_frequencies')))
         elif event_type == 'test_prev':
-            prev_label = event['cluster_label'] if 'cluster_label' in event else event['prev_label']
-            label = 10000 + prev_label
+            label = 10000 + event['cluster_label']
             if label not in self.test_events:
                 self.test_events[label] = []
             # event.get('count').append(label)
             self.test_events[label].append(
-                dict(prev_label=prev_label, text=event.get('text'), message_frequencies=event.get('message_frequencies')))
+                dict(cluster_label=event['cluster_label'], text=event.get('text'), message_frequencies=event.get('message_frequencies')))
 
     def save_to_harness(self, url, payload):
         SplunkHarnessLoader.post_to_wings_server(url, payload)
