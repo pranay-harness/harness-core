@@ -319,6 +319,8 @@ public class ArtifactServiceImpl implements ArtifactService {
                         .build())
                 .getResponse();
         if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
+          logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
+              toBeDeletedArtifacts.size(), appId);
           deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
         } else {
           logger.info(
@@ -335,17 +337,17 @@ public class ArtifactServiceImpl implements ArtifactService {
                                            .build())
                                    .getResponse();
         if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
+          logger.info("Deleting failed artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
+              toBeDeletedArtifacts.size(), appId);
           deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
         } else {
-          logger.info("ArtifactStreamId {} for the app {} does not have more than {} artifacts. Not deleting",
-              artifactStreamId, appId, retentionSize);
+          logger.info(
+              "ArtifactStreamId {} for the app {} does not have failed artifacts to delete", artifactStreamId, appId);
         }
       }
     }
   }
   private void deleteArtifacts(String appId, String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
-    logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
-        toBeDeletedArtifacts.size(), appId);
     try {
       List<String> artifactUuids = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toList());
       List<ObjectId> artifactFileUuids =
@@ -359,7 +361,6 @@ public class ArtifactServiceImpl implements ArtifactService {
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-
     } catch (Exception ex) {
       logger.warn("Failed to purge(delete) artifacts for artifactStreamId {}  of size: {} for appId {}",
           artifactStreamId, toBeDeletedArtifacts.size(), appId, ex);

@@ -31,14 +31,18 @@ public class DataCleanUpJob implements Job {
   }
   private void deleteArtifacts() {
     try {
+      logger.info("Deleting artifacts");
       artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
+      logger.info("Deleting artifacts success");
     } catch (Exception e) {
       logger.warn("Deleting artifacts failed . Reason: {} ", e.getMessage());
     }
   }
   private void deleteAuditRecords() {
     try {
+      logger.info("Deleting audit records");
       auditService.deleteAuditRecords(AUDIT_RETENTION_TIME);
+      logger.info("Deleting audit records success");
     } catch (Exception e) {
       logger.warn("Deleting audit records failed Reason:", e.getMessage());
     }

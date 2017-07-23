@@ -72,15 +72,23 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
    */
   @Test
   public void addCronForSystemDataCleanup() {
+    System.out.println("Adding System Data Cleanup cron");
     JobDetail job = JobBuilder.newJob(DataCleanUpJob.class)
                         .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
+                        .withDescription("Data cleanup job that deletes records")
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
+            .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_NAME")
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(30).repeatForever())
             .build();
     jobScheduler.scheduleJob(job, trigger);
+    System.out.println("Added System Data Cleanup cron");
+  }
+
+  @Test
+  public void deleteCronForSystemDataCleanup() {
+    jobScheduler.deleteJob("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_NAME");
   }
 }
