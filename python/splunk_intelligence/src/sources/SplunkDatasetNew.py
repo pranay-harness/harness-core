@@ -98,7 +98,7 @@ class SplunkDatasetNew(object):
                                                                  options.test_nodes,
                                                                  options.query)
 
-        if control_events is None and test_events is not None:
+        if control_events is None and test_events is None:
             logger.error("No new control events or test events")
             sys.exit(2)
 
