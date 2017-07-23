@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 """
 Handles sequences where all values are the same.
@@ -9,7 +10,7 @@ to detect anomalies
 
 class ZeroDeviationClassifier(object):
     klassifier = {}
-
+    tolerance = 5
     #TODO values should be a 1d array
     def fit_transform(self, label, values, threshold):
 
@@ -39,18 +40,20 @@ class ZeroDeviationClassifier(object):
         threshold = self.klassifier[label][1]
         vals = map(int, values[:, 1])
         score = 0.0
-        predictions = [1] * len(vals)
+        predictions = np.array([1] * len(vals))
         for i, value in enumerate(vals):
-            anomaly = 0
+            anomaly = False
+            if math.floor(abs(value - mean)) > self.tolerance:
+                anomaly = True
             # Higher is bad
             if flag == 0:
-                anomaly = (value - mean) / mean > threshold
+                anomaly &= math.floor(value - mean)  > math.ceil(threshold * mean)
             # Lower is bad
             elif flag == 1:
-                anomaly = (value - mean) / mean < threshold
+                anomaly &= math.floor(value - mean) < math.ceil(threshold * mean)
             # Both are bad
             else:
-                anomaly = abs(value - mean) / mean > threshold
+                anomaly &= math.floor(abs(value - mean)) > math.ceil(threshold * mean)
 
             if anomaly:
                 predictions[i] = -1
@@ -58,11 +61,12 @@ class ZeroDeviationClassifier(object):
         return predictions, ((len(values) - score) / len(values))
 
 
-# Uncomment to debug
+#Uncomment to debug
 # zdc = ZeroDeviationClassifier()
 # zdc.fit_transform(1, np.array([[1, 7],
 #                                [1, 7],
-#                                [1, 7]]), 0.1)
-# predictions, score = zdc.predict(1, np.array([[1, 8]]))
-# print(len(np.where(predictions == -1)[0]) == 0)
+#                                [1, 7]]), 0.05)
+# predictions, score = zdc.predict(1, np.array([[1, 13]]))
+# print(predictions == -1)
+# print(len(np.where(predictions == -1)[0]) == 1)
 # print(predictions, score)

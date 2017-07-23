@@ -1,8 +1,11 @@
+import math
+
 import numpy as np
 
 
 class ThreeSigmaClassifier(object):
     klassifier = {}
+    tolerance = 5
 
     def fit_transform(self, label, values):
         vals = map(int, values[:, 1])
@@ -14,21 +17,28 @@ class ThreeSigmaClassifier(object):
         std = self.klassifier[label][1]
         vals = map(int, values[:, 1])
         score = 0.0
-        predictions = [1] * len(vals)
+        predictions = np.array([1] * len(vals))
         for i, value in enumerate(vals):
-            anomaly = 0
+            anomaly = False
+            if math.floor(abs(value - mean)) > self.tolerance:
+                anomaly = True
             if flag == 0:
-                anomaly = (value - mean) / std > 3
+                anomaly &= math.floor(value - mean) > math.ceil(3 * std)
             elif flag == 1:
-                anomaly = (value - mean) / std < 3
+                anomaly &= math.floor(value - mean) < math.ceil(3 * std)
             else:
-                anomaly = abs(value - mean) / std > 3
+                anomaly &= math.floor(abs(value - mean)) > math.ceil(3 * std)
 
-            if anomaly == True:
+            if anomaly:
                 predictions[i] = -1
                 score = score + 1
         return predictions, ((len(values) - score) / len(values))
 
-# threeSigmaClassifier =    ThreeSigmaClassifier()
 
-# threeSigmaClassifier.fit_transform('1', [1,4,7,9])
+# zdc = ThreeSigmaClassifier()
+# zdc.fit_transform(1, np.array([[1, 1],
+#                                    [1, 1],
+#                                    [1, 1],
+#                                    [1,2]]))
+# predictions, score = zdc.predict(1, np.array([[1, 8], [1,8]]))
+# print(predictions, score)
