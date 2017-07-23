@@ -22,9 +22,12 @@ class SplunkIntelOptimized(object):
         self._options = _options
 
     def run(self):
-        logger.info('Running using file source')
 
-        # TODO -Can min_df be set higher
+        if not bool(self.splunkDatasetNew.control_events):
+            logger.error("No control events. Nothing to do")
+            return self.splunkDatasetNew
+
+        # TODO Can min_df be set higher or max_df set lower
         min_df = 1
         max_df = 1.0
 
@@ -36,10 +39,13 @@ class SplunkIntelOptimized(object):
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()
 
-        tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDatasetNew.get_test_events_text_as_np()))
-        newAnomDetector = KmeansAnomalyDetector()
+        predictions = []
+        anomalies = []
+        if bool(self.splunkDatasetNew.test_events):
+            tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDatasetNew.get_test_events_text_as_np()))
+            newAnomDetector = KmeansAnomalyDetector()
 
-        predictions, anomalies = np.array(
+            predictions, anomalies = np.array(
             newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
                                                               self.splunkDatasetNew.get_control_events_text_as_np(),
                                                               self.splunkDatasetNew.get_test_events_text_as_np(),
@@ -137,15 +143,13 @@ def run_debug(options):
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunkDataset.load_prod_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut1.json',
+        splunkDataset.load_prod_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut2.json',
                                      [control_start, control_start],
                                      [test_start, test_start], ['ip-172-31-28-126'], ['ip-172-31-19-157'], prev_out_file)
 
-        if bool(splunkDataset.get_control_events()):
+        print(options)
 
-
-
-            print(options)
+        if splunkDataset.new_data:
 
             splunkIntel = SplunkIntelOptimized(splunkDataset, options)
             splunkDataset = splunkIntel.run()
@@ -172,12 +176,11 @@ def main(args):
 
     splunkDataset.load_from_harness(options)
 
-    # Add the production flow to load data here
-
     splunkIntel = SplunkIntelOptimized(splunkDataset, options)
     splunkDataset = splunkIntel.run()
+
     logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url,
-                                              splunkDataset.get_output_as_json(options)))
+                                                  splunkDataset.get_output_as_json(options)))
 
 
 # result = {'args': args[1:], 'events': splunkDataset.get_all_events_as_json()}

@@ -1,10 +1,11 @@
 import json
+import logging
+import sys
+
+import numpy as np
 
 from SplunkFileSource import SplunkFileSource
-import numpy as np
-import logging
 from SplunkHarnessLoader import SplunkHarnessLoader
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class SplunkDatasetNew(object):
         self.test_clusters = {}
         self.anomalies = []
         self.anom_clusters = {}
+        self.new_data = True
 
     def add_event(self, event, event_type):
 
@@ -31,22 +33,22 @@ class SplunkDatasetNew(object):
                 self.control_events[event['cluster_label']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['cluster_label']].append(
-                dict(text=event.get('_raw'),
+                dict(prev_label=int(event['cluster_label']), text=event.get('_raw'),
                      message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
                                                old_label=event['cluster_label'])]))
         elif event_type == 'test':
             if event['cluster_label'] not in self.test_events:
                 self.test_events[event['cluster_label']] = []
             self.test_events[event['cluster_label']].append(
-                dict(text=event.get('_raw'),
+                dict(prev_label=int(event['cluster_label']), text=event.get('_raw'),
                      message_frequencies=[dict(count=event.get('cluster_count'), time=event.get('_time'), host=host,
-                                               label=event['cluster_label'])]))
+                                               old_label=event['cluster_label'])]))
         elif event_type == 'control_prod':
             if event['clusterLabel'] not in self.control_events:
                 self.control_events[event['clusterLabel']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.control_events[event['clusterLabel']].append(
-                dict(text=event.get('logMessage'),
+                dict(prev_label=int(event['clusterLabel']), text=event.get('logMessage'),
                      message_frequencies=[dict(count=event.get('count'), time=event.get('timeStamp'),
                                                host=host,
                                                old_label=event.get('clusterLabel'))]))
@@ -55,7 +57,7 @@ class SplunkDatasetNew(object):
                 self.test_events[event['clusterLabel']] = []
             # print(event['cluster_label'], event, self.control_events[event['cluster_label']])
             self.test_events[event['clusterLabel']].append(
-                dict(text=event.get('logMessage'),
+                dict(prev_label=int(event['clusterLabel']), text=event.get('logMessage'),
                      message_frequencies=[dict(count=event.get('count'),
                                                time=event.get('timeStamp'),
                                                host=host,
@@ -66,33 +68,28 @@ class SplunkDatasetNew(object):
             if label not in self.control_events:
                 self.control_events[label] = []
             self.control_events[label].append(
-                dict(text=event.get('text'), message_frequencies=event.get('message_frequencies')))
+                dict(prev_label=event['cluster_label'], text=event.get('text'), message_frequencies=event.get('message_frequencies')))
         elif event_type == 'test_prev':
-            label = 10000 + event['cluster_label']
+            prev_label = event['cluster_label'] if 'cluster_label' in event else event['prev_label']
+            label = 10000 + prev_label
             if label not in self.test_events:
                 self.test_events[label] = []
             # event.get('count').append(label)
             self.test_events[label].append(
-                dict(text=event.get('text'), message_frequencies=event.get('message_frequencies')))
+                dict(prev_label=prev_label, text=event.get('text'), message_frequencies=event.get('message_frequencies')))
 
     def save_to_harness(self, url, payload):
         SplunkHarnessLoader.post_to_wings_server(url, payload)
 
     # Called with the production workflow
     def load_from_harness(self, options):
+
         control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
                                                                     options.application_id,
                                                                     options.state_execution_id,
                                                                     options.log_collection_minute,
                                                                     options.control_nodes,
                                                                     options.query)
-
-        if control_events is None or len(control_events) == 0:
-            logger.error("Did not get any control events")
-            sys.exit(2)
-
-        for dict in control_events:
-            self.add_event(dict, 'control')
 
         test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
                                                                  options.application_id,
@@ -101,35 +98,38 @@ class SplunkDatasetNew(object):
                                                                  options.test_nodes,
                                                                  options.query)
 
-        if test_events is None or len(test_events) == 0:
-            logger.error("Did not get any test events")
+        if control_events is None and test_events is not None:
+            logger.error("No new control events or test events")
             sys.exit(2)
 
-        for dict in test_events:
-            self.add_event(dict, 'test')
+        self.new_data = True
+        for event in control_events:
+            self.add_event(event, 'control')
+        for event in test_events:
+            self.add_event(event, 'test')
 
         prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
                                                                        options.application_id,
                                                                        options.state_execution_id,
                                                                        options.query)
-        if prev_state is None:
-            return
+        if prev_state is not None:
 
-        if prev_state.get('control_events') is not None:
-            for key, events in prev_state.get('control_events').items():
-                for event in events:
-                    self.add_event(event, 'control_prev')
+            if prev_state.get('control_events') is not None:
+                for key, events in prev_state.get('control_events').items():
+                    for event in events:
+                        self.add_event(event, 'control_prev')
 
-        if prev_state.get('test_events') is not None:
-            for key, events in prev_state.get('test_events').items():
-                for event in events:
-                    self.add_event(event, 'test_prev')
+            if prev_state.get('test_events') is not None:
+                for key, events in prev_state.get('test_events').items():
+                    for event in events:
+                        self.add_event(event, 'test_prev')
 
     # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
     def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
         raw_events = SplunkFileSource.load_data(file_name)
         minute = 0
         count = 0
+        self.new_data = True
         for idx, event in enumerate(raw_events):
             count = count + 1
             if event.get('cluster_label') == '1':
@@ -139,6 +139,10 @@ class SplunkDatasetNew(object):
                 self.add_event(event, 'control')
             if test_window[0] <= minute <= test_window[1]:
                 self.add_event(event, 'test')
+
+        if not bool(self.control_events) and not bool(self.test_events):
+            self.new_data = False
+            return
 
         if prev_out_file is not None:
             prev_out = SplunkFileSource.load_data(prev_out_file)
@@ -152,9 +156,10 @@ class SplunkDatasetNew(object):
 
     # Used in SplunkAnomaly : To debug prod runs
     def load_prod_file(self, file_name, control_window, test_window,
-                          control_nodes, test_nodes, prev_out_file=None):
+                       control_nodes, test_nodes, prev_out_file=None):
         raw_events = SplunkFileSource.load_data(file_name)
         print(control_window, test_window, control_nodes, test_nodes)
+        self.new_data = True
         for idx, event in enumerate(raw_events):
 
             minute = event.get('logCollectionMinute')
@@ -164,6 +169,10 @@ class SplunkDatasetNew(object):
             if test_window[0] <= minute <= test_window[1] \
                     and event.get('host') in test_nodes:
                 self.add_event(event, 'test_prod')
+
+        if not bool(self.control_events) and not bool(self.test_events):
+            self.new_data = False
+            return
 
         if prev_out_file is not None:
             prev_out = SplunkFileSource.load_data(prev_out_file)
