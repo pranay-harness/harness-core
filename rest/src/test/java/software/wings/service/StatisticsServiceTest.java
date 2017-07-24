@@ -278,7 +278,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
-    DeploymentStatistics deploymentStatistics = statisticsService.getDeploymentStatistics(ACCOUNT_ID, APP_ID, 30);
+    DeploymentStatistics deploymentStatistics =
+        statisticsService.getDeploymentStatistics(ACCOUNT_ID, asList(APP_ID), 30);
 
     assertThat(deploymentStatistics.getStatsMap()).hasSize(3).containsOnlyKeys(EnvironmentType.values());
 

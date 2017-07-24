@@ -53,11 +53,11 @@ public interface StatisticsService {
    *
    *
    * @param accountId
-   * @param appId     the app id
+   * @param appIds    the app ids
    * @param numOfDays the num of days
    * @return the deployment statistics
    */
-  DeploymentStatistics getDeploymentStatistics(@NotNull String accountId, String appId, int numOfDays);
+  DeploymentStatistics getDeploymentStatistics(@NotNull String accountId, List<String> appIds, int numOfDays);
 
   /**
    * Gets notification count.

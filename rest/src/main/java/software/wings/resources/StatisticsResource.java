@@ -15,6 +15,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.StatisticsService;
 
+import java.util.List;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -63,8 +64,8 @@ public class StatisticsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<DeploymentStatistics> deploymentStats(@QueryParam("accountId") String accountId,
-      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
-    return new RestResponse<>(statisticsService.getDeploymentStatistics(accountId, appId, numOfDays));
+      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getDeploymentStatistics(accountId, appIds, numOfDays));
   }
 
   @GET

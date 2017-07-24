@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
@@ -244,7 +245,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
   }
   @Override
-  public DeploymentStatistics getDeploymentStatistics(String accountId, String appId, int numOfDays) {
+  public DeploymentStatistics getDeploymentStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
     PageRequest pageRequest =
@@ -255,15 +256,15 @@ public class StatisticsServiceImpl implements StatisticsService {
                 aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
-    if (isNullOrEmpty(appId)) {
-      List<String> appIds = getAppIdsForAccount(accountId);
+    if (isEmpty(appIds)) {
+      appIds = getAppIdsForAccount(accountId);
       if (isEmpty(appIds)) {
         return null;
       }
       pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
 
     } else {
-      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build());
+      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
     }
 
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
