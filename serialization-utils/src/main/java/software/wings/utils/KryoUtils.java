@@ -90,6 +90,7 @@ public class KryoUtils {
       return baos.toByteArray();
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new RuntimeException(exception);
     }
   }
@@ -104,6 +105,7 @@ public class KryoUtils {
       output.flush();
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
+      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new RuntimeException(exception);
     }
   }
