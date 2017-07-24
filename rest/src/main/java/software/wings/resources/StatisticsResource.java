@@ -42,8 +42,9 @@ public class StatisticsResource {
   @Path("top-consumers")
   @Timed
   @ExceptionMetered
-  public RestResponse<WingsStatistics> topConsumers(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(statisticsService.getTopConsumers(accountId));
+  public RestResponse<WingsStatistics> topConsumers(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getTopConsumers(accountId, appIds));
   }
 
   /**
@@ -55,8 +56,9 @@ public class StatisticsResource {
   @Path("user-stats/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<UserStatistics> userStatistics(@PathParam("accountId") String accountId) {
-    return new RestResponse<>(statisticsService.getUserStats(accountId));
+  public RestResponse<UserStatistics> userStatistics(
+      @PathParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getUserStats(accountId, appIds));
   }
 
   @GET
@@ -73,8 +75,9 @@ public class StatisticsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<NotificationCount> notificationCount(@QueryParam("accountId") String accountId,
-      @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow, @QueryParam("appId") String appId) {
-    return new RestResponse<>(statisticsService.getNotificationCount(accountId, appId, minutesFromNow));
+      @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow,
+      @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getNotificationCount(accountId, appIds, minutesFromNow));
   }
 
   @GET

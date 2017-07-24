@@ -10,6 +10,8 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
@@ -91,12 +93,19 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private ActivityService activityService;
 
   @Override
-  public WingsStatistics getTopConsumers(String accountId) {
-    List<Application> applications =
-        appService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build(), false, 0, 0)
-            .getResponse();
-    ImmutableMap<String, Application> appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
-    List<TopConsumer> topConsumers =
+  public WingsStatistics getTopConsumers(String accountId, List<String> appIds) {
+    ImmutableMap<String, Application> appIdMap;
+    List<TopConsumer> topConsumers;
+    List<Application> applications;
+    if (CollectionUtils.isEmpty(appIds)) {
+      applications =
+          appService.list(aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0).getResponse();
+    } else {
+      applications =
+          appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
+    }
+    appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
+    topConsumers =
         getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
     return new TopConsumersStatistics(topConsumers);
@@ -112,9 +121,8 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(
-                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
-            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter("appId", IN, appIds.toArray())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
 
@@ -187,7 +195,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public UserStatistics getUserStats(String accountId) {
+  public UserStatistics getUserStats(String accountId, List<String> appIds) {
     // TODO: Needs to see what's purpose for this.
     User user = UserThreadLocal.get();
     if (user == null) {
@@ -196,18 +204,23 @@ public class StatisticsServiceImpl implements StatisticsService {
     long statsFetchedOn = user.getStatsFetchedOn();
     UserStatistics userStatistics = anUserStatistics().withLastFetchedOn(statsFetchedOn).build();
 
-    List<String> appIds = getAppIdsForAccount(accountId);
-    if (isEmpty(appIds)) {
-      return userStatistics;
+    List<String> authorizedAppIds;
+    if (CollectionUtils.isEmpty(appIds)) {
+      authorizedAppIds = getAppIdsForAccount(accountId);
+      if (CollectionUtils.isEmpty(authorizedAppIds)) {
+        return userStatistics;
+      }
+
+    } else {
+      authorizedAppIds = appIds;
     }
 
     PageRequest pageRequest =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
-            .addFilter(
-                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
-            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter("appId", IN, authorizedAppIds.toArray())
             .build();
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false).getResponse();
@@ -236,8 +249,8 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   private List<String> getAppIdsForAccount(String accountId) {
-    List<Application> applications = appService.list(
-        PageRequest.Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).build(), false, 0, 0);
+    List<Application> applications =
+        appService.list(PageRequest.Builder.aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0);
     if (applications == null) {
       return new ArrayList<>();
     } else {
@@ -252,19 +265,18 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(
-                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
-    if (isEmpty(appIds)) {
+    if (CollectionUtils.isEmpty(appIds)) {
       appIds = getAppIdsForAccount(accountId);
-      if (isEmpty(appIds)) {
+      if (CollectionUtils.isEmpty(appIds)) {
         return null;
       }
-      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
+      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
 
     } else {
-      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
+      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
     }
 
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
@@ -288,35 +300,37 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public NotificationCount getNotificationCount(String accountId, String appId, int minutesFromNow) {
+  public NotificationCount getNotificationCount(String accountId, List<String> appIds, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
 
     PageRequest actionableNotificationRequest = aPageRequest()
-                                                    .addFilter("accountId", Operator.EQ, accountId)
-                                                    .addFilter("actionable", Operator.EQ, true)
-                                                    .addFilter("complete", Operator.EQ, false)
+                                                    .addFilter("accountId", EQ, accountId)
+                                                    .addFilter("actionable", EQ, true)
+                                                    .addFilter("complete", EQ, false)
                                                     .build();
 
     PageRequest nonActionableNotificationRequest = aPageRequest()
-                                                       .addFilter("accountId", Operator.EQ, accountId)
+                                                       .addFilter("accountId", EQ, accountId)
                                                        .addFilter("createdAt", Operator.GT, queryStartEpoch)
-                                                       .addFilter("actionable", Operator.EQ, false)
+                                                       .addFilter("actionable", EQ, false)
                                                        .build();
 
     PageRequest failureRequest = aPageRequest()
                                      .addFilter("createdAt", Operator.GT, queryStartEpoch)
-                                     .addFilter("status", Operator.EQ, FAILED)
+                                     .addFilter("status", EQ, FAILED)
                                      .addFieldsIncluded("appId")
                                      .build();
-    List<String> appIds = getAppIdsForAccount(accountId);
-    if (!isEmpty(appIds)) {
-      failureRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
-    }
-
-    if (appId != null) {
-      actionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
-      nonActionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
-      failureRequest.addFilter("appId", appId, Operator.EQ);
+    List<String> authorizedAppIds;
+    if (CollectionUtils.isEmpty(appIds)) {
+      authorizedAppIds = getAppIdsForAccount(accountId);
+      if (!CollectionUtils.isEmpty(authorizedAppIds)) {
+        failureRequest.addFilter(aSearchFilter().withField("appId", IN, authorizedAppIds.toArray()).build());
+      }
+    } else {
+      authorizedAppIds = appIds;
+      actionableNotificationRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
+      nonActionableNotificationRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
+      failureRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
     }
 
     int actionableNotificationCount = notificationService.list(actionableNotificationRequest).getResponse().size();

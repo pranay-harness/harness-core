@@ -19,8 +19,9 @@ public interface StatisticsService {
    *
    * @return the top consumers
    * @param accountId
+   * @param appIds Application Ids
    */
-  WingsStatistics getTopConsumers(@NotNull String accountId);
+  WingsStatistics getTopConsumers(@NotNull String accountId, List<String> appIds);
 
   /**
    * Gets application key stats.
@@ -45,8 +46,9 @@ public interface StatisticsService {
    *
    * @return the user stats
    * @param accountId
+   * @param appIds
    */
-  UserStatistics getUserStats(@NotNull String accountId);
+  UserStatistics getUserStats(@NotNull String accountId, List<String> appIds);
 
   /**
    * Gets deployment statistics.
@@ -64,9 +66,9 @@ public interface StatisticsService {
    *
    *
    * @param accountId
-   * @param appId          the app id
+   * @param appIds          the app ids
    * @param minutesFromNow the minutes from now
    * @return the notification count
    */
-  NotificationCount getNotificationCount(@NotNull String accountId, String appId, int minutesFromNow);
+  NotificationCount getNotificationCount(@NotNull String accountId, List<String> appIds, int minutesFromNow);
 }

@@ -637,6 +637,10 @@ public class UserServiceImpl implements UserService {
   @Override
   public AccountRole getUserAccountRole(String userId, String accountId) {
     Account account = accountService.get(accountId);
+    if (account == null) {
+      String message = "Account [" + accountId + "] does not exist";
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
+    }
     User user = get(userId);
 
     if (user.isAccountAdmin(accountId)) {

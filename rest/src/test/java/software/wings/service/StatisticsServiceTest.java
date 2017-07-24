@@ -115,7 +115,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                    new StatusCount(ExecutionStatus.FAILED, 5)))
                                .build())
                         .iterator());
-    TopConsumersStatistics topConsumers = (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID);
+    TopConsumersStatistics topConsumers = (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID, null);
     assertThat(topConsumers.getTopConsumers())
         .hasSize(1)
         .containsExactly(aTopConsumer()
@@ -126,6 +126,28 @@ public class StatisticsServiceTest extends WingsBaseTest {
                              .build());
   }
 
+  @Test
+  public void shouldGetTopConsumersMultipleAppIds() {
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+    when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
+        .thenReturn(asList(anActivityStatusAggregation()
+                               .withAppId(APP_ID)
+                               .withStatus(asList(new StatusCount(ExecutionStatus.SUCCESS, 5),
+                                   new StatusCount(ExecutionStatus.FAILED, 5)))
+                               .build())
+                        .iterator());
+    TopConsumersStatistics topConsumers =
+        (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID, asList(APP_ID));
+    assertThat(topConsumers.getTopConsumers())
+        .hasSize(1)
+        .containsExactly(aTopConsumer()
+                             .withAppId(APP_ID)
+                             .withSuccessfulActivityCount(5)
+                             .withFailedActivityCount(5)
+                             .withTotalCount(10)
+                             .build());
+  }
   @Test
   public void shouldGetApplicationKeyStats() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
@@ -218,7 +240,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
 
-    UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID);
+    UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID, null);
     assertThat(userStats.getDeploymentCount()).isEqualTo(2);
     assertThat(userStats.getLastFetchedOn()).isEqualTo(statusFetchedOn);
     assertThat(userStats.getAppDeployments())
@@ -228,6 +250,44 @@ public class StatisticsServiceTest extends WingsBaseTest {
     UserThreadLocal.unset();
   }
 
+  @Test
+  public void shouldGetUserStatsAppIds() {
+    long statusFetchedOn = LocalDate.now(ZoneId.systemDefault())
+                               .minus(0, ChronoUnit.DAYS)
+                               .atStartOfDay(ZoneId.systemDefault())
+                               .toInstant()
+                               .toEpochMilli();
+
+    UserThreadLocal.set(User.Builder.anUser().withStatsFetchedOn(statusFetchedOn).build());
+
+    List<WorkflowExecution> executions = asList(aWorkflowExecution()
+                                                    .withAppId(APP_ID)
+                                                    .withAppName(APP_NAME)
+                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(EnvironmentType.NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .build());
+
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
+        .thenReturn(aPageResponse().withResponse(executions).build());
+
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+
+    UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID, asList(APP_ID));
+    assertThat(userStats.getDeploymentCount()).isEqualTo(2);
+    assertThat(userStats.getLastFetchedOn()).isEqualTo(statusFetchedOn);
+    assertThat(userStats.getAppDeployments())
+        .extracting(
+            AppDeployment::getAppId, AppDeployment::getAppName, appDeployment -> appDeployment.getDeployments().size())
+        .containsExactly(tuple(APP_ID, APP_NAME, 2));
+    UserThreadLocal.unset();
+  }
   @Test
   public void shouldGetDeploymentStatistics() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
@@ -309,7 +369,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(activityService.list(any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().withResponse(asList(anActivity().build())).build());
 
-    NotificationCount notificationCount = statisticsService.getNotificationCount(ACCOUNT_ID, APP_ID, 30);
+    NotificationCount notificationCount = statisticsService.getNotificationCount(ACCOUNT_ID, asList(APP_ID), 30);
     assertThat(notificationCount)
         .isEqualTo(aNotificationCount()
                        .withCompletedNotificationsCount(2)

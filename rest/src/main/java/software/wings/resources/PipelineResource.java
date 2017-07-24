@@ -61,7 +61,7 @@ public class PipelineResource {
   /**
    * List.
    *
-   * @param appId       the app id
+   * @param appIds       the app ids
    * @param pageRequest the page request
    * @return the rest response
    */
@@ -70,7 +70,7 @@ public class PipelineResource {
   @ExceptionMetered
   @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<PageResponse<Pipeline>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
+      @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<Pipeline> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelines(pageRequest));
   }
 
