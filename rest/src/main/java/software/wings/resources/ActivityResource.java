@@ -76,13 +76,6 @@ public class ActivityResource {
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
-    } else {
-      PageRequest<Application> applicationPageRequest =
-          aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
-      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
-      if (res == null || res.isEmpty()) {
-        return new RestResponse<PageResponse<Activity>>(new PageResponse<Activity>());
-      }
     }
     return new RestResponse<>(activityService.list(request));
   }
