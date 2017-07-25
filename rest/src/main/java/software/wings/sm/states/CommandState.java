@@ -73,10 +73,10 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -324,8 +324,7 @@ public class CommandState extends State {
                                                      .withParameters(new Object[] {command, commandExecutionContext})
                                                      .build());
     } catch (Exception e) {
-      logger.error("Exception in command execution: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception in command execution", e);
       handleCommandException(context, activityId, appId);
       updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()

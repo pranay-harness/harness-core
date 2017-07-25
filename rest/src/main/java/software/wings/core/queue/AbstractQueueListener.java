@@ -3,9 +3,9 @@ package software.wings.core.queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
+import software.wings.utils.Misc;
 import software.wings.utils.ThreadContext;
 
-import java.util.Arrays;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,15 +50,10 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         if (exception instanceof InterruptedException
             || exception.getCause() != null
                 && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
-          logger.info(
-              "Thread interrupted, shutting down for queue " + queue.name() + ": " + exception.getMessage(), exception);
-          Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.info("Trace: {}", elem));
+          Misc.info(logger, "Thread interrupted, shutting down for queue " + queue.name(), exception);
           run = false;
         } else {
-          logger.error(
-              "Exception happened while fetching message from queue " + queue.name() + ": {}" + exception.getMessage(),
-              exception);
-          Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+          Misc.error(logger, "Exception happened while fetching message from queue " + queue.name(), exception);
         }
       }
 
@@ -95,7 +90,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    * @param message   the message
    */
   protected void onException(Exception exception, T message) {
-    logger.error("Exception happened while processing message " + message, exception);
+    Misc.error(logger, "Exception happened while processing message " + message, exception);
     if (message.getRetries() > 0) {
       message.setRetries(message.getRetries() - 1);
       queue.requeue(message);

@@ -22,10 +22,10 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -140,8 +140,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     try {
       workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
     } catch (Exception e) {
-      logger.error("Error in breakdown refresh: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error in breakdown refresh", e);
     }
   }
 

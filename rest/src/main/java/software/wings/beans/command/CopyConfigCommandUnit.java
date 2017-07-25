@@ -22,10 +22,10 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -71,8 +71,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               .withLogLine("Unable to fetch config file information")
               .withExecutionResult(FAILURE)
               .build());
-      logger.error("Unable to fetch log file information: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Unable to fetch log file information", e);
       return FAILURE;
     }
 

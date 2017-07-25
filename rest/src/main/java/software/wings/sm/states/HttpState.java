@@ -39,12 +39,12 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -321,8 +321,7 @@ public class HttpState extends State {
           logger.error("Invalid assertion {} ", e.getMessage());
           executionData.setErrorMsg(ASSERTION_ERROR_MSG);
         } catch (JexlException e) {
-          logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
-          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+          Misc.error(logger, "Error in httpStateAssertion", e);
           assertionStatus = false;
           if (e instanceof Parsing) {
             Parsing p = (Parsing) e;
@@ -334,8 +333,7 @@ public class HttpState extends State {
             executionData.setErrorMsg(getMessage(e));
           }
         } catch (Exception e) {
-          logger.error("Error in httpStateAssertion: " + e.getMessage(), e);
-          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+          Misc.error(logger, "Error in httpStateAssertion", e);
           executionData.setErrorMsg(getMessage(e));
           assertionStatus = false;
         }

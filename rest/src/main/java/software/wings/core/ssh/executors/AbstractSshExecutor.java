@@ -32,6 +32,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,7 +40,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -413,8 +413,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       if (ex instanceof FileNotFoundException) {
         saveExecutionLogError("File not found");
       } else if (ex instanceof JSchException) {
-        logger.error("Command execution failed with error: " + ex.getMessage(), ex);
-        Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "Command execution failed with error", ex);
         saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
       } else {
         throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS, ex);

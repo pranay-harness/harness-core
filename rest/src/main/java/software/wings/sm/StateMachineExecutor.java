@@ -46,7 +46,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -581,8 +580,7 @@ public class StateMachineExecutor {
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
-      logger.error("Error in aborting: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error in aborting", e);
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());

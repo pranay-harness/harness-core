@@ -16,6 +16,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.Delegate;
 import software.wings.managerclient.ManagerClient;
+import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,7 +29,6 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -94,8 +94,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("Exception while upgrading: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception while upgrading", e);
       if (process != null) {
         // Something went wrong restart yourself
         try {

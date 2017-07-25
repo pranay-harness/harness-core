@@ -78,12 +78,9 @@ public class SshSessionFactory {
     //      client.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getSocketConnectTimeout());
     //      client.close();
     //    } catch (IOException e) {
-    //      logger.error(e.getMessage());
+    //      Misc.error(logger, "timeout: socket is not established", e);
     //      e.printStackTrace();
     //      throw new JSchException("timeout: socket is not established: " + e.getMessage(), e);
-    //      for (StackTraceElement elem : e.getStackTrace()) {
-    //        logger.error("Trace: {}", elem);
-    //      }
     //    } finally {
     //      IOUtils.closeQuietly(client);
     //    }

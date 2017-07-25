@@ -13,9 +13,9 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResu
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -131,8 +131,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
             dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
-        logger.error("error fetcing appdynamis metrics: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "error fetching appdynamics metrics", e);
       }
     }
   }

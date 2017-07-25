@@ -21,10 +21,10 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,8 +97,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
                                     .distinct()
                                     .collect(Collectors.toList()));
     } catch (Exception ex) {
-      logger.error("Exception in generating artifact path suggestions for " + jobName + ": " + ex.getMessage(), ex);
-      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception in generating artifact path suggestions for " + jobName, ex);
     }
     return artifactPaths;
   }

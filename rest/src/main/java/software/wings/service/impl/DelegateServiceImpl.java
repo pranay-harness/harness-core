@@ -56,6 +56,7 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -65,7 +66,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -207,8 +207,7 @@ public class DelegateServiceImpl implements DelegateService {
                           .execute()
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Unable to fetch delegate version information", e);
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);
     }

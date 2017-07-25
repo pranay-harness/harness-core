@@ -38,11 +38,11 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -264,8 +264,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
       return btNames;
     } catch (Exception e) {
-      logger.error("error fetching Appdynamics BTs: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "error fetching Appdynamics BTs", e);
       throw new WingsException("error fetching Appdynamics BTs", e);
     }
   }

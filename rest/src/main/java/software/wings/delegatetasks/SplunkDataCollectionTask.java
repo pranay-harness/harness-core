@@ -19,11 +19,11 @@ import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult.SplunkDataCollectionTaskStatus;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.time.WingsTimeUtils;
+import software.wings.utils.Misc;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -176,8 +176,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
-        logger.error("error fetching splunk logs: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "error fetching splunk logs", e);
       }
     }
   }

@@ -32,9 +32,9 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.utils.Misc;
 import software.wings.utils.SshHelperUtil;
 
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -162,8 +162,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           throw e;
         }
       } else {
-        logger.error("Error while executing command: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "Error while executing command", e);
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())
@@ -177,8 +176,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR);
       }
     } catch (Exception e) {
-      logger.error("Error while executing command: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error while executing command", e);
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

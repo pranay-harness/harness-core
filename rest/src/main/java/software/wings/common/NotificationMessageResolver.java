@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -107,8 +107,7 @@ public class NotificationMessageResolver {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       templateMap = yamlUtils.read(yaml, new TypeReference<Map<String, ChannelTemplate>>() {});
     } catch (Exception e) {
-      logger.error("Error in initializing catalog: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error in initializing catalog", e);
       throw new WingsException(e);
     }
   }

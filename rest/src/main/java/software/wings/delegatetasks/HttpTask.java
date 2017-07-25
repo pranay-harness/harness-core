@@ -27,13 +27,13 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.DelegateTask;
 import software.wings.sm.ExecutionStatus;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -138,8 +138,7 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
       executionDataBuilder.withHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
-      logger.error("Exception occurred during HTTP task execution: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception occurred during HTTP task execution", e);
       executionDataBuilder.withHttpResponseCode(500)
           .withHttpResponseBody(getMessage(e))
           .withErrorMsg(getMessage(e))

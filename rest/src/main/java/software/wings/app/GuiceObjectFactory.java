@@ -14,9 +14,9 @@ import org.atmosphere.cpr.MetaBroadcaster;
 import org.atmosphere.inject.AtmosphereProducers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -56,8 +56,7 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
       AtmosphereProducers p = newClassInstance(AtmosphereProducers.class, AtmosphereProducers.class);
       p.configure(config);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, e.getMessage(), e);
     }
   }
 

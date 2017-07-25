@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -36,8 +36,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
           (String) parameters[4], (List<String>) parameters[5], (String) parameters[6],
           (Map<String, String>) parameters[7]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
@@ -71,10 +70,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
         res.addData(artifactFile);*//*
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
-      for (StackTraceElement elem : e.getStackTrace()) {
-        logger.warn("Trace: {}", elem);
-      }
+      Misc.warn(logger, "Exception", e);
       //TODO: better error handling
 
 //      if (e instanceof WingsException)

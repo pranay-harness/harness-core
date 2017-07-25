@@ -21,7 +21,6 @@ import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -101,8 +100,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
         executionStatus = ExecutionStatus.FAILED;
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+      Misc.warn(logger, "Exception: " + e.getMessage(), e);
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
         errorMessage = Joiner.on(",").join(ex.getResponseMessageList()

@@ -2,9 +2,12 @@ package software.wings.utils;
 
 import com.google.api.client.util.Throwables;
 
+import com.codahale.metrics.Slf4jReporter.LoggingLevel;
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
 import software.wings.common.Constants;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -103,6 +106,51 @@ public class Misc {
     } catch (Exception e) {
       // Ignore
       return defaultValue;
+    }
+  }
+
+  public static void error(Logger logger, String msg, Throwable t) {
+    logger.error(msg, t);
+    writeException(logger, LoggingLevel.ERROR, t);
+  }
+
+  public static void warn(Logger logger, String msg, Throwable t) {
+    logger.warn(msg, t);
+    writeException(logger, LoggingLevel.WARN, t);
+  }
+
+  public static void info(Logger logger, String msg, Throwable t) {
+    logger.info(msg, t);
+    writeException(logger, LoggingLevel.INFO, t);
+  }
+
+  public static void debug(Logger logger, String msg, Throwable t) {
+    logger.debug(msg, t);
+    writeException(logger, LoggingLevel.DEBUG, t);
+  }
+
+  private static void writeException(Logger logger, LoggingLevel level, Throwable t) {
+    while (t != null) {
+      logIt(logger, level,
+          "**** Caused by: " + t.getClass().getCanonicalName() + (t.getMessage() != null ? ": " + t.getMessage() : ""));
+      Arrays.stream(t.getStackTrace()).forEach(elem -> logIt(logger, level, " --- Trace: " + elem));
+      t = t.getCause();
+    }
+  }
+
+  private static void logIt(Logger logger, LoggingLevel level, String msg) {
+    switch (level) {
+      case ERROR:
+        logger.error(msg);
+        break;
+      case WARN:
+        logger.warn(msg);
+        break;
+      case DEBUG:
+        logger.debug(msg);
+        break;
+      default:
+        logger.info(msg);
     }
   }
 

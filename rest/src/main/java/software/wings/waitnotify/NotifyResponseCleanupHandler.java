@@ -17,8 +17,8 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
+import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +74,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
         wingsPersistence.delete(notifyResponse);
       }
     } catch (Exception exception) {
-      logger.error("Error in NotifyResponseCleanupHandler: " + exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error in NotifyResponseCleanupHandler", exception);
     }
   }
 }

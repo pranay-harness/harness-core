@@ -33,9 +33,9 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -148,8 +148,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                         .getStatus()
                         .equals("RUNNING");
           } catch (IOException e) {
-            logger.error("Error checking operation status: " + e.getMessage(), e);
-            Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+            Misc.error(logger, "Error checking operation status", e);
             return true;
           }
         });

@@ -21,9 +21,9 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -335,8 +335,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       return artifactory;
     } catch (Exception ex) {
-      logger.error("Error occurred while trying to initialize artifactory: " + ex.getMessage(), ex);
-      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error occurred while trying to initialize artifactory", ex);
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
     }
   }

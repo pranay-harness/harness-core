@@ -11,11 +11,11 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -71,8 +71,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
         res.addData(artifactFile);
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+      Misc.warn(logger, "Exception: " + e.getMessage(), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

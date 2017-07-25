@@ -14,10 +14,10 @@ import software.wings.beans.CatalogItem;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
+import software.wings.utils.Misc;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,8 +50,7 @@ public class CatalogServiceImpl implements CatalogService {
         Collections.sort(catalogItems, CatalogItem.displayOrderComparator);
       }
     } catch (Exception e) {
-      logger.error("Error in initializing catalog: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error in initializing catalog", e);
       throw new WingsException(e);
     }
   }

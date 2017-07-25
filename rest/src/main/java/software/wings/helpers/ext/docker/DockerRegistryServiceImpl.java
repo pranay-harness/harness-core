@@ -18,6 +18,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -164,8 +165,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
       }
     } catch (IOException e) {
-      logger.warn("Exception occurred while fetching token: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+      Misc.warn(logger, "Exception occurred while fetching token", e);
     }
     return null;
   }

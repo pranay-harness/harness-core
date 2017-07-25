@@ -17,9 +17,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -127,8 +127,7 @@ public class DelegateQueueTask implements Runnable {
                  .broadcast(delegateTask1));
 
     } catch (Exception exception) {
-      log().error("Error seen in the Notifier call: " + exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> log().error("Trace: {}", elem));
+      Misc.error(log(), "Error seen in the Notifier call", exception);
     } finally {
       if (lockAcquired) {
         persistentLocker.releaseLock(DelegateQueueTask.class, DelegateQueueTask.class.getName());

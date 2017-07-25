@@ -48,13 +48,13 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -168,8 +168,7 @@ public class DelegateServiceImpl implements DelegateService {
                           }
                         } catch (Exception e) {
                           System.out.println(message);
-                          logger.error("Exception while decoding task: " + e.getMessage(), e);
-                          Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+                          Misc.error(logger, "Exception while decoding task", e);
                         }
                       }
                     }
@@ -192,12 +191,10 @@ public class DelegateServiceImpl implements DelegateService {
                     try {
                       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
                     } catch (IOException ex) {
-                      logger.error("Unable to open socket: " + e.getMessage(), e);
-                      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+                      Misc.error(logger, "Unable to open socket", e);
                     }
                   } else {
-                    logger.error("Exception: " + e.getMessage(), e);
-                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+                    Misc.error(logger, "Exception: " + e.getMessage(), e);
                     try {
                       socket.close();
                     } catch (Exception ex) {
@@ -246,8 +243,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
     } catch (Exception e) {
-      logger.error("Exception while starting/running delegate: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Exception while starting/running delegate", e);
     }
   }
 
@@ -325,8 +321,7 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("delegate uptodate...");
         }
       } catch (Exception e) {
-        logger.error("Exception while checking for upgrade: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "Exception while checking for upgrade", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -345,8 +340,7 @@ public class DelegateServiceImpl implements DelegateService {
                   .build()));
         }
       } catch (IOException e) {
-        logger.error("Exception while sending heartbeat: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "Exception while sending heartbeat", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -390,8 +384,7 @@ public class DelegateServiceImpl implements DelegateService {
                                    .execute();
                     logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
                   } catch (IOException e) {
-                    logger.error("Unable to send response to manager: " + e.getMessage(), e);
-                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+                    Misc.error(logger, "Unable to send response to manager", e);
                   } finally {
                     currentlyExecutingTasks.remove(delegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
@@ -416,8 +409,7 @@ public class DelegateServiceImpl implements DelegateService {
                     }
                     return taskAcquired;
                   } catch (IOException e) {
-                    logger.error("Unable to update task status on manager: " + e.getMessage(), e);
-                    Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+                    Misc.error(logger, "Unable to update task status on manager", e);
                     return false;
                   }
                 });
@@ -430,8 +422,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
       }
     } catch (IOException e) {
-      logger.error("Unable to acquire task: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Unable to acquire task", e);
     }
   }
 

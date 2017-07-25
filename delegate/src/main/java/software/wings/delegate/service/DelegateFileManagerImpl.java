@@ -20,12 +20,12 @@ import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -66,16 +66,14 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       upload(delegateFile, file);
 
     } catch (Exception e) {
-      logger.warn("Error uploading file: " + file.getName() + ": " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+      Misc.warn(logger, "Error uploading file: " + file.getName(), e);
     } finally {
       try {
         if (!file.delete()) {
           logger.warn("Could not delete file: {}", file.getName());
         }
       } catch (Exception e) {
-        logger.warn("Error deleting file: " + file.getName() + ": " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+        Misc.warn(logger, "Error deleting file: " + file.getName(), e);
       }
     }
 

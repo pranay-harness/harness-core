@@ -26,9 +26,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -53,8 +53,7 @@ public class ArtifactCollectionJob implements Job {
     try {
       collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
     } catch (Exception ex) {
-      logger.warn("Artifact collection cron failed with error : " + ex.getMessage(), ex);
-      Arrays.stream(ex.getStackTrace()).forEach(elem -> logger.warn("Trace: {}", elem));
+      Misc.warn(logger, "Artifact collection cron failed with error", ex);
     }
   }
 

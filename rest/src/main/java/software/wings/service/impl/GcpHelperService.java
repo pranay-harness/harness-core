@@ -13,10 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -63,13 +63,11 @@ public class GcpHelperService {
       }
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
-      logger.error("Security exception getting Google container service: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Security exception getting Google container service", e);
       throw new WingsException(
           ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
-      logger.error("Error getting Google container service: " + e.getMessage(), e);
-      Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      Misc.error(logger, "Error getting Google container service", e);
       throw new WingsException(
           ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
     }

@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -30,8 +30,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * If the error is in the JSON generation, it's a server error.
      */
     if (exception instanceof JsonGenerationException) {
-      LOGGER.warn("Error generating JSON: " + exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.error("Trace: {}", elem));
+      Misc.warn(LOGGER, "Error generating JSON", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -50,8 +49,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * server error and we should inform the developer.
      */
     if (message.startsWith("No suitable constructor found")) {
-      LOGGER.error("Unable to deserialize the specific type: " + exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.error("Trace: {}", elem));
+      Misc.error(LOGGER, "Unable to deserialize the specific type", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -66,8 +64,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     /*
      * Otherwise, it's those pesky users.
      */
-    LOGGER.info("Unable to process JSON: " + exception.getMessage(), exception);
-    Arrays.stream(exception.getStackTrace()).forEach(elem -> LOGGER.info("Trace: {}", elem));
+    Misc.info(LOGGER, "Unable to process JSON", exception);
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(aResponseMessage()

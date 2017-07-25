@@ -85,10 +85,10 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1026,8 +1026,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         UpdateResults updated = wingsPersistence.update(query, updateOps);
         logger.info("Updated : {} row", updated.getWriteResult().getN());
       } catch (java.lang.Exception e) {
-        logger.error("Error in breakdown retrieval: " + e.getMessage(), e);
-        Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+        Misc.error(logger, "Error in breakdown retrieval", e);
       }
     }
   }
