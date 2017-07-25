@@ -16,10 +16,11 @@ public class JenkinsSettingOverWriteTest extends BaseIntegrationTest {
   @Test
   public void configureJenkinsWithTestServer() throws Exception {
     loginAdminUser();
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Wings Jenkins"));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"));
     SettingAttribute jenkinsSettingAttribute =
         aSettingAttribute()
-            .withName("Wings Jenkins")
+            .withName("Harness Jenkins")
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(aJenkinsConfig()
@@ -34,7 +35,7 @@ public class JenkinsSettingOverWriteTest extends BaseIntegrationTest {
     JenkinsConfig jenkinsConfig =
         (JenkinsConfig) wingsPersistence
             .executeGetOneQuery(
-                wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Wings Jenkins"))
+                wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"))
             .getValue();
     Assert.assertEquals("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/", jenkinsConfig.getJenkinsUrl());
   }
