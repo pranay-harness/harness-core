@@ -19,8 +19,8 @@ import javax.validation.constraints.NotNull;
  */
 public interface SplunkService {
   @ValidationGroups(Create.class)
-  Boolean saveLogData(@NotNull String appId, @NotNull String stateExecutionId, @Valid List<SplunkLogElement> logData)
-      throws IOException;
+  Boolean saveLogData(@NotNull String appId, @NotNull String stateExecutionId, String workflowExecutionId,
+      @Valid List<SplunkLogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class) List<SplunkLogDataRecord> getSplunkLogData(@Valid SplunkLogRequest logRequest);
 

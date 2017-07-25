@@ -42,9 +42,10 @@ public class SplunkResource {
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveSplunkLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("appId") final String appId,
+      @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
       List<SplunkLogElement> logData) throws IOException {
-    return new RestResponse<>(splunkService.saveLogData(appId, stateExecutionId, logData));
+    return new RestResponse<>(splunkService.saveLogData(appId, stateExecutionId, workflowExecutionId, logData));
   }
 
   @POST

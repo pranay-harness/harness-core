@@ -278,9 +278,10 @@ public class SplunkV2State extends AbstractAnalysisState {
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
-        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
+    final SplunkDataCollectionInfo dataCollectionInfo =
+        new SplunkDataCollectionInfo(appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+            context.getStateExecutionInstanceId(), context.getWorkflowExecutionId(), splunkConfig, queries,
+            logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)

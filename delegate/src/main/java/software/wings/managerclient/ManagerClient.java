@@ -77,7 +77,8 @@ public interface ManagerClient {
 
   @POST("splunk/save-logs")
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
-      @Query("stateExecutionId") String stateExecutionId, @Body List<SplunkLogElement> metricData);
+      @Query("stateExecutionId") String stateExecutionId, @Query("workflowExecutionId") String workflowExecutionId,
+      @Body List<SplunkLogElement> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,

@@ -40,10 +40,11 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
-  public Boolean saveLogData(String appId, String stateExecutionId, List<SplunkLogElement> logData) throws IOException {
+  public Boolean saveLogData(String appId, String stateExecutionId, String workflowExecutionId,
+      List<SplunkLogElement> logData) throws IOException {
     logger.debug("inserting " + logData.size() + " pieces of splunk log data");
     final List<SplunkLogDataRecord> logDataRecords =
-        SplunkLogDataRecord.generateDataRecords(appId, stateExecutionId, logData);
+        SplunkLogDataRecord.generateDataRecords(appId, stateExecutionId, workflowExecutionId, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.debug("inserted " + logDataRecords.size() + " SplunkLogDataRecord to persistence layer.");
     return true;

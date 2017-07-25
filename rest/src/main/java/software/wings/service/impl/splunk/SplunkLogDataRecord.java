@@ -1,5 +1,6 @@
 package software.wings.service.impl.splunk;
 
+import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -23,8 +24,11 @@ import java.util.List;
     @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash")
   }, options = @IndexOptions(unique = true, name = "splunkLogUniqueIdx"))
 })
-@Archive(retentionMills = 24 * 60 * 60 * 1000)
+@Data
+@Archive(retentionMills = 7 * 24 * 60 * 60 * 1000)
 public class SplunkLogDataRecord extends Base {
+  @NotEmpty @Indexed private String workflowExecutionId;
+
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private String query;
@@ -45,11 +49,12 @@ public class SplunkLogDataRecord extends Base {
     // for json parsing
   }
 
-  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String query, String clusterLabel,
-      String host, long timeStamp, int count, String logMessage, String logMD5Hash, boolean processed,
-      int logCollectionMinute) {
+  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String workflowExecutionId, String query,
+      String clusterLabel, String host, long timeStamp, int count, String logMessage, String logMD5Hash,
+      boolean processed, int logCollectionMinute) {
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;
+    this.workflowExecutionId = workflowExecutionId;
     this.query = query;
     this.clusterLabel = clusterLabel;
     this.host = host;
@@ -62,102 +67,14 @@ public class SplunkLogDataRecord extends Base {
   }
 
   public static List<SplunkLogDataRecord> generateDataRecords(
-      String applicationId, String stateExecutionId, List<SplunkLogElement> logElements) {
+      String applicationId, String stateExecutionId, String workflowExecutionId, List<SplunkLogElement> logElements) {
     final List<SplunkLogDataRecord> records = new ArrayList<>();
     for (SplunkLogElement logElement : logElements) {
-      records.add(
-          new SplunkLogDataRecord(applicationId, stateExecutionId, logElement.getQuery(), logElement.getClusterLabel(),
-              logElement.getHost(), logElement.getTimeStamp(), logElement.getCount(), logElement.getLogMessage(),
-              DigestUtils.md5Hex(logElement.getLogMessage()), false, logElement.getLogCollectionMinute()));
+      records.add(new SplunkLogDataRecord(applicationId, stateExecutionId, workflowExecutionId, logElement.getQuery(),
+          logElement.getClusterLabel(), logElement.getHost(), logElement.getTimeStamp(), logElement.getCount(),
+          logElement.getLogMessage(), DigestUtils.md5Hex(logElement.getLogMessage()), false,
+          logElement.getLogCollectionMinute()));
     }
     return records;
-  }
-
-  public String getApplicationId() {
-    return applicationId;
-  }
-
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
-  }
-
-  public String getStateExecutionId() {
-    return stateExecutionId;
-  }
-
-  public void setStateExecutionId(String stateExecutionId) {
-    this.stateExecutionId = stateExecutionId;
-  }
-
-  public String getQuery() {
-    return query;
-  }
-
-  public void setQuery(String query) {
-    this.query = query;
-  }
-
-  public String getClusterLabel() {
-    return clusterLabel;
-  }
-
-  public void setClusterLabel(String clusterLabel) {
-    this.clusterLabel = clusterLabel;
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public long getTimeStamp() {
-    return timeStamp;
-  }
-
-  public void setTimeStamp(long timeStamp) {
-    this.timeStamp = timeStamp;
-  }
-
-  public int getCount() {
-    return count;
-  }
-
-  public void setCount(int count) {
-    this.count = count;
-  }
-
-  public String getLogMessage() {
-    return logMessage;
-  }
-
-  public void setLogMessage(String logMessage) {
-    this.logMessage = logMessage;
-  }
-
-  public String getLogMD5Hash() {
-    return logMD5Hash;
-  }
-
-  public void setLogMD5Hash(String logMD5Hash) {
-    this.logMD5Hash = logMD5Hash;
-  }
-
-  public boolean isProcessed() {
-    return processed;
-  }
-
-  public void setProcessed(boolean processed) {
-    this.processed = processed;
-  }
-
-  public int getLogCollectionMinute() {
-    return logCollectionMinute;
-  }
-
-  public void setLogCollectionMinute(int logCollectionMinute) {
-    this.logCollectionMinute = logCollectionMinute;
   }
 }

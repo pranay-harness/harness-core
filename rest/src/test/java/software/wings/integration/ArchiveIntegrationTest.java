@@ -38,6 +38,7 @@ public class ArchiveIntegrationTest extends BaseIntegrationTest {
     final int numOfRecords = r.nextInt(50);
 
     final String stateExecutionId = UUID.randomUUID().toString();
+    final String workflowExecutionId = UUID.randomUUID().toString();
     final String query = UUID.randomUUID().toString();
     final String applicationId = UUID.randomUUID().toString();
     final int logCollectionMinute = 0;
@@ -51,8 +52,9 @@ public class ArchiveIntegrationTest extends BaseIntegrationTest {
       final String logMessage = UUID.randomUUID().toString();
       final String logMD5Hash = UUID.randomUUID().toString();
 
-      final SplunkLogDataRecord splunkLogDataRecord = new SplunkLogDataRecord(applicationId, stateExecutionId, query,
-          clusterLabel, host, timeStamp, count, logMessage, logMD5Hash, processed, logCollectionMinute);
+      final SplunkLogDataRecord splunkLogDataRecord =
+          new SplunkLogDataRecord(applicationId, stateExecutionId, workflowExecutionId, query, clusterLabel, host,
+              timeStamp, count, logMessage, logMD5Hash, processed, logCollectionMinute);
       splunkLogDataRecord.setLastUpdatedAt(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30));
       splunkLogDataRecord.setCreatedAt(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30));
       wingsPersistence.save(splunkLogDataRecord);
