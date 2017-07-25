@@ -110,29 +110,27 @@ public class Misc {
   }
 
   public static void error(Logger logger, String msg, Throwable t) {
-    logger.error(msg, t);
-    writeException(logger, LoggingLevel.ERROR, t);
+    writeException(logger, LoggingLevel.ERROR, msg, t);
   }
 
   public static void warn(Logger logger, String msg, Throwable t) {
-    logger.warn(msg, t);
-    writeException(logger, LoggingLevel.WARN, t);
+    writeException(logger, LoggingLevel.WARN, msg, t);
   }
 
   public static void info(Logger logger, String msg, Throwable t) {
-    logger.info(msg, t);
-    writeException(logger, LoggingLevel.INFO, t);
+    writeException(logger, LoggingLevel.INFO, msg, t);
   }
 
   public static void debug(Logger logger, String msg, Throwable t) {
-    logger.debug(msg, t);
-    writeException(logger, LoggingLevel.DEBUG, t);
+    writeException(logger, LoggingLevel.DEBUG, msg, t);
   }
 
-  private static void writeException(Logger logger, LoggingLevel level, Throwable t) {
+  private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
+    logIt(logger, level, msg);
     while (t != null) {
       logIt(logger, level,
-          "**** Caused by: " + t.getClass().getCanonicalName() + (t.getMessage() != null ? ": " + t.getMessage() : ""));
+          "***** Caused by: " + t.getClass().getCanonicalName()
+              + (t.getMessage() != null ? ": " + t.getMessage() : ""));
       Arrays.stream(t.getStackTrace()).forEach(elem -> logIt(logger, level, " --- Trace: " + elem));
       t = t.getCause();
     }
@@ -149,6 +147,7 @@ public class Misc {
       case DEBUG:
         logger.debug(msg);
         break;
+      case INFO:
       default:
         logger.info(msg);
     }
