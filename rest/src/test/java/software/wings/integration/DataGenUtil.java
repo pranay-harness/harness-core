@@ -50,6 +50,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -413,7 +414,7 @@ public class DataGenUtil extends BaseIntegrationTest {
           getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
       return response.getStatus() == 200;
     } catch (IOException e) {
-      log().info("Error occured in uploading app container" + e.getMessage());
+      Misc.info(log(), "Error occured in uploading app container", e);
     }
     return false;
   }

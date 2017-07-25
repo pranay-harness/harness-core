@@ -64,6 +64,7 @@ import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -346,7 +347,7 @@ public class AwsHelperService {
       client.close();
       return true;
     } catch (IOException e) {
-      logger.error(e.getMessage());
+      Misc.error(logger, e.getMessage(), e);
       e.printStackTrace();
       return false;
     } finally {
@@ -363,7 +364,7 @@ public class AwsHelperService {
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    logger.error("AWS API call exception {}", amazonServiceException);
+    Misc.error(logger, "AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {

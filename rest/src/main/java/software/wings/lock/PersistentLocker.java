@@ -6,6 +6,7 @@ import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -36,7 +37,7 @@ public class PersistentLocker implements Locker {
     try {
       return lock.tryLock();
     } catch (Exception ex) {
-      logger.debug("acquireLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
+      Misc.debug(logger, "acquireLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
       return false;
     }
   }
@@ -60,7 +61,7 @@ public class PersistentLocker implements Locker {
       try {
         lock.unlock();
       } catch (Exception ex) {
-        logger.debug("releaseLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
+        Misc.debug(logger, "releaseLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
         return false;
       }
       return true;

@@ -1,13 +1,10 @@
 package software.wings.service.impl;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.awaitility.Awaitility.with;
-import static org.awaitility.Duration.FIVE_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.beans.artifact.Artifact.Status.ABORTED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.ERROR;
@@ -22,17 +19,14 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
-import static software.wings.dl.PageRequest.Builder.*;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
-import org.awaitility.Duration;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -41,9 +35,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
-import software.wings.beans.SortOrder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
@@ -59,6 +51,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -67,16 +60,10 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -362,8 +349,10 @@ public class ArtifactServiceImpl implements ArtifactService {
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
     } catch (Exception ex) {
-      logger.warn("Failed to purge(delete) artifacts for artifactStreamId {}  of size: {} for appId {}",
-          artifactStreamId, toBeDeletedArtifacts.size(), appId, ex);
+      Misc.warn(logger,
+          String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
+              artifactStreamId, toBeDeletedArtifacts.size(), appId),
+          ex);
     }
     logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {} success", artifactStreamId,
         toBeDeletedArtifacts.size(), appId);
@@ -385,7 +374,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
     } catch (Exception ex) {
-      logger.warn("Failed to purge (delete) the artifact files", ex);
+      Misc.warn(logger, "Failed to purge (delete) the artifact files", ex);
     }
   }
 }

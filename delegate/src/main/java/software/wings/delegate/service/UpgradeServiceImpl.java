@@ -111,7 +111,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("ALERT: Couldn't kill forcibly.");
+          Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
         }
       }
     }
@@ -121,7 +121,7 @@ public class UpgradeServiceImpl implements UpgradeService {
     try {
       cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion(), "backup.");
     } catch (Exception ex) {
-      logger.error("Failed to clean delegate version [{}] from Backup", delegate.getVersion());
+      Misc.error(logger, String.format("Failed to clean delegate version [%s] from Backup", delegate.getVersion()), ex);
     }
   }
 
@@ -129,7 +129,8 @@ public class UpgradeServiceImpl implements UpgradeService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion(), "delegate-");
     } catch (Exception ex) {
-      logger.error("Failed to clean delegate version [{}] from Capsule", delegate.getVersion());
+      Misc.error(
+          logger, String.format("Failed to clean delegate version [%s] from Capsule", delegate.getVersion()), ex);
     }
   }
 

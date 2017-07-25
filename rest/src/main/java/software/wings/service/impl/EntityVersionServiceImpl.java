@@ -25,6 +25,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import javax.inject.Inject;
@@ -97,8 +98,10 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         entityVersion = wingsPersistence.saveAndGet(EntityVersionCollection.class, entityVersion);
         done = true;
       } catch (Exception e) {
-        logger.warn(
-            "EntityVersion save failed for entityType: {}, entityUuid: {}- attemptNo: {}", entityType, entityUuid, i);
+        Misc.warn(logger,
+            String.format("EntityVersion save failed for entityType: %s, entityUuid: %s- attemptNo: %s", entityType,
+                entityUuid, i),
+            e);
         i++;
       }
     } while (!done && i < 3);

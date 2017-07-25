@@ -66,6 +66,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -246,7 +247,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (ParseException e) {
-      logger.error("Error parsing cron expression: " + cronExpression);
+      Misc.error(logger, "Error parsing cron expression: " + cronExpression, e);
       return cronExpression;
     }
   }

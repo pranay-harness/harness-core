@@ -23,6 +23,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -187,7 +188,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         return allRunning;
       });
     } catch (ConditionTimeoutException e) {
-      logger.warn("Timed out waiting for pods to be ready.");
+      Misc.warn(logger, "Timed out waiting for pods to be ready.", e);
     }
 
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();

@@ -32,6 +32,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
@@ -75,7 +76,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
+      Misc.error(logger, ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

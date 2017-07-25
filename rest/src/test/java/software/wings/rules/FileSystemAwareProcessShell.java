@@ -14,6 +14,7 @@ import org.apache.sshd.server.session.ServerSessionHolder;
 import org.apache.sshd.server.shell.InvertedShell;
 import org.apache.sshd.server.shell.TtyFilterInputStream;
 import org.apache.sshd.server.shell.TtyFilterOutputStream;
+import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,8 +98,10 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
         Map<String, String> procEnv = builder.environment();
         procEnv.putAll(varsMap);
       } catch (Exception e) {
-        log.warn("start() - Failed ({}) to set environment for command={}: {}", e.getClass().getSimpleName(), cmdValue,
-            e.getMessage());
+        Misc.warn(log,
+            String.format(
+                "start() - Failed (%s) to set environment for command=%s", e.getClass().getSimpleName(), cmdValue),
+            e);
         if (log.isDebugEnabled()) {
           log.debug("start(" + cmdValue + ") failure details: " + e.getMessage(), e);
           Arrays.stream(e.getStackTrace()).forEach(elem -> log.debug("Trace: {}", elem));

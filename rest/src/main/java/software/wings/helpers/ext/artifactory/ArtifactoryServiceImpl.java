@@ -99,12 +99,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (IllegalArgumentException e) {
-      logger.error("Error occurred while retrieving Repositories from Artifactory server {} ",
-          artifactoryConfig.getArtifactoryUrl(), e);
+      Misc.error(logger,
+          "Error occurred while retrieving Repositories from Artifactory server "
+              + artifactoryConfig.getArtifactoryUrl(),
+          e);
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving Repositories from Artifactory server {} ",
-          artifactoryConfig.getArtifactoryUrl(), e);
+      Misc.error(logger,
+          "Error occurred while retrieving Repositories from Artifactory server "
+              + artifactoryConfig.getArtifactoryUrl(),
+          e);
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 401) {
@@ -188,8 +192,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving File Paths from Artifactory server {} ",
-          artifactoryConfig.getArtifactoryUrl(), e);
+      Misc.error(logger,
+          "Error occurred while retrieving File Paths from Artifactory server " + artifactoryConfig.getArtifactoryUrl(),
+          e);
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 401) {
@@ -306,7 +311,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         return repositories;
       }
     } catch (Exception e) {
-      logger.error("Error occurred while listing docker images from artifactory {} for Repo ", artifactory, repoKey, e);
+      Misc.error(logger,
+          String.format(
+              "Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
+          e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
     return new ArrayList<>();

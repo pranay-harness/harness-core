@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.utils.Misc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.util.Arrays;
@@ -124,11 +125,11 @@ public class DatabaseModule extends AbstractModule {
                       .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
                           indexed.unique() || indexed.options().unique());
                 } catch (MongoCommandException mex1) {
-                  logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+                  Misc.error(logger, "Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
                   throw mex1;
                 }
               } else {
-                logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+                Misc.error(logger, "Index creation failed for class " + mc.getClazz().getCanonicalName(), mex);
                 throw mex;
               }
             }

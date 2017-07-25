@@ -87,7 +87,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("BambooService job keys fetch failed with exception " + ex.getStackTrace());
+      Misc.error(logger, "BambooService job keys fetch failed with exception", ex);
     }
     return null;
   }

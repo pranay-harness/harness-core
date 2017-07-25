@@ -17,6 +17,7 @@ import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.util.Date;
 import java.util.Properties;
@@ -119,7 +120,7 @@ public class JobScheduler {
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
-        logger.error("Couldn't delete cron job [{} {}] ", groupName, jobName);
+        Misc.error(logger, String.format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
       }
     }
     return false;

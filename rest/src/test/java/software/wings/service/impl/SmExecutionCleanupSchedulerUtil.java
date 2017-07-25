@@ -11,6 +11,7 @@ import software.wings.beans.Application;
 import software.wings.dl.PageResponse;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
+import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -32,7 +33,10 @@ public class SmExecutionCleanupSchedulerUtil extends WingsBaseTest {
       try {
         appServiceImpl.deleteCronForStateMachineExecutionCleanup(application.getUuid());
       } catch (Exception e) {
-        logger.error("Error in delete schedule - appId: {}, name: {}", application.getUuid(), application.getName(), e);
+        Misc.error(logger,
+            String.format(
+                "Error in delete schedule - appId: %s, name: %s", application.getUuid(), application.getName()),
+            e);
       }
       appServiceImpl.addCronForStateMachineExecutionCleanup(application);
 

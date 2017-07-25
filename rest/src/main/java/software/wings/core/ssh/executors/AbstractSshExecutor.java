@@ -186,10 +186,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     } catch (JSchException | IOException ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       if (ex instanceof JSchException) {
-        logger.error("Command execution failed with error " + ex.getMessage());
+        Misc.error(logger, "Command execution failed with error", ex);
         saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
       } else {
-        logger.error("Exception in reading InputStream " + ex.getMessage());
+        Misc.error(logger, "Exception in reading InputStream", ex);
         saveExecutionLog("Command execution failed with error " + UNKNOWN_ERROR);
       }
       return commandExecutionStatus;
@@ -358,7 +358,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       testChannel.disconnect();
       logger.info("Session connection test successful");
     } catch (Throwable throwable) {
-      logger.error("Session connection test failed. Reopen new session");
+      Misc.error(logger, "Session connection test failed. Reopen new session", throwable);
       cahcedSession = sessions.merge(key, cahcedSession, (session1, session2) -> getSession(this.config));
     }
     return cahcedSession;

@@ -130,7 +130,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       isSuccessful(response);
     } catch (IOException e) {
-      logger.error("Error occurred while sending request to server {} ", dockerConfig.getDockerRegistryUrl(), e);
+      Misc.error(logger, "Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
     }
     return false;

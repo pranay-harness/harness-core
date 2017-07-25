@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,8 +94,7 @@ public class JenkinsImpl implements Jenkins {
                   jobWithDetails = jenkinsServer.getJob(jobname);
                 } catch (HttpResponseException e) {
                   if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-                    logger.warn(
-                        "Error occurred while retrieving job {}. Reason: {}. Retrying ", jobname, e.getMessage());
+                    Misc.warn(logger, String.format("Error occurred while retrieving job %s. Retrying ", jobname), e);
                     return null;
                   } else {
                     throw e;
@@ -105,7 +105,7 @@ public class JenkinsImpl implements Jenkins {
               notNullValue())
           .get(0);
     } catch (ConditionTimeoutException e) {
-      logger.warn("Jenkins server request did not succeed within 15 secs even after 5 retries");
+      Misc.warn(logger, "Jenkins server request did not succeed within 15 secs even after 5 retries", e);
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get job details for " + jobname);
       wingsException.addParam("jenkinsResponse", "Server Error");
@@ -121,7 +121,7 @@ public class JenkinsImpl implements Jenkins {
           return jenkinsServer.getJobs();
         } catch (HttpResponseException e) {
           if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-            logger.warn("Error occurred while retrieving jobs. Reason: {}. Retrying", e.getMessage());
+            Misc.warn(logger, "Error occurred while retrieving jobs. Retrying", e);
             return null;
           } else {
             throw e;
@@ -129,7 +129,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
-      logger.warn("Jenkins server request did not succeed within 15 secs even after 5 retries");
+      Misc.warn(logger, "Jenkins server request did not succeed within 15 secs even after 5 retries", e);
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get jobs from jenkins sever");
       wingsException.addParam("jenkinsResponse", "Server Error");

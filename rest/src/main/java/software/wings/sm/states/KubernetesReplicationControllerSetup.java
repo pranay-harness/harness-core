@@ -71,6 +71,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -258,7 +259,8 @@ public class KubernetesReplicationControllerSetup extends State {
             return loadBalancerReady;
           });
         } catch (ConditionTimeoutException e) {
-          logger.warn("Timed out waiting for service [{}] load balancer to be ready.", serviceName);
+          Misc.warn(
+              logger, String.format("Timed out waiting for service [%s] load balancer to be ready.", serviceName), e);
           return null;
         }
         loadBalancer =

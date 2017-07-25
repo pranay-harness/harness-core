@@ -87,7 +87,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
         } catch (IOException e) {
           String message = "Unable to get config file for entityId: " + configFile.getUuid()
               + ", version: " + configFile.getVersionForEnv(context.getEnvId());
-          logger.error(message, e);
+          Misc.error(logger, message, e);
           delegateLogService.save(context.getAccountId(),
               aLog()
                   .withAppId(context.getAppId())

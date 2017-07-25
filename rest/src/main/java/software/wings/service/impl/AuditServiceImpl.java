@@ -4,14 +4,11 @@ import static org.awaitility.Awaitility.with;
 import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket;
-import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.WriteResult;
 import org.apache.commons.collections.CollectionUtils;
-import org.awaitility.Duration;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -20,19 +17,18 @@ import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.User;
-import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
+import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -192,7 +188,7 @@ public class AuditServiceImpl implements AuditService {
               .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
 
         } catch (Exception ex) {
-          logger.info("Failed to delete audit audit records of size: {} ", auditHeaders.size());
+          Misc.info(logger, "Failed to delete audit audit records of size: " + auditHeaders.size(), ex);
         }
         logger.info("Deleting audit records of size: {} success", auditHeaders.size());
         if (auditHeaders.size() < limit) {
@@ -201,8 +197,8 @@ public class AuditServiceImpl implements AuditService {
         return false;
       });
     } catch (Exception ex) {
-      logger.info(
-          "Failed to delete audit records older than last {} days within 10 minutes. Reason:{}", days, ex.getMessage());
+      Misc.info(
+          logger, String.format("Failed to delete audit records older than last %s days within 10 minutes.", days), ex);
     }
     logger.info("Deleted audit records  older than {} days", days);
   }

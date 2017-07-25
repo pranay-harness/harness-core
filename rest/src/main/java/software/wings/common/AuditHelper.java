@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
+import software.wings.utils.Misc;
 
 import java.io.InputStream;
 import javax.inject.Singleton;
@@ -46,7 +47,7 @@ public class AuditHelper {
       auditThreadLocal.set(header);
       return header;
     } catch (RuntimeException exception) {
-      logger.error("Exception occurred while trying to save HttpAuditHeader:=" + exception.getMessage(), exception);
+      Misc.error(logger, "Exception occurred while trying to save HttpAuditHeader", exception);
       throw exception;
     }
   }
@@ -63,8 +64,9 @@ public class AuditHelper {
     try {
       return auditService.create(header, requestType, inputStream);
     } catch (RuntimeException exception) {
-      logger.error(
-          "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null));
+      Misc.error(logger,
+          "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null),
+          exception);
       throw exception;
     }
   }

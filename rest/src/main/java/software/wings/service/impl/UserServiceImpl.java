@@ -75,6 +75,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -175,7 +176,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Add account email couldn't be sent " + e);
+      Misc.error(logger, "Add account email couldn't be sent", e);
     }
   }
 
@@ -224,7 +225,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Verification email couldn't be sent " + e);
+      Misc.error(logger, "Verification email couldn't be sent", e);
     }
   }
 
@@ -352,7 +353,7 @@ public class UserServiceImpl implements UserService {
               .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Invitation email couldn't be sent " + e);
+      Misc.error(logger, "Invitation email couldn't be sent ", e);
     }
   }
 
@@ -371,7 +372,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Add account email couldn't be sent " + e);
+      Misc.error(logger, "Add account email couldn't be sent", e);
     }
   }
 
@@ -515,7 +516,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Reset password email couldn't be sent " + e);
+      Misc.error(logger, "Reset password email couldn't be sent", e);
     }
   }
 

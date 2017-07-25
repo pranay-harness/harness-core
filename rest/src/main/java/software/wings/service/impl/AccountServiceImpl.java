@@ -227,7 +227,7 @@ public class AccountServiceImpl implements AccountService {
       try {
         appContainerService.save(appContainer);
       } catch (Exception e) {
-        logger.warn("Error while creating system app container {}", appContainer);
+        Misc.warn(logger, "Error while creating system app container " + appContainer, e);
       }
     }
   }

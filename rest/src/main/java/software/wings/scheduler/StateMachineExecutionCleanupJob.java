@@ -5,9 +5,9 @@ import static software.wings.sm.ExecutionInterrupt.Builder.aWorkflowExecutionInt
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
+import static software.wings.sm.ExecutionStatus.WAITING;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -21,6 +21,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -60,7 +61,7 @@ public class StateMachineExecutionCleanupJob implements Job {
 
         executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       } catch (WingsException e) {
-        logger.error("Error in interrupt for stateExecutionInstance: {}", stateExecutionInstance.getUuid(), e);
+        Misc.error(logger, "Error in interrupt for stateExecutionInstance: " + stateExecutionInstance.getUuid(), e);
       }
     }
   }

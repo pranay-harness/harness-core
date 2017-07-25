@@ -318,7 +318,7 @@ public class HttpState extends State {
           logger.info("assertion status: {}", assertionStatus);
 
         } catch (ClassCastException e) {
-          logger.error("Invalid assertion {} ", e.getMessage());
+          Misc.error(logger, "Invalid assertion " + e.getMessage(), e);
           executionData.setErrorMsg(ASSERTION_ERROR_MSG);
         } catch (JexlException e) {
           Misc.error(logger, "Error in httpStateAssertion", e);

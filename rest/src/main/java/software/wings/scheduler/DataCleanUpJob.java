@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
+import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -35,7 +36,7 @@ public class DataCleanUpJob implements Job {
       artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
       logger.info("Deleting artifacts success");
     } catch (Exception e) {
-      logger.warn("Deleting artifacts failed . Reason: {} ", e.getMessage());
+      Misc.warn(logger, "Deleting artifacts failed.", e);
     }
   }
   private void deleteAuditRecords() {
@@ -44,7 +45,7 @@ public class DataCleanUpJob implements Job {
       auditService.deleteAuditRecords(AUDIT_RETENTION_TIME);
       logger.info("Deleting audit records success");
     } catch (Exception e) {
-      logger.warn("Deleting audit records failed Reason:", e.getMessage());
+      Misc.warn(logger, "Deleting audit records failed.", e);
     }
   }
 }

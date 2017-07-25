@@ -17,9 +17,9 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatus.PAUSING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
@@ -68,6 +68,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -212,7 +213,7 @@ public class PipelineServiceImpl implements PipelineService {
       executorService.submit(() -> updatePipelineEstimates(pipelineExecution));
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
-      logger.warn("Pipeline execution update failed " + cex); // TODO: add retry
+      Misc.warn(logger, "Pipeline execution update failed ", cex); // TODO: add retry
     }
   }
 

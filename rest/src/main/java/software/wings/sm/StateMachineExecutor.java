@@ -316,7 +316,7 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
-      logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
+      Misc.warn(logger, "Error in " + stateExecutionInstance.getStateName() + " execution", exception);
       ex = exception;
     }
 
@@ -475,7 +475,7 @@ public class StateMachineExecutor {
     try {
       return failedTransition(context, exception);
     } catch (Exception e2) {
-      logger.error("Error in transitioning to failure state", e2);
+      Misc.error(logger, "Error in transitioning to failure state", e2);
     }
     return null;
   }

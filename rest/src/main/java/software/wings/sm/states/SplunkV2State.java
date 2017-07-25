@@ -44,6 +44,7 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -384,7 +385,8 @@ public class SplunkV2State extends AbstractAnalysisState {
           }
 
         } catch (Exception e) {
-          logger.error("Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+          Misc.error(logger,
+              "Splunk analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
                   + logCollectionMinute,
               e);
         }

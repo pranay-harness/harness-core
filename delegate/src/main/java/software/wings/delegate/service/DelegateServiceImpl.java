@@ -215,6 +215,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .withConnected(true)
                                     .build());
                   } catch (IOException e) {
+                    Misc.error(logger, "Error connecting", e);
                     e.printStackTrace();
                   }
                 }
@@ -257,7 +258,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
     } catch (IOException e) {
-      logger.error("Failed to resume.");
+      Misc.error(logger, "Failed to resume.", e);
       stop();
     }
   }
@@ -279,7 +280,7 @@ public class DelegateServiceImpl implements DelegateService {
               builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
           String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
-          logger.error(msg, e);
+          Misc.error(logger, msg, e);
           throw new WingsException(msg, e);
         }
         if (delegateResponse == null) {
@@ -296,7 +297,7 @@ public class DelegateServiceImpl implements DelegateService {
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
       String msg = "Timeout occurred while registering Delegate [" + accountId + "] with manager";
-      logger.error(msg, e);
+      Misc.error(logger, msg, e);
       throw new WingsException(msg, e);
     }
   }

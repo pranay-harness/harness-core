@@ -99,7 +99,8 @@ public class NexusServiceImpl implements NexusService {
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId, name);
       return getArtifactPaths(request);
     } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Repository contents  from Nexus server " + nexusConfig.getNexusUrl()
+      Misc.error(logger,
+          "Error occurred while retrieving Repository contents from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();

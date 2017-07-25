@@ -31,6 +31,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,7 +105,7 @@ public class StateMachine extends Base {
       deepTransform(graph, stencilMap);
       valid = true;
     } catch (WingsException wingsException) {
-      logger.error("Error in Statemachine transform", wingsException);
+      Misc.error(logger, "Error in Statemachine transform", wingsException);
       wingsException.getResponseMessageList().stream().forEach(responseMessage -> {
         sb.append(
             ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(), wingsException.getParams()));
@@ -128,10 +129,10 @@ public class StateMachine extends Base {
     try {
       transformPipeline(pipeline, stencilMap);
     } catch (WingsException e) {
-      logger.error(e.getLocalizedMessage(), e);
+      Misc.error(logger, e.getLocalizedMessage(), e);
       throw e;
     } catch (Exception e) {
-      logger.error(e.getLocalizedMessage(), e);
+      Misc.error(logger, e.getLocalizedMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateMachine transformation error");
     }
   }

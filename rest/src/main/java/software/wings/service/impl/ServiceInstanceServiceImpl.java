@@ -19,6 +19,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -92,7 +93,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
       try {
         wingsPersistence.save(serviceInstance);
       } catch (DuplicateKeyException ex) {
-        logger.warn("Reinserting an existing service instance ignore");
+        Misc.warn(logger, "Reinserting an existing service instance ignore", ex);
       }
     });
   }

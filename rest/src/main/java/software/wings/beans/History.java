@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 /**
  * Created by peeyushaggarwal on 6/20/16.
@@ -277,7 +278,10 @@ public class History extends Base {
       try {
         entityOldValue = (Base) asObject(entityOldValueStr, Class.forName(entityOldValueClass));
       } catch (Exception e) {
-        logger.error("Error in Json conversion- entityOldValueClass: {}, entityOldValueStr: {}");
+        Misc.error(logger,
+            String.format("Error in Json conversion- entityOldValueClass: %s, entityOldValueStr: %s",
+                entityOldValueClass, entityOldValueStr),
+            e);
       }
     }
 
@@ -285,7 +289,10 @@ public class History extends Base {
       try {
         entityNewValue = (Base) asObject(entityNewValueStr, Class.forName(entityNewValueClass));
       } catch (Exception e) {
-        logger.error("Error in Json conversion- entityNewValueClass: {}, entityNewValueStr: {}");
+        Misc.error(logger,
+            String.format("Error in Json conversion- entityNewValueClass: %s, entityNewValueStr: %s",
+                entityNewValueClass, entityNewValueStr),
+            e);
       }
     }
   }

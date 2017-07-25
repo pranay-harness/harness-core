@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -176,7 +177,9 @@ public class StencilPostProcessor {
         return overridingStencil;
       }
     } catch (Exception e) {
-      logger.warn("Unable to set default value for stencil {}:field {} with value {}", stencil, fieldName, value);
+      Misc.warn(logger,
+          String.format("Unable to set default value for stencil %s:field %s with value %s", stencil, fieldName, value),
+          e);
     }
     return stencil;
   }
@@ -197,7 +200,8 @@ public class StencilPostProcessor {
         });
       }
     } catch (Exception e) {
-      logger.warn("Unable to fill in values for stencil {}:field {} with data {}", t, fieldName, data);
+      Misc.warn(logger,
+          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return Stream.of(t);
   }
@@ -216,7 +220,8 @@ public class StencilPostProcessor {
         });
       }
     } catch (Exception e) {
-      logger.warn("Unable to fill in values for stencil {}:field {} with data {}", t, fieldName, data);
+      Misc.warn(logger,
+          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return Stream.of(t);
   }
@@ -233,7 +238,8 @@ public class StencilPostProcessor {
         return overridingStencil;
       }
     } catch (Exception e) {
-      logger.warn("Unable to fill in values for stencil {}:field {} with data {}", t, fieldName, data);
+      Misc.warn(logger,
+          String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return t;
   }
