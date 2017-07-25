@@ -48,6 +48,20 @@ public class StatisticsResource {
   }
 
   /**
+   * Top consumers rest response.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("top-consumers-services")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WingsStatistics> topConsumerServices(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getTopConsumerServices(accountId, appIds));
+  }
+
+  /**
    * User statistics rest response.
    *
    * @return the rest response

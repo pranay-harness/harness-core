@@ -12,6 +12,8 @@ import java.util.Objects;
 public class TopConsumer {
   @Id private String appId;
   private String appName;
+  private String serviceId;
+  private String serviceName;
   private int successfulActivityCount;
   private int failedActivityCount;
   private int totalCount;
@@ -52,6 +54,35 @@ public class TopConsumer {
     this.appId = appId;
   }
 
+  /**
+   * Get Service id
+   * @return
+   */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * Set Service Id
+   * @param serviceId
+   */
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  /**
+   * Get Service Name
+   */
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  /**
+   * Set Service Name
+   */
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
   /**
    * Gets successful activity count.
    *
@@ -111,7 +142,9 @@ public class TopConsumer {
     return MoreObjects.toStringHelper(this)
         .add("appId", appId)
         .add("appName", appName)
+        .add("serviceId", serviceId)
         .add("successfulActivityCount", successfulActivityCount)
+        .add("serviceName", serviceName)
         .add("failedActivityCount", failedActivityCount)
         .add("totalCount", totalCount)
         .toString();
@@ -119,7 +152,8 @@ public class TopConsumer {
 
   @Override
   public int hashCode() {
-    return Objects.hash(appId, appName, successfulActivityCount, failedActivityCount, totalCount);
+    return Objects.hash(
+        appId, appName, successfulActivityCount, failedActivityCount, totalCount, serviceId, serviceName);
   }
 
   @Override
@@ -134,7 +168,8 @@ public class TopConsumer {
     return Objects.equals(this.appId, other.appId) && Objects.equals(this.appName, other.appName)
         && Objects.equals(this.successfulActivityCount, other.successfulActivityCount)
         && Objects.equals(this.failedActivityCount, other.failedActivityCount)
-        && Objects.equals(this.totalCount, other.totalCount);
+        && Objects.equals(this.totalCount, other.totalCount) && Objects.equals(this.serviceId, this.serviceId)
+        && Objects.equals(this.serviceName, this.serviceName);
   }
 
   /**
@@ -143,6 +178,8 @@ public class TopConsumer {
   public static final class Builder {
     private String appId;
     private String appName;
+    private String serviceId;
+    private String serviceName;
     private int successfulActivityCount;
     private int failedActivityCount;
     private int totalCount;
@@ -180,6 +217,21 @@ public class TopConsumer {
       return this;
     }
 
+    /**
+     * With service id builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
+     * With service name builder
+     */
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
     /**
      * With successful activity count builder.
      *
@@ -222,6 +274,8 @@ public class TopConsumer {
       return aTopConsumer()
           .withAppId(appId)
           .withAppName(appName)
+          .withServiceId(serviceId)
+          .withServiceName(serviceName)
           .withSuccessfulActivityCount(successfulActivityCount)
           .withFailedActivityCount(failedActivityCount)
           .withTotalCount(totalCount);
@@ -236,6 +290,8 @@ public class TopConsumer {
       TopConsumer topConsumer = new TopConsumer();
       topConsumer.setAppId(appId);
       topConsumer.setAppName(appName);
+      topConsumer.setServiceId(serviceId);
+      topConsumer.setServiceName(serviceName);
       topConsumer.setSuccessfulActivityCount(successfulActivityCount);
       topConsumer.setFailedActivityCount(failedActivityCount);
       topConsumer.setTotalCount(totalCount);

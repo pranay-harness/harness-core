@@ -21,21 +21,29 @@ import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
@@ -57,9 +65,11 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 
 import java.time.Instant;
@@ -68,9 +78,11 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
@@ -91,7 +103,22 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private ExecutorService executorService;
   @Inject private NotificationService notificationService;
   @Inject private ActivityService activityService;
+  @Inject private ServiceResourceService serviceResourceService;
 
+  @Override
+  public WingsStatistics getTopConsumerServices(String accountId, List<String> appIds) {
+    ImmutableMap<String, Application> appIdMap;
+    List<Application> applications;
+    if (CollectionUtils.isEmpty(appIds)) {
+      applications =
+          appService.list(aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0).getResponse();
+    } else {
+      applications =
+          appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
+    }
+    appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
+    return new TopConsumersStatistics(getTopConsumerServicesForPastXDays(30, appIdMap.keySet()));
+  }
   @Override
   public WingsStatistics getTopConsumers(String accountId, List<String> appIds) {
     ImmutableMap<String, Application> appIdMap;
@@ -104,13 +131,15 @@ public class StatisticsServiceImpl implements StatisticsService {
       applications =
           appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
     }
-    appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
-    topConsumers =
-        getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
-    topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
-    return new TopConsumersStatistics(topConsumers);
-  }
 
+    appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
+    topConsumers = getTopConsumerForPastXDays(30, appIdMap.keySet())
+                       .stream()
+                       .filter(tc -> appIdMap.containsKey(tc.getAppId()))
+                       .collect(toList());
+    topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
+    return new TopConsumersStatistics(getTopConsumerForPastXDays(30, appIdMap.keySet()));
+  }
   @Override
   public Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
@@ -121,7 +150,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
             .addFilter("appId", IN, appIds.toArray())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
@@ -129,8 +158,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
     if (pageResponse != null) {
-      List<WorkflowExecution> workflowExecutions =
-          workflowExecutionService.listExecutions(pageRequest, false, false, false, false).getResponse();
+      List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
 
       Map<String, List<WorkflowExecution>> workflowExecutionsByApp =
           workflowExecutions.stream().collect(groupingBy(WorkflowExecution::getAppId));
@@ -219,7 +247,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
             .addFilter("appId", IN, authorizedAppIds.toArray())
             .build();
     List<WorkflowExecution> workflowExecutions =
@@ -265,7 +293,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
     if (CollectionUtils.isEmpty(appIds)) {
@@ -404,15 +432,17 @@ public class StatisticsServiceImpl implements StatisticsService {
     return new AggregatedDayStats(aggTotalCount, aggFailureCount, aggInstanceCount, dayStats);
   }
 
-  private List<TopConsumer> getTopConsumerForPastXDays(int days) {
+  private List<TopConsumer> getTopConsumerForPastXDays(int days, Set<String> appIds) {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
 
     List<TopConsumer> topConsumers = new ArrayList<>();
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field("appId")
+                                         .in(appIds)
                                          .field("createdAt")
                                          .greaterThanOrEq(epochMilli)
                                          .field("status")
-                                         .hasAnyOf(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                         .hasAnyOf(asList(ExecutionStatus.FAILED, SUCCESS))
                                          .field("workflowType")
                                          .hasAnyOf(asList(ORCHESTRATION, SIMPLE));
 
@@ -430,10 +460,59 @@ public class StatisticsServiceImpl implements StatisticsService {
     return topConsumers;
   }
 
+  private List<TopConsumer> getTopConsumerServicesForPastXDays(int days, Set<String> appIds) {
+    long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
+    List<TopConsumer> topConsumers = new ArrayList<>();
+    PageRequest pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, epochMilli).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
+            .addFilter(aSearchFilter().withField("status", IN, FAILED, SUCCESS).build())
+            .addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build())
+            .build();
+
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
+    if (pageResponse != null) {
+      Map<String, TopConsumer> topConsumerMap = new HashMap<>();
+      TopConsumer topConsumer;
+      List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
+      for (WorkflowExecution execution : wflExecutions) {
+        for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
+          ContextElement contextElement = elementExecutionSummary.getContextElement();
+          if (contextElement != null) {
+            String uuid = contextElement.getUuid();
+            if (!topConsumerMap.containsKey(uuid)) {
+              TopConsumer tempConsumer = aTopConsumer()
+                                             .withAppId(execution.getAppId())
+                                             .withAppName(execution.getAppId())
+                                             .withServiceId(uuid)
+                                             .withServiceName(contextElement.getName())
+                                             .build();
+              topConsumerMap.put(uuid, tempConsumer);
+              topConsumers.add(tempConsumer);
+            }
+            topConsumer = topConsumerMap.get(uuid);
+            if (elementExecutionSummary.getStatus().equals(SUCCESS)) {
+              topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+            } else {
+              topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+            }
+          }
+        }
+      }
+    }
+    Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
+    return topConsumers.stream().sorted(byCount).collect(toList());
+  }
+
   private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
     TopConsumer topConsumer = aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
     activityStatusAggregation.getStatus().stream().forEach(statusCount -> {
-      if (statusCount.getStatus().equals(ExecutionStatus.SUCCESS)) {
+      if (statusCount.getStatus().equals(SUCCESS)) {
         topConsumer.setSuccessfulActivityCount(statusCount.getCount());
       } else {
         topConsumer.setFailedActivityCount(statusCount.getCount());

@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
@@ -21,10 +22,13 @@ import static software.wings.beans.stats.NotificationCount.Builder.aNotification
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -38,6 +42,7 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.api.ServiceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
@@ -109,12 +114,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
     when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
-        .thenReturn(asList(anActivityStatusAggregation()
-                               .withAppId(APP_ID)
-                               .withStatus(asList(new StatusCount(ExecutionStatus.SUCCESS, 5),
-                                   new StatusCount(ExecutionStatus.FAILED, 5)))
-                               .build())
-                        .iterator());
+        .thenReturn(
+            asList(anActivityStatusAggregation()
+                       .withAppId(APP_ID)
+                       .withStatus(asList(new StatusCount(SUCCESS, 5), new StatusCount(ExecutionStatus.FAILED, 5)))
+                       .build())
+                .iterator());
     TopConsumersStatistics topConsumers = (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID, null);
     assertThat(topConsumers.getTopConsumers())
         .hasSize(1)
@@ -131,12 +136,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
     when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
-        .thenReturn(asList(anActivityStatusAggregation()
-                               .withAppId(APP_ID)
-                               .withStatus(asList(new StatusCount(ExecutionStatus.SUCCESS, 5),
-                                   new StatusCount(ExecutionStatus.FAILED, 5)))
-                               .build())
-                        .iterator());
+        .thenReturn(
+            asList(anActivityStatusAggregation()
+                       .withAppId(APP_ID)
+                       .withStatus(asList(new StatusCount(SUCCESS, 5), new StatusCount(ExecutionStatus.FAILED, 5)))
+                       .build())
+                .iterator());
     TopConsumersStatistics topConsumers =
         (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID, asList(APP_ID));
     assertThat(topConsumers.getTopConsumers())
@@ -148,6 +153,74 @@ public class StatisticsServiceTest extends WingsBaseTest {
                              .withTotalCount(10)
                              .build());
   }
+
+  @Test
+  public void shouldGetTopConsumerServices() {
+    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+                        .minus(0, ChronoUnit.DAYS)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+                          .minus(29, ChronoUnit.DAYS)
+                          .atStartOfDay(ZoneId.systemDefault())
+                          .toInstant()
+                          .toEpochMilli();
+
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+
+    List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withStatus(SUCCESS)
+                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .build());
+    List<WorkflowExecution> executions = asList(aWorkflowExecution()
+                                                    .withAppId(APP_ID)
+                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withStatus(SUCCESS)
+                                                    .withServiceExecutionSummaries(serviceExecutionSummaries)
+                                                    .withCreatedAt(endEpoch)
+                                                    .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.PROD)
+            .withStatus(SUCCESS)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(endEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build());
+
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
+        .thenReturn(aPageResponse().withResponse(executions).build());
+    TopConsumersStatistics topConsumers =
+        (TopConsumersStatistics) statisticsService.getTopConsumerServices(ACCOUNT_ID, null);
+    assertThat(topConsumers.getTopConsumers())
+        .hasSize(1)
+        .containsExactlyInAnyOrder(aTopConsumer()
+                                       .withAppId(APP_ID)
+                                       .withAppName(APP_ID)
+                                       .withServiceId(SERVICE_ID)
+                                       .withServiceName(SERVICE_NAME)
+                                       .withSuccessfulActivityCount(4)
+                                       .withFailedActivityCount(0)
+                                       .withTotalCount(4)
+                                       .build());
+  }
+
   @Test
   public void shouldGetApplicationKeyStats() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
@@ -170,14 +243,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
                                                     .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withEnvType(EnvironmentType.PROD)
-            .withStatus(ExecutionStatus.SUCCESS)
+            .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),
@@ -225,7 +298,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                                     .withAppId(APP_ID)
                                                     .withAppName(APP_NAME)
                                                     .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .withStatus(SUCCESS)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
@@ -264,7 +337,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                                     .withAppId(APP_ID)
                                                     .withAppName(APP_NAME)
                                                     .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .withStatus(SUCCESS)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
@@ -310,14 +383,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
                                                     .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withEnvType(EnvironmentType.PROD)
-            .withStatus(ExecutionStatus.SUCCESS)
+            .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),

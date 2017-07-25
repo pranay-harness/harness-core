@@ -24,6 +24,15 @@ public interface StatisticsService {
   WingsStatistics getTopConsumers(@NotNull String accountId, List<String> appIds);
 
   /**
+   * Gets top consumers.
+   *
+   * @return the top consumers
+   * @param accountId
+   * @param appIds Application Ids
+   */
+  WingsStatistics getTopConsumerServices(@NotNull String accountId, List<String> appIds);
+
+  /**
    * Gets application key stats.
    *
    * @param appIds    the list of app ids
