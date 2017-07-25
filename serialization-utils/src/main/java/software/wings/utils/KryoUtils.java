@@ -89,8 +89,7 @@ public class KryoUtils {
       output.flush();
       return baos.toByteArray();
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      logException(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -104,8 +103,7 @@ public class KryoUtils {
       });
       output.flush();
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
-      Arrays.stream(exception.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
+      logException(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -123,5 +121,15 @@ public class KryoUtils {
 
   public static Object asObject(String base64) {
     return asObject(Base64.decodeBase64(base64));
+  }
+
+  private static void logException(String msg, Throwable t) {
+    logger.error(msg, t);
+    while (t != null) {
+      logger.error("***** Caused by: " + t.getClass().getCanonicalName()
+          + (t.getMessage() != null ? ": " + t.getMessage() : ""));
+      Arrays.stream(t.getStackTrace()).forEach(elem -> logger.error(" --- Trace: " + elem));
+      t = t.getCause();
+    }
   }
 }

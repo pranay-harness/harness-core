@@ -110,23 +110,26 @@ public class Misc {
   }
 
   public static void error(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.ERROR, msg, t);
+    logger.error(msg, t);
+    writeException(logger, LoggingLevel.ERROR, t);
   }
 
   public static void warn(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.WARN, msg, t);
+    logger.warn(msg, t);
+    writeException(logger, LoggingLevel.WARN, t);
   }
 
   public static void info(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.INFO, msg, t);
+    logger.info(msg, t);
+    writeException(logger, LoggingLevel.INFO, t);
   }
 
   public static void debug(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.DEBUG, msg, t);
+    logger.debug(msg, t);
+    writeException(logger, LoggingLevel.DEBUG, t);
   }
 
-  private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
-    logIt(logger, level, msg);
+  private static void writeException(Logger logger, LoggingLevel level, Throwable t) {
     while (t != null) {
       logIt(logger, level,
           "***** Caused by: " + t.getClass().getCanonicalName()
