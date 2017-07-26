@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by bzane on 7/26/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateScripts extends Base {
   private String delegateId;
   private String version;

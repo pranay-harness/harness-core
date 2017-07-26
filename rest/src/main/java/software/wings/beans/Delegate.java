@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -10,6 +11,7 @@ import java.util.List;
  * Created by peeyushaggarwal on 11/28/16.
  */
 @Entity(value = "delegates", noClassnameStored = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Delegate extends Base {
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
