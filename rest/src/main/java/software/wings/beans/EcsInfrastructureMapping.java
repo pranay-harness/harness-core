@@ -10,6 +10,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -42,6 +43,15 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
    */
   public EcsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_ECS.name());
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getDisplayName() {
+    return String.format("%s (%s/%s::%s) %s", this.getClusterName(), this.getComputeProviderType(),
+        this.getDeploymentType(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        this.getRegion());
   }
 
   /**

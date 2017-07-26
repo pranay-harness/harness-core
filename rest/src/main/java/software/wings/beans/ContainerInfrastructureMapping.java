@@ -3,8 +3,6 @@ package software.wings.beans;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
-import java.util.Optional;
-
 /**
  * Created by rishi on 5/18/17.
  */
@@ -44,13 +42,5 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
     return null;
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getDisplayName() {
-    return String.format("%s (%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
-        this.getDeploymentType(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 }
