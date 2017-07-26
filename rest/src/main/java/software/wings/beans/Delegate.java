@@ -21,10 +21,6 @@ public class Delegate extends Base {
   private long lastHeartBeat;
   private String version;
   private List<TaskType> supportedTaskTypes;
-  @Transient private boolean doUpgrade;
-  @Transient private String upgradeScript;
-  @Transient private String runScript;
-  @Transient private String stopScript;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
@@ -139,32 +135,6 @@ public class Delegate extends Base {
   }
 
   /**
-   * Getter for property 'doUpgrade'.
-   *
-   * @return Value for property 'doUpgrade'.
-   */
-  public boolean isDoUpgrade() {
-    return doUpgrade;
-  }
-
-  /**
-   * Setter for property 'doUpgrade'.
-   *
-   * @param doUpgrade Value to set for property 'doUpgrade'.
-   */
-  public void setDoUpgrade(boolean doUpgrade) {
-    this.doUpgrade = doUpgrade;
-  }
-
-  public String getUpgradeScript() {
-    return upgradeScript;
-  }
-
-  public void setUpgradeScript(String upgradeScript) {
-    this.upgradeScript = upgradeScript;
-  }
-
-  /**
    * Getter for property 'connected'.
    *
    * @return Value for property 'connected'.
@@ -216,35 +186,6 @@ public class Delegate extends Base {
    */
   public void setSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
     this.supportedTaskTypes = supportedTaskTypes;
-  }
-
-  public String getRunScript() {
-    return runScript;
-  }
-
-  public void setRunScript(String runScript) {
-    this.runScript = runScript;
-  }
-
-  public String getStopScript() {
-    return stopScript;
-  }
-
-  public void setStopScript(String stopScript) {
-    this.stopScript = stopScript;
-  }
-
-  public String getScriptByName(String fileName) {
-    switch (fileName) {
-      case "upgrade.sh":
-        return getUpgradeScript();
-      case "run.sh":
-        return getRunScript();
-      case "stop.sh":
-        return getStopScript();
-      default:
-        return null;
-    }
   }
 
   public enum Status { ENABLED, DISABLED }
@@ -390,8 +331,6 @@ public class Delegate extends Base {
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setSupportedTaskTypes(supportedTaskTypes);
-      delegate.setDoUpgrade(doUpgrade);
-      delegate.setUpgradeScript(upgradeScript);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
@@ -408,7 +347,6 @@ public class Delegate extends Base {
     return "Delegate{"
         + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", ip='" + ip + '\''
         + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat + ", version='" + version + '\''
-        + ", supportedTaskTypes=" + supportedTaskTypes + ", doUpgrade=" + doUpgrade + ", upgradeScript='"
-        + upgradeScript + '\'' + '}';
+        + ", supportedTaskTypes=" + supportedTaskTypes + '}';
   }
 }

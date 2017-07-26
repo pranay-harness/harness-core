@@ -57,7 +57,7 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Part MultipartBody.Part file);
 
   @GET("delegates/{delegateId}/upgrade")
-  Call<RestResponse<Delegate>> checkForUpgrade(
+  Call<RestResponse<DelegateScripts>> checkForUpgrade(
       @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
   @GET("delegates/{delegateId}/upgrade-check")

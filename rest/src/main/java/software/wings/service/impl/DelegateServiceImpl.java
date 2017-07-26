@@ -151,38 +151,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
-      throws IOException, TemplateException {
-    Delegate delegate = get(accountId, delegateId);
-    logger.info("Checking delegate for upgrade: {}", delegate.getUuid());
-
-    ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
-
-    if (scriptParams != null && scriptParams.size() > 0) {
-      delegate.setDoUpgrade(true);
-      logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
-      delegate.setVersion((String) scriptParams.get("upgradeVersion"));
-
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
-        delegate.setUpgradeScript(stringWriter.toString());
-      }
-
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("run.sh.ftl").process(scriptParams, stringWriter);
-        delegate.setRunScript(stringWriter.toString());
-      }
-
-      try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
-        delegate.setStopScript(stringWriter.toString());
-      }
-    }
-    return delegate;
-  }
-
-  @Override
-  public DelegateScripts checkForUpgradeScripts(String accountId, String delegateId, String version, String managerHost)
+  public DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
     Delegate delegate = get(accountId, delegateId);
     logger.info("Checking delegate for upgrade: {}", delegate.getUuid());

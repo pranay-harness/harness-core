@@ -52,14 +52,11 @@ public interface DelegateService {
    * @param delegateId  the delegate id
    * @param version     the version
    * @param managerHost the manager host
-   * @return the delegate
+   * @return the delegate scripts
    * @throws IOException       the io exception
    * @throws TemplateException the template exception
    */
-  Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
-      throws IOException, TemplateException;
-
-  DelegateScripts checkForUpgradeScripts(String accountId, String delegateId, String version, String managerHost)
+  DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException;
 
   /**

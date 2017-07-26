@@ -202,7 +202,7 @@ public class DelegateResource {
   @Path("{deletgateId}/upgrade")
   @Timed
   @ExceptionMetered
-  public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
+  public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
@@ -217,7 +217,7 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> checkForUpgradeScripts(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.checkForUpgradeScripts(
+    return new RestResponse<>(delegateService.checkForUpgrade(
         accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
   }
 }

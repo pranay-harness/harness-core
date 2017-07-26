@@ -313,7 +313,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("checking for upgrade");
       try {
         RestResponse<DelegateScripts> restResponse =
-            execute(managerClient.checkForUpgradeScripts(version, delegateId, accountId));
+            execute(managerClient.checkForUpgrade(version, delegateId, accountId));
         // TODO(brett): Store the Delegate object to check for task filtering on acquire
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");
