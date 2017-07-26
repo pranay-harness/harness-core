@@ -24,7 +24,15 @@ public class Delegate extends Base {
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
-  // TODO(brett): Add fields to filter delegate tasks, encapsulated in a class
+  private DelegateScope delegateScope = new DelegateScope();
+
+  public DelegateScope getDelegateScope() {
+    return delegateScope;
+  }
+
+  public void setDelegateScope(DelegateScope delegateScope) {
+    this.delegateScope = delegateScope;
+  }
 
   /**
    * Getter for property 'accountId'.
@@ -199,8 +207,7 @@ public class Delegate extends Base {
     private long lastHeartBeat;
     private String version;
     private List<TaskType> supportedTaskTypes;
-    private boolean doUpgrade;
-    private String upgradeScript;
+    private DelegateScope delegateScope;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
     private String uuid;
     private String appId;
@@ -255,13 +262,8 @@ public class Delegate extends Base {
       return this;
     }
 
-    public Builder withDoUpgrade(boolean doUpgrade) {
-      this.doUpgrade = doUpgrade;
-      return this;
-    }
-
-    public Builder withUpgradeScript(String upgradeScript) {
-      this.upgradeScript = upgradeScript;
+    public Builder withDelegateScope(DelegateScope delegateScope) {
+      this.delegateScope = delegateScope;
       return this;
     }
 
@@ -310,8 +312,7 @@ public class Delegate extends Base {
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
           .withSupportedTaskTypes(supportedTaskTypes)
-          .withDoUpgrade(doUpgrade)
-          .withUpgradeScript(upgradeScript)
+          .withDelegateScope(delegateScope)
           .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
           .withUuid(uuid)
           .withAppId(appId)
@@ -331,6 +332,7 @@ public class Delegate extends Base {
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setSupportedTaskTypes(supportedTaskTypes);
+      delegate.setDelegateScope(delegateScope);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);

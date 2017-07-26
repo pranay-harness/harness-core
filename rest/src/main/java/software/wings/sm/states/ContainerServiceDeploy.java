@@ -105,9 +105,10 @@ public abstract class ContainerServiceDeploy extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
+    String envId = env.getUuid();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
-        serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName()).getCommand();
+        serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
@@ -130,7 +131,7 @@ public abstract class ContainerServiceDeploy extends State {
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(app.getUuid())
                                            .withApplicationName(app.getName())
-                                           .withEnvironmentId(env.getUuid())
+                                           .withEnvironmentId(envId)
                                            .withEnvironmentName(env.getName())
                                            .withEnvironmentType(env.getEnvironmentType())
                                            .withServiceId(service.getUuid())
@@ -143,7 +144,7 @@ public abstract class ContainerServiceDeploy extends State {
                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                            .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
                                            .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
-                                               app.getUuid(), serviceId, env.getUuid(), command.getName()))
+                                               app.getUuid(), serviceId, envId, command.getName()))
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 
@@ -176,7 +177,7 @@ public abstract class ContainerServiceDeploy extends State {
     logger.info("Desired count for service {} is {}", serviceName, desiredCount);
 
     CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(
-        app, env.getUuid(), clusterName, serviceName, region, desiredCount, activity.getUuid(), settingAttribute);
+        app, envId, clusterName, serviceName, region, desiredCount, activity.getUuid(), settingAttribute);
 
     String delegateTaskId =
         delegateService.queueTask(aDelegateTask()
@@ -185,6 +186,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activity.getUuid())
                                       .withParameters(new Object[] {command, commandExecutionContext})
+                                      .withEnvId(envId)
                                       .build());
 
     return anExecutionResponse()
@@ -279,12 +281,13 @@ public abstract class ContainerServiceDeploy extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
+    String envId = env.getUuid();
     Command command = serviceResourceService
                           .getCommandByName(workflowStandardParams.getAppId(),
-                              phaseElement.getServiceElement().getUuid(), env.getUuid(), getCommandName())
+                              phaseElement.getServiceElement().getUuid(), envId, getCommandName())
                           .getCommand();
 
-    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
+    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, envId, clusterName,
         oldServiceName, region, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
     String delegateTaskId =
@@ -294,6 +297,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(commandStateExecutionData.getActivityId())
                                       .withParameters(new Object[] {command, commandExecutionContext})
+                                      .withEnvId(envId)
                                       .build());
 
     return anExecutionResponse()

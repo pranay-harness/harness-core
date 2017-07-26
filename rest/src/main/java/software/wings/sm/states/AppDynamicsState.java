@@ -236,6 +236,9 @@ public class AppDynamicsState extends AbstractAnalysisState {
       throw new WingsException("No appdynamics setting with id: " + appDynamicsConfigId + " found");
     }
 
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
     final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
         new AppdynamicsDataCollectionInfo(appDynamicsConfig, context.getAppId(), context.getStateExecutionInstanceId(),
@@ -247,6 +250,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
+                                    .withEnvId(envId)
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);

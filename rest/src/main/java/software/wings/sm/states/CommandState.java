@@ -322,6 +322,7 @@ public class CommandState extends State {
                                                      .withTaskType(TaskType.COMMAND)
                                                      .withWaitId(activityId)
                                                      .withParameters(new Object[] {command, commandExecutionContext})
+                                                     .withEnvId(envId)
                                                      .build());
     } catch (Exception e) {
       Misc.error(logger, "Exception in command execution", e);
