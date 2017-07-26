@@ -41,6 +41,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
@@ -178,6 +179,41 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
     return delegate;
+  }
+
+  @Override
+  public DelegateScripts checkForUpgradeScripts(String accountId, String delegateId, String version, String managerHost)
+      throws IOException, TemplateException {
+    Delegate delegate = get(accountId, delegateId);
+    logger.info("Checking delegate for upgrade: {}", delegate.getUuid());
+
+    ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
+
+    DelegateScripts delegateScripts = new DelegateScripts();
+    delegateScripts.setDelegateId(delegateId);
+    delegateScripts.setVersion(version);
+    delegateScripts.setDoUpgrade(false);
+    if (scriptParams != null && scriptParams.size() > 0) {
+      logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
+      delegateScripts.setDoUpgrade(true);
+      delegateScripts.setVersion((String) scriptParams.get("upgradeVersion"));
+
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("upgrade.sh.ftl").process(scriptParams, stringWriter);
+        delegateScripts.setUpgradeScript(stringWriter.toString());
+      }
+
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("run.sh.ftl").process(scriptParams, stringWriter);
+        delegateScripts.setRunScript(stringWriter.toString());
+      }
+
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
+        delegateScripts.setStopScript(stringWriter.toString());
+      }
+    }
+    return delegateScripts;
   }
 
   private ImmutableMap<Object, Object> getJarAndScriptRunTimeParamMap(

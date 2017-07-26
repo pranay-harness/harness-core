@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
@@ -205,6 +206,18 @@ public class DelegateResource {
       @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
+        accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{deletgateId}/upgrade-check")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> checkForUpgradeScripts(@Context HttpServletRequest request,
+      @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
+    return new RestResponse<>(delegateService.checkForUpgradeScripts(
         accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
   }
 }

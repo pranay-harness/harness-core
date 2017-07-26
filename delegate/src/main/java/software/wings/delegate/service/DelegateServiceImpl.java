@@ -36,6 +36,7 @@ import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
@@ -311,7 +312,8 @@ public class DelegateServiceImpl implements DelegateService {
     upgradeExecutor.scheduleWithFixedDelay(() -> {
       logger.info("checking for upgrade");
       try {
-        RestResponse<Delegate> restResponse = execute(managerClient.checkForUpgrade(version, delegateId, accountId));
+        RestResponse<DelegateScripts> restResponse =
+            execute(managerClient.checkForUpgradeScripts(version, delegateId, accountId));
         // TODO(brett): Store the Delegate object to check for task filtering on acquire
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");

@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import freemarker.template.TemplateException;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
@@ -56,6 +57,9 @@ public interface DelegateService {
    * @throws TemplateException the template exception
    */
   Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
+      throws IOException, TemplateException;
+
+  DelegateScripts checkForUpgradeScripts(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException;
 
   /**

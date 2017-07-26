@@ -15,6 +15,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Log;
@@ -57,6 +58,10 @@ public interface ManagerClient {
 
   @GET("delegates/{delegateId}/upgrade")
   Call<RestResponse<Delegate>> checkForUpgrade(
+      @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+
+  @GET("delegates/{delegateId}/upgrade-check")
+  Call<RestResponse<DelegateScripts>> checkForUpgradeScripts(
       @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
   @GET("service-templates/{templateId}/compute-files")

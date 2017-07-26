@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScripts;
 import software.wings.managerclient.ManagerClient;
 import software.wings.utils.Misc;
 
@@ -50,9 +50,10 @@ public class UpgradeServiceImpl implements UpgradeService {
   private AtomicBoolean isUpgrading = new AtomicBoolean(false);
 
   @Override
-  public void doUpgrade(Delegate delegate, String version) throws IOException, TimeoutException, InterruptedException {
+  public void doUpgrade(DelegateScripts delegateScripts, String version)
+      throws IOException, TimeoutException, InterruptedException {
     logger.info("Replace run scripts");
-    replaceRunScripts(delegate);
+    replaceRunScripts(delegateScripts);
     logger.info("Run scripts downloaded");
 
     StartedProcess process = null;
@@ -81,8 +82,8 @@ public class UpgradeServiceImpl implements UpgradeService {
           signalService.pause();
           logger.info("Old delegate paused");
           new PrintWriter(process.getProcess().getOutputStream(), true).println("goahead");
-          removeDelegateVersionFromCapsule(delegate, version);
-          cleanupOldDelegateVersionFromBackup(delegate, version);
+          removeDelegateVersionFromCapsule(delegateScripts, version);
+          cleanupOldDelegateVersionFromBackup(delegateScripts, version);
 
           signalService.stop();
         } finally {
@@ -117,28 +118,30 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
-  private void cleanupOldDelegateVersionFromBackup(Delegate delegate, String version) {
+  private void cleanupOldDelegateVersionFromBackup(DelegateScripts delegateScripts, String version) {
     try {
-      cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion(), "backup.");
-    } catch (Exception ex) {
-      Misc.error(logger, String.format("Failed to clean delegate version [%s] from Backup", delegate.getVersion()), ex);
-    }
-  }
-
-  private void removeDelegateVersionFromCapsule(Delegate delegate, String version) {
-    try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion(), "delegate-");
+      cleanup(new File(System.getProperty("user.dir")), version, delegateScripts.getVersion(), "backup.");
     } catch (Exception ex) {
       Misc.error(
-          logger, String.format("Failed to clean delegate version [%s] from Capsule", delegate.getVersion()), ex);
+          logger, String.format("Failed to clean delegate version [%s] from Backup", delegateScripts.getVersion()), ex);
     }
   }
 
-  private void replaceRunScripts(Delegate delegate) throws IOException {
+  private void removeDelegateVersionFromCapsule(DelegateScripts delegateScripts, String version) {
+    try {
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegateScripts.getVersion(),
+          "delegate-");
+    } catch (Exception ex) {
+      Misc.error(logger,
+          String.format("Failed to clean delegate version [%s] from Capsule", delegateScripts.getVersion()), ex);
+    }
+  }
+
+  private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
     for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
-      String script = delegate.getScriptByName(fileName);
+      String script = delegateScripts.getScriptByName(fileName);
 
       if (script != null && script.length() != 0) {
         try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
