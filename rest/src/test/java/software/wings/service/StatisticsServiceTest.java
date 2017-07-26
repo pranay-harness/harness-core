@@ -180,6 +180,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                    .build());
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
+                                                    .withAppName(APP_NAME)
                                                     .withEnvType(EnvironmentType.PROD)
                                                     .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
@@ -187,6 +188,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
+            .withAppName(APP_NAME)
             .withEnvType(EnvironmentType.PROD)
             .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
@@ -194,6 +196,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
+            .withAppName(APP_NAME)
             .withEnvType(EnvironmentType.NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
@@ -201,6 +204,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
+            .withAppName(APP_NAME)
             .withEnvType(EnvironmentType.NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
