@@ -170,7 +170,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toEpochMilli();
 
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
-        .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+        .thenReturn(
+            aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
     List<ElementExecutionSummary> serviceExecutionSummaries =
         asList(anElementExecutionSummary()
@@ -214,7 +215,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .hasSize(1)
         .containsExactlyInAnyOrder(aTopConsumer()
                                        .withAppId(APP_ID)
-                                       .withAppName(APP_ID)
+                                       .withAppName(APP_NAME)
                                        .withServiceId(SERVICE_ID)
                                        .withServiceName(SERVICE_NAME)
                                        .withSuccessfulActivityCount(4)

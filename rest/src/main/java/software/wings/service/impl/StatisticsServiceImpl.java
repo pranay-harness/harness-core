@@ -486,7 +486,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             if (!topConsumerMap.containsKey(uuid)) {
               TopConsumer tempConsumer = aTopConsumer()
                                              .withAppId(execution.getAppId())
-                                             .withAppName(execution.getAppId())
+                                             .withAppName(execution.getAppName())
                                              .withServiceId(uuid)
                                              .withServiceName(contextElement.getName())
                                              .build();
