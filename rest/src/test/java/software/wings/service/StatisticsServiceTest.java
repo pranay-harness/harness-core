@@ -135,6 +135,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   public void shouldGetTopConsumersMultipleAppIds() {
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+
     when(aggregationPipeline.aggregate(ActivityStatusAggregation.class))
         .thenReturn(
             asList(anActivityStatusAggregation()
@@ -142,6 +143,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                        .withStatus(asList(new StatusCount(SUCCESS, 5), new StatusCount(ExecutionStatus.FAILED, 5)))
                        .build())
                 .iterator());
+
     TopConsumersStatistics topConsumers =
         (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID, asList(APP_ID));
     assertThat(topConsumers.getTopConsumers())

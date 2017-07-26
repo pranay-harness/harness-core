@@ -70,6 +70,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionStatus;
 
 import java.time.Instant;
@@ -131,14 +132,13 @@ public class StatisticsServiceImpl implements StatisticsService {
       applications =
           appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
     }
-
     appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
     topConsumers = getTopConsumerForPastXDays(30, appIdMap.keySet())
                        .stream()
                        .filter(tc -> appIdMap.containsKey(tc.getAppId()))
                        .collect(toList());
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
-    return new TopConsumersStatistics(getTopConsumerForPastXDays(30, appIdMap.keySet()));
+    return new TopConsumersStatistics(topConsumers);
   }
   @Override
   public Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays) {
@@ -481,7 +481,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       for (WorkflowExecution execution : wflExecutions) {
         for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
           ContextElement contextElement = elementExecutionSummary.getContextElement();
-          if (contextElement != null) {
+          if (contextElement != null && contextElement.getElementType().equals(ContextElementType.SERVICE)) {
             String uuid = contextElement.getUuid();
             if (!topConsumerMap.containsKey(uuid)) {
               TopConsumer tempConsumer = aTopConsumer()
