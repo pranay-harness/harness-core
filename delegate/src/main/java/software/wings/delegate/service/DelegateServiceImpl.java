@@ -55,6 +55,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -153,27 +154,24 @@ public class DelegateServiceImpl implements DelegateService {
               new Function<String>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(String message) {
-                  logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                  fixedThreadPool.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                      logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                      if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
-                        try {
-                          DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                          if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-                            abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-                          } else {
-                            dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
-                          }
-                        } catch (Exception e) {
-                          System.out.println(message);
-                          Misc.error(logger, "Exception while decoding task", e);
+                  logger.info("Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
+                  fixedThreadPool.submit(() -> {
+                    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+                    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+                      try {
+                        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+                        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+                          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+                        } else {
+                          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
                         }
+                      } catch (Exception e) {
+                        System.out.println(message);
+                        Misc.error(logger, "Exception while decoding task", e);
                       }
                     }
                   });
-                  logger.info("Submitted: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+                  logger.info("Submitted: Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
                 }
               })
           .on(Event.ERROR,
