@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import software.wings.AnalysisComparisonStrategy;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
@@ -78,6 +79,11 @@ public class SplunkV2State extends AbstractAnalysisState {
   @DefaultValue("15")
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
+
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
+  @Attributes(
+      title = "How do you want to compare for analyis", description = "Compare with previous run or current run")
+  private String comparisonStrategy;
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -406,5 +412,12 @@ public class SplunkV2State extends AbstractAnalysisState {
   @Override
   public Logger getLogger() {
     return logger;
+  }
+
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 }
