@@ -21,7 +21,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -255,7 +254,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
 
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID))
-        .the artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+    // when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID))
+    artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
   }
 }
