@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Created by peeyushaggarwal on 5/12/16.
@@ -26,12 +27,12 @@ public interface Jenkins {
   JobWithDetails getJob(String jobname) throws IOException;
 
   /**
-   * Gets jobs.
-   *
-   * @return the jobs
-   * @throws IOException the io exception
+   * Gets the child jobs for the given parent folder job. For the root level jobs, pass null.
+   * @param parentFolderJobName parent folder job name. To get the root level jobs, pass null.
+   * @return
+   * @throws IOException
    */
-  Map<String, Job> getJobs() throws IOException;
+  List<JobDetails> getJobs(@Nullable String parentFolderJobName) throws IOException;
 
   /**
    * Gets the builds for job.

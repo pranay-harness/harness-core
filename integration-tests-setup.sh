@@ -37,7 +37,9 @@ if [[ $datagen_status -ne 0 ]] ; then
   exit $datagen_status
 fi
 
-mvn test -pl rest -Dtest=software.wings.integration.JenkinsSettingOverWriteTest
+
+mvn test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest
+
 jenkins_overwrite_status=$?
 if [[ jenkins_overwrite_status -ne 0 ]] ; then
   echo 'jenkins overwrite failed';

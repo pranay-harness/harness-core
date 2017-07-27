@@ -14,11 +14,14 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -37,8 +40,9 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public List<String> getJobs(BambooConfig bambooConfig) {
-    return Lists.newArrayList(bambooService.getPlanKeys(bambooConfig).keySet());
+  public List<JobDetails> getJobs(BambooConfig bambooConfig, Optional<String> parentJobName) {
+    ArrayList<String> strings = Lists.newArrayList(bambooService.getPlanKeys(bambooConfig).keySet());
+    return wrapJobNameWithJobDetails(strings);
   }
 
   @Override

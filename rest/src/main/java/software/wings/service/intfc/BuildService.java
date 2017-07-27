@@ -1,11 +1,15 @@
 package software.wings.service.intfc;
 
+import com.google.common.collect.Lists;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -27,9 +31,10 @@ public interface BuildService<T> {
    * Gets jobs.
    *
    * @param jenkinsConfig the jenkins setting id
+   * @param parentJobName parent job name if any
    * @return the jobs
    */
-  List<String> getJobs(T jenkinsConfig);
+  List<JobDetails> getJobs(T jenkinsConfig, Optional<String> parentJobName);
 
   /**
    * Gets artifact paths.
@@ -90,4 +95,23 @@ public interface BuildService<T> {
    * @throws software.wings.exception.WingsException if not valid
    */
   boolean validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
+
+  default List
+    <JobDetails> wrapJobNameWithJobDetails(List<String> jobNames) {
+      List<JobDetails> jobDetailsList = Lists.newArrayListWithExpectedSize(jobNames.size());
+      for (String jobName : jobNames) {
+        JobDetails jobDetails = new JobDetails(jobName, false);
+        jobDetailsList.add(jobDetails);
+      }
+      return jobDetailsList;
+    }
+
+  default List
+    <String> extractJobNameFromJobDetails(List<JobDetails> jobs) {
+      List<String> jobNames = Lists.newArrayListWithExpectedSize(jobs.size());
+      for (JobDetails job : jobs) {
+        jobNames.add(job.getJobName());
+      }
+      return jobNames;
+    }
 }

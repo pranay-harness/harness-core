@@ -4,10 +4,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 8/18/16.
@@ -18,9 +20,10 @@ public interface BuildSourceService {
    *
    * @param appId     the app id
    * @param settingId the jenkins setting id
+   * @param parentJobName the jenkins parent job name (if any)
    * @return the jobs
    */
-  Set<String> getJobs(@NotEmpty String appId, @NotEmpty String settingId);
+  Set<JobDetails> getJobs(@NotEmpty String appId, @NotEmpty String settingId, @Nullable String parentJobName);
 
   /**
    * Gets plans.

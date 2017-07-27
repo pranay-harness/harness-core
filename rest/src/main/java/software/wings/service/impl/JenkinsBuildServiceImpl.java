@@ -19,6 +19,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -69,11 +71,15 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public List<String> getJobs(JenkinsConfig jenkinsConfig) {
+  public List<JobDetails> getJobs(JenkinsConfig jenkinsConfig, Optional<String> parentJobName) {
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
-      return Lists.newArrayList(jenkins.getJobs().keySet());
+      // Just in case, some one passes null instead of Optional.empty()
+      if (parentJobName == null) {
+        return jenkins.getJobs(null);
+      }
+      return jenkins.getJobs(parentJobName.orElse(null));
     } catch (IOException e) {
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, e);
       wingsException.addParam("message", "Error in fetching jobs from jenkins server");
@@ -118,10 +124,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public Map<String, String> getPlans(JenkinsConfig jenkinsConfig) {
-    List<String> jobs = getJobs(jenkinsConfig);
+    List<JobDetails> jobs = getJobs(jenkinsConfig, Optional.empty());
     Map<String, String> jobKeyMap = new HashMap<>();
     if (jobs != null) {
-      jobs.forEach(jobKey -> jobKeyMap.put(jobKey, jobKey));
+      jobs.forEach(jobKey -> jobKeyMap.put(jobKey.getJobName(), jobKey.getJobName()));
     }
     return jobKeyMap;
   }

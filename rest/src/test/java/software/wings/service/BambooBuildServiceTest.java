@@ -24,10 +24,12 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -67,8 +69,9 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   public void shouldGetPlans() {
     when(bambooService.getPlanKeys(bambooConfig))
         .thenReturn(ImmutableMap.of("PlanAKey", "PlanAName", "PlanBKey", "PlanBName"));
-    List<String> jobs = bambooBuildService.getJobs(bambooConfig);
-    assertThat(jobs).hasSize(2).containsExactlyInAnyOrder("PlanAKey", "PlanBKey");
+    List<JobDetails> jobs = bambooBuildService.getJobs(bambooConfig, Optional.empty());
+    List<String> jobNames = bambooBuildService.extractJobNameFromJobDetails(jobs);
+    assertThat(jobNames).hasSize(2).containsExactlyInAnyOrder("PlanAKey", "PlanBKey");
   }
 
   @Test

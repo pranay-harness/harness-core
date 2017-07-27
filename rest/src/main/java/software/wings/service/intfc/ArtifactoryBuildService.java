@@ -5,10 +5,12 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by sgurubelli on 6/20/17.
@@ -26,7 +28,8 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
   List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig);
 
-  @DelegateTaskType(TaskType.ARTIFACTORY_GET_JOBS) List<String> getJobs(ArtifactoryConfig artifactoryConfig);
+  @DelegateTaskType(TaskType.ARTIFACTORY_GET_JOBS)
+  List<JobDetails> getJobs(ArtifactoryConfig artifactoryConfig, Optional<String> parentJobName);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_PLANS) Map<String, String> getPlans(ArtifactoryConfig artifactoryConfig);
 

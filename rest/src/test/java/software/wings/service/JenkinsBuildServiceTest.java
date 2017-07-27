@@ -39,9 +39,12 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -121,8 +124,10 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldFetchJobNames() throws IOException {
-    when(jenkins.getJobs()).thenReturn(ImmutableMap.of("jobName", new Job()));
-    assertThat(jenkinsBuildService.getJobs(jenkinsConfig)).containsExactly("jobName");
+    when(jenkins.getJobs(anyString())).thenReturn(ImmutableList.of(new JobDetails("jobName", false)));
+    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, Optional.empty());
+    List<String> jobNames = jenkinsBuildService.extractJobNameFromJobDetails(jobs);
+    assertThat(jobNames).containsExactly("jobName");
   }
 
   /**

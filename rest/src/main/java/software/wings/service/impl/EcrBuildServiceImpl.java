@@ -12,11 +12,13 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -37,8 +39,9 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   }
 
   @Override
-  public List<String> getJobs(EcrConfig ecrConfig) {
-    return ecrService.listEcrRegistry(ecrConfig);
+  public List<JobDetails> getJobs(EcrConfig ecrConfig, Optional<String> parentJobName) {
+    List<String> strings = ecrService.listEcrRegistry(ecrConfig);
+    return wrapJobNameWithJobDetails(strings);
   }
 
   @Override
@@ -54,7 +57,9 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public Map<String, String> getPlans(EcrConfig config) {
-    return getJobs(config).stream().collect(Collectors.toMap(o -> o, o -> o));
+    return getJobs(config, Optional.empty())
+        .stream()
+        .collect(Collectors.toMap(o -> o.getJobName(), o -> o.getJobName()));
   }
 
   @Override

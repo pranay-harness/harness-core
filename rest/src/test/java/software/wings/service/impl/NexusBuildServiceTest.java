@@ -17,6 +17,7 @@ import com.newrelic.agent.deps.com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -71,8 +73,9 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   public void shouldGetJobs() {
     when(nexusService.getRepositories(nexusConfig))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
-    List<String> jobs = nexusBuildService.getJobs(nexusConfig);
-    assertThat(jobs).hasSize(2).containsExactlyInAnyOrder("releases", "snapshots");
+    List<JobDetails> jobs = nexusBuildService.getJobs(nexusConfig, Optional.empty());
+    List<String> jobNames = nexusBuildService.extractJobNameFromJobDetails(jobs);
+    assertThat(jobNames).hasSize(2).containsExactlyInAnyOrder("releases", "snapshots");
   }
 
   @Test

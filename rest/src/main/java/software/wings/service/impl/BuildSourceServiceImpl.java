@@ -12,6 +12,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -19,9 +20,12 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -39,10 +43,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
-  public Set<String> getJobs(String appId, String settingId) {
+  public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return Sets.newHashSet(getBuildService(settingAttribute, appId).getJobs(settingAttribute.getValue()));
+    List<JobDetails> jobs = getBuildService(settingAttribute, appId)
+                                .getJobs(settingAttribute.getValue(), Optional.ofNullable(parentJobName));
+    // Sorting the job details by name before returning
+    TreeSet<JobDetails> jobDetailsSet =
+        Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
+    jobDetailsSet.addAll(jobs);
+    return jobDetailsSet;
   }
 
   @Override

@@ -11,11 +11,13 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -41,7 +43,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   }
 
   @Override
-  public List<String> getJobs(ArtifactoryConfig config) {
+  public List<JobDetails> getJobs(ArtifactoryConfig config, Optional<String> parentJobName) {
     return null;
   }
 

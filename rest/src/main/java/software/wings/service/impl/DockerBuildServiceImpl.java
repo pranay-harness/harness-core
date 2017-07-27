@@ -11,11 +11,13 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -36,7 +38,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public List<String> getJobs(DockerConfig jenkinsConfig) {
+  public List<JobDetails> getJobs(DockerConfig jenkinsConfig, Optional<String> parentJobName) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 

@@ -13,12 +13,15 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -48,8 +51,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public List<String> getJobs(NexusConfig config) {
-    return Lists.newArrayList(nexusService.getRepositories(config).keySet());
+  public List<JobDetails> getJobs(NexusConfig config, Optional<String> parentJobName) {
+    ArrayList<String> jobNames = Lists.newArrayList(nexusService.getRepositories(config).keySet());
+    return wrapJobNameWithJobDetails(jobNames);
   }
 
   @Override

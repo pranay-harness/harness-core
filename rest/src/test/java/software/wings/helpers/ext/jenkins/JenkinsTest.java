@@ -1,7 +1,12 @@
 package software.wings.helpers.ext.jenkins;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -41,6 +46,27 @@ public class JenkinsTest {
   @Test
   public void shouldGetJobFromJenkins() throws URISyntaxException, IOException {
     assertThat(jenkins.getJob("scheduler")).isNotNull();
+  }
+
+  /**
+   * Should get child jobs from jenkins.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void shouldGetJobsFromJenkins() throws URISyntaxException, IOException {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/view/all/job/parentJob/api/json"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody(
+                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"actions\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\"}]}")
+                    .withHeader("Content-Type", "application/json")));
+
+    List<JobDetails> jobs = jenkins.getJobs("parentJob");
+    assertTrue(jobs.size() == 2);
   }
 
   /**

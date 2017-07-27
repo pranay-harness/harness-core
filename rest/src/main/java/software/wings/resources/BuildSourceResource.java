@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.RestResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.BuildSourceService;
@@ -41,9 +42,9 @@ public class BuildSourceResource {
   @Path("jobs")
   @Timed
   @ExceptionMetered
-  public RestResponse<Set<String>> getJobs(
-      @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getJobs(appId, settingId));
+  public RestResponse<Set<JobDetails>> getJobs(@QueryParam("appId") String appId,
+      @QueryParam("settingId") String settingId, @QueryParam("parentJobName") String parentJobName) {
+    return new RestResponse<>(buildSourceService.getJobs(appId, settingId, parentJobName));
   }
 
   /**

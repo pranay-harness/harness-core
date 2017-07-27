@@ -16,6 +16,7 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.ExtractHeader;
+import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
@@ -37,6 +38,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +54,7 @@ import java.util.regex.Pattern;
  * The Class JenkinsImpl.
  */
 public class JenkinsImpl implements Jenkins {
+  private static final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
   private JenkinsServer jenkinsServer;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -89,9 +95,32 @@ public class JenkinsImpl implements Jenkins {
           .until(
               ()
                   -> {
+                if (jobname == null) {
+                  return null;
+                }
+
+                String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
+                String parentJobName = null;
+                String childJobName;
+                String[] jobNameSplit = decodedJobName.split("/");
+                // UI only handles one level folder jobs right now, we could easily change it to handle multiple levels
+                // when UI is ready.
+                if (jobNameSplit.length > 1) {
+                  parentJobName = jobNameSplit[0];
+                  childJobName = jobNameSplit[1];
+                } else {
+                  childJobName = decodedJobName;
+                }
+
                 JobWithDetails jobWithDetails;
+                FolderJob folderJob = null;
+
                 try {
-                  jobWithDetails = jenkinsServer.getJob(jobname);
+                  if (parentJobName != null && parentJobName.length() > 0) {
+                    folderJob = new FolderJob(parentJobName, "/view/all/job/" + parentJobName + "/");
+                  }
+
+                  jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
                 } catch (HttpResponseException e) {
                   if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
                     Misc.warn(logger, String.format("Error occurred while retrieving job %s. Retrying ", jobname), e);
@@ -114,22 +143,40 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public Map<String, Job> getJobs() throws IOException {
+  public List<JobDetails> getJobs(String parentFolderJobName) throws IOException {
+    int timeoutInSeconds = 15;
     try {
-      return with().pollInterval(3L, TimeUnit.SECONDS).atMost(new Duration(16L, TimeUnit.SECONDS)).until(() -> {
-        try {
-          return jenkinsServer.getJobs();
-        } catch (HttpResponseException e) {
-          if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-            Misc.warn(logger, "Error occurred while retrieving jobs. Retrying", e);
-            return null;
-          } else {
-            throw e;
-          }
-        }
-      }, notNullValue());
+      return with()
+          .pollInterval(3L, TimeUnit.SECONDS)
+          .atMost(new Duration(timeoutInSeconds, TimeUnit.SECONDS))
+          .until(() -> {
+            try {
+              FolderJob folderJob = null;
+              if (parentFolderJobName != null && parentFolderJobName.length() > 0) {
+                folderJob = new FolderJob(parentFolderJobName, "/view/all/job/" + parentFolderJobName + "/");
+              }
+
+              Map<String, Job> jobs = jenkinsServer.getJobs(folderJob);
+              Collection<Job> jobCollection = jobs.values();
+              List<JobDetails> jobDetailsList = new ArrayList<>(jobCollection.size());
+              for (Job job : jobCollection) {
+                // job.get_class().equals(FOLDER_JOB_CLASS_NAME) is to find if the jenkins job is of type folder.
+                // (job instanceOf FolderJob) doesn't work
+                jobDetailsList.add(new JobDetails(job.getName(), job.get_class().equals(FOLDER_JOB_CLASS_NAME)));
+              }
+              return jobDetailsList;
+            } catch (HttpResponseException e) {
+              if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
+                Misc.warn(logger, "Error occurred while retrieving jobs. Retrying", e);
+                return null;
+              } else {
+                throw e;
+              }
+            }
+          }, notNullValue());
     } catch (ConditionTimeoutException e) {
-      Misc.warn(logger, "Jenkins server request did not succeed within 15 secs even after 5 retries", e);
+      Misc.warn(
+          logger, "Jenkins server request did not succeed within " + timeoutInSeconds + "secs even after 5 retries", e);
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Failed to get jobs from jenkins sever");
       wingsException.addParam("jenkinsResponse", "Server Error");
