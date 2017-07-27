@@ -117,7 +117,7 @@ public class JenkinsImpl implements Jenkins {
 
                 try {
                   if (parentJobName != null && parentJobName.length() > 0) {
-                    folderJob = new FolderJob(parentJobName, "/view/All/job/" + parentJobName + "/");
+                    folderJob = new FolderJob(parentJobName, "/job/" + parentJobName + "/");
                   }
 
                   jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
@@ -153,7 +153,7 @@ public class JenkinsImpl implements Jenkins {
             try {
               FolderJob folderJob = null;
               if (parentFolderJobName != null && parentFolderJobName.length() > 0) {
-                folderJob = new FolderJob(parentFolderJobName, "/view/All/job/" + parentFolderJobName + "/");
+                folderJob = new FolderJob(parentFolderJobName, "/job/" + parentFolderJobName + "/");
               }
 
               Map<String, Job> jobs = jenkinsServer.getJobs(folderJob);
