@@ -5,6 +5,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,14 +25,23 @@ public class Delegate extends Base {
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
-  private DelegateScope delegateScope = new DelegateScope();
+  private List<DelegateScope> includeScopes = new ArrayList<>();
+  private List<DelegateScope> excludeScopes = new ArrayList<>();
 
-  public DelegateScope getDelegateScope() {
-    return delegateScope;
+  public List<DelegateScope> getIncludeScopes() {
+    return includeScopes;
   }
 
-  public void setDelegateScope(DelegateScope delegateScope) {
-    this.delegateScope = delegateScope;
+  public void setIncludeScopes(List<DelegateScope> includeScopes) {
+    this.includeScopes = includeScopes;
+  }
+
+  public List<DelegateScope> getExcludeScopes() {
+    return excludeScopes;
+  }
+
+  public void setExcludeScopes(List<DelegateScope> excludeScopes) {
+    this.excludeScopes = excludeScopes;
   }
 
   /**
@@ -207,7 +217,8 @@ public class Delegate extends Base {
     private long lastHeartBeat;
     private String version;
     private List<TaskType> supportedTaskTypes;
-    private DelegateScope delegateScope;
+    private List<DelegateScope> includeScopes;
+    private List<DelegateScope> excludeScopes;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
     private String uuid;
     private String appId;
@@ -262,8 +273,13 @@ public class Delegate extends Base {
       return this;
     }
 
-    public Builder withDelegateScope(DelegateScope delegateScope) {
-      this.delegateScope = delegateScope;
+    public Builder withIncludeScopes(List<DelegateScope> includeScopes) {
+      this.includeScopes = includeScopes;
+      return this;
+    }
+
+    public Builder withExcludeScopes(List<DelegateScope> excludeScopes) {
+      this.excludeScopes = excludeScopes;
       return this;
     }
 
@@ -312,7 +328,8 @@ public class Delegate extends Base {
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
           .withSupportedTaskTypes(supportedTaskTypes)
-          .withDelegateScope(delegateScope)
+          .withIncludeScopes(includeScopes)
+          .withExcludeScopes(excludeScopes)
           .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
           .withUuid(uuid)
           .withAppId(appId)
@@ -332,7 +349,8 @@ public class Delegate extends Base {
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setSupportedTaskTypes(supportedTaskTypes);
-      delegate.setDelegateScope(delegateScope);
+      delegate.setIncludeScopes(includeScopes);
+      delegate.setExcludeScopes(excludeScopes);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
@@ -349,6 +367,7 @@ public class Delegate extends Base {
     return "Delegate{"
         + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", ip='" + ip + '\''
         + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat + ", version='" + version + '\''
-        + ", supportedTaskTypes=" + supportedTaskTypes + '}';
+        + ", supportedTaskTypes=" + supportedTaskTypes + ", includeScopes=" + includeScopes
+        + ", excludeScopes=" + excludeScopes + '}';
   }
 }

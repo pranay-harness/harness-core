@@ -415,7 +415,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .doesNotExist()
                                       .field(ID_KEY)
                                       .equal(taskId);
-      if (!assignDelegateService.assign(wingsPersistence.executeGetOneQuery(query), delegateId, accountId)) {
+      if (!assignDelegateService.assign(wingsPersistence.executeGetOneQuery(query), delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
         delegateTask = null;
       } else {
@@ -430,7 +430,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
-      } else if (!assignDelegateService.assign(delegateTask, delegateId, accountId)) {
+      } else if (!assignDelegateService.assign(delegateTask, delegateId)) {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
         delegateTask = null;
       } else {
