@@ -57,12 +57,12 @@ public class JenkinsTest {
   @Test
   public void shouldGetJobsFromJenkins() throws URISyntaxException, IOException {
     wireMockRule.stubFor(
-        get(urlEqualTo("/view/all/job/parentJob/api/json"))
+        get(urlEqualTo("/view/All/job/parentJob/api/json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
                     .withBody(
-                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"actions\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\"}]}")
+                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"actions\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/all/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/view/All/job/parentJob/\"}]}")
                     .withHeader("Content-Type", "application/json")));
 
     List<JobDetails> jobs = jenkins.getJobs("parentJob");
