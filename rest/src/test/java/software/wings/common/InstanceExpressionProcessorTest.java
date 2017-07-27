@@ -179,11 +179,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     List<InstanceElement> elements = processor.list();
     assertThat(elements).isNotNull().hasSize(3).doesNotContainNull().extracting("uuid").contains(
         instance1.getUuid(), instance2.getUuid(), instance3.getUuid());
-    assertThat(elements)
-        .extracting("hostElement")
-        .doesNotContainNull()
-        .extracting("uuid")
-        .contains(instance1.getHostId(), instance2.getHostId(), instance3.getHostId());
+    assertThat(elements).extracting("host").doesNotContainNull().extracting("uuid").contains(
+        instance1.getHostId(), instance2.getHostId(), instance3.getHostId());
     assertThat(elements)
         .extracting("serviceTemplateElement")
         .doesNotContainNull()

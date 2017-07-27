@@ -103,7 +103,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       ServiceInstance instance, Host host, Service service, ServiceTemplate serviceTemplate) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
-    element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
+    element.setHost(HostExpressionProcessor.convertToHostElement(host));
     element.setServiceTemplateElement(
         ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(serviceTemplate, service));
     element.setDisplayName(host.getPublicDns());

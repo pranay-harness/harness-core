@@ -112,7 +112,7 @@ public class CloudWatchState extends State {
 
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
-      HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
+      HostElement hostElement = ((InstanceElement) contextElement).getHost();
       String hostName = hostElement.getHostName();
       if (!Strings.isNullOrEmpty(hostName)) {
         String awsInstanceId = awsHelperService.getInstanceId(
@@ -348,7 +348,7 @@ public class CloudWatchState extends State {
           .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
           .withServiceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
           .withServiceInstanceId(instanceElement.getUuid())
-          .withHostName(instanceElement.getHostElement().getHostName());
+          .withHostName(instanceElement.getHost().getHostName());
     }
 
     return activityService.save(activityBuilder.build()).getUuid();

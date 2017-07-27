@@ -20,7 +20,7 @@ public class InstanceElement implements ContextElement {
   private String uuid;
   private String displayName;
   private String hostName;
-  private HostElement hostElement;
+  private HostElement host;
   private ServiceTemplateElement serviceTemplateElement;
 
   @Override
@@ -37,8 +37,8 @@ public class InstanceElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(INSTANCE, this);
-    if (hostElement != null) {
-      map.putAll(hostElement.paramMap(context));
+    if (host != null) {
+      map.putAll(host.paramMap(context));
     }
     if (serviceTemplateElement != null) {
       map.putAll(serviceTemplateElement.paramMap(context));
@@ -90,8 +90,8 @@ public class InstanceElement implements ContextElement {
    *
    * @return the host element
    */
-  public HostElement getHostElement() {
-    return hostElement;
+  public HostElement getHost() {
+    return host;
   }
 
   /**
@@ -99,8 +99,8 @@ public class InstanceElement implements ContextElement {
    *
    * @param hostElement the host element
    */
-  public void setHostElement(HostElement hostElement) {
-    this.hostElement = hostElement;
+  public void setHost(HostElement hostElement) {
+    this.host = hostElement;
   }
 
   /**
@@ -125,7 +125,7 @@ public class InstanceElement implements ContextElement {
   public String toString() {
     return "InstanceElement{"
         + "uuid='" + uuid + '\'' + ", displayName='" + displayName + '\'' + ", hostName='" + hostName + '\''
-        + ", hostElement=" + hostElement + ", serviceTemplateElement=" + serviceTemplateElement + '}';
+        + ", hostElement=" + host + ", serviceTemplateElement=" + serviceTemplateElement + '}';
   }
 
   /**
@@ -135,7 +135,7 @@ public class InstanceElement implements ContextElement {
     private String uuid;
     private String displayName;
     private String hostName;
-    private HostElement hostElement;
+    private HostElement host;
     private ServiceTemplateElement serviceTemplateElement;
 
     private Builder() {}
@@ -183,7 +183,7 @@ public class InstanceElement implements ContextElement {
      * @return the builder
      */
     public Builder withHostElement(HostElement hostElement) {
-      this.hostElement = hostElement;
+      this.host = hostElement;
       return this;
     }
 
@@ -208,7 +208,7 @@ public class InstanceElement implements ContextElement {
       instanceElement.setUuid(uuid);
       instanceElement.setDisplayName(displayName);
       instanceElement.setHostName(hostName);
-      instanceElement.setHostElement(hostElement);
+      instanceElement.setHost(host);
       instanceElement.setServiceTemplateElement(serviceTemplateElement);
       return instanceElement;
     }

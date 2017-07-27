@@ -29,7 +29,7 @@ import software.wings.sm.ContextElement;
 public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConfig> {
   @Override
   public boolean enableInstance(ElasticLoadBalancerConfig loadBalancerConfig, ContextElement contextElement) {
-    HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
+    HostElement hostElement = ((InstanceElement) contextElement).getHost();
     String hostName = hostElement.getHostName();
     String awsInstanceId = getInstanceId(hostName, loadBalancerConfig);
     AmazonElasticLoadBalancingClient elbClient =
@@ -53,7 +53,7 @@ public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConf
 
   @Override
   public boolean disableInstance(ElasticLoadBalancerConfig loadBalancerConfig, ContextElement contextElement) {
-    HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
+    HostElement hostElement = ((InstanceElement) contextElement).getHost();
     String hostName = hostElement.getHostName();
     String awsInstanceId = getInstanceId(hostName, loadBalancerConfig);
     AmazonElasticLoadBalancingClient elbClient =

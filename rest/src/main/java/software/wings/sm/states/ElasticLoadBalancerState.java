@@ -94,9 +94,9 @@ public class ElasticLoadBalancerState extends State {
         awsHelperService.getClassicElbClient(region, accessKey, secretKey);
 
     InstanceElement instance = context.getContextElement(ContextElementType.INSTANCE);
-    final String instanceId = instance.getHostElement().getInstanceId() != null
-        ? instance.getHostElement().getInstanceId()
-        : awsHelperService.getInstanceId(region, accessKey, secretKey, instance.getHostElement().getHostName());
+    final String instanceId = instance.getHost().getInstanceId() != null
+        ? instance.getHost().getInstanceId()
+        : awsHelperService.getInstanceId(region, accessKey, secretKey, instance.getHost().getHostName());
 
     String errorMessage = "";
 
@@ -123,7 +123,7 @@ public class ElasticLoadBalancerState extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(anElbStateExecutionData().withHostName(instance.getHostElement().getHostName()).build())
+        .withStateExecutionData(anElbStateExecutionData().withHostName(instance.getHost().getHostName()).build())
         .withExecutionStatus(status)
         .withErrorMessage(errorMessage)
         .build();
