@@ -49,6 +49,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -271,6 +272,21 @@ public class JenkinsState extends State {
   @Override
   public Integer getTimeoutMillis() {
     return super.getTimeoutMillis();
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    List<String> patterns = new ArrayList<>();
+    patterns.add(jobName);
+    if (CollectionUtils.isNotEmpty(jobParameters)) {
+      jobParameters.forEach(parameterEntry -> patterns.add(parameterEntry.getValue()));
+    }
+
+    if (CollectionUtils.isNotEmpty(filePathsForAssertion)) {
+      filePathsForAssertion.forEach(filePathAssertionEntry -> patterns.add(filePathAssertionEntry.getFilePath()));
+    }
+    return patterns;
   }
 
   protected String createActivity(ExecutionContext executionContext) {
