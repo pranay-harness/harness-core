@@ -24,6 +24,8 @@ public class ArtifactStreamAction {
   private String cronDescription;
   private String actionSummary; // TODO:: remove once UI stops using it.
 
+  private String artifactFilter;
+
   /**
    * Gets workflow type.
    *
@@ -186,10 +188,27 @@ public class ArtifactStreamAction {
     this.envName = envName;
   }
 
+  /**
+   * Get artifact Path Regex
+   *
+   * @return
+   */
+  public String getArtifactFilter() {
+    return artifactFilter;
+  }
+
+  /**
+   * Set artifact filter
+   * @param artifactFilter
+   */
+  public void setArtifactFilter(String artifactFilter) {
+    this.artifactFilter = artifactFilter;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(workflowType, workflowId, workflowName, envId, envName, customAction, cronExpression,
-        cronDescription, actionSummary);
+        cronDescription, actionSummary, artifactFilter);
   }
 
   @Override
@@ -206,7 +225,8 @@ public class ArtifactStreamAction {
         && Objects.equals(this.envName, other.envName) && Objects.equals(this.customAction, other.customAction)
         && Objects.equals(this.cronExpression, other.cronExpression)
         && Objects.equals(this.cronDescription, other.cronDescription)
-        && Objects.equals(this.actionSummary, other.actionSummary);
+        && Objects.equals(this.actionSummary, other.actionSummary)
+        && Objects.equals(this.artifactFilter, other.artifactFilter);
   }
 
   @Override
@@ -221,6 +241,7 @@ public class ArtifactStreamAction {
         .add("cronExpression", cronExpression)
         .add("cronDescription", cronDescription)
         .add("actionSummary", actionSummary)
+        .add("artifactFilter", artifactFilter)
         .toString();
   }
 
@@ -237,6 +258,7 @@ public class ArtifactStreamAction {
     private String cronExpression;
     private String cronDescription;
     private String actionSummary; // TODO:: remove once UI stops using it.
+    private String artifactFilter;
 
     private Builder() {}
 
@@ -349,6 +371,13 @@ public class ArtifactStreamAction {
     }
 
     /**
+     * With Artifact Path Regex
+     */
+    public Builder withArtifactFilter(String artifactFilter) {
+      this.artifactFilter = artifactFilter;
+      return this;
+    }
+    /**
      * But builder.
      *
      * @return the builder
@@ -363,7 +392,8 @@ public class ArtifactStreamAction {
           .withCustomAction(customAction)
           .withCronExpression(cronExpression)
           .withCronDescription(cronDescription)
-          .withActionSummary(actionSummary);
+          .withActionSummary(actionSummary)
+          .withArtifactFilter(artifactFilter);
     }
 
     /**
@@ -382,6 +412,7 @@ public class ArtifactStreamAction {
       artifactStreamAction.setCronExpression(cronExpression);
       artifactStreamAction.setCronDescription(cronDescription);
       artifactStreamAction.setActionSummary(actionSummary);
+      artifactStreamAction.setArtifactFilter(artifactFilter);
       return artifactStreamAction;
     }
   }

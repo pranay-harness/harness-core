@@ -44,6 +44,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
@@ -64,6 +65,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private Query<ArtifactStream> query;
   @Mock private FieldEnd end;
   @Mock private BuildSourceService buildSourceService;
+  @Mock private ArtifactService artifactService;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
 
@@ -243,6 +245,17 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
-  public void shouldTriggerStreamActionAsync() {}
+  public void shouldTriggerScheduledStreamAction() {
+    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
+                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                                    .withWorkflowId(WORKFLOW_ID)
+                                                    .withCustomAction(true)
+                                                    .withCronExpression("0 * * * * ?")
+                                                    .build();
+    jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
+
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID))
+        .the artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+  }
 }

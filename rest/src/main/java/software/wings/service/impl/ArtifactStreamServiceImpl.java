@@ -16,6 +16,7 @@ import net.redhogs.cronparser.CronExpressionDescriptor;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -41,6 +42,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -72,10 +74,12 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -342,7 +346,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .findFirst()
             .orElse(null);
     if (artifactStreamAction == null) {
-      logger.info("Artifact stream does not have trigger anymore . Hence deleting associated job");
+      logger.info("Artifact stream does not have trigger anymore. Deleting associated job");
       jobScheduler.deleteJob(workflowId, streamId);
       return;
     }
@@ -358,11 +362,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             && lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
         ? lastSuccessfullyDeployedArtifact.getMetadata().get(Constants.BUILD_NO)
         : "";
-
-    logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
-        latestArtifactBuildNo, lastDeployedArtifactBuildNo);
-
     if (latestArtifactBuildNo.compareTo(lastDeployedArtifactBuildNo) > 0) {
+      logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
+          latestArtifactBuildNo, lastDeployedArtifactBuildNo);
       logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
       triggerStreamAction(latestArtifact, artifactStreamAction);
     } else {
@@ -411,25 +413,68 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.getStreamActions()
         .stream()
         .filter(streamAction -> !streamAction.isCustomAction())
-        .forEach(artifactStreamAction -> triggerStreamAction(artifact, artifactStreamAction));
+        .forEach(artifactStreamAction -> {
+          logger.info("Triggering Post Artifact Collection action triggered");
+          triggerStreamAction(artifact, artifactStreamAction);
+          logger.info("Post Artifact Collection action triggered");
+        });
   }
 
   private void triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
-    logger.info("Post Artifact Collection action triggered");
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(asList(artifact));
-    executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
-    executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
-    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
-
-    logger.info("Execute workflow of {} type with id {}", artifactStreamAction.getWorkflowType(),
-        artifactStreamAction.getWorkflowId());
-
-    if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
-      workflowExecutionService.triggerEnvExecution(artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
-    } else {
-      pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+    if (artifactFilterMatches(artifact, artifactStreamAction)) {
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setArtifacts(asList(artifact));
+      executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
+      executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
+      executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
+      if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
+        logger.info("Triggering Workflow execution of appId {} of  {} type with workflow id {}", artifact.getAppId(),
+            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        workflowExecutionService.triggerEnvExecution(
+            artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
+        logger.info("Workflow execution of appId {} of {} type with workflow id {} triggered", artifact.getAppId(),
+            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+      } else {
+        logger.info("Triggering Pipeline execution of appId {} with stream action id {}", artifact.getAppId(),
+            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+        logger.info("Pipeline execution of appId {} of  {} type with stream action id {} triggered",
+            artifact.getAppId(), artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+      }
     }
+  }
+  private boolean artifactFilterMatches(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    if (StringUtils.isEmpty(artifactStreamAction.getArtifactFilter())) {
+      return true;
+    } else {
+      logger.info("Artifact filter {} set for artifact stream action {}", artifactStreamAction.getArtifactFilter(),
+          artifactStreamAction);
+      Pattern pattern = Pattern.compile(
+          artifactStreamAction.getArtifactFilter().replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+      if (CollectionUtils.isEmpty(artifact.getArtifactFiles())) {
+        if (pattern.matcher(artifact.getBuildNo()).matches()) {
+          logger.info("Artifact filter {} matching with artifact name/ tag / buildNo {}",
+              artifactStreamAction.getArtifactFilter(), artifact.getBuildNo());
+          return true;
+        }
+      } else {
+        logger.info("Comparing artifact file name matches with the given artifact filter");
+        List<ArtifactFile> artifactFiles =
+            artifact.getArtifactFiles()
+                .stream()
+                .filter(artifactFile -> pattern.matcher(artifactFile.getName()).matches())
+                .collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(artifactFiles)) {
+          logger.info("Artifact file names matches with the given artifact filter");
+          artifact.setArtifactFiles(artifactFiles);
+          return true;
+        } else {
+          logger.info(
+              "Artifact does not have artifact files matching with the given artifact filter. So, not triggering either workflow or pipeline");
+        }
+      }
+    }
+    return false;
   }
 
   @Override

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Created by sgurubelli on 6/27/17.
@@ -395,14 +396,24 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     // artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "", ArtifactType.RPM, 50);
 
-    List<BuildDetails> buildDetails =
-        artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "todolist*", ArtifactType.RPM, 50);
+    /*List<BuildDetails> buildDetails =  artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null,
+     "todolist*", ArtifactType.RPM, 50);
 
-    Comparator<BuildDetails> byFirst =
-        Comparator.comparing(buildDetails1 -> buildDetails1.getNumber(), Comparator.reverseOrder());
-    List<BuildDetails> sortedList = buildDetails.stream().sorted(byFirst).collect(toList());
-    sortedList.forEach(buildDetails1 -> System.out.println("Build" + buildDetails1.getNumber()));
-    System.out.println("Comparison: "
-        + "10".compareTo("1"));
+     Comparator<BuildDetails> byFirst = Comparator.comparing(buildDetails1 -> buildDetails1.getNumber(),
+     Comparator.reverseOrder()); List<BuildDetails> sortedList = buildDetails.stream()
+         .sorted(byFirst).collect(toList());
+     sortedList.forEach(buildDetails1 ->
+     System.out.println("Build" +  buildDetails1.getNumber()));
+     System.out.println("Comparison: " + "10".compareTo("1"));*/
+
+    String artifactPathRegex = "a?todolist*";
+    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+
+    String path = "abtodolist";
+    if (pattern.matcher(path).matches()) {
+      System.out.println("path = " + path);
+    } else {
+      System.out.println("Pattern not found");
+    }
   }
 }
