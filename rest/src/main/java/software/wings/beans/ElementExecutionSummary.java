@@ -2,11 +2,13 @@ package software.wings.beans;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,6 +20,7 @@ public class ElementExecutionSummary {
   private Long startTs;
   private Long endTs;
   private ExecutionStatus status;
+  private List<InfraMappingSummary> infraMappingSummaries;
 
   /**
    * Gets context element.
@@ -45,6 +48,13 @@ public class ElementExecutionSummary {
     this.instanceStatusSummaries = instanceStatusSummaries;
   }
 
+  public List<InfraMappingSummary> getInfraMappingSummaries() {
+    return infraMappingSummaries;
+  }
+
+  public void setInfraMappingSummary(List<InfraMappingSummary> infraMappingSummary) {
+    this.infraMappingSummaries = infraMappingSummary;
+  }
   /**
    * Gets instances count.
    *
@@ -193,6 +203,7 @@ public class ElementExecutionSummary {
     private Long endTs;
     private ExecutionStatus status;
     private List<InstanceStatusSummary> instanceStatusSummaries;
+    private List<InfraMappingSummary> infraMappingSummaries;
 
     private ElementExecutionSummaryBuilder() {}
 
@@ -225,6 +236,16 @@ public class ElementExecutionSummary {
     public ElementExecutionSummaryBuilder withInstanceStatusSummaries(
         List<InstanceStatusSummary> instanceStatusSummaries) {
       this.instanceStatusSummaries = instanceStatusSummaries;
+      return this;
+    }
+
+    /**
+     * With inframapping Summaries
+     * @param infraMappingSummaries
+     * @return
+     */
+    public ElementExecutionSummaryBuilder withInfraMappingSummaries(List<InfraMappingSummary> infraMappingSummaries) {
+      this.infraMappingSummaries = infraMappingSummaries;
       return this;
     }
 
@@ -273,6 +294,7 @@ public class ElementExecutionSummary {
       elementExecutionSummary.setStartTs(startTs);
       elementExecutionSummary.setEndTs(endTs);
       elementExecutionSummary.setStatus(status);
+      elementExecutionSummary.setInfraMappingSummary(infraMappingSummaries);
       return elementExecutionSummary;
     }
   }

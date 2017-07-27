@@ -28,6 +28,7 @@ public class ExecutionArgs {
   @Transient private ExecutionCredential executionCredential;
   private ErrorStrategy errorStrategy;
   private boolean triggeredFromPipeline;
+  private String pipelineId;
 
   /**
    * Gets service id.
@@ -233,5 +234,21 @@ public class ExecutionArgs {
 
   public void setTriggeredFromPipeline(boolean triggeredFromPipeline) {
     this.triggeredFromPipeline = triggeredFromPipeline;
+  }
+
+  /**
+   * Get PipelineId
+   * @return
+   */
+  public String getPipelineId() {
+    return pipelineId;
+  }
+
+  /**
+   * Set PipelineId
+   * @param pipelineId
+   */
+  public void setPipelineId(String pipelineId) {
+    this.pipelineId = pipelineId;
   }
 }

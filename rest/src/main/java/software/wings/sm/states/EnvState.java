@@ -6,6 +6,7 @@ import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionC
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
@@ -50,6 +51,8 @@ public class EnvState extends State {
   @Attributes(required = true, title = "Workflow")
   private String workflowId;
 
+  @SchemaIgnore private String pipelineId;
+
   @Transient @Inject private WorkflowExecutionService executionService;
 
   @Transient @Inject private PipelineService pipelineService;
@@ -82,6 +85,7 @@ public class EnvState extends State {
     executionArgs.setArtifacts(artifacts);
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
+    executionArgs.setPipelineId(pipelineId);
 
     EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
     envStateExecutionData.setWorkflowId(workflowId);
@@ -147,6 +151,22 @@ public class EnvState extends State {
    */
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
+  }
+
+  /**
+   * Get PipelineId
+   * @return
+   */
+  public String getPipelineId() {
+    return pipelineId;
+  }
+
+  /**
+   * Set PipelineId
+   * @param pipelineId
+   */
+  public void setPipelineId(String pipelineId) {
+    this.pipelineId = pipelineId;
   }
 
   /**

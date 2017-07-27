@@ -12,9 +12,12 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph.Node;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InfraMappingSummary;
+import software.wings.sm.PipelineSummary;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class WorkflowExecution.
@@ -49,6 +52,10 @@ public class WorkflowExecution extends Base {
 
   private Long startTs;
   private Long endTs;
+
+  private EmbeddedUser triggeredBy;
+
+  private PipelineSummary pipelineSummary;
 
   /**
    * Gets name.
@@ -431,6 +438,22 @@ public class WorkflowExecution extends Base {
     this.envType = envType;
   }
 
+  public EmbeddedUser getTriggeredBy() {
+    return triggeredBy;
+  }
+
+  public void setTriggeredBy(EmbeddedUser triggeredBy) {
+    this.triggeredBy = triggeredBy;
+  }
+
+  public PipelineSummary getPipelineSummary() {
+    return pipelineSummary;
+  }
+
+  public void setPipelineSummary(PipelineSummary pipelineSummary) {
+    this.pipelineSummary = pipelineSummary;
+  }
+
   public static final class WorkflowExecutionBuilder {
     private String workflowId;
     private String stateMachineId;
@@ -458,6 +481,9 @@ public class WorkflowExecution extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private EmbeddedUser triggeredBy;
+    private Map<String, InfraMappingSummary> infraMappingSummary;
+    private PipelineSummary pipelineSummary;
 
     private WorkflowExecutionBuilder() {}
 
@@ -596,6 +622,18 @@ public class WorkflowExecution extends Base {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
+    public WorkflowExecutionBuilder withTriggeredBy(EmbeddedUser triggeredBy) {
+      this.triggeredBy = triggeredBy;
+      return this;
+    }
+    public WorkflowExecutionBuilder withPipelineSummary(PipelineSummary pipelineSummary) {
+      this.pipelineSummary = pipelineSummary;
+      return this;
+    }
+    public WorkflowExecutionBuilder withInfraMappingSummary(Map<String, InfraMappingSummary> infraMappingSummary) {
+      this.infraMappingSummary = infraMappingSummary;
+      return this;
+    }
 
     @Override
     public String toString() {
@@ -637,7 +675,10 @@ public class WorkflowExecution extends Base {
           .withEndTs(endTs)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withTriggeredBy(triggeredBy)
+          .withPipelineSummary(pipelineSummary)
+          .withInfraMappingSummary(infraMappingSummary);
     }
 
     public WorkflowExecution build() {
@@ -668,6 +709,8 @@ public class WorkflowExecution extends Base {
       workflowExecution.setCreatedAt(createdAt);
       workflowExecution.setLastUpdatedBy(lastUpdatedBy);
       workflowExecution.setLastUpdatedAt(lastUpdatedAt);
+      workflowExecution.setTriggeredBy(triggeredBy);
+      workflowExecution.setPipelineSummary(pipelineSummary);
       return workflowExecution;
     }
   }

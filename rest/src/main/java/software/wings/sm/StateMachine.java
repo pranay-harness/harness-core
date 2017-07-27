@@ -151,6 +151,8 @@ public class StateMachine extends Base {
 
           Map<String, Object> properties = pipelineStageElement.getProperties();
 
+          properties.put("pipelineId", pipeline.getUuid());
+
           // populate properties
           MapperUtils.mapObject(properties, state);
 
