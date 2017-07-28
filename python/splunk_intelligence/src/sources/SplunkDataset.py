@@ -54,8 +54,9 @@ class SplunkDataset(object):
                           index=['text', 'local_id', 'count', 'global_id']))
 
     def load_from_harness(self, options):
-        control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+        control_events = SplunkHarnessLoader.load_from_wings_server(options.control_input_url,
                                                                     options.application_id,
+                                                                    options.workflow_id,
                                                                     options.control_window[0],
                                                                     options.control_window[1],
                                                                     options.control_nodes,
@@ -63,8 +64,9 @@ class SplunkDataset(object):
         for dict in control_events:
             self.add_event(dict, 'control')
 
-        test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+        test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
                                                                  options.application_id,
+                                                                 options.workflow_id,
                                                                  options.test_window[0],
                                                                  options.test_window[1],
                                                                  options.test_nodes,

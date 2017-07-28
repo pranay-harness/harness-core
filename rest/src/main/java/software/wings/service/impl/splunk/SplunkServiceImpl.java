@@ -1,21 +1,36 @@
 package software.wings.service.impl.splunk;
 
+import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
+import com.google.common.base.Preconditions;
+
+import org.mongodb.morphia.aggregation.Accumulator;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.aggregation.Projection;
+import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.splunk.SplunkService;
+import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,35 +53,74 @@ public class SplunkServiceImpl implements SplunkService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public Boolean saveLogData(String appId, String stateExecutionId, String workflowExecutionId,
-      List<SplunkLogElement> logData) throws IOException {
+  public Boolean saveLogData(String appId, String stateExecutionId, String workflowId, List<SplunkLogElement> logData)
+      throws IOException {
     logger.debug("inserting " + logData.size() + " pieces of splunk log data");
     final List<SplunkLogDataRecord> logDataRecords =
-        SplunkLogDataRecord.generateDataRecords(appId, stateExecutionId, workflowExecutionId, logData);
+        SplunkLogDataRecord.generateDataRecords(appId, stateExecutionId, workflowId, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.debug("inserted " + logDataRecords.size() + " SplunkLogDataRecord to persistence layer.");
     return true;
   }
 
   @Override
-  public List<SplunkLogDataRecord> getSplunkLogData(SplunkLogRequest logRequest) {
-    Query<SplunkLogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
-                                                              .field("stateExecutionId")
-                                                              .equal(logRequest.getStateExecutionId())
-                                                              .field("applicationId")
-                                                              .equal(logRequest.getApplicationId())
-                                                              .field("query")
-                                                              .equal(logRequest.getQuery())
-                                                              .field("processed")
-                                                              .equal(false)
-                                                              .field("logCollectionMinute")
-                                                              .equal(logRequest.getLogCollectionMinute())
-                                                              .field("host")
-                                                              .hasAnyOf(logRequest.getNodes());
+  public List<SplunkLogDataRecord> getSplunkLogData(SplunkLogRequest logRequest, boolean compareCurrent) {
+    Query<SplunkLogDataRecord> splunkLogDataRecordQuery = null;
+    List<SplunkLogDataRecord> records = null;
+    if (compareCurrent) {
+      splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
+                                     .field("stateExecutionId")
+                                     .equal(logRequest.getStateExecutionId())
+                                     .field("applicationId")
+                                     .equal(logRequest.getApplicationId())
+                                     .field("query")
+                                     .equal(logRequest.getQuery())
+                                     .field("processed")
+                                     .equal(false)
+                                     .field("logCollectionMinute")
+                                     .equal(logRequest.getLogCollectionMinute())
+                                     .field("host")
+                                     .hasAnyOf(logRequest.getNodes());
+    } else {
+      final WorkflowExecution workflowExecution =
+          getLastSuccessfulWorkflowExecution(logRequest.getApplicationId(), logRequest.getWorkflowId());
+      Preconditions.checkNotNull(
+          workflowExecution, "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
+      final Query<SplunkLogDataRecord> lastSuccessfulExecutionData =
+          wingsPersistence.createQuery(SplunkLogDataRecord.class)
+              .field("workflowId")
+              .equal(logRequest.getWorkflowId())
+              .field("stateExecutionId")
+              .notEqual(logRequest.getStateExecutionId())
+              .field("applicationId")
+              .equal(logRequest.getApplicationId())
+              .field("query")
+              .equal(logRequest.getQuery())
+              .order("-createdAt")
+              .field("logCollectionMinute")
+              .equal(logRequest.getLogCollectionMinute());
 
-    List<SplunkLogDataRecord> records = splunkLogDataRecordQuery.asList();
+      SplunkLogDataRecord record = wingsPersistence.executeGetOneQuery(lastSuccessfulExecutionData);
+      if (record == null) {
+        logger.error("Could not find any logs collected for minute {} for previous successful workflow {}",
+            logRequest.getLogCollectionMinute(), logRequest.getWorkflowId());
+        return Collections.emptyList();
+      }
+      splunkLogDataRecordQuery = wingsPersistence.createQuery(SplunkLogDataRecord.class)
+                                     .field("stateExecutionId")
+                                     .equal(record.getStateExecutionId())
+                                     .field("applicationId")
+                                     .equal(logRequest.getApplicationId())
+                                     .field("query")
+                                     .equal(logRequest.getQuery())
+                                     .field("logCollectionMinute")
+                                     .equal(logRequest.getLogCollectionMinute());
+    }
+
+    records = splunkLogDataRecordQuery.asList();
     logger.debug("returning " + records.size() + " records for request: " + logRequest);
     return records;
   }
@@ -247,5 +301,25 @@ public class SplunkServiceImpl implements SplunkService {
     final int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
+  }
+
+  private WorkflowExecution getLastSuccessfulWorkflowExecution(String appId, String workflowId) {
+    final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+                                                           .addFilter("appId", Operator.EQ, appId)
+                                                           .addFilter("workflowId", Operator.EQ, workflowId)
+                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .withLimit("1")
+                                                           .build();
+
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
+    if (workflowExecutions.isEmpty()) {
+      logger.error("Could not get a successful workflow to find control nodes");
+      return null;
+    }
+
+    Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
+    return workflowExecutions.get(0);
   }
 }

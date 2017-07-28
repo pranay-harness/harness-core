@@ -10,7 +10,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.security.annotations.Archive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,8 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "splunkLogUniqueIdx"))
 })
 @Data
-@Archive(retentionMills = 7 * 24 * 60 * 60 * 1000)
 public class SplunkLogDataRecord extends Base {
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String stateExecutionId;
 
@@ -49,12 +47,12 @@ public class SplunkLogDataRecord extends Base {
     // for json parsing
   }
 
-  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String workflowExecutionId, String query,
+  public SplunkLogDataRecord(String applicationId, String stateExecutionId, String workflowId, String query,
       String clusterLabel, String host, long timeStamp, int count, String logMessage, String logMD5Hash,
       boolean processed, int logCollectionMinute) {
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;
-    this.workflowExecutionId = workflowExecutionId;
+    this.workflowId = workflowId;
     this.query = query;
     this.clusterLabel = clusterLabel;
     this.host = host;

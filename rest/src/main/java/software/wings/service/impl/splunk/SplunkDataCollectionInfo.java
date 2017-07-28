@@ -18,7 +18,7 @@ public class SplunkDataCollectionInfo {
   private String accountId;
   private String applicationId;
   private String stateExecutionId;
-  private String workflowExecutionId;
+  private String workflowId;
   private SplunkConfig splunkConfig;
   private Set<String> queries = new HashSet<>();
   private long startTime;

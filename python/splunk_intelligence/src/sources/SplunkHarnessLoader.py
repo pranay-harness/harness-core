@@ -74,9 +74,9 @@ class SplunkHarnessLoader(object):
         return json.loads(text)['resource']
 
     @staticmethod
-    def load_from_wings_server(url, app_id, state_execution_id, log_collection_minute, nodes, query):
+    def load_from_wings_server(url, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        payload = dict(applicationId=app_id, stateExecutionId=state_execution_id,
+        payload = dict(applicationId=app_id, workflowId=workflow_id, stateExecutionId=state_execution_id,
                        logCollectionMinute=log_collection_minute, nodes=nodes,
                        query=query)
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))

@@ -42,10 +42,9 @@ public class SplunkResource {
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveSplunkLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      List<SplunkLogElement> logData) throws IOException {
-    return new RestResponse<>(splunkService.saveLogData(appId, stateExecutionId, workflowExecutionId, logData));
+      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
+      @QueryParam("appId") final String appId, List<SplunkLogElement> logData) throws IOException {
+    return new RestResponse<>(splunkService.saveLogData(appId, stateExecutionId, workflowId, logData));
   }
 
   @POST
@@ -53,9 +52,9 @@ public class SplunkResource {
   @Timed
   @ExceptionMetered
   @PublicApi
-  public RestResponse<List<SplunkLogDataRecord>> getSplunkLogData(
-      @QueryParam("accountId") String accountId, SplunkLogRequest logRequest) throws IOException {
-    return new RestResponse<>(splunkService.getSplunkLogData(logRequest));
+  public RestResponse<List<SplunkLogDataRecord>> getSplunkLogData(@QueryParam("accountId") String accountId,
+      @QueryParam("compareCurrent") boolean compareCurrent, SplunkLogRequest logRequest) throws IOException {
+    return new RestResponse<>(splunkService.getSplunkLogData(logRequest, compareCurrent));
   }
 
   @POST

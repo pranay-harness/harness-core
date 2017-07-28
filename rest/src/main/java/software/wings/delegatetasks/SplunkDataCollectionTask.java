@@ -167,7 +167,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           }
           resultsReader.close();
           splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
-              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
+              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(), logElements);
           logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);

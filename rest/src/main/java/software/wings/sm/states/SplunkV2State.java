@@ -152,7 +152,15 @@ public class SplunkV2State extends AbstractAnalysisState {
 
     Set<String> lastExecutionNodes = getLastExecutionNodes(context);
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
-      logger.error("No nodes with older version found to compare the logs. Skipping analysis");
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        logger.error("No nodes with older version found to compare the logs. Skipping analysis");
+        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+            "Skipping analysis due to lack of baseline data (First time deployment).");
+      }
+
+      triggerSplunkDataCollection(context);
+      logger.warn(
+          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
       return generateAnalysisResponse(
           context, ExecutionStatus.SUCCESS, "Skipping analysis due to lack of baseline data (First time deployment).");
     }
@@ -289,10 +297,9 @@ public class SplunkV2State extends AbstractAnalysisState {
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final SplunkDataCollectionInfo dataCollectionInfo =
-        new SplunkDataCollectionInfo(appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), context.getWorkflowExecutionId(), splunkConfig, queries,
-            logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
+    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
+        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
+        getWorkflowId(context), splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
@@ -313,6 +320,7 @@ public class SplunkV2State extends AbstractAnalysisState {
     private final String serverUrl;
     private final String accountId;
     private final String applicationId;
+    private final String workflowId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
     private final Set<String> queries;
@@ -327,6 +335,7 @@ public class SplunkV2State extends AbstractAnalysisState {
       this.serverUrl = protocol + "://localhost:" + SplunkV2State.this.configuration.getApplicationPort();
       this.applicationId = context.getAppId();
       this.accountId = SplunkV2State.this.appService.get(this.applicationId).getAccountId();
+      this.workflowId = getWorkflowId(context);
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
       this.controlNodes.removeAll(this.testNodes);
@@ -336,8 +345,9 @@ public class SplunkV2State extends AbstractAnalysisState {
     @Override
     public void run() {
       for (String query : queries) {
-        if (!splunkService.isLogDataCollected(
-                applicationId, context.getStateExecutionInstanceId(), query, logCollectionMinute)) {
+        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+            && !splunkService.isLogDataCollected(
+                   applicationId, context.getStateExecutionInstanceId(), query, logCollectionMinute)) {
           logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
               + " stateExecution: " + context.getStateExecutionInstanceId()
               + ". No ML analysis will be run this minute");
@@ -346,16 +356,24 @@ public class SplunkV2State extends AbstractAnalysisState {
 
         try {
           final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
-          final String logInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId;
+          final String testInputUrl =
+              this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId + "&compareCurrent=true";
+          String controlInputUrl = this.serverUrl + "/api/splunk/get-logs?accountId=" + accountId + "&compareCurrent=";
+          controlInputUrl = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+              ? controlInputUrl + true
+              : controlInputUrl + false;
           final String logAnalysisSaveUrl = this.serverUrl + "/api/splunk/save-analysis-records?accountId=" + accountId
               + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
           final String logAnalysisGetUrl = this.serverUrl + "/api/splunk/get-analysis-records?accountId=" + accountId;
           final List<String> command = new ArrayList<>();
           command.add(this.pythonScriptRoot + "/" + SPLUNKML_SHELL_FILE_NAME);
           command.add("--query=" + query);
-          command.add("--url");
-          command.add(logInputUrl);
+          command.add("--control_input_url");
+          command.add(controlInputUrl);
+          command.add("--test_input_url");
+          command.add(testInputUrl);
           command.add("--application_id=" + applicationId);
+          command.add("--workflow_id=" + workflowId);
           command.add("--control_nodes");
           command.addAll(controlNodes);
           command.add("--test_nodes");
