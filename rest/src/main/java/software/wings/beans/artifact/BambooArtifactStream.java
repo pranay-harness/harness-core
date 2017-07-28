@@ -104,7 +104,6 @@ public class BambooArtifactStream extends ArtifactStream {
         .withSettingId(getSettingId())
         .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .build();
