@@ -61,6 +61,7 @@ fi
 #run delegate
 sed -i -e 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
 java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
+     -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=${hostname} \
      -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml 2>&1 &
 
 #wait for delegate to start
