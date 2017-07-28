@@ -77,13 +77,14 @@ class SplunkDatasetNew(object):
             self.test_events[label].append(
                 dict(cluster_label=event['cluster_label'], text=event.get('text'), message_frequencies=event.get('message_frequencies')))
 
-    def save_to_harness(self, url, payload):
-        SplunkHarnessLoader.post_to_wings_server(url, payload)
+    def save_to_harness(self, url, auth_token, payload):
+        SplunkHarnessLoader.post_to_wings_server(url, auth_token, payload)
 
     # Called with the production workflow
     def load_from_harness(self, options):
 
         control_events = SplunkHarnessLoader.load_from_wings_server(options.control_input_url,
+                                                                    options.auth_token,
                                                                     options.application_id,
                                                                     options.workflow_id,
                                                                     options.state_execution_id,
@@ -92,6 +93,7 @@ class SplunkDatasetNew(object):
                                                                     options.query)
 
         test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
+                                                                 options.auth_token,
                                                                  options.application_id,
                                                                  options.workflow_id,
                                                                  options.state_execution_id,
@@ -110,6 +112,7 @@ class SplunkDatasetNew(object):
             self.add_event(event, 'test')
 
         prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
+                                                                       options.auth_token,
                                                                        options.application_id,
                                                                        options.state_execution_id,
                                                                        options.query)

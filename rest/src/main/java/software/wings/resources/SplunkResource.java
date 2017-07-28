@@ -9,7 +9,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.ExternalServiceAuth;
 import software.wings.service.impl.splunk.SplunkLogDataRecord;
 import software.wings.service.impl.splunk.SplunkLogElement;
 import software.wings.service.impl.splunk.SplunkLogRequest;
@@ -51,7 +51,7 @@ public class SplunkResource {
   @Path("/get-logs")
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @ExternalServiceAuth
   public RestResponse<List<SplunkLogDataRecord>> getSplunkLogData(@QueryParam("accountId") String accountId,
       @QueryParam("compareCurrent") boolean compareCurrent, SplunkLogRequest logRequest) throws IOException {
     return new RestResponse<>(splunkService.getSplunkLogData(logRequest, compareCurrent));
@@ -61,7 +61,7 @@ public class SplunkResource {
   @Path("/save-analysis-records")
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @ExternalServiceAuth
   public RestResponse<Boolean> saveSplunkAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       SplunkLogMLAnalysisRecord mlAnalysisResponse) throws IOException {
@@ -74,7 +74,7 @@ public class SplunkResource {
   @Path("/get-analysis-records")
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @ExternalServiceAuth
   public RestResponse<SplunkLogMLAnalysisRecord> getplunkAnalysisRecords(
       @QueryParam("accountId") String accountId, SplunkMLAnalysisRequest mlAnalysisRequest) throws IOException {
     return new RestResponse<>(splunkService.getSplunkAnalysisRecords(

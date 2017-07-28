@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.service.impl.splunk.SplunkAnalysisResponse.Builder.anSplunkAnalysisResponse;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -8,6 +9,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
@@ -52,8 +55,10 @@ import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +103,7 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   @Transient @Inject private SplunkService splunkService;
 
-  @Transient @Inject private MainConfiguration configuration;
+  @Transient @Inject @SchemaIgnore private MainConfiguration configuration;
 
   @Transient @SchemaIgnore private ScheduledExecutorService pythonExecutorService;
 
@@ -344,6 +349,10 @@ public class SplunkV2State extends AbstractAnalysisState {
 
     @Override
     public void run() {
+      if (logCollectionMinute > Integer.parseInt(timeDuration)) {
+        return;
+      }
+
       for (String query : queries) {
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && !splunkService.isLogDataCollected(
@@ -372,6 +381,7 @@ public class SplunkV2State extends AbstractAnalysisState {
           command.add(controlInputUrl);
           command.add("--test_input_url");
           command.add(testInputUrl);
+          command.add("--auth_token=" + generateAuthToken());
           command.add("--application_id=" + applicationId);
           command.add("--workflow_id=" + workflowId);
           command.add("--control_nodes");
@@ -431,6 +441,20 @@ public class SplunkV2State extends AbstractAnalysisState {
         generateAnalysisResponse(context, ExecutionStatus.RUNNING, "No data with given queries has been found yet.");
       }
     }
+  }
+
+  private String generateAuthToken() throws UnsupportedEncodingException {
+    final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
+    if (jwtExternalServiceSecret == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "No secret present for external service");
+    }
+
+    Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
+    return JWT.create()
+        .withIssuer("Harness Inc")
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
+        .sign(algorithm);
   }
 
   @Override

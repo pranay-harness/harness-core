@@ -24,6 +24,7 @@ public class PortalConfig {
   @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
   private String jwtPasswordSecret;
+  private String jwtExternalServiceSecret;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
@@ -176,6 +177,14 @@ public class PortalConfig {
 
   public void setJwtPasswordSecret(String jwtPasswordSecret) {
     this.jwtPasswordSecret = jwtPasswordSecret;
+  }
+
+  public String getJwtExternalServiceSecret() {
+    return jwtExternalServiceSecret;
+  }
+
+  public void setJwtExternalServiceSecret(String jwtExternalServiceSecret) {
+    this.jwtExternalServiceSecret = jwtExternalServiceSecret;
   }
 
   /**

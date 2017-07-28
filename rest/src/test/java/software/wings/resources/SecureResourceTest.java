@@ -51,6 +51,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
@@ -114,9 +115,10 @@ public class SecureResourceTest {
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
+  private static MainConfiguration configuration = mock(MainConfiguration.class);
 
   private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, accountService, wingsPersistence, userService, cacheHelper);
+      new AuthServiceImpl(genericDbCache, accountService, wingsPersistence, userService, cacheHelper, configuration);
 
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, appService, userService);

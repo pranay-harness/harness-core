@@ -6,6 +6,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
@@ -13,6 +14,10 @@ import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
 import com.google.inject.Singleton;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
@@ -20,9 +25,11 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
@@ -46,6 +53,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Misc;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.List;
 import javax.cache.Cache;
@@ -62,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
   private WingsPersistence wingsPersistence;
   private UserService userService;
   private CacheHelper cacheHelper;
+  private MainConfiguration configuration;
 
   private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
@@ -76,12 +85,13 @@ public class AuthServiceImpl implements AuthService {
    */
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, WingsPersistence wingsPersistence,
-      UserService userService, CacheHelper cacheHelper) {
+      UserService userService, CacheHelper cacheHelper, MainConfiguration configuration) {
     this.dbCache = dbCache;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
     this.cacheHelper = cacheHelper;
+    this.configuration = configuration;
   }
 
   @Override
@@ -189,8 +199,22 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void validateExternalServiceToken(String accountId, String tokenString) {
-    //
+  public void validateExternalServiceToken(String accountId, String externalServiceToken) {
+    String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
+    if (StringUtils.isBlank(jwtExternalServiceSecret)) {
+      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+    }
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      verifier.verify(externalServiceToken);
+      JWT decode = JWT.decode(externalServiceToken);
+      if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
+        throw new WingsException(EXPIRED_TOKEN);
+      }
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException(e);
+    }
   }
 
   @Override

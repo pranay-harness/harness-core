@@ -119,6 +119,7 @@ def parse(cli_args):
     parser = argparse.ArgumentParser()
     parser.add_argument("--control_input_url", required=True)
     parser.add_argument("--test_input_url", required=True)
+    parser.add_argument("--auth_token", required=True)
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
     parser.add_argument("--sim_threshold", type=float, required=True)
@@ -181,7 +182,7 @@ def main(args):
     splunkIntel = SplunkIntelOptimized(splunkDataset, options)
     splunkDataset = splunkIntel.run()
 
-    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url,
+    logger.info(splunkDataset.save_to_harness(options.log_analysis_save_url, options.auth_token,
                                                   splunkDataset.get_output_as_json(options)))
 
 
