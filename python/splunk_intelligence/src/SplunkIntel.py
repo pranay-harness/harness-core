@@ -100,8 +100,10 @@ class SplunkIntel(object):
 
 def parse(cli_args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", required=True)
+    parser.add_argument("--control_input_url", required=True)
+    parser.add_argument("--test_input_url", required=True)
     parser.add_argument("--application_id", required=True)
+    parser.add_argument("--workflow_id", required=True)
     parser.add_argument("--control_window", nargs='+', type=int, required=True)
     parser.add_argument("--test_window", nargs='+', type=int, required=True)
     parser.add_argument("--sim_threshold", type=float, required=True)

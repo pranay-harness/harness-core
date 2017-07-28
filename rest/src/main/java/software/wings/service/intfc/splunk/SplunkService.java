@@ -22,7 +22,8 @@ public interface SplunkService {
   Boolean saveLogData(@NotNull String appId, @NotNull String stateExecutionId, String workflowExecutionId,
       @Valid List<SplunkLogElement> logData) throws IOException;
 
-  @ValidationGroups(Create.class) List<SplunkLogDataRecord> getSplunkLogData(@Valid SplunkLogRequest logRequest);
+  @ValidationGroups(Create.class)
+  List<SplunkLogDataRecord> getSplunkLogData(@Valid SplunkLogRequest logRequest, boolean compareCurrent);
 
   Boolean markProcessed(@NotNull String stateExecutionId, @NotNull String applicationId, long timeStamp);
 

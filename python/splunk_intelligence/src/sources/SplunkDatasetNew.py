@@ -83,15 +83,17 @@ class SplunkDatasetNew(object):
     # Called with the production workflow
     def load_from_harness(self, options):
 
-        control_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+        control_events = SplunkHarnessLoader.load_from_wings_server(options.control_input_url,
                                                                     options.application_id,
+                                                                    options.workflow_id,
                                                                     options.state_execution_id,
                                                                     options.log_collection_minute,
                                                                     options.control_nodes,
                                                                     options.query)
 
-        test_events = SplunkHarnessLoader.load_from_wings_server(options.url,
+        test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
                                                                  options.application_id,
+                                                                 options.workflow_id,
                                                                  options.state_execution_id,
                                                                  options.log_collection_minute,
                                                                  options.test_nodes,

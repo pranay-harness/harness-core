@@ -46,12 +46,10 @@ public abstract class AbstractAnalysisState extends State {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
 
-    final WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
     final PageRequest<WorkflowExecution> pageRequest =
         PageRequest.Builder.aPageRequest()
             .addFilter("appId", Operator.EQ, context.getAppId())
-            .addFilter("workflowId", Operator.EQ, executionDetails.getWorkflowId())
+            .addFilter("workflowId", Operator.EQ, getWorkflowId(context))
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
             .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
             .addOrder("createdAt", OrderType.DESC)
@@ -94,6 +92,12 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return rv;
+  }
+
+  protected String getWorkflowId(ExecutionContext context) {
+    final WorkflowExecution executionDetails =
+        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
+    return executionDetails.getWorkflowId();
   }
 
   @SchemaIgnore abstract public Logger getLogger();
