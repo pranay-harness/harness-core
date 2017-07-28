@@ -187,11 +187,19 @@ public class PhaseStep {
     if (steps == null || steps.isEmpty()) {
       return graphBuilder.build();
     }
+    for (Node step : getSteps()) {
+      step.getProperties().put("parentId", getUuid());
+    }
 
     Node originNode = null;
 
     if (stepsInParallel && steps.size() > 1) {
-      Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(name + "-FORK").build();
+      Node forkNode = aNode()
+                          .withId(getUuid())
+                          .withType(FORK.name())
+                          .withName(name + "-FORK")
+                          .addProperty("parentId", getUuid())
+                          .build();
       graphBuilder.addNodes(forkNode);
       for (Node step : steps) {
         step.setOrigin(false);

@@ -16,6 +16,8 @@ import java.util.Map;
 public abstract class State {
   @SchemaIgnore private String id;
 
+  @SchemaIgnore private String parentId;
+
   @SchemaIgnore private String name;
 
   @SchemaIgnore private ContextElementType requiredContextElementType;
@@ -59,6 +61,15 @@ public abstract class State {
   @SchemaIgnore
   public void setId(String id) {
     this.id = id;
+  }
+
+  @SchemaIgnore
+  public String getParentId() {
+    return parentId;
+  }
+
+  public void setParentId(String parentId) {
+    this.parentId = parentId;
   }
 
   /**

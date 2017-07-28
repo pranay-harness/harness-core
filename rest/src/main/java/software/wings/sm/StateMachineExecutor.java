@@ -416,6 +416,9 @@ public class StateMachineExecutor {
         }
         return successTransition(context);
       }
+      case IGNORE: {
+        return successTransition(context);
+      }
       case ABORT: {
         endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
         break;

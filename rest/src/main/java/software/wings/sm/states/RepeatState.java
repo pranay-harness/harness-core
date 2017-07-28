@@ -501,6 +501,7 @@ public class RepeatState extends State {
     private ExecutionStrategy executionStrategy;
     private String executionStrategyExpression;
     private String repeatTransitionStateName;
+    private String parentId;
 
     private Builder() {}
 
@@ -521,6 +522,17 @@ public class RepeatState extends State {
      */
     public Builder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    /**
+     * With parentId builder.
+     *
+     * @param parentId the parentId
+     * @return the builder
+     */
+    public Builder withParentId(String parentId) {
+      this.parentId = parentId;
       return this;
     }
 
@@ -591,7 +603,8 @@ public class RepeatState extends State {
           .withRepeatElementExpression(repeatElementExpression)
           .withExecutionStrategy(executionStrategy)
           .withExecutionStrategyExpression(executionStrategyExpression)
-          .withRepeatTransitionStateName(repeatTransitionStateName);
+          .withRepeatTransitionStateName(repeatTransitionStateName)
+          .withParentId(parentId);
     }
 
     /**
@@ -606,6 +619,7 @@ public class RepeatState extends State {
       repeatState.setExecutionStrategy(executionStrategy);
       repeatState.setExecutionStrategyExpression(executionStrategyExpression);
       repeatState.setRepeatTransitionStateName(repeatTransitionStateName);
+      repeatState.setParentId(parentId);
       return repeatState;
     }
   }

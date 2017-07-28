@@ -701,7 +701,7 @@ public class StateMachine extends Base {
         if (!initialStateName.equals(stateName)) {
           throw new WingsException("Inconsistent state");
         }
-        State newRepeatState = createRepeatState(stateName, requiredContextElementType);
+        State newRepeatState = createRepeatState(state, requiredContextElementType);
         setInitialStateName(newRepeatState.getName());
         addTransition(aTransition()
                           .withTransitionType(TransitionType.REPEAT)
@@ -722,7 +722,7 @@ public class StateMachine extends Base {
         if (transitionsForRequired.isEmpty()) {
           continue;
         }
-        State newRepeatState = createRepeatState(stateName, requiredContextElementType);
+        State newRepeatState = createRepeatState(state, requiredContextElementType);
         transitionsForRequired.forEach(transition -> { transition.setToState(newRepeatState); });
         addTransition(aTransition()
                           .withTransitionType(TransitionType.REPEAT)
@@ -733,14 +733,15 @@ public class StateMachine extends Base {
     }
   }
 
-  private State createRepeatState(String stateName, ContextElementType requiredContextElementType) {
+  private State createRepeatState(State state, ContextElementType requiredContextElementType) {
     return addState(aRepeatState()
-                        .withName("Repeat " + stateName)
+                        .withName("Repeat " + state.getName())
                         .withRepeatElementType(requiredContextElementType)
                         .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                        .withParentId(state.getParentId())
                         .withRepeatElementExpression(
                             WingsExpressionProcessorFactory.getDefaultExpression(requiredContextElementType))
-                        .withRepeatTransitionStateName(stateName)
+                        .withRepeatTransitionStateName(state.getName())
                         .build());
   }
 

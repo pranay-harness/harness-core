@@ -5,9 +5,12 @@ import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
+import software.wings.common.Constants;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionEventAdvice;
@@ -76,11 +79,42 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
-    RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow);
+    if (state.getParentId() != null) {
+      PhaseStep phaseStep = null;
+      if (state.getParentId().equals(orchestrationWorkflow.getPreDeploymentSteps().getUuid())) {
+        phaseStep = orchestrationWorkflow.getPreDeploymentSteps();
+      } else if (state.getParentId().equals(orchestrationWorkflow.getPostDeploymentSteps().getUuid())) {
+        phaseStep = orchestrationWorkflow.getPostDeploymentSteps();
+      } else {
+        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        WorkflowPhase phase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseElement.getUuid());
+        if (phase != null) {
+          Optional<PhaseStep> phaseStep1 = phase.getPhaseSteps()
+                                               .stream()
+                                               .filter(ps -> ps != null && state.getParentId().equals(ps.getUuid()))
+                                               .findFirst();
+          if (phaseStep1.isPresent()) {
+            phaseStep = phaseStep1.get();
+          }
+        }
+      }
+      if (phaseStep != null && phaseStep.getFailureStrategies() != null
+          && !phaseStep.getFailureStrategies().isEmpty()) {
+        RepairActionCode repairActionCode = rollbackStrategy(phaseStep.getFailureStrategies(), state);
+        return getExecutionEventAdvice(orchestrationWorkflow, repairActionCode, executionEvent, null);
+      }
+    }
+    RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
 
+    return getExecutionEventAdvice(orchestrationWorkflow, repairActionCode, executionEvent, phaseSubWorkflow);
+  }
+
+  private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
+      RepairActionCode repairActionCode, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow) {
     switch (repairActionCode) {
-      case IGNORE:
-        return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.MARK_SUCCESS).build();
+      case IGNORE: {
+        return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
+      }
 
       case MANUAL_INTERVENTION:
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.PAUSE).build();
@@ -141,13 +175,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
   }
 
-  private RepairActionCode rollbackStrategy(CanaryOrchestrationWorkflow orchestrationWorkflow) {
-    if (orchestrationWorkflow.getFailureStrategies() == null) {
+  private RepairActionCode rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
+    if (failureStrategies == null) {
       return null;
     }
     Optional<FailureStrategy> rollbackStrategy =
-        orchestrationWorkflow.getFailureStrategies()
-            .stream()
+        failureStrategies.stream()
             .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
             .findFirst();
 
@@ -155,17 +188,14 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get().getRepairActionCode();
     }
 
-    rollbackStrategy = orchestrationWorkflow.getFailureStrategies()
-                           .stream()
-                           .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE)
-                           .findFirst();
+    rollbackStrategy =
+        failureStrategies.stream().filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE).findFirst();
 
     if (rollbackStrategy.isPresent()) {
       return rollbackStrategy.get().getRepairActionCode();
     }
 
-    rollbackStrategy = orchestrationWorkflow.getFailureStrategies()
-                           .stream()
+    rollbackStrategy = failureStrategies.stream()
                            .filter(f -> f.getRepairActionCode() == RepairActionCode.MANUAL_INTERVENTION)
                            .findFirst();
 
@@ -173,10 +203,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get().getRepairActionCode();
     }
 
-    rollbackStrategy = orchestrationWorkflow.getFailureStrategies()
-                           .stream()
-                           .filter(f -> f.getRepairActionCode() == RepairActionCode.IGNORE)
-                           .findFirst();
+    rollbackStrategy =
+        failureStrategies.stream().filter(f -> f.getRepairActionCode() == RepairActionCode.IGNORE).findFirst();
 
     if (rollbackStrategy.isPresent()) {
       return rollbackStrategy.get().getRepairActionCode();

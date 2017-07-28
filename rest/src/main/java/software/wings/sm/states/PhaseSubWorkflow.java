@@ -96,7 +96,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     Service service = serviceResourceService.get(stateExecutionInstance.getAppId(), serviceId, false);
     MapperUtils.mapObject(service, serviceElement);
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(uuid)
+                                    .withUuid(getId())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(infrastructureMapping.getDeploymentType())
                                     .withInfraMappingId(infraMappingId)
