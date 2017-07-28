@@ -10,6 +10,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
@@ -22,6 +23,7 @@ import static software.wings.beans.stats.NotificationCount.Builder.aNotification
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -42,7 +44,6 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.api.ServiceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
@@ -173,11 +174,47 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
-    List<ElementExecutionSummary> serviceExecutionSummaries =
-        asList(anElementExecutionSummary()
-                   .withStatus(SUCCESS)
-                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
-                   .build());
+    /*List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary().withStatus(SUCCESS).withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build()).build());*/
+
+    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(SUCCESS)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(getUuid())
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build()))
+            .build());
+
+    List<ElementExecutionSummary> serviceFailureExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(FAILED)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(getUuid())
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build()))
+            .build());
+
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
                                                     .withAppName(APP_NAME)
@@ -199,7 +236,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withAppName(APP_NAME)
             .withEnvType(EnvironmentType.NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
-            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build(),
         aWorkflowExecution()
@@ -207,7 +244,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withAppName(APP_NAME)
             .withEnvType(EnvironmentType.NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
-            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build());
 
@@ -222,8 +259,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                        .withAppName(APP_NAME)
                                        .withServiceId(SERVICE_ID)
                                        .withServiceName(SERVICE_NAME)
-                                       .withSuccessfulActivityCount(4)
-                                       .withFailedActivityCount(0)
+                                       .withSuccessfulActivityCount(2)
+                                       .withFailedActivityCount(2)
                                        .withTotalCount(4)
                                        .build());
   }

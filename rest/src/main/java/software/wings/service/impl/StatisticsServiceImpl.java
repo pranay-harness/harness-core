@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -23,29 +21,23 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
-import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.Activity;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown;
@@ -69,9 +61,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -480,26 +471,34 @@ public class StatisticsServiceImpl implements StatisticsService {
       List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
       for (WorkflowExecution execution : wflExecutions) {
         for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
-          ContextElement contextElement = elementExecutionSummary.getContextElement();
-          if (contextElement != null && contextElement.getElementType().equals(ContextElementType.SERVICE)) {
-            String uuid = contextElement.getUuid();
-            if (!topConsumerMap.containsKey(uuid)) {
-              TopConsumer tempConsumer = aTopConsumer()
-                                             .withAppId(execution.getAppId())
-                                             .withAppName(execution.getAppName())
-                                             .withServiceId(uuid)
-                                             .withServiceName(contextElement.getName())
-                                             .build();
-              topConsumerMap.put(uuid, tempConsumer);
-              topConsumers.add(tempConsumer);
-            }
-            topConsumer = topConsumerMap.get(uuid);
-            if (elementExecutionSummary.getStatus().equals(SUCCESS)) {
-              topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-            } else {
-              topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+          if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
+            continue;
+          }
+          for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
+            ServiceElement serviceElement =
+                instanceStatusSummary.getInstanceElement().getServiceTemplateElement() != null
+                ? instanceStatusSummary.getInstanceElement().getServiceTemplateElement().getServiceElement()
+                : null;
+            if (serviceElement != null) {
+              String serviceId = serviceElement.getUuid();
+              if (!topConsumerMap.containsKey(serviceId)) {
+                TopConsumer tempConsumer = aTopConsumer()
+                                               .withAppId(execution.getAppId())
+                                               .withAppName(execution.getAppName())
+                                               .withServiceId(serviceId)
+                                               .withServiceName(serviceElement.getName())
+                                               .build();
+                topConsumerMap.put(serviceId, tempConsumer);
+                topConsumers.add(tempConsumer);
+              }
+              topConsumer = topConsumerMap.get(serviceId);
+              if (instanceStatusSummary.getStatus().equals(SUCCESS)) {
+                topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+                topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+              } else {
+                topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+                topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+              }
             }
           }
         }
