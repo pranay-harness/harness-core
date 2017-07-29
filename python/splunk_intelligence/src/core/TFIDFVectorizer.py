@@ -24,7 +24,7 @@ class TFIDFVectorizer(object):
                                                 min_df=self.min_df,
                                                 max_df=self.max_df,
                                                 stop_words='english',
-                                                use_idf=True, tokenizer=self.tokenizer, ngram_range=(1, 3))
+                                                use_idf=True, tokenizer=self.tokenizer, ngram_range=(1, 1))
 
     def fit_transform(self, texts):
         """

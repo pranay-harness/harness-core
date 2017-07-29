@@ -1,13 +1,13 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from JaccardDistance import jaccard_text_similarity
+from JaccardDistance import jaccard_similarity
 """
 Detect anomalies based on kmeans clusters
 """
 class KmeansAnomalyDetector(object):
 
 
-    def detect_kmeans_anomaly_cosine_dist(self, feature_matrix, control_texts, test_texts, km, threshold):
+    def detect_kmeans_anomaly_cosine_dist(self, feature_matrix, km, threshold):
 
         """
 
@@ -25,10 +25,10 @@ class KmeansAnomalyDetector(object):
         for j, i in enumerate(predictions):
             mat = feature_matrix[j]
             sim = cosine_similarity(km.get_feature_matrix()[clusters == i], mat)
+            jaccard_sim = jaccard_similarity(km.get_feature_matrix()[clusters == i], mat)
             if len(np.where(sim < threshold)[0]) > 0:
                 anomalies.append(-1)
-            elif len(np.where(jaccard_text_similarity(control_texts[np.where(clusters == i)],
-                                                      test_texts[j]) < threshold)[0]) > 0:
+            elif len(np.where( jaccard_sim < threshold)[0]) > 0:
                 anomalies.append(-1)
             else:
                 anomalies.append(1)

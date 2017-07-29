@@ -4,12 +4,13 @@ import sys
 
 import numpy as np
 
+from core.FrequencyAnomalyDetector import FrequencyAnomalyDetector
 from core.KmeansAnomalyDetector import KmeansAnomalyDetector
 from core.KmeansCluster import KmeansCluster
 from core.TFIDFVectorizer import TFIDFVectorizer
 from core.Tokenizer import Tokenizer
 from sources.SplunkDatasetNew import SplunkDatasetNew
-from core.FrequencyAnomalyDetector import FrequencyAnomalyDetector
+from core.JaccardDistance import jaccard_difference, jaccard_text_similarity
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -39,6 +40,8 @@ class SplunkIntelOptimized(object):
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()
 
+        logging.info("Finish kemans....")
+
         predictions = []
         anomalies = []
         if bool(self.splunkDatasetNew.test_events):
@@ -47,18 +50,24 @@ class SplunkIntelOptimized(object):
 
             predictions, anomalies = np.array(
             newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
-                                                              self.splunkDatasetNew.get_control_events_text_as_np(),
-                                                              self.splunkDatasetNew.get_test_events_text_as_np(),
                                                               kmeans, self._options.sim_threshold))
+
+        logging.info("Finish unknown event detection")
+
 
         combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
         combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDatasetNew.get_all_events_text_as_np())
 
         combined_dist = combined_vectorizer.get_cosine_dist_matrix(combined_tfidf_matrix)
 
+        logging.info("Finish combine dist")
+
+
         self.splunkDatasetNew.create_clusters(combined_dist, kmeans.get_clusters(), kmeans.get_centriods(),
                                               vectorizer.get_feature_names(),
                                               predictions, anomalies)
+
+        logging.info("Finish create clusters")
 
         unknown_anomalies_text = self.splunkDatasetNew.get_unknown_anomalies_text()
 
@@ -71,15 +80,25 @@ class SplunkIntelOptimized(object):
 
             self.splunkDatasetNew.create_anom_clusters(anom_kmeans.get_clusters())
 
+            control_clusters = self.splunkDatasetNew.get_control_clusters()
+            anom_clusters = self.splunkDatasetNew.get_anom_clusters()
+            for key, anomalies in anom_clusters.items():
+                for host, anomaly in anomalies.items():
+                    score = jaccard_text_similarity([control_clusters[anomaly['cluster_label']].values()[0]['text']],  anomaly['text'])
+                    if 0.9 > score[0] > 0.5:
+                        anomaly['diff_tags'] = []
+                        anomaly['diff_tags'].append(jaccard_difference(control_clusters[anomaly['cluster_label']].values()[0]['text'],
+                                                                        anomaly['text']))
+
+        logging.info("Finish unknown event clustering")
+
         logger.info("Detect Count Anomalies....")
 
         control_clusters = self.splunkDatasetNew.get_control_clusters()
         test_clusters = self.splunkDatasetNew.get_test_clusters()
 
-        # classifier = IsolationForestClassifier()
-
         classifier = FrequencyAnomalyDetector()
-        #classifier = ConnectedSetClassifier(FrequencyAnomalyDetector())
+
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
@@ -100,8 +119,8 @@ class SplunkIntelOptimized(object):
                 # print(anomalous_counts)
                 data.get('anomalous_counts').extend(anomalous_counts)
                 if score < 0.5:
-                    print(values)
-                    print(values_test)
+                    print('values=',values)
+                    print('values_test=',values_test)
                     print(anomalous_counts)
                     data['unexpected_freq'] = True
 
@@ -146,7 +165,7 @@ def run_debug(options):
 
         print(control_start, control_start)
         print(test_start, test_start)
-        splunkDataset.load_prod_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut2.json',
+        splunkDataset.load_prod_file('/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prodOut1.json',
                                      [control_start, control_start],
                                      [test_start, test_start], ['ip-172-31-28-126'], ['ip-172-31-19-157'], prev_out_file)
 
