@@ -102,6 +102,7 @@ def parse(cli_args):
     parser = argparse.ArgumentParser()
     parser.add_argument("--control_input_url", required=True)
     parser.add_argument("--test_input_url", required=True)
+    parser.add_argument("--auth_token", required=True)
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
     parser.add_argument("--control_window", nargs='+', type=int, required=True)

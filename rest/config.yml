@@ -87,6 +87,7 @@ portal:
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
+  jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
 
 awsEcsAMIByRegion:
   us-east-1: ami-b2df2ca4

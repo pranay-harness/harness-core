@@ -50,8 +50,8 @@ class SplunkHarnessLoader(object):
         sys.exit(1)
 
     @staticmethod
-    def post_to_wings_server(url, response):
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    def post_to_wings_server(url, auth_token, response):
+        headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "ExternalService " + auth_token}
         text, status_code = SplunkHarnessLoader.send_request(url, response, headers, False, 3)
         logger.info("Posting results to " + url)
         if status_code != 200:
@@ -60,8 +60,8 @@ class SplunkHarnessLoader(object):
             sys.exit(-1)
 
     @staticmethod
-    def load_prev_output_from_harness(url, app_id, state_execution_id, query):
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    def load_prev_output_from_harness(url, auth_token, app_id, state_execution_id, query):
+        headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "ExternalService " + auth_token}
         payload = dict(applicationId=app_id, stateExecutionId=state_execution_id, query=query)
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
@@ -74,8 +74,8 @@ class SplunkHarnessLoader(object):
         return json.loads(text)['resource']
 
     @staticmethod
-    def load_from_wings_server(url, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    def load_from_wings_server(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
+        headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "ExternalService " + auth_token}
         payload = dict(applicationId=app_id, workflowId=workflow_id, stateExecutionId=state_execution_id,
                        logCollectionMinute=log_collection_minute, nodes=nodes,
                        query=query)

@@ -55,6 +55,7 @@ class SplunkDataset(object):
 
     def load_from_harness(self, options):
         control_events = SplunkHarnessLoader.load_from_wings_server(options.control_input_url,
+                                                                    options.auth_token,
                                                                     options.application_id,
                                                                     options.workflow_id,
                                                                     options.control_window[0],
@@ -65,6 +66,7 @@ class SplunkDataset(object):
             self.add_event(dict, 'control')
 
         test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
+                                                                 options.auth_token,
                                                                  options.application_id,
                                                                  options.workflow_id,
                                                                  options.test_window[0],

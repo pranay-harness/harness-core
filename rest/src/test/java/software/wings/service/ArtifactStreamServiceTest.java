@@ -254,7 +254,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
 
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    // when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID))
+    // when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID,
+    // ARTIFACT_STREAM_ID)).thenReturn(Artifact.Builder.anArtifact().withAppId(APP_ID))
     artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
   }
 }

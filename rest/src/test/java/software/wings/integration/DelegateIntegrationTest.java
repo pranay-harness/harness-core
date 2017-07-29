@@ -13,6 +13,7 @@ import org.hamcrest.CoreMatchers;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
@@ -105,6 +106,7 @@ public void shouldDownloadDelegateZip() throws IOException, JSONException, Timeo
 }
 
 @Test
+@Ignore
 public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
   String responseString =
       httpRequestExecutor

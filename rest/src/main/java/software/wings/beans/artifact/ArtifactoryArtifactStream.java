@@ -167,12 +167,13 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .withArtifactPattern(getArtifactPattern())
+        .withMetadataOnly(getMetadataOnly())
+        .withGroupId(getGroupId())
+        .withImageName(getImageName())
         .build();
   }
 
@@ -195,6 +196,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private boolean metadataOnly = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
     private String artifactPattern;
+    private String groupId;
+    private String imageName;
 
     private Builder() {}
 
@@ -218,6 +221,19 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       return this;
     }
 
+    /**
+     * With GroupId builder
+     * @param groupId the groupId
+     */
+    public Builder withGroupId(String groupId) {
+      this.groupId = groupId;
+      return this;
+    }
+
+    public Builder withImageName(String imageName) {
+      this.imageName = imageName;
+      return this;
+    }
     /**
      * With artifact paths builder.
      *
@@ -388,7 +404,10 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
           .withAutoApproveForProduction(autoApproveForProduction)
           .withStreamActions(streamActions)
           .withMetadataOnly(metadataOnly)
-          .withArtifactPattern(artifactPattern);
+          .withArtifactPattern(artifactPattern)
+          .withMetadataOnly(metadataOnly)
+          .withImageName(imageName)
+          .withGroupId(groupId);
     }
 
     /**
@@ -411,6 +430,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       artifactoryArtifactStream.setStreamActions(streamActions);
       artifactoryArtifactStream.setMetadataOnly(metadataOnly);
       artifactoryArtifactStream.setArtifactPattern(artifactPattern);
+      artifactoryArtifactStream.setImageName(imageName);
       return artifactoryArtifactStream;
     }
   }

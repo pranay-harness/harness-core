@@ -155,74 +155,27 @@ public class DelegateServiceImpl implements DelegateService {
               new Function<String>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(String message) {
-                  logger.info("Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
-                  fixedThreadPool.submit(() -> {
-                    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-                    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
-                      try {
-                        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-                          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-                        } else {
-                          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
-                        }
-                      } catch (Exception e) {
-                        System.out.println(message);
-                        Misc.error(logger, "Exception while decoding task", e);
-                      }
-                    }
-                  });
-                  logger.info("Submitted: Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
+                  handleMessageSubmit(message, fixedThreadPool, delegateId, accountId);
                 }
               })
           .on(Event.ERROR,
               new Function<Exception>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(Exception e) {
-                  logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
-                  if (e instanceof SSLException) {
-                    logger.info("Reopening connection to manager.");
-                    try {
-                      socket.close();
-                    } catch (Exception ex) {
-                      // Ignore
-                    }
-                    try {
-                      ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
-                    } catch (IOException ex) {
-                      Misc.error(logger, "Unable to open socket", e);
-                    }
-                  } else {
-                    Misc.error(logger, "Exception: " + e.getMessage(), e);
-                    try {
-                      socket.close();
-                    } catch (Exception ex) {
-                      // Ignore
-                    }
-                  }
+                  handleError(e);
                 }
               })
           .on(Event.REOPENED,
               new Function<Object>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(Object o) {
-                  logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
-                  try {
-                    socket.fire(builder.but()
-                                    .withLastHeartBeat(System.currentTimeMillis())
-                                    .withStatus(Status.ENABLED)
-                                    .withConnected(true)
-                                    .build());
-                  } catch (IOException e) {
-                    Misc.error(logger, "Error connecting", e);
-                    e.printStackTrace();
-                  }
+                  handleReopened(o, builder);
                 }
               })
           .on(Event.CLOSE, new Function<Object>() { // Do not change this wasync doesn't like lambda's
             @Override
             public void on(Object o) {
-              logger.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
+              handleClose(o);
             }
           });
 
@@ -244,6 +197,72 @@ public class DelegateServiceImpl implements DelegateService {
 
     } catch (Exception e) {
       Misc.error(logger, "Exception while starting/running delegate", e);
+    }
+  }
+
+  private void handleClose(Object o) {
+    logger.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
+  }
+
+  private void handleReopened(Object o, Builder builder) {
+    logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
+    try {
+      socket.fire(builder.but()
+                      .withLastHeartBeat(System.currentTimeMillis())
+                      .withStatus(Status.ENABLED)
+                      .withConnected(true)
+                      .build());
+    } catch (IOException e) {
+      Misc.error(logger, "Error connecting", e);
+      e.printStackTrace();
+    }
+  }
+
+  private void handleError(Exception e) {
+    logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
+    if (e instanceof SSLException) {
+      logger.info("Reopening connection to manager.");
+      try {
+        socket.close();
+      } catch (Exception ex) {
+        // Ignore
+      }
+      try {
+        ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+      } catch (IOException ex) {
+        Misc.error(logger, "Unable to open socket", e);
+      }
+    } else {
+      Misc.error(logger, "Exception: " + e.getMessage(), e);
+      try {
+        socket.close();
+      } catch (Exception ex) {
+        // Ignore
+      }
+    }
+  }
+
+  private void handleMessageSubmit(
+      String message, ExecutorService fixedThreadPool, String delegateId, String accountId) {
+    logger.info("Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
+    fixedThreadPool.submit(() -> { handleMessage(message, delegateId, accountId); });
+    logger.info("Submitted: Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
+  }
+
+  private void handleMessage(String message, String delegateId, String accountId) {
+    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+      try {
+        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+        } else {
+          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+        }
+      } catch (Exception e) {
+        System.out.println(message);
+        Misc.error(logger, "Exception while decoding task", e);
+      }
     }
   }
 

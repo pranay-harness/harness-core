@@ -119,9 +119,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .withMetadataOnly(getMetadataOnly())
@@ -291,7 +289,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     *
+     * With MetadataOnly builder.
      */
     public Builder withMetadataOnly(boolean metadataOnly) {
       this.metadataOnly = metadataOnly;

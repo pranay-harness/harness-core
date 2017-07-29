@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.NexusArtifactStream.Builder.*;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -32,6 +33,12 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @UIOrder(6) @NotEmpty @Attributes(title = "Artifact", required = true) private List<String> artifactPaths;
 
+  @UIOrder(7)
+  @Attributes(title = "Meta-data Only (Artifact download not required)")
+  public boolean getMetadataOnly() {
+    return super.isMetadataOnly();
+  }
+
   /**
    * Instantiates a new Nexus artifact stream.
    */
@@ -57,7 +64,7 @@ public class NexusArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @UIOrder(7)
+  @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
   public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
@@ -108,15 +115,14 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStream clone() {
-    return NexusArtifactStream.Builder.aNexusArtifactStream()
+    return aNexusArtifactStream()
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withStreamActions(getStreamActions())
         .withJobname(getJobname())
         .withGroupId(getGroupId())
+        .withMetadataOnly(getMetadataOnly())
         .withArtifactPaths(getArtifactPaths())
         .build();
   }
@@ -138,6 +144,7 @@ public class NexusArtifactStream extends ArtifactStream {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean autoApproveForProduction = false;
+    private boolean metadataOnly = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}
@@ -147,8 +154,8 @@ public class NexusArtifactStream extends ArtifactStream {
      *
      * @return the builder
      */
-    public static NexusArtifactStream.Builder aNexusArtifactStream() {
-      return new NexusArtifactStream.Builder();
+    public static Builder aNexusArtifactStream() {
+      return new Builder();
     }
 
     /**
@@ -157,7 +164,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param jobname the jobname
      * @return the builder
      */
-    public NexusArtifactStream.Builder withJobname(String jobname) {
+    public Builder withJobname(String jobname) {
       this.jobname = jobname;
       return this;
     }
@@ -168,7 +175,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param groupId the groupId
      * @return the builder
      */
-    public NexusArtifactStream.Builder withGroupId(String groupId) {
+    public Builder withGroupId(String groupId) {
       this.groupId = groupId;
       return this;
     }
@@ -179,7 +186,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param artifactPaths the artifact paths
      * @return the builder
      */
-    public NexusArtifactStream.Builder withArtifactPaths(List<String> artifactPaths) {
+    public Builder withArtifactPaths(List<String> artifactPaths) {
       this.artifactPaths = artifactPaths;
       return this;
     }
@@ -190,7 +197,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param sourceName the source name
      * @return the builder
      */
-    public NexusArtifactStream.Builder withSourceName(String sourceName) {
+    public Builder withSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
     }
@@ -201,7 +208,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param settingId the setting id
      * @return the builder
      */
-    public NexusArtifactStream.Builder withSettingId(String settingId) {
+    public Builder withSettingId(String settingId) {
       this.settingId = settingId;
       return this;
     }
@@ -212,7 +219,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param serviceId the service id
      * @return the builder
      */
-    public NexusArtifactStream.Builder withServiceId(String serviceId) {
+    public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
@@ -223,7 +230,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param uuid the uuid
      * @return the builder
      */
-    public NexusArtifactStream.Builder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
@@ -234,7 +241,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param appId the app id
      * @return the builder
      */
-    public NexusArtifactStream.Builder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -245,7 +252,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param createdBy the created by
      * @return the builder
      */
-    public NexusArtifactStream.Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -256,7 +263,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param createdAt the created at
      * @return the builder
      */
-    public NexusArtifactStream.Builder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -267,7 +274,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public NexusArtifactStream.Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -278,7 +285,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param lastUpdatedAt the last updated at
      * @return the builder
      */
-    public NexusArtifactStream.Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -289,7 +296,7 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param autoApproveForProduction the auto approve for production
      * @return the builder
      */
-    public NexusArtifactStream.Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
       this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
@@ -300,8 +307,15 @@ public class NexusArtifactStream extends ArtifactStream {
      * @param streamActions the stream actions
      * @return the builder
      */
-    public NexusArtifactStream.Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
+    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
       this.streamActions = streamActions;
+      return this;
+    }
+    /**
+     * With MetadataOnly builder.
+     */
+    public Builder withMetadataOnly(boolean metadataOnly) {
+      this.metadataOnly = metadataOnly;
       return this;
     }
 
@@ -310,7 +324,7 @@ public class NexusArtifactStream extends ArtifactStream {
      *
      * @return the builder
      */
-    public NexusArtifactStream.Builder but() {
+    public Builder but() {
       return aNexusArtifactStream()
           .withJobname(jobname)
           .withGroupId(groupId)
@@ -325,7 +339,8 @@ public class NexusArtifactStream extends ArtifactStream {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
-          .withStreamActions(streamActions);
+          .withStreamActions(streamActions)
+          .withMetadataOnly(metadataOnly);
     }
 
     /**
@@ -340,7 +355,6 @@ public class NexusArtifactStream extends ArtifactStream {
       nexusArtifactStream.setArtifactPaths(artifactPaths);
       nexusArtifactStream.setSourceName(sourceName);
       nexusArtifactStream.setSettingId(settingId);
-      nexusArtifactStream.setServiceId(serviceId);
       nexusArtifactStream.setUuid(uuid);
       nexusArtifactStream.setAppId(appId);
       nexusArtifactStream.setCreatedBy(createdBy);
@@ -348,7 +362,7 @@ public class NexusArtifactStream extends ArtifactStream {
       nexusArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       nexusArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       nexusArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      nexusArtifactStream.setStreamActions(streamActions);
+      nexusArtifactStream.setMetadataOnly(metadataOnly);
       return nexusArtifactStream;
     }
   }

@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -23,29 +21,23 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
-import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.Activity;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown;
@@ -69,9 +61,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -118,7 +109,7 @@ public class StatisticsServiceImpl implements StatisticsService {
           appService.list(aPageRequest().addFilter("appId", IN, appIds.toArray()).build(), false, 0, 0).getResponse();
     }
     appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
-    return new TopConsumersStatistics(getTopConsumerServicesForPastXDays(30, appIdMap.keySet()));
+    return new TopConsumersStatistics(getTopConsumerServicesForPastXDays(30, appIdMap));
   }
   @Override
   public WingsStatistics getTopConsumers(String accountId, List<String> appIds) {
@@ -460,7 +451,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     return topConsumers;
   }
 
-  private List<TopConsumer> getTopConsumerServicesForPastXDays(int days, Set<String> appIds) {
+  private List<TopConsumer> getTopConsumerServicesForPastXDays(int days, Map<String, Application> appIdMap) {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
     List<TopConsumer> topConsumers = new ArrayList<>();
     PageRequest pageRequest =
@@ -469,42 +460,79 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, epochMilli).build())
             .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
             .addFilter(aSearchFilter().withField("status", IN, FAILED, SUCCESS).build())
-            .addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build())
+            .addFilter(aSearchFilter().withField("appId", IN, appIdMap.keySet().toArray()).build())
             .build();
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
+    Map<String, Map<String, ExecutionStatus>> serviceInstanceStatusMap = new HashMap<>();
+    Map<String, String> serviceIdNames = new HashMap<>();
+    Map<String, String> serviceAppIdMap = new HashMap<>();
     if (pageResponse != null) {
-      Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-      TopConsumer topConsumer;
       List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
       for (WorkflowExecution execution : wflExecutions) {
         for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
-          ContextElement contextElement = elementExecutionSummary.getContextElement();
-          if (contextElement != null && contextElement.getElementType().equals(ContextElementType.SERVICE)) {
-            String uuid = contextElement.getUuid();
-            if (!topConsumerMap.containsKey(uuid)) {
-              TopConsumer tempConsumer = aTopConsumer()
-                                             .withAppId(execution.getAppId())
-                                             .withAppName(execution.getAppName())
-                                             .withServiceId(uuid)
-                                             .withServiceName(contextElement.getName())
-                                             .build();
-              topConsumerMap.put(uuid, tempConsumer);
-              topConsumers.add(tempConsumer);
-            }
-            topConsumer = topConsumerMap.get(uuid);
-            if (elementExecutionSummary.getStatus().equals(SUCCESS)) {
-              topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-            } else {
-              topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+          if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
+            continue;
+          }
+          for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
+            ServiceElement serviceElement =
+                instanceStatusSummary.getInstanceElement().getServiceTemplateElement() != null
+                ? instanceStatusSummary.getInstanceElement().getServiceTemplateElement().getServiceElement()
+                : null;
+            if (serviceElement != null) {
+              String serviceId = serviceElement.getUuid();
+              serviceAppIdMap.put(serviceId, execution.getAppId());
+              serviceIdNames.put(serviceId, serviceElement.getName());
+              Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
+              if (instancestatusMap == null) {
+                instancestatusMap = new HashMap<>();
+                serviceInstanceStatusMap.put(serviceId, instancestatusMap);
+              }
+              instancestatusMap.put(
+                  instanceStatusSummary.getInstanceElement().getUuid(), instanceStatusSummary.getStatus());
             }
           }
         }
       }
     }
+    for (String serviceId : serviceInstanceStatusMap.keySet()) {
+      String appId = serviceAppIdMap.get(serviceId);
+      String appName = appIdMap.get(appId).getName();
+      TopConsumer topConsumer = aTopConsumer()
+                                    .withAppId(appId)
+                                    .withAppName(appName)
+                                    .withServiceId(serviceId)
+                                    .withServiceName(serviceIdNames.get(serviceId))
+                                    .build();
+      Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
+      for (String instanceId : instancestatusMap.keySet()) {
+        if (instancestatusMap.get(instanceId).equals(SUCCESS)) {
+          topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+        } else {
+          topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+        }
+      }
+      topConsumers.add(topConsumer);
+    }
+    /*  Map<String, TopConsumer> topConsumerMap = new HashMap<>();
+      TopConsumer topConsumer;
+      if (!topConsumerMap.containsKey(serviceId)) {
+        TopConsumer tempConsumer =
+      aTopConsumer().withAppId(execution.getAppId()).withAppName(execution.getAppName()).withServiceId(serviceId).withServiceName(serviceElement.getName()).build();
+        topConsumerMap.put(serviceId, tempConsumer);
+        topConsumers.add(tempConsumer);
+      }
+      topConsumer = topConsumerMap.get(serviceId);
+      if (instanceStatusSummary.getStatus().equals(SUCCESS)) {
+        topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+      } else {
+        topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+      }*/
     Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
     return topConsumers.stream().sorted(byCount).collect(toList());
   }
