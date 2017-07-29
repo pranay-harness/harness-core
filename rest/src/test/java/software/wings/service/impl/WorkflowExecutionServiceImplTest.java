@@ -1482,7 +1482,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                 .withEnvId(env.getUuid())
                                                 .withExecutionUuid(executionId)
                                                 .withStateExecutionInstanceId(installNode.getId())
-                                                .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                                                .withExecutionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
                                                 .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
 
@@ -1509,7 +1509,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                              .withEnvId(env.getUuid())
                              .withExecutionUuid(executionId)
                              .withStateExecutionInstanceId(installNode.getId())
-                             .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                             .withExecutionInterruptType(ExecutionInterruptType.IGNORE)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await();
@@ -1538,7 +1538,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .filteredOn("name", "install")
         .hasSize(2)
         .extracting("status")
-        .containsExactly(ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name());
+        .containsExactly(ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name());
   }
 
   private List<Node> getNodes(String executionId) throws InterruptedException {
@@ -1698,7 +1698,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                              .withEnvId(env.getUuid())
                              .withExecutionUuid(executionId)
                              .withStateExecutionInstanceId(installNode.getId())
-                             .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                             .withExecutionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await();
