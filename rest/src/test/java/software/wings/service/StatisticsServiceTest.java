@@ -174,9 +174,6 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
-    /*List<ElementExecutionSummary> serviceExecutionSummaries =
-        asList(anElementExecutionSummary().withStatus(SUCCESS).withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build()).build());*/
-
     List<ElementExecutionSummary> serviceExecutionSummaries = asList(
         anElementExecutionSummary()
             .withInstanceStatusSummaries(
@@ -259,9 +256,9 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                        .withAppName(APP_NAME)
                                        .withServiceId(SERVICE_ID)
                                        .withServiceName(SERVICE_NAME)
-                                       .withSuccessfulActivityCount(2)
-                                       .withFailedActivityCount(2)
-                                       .withTotalCount(4)
+                                       .withSuccessfulActivityCount(1)
+                                       .withFailedActivityCount(1)
+                                       .withTotalCount(2)
                                        .build());
   }
 
