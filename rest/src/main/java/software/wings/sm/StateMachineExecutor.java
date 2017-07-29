@@ -355,7 +355,6 @@ public class StateMachineExecutor {
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
-
     if (executionResponse.isAsync()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
@@ -846,7 +845,27 @@ public class StateMachineExecutor {
    */
   public void handleInterrupt(ExecutionInterrupt workflowExecutionInterrupt) {
     switch (workflowExecutionInterrupt.getExecutionInterruptType()) {
-      case RESUME: {
+      case IGNORE: {
+        StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
+            workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getStateExecutionInstanceId());
+
+        updateStatus(stateExecutionInstance, ExecutionStatus.FAILED, Lists.newArrayList(ExecutionStatus.WAITING));
+
+        StateMachine sm = wingsPersistence.get(
+            StateMachine.class, workflowExecutionInterrupt.getAppId(), stateExecutionInstance.getStateMachineId());
+
+        State currentState =
+            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+        injector.injectMembers(currentState);
+
+        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+        injector.injectMembers(context);
+        successTransition(context);
+        break;
+      }
+
+      case RESUME:
+      case MARK_SUCCESS: {
         StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
             workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getStateExecutionInstanceId());
 
@@ -859,7 +878,7 @@ public class StateMachineExecutor {
 
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        executorService.execute(new SmExecutionResumer(context, this));
+        executorService.execute(new SmExecutionResumer(context, this, ExecutionStatus.SUCCESS));
         break;
       }
 
@@ -1087,6 +1106,7 @@ public class StateMachineExecutor {
   private static class SmExecutionResumer implements Runnable {
     private ExecutionContextImpl context;
     private StateMachineExecutor stateMachineExecutor;
+    private ExecutionStatus status;
 
     /**
      * Instantiates a new Sm execution dispatcher.
@@ -1094,9 +1114,11 @@ public class StateMachineExecutor {
      * @param context              the context
      * @param stateMachineExecutor the state machine executor
      */
-    public SmExecutionResumer(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
+    public SmExecutionResumer(
+        ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor, ExecutionStatus status) {
       this.context = context;
       this.stateMachineExecutor = stateMachineExecutor;
+      this.status = status;
     }
 
     /* (non-Javadoc)
@@ -1105,7 +1127,7 @@ public class StateMachineExecutor {
     @Override
     public void run() {
       try {
-        stateMachineExecutor.handleExecuteResponse(context, new ExecutionResponse());
+        stateMachineExecutor.handleExecuteResponse(context, anExecutionResponse().withExecutionStatus(status).build());
       } catch (Exception ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       }

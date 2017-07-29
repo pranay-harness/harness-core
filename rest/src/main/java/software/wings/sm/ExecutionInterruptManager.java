@@ -43,10 +43,12 @@ public class ExecutionInterruptManager {
    * @return the execution event
    */
   public ExecutionInterrupt registerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
-    if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE
-        || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RESUME
-        || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RETRY
-        || executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.ABORT) {
+    ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
+    if (executionInterruptType == ExecutionInterruptType.PAUSE
+        || executionInterruptType == ExecutionInterruptType.IGNORE
+        || executionInterruptType == ExecutionInterruptType.RETRY
+        || executionInterruptType == ExecutionInterruptType.ABORT
+        || executionInterruptType == ExecutionInterruptType.RESUME) {
       if (executionInterrupt.getStateExecutionInstanceId() == null) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
       }
@@ -58,19 +60,24 @@ public class ExecutionInterruptManager {
             "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
       }
 
-      if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RESUME
+      if (executionInterruptType == ExecutionInterruptType.RESUME
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
+        throw new WingsException(ErrorCode.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+      }
+
+      if (executionInterruptType == ExecutionInterruptType.IGNORE
           && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
           && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
       }
 
-      if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RETRY
+      if (executionInterruptType == ExecutionInterruptType.RETRY
           && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING
           && stateExecutionInstance.getStatus() != ExecutionStatus.ERROR) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
       }
 
-      if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.ABORT
+      if (executionInterruptType == ExecutionInterruptType.ABORT
           && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
           && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
           && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING
@@ -78,7 +85,7 @@ public class ExecutionInterruptManager {
           && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
         throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
       }
-      if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE
+      if (executionInterruptType == ExecutionInterruptType.PAUSE
           && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
           && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
           && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING) {
@@ -92,7 +99,7 @@ public class ExecutionInterruptManager {
       throw new WingsException(ErrorCode.ABORT_ALL_ALREADY);
     }
 
-    if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL) {
+    if (executionInterruptType == ExecutionInterruptType.PAUSE_ALL) {
       if (isPresent(res, ExecutionInterruptType.PAUSE_ALL)) {
         throw new WingsException(ErrorCode.PAUSE_ALL_ALREADY);
       }
@@ -102,7 +109,7 @@ public class ExecutionInterruptManager {
       }
     }
 
-    if (executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.RESUME_ALL) {
+    if (executionInterruptType == ExecutionInterruptType.RESUME_ALL) {
       ExecutionInterrupt pauseAll = getExecutionInterrupt(res, ExecutionInterruptType.PAUSE_ALL);
       if (pauseAll == null || isPresent(res, ExecutionInterruptType.RESUME_ALL)) {
         throw new WingsException(ErrorCode.RESUME_ALL_ALREADY);
