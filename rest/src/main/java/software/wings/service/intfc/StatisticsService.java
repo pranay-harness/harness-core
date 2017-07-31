@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
+import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
@@ -80,4 +81,15 @@ public interface StatisticsService {
    * @return the notification count
    */
   NotificationCount getNotificationCount(@NotNull String accountId, List<String> appIds, int minutesFromNow);
+
+  /**
+   * Gets deployment statistics.
+   *
+   *
+   * @param accountId
+   * @param appIds    the app ids
+   * @param numOfDays the num of days
+   * @return the service instance statistics
+   */
+  ServiceInstanceStatistics getServiceInstanceStatistics(@NotNull String accountId, List<String> appIds, int numOfDays);
 }
