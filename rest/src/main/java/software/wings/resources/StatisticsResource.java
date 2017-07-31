@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
+import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
@@ -82,6 +83,15 @@ public class StatisticsResource {
   public RestResponse<DeploymentStatistics> deploymentStats(@QueryParam("accountId") String accountId,
       @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") List<String> appIds) {
     return new RestResponse<>(statisticsService.getDeploymentStatistics(accountId, appIds, numOfDays));
+  }
+
+  @GET
+  @Path("service-instance-stats")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ServiceInstanceStatistics> instanceStats(@QueryParam("accountId") String accountId,
+      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(statisticsService.getServiceInstanceStatistics(accountId, appIds, numOfDays));
   }
 
   @GET

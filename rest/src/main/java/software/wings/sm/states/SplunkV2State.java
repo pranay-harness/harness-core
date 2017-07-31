@@ -468,4 +468,8 @@ public class SplunkV2State extends AbstractAnalysisState {
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
+
+  public void setComparisonStrategy(String comparisonStrategy) {
+    this.comparisonStrategy = comparisonStrategy;
+  }
 }
