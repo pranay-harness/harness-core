@@ -348,23 +348,29 @@ public class StatisticsServiceImpl implements StatisticsService {
     if (pageResponse != null) {
       List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
 
-      Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
-      List<TopConsumer> allTopConsumers = new ArrayList<>();
-      getTopInstancesDeployed(allTopConsumers, workflowExecutions);
-      allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
+      if (workflowExecutions != null) {
+        Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
 
-      Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType = workflowExecutions.parallelStream().collect(
-          groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+        List<TopConsumer> allTopConsumers = new ArrayList<>();
+        getTopInstancesDeployed(allTopConsumers, workflowExecutions);
 
-      List<TopConsumer> prodTopConsumers = new ArrayList<>();
-      getTopInstancesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
-      prodTopConsumers = prodTopConsumers.stream().sorted(byCount).collect(toList());
-      List<TopConsumer> nonProdTopConsumers = new ArrayList<>();
-      nonProdTopConsumers = nonProdTopConsumers.stream().sorted(byCount).collect(toList());
-      getTopInstancesDeployed(nonProdTopConsumers, wflExecutionByEnvType.get(NON_PROD));
-      instanceStats.getStatsMap().put(ALL, allTopConsumers);
-      instanceStats.getStatsMap().put(PROD, prodTopConsumers);
-      instanceStats.getStatsMap().put(NON_PROD, nonProdTopConsumers);
+        allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
+
+        Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
+            workflowExecutions.parallelStream().collect(
+                groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+
+        List<TopConsumer> prodTopConsumers = new ArrayList<>();
+        getTopInstancesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
+        prodTopConsumers = prodTopConsumers.stream().sorted(byCount).collect(toList());
+
+        List<TopConsumer> nonProdTopConsumers = new ArrayList<>();
+        nonProdTopConsumers = nonProdTopConsumers.stream().sorted(byCount).collect(toList());
+        getTopInstancesDeployed(nonProdTopConsumers, wflExecutionByEnvType.get(NON_PROD));
+        instanceStats.getStatsMap().put(ALL, allTopConsumers);
+        instanceStats.getStatsMap().put(PROD, prodTopConsumers);
+        instanceStats.getStatsMap().put(NON_PROD, nonProdTopConsumers);
+      }
     }
     return instanceStats;
   }
@@ -527,6 +533,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<String, String> serviceIdNames = new HashMap<>();
     Map<String, String> serviceAppIdMap = new HashMap<>();
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
+    if (wflExecutions == null || wflExecutions.size() == 0) {
+      return;
+    }
     for (WorkflowExecution execution : wflExecutions) {
       for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
         if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
