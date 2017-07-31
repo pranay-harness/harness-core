@@ -465,9 +465,9 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
-    Map<String, Map<String, ExecutionStatus>> serviceInstanceStatusMap = new HashMap<>();
     Map<String, String> serviceIdNames = new HashMap<>();
     Map<String, String> serviceAppIdMap = new HashMap<>();
+    Map<String, TopConsumer> topConsumerMap = new HashMap<>();
     if (pageResponse != null) {
       List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
       for (WorkflowExecution execution : wflExecutions) {
@@ -475,6 +475,7 @@ public class StatisticsServiceImpl implements StatisticsService {
           if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
             continue;
           }
+          Map<String, Map<String, ExecutionStatus>> serviceInstanceStatusMap = new HashMap<>();
           for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
             ServiceElement serviceElement =
                 instanceStatusSummary.getInstanceElement().getServiceTemplateElement() != null
@@ -493,46 +494,33 @@ public class StatisticsServiceImpl implements StatisticsService {
                   instanceStatusSummary.getInstanceElement().getUuid(), instanceStatusSummary.getStatus());
             }
           }
+          TopConsumer topConsumer;
+          for (String serviceId : serviceInstanceStatusMap.keySet()) {
+            if (!topConsumerMap.containsKey(serviceId)) {
+              TopConsumer tempConsumer = aTopConsumer()
+                                             .withAppId(execution.getAppId())
+                                             .withAppName(execution.getAppName())
+                                             .withServiceId(serviceId)
+                                             .withServiceName(serviceIdNames.get(serviceId))
+                                             .build();
+              topConsumerMap.put(serviceId, tempConsumer);
+              topConsumers.add(tempConsumer);
+            }
+            topConsumer = topConsumerMap.get(serviceId);
+            Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
+            for (String instanceId : instancestatusMap.keySet()) {
+              if (instancestatusMap.get(instanceId).equals(SUCCESS)) {
+                topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+                topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+              } else {
+                topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+                topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+              }
+            }
+          }
         }
       }
     }
-    for (String serviceId : serviceInstanceStatusMap.keySet()) {
-      String appId = serviceAppIdMap.get(serviceId);
-      String appName = appIdMap.get(appId).getName();
-      TopConsumer topConsumer = aTopConsumer()
-                                    .withAppId(appId)
-                                    .withAppName(appName)
-                                    .withServiceId(serviceId)
-                                    .withServiceName(serviceIdNames.get(serviceId))
-                                    .build();
-      Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
-      for (String instanceId : instancestatusMap.keySet()) {
-        if (instancestatusMap.get(instanceId).equals(SUCCESS)) {
-          topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-        } else {
-          topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-        }
-      }
-      topConsumers.add(topConsumer);
-    }
-    /*  Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-      TopConsumer topConsumer;
-      if (!topConsumerMap.containsKey(serviceId)) {
-        TopConsumer tempConsumer =
-      aTopConsumer().withAppId(execution.getAppId()).withAppName(execution.getAppName()).withServiceId(serviceId).withServiceName(serviceElement.getName()).build();
-        topConsumerMap.put(serviceId, tempConsumer);
-        topConsumers.add(tempConsumer);
-      }
-      topConsumer = topConsumerMap.get(serviceId);
-      if (instanceStatusSummary.getStatus().equals(SUCCESS)) {
-        topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-      } else {
-        topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-      }*/
     Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
     return topConsumers.stream().sorted(byCount).collect(toList());
   }
