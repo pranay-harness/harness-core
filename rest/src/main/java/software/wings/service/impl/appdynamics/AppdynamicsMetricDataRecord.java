@@ -1,6 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
 import lombok.Data;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -83,10 +84,11 @@ public class AppdynamicsMetricDataRecord extends Base {
      */
 
     String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
-    String metricName = appdynamicsPathPieces[6];
-    String tierName = appdynamicsPathPieces[2];
-    String btName = appdynamicsPathPieces[3];
-    String nodeName = appdynamicsPathPieces[5];
+    String metricName = parseAppdynamicsInternalName(appdynamicsPathPieces, 6);
+    String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
+    String btName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
+    String nodeName = parseAppdynamicsInternalName(appdynamicsPathPieces, 5);
+
     /*
      * An AppDynamics metric name looks like:
      * "BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)"
@@ -123,6 +125,16 @@ public class AppdynamicsMetricDataRecord extends Base {
                        .build())
             .collect(Collectors.toList());
     return records;
+  }
+
+  private static String parseAppdynamicsInternalName(String[] appdynamicsPathPieces, int index) {
+    String name = appdynamicsPathPieces[index];
+    if (name == null) {
+      return name;
+    }
+
+    // mongo doesn't like dots in the names
+    return name.replaceAll("\\.", "-");
   }
 
   public static final class Builder {
