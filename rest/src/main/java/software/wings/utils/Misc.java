@@ -7,7 +7,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import software.wings.common.Constants;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,13 +17,14 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public class Misc {
-  private static Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  private static final Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  private static final int MAX_STACK_TRACE_LINES = 500;
 
-  public static String normalizeExpression(String expression) {
+  static String normalizeExpression(String expression) {
     return normalizeExpression(expression, "__");
   }
 
-  public static String normalizeExpression(String expression, String replacement) {
+  static String normalizeExpression(String expression, String replacement) {
     Matcher matcher = wildCharPattern.matcher(expression);
     return matcher.replaceAll(replacement);
   }
@@ -110,33 +110,42 @@ public class Misc {
   }
 
   public static void error(Logger logger, String msg, Throwable t) {
-    logger.error(msg, t);
-    writeException(logger, LoggingLevel.ERROR, t);
+    writeException(logger, LoggingLevel.ERROR, msg, t);
   }
 
   public static void warn(Logger logger, String msg, Throwable t) {
-    logger.warn(msg, t);
-    writeException(logger, LoggingLevel.WARN, t);
+    writeException(logger, LoggingLevel.WARN, msg, t);
   }
 
   public static void info(Logger logger, String msg, Throwable t) {
-    logger.info(msg, t);
-    writeException(logger, LoggingLevel.INFO, t);
+    writeException(logger, LoggingLevel.INFO, msg, t);
   }
 
   public static void debug(Logger logger, String msg, Throwable t) {
-    logger.debug(msg, t);
-    writeException(logger, LoggingLevel.DEBUG, t);
+    writeException(logger, LoggingLevel.DEBUG, msg, t);
   }
 
-  private static void writeException(Logger logger, LoggingLevel level, Throwable t) {
-    while (t != null) {
-      logIt(logger, level,
-          "***** Caused by: " + t.getClass().getCanonicalName()
-              + (t.getMessage() != null ? ": " + t.getMessage() : ""));
-      Arrays.stream(t.getStackTrace()).forEach(elem -> logIt(logger, level, " --- Trace: " + elem));
+  private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
+    StringBuilder trace = new StringBuilder(msg).append("\n");
+    int traceLines = 0;
+    while (t != null && traceLines < MAX_STACK_TRACE_LINES) {
+      if (traceLines > 0) {
+        trace.append("Caused by: ");
+      }
+      trace.append(t.getClass().getCanonicalName())
+          .append(t.getMessage() != null ? ": " + t.getMessage() : "")
+          .append("\n");
+      for (StackTraceElement elem : t.getStackTrace()) {
+        trace.append("\tat ").append(elem).append("\n");
+        traceLines++;
+        if (traceLines > MAX_STACK_TRACE_LINES) {
+          trace.append("\t... truncated after ").append(MAX_STACK_TRACE_LINES).append(" stack trace lines");
+          break;
+        }
+      }
       t = t.getCause();
     }
+    logIt(logger, level, trace.toString());
   }
 
   private static void logIt(Logger logger, LoggingLevel level, String msg) {
