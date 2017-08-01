@@ -1,0 +1,36 @@
+package software.wings.beans;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
+import software.wings.settings.SettingValue;
+
+/**
+ * The type ELK config.
+ */
+@JsonTypeName("ELK")
+@Data
+public class ElkConfig extends SettingValue implements Encryptable {
+  @Attributes(title = "Host", required = true) @NotEmpty private String host;
+  @Attributes(title = "Port", required = true) private int port;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  @Encrypted
+  private char[] password;
+  @SchemaIgnore @NotEmpty private String accountId;
+
+  /**
+   * Instantiates a new Splunk config.
+   */
+  public ElkConfig() {
+    super(SettingVariableTypes.ELK.name());
+  }
+}

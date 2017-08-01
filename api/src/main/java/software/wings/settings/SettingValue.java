@@ -78,6 +78,11 @@ public abstract class SettingValue implements ExtensionPoint {
     SPLUNK("Splunk"),
 
     /**
+     * Elk setting variable types.
+     */
+    ELK("Elk"),
+
+    /**
      * App dynamics setting variable types.
      */
     APP_DYNAMICS("AppDynamics"),

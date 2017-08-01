@@ -359,6 +359,11 @@ public enum ErrorCode {
   SPLUNK_CONFIGURATION_ERROR("SPLUNK_CONFIGURATION_ERROR"),
 
   /**
+   * Splunk configuration error error code.
+   */
+  ELK_CONFIGURATION_ERROR("SPLUNK_CONFIGURATION_ERROR"),
+
+  /**
    * Appdynamics error error code.
    */
   APPDYNAMICS_ERROR("APPDYNAMICS_ERROR"),

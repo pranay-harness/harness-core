@@ -61,6 +61,7 @@ import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
+import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -71,6 +72,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
 import java.util.concurrent.ExecutorService;
@@ -124,6 +126,7 @@ public class DelegateModule extends AbstractModule {
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
     bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
+    bind(ElkDelegateService.class).to(ElkDelegateServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrService.class).to(EcrServiceImpl.class);
