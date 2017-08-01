@@ -129,16 +129,14 @@ public class Misc {
 
   private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
     StringBuilder trace = new StringBuilder();
-    if (isNotEmpty(msg)) {
-      trace.append(msg).append("\n");
-    }
+    trace.append(isNotEmpty(msg) ? msg : "An exception occurred: " + t.getClass().getSimpleName()).append("\n");
     int traceLines = 0;
     while (t != null && traceLines < MAX_STACK_TRACE_LINES) {
       if (traceLines > 0) {
         trace.append("Caused by: ");
       }
       trace.append(t.getClass().getCanonicalName())
-          .append(t.getMessage() != null ? ": " + t.getMessage() : "")
+          .append(isNotEmpty(t.getMessage()) ? ": " + t.getMessage() : "")
           .append("\n");
       for (StackTraceElement elem : t.getStackTrace()) {
         trace.append("\tat ").append(elem).append("\n");
