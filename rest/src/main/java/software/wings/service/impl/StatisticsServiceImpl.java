@@ -537,6 +537,11 @@ public class StatisticsServiceImpl implements StatisticsService {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
+      if ((execution.getStatus() != ExecutionStatus.SUCCESS && execution.getStatus() != ExecutionStatus.FAILED
+              && execution.getStatus() != ExecutionStatus.ABORTED && execution.getStatus() != ExecutionStatus.ERROR)
+          || execution.getServiceExecutionSummaries() == null) {
+        continue;
+      }
       for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
         if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
           continue;
