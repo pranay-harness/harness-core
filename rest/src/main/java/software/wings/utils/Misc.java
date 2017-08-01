@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.google.api.client.util.Throwables;
 
 import com.codahale.metrics.Slf4jReporter.LoggingLevel;
@@ -126,7 +128,10 @@ public class Misc {
   }
 
   private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
-    StringBuilder trace = new StringBuilder(msg).append("\n");
+    StringBuilder trace = new StringBuilder();
+    if (isNotEmpty(msg)) {
+      trace.append(msg).append("\n");
+    }
     int traceLines = 0;
     while (t != null && traceLines < MAX_STACK_TRACE_LINES) {
       if (traceLines > 0) {
