@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.service.impl.splunk.SplunkAnalysisResponse.Builder.anSplunkAnalysisResponse;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -9,8 +8,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
@@ -21,9 +18,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.AnalysisComparisonStrategy;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -38,9 +33,6 @@ import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
 import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
 import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -53,12 +45,9 @@ import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +65,6 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";
-  private static final int PYTHON_JOB_RETRIES = 3;
 
   @EnumData(enumDataProvider = SplunkSettingProvider.class)
   @Attributes(required = true, title = "Splunk Server")
@@ -88,22 +76,7 @@ public class SplunkV2State extends AbstractAnalysisState {
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  @Attributes(
-      title = "How do you want to compare for analyis", description = "Compare with previous run or current run")
-  private String comparisonStrategy;
-
-  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
-
-  @Transient @Inject private SettingsService settingsService;
-
-  @Transient @Inject private AppService appService;
-
-  @Transient @Inject private DelegateService delegateService;
-
   @Transient @Inject private SplunkService splunkService;
-
-  @Transient @Inject @SchemaIgnore private MainConfiguration configuration;
 
   @Transient @SchemaIgnore private ScheduledExecutorService pythonExecutorService;
 
@@ -441,20 +414,6 @@ public class SplunkV2State extends AbstractAnalysisState {
         generateAnalysisResponse(context, ExecutionStatus.RUNNING, "No data with given queries has been found yet.");
       }
     }
-  }
-
-  private String generateAuthToken() throws UnsupportedEncodingException {
-    final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
-    if (jwtExternalServiceSecret == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "No secret present for external service");
-    }
-
-    Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
-    return JWT.create()
-        .withIssuer("Harness Inc")
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
-        .sign(algorithm);
   }
 
   @Override
