@@ -6,6 +6,7 @@ package software.wings.api;
 
 import com.google.common.base.MoreObjects;
 
+import com.amazonaws.services.ec2.model.Instance;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -23,6 +24,7 @@ public class HostElement implements ContextElement {
   private String hostName;
   private String instanceId;
   private String publicDns;
+  private Instance ec2Instance;
 
   @Override
   public String getName() {
@@ -68,6 +70,14 @@ public class HostElement implements ContextElement {
     this.uuid = uuid;
   }
 
+  public Instance getEc2Instance() {
+    return ec2Instance;
+  }
+
+  public void setEc2Instance(Instance ec2Instance) {
+    this.ec2Instance = ec2Instance;
+  }
+
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.HOST;
@@ -107,90 +117,51 @@ public class HostElement implements ContextElement {
     this.instanceId = instanceId;
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String uuid;
     private String hostName;
-    private String publicDns;
     private String instanceId;
+    private String publicDns;
+    private Instance ec2Instance;
 
     private Builder() {}
 
-    /**
-     * A host element builder.
-     *
-     * @return the builder
-     */
     public static Builder aHostElement() {
       return new Builder();
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    /**
-     * With publicDns name builder.
-     *
-     * @param publicDns the host name
-     * @return the builder
-     */
-    public Builder withPublicDns(String publicDns) {
-      this.publicDns = publicDns;
-      return this;
-    }
-
-    /**
-     * With instance id builder.
-     *
-     * @param instanceId the instance id
-     * @return the builder
-     */
     public Builder withInstanceId(String instanceId) {
       this.instanceId = instanceId;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aHostElement().withUuid(uuid).withHostName(hostName).withPublicDns(publicDns).withInstanceId(instanceId);
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
+      return this;
     }
 
-    /**
-     * Build host element.
-     *
-     * @return the host element
-     */
+    public Builder withEc2Instance(Instance ec2Instance) {
+      this.ec2Instance = ec2Instance;
+      return this;
+    }
+
     public HostElement build() {
       HostElement hostElement = new HostElement();
       hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
-      hostElement.setPublicDns(publicDns);
       hostElement.setInstanceId(instanceId);
+      hostElement.setPublicDns(publicDns);
+      hostElement.setEc2Instance(ec2Instance);
       return hostElement;
     }
   }

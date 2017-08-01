@@ -2,6 +2,7 @@ package software.wings.beans.infrastructure;
 
 import com.google.common.base.MoreObjects;
 
+import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -31,6 +32,8 @@ public class Host extends Base {
   private String publicDns;
   @NotNull private String hostConnAttr;
   private String bastionConnAttr;
+
+  private Instance ec2Instance;
 
   /**
    * Gets env id.
@@ -169,6 +172,14 @@ public class Host extends Base {
     this.serviceTemplateId = serviceTemplateId;
   }
 
+  public Instance getEc2Instance() {
+    return ec2Instance;
+  }
+
+  public void setEc2Instance(Instance ec2Instance) {
+    this.ec2Instance = ec2Instance;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -227,6 +238,7 @@ public class Host extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private Instance ec2Instance;
 
     private Builder() {}
 
@@ -393,6 +405,11 @@ public class Host extends Base {
       return this;
     }
 
+    public Builder withEc2Instance(Instance ec2Instance) {
+      this.ec2Instance = ec2Instance;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -413,7 +430,8 @@ public class Host extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withPublicDns(publicDns);
+          .withPublicDns(publicDns)
+          .withEc2Instance(ec2Instance);
     }
 
     /**
@@ -437,6 +455,7 @@ public class Host extends Base {
       host.setCreatedAt(createdAt);
       host.setLastUpdatedBy(lastUpdatedBy);
       host.setLastUpdatedAt(lastUpdatedAt);
+      host.setEc2Instance(ec2Instance);
       return host;
     }
   }

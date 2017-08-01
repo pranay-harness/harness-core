@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
@@ -48,7 +48,6 @@ import software.wings.beans.Base;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.AwsHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -91,11 +90,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
             .stream()
             .flatMap(reservation -> reservation.getInstances().stream())
             .map(instance
-                -> anAwsHost()
+                -> aHost()
                        .withAppId(Base.GLOBAL_APP_ID)
                        .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
                        .withPublicDns(instance.getPublicDnsName())
-                       .withInstance(instance)
+                       .withEc2Instance(instance)
                        .build())
             .collect(toList());
     return aPageResponse().withResponse(awsHosts).build();
@@ -198,9 +197,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .stream()
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
-            -> anAwsHost()
+            -> aHost()
                    .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName()))
-                   .withInstance(instance)
+                   .withEc2Instance(instance)
                    .build())
         .collect(toList());
   }
@@ -211,16 +210,16 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AmazonEC2Client amazonEc2Client =
         awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-    List<AwsHost> awsHosts = hostService
-                                 .list(aPageRequest()
-                                           .addFilter("appId", Operator.EQ, appId)
-                                           .addFilter("infraMappingId", Operator.EQ, infraMappingId)
-                                           .addFilter("hostNames", Operator.IN, hostNames)
-                                           .build())
-                                 .getResponse();
+    List<Host> awsHosts = hostService
+                              .list(aPageRequest()
+                                        .addFilter("appId", Operator.EQ, appId)
+                                        .addFilter("infraMappingId", Operator.EQ, infraMappingId)
+                                        .addFilter("hostNames", Operator.IN, hostNames)
+                                        .build())
+                              .getResponse();
 
     List<String> hostInstanceId =
-        awsHosts.stream().map(host -> ((AwsHost) host).getInstance().getInstanceId()).collect(toList());
+        awsHosts.stream().map(host -> host.getEc2Instance().getInstanceId()).collect(toList());
     TerminateInstancesResult terminateInstancesResult =
         amazonEc2Client.terminateInstances(new TerminateInstancesRequest(hostInstanceId));
   }
