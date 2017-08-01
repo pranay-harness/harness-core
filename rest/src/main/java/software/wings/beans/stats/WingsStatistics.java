@@ -56,6 +56,11 @@ public abstract class WingsStatistics {
     /**
      * Notification count statistics type.
      */
-    NOTIFICATION_COUNT
+    NOTIFICATION_COUNT,
+
+    /**
+     * Instance statistics type.
+     */
+    SERVICE_INSTANCE_STATISTICS
   }
 }

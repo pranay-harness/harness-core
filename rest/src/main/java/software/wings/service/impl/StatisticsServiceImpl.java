@@ -44,6 +44,7 @@ import software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
+import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
@@ -319,6 +320,61 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
+  public ServiceInstanceStatistics getServiceInstanceStatistics(String accountId, List<String> appIds, int numOfDays) {
+    long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
+
+    PageRequest pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
+            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE).build())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+    if (CollectionUtils.isEmpty(appIds)) {
+      appIds = getAppIdsForAccount(accountId);
+      if (CollectionUtils.isEmpty(appIds)) {
+        return null;
+      }
+      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+
+    } else {
+      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+    }
+
+    ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
+
+    if (pageResponse != null) {
+      List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
+
+      if (workflowExecutions != null) {
+        Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
+
+        List<TopConsumer> allTopConsumers = new ArrayList<>();
+        getTopInstancesDeployed(allTopConsumers, workflowExecutions);
+
+        allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
+
+        Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
+            workflowExecutions.parallelStream().collect(
+                groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+
+        List<TopConsumer> prodTopConsumers = new ArrayList<>();
+        getTopInstancesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
+        prodTopConsumers = prodTopConsumers.stream().sorted(byCount).collect(toList());
+
+        List<TopConsumer> nonProdTopConsumers = new ArrayList<>();
+        nonProdTopConsumers = nonProdTopConsumers.stream().sorted(byCount).collect(toList());
+        getTopInstancesDeployed(nonProdTopConsumers, wflExecutionByEnvType.get(NON_PROD));
+        instanceStats.getStatsMap().put(ALL, allTopConsumers);
+        instanceStats.getStatsMap().put(PROD, prodTopConsumers);
+        instanceStats.getStatsMap().put(NON_PROD, nonProdTopConsumers);
+      }
+    }
+    return instanceStats;
+  }
+  @Override
   public NotificationCount getNotificationCount(String accountId, List<String> appIds, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
 
@@ -465,78 +521,72 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
-    Map<String, Map<String, ExecutionStatus>> serviceInstanceStatusMap = new HashMap<>();
-    Map<String, String> serviceIdNames = new HashMap<>();
-    Map<String, String> serviceAppIdMap = new HashMap<>();
     if (pageResponse != null) {
       List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
-      for (WorkflowExecution execution : wflExecutions) {
-        for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
-          if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
-            continue;
+      getTopInstancesDeployed(topConsumers, wflExecutions);
+    }
+    Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
+    return topConsumers.stream().sorted(byCount).collect(toList());
+  }
+
+  private void getTopInstancesDeployed(List<TopConsumer> topConsumers, List<WorkflowExecution> wflExecutions) {
+    Map<String, String> serviceIdNames = new HashMap<>();
+    Map<String, String> serviceAppIdMap = new HashMap<>();
+    Map<String, TopConsumer> topConsumerMap = new HashMap<>();
+    if (wflExecutions == null || wflExecutions.size() == 0) {
+      return;
+    }
+    for (WorkflowExecution execution : wflExecutions) {
+      for (ElementExecutionSummary elementExecutionSummary : execution.getServiceExecutionSummaries()) {
+        if (elementExecutionSummary.getInstanceStatusSummaries() == null) {
+          continue;
+        }
+        Map<String, Map<String, ExecutionStatus>> serviceInstanceStatusMap = new HashMap<>();
+
+        for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
+          ServiceElement serviceElement = instanceStatusSummary.getInstanceElement().getServiceTemplateElement() != null
+              ? instanceStatusSummary.getInstanceElement().getServiceTemplateElement().getServiceElement()
+              : null;
+          if (serviceElement != null) {
+            String serviceId = serviceElement.getUuid();
+            serviceAppIdMap.put(serviceId, execution.getAppId());
+            serviceIdNames.put(serviceId, serviceElement.getName());
+            Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
+            if (instancestatusMap == null) {
+              instancestatusMap = new HashMap<>();
+              serviceInstanceStatusMap.put(serviceId, instancestatusMap);
+            }
+            instancestatusMap.put(
+                instanceStatusSummary.getInstanceElement().getUuid(), instanceStatusSummary.getStatus());
           }
-          for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
-            ServiceElement serviceElement =
-                instanceStatusSummary.getInstanceElement().getServiceTemplateElement() != null
-                ? instanceStatusSummary.getInstanceElement().getServiceTemplateElement().getServiceElement()
-                : null;
-            if (serviceElement != null) {
-              String serviceId = serviceElement.getUuid();
-              serviceAppIdMap.put(serviceId, execution.getAppId());
-              serviceIdNames.put(serviceId, serviceElement.getName());
-              Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
-              if (instancestatusMap == null) {
-                instancestatusMap = new HashMap<>();
-                serviceInstanceStatusMap.put(serviceId, instancestatusMap);
-              }
-              instancestatusMap.put(
-                  instanceStatusSummary.getInstanceElement().getUuid(), instanceStatusSummary.getStatus());
+        }
+        TopConsumer topConsumer;
+        for (String serviceId : serviceInstanceStatusMap.keySet()) {
+          if (!topConsumerMap.containsKey(serviceId)) {
+            TopConsumer tempConsumer = aTopConsumer()
+                                           .withAppId(execution.getAppId())
+                                           .withAppName(execution.getAppName())
+                                           .withServiceId(serviceId)
+                                           .withServiceName(serviceIdNames.get(serviceId))
+                                           .build();
+            topConsumerMap.put(serviceId, tempConsumer);
+            topConsumers.add(tempConsumer);
+          }
+          topConsumer = topConsumerMap.get(serviceId);
+          Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
+          for (String instanceId : instancestatusMap.keySet()) {
+            if (instancestatusMap.get(instanceId).equals(SUCCESS)) {
+              topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
+              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
+            } else {
+              topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
+              topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
             }
           }
         }
       }
     }
-    for (String serviceId : serviceInstanceStatusMap.keySet()) {
-      String appId = serviceAppIdMap.get(serviceId);
-      String appName = appIdMap.get(appId).getName();
-      TopConsumer topConsumer = aTopConsumer()
-                                    .withAppId(appId)
-                                    .withAppName(appName)
-                                    .withServiceId(serviceId)
-                                    .withServiceName(serviceIdNames.get(serviceId))
-                                    .build();
-      Map<String, ExecutionStatus> instancestatusMap = serviceInstanceStatusMap.get(serviceId);
-      for (String instanceId : instancestatusMap.keySet()) {
-        if (instancestatusMap.get(instanceId).equals(SUCCESS)) {
-          topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-        } else {
-          topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-          topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-        }
-      }
-      topConsumers.add(topConsumer);
-    }
-    /*  Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-      TopConsumer topConsumer;
-      if (!topConsumerMap.containsKey(serviceId)) {
-        TopConsumer tempConsumer =
-      aTopConsumer().withAppId(execution.getAppId()).withAppName(execution.getAppName()).withServiceId(serviceId).withServiceName(serviceElement.getName()).build();
-        topConsumerMap.put(serviceId, tempConsumer);
-        topConsumers.add(tempConsumer);
-      }
-      topConsumer = topConsumerMap.get(serviceId);
-      if (instanceStatusSummary.getStatus().equals(SUCCESS)) {
-        topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
-        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-      } else {
-        topConsumer.setFailedActivityCount(topConsumer.getFailedActivityCount() + 1);
-        topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
-      }*/
-    Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
-    return topConsumers.stream().sorted(byCount).collect(toList());
   }
-
   private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
     TopConsumer topConsumer = aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
     activityStatusAggregation.getStatus().stream().forEach(statusCount -> {

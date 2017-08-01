@@ -504,7 +504,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
-    if (!serviceCommand.getCommand().getGraph().isLinear()) {
+    if (!isLinearCommandGraph(serviceCommand)) {
       final WingsException wingsException =
           new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
       wingsException.addParam("message", "Graph is not a linear pipeline");
@@ -539,6 +539,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return get(appId, serviceId);
   }
 
+  private boolean isLinearCommandGraph(ServiceCommand serviceCommand) {
+    try {
+      return serviceCommand.getCommand().getGraph().isLinear();
+    } catch (Exception ex) {
+      logger.error("Exception in validating command graph [{}], [{}]", serviceCommand.getCommand(), ex);
+      return false;
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -550,7 +559,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
 
     if (serviceCommand.getCommand() != null) {
-      if (!serviceCommand.getCommand().getGraph().isLinear()) {
+      if (!isLinearCommandGraph(serviceCommand)) {
         final WingsException wingsException =
             new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
         wingsException.addParam("message", "Graph is not a linear pipeline");

@@ -15,6 +15,8 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.stats.ActivityStatusAggregation.Builder.anActivityStatusAggregation;
@@ -55,6 +57,7 @@ import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.NotificationCount;
+import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
@@ -215,7 +218,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
                                                     .withAppName(APP_NAME)
-                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withEnvType(PROD)
                                                     .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
@@ -223,7 +226,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withEnvType(EnvironmentType.PROD)
+            .withEnvType(PROD)
             .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
@@ -231,7 +234,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
@@ -239,7 +242,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
@@ -256,12 +259,253 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                        .withAppName(APP_NAME)
                                        .withServiceId(SERVICE_ID)
                                        .withServiceName(SERVICE_NAME)
-                                       .withSuccessfulActivityCount(1)
-                                       .withFailedActivityCount(1)
-                                       .withTotalCount(2)
+                                       .withSuccessfulActivityCount(2)
+                                       .withFailedActivityCount(2)
+                                       .withTotalCount(4)
                                        .build());
   }
 
+  @Test
+  public void shouldGetTopConsumerServicesNotCountSameHost() {
+    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+                        .minus(0, ChronoUnit.DAYS)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+                          .minus(29, ChronoUnit.DAYS)
+                          .atStartOfDay(ZoneId.systemDefault())
+                          .toInstant()
+                          .toEpochMilli();
+
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(
+            aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
+
+    String instanceUuid = getUuid();
+    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(SUCCESS)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(instanceUuid)
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build(),
+                    anInstanceStatusSummary()
+                        .withStatus(FAILED)
+                        .withInstanceElement(
+                            anInstanceElement()
+                                .withUuid(instanceUuid)
+                                .withServiceTemplateElement(
+                                    aServiceTemplateElement()
+                                        .withName(SERVICE_NAME)
+                                        .withUuid(SERVICE_ID)
+                                        .withServiceElement(
+                                            aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                        .build())
+                                .build())
+                        .build()))
+            .build());
+
+    List<ElementExecutionSummary> serviceFailureExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(FAILED)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(getUuid())
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build()))
+            .build());
+
+    List<WorkflowExecution> executions = asList(aWorkflowExecution()
+                                                    .withAppId(APP_ID)
+                                                    .withAppName(APP_NAME)
+                                                    .withEnvType(PROD)
+                                                    .withStatus(SUCCESS)
+                                                    .withServiceExecutionSummaries(serviceExecutionSummaries)
+                                                    .withCreatedAt(endEpoch)
+                                                    .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(PROD)
+            .withStatus(SUCCESS)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(endEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build());
+
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
+        .thenReturn(aPageResponse().withResponse(executions).build());
+    TopConsumersStatistics topConsumers =
+        (TopConsumersStatistics) statisticsService.getTopConsumerServices(ACCOUNT_ID, null);
+    assertThat(topConsumers.getTopConsumers())
+        .hasSize(1)
+        .containsExactlyInAnyOrder(aTopConsumer()
+                                       .withAppId(APP_ID)
+                                       .withAppName(APP_NAME)
+                                       .withServiceId(SERVICE_ID)
+                                       .withServiceName(SERVICE_NAME)
+                                       .withSuccessfulActivityCount(0)
+                                       .withFailedActivityCount(4)
+                                       .withTotalCount(4)
+                                       .build());
+  }
+
+  @Test
+  public void shouldGetServiceInstanceStatistics() {
+    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+                        .minus(0, ChronoUnit.DAYS)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+                          .minus(29, ChronoUnit.DAYS)
+                          .atStartOfDay(ZoneId.systemDefault())
+                          .toInstant()
+                          .toEpochMilli();
+
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(
+            aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
+
+    String instanceUuid = getUuid();
+    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(SUCCESS)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(instanceUuid)
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build(),
+                    anInstanceStatusSummary()
+                        .withStatus(FAILED)
+                        .withInstanceElement(
+                            anInstanceElement()
+                                .withUuid(instanceUuid)
+                                .withServiceTemplateElement(
+                                    aServiceTemplateElement()
+                                        .withName(SERVICE_NAME)
+                                        .withUuid(SERVICE_ID)
+                                        .withServiceElement(
+                                            aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                        .build())
+                                .build())
+                        .build()))
+            .build());
+
+    List<ElementExecutionSummary> serviceFailureExecutionSummaries = asList(
+        anElementExecutionSummary()
+            .withInstanceStatusSummaries(
+                asList(anInstanceStatusSummary()
+                           .withStatus(FAILED)
+                           .withInstanceElement(
+                               anInstanceElement()
+                                   .withUuid(getUuid())
+                                   .withServiceTemplateElement(
+                                       aServiceTemplateElement()
+                                           .withName(SERVICE_NAME)
+                                           .withUuid(SERVICE_ID)
+                                           .withServiceElement(
+                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                                           .build())
+                                   .build())
+                           .build()))
+            .build());
+
+    List<WorkflowExecution> executions = asList(aWorkflowExecution()
+                                                    .withAppId(APP_ID)
+                                                    .withAppName(APP_NAME)
+                                                    .withEnvType(PROD)
+                                                    .withStatus(SUCCESS)
+                                                    .withServiceExecutionSummaries(serviceExecutionSummaries)
+                                                    .withCreatedAt(endEpoch)
+                                                    .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(PROD)
+            .withStatus(SUCCESS)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(endEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withAppName(APP_NAME)
+            .withEnvType(NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build());
+
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false)))
+        .thenReturn(aPageResponse().withResponse(executions).build());
+    ServiceInstanceStatistics statistics = statisticsService.getServiceInstanceStatistics(ACCOUNT_ID, null, 30);
+    assertThat(statistics.getStatsMap()).isNotEmpty();
+    assertThat(statistics.getStatsMap().get(PROD))
+        .hasSize(1)
+        .containsExactlyInAnyOrder(aTopConsumer()
+                                       .withAppId(APP_ID)
+                                       .withAppName(APP_NAME)
+                                       .withServiceId(SERVICE_ID)
+                                       .withServiceName(SERVICE_NAME)
+                                       .withSuccessfulActivityCount(0)
+                                       .withFailedActivityCount(2)
+                                       .withTotalCount(2)
+                                       .build());
+    ;
+    assertThat(statistics.getStatsMap().get(NON_PROD)).hasSize(1);
+  }
   @Test
   public void shouldGetApplicationKeyStats() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
@@ -283,28 +527,28 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
-                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withEnvType(PROD)
                                                     .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.PROD)
+            .withEnvType(PROD)
             .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
@@ -315,9 +559,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(asList(APP_ID), 10);
     AppKeyStatistics appKeyStatistics = new AppKeyStatistics();
-    appKeyStatistics.setStatsMap(ImmutableMap.of(EnvironmentType.PROD,
-        anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(),
-        EnvironmentType.NON_PROD,
+    appKeyStatistics.setStatsMap(ImmutableMap.of(PROD,
+        anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(), NON_PROD,
         anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(),
         EnvironmentType.ALL,
         anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(4).withInstanceCount(4).build()));
@@ -335,16 +578,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     UserThreadLocal.set(User.Builder.anUser().withStatsFetchedOn(statusFetchedOn).build());
 
-    List<WorkflowExecution> executions = asList(aWorkflowExecution()
-                                                    .withAppId(APP_ID)
-                                                    .withAppName(APP_NAME)
-                                                    .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(SUCCESS)
-                                                    .build(),
+    List<WorkflowExecution> executions = asList(
+        aWorkflowExecution().withAppId(APP_ID).withAppName(APP_NAME).withEnvType(PROD).withStatus(SUCCESS).build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .build());
 
@@ -374,16 +613,12 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     UserThreadLocal.set(User.Builder.anUser().withStatsFetchedOn(statusFetchedOn).build());
 
-    List<WorkflowExecution> executions = asList(aWorkflowExecution()
-                                                    .withAppId(APP_ID)
-                                                    .withAppName(APP_NAME)
-                                                    .withEnvType(EnvironmentType.PROD)
-                                                    .withStatus(SUCCESS)
-                                                    .build(),
+    List<WorkflowExecution> executions = asList(
+        aWorkflowExecution().withAppId(APP_ID).withAppName(APP_NAME).withEnvType(PROD).withStatus(SUCCESS).build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .build());
 
@@ -423,28 +658,28 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
-                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withEnvType(PROD)
                                                     .withStatus(SUCCESS)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.PROD)
+            .withEnvType(PROD)
             .withStatus(SUCCESS)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
-            .withEnvType(EnvironmentType.NON_PROD)
+            .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
@@ -457,8 +692,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     assertThat(deploymentStatistics.getStatsMap()).hasSize(3).containsOnlyKeys(EnvironmentType.values());
 
-    AggregatedDayStats aggregatedProdDayStats = deploymentStatistics.getStatsMap().get(EnvironmentType.PROD);
-    AggregatedDayStats aggregatedNonProdDayStats = deploymentStatistics.getStatsMap().get(EnvironmentType.NON_PROD);
+    AggregatedDayStats aggregatedProdDayStats = deploymentStatistics.getStatsMap().get(PROD);
+    AggregatedDayStats aggregatedNonProdDayStats = deploymentStatistics.getStatsMap().get(NON_PROD);
 
     assertThat(aggregatedNonProdDayStats.getFailedCount()).isEqualTo(2);
     assertThat(aggregatedNonProdDayStats.getInstancesCount()).isEqualTo(2);

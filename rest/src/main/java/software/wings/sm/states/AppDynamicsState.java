@@ -217,7 +217,14 @@ public class AppDynamicsState extends AbstractAnalysisState {
       }
     } else {
       finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
-      wingsPersistence.save(finalMetrics);
+      try {
+        wingsPersistence.save(finalMetrics);
+      } catch (Exception e) {
+        logger.error("Could not save analysis report", e);
+        executionStatus = ExecutionStatus.FAILED;
+        executionResponse.getAppDynamicsExecutionData().setErrorMsg(
+            "Could not save analysis report, Please contact support");
+      }
     }
 
     if (!ignoreVerificationFailure && finalMetrics != null && finalMetrics.getRiskLevel() == RiskLevel.HIGH) {

@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +53,8 @@ import java.util.regex.Pattern;
  * The Class JenkinsImpl.
  */
 public class JenkinsImpl implements Jenkins {
-  private static final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
+  private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
+  private final int MAX_FOLDER_DEPTH = 10;
   private JenkinsServer jenkinsServer;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -91,7 +91,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       return with()
           .pollInterval(3L, TimeUnit.SECONDS)
-          .atMost(new Duration(16L, TimeUnit.SECONDS))
+          .atMost(new Duration(25L, TimeUnit.SECONDS))
           .until(
               ()
                   -> {
@@ -101,13 +101,14 @@ public class JenkinsImpl implements Jenkins {
 
                 String decodedJobName = URLDecoder.decode(jobname, "UTF-8");
                 String parentJobName = null;
+                String parentJobUrl = null;
                 String childJobName;
                 String[] jobNameSplit = decodedJobName.split("/");
-                // UI only handles one level folder jobs right now, we could easily change it to handle multiple levels
-                // when UI is ready.
-                if (jobNameSplit.length > 1) {
-                  parentJobName = jobNameSplit[0];
-                  childJobName = jobNameSplit[1];
+                int parts = jobNameSplit.length;
+                if (parts > 1) {
+                  parentJobUrl = constructParentJobUrl(jobNameSplit);
+                  parentJobName = jobNameSplit[(parts - 2)];
+                  childJobName = jobNameSplit[(parts - 1)];
                 } else {
                   childJobName = decodedJobName;
                 }
@@ -117,7 +118,7 @@ public class JenkinsImpl implements Jenkins {
 
                 try {
                   if (parentJobName != null && parentJobName.length() > 0) {
-                    folderJob = new FolderJob(parentJobName, "/job/" + parentJobName + "/");
+                    folderJob = new FolderJob(parentJobName, parentJobUrl);
                   }
 
                   jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
@@ -142,9 +143,28 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
+  private String constructParentJobUrl(String[] jobNameSplit) {
+    if (jobNameSplit == null || jobNameSplit.length == 0) {
+      return "/";
+    }
+
+    int parts = jobNameSplit.length;
+    int currentIndex = 0;
+    StringBuilder sb = new StringBuilder();
+    for (String jobName : jobNameSplit) {
+      if (currentIndex++ < (parts - 1)) {
+        sb.append("/job/");
+        sb.append(jobName);
+      }
+    }
+
+    sb.append("/");
+    return sb.toString();
+  }
+
   @Override
   public List<JobDetails> getJobs(String parentFolderJobName) throws IOException {
-    int timeoutInSeconds = 15;
+    int timeoutInSeconds = 30;
     try {
       return with()
           .pollInterval(3L, TimeUnit.SECONDS)
@@ -152,19 +172,18 @@ public class JenkinsImpl implements Jenkins {
           .until(() -> {
             try {
               FolderJob folderJob = null;
+              int depth = 1;
+              List<JobDetails> jobDetailsList = new ArrayList<>();
               if (parentFolderJobName != null && parentFolderJobName.length() > 0) {
-                folderJob = new FolderJob(parentFolderJobName, "/job/" + parentFolderJobName + "/");
+                // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to
+                // add it again
+                return browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, true);
+              } else {
+                // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to
+                // add it again at the root level, we only want to fetch the first level jobs
+                return browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, false);
               }
 
-              Map<String, Job> jobs = jenkinsServer.getJobs(folderJob);
-              Collection<Job> jobCollection = jobs.values();
-              List<JobDetails> jobDetailsList = new ArrayList<>(jobCollection.size());
-              for (Job job : jobCollection) {
-                // job.get_class().equals(FOLDER_JOB_CLASS_NAME) is to find if the jenkins job is of type folder.
-                // (job instanceOf FolderJob) doesn't work
-                jobDetailsList.add(new JobDetails(job.getName(), job.get_class().equals(FOLDER_JOB_CLASS_NAME)));
-              }
-              return jobDetailsList;
             } catch (HttpResponseException e) {
               if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
                 Misc.warn(logger, "Error occurred while retrieving jobs. Retrying", e);
@@ -182,6 +201,55 @@ public class JenkinsImpl implements Jenkins {
       wingsException.addParam("jenkinsResponse", "Server Error");
       throw wingsException;
     }
+  }
+
+  private List<JobDetails> browseJobsRecursively(String parentJobUrl, String parentJobDisplayName, String folderJobName,
+      int depth, List<JobDetails> jobDetailsList, boolean recurseThrough) throws IOException {
+    if (depth == MAX_FOLDER_DEPTH) {
+      return jobDetailsList;
+    }
+
+    FolderJob folderJob = null;
+    String jobUrl = null;
+    String jobDisplayName = null;
+    if (folderJobName != null && folderJobName.length() > 0) {
+      if (parentJobUrl != null) {
+        jobUrl = parentJobUrl + "/job/" + folderJobName + "/";
+
+      } else {
+        jobUrl = "/job/" + folderJobName + "/";
+      }
+
+      folderJob = new FolderJob(folderJobName, jobUrl);
+      // We need to show the parent job name starting from depth 2 since ui presents the first level as an expanded
+      // tree. From depth 2, we flatten it
+      if (depth >= 2) {
+        jobDisplayName = (parentJobDisplayName != null) ? (parentJobDisplayName + "/" + folderJobName) : folderJobName;
+      }
+    }
+
+    Map<String, Job> jobsMap = jenkinsServer.getJobs(folderJob);
+    Collection<Job> jobCollection = jobsMap.values();
+    for (Job job : jobCollection) {
+      boolean isFolderJob = isFolderJob(job);
+      if (!recurseThrough) {
+        jobDetailsList.add(new JobDetails(job.getName(), isFolderJob));
+      } else {
+        if (isFolderJob) {
+          browseJobsRecursively(jobUrl, jobDisplayName, job.getName(), ++depth, jobDetailsList, recurseThrough);
+        } else {
+          jobDetailsList.add(
+              new JobDetails((jobDisplayName != null) ? (jobDisplayName + "/" + job.getName()) : job.getName(), false));
+        }
+      }
+    }
+    return jobDetailsList;
+  }
+
+  private boolean isFolderJob(Job job) {
+    // job.get_class().equals(FOLDER_JOB_CLASS_NAME) is to find if the jenkins job is of type folder.
+    // (job instanceOf FolderJob) doesn't work
+    return job.get_class().equals(FOLDER_JOB_CLASS_NAME);
   }
 
   /* (non-Javadoc)
