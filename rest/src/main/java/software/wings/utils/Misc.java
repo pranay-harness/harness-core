@@ -129,6 +129,9 @@ public class Misc {
 
   private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
     logIt(logger, level, isNotEmpty(msg) ? msg : "An exception occurred: " + t.getClass().getSimpleName());
+    if (level == LoggingLevel.ERROR) {
+      level = LoggingLevel.WARN;
+    }
     int traceLines = 0;
     while (t != null && traceLines < MAX_STACK_TRACE_LINES) {
       logIt(logger, level,
