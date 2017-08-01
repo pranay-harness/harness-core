@@ -93,6 +93,8 @@ FAILURE_TYPE:
       value: CONNECTIVITY
     - name: Authentication Failure
       value: AUTHENTICATION
+    - name: Verification Failure
+      value: VERIFICATION_FAILURE
     - name: Application Error
       value: APPLICATION_ERROR
 

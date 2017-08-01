@@ -264,8 +264,11 @@ public class AwsCodeDeployState extends State {
                 .withUuid(instance.getInstanceId())
                 .withHostName(hostName)
                 .withDisplayName(instance.getPublicDnsName())
-                .withHostElement(
-                    aHostElement().withHostName(hostName).withPublicDns(instance.getPublicDnsName()).build())
+                .withHostElement(aHostElement()
+                                     .withHostName(hostName)
+                                     .withPublicDns(instance.getPublicDnsName())
+                                     .withEc2Instance(instance)
+                                     .build())
                 .withServiceTemplateElement(aServiceTemplateElement()
                                                 .withUuid(serviceTemplateKey.getId().toString())
                                                 .withServiceElement(phaseElement.getServiceElement())

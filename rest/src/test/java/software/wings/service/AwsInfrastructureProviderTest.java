@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -43,7 +42,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.AwsHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -93,7 +91,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
     assertThat(hosts)
         .hasSize(2)
-        .hasOnlyElementsOfType(AwsHost.class)
+        .hasOnlyElementsOfType(Host.class)
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
@@ -155,9 +153,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
     assertThat(hosts)
         .hasSize(1)
-        .hasOnlyElementsOfType(AwsHost.class)
+        .hasOnlyElementsOfType(Host.class)
         .isEqualTo(asList(
-            anAwsHost().withHostName(HOST_NAME).withInstance(new Instance().withInstanceId("INSTANCE_ID")).build()));
+            aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
     verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
     verify(awsHelperService).getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY);
@@ -172,7 +170,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(hostService.list(any(PageRequest.class)))
         .thenReturn(
             aPageResponse()
-                .withResponse(asList(anAwsHost().withInstance(new Instance().withInstanceId("INSTANCE_ID")).build()))
+                .withResponse(asList(aHost().withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()))
                 .build());
 
     infrastructureProvider.deProvisionHosts(

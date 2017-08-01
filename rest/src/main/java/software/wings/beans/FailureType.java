@@ -6,5 +6,6 @@ package software.wings.beans;
 public enum FailureType {
   CONNECTIVITY,
   AUTHENTICATION,
+  VERIFICATION_FAILURE,
   APPLICATION_ERROR;
 }
