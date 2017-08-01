@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
+import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.MountPoint;
 import com.amazonaws.services.ecs.model.PortMapping;
@@ -25,6 +26,8 @@ import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -37,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -51,6 +55,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -60,7 +65,9 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -84,7 +91,11 @@ public class EcsServiceSetup extends State {
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
+
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
+
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
   /**
    * Instantiates a new state.
@@ -112,6 +123,8 @@ public class EcsServiceSetup extends State {
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
+    Map<String, String> serviceVariables = getResolvedServiceVariables(
+        context, app.getAppId(), env.getUuid(), infrastructureMapping.getServiceTemplateId());
 
     EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
     String region = ecsInfrastructureMapping.getRegion();
@@ -140,7 +153,8 @@ public class EcsServiceSetup extends State {
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
             .stream()
-            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
+            .map(containerDefinition
+                -> createContainerDefinition(imageName, containerName, containerDefinition, serviceVariables))
             .collect(toList());
 
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
@@ -210,6 +224,23 @@ public class EcsServiceSetup extends State {
         .build();
   }
 
+  private Map<String, String> getResolvedServiceVariables(
+      ExecutionContext context, String appId, String envId, String serviceTemplateId) {
+    Map<String, String> variables = new HashMap<>();
+    try {
+      List<ServiceVariable> serviceVariables =
+          serviceTemplateService.computeServiceVariables(appId, envId, serviceTemplateId);
+      serviceVariables.forEach(serviceVariable -> {
+        String key = context.renderExpression(serviceVariable.getName());
+        String value = context.renderExpression(new String(serviceVariable.getValue()));
+        variables.put(key, value);
+      });
+    } catch (Exception ex) {
+      logger.error("Exception occured in processing service variables ", ex);
+    }
+    return variables;
+  }
+
   private String lastECSService(
       String region, SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
     List<com.amazonaws.services.ecs.model.Service> services =
@@ -238,10 +269,11 @@ public class EcsServiceSetup extends State {
    * @param imageName                the image name
    * @param containerName            the container name
    * @param wingsContainerDefinition the wings container definition
+   * @param serviceVariables
    * @return the container definition
    */
-  private ContainerDefinition createContainerDefinition(
-      String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
+  private ContainerDefinition createContainerDefinition(String imageName, String containerName,
+      EcsContainerTask.ContainerDefinition wingsContainerDefinition, Map<String, String> serviceVariables) {
     ContainerDefinition containerDefinition =
         new ContainerDefinition().withName(strip(containerName)).withImage(strip(imageName));
 
@@ -297,6 +329,15 @@ public class EcsServiceSetup extends State {
                          .withSourceVolume(strip(storageConfiguration.getHostSourcePath()))
                          .withReadOnly(storageConfiguration.isReadonly()))
               .collect(toList()));
+    }
+
+    if (serviceVariables != null) {
+      List<KeyValuePair> valuePairs =
+          serviceVariables.entrySet()
+              .stream()
+              .map(entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue()))
+              .collect(toList());
+      containerDefinition.setEnvironment(valuePairs);
     }
 
     return containerDefinition;
@@ -417,6 +458,9 @@ public class EcsServiceSetup extends State {
     this.useLoadBalancer = useLoadBalancer;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String id;
     private String name;
@@ -430,55 +474,119 @@ public class EcsServiceSetup extends State {
 
     private Builder() {}
 
+    /**
+     * An ecs service setup builder.
+     *
+     * @return the builder
+     */
     public static Builder anEcsServiceSetup() {
       return new Builder();
     }
 
+    /**
+     * With id builder.
+     *
+     * @param id the id
+     * @return the builder
+     */
     public Builder withId(String id) {
       this.id = id;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With required context element type builder.
+     *
+     * @param requiredContextElementType the required context element type
+     * @return the builder
+     */
     public Builder withRequiredContextElementType(ContextElementType requiredContextElementType) {
       this.requiredContextElementType = requiredContextElementType;
       return this;
     }
 
+    /**
+     * With state type builder.
+     *
+     * @param stateType the state type
+     * @return the builder
+     */
     public Builder withStateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
+    /**
+     * With rollback builder.
+     *
+     * @param rollback the rollback
+     * @return the builder
+     */
     public Builder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
     }
 
+    /**
+     * With use load balancer builder.
+     *
+     * @param useLoadBalancer the use load balancer
+     * @return the builder
+     */
     public Builder withUseLoadBalancer(boolean useLoadBalancer) {
       this.useLoadBalancer = useLoadBalancer;
       return this;
     }
 
+    /**
+     * With load balancer name builder.
+     *
+     * @param loadBalancerName the load balancer name
+     * @return the builder
+     */
     public Builder withLoadBalancerName(String loadBalancerName) {
       this.loadBalancerName = loadBalancerName;
       return this;
     }
 
+    /**
+     * With target group arn builder.
+     *
+     * @param targetGroupArn the target group arn
+     * @return the builder
+     */
     public Builder withTargetGroupArn(String targetGroupArn) {
       this.targetGroupArn = targetGroupArn;
       return this;
     }
 
+    /**
+     * With role arn builder.
+     *
+     * @param roleArn the role arn
+     * @return the builder
+     */
     public Builder withRoleArn(String roleArn) {
       this.roleArn = roleArn;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anEcsServiceSetup()
           .withId(id)
@@ -492,6 +600,11 @@ public class EcsServiceSetup extends State {
           .withRoleArn(roleArn);
     }
 
+    /**
+     * Build ecs service setup.
+     *
+     * @return the ecs service setup
+     */
     public EcsServiceSetup build() {
       EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
       ecsServiceSetup.setId(id);
