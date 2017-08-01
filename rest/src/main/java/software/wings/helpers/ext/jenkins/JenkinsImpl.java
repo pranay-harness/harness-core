@@ -214,7 +214,7 @@ public class JenkinsImpl implements Jenkins {
     String jobDisplayName = null;
     if (folderJobName != null && folderJobName.length() > 0) {
       if (parentJobUrl != null) {
-        jobUrl = parentJobUrl + "/job/" + folderJobName + "/";
+        jobUrl = parentJobUrl + "job/" + folderJobName + "/";
 
       } else {
         jobUrl = "/job/" + folderJobName + "/";
