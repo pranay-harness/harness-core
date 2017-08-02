@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.MapUtils.isEmpty;
+import static org.apache.commons.collections.MapUtils.isNotEmpty;
 
 import com.google.common.base.Joiner;
 
@@ -18,7 +18,6 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
-import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Misc;
 
 import java.util.Map;
@@ -32,7 +31,6 @@ import javax.inject.Inject;
 public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionResponse> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  @Inject private ExpressionEvaluator evaluator;
   @Inject private JenkinsFactory jenkinsFactory;
 
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> postExecute,
@@ -50,7 +48,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
       Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    String errorMessage = null;
+    String errorMessage;
     try {
       Jenkins jenkins = jenkinsFactory.create(jenkinsUrl, username, password);
 
@@ -71,7 +69,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
       jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
 
       if (buildResult == BuildResult.SUCCESS || buildResult == BuildResult.UNSTABLE) {
-        if (!isEmpty(evaluatedFilePathsForAssertion)) {
+        if (isNotEmpty(evaluatedFilePathsForAssertion)) {
           //          for (Entry<String, String> entry : evaluatedFilePathsForAssertion.entrySet()) {
           //            String filePathForAssertion = entry.getKey();
           //            String assertion = entry.getValue();
@@ -113,7 +111,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
       } else {
         errorMessage = e.getMessage();
       }
-      executionStatus = executionStatus.FAILED;
+      executionStatus = ExecutionStatus.FAILED;
       jenkinsExecutionResponse.setErrorMessage(errorMessage);
     }
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
