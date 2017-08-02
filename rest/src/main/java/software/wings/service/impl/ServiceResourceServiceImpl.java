@@ -543,7 +543,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     try {
       return serviceCommand.getCommand().getGraph().isLinear();
     } catch (Exception ex) {
-      logger.error("Exception in validating command graph [{}], [{}]", serviceCommand.getCommand(), ex);
+      Misc.error(logger, "Exception in validating command graph " + serviceCommand.getCommand(), ex);
       return false;
     }
   }

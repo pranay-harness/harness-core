@@ -24,7 +24,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -288,8 +287,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      logger.error(
-          "Error occurred while retrieving artifact names from Artifactory server {} ", artifactory.getUri(), e);
+      Misc.error(
+          logger, "Error occurred while retrieving artifact names from Artifactory server " + artifactory.getUri(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
     return artifactNames;

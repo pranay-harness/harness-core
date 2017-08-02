@@ -126,9 +126,9 @@ public class KryoUtils {
   private static void logException(String msg, Throwable t) {
     logger.error(msg, t);
     while (t != null) {
-      logger.error("***** Caused by: " + t.getClass().getCanonicalName()
-          + (t.getMessage() != null ? ": " + t.getMessage() : ""));
-      Arrays.stream(t.getStackTrace()).forEach(elem -> logger.error(" --- Trace: " + elem));
+      logger.warn(
+          "Caused by: " + t.getClass().getCanonicalName() + (t.getMessage() != null ? ": " + t.getMessage() : ""));
+      Arrays.stream(t.getStackTrace()).forEach(elem -> logger.warn("\tat " + elem));
       t = t.getCause();
     }
   }

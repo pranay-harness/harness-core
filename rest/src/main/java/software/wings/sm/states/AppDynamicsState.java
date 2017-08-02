@@ -27,9 +27,6 @@ import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -41,7 +38,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -213,7 +209,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
       try {
         wingsPersistence.save(finalMetrics);
       } catch (Exception e) {
-        logger.error("Could not save analysis report", e);
+        Misc.error(logger, "Could not save analysis report", e);
         executionStatus = ExecutionStatus.FAILED;
         executionResponse.getAppDynamicsExecutionData().setErrorMsg(
             "Could not save analysis report, Please contact support");

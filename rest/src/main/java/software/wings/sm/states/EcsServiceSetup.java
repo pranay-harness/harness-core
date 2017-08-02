@@ -64,6 +64,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -236,7 +237,7 @@ public class EcsServiceSetup extends State {
         variables.put(key, value);
       });
     } catch (Exception ex) {
-      logger.error("Exception occured in processing service variables ", ex);
+      Misc.error(logger, "Exception occured in processing service variables ", ex);
     }
     return variables;
   }
