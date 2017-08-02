@@ -136,7 +136,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 
 4) `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.   
 
-5) 2) Run DelegateApplication: [Run -> Run... -> DelegateApplication]  
+5) Run DelegateApplication: [Run -> Run... -> DelegateApplication]  
 
 The admin username and password are in BaseIntegrationTest.java.  
 
