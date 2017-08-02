@@ -7,7 +7,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
@@ -47,13 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 /**
@@ -64,7 +57,6 @@ public class JenkinsImpl implements Jenkins {
   private final int MAX_FOLDER_DEPTH = 10;
   private JenkinsServer jenkinsServer;
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  @Inject ExecutorService executorService;
 
   /**
    * Instantiates a new jenkins impl.
@@ -172,40 +164,24 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public List<JobDetails> getJobs(String parentFolderJobName) throws IOException {
-    int timeoutInSeconds = 60;
+    int timeoutInSeconds = 30;
     try {
-      List<JobDetails> jobDetailsList = Collections.synchronizedList(new ArrayList<>());
       return with()
           .pollInterval(3L, TimeUnit.SECONDS)
           .atMost(new Duration(timeoutInSeconds, TimeUnit.SECONDS))
           .until(() -> {
             try {
+              FolderJob folderJob = null;
               int depth = 1;
-              // We need to maintain a counter to know how many async callables were spun up.
-              AtomicInteger callableCount = new AtomicInteger();
-              final Lock lock = new ReentrantLock();
-              final Condition allJobsDoneCondition = lock.newCondition();
-
+              List<JobDetails> jobDetailsList = new ArrayList<>();
               if (parentFolderJobName != null && parentFolderJobName.length() > 0) {
                 // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to
                 // add it again
-                browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, true, callableCount, lock,
-                    allJobsDoneCondition);
-
+                return browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, true);
               } else {
                 // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to
                 // add it again at the root level, we only want to fetch the first level jobs
-                browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, false, callableCount,
-                    lock, allJobsDoneCondition);
-              }
-
-              // Wait for all async callable jobs to complete. If not completed within the timeout, return the job
-              // details list collected so far.
-              lock.lock();
-              try {
-                allJobsDoneCondition.await(30, TimeUnit.SECONDS);
-              } finally {
-                lock.unlock();
+                return browseJobsRecursively(null, null, parentFolderJobName, depth, jobDetailsList, false);
               }
 
             } catch (HttpResponseException e) {
@@ -216,8 +192,6 @@ public class JenkinsImpl implements Jenkins {
                 throw e;
               }
             }
-
-            return jobDetailsList;
           }, notNullValue());
     } catch (ConditionTimeoutException e) {
       Misc.warn(
@@ -229,66 +203,46 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
-  private List<JobDetails> browseJobsRecursively(String folderJobUrl, String folderJobDisplayName, String folderJobName,
-      final int depth, List<JobDetails> jobDetailsList, boolean recurseThrough, AtomicInteger callableCount, Lock lock,
-      Condition allJobsDoneCondition) throws IOException {
+  private List<JobDetails> browseJobsRecursively(String parentJobUrl, String parentJobDisplayName, String folderJobName,
+      int depth, List<JobDetails> jobDetailsList, boolean recurseThrough) throws IOException {
     if (depth == MAX_FOLDER_DEPTH) {
       return jobDetailsList;
     }
 
-    // Each time a new parentJob needs to be fetched,
-    callableCount.incrementAndGet();
-    executorService.submit((Callable<Void>) () -> {
-      FolderJob folderJob = null;
-      String jobUrl = null;
-      String jobDisplayName = null;
-      if (folderJobName != null && folderJobName.length() > 0) {
-        if (folderJobUrl != null) {
-          jobUrl = folderJobUrl + "job/" + folderJobName + "/";
+    FolderJob folderJob = null;
+    String jobUrl = null;
+    String jobDisplayName = null;
+    if (folderJobName != null && folderJobName.length() > 0) {
+      if (parentJobUrl != null) {
+        jobUrl = parentJobUrl + "job/" + folderJobName + "/";
 
+      } else {
+        jobUrl = "/job/" + folderJobName + "/";
+      }
+
+      folderJob = new FolderJob(folderJobName, jobUrl);
+      // We need to show the parent job name starting from depth 2 since ui presents the first level as an expanded
+      // tree. From depth 2, we flatten it
+      if (depth >= 2) {
+        jobDisplayName = (parentJobDisplayName != null) ? (parentJobDisplayName + "/" + folderJobName) : folderJobName;
+      }
+    }
+
+    Map<String, Job> jobsMap = jenkinsServer.getJobs(folderJob);
+    Collection<Job> jobCollection = jobsMap.values();
+    for (Job job : jobCollection) {
+      boolean isFolderJob = isFolderJob(job);
+      if (!recurseThrough) {
+        jobDetailsList.add(new JobDetails(job.getName(), isFolderJob));
+      } else {
+        if (isFolderJob) {
+          browseJobsRecursively(jobUrl, jobDisplayName, job.getName(), ++depth, jobDetailsList, recurseThrough);
         } else {
-          jobUrl = "/job/" + folderJobName + "/";
-        }
-
-        folderJob = new FolderJob(folderJobName, jobUrl);
-        // We need to show the parent job name starting from depth 2 since ui presents the first level as an expanded
-        // tree. From depth 2, we flatten it
-        if (depth >= 2) {
-          jobDisplayName =
-              (folderJobDisplayName != null) ? (folderJobDisplayName + "/" + folderJobName) : folderJobName;
+          jobDetailsList.add(
+              new JobDetails((jobDisplayName != null) ? (jobDisplayName + "/" + job.getName()) : job.getName(), false));
         }
       }
-
-      Map<String, Job> jobsMap = jenkinsServer.getJobs(folderJob);
-      Collection<Job> jobCollection = jobsMap.values();
-      for (Job job : jobCollection) {
-        boolean isFolderJob = isFolderJob(job);
-        if (!recurseThrough) {
-          jobDetailsList.add(new JobDetails(job.getName(), isFolderJob));
-        } else {
-          if (isFolderJob) {
-            browseJobsRecursively(jobUrl, jobDisplayName, job.getName(), depth + 1, jobDetailsList, recurseThrough,
-                callableCount, lock, allJobsDoneCondition);
-          } else {
-            jobDetailsList.add(new JobDetails(
-                (jobDisplayName != null) ? (jobDisplayName + "/" + job.getName()) : job.getName(), false));
-          }
-        }
-      }
-
-      // The last job signals that the main caller job can return the results now
-      lock.lock();
-      try {
-        callableCount.decrementAndGet();
-        if (callableCount.intValue() == 0) {
-          allJobsDoneCondition.signalAll();
-        }
-      } finally {
-        lock.unlock();
-      }
-      return null;
-    });
-
+    }
     return jobDetailsList;
   }
 
