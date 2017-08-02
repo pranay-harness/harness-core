@@ -23,6 +23,8 @@
 
    `export JAVA_HOME=$(/usr/libexec/java_home)`
 
+7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+
 ### Build
 
 1) Clone form git repository: https://github.com/wings-software/wings
@@ -68,7 +70,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 3) Import Code Style tools/src/main/resources/do-not-use/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
 
 ### Run from IntelliJ
-1) Run API Server : Make sure your mongodb is running first. 
+1) Create the API Server application - "WingsApplication":  
 [Run -> Edit Configurations...]
 
     * Add new Application:  
@@ -98,7 +100,8 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
     * Ensure [IntelliJ IDEA -> Preferences -> Build, Execution, Deployment -> Compile -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
 
-2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
+2) Create the "DelegateApplication":  
+[Run -> Edit Configurations...]
     * Add new Application:  
         Use the "+" on the left to add a new application. Call it "DelegateApplication"
     
@@ -124,12 +127,21 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
         Default (1.8 - SDK of 'delegate' module)
         
 ### Before you can use the client:
-1) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles. The admin username and password are in BaseIntegrationTest.java.
 
-2) Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+1) Make sure your mongodb is running first.  
+
+2) Run API Server (WingsApplication): [Run -> Run... -> WimngsApplication]   
+
+3) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and  
+
+4) `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.   
+
+5) 2) Run DelegateApplication: [Run -> Run... -> DelegateApplication]  
+
+The admin username and password are in BaseIntegrationTest.java.  
 
 ### Note:
-1) To build UI Go to wings-ui and follow READ me instructions.
+1) To build UI Go to wingsui and follow READ me instructions.
 
 2) To apply database migrations run following command in dbmigrations folder:
 
