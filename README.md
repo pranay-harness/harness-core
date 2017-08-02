@@ -71,58 +71,58 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 1) Run API Server : Make sure your mongodb is running first. 
 [Run -> Edit Configurations...]
 
-    * Add new Application:
-    
+    * Add new Application:  
         Use the "+" on the left to add a new application. Call it "WingsApplication"
-    * Set Main class: 
     
+    * Set Main class:   
         'WingsApplication' class (found at software.wings.app.WingsApplication) with the following configurations.
-    * VM Options:
-
+    
+    * VM Options:  
         `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
-    * Program Arguments:
-
+    
+    * Program Arguments:  
         `server config.yml`
-    * Working Directory:
-
+    
+    * Working Directory:  
         `$MODULE_DIR$`
-    * Environment Variable:
-        
+    
+    * Environment Variable:   
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
-    * Use classpath of module:
     
+    * Use classpath of module:  
         rest
-    * JRE:
     
+    * JRE:  
         Default (1.8 - SDK of 'rest' module)
+    
     * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
     * Ensure [IntelliJ IDEA -> Preferences -> Build, Execution, Deployment -> Compile -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
 
 2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
-    * Add new Application:
-        
+    * Add new Application:  
         Use the "+" on the left to add a new application. Call it "DelegateApplication"
-    * Set Main class: 
-        
+    
+    * Set Main class:   
         'DelegateApplication' class (found at software.wings.delegate.app.WingsApplication) with the following configurations.
-    * VM Options:
-
+    
+    * VM Options:  
         `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0`
-    * Program Arguments:
-
+    
+    * Program Arguments:  
         `config-delegate.yml`
-    * Working Directory:
-
+    
+    * Working Directory:  
         `$MODULE_DIR$`
-    * Environment Variable:
-
+    
+    * Environment Variable:  
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
-    * Use classpath of module:
-        
+    
+    * Use classpath of module:  
         delegate
-    * JRE:
         
+    * JRE:  
         Default (1.8 - SDK of 'delegate' module)
+        
 ### Before you can use the client:
 1) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles. The admin username and password are in BaseIntegrationTest.java.
 
