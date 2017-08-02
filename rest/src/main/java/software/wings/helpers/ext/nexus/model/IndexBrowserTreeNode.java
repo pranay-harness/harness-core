@@ -19,6 +19,7 @@ public class IndexBrowserTreeNode implements Serializable {
   private String nodeName;
   private String path;
   private String packaging;
+  private String extension;
 
   @XmlElementWrapper(name = "children")
   @XmlElement(name = "indexBrowserTreeNode")
@@ -66,6 +67,14 @@ public class IndexBrowserTreeNode implements Serializable {
 
   public List<IndexBrowserTreeNode> getChildren() {
     return children;
+  }
+
+  public String getExtension() {
+    return extension;
+  }
+
+  public void setExtension(String extension) {
+    this.extension = extension;
   }
 
   public void setChildren(List<IndexBrowserTreeNode> children) {

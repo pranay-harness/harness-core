@@ -1,10 +1,11 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -64,7 +65,7 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
+    pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 
