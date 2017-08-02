@@ -68,21 +68,34 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 3) Import Code Style tools/src/main/resources/do-not-use/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
 
 ### Run from IntelliJ
-1) Run API Server : Make sure your mongodb is running first. Run 'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
-    * Environment Variable:
+1) Run API Server : Make sure your mongodb is running first. 
+[Run -> Edit Configurations...]
 
-        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
-    * VM Args:
+    * Add new Application:
+    
+        Use the "+" on the left to add a new applicatgion. Call it "WingsApplication"
+        
+    * Set Main class: 
+    
+        'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
+    
+    * VM Options:
 
         `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
-    * Program Args:
+    * Program Arguments:
 
         `server config.yml`
     * Working Directory:
 
         `$MODULE_DIR$`
-    * Ensure [IntelliJ -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
-    * Ensure [IntelliJ -> Preferences -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
+    * Environment Variable:
+        
+        `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
+    * Use classpath of module:
+    
+        Rest
+    * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
+    * Ensure [IntelliJ IDEA -> Preferences -> Build, Execution, Deployment -> Compile -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
 
 2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
     * Environment Variable:
