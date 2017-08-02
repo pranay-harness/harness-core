@@ -1,14 +1,22 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
+import software.wings.AnalysisComparisonStrategy;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -16,21 +24,47 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
+import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractAnalysisState extends State {
-  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
+  protected static final int PYTHON_JOB_RETRIES = 3;
+
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
+  @Attributes(
+      title = "How do you want to compare for analyis", description = "Compare with previous run or current run")
+  protected String comparisonStrategy;
+
+  @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
+
+  @Transient @Inject protected WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject protected SettingsService settingsService;
+
+  @Transient @Inject protected AppService appService;
+
+  @Transient @Inject protected DelegateService delegateService;
+
+  @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
 
   /**
    * Instantiates a new state.
@@ -101,4 +135,29 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   @SchemaIgnore abstract public Logger getLogger();
+
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  public void setComparisonStrategy(String comparisonStrategy) {
+    this.comparisonStrategy = comparisonStrategy;
+  }
+
+  protected String generateAuthToken() throws UnsupportedEncodingException {
+    final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
+    if (jwtExternalServiceSecret == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "No secret present for external service");
+    }
+
+    Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
+    return JWT.create()
+        .withIssuer("Harness Inc")
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
+        .sign(algorithm);
+  }
 }

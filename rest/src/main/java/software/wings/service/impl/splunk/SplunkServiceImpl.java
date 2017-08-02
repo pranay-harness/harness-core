@@ -1,14 +1,9 @@
 package software.wings.service.impl.splunk;
 
-import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.common.base.Preconditions;
 
-import org.mongodb.morphia.aggregation.Accumulator;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.aggregation.Projection;
-import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +15,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -238,7 +232,7 @@ public class SplunkServiceImpl implements SplunkService {
       delegateProxyFactory.get(SplunkDelegateService.class, syncTaskContext)
           .validateConfig((SplunkConfig) settingAttribute.getValue());
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.SPLUNK_CONFIGURATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, "reason", e.getMessage());
     }
   }
 

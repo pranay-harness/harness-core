@@ -67,6 +67,7 @@ public enum TaskType {
   APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
+  ELK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),

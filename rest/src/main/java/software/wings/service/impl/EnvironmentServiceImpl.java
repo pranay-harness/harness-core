@@ -150,7 +150,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment update(Environment environment) {
     String description = environment.getDescription() == null ? "" : environment.getDescription();
-    ImmutableMap<String, Object> paramMap = ImmutableMap.of("name", environment.getName(), "description", description);
+    ImmutableMap<String, Object> paramMap = ImmutableMap.of(
+        "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());

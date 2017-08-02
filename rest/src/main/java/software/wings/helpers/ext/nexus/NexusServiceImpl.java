@@ -32,6 +32,8 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -148,7 +150,8 @@ public class NexusServiceImpl implements NexusService {
                   getBaseUrl(nexusConfig) + "service/local/repositories/" + repoType + "/content" + artifact.getPath();
               logger.info("Resource url " + resourceUrl);
               try {
-                URL server = new URL(resourceUrl); // works for https and not for http, i needed https in  my case.
+                Authenticator.setDefault(
+                    new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
                 Misc.error(logger, "Error occurred while getting the input stream", ex);
@@ -437,11 +440,24 @@ public class NexusServiceImpl implements NexusService {
     return true;
   }
 
+  static class MyAuthenticator extends Authenticator {
+    private String username, password;
+
+    public MyAuthenticator(String user, String pass) {
+      username = user;
+      password = pass;
+    }
+
+    protected PasswordAuthentication getPasswordAuthentication() {
+      return new PasswordAuthentication(username, password.toCharArray());
+    }
+  }
+
   public static void main(String... args) throws Exception {
     NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
-                                  .withNexusUrl("http://localhost:8081/nexus/")
+                                  .withNexusUrl("https://nexus.wings.software/")
                                   .withUsername("admin")
-                                  .withPassword("admin123".toCharArray())
+                                  .withPassword("wings123!".toCharArray())
                                   .build();
 
     NexusServiceImpl nexusService = new NexusServiceImpl();
@@ -450,17 +466,16 @@ public class NexusServiceImpl implements NexusService {
     // List<String> names = nexusService.getArtifactNames(nexusConfig, "releases", null);
 
     List<BuildDetails> details =
-        nexusService.getVersions(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+        nexusService.getVersions(nexusConfig, "releases", "org.apache.maven", "maven-artifact");
 
     details.forEach(name -> { System.out.println(name.getNumber()); });
 
-    Project project =
-        nexusService.getPomModel(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
+    Project project = nexusService.getPomModel(nexusConfig, "releases", "org.apache.maven", "maven-artifact", "LATEST");
 
     System.out.println("Project package type " + project.getPackaging());
 
     Pair<String, InputStream> map =
-        nexusService.downloadArtifact(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
+        nexusService.downloadArtifact(nexusConfig, "releases", "org.apache.maven", "maven-artifact", "LATEST");
     System.out.println("Return inputstream " + map.getValue());
   }
 }

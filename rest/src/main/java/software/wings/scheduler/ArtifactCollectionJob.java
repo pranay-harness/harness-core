@@ -93,7 +93,7 @@ public class ArtifactCollectionJob implements Job {
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      logger.debug("Collecting Artifact for artifact stream {} ", NEXUS.name());
+      logger.info("Collecting Artifact for artifact stream {} ", NEXUS.name());
       BuildDetails latestVersion =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (latestVersion != null) {
