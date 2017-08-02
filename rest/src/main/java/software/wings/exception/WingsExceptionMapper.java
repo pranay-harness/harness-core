@@ -3,6 +3,7 @@ package software.wings.exception;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.common.collect.Sets;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -40,8 +42,13 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
             .collect(toList());
     if (responseMessages.stream().noneMatch(
             responseMessage -> logIgnoredErrorCodes.contains(responseMessage.getCode()))) {
+      String msg = "Exception occurred: " + ex.getMessage();
       if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == ERROR)) {
-        logger.error("Exception occurred: {}", ex.getMessage(), ex);
+        Misc.error(logger, msg, ex);
+      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == WARN)) {
+        Misc.warn(logger, msg, ex);
+      } else {
+        Misc.info(logger, msg, ex);
       }
       responseMessages.forEach(responseMessage -> {
         switch (responseMessage.getErrorType()) {
