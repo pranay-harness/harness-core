@@ -1,5 +1,5 @@
 {
-  "ui:order": ["splunkConfigId", "query", "timeDuration", "comparisonStrategy"],
+  "ui:order": ["analysisServerConfigId", "query", "timeDuration", "comparisonStrategy"],
   "query": {
     "ui:widget": "textarea"
   }

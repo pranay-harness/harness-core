@@ -1,4 +1,4 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
@@ -17,53 +17,22 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 8/4/16.
  */
 @Data
-public class SplunkExecutionData extends StateExecutionData {
+public class LogAnalysisExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;
-  private String splunkConfigId;
+  private String serverConfigId;
   private Set<String> queries;
   private int timeDuration;
   private Set<String> canaryNewHostNames;
   private Set<String> lastExecutionNodes;
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (!(o instanceof SplunkExecutionData))
-      return false;
-
-    SplunkExecutionData that = (SplunkExecutionData) o;
-
-    if (timeDuration != that.timeDuration)
-      return false;
-    if (correlationId != null ? !correlationId.equals(that.correlationId) : that.correlationId != null)
-      return false;
-    if (stateExecutionInstanceId != null ? !stateExecutionInstanceId.equals(that.stateExecutionInstanceId)
-                                         : that.stateExecutionInstanceId != null)
-      return false;
-    if (splunkConfigId != null ? !splunkConfigId.equals(that.splunkConfigId) : that.splunkConfigId != null)
-      return false;
-    return queries != null ? queries.equals(that.queries) : that.queries == null;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = correlationId != null ? correlationId.hashCode() : 0;
-    result = 31 * result + (stateExecutionInstanceId != null ? stateExecutionInstanceId.hashCode() : 0);
-    result = 31 * result + (splunkConfigId != null ? splunkConfigId.hashCode() : 0);
-    result = 31 * result + (queries != null ? queries.hashCode() : 0);
-    result = 31 * result + timeDuration;
-    return result;
-  }
-
-  @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
         anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
-    putNotNull(executionDetails, "splunkConfigId",
-        anExecutionDataValue().withValue(splunkConfigId).withDisplayName("Splunk Config Id").build());
+    putNotNull(executionDetails, "serverConfigId",
+        anExecutionDataValue().withValue(serverConfigId).withDisplayName("Server Config Id").build());
     return executionDetails;
   }
 
@@ -88,8 +57,8 @@ public class SplunkExecutionData extends StateExecutionData {
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
-    putNotNull(executionDetails, "queries",
-        anExecutionDataValue().withValue(queries).withDisplayName("Splunk queries").build());
+    putNotNull(
+        executionDetails, "queries", anExecutionDataValue().withValue(queries).withDisplayName("Queries").build());
     return executionDetails;
   }
 
@@ -99,7 +68,7 @@ public class SplunkExecutionData extends StateExecutionData {
   public static final class Builder {
     private String correlationId;
     private String stateExecutionInstanceId;
-    private String splunkConfigId;
+    private String serverConfigId;
     private Set<String> queries;
     private int timeDuration;
     private String stateName;
@@ -112,12 +81,7 @@ public class SplunkExecutionData extends StateExecutionData {
 
     private Builder() {}
 
-    /**
-     * An splunk execution data builder.
-     *
-     * @return the builder
-     */
-    public static Builder anSplunkExecutionData() {
+    public static Builder anLogAnanlysisExecutionData() {
       return new Builder();
     }
 
@@ -131,12 +95,12 @@ public class SplunkExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withSplunkConfigID(String splunkConfigId) {
-      this.splunkConfigId = splunkConfigId;
+    public Builder withServerConfigID(String serverConfigId) {
+      this.serverConfigId = serverConfigId;
       return this;
     }
 
-    public Builder withSplunkQueries(Set<String> queries) {
+    public Builder withQueries(Set<String> queries) {
       this.queries = queries;
       return this;
     }
@@ -217,10 +181,10 @@ public class SplunkExecutionData extends StateExecutionData {
      * @return the builder
      */
     public Builder but() {
-      return anSplunkExecutionData()
+      return anLogAnanlysisExecutionData()
           .withCorrelationId(correlationId)
-          .withSplunkConfigID(splunkConfigId)
-          .withSplunkQueries(queries)
+          .withServerConfigID(serverConfigId)
+          .withQueries(queries)
           .withAnalysisDuration(timeDuration)
           .withStateName(stateName)
           .withStartTs(startTs)
@@ -234,21 +198,21 @@ public class SplunkExecutionData extends StateExecutionData {
      *
      * @return the app dynamics execution data
      */
-    public SplunkExecutionData build() {
-      SplunkExecutionData splunkExecutionData = new SplunkExecutionData();
-      splunkExecutionData.setCorrelationId(correlationId);
-      splunkExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
-      splunkExecutionData.setSplunkConfigId(splunkConfigId);
-      splunkExecutionData.setQueries(queries);
-      splunkExecutionData.setTimeDuration(timeDuration);
-      splunkExecutionData.setStateName(stateName);
-      splunkExecutionData.setStartTs(startTs);
-      splunkExecutionData.setEndTs(endTs);
-      splunkExecutionData.setStatus(status);
-      splunkExecutionData.setErrorMsg(errorMsg);
-      splunkExecutionData.setCanaryNewHostNames(canaryNewHostNames);
-      splunkExecutionData.setLastExecutionNodes(lastExecutionNodes);
-      return splunkExecutionData;
+    public LogAnalysisExecutionData build() {
+      LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
+      logAnalysisExecutionData.setCorrelationId(correlationId);
+      logAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
+      logAnalysisExecutionData.setServerConfigId(serverConfigId);
+      logAnalysisExecutionData.setQueries(queries);
+      logAnalysisExecutionData.setTimeDuration(timeDuration);
+      logAnalysisExecutionData.setStateName(stateName);
+      logAnalysisExecutionData.setStartTs(startTs);
+      logAnalysisExecutionData.setEndTs(endTs);
+      logAnalysisExecutionData.setStatus(status);
+      logAnalysisExecutionData.setErrorMsg(errorMsg);
+      logAnalysisExecutionData.setCanaryNewHostNames(canaryNewHostNames);
+      logAnalysisExecutionData.setLastExecutionNodes(lastExecutionNodes);
+      return logAnalysisExecutionData;
     }
   }
 }

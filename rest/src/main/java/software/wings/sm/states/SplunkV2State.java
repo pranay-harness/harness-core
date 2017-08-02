@@ -1,12 +1,9 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.service.impl.splunk.SplunkAnalysisResponse.Builder.anSplunkAnalysisResponse;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -23,44 +20,28 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.exception.WingsException;
-import software.wings.metrics.RiskLevel;
-import software.wings.service.impl.splunk.SplunkAnalysisResponse;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
-import software.wings.service.impl.splunk.SplunkExecutionData;
-import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
-public class SplunkV2State extends AbstractAnalysisState {
+public class SplunkV2State extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
 
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
@@ -68,209 +49,19 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   @EnumData(enumDataProvider = SplunkSettingProvider.class)
   @Attributes(required = true, title = "Splunk Server")
-  private String splunkConfigId;
-
-  @Attributes(required = true, title = "Query") private String query;
-
-  @DefaultValue("15")
-  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
-  private String timeDuration;
-
-  @Transient @Inject private AnalysisService analysisService;
-
-  @Transient @SchemaIgnore private ScheduledExecutorService pythonExecutorService;
+  private String analysisServerConfigId;
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
   }
 
-  /**
-   * Getter for property 'query'.
-   *
-   * @return Value for property 'query'.
-   */
-  public String getQuery() {
-    return query;
-  }
-
-  /**
-   * Setter for property 'query'.
-   *
-   * @param query Value to set for property 'query'.
-   */
-  public void setQuery(String query) {
-    this.query = query;
-  }
-
-  public String getTimeDuration() {
-    return timeDuration;
-  }
-
-  public void setTimeDuration(String timeDuration) {
-    this.timeDuration = timeDuration;
-  }
-
-  public String getSplunkConfigId() {
-    return splunkConfigId;
-  }
-
-  public void setSplunkConfigId(String splunkConfigId) {
-    this.splunkConfigId = splunkConfigId;
-  }
-
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    logger.debug("Executing splunk state");
-
-    Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
-    if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
-      logger.error("Could not find test nodes to compare the data");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
-    }
-
-    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
-    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        logger.error("No nodes with older version found to compare the logs. Skipping analysis");
-        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline data (First time deployment).");
-      }
-
-      triggerSplunkDataCollection(context);
-      logger.warn(
-          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
-      return generateAnalysisResponse(
-          context, ExecutionStatus.SUCCESS, "Skipping analysis due to lack of baseline data (First time deployment).");
-    }
-
-    final SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
-                                                  .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                                  .withSplunkConfigID(splunkConfigId)
-                                                  .withSplunkQueries(Sets.newHashSet(query.split(",")))
-                                                  .withAnalysisDuration(Integer.parseInt(timeDuration))
-                                                  .withStatus(ExecutionStatus.RUNNING)
-                                                  .withCanaryNewHostNames(canaryNewHostNames)
-                                                  .withLastExecutionNodes(new HashSet<>(lastExecutionNodes))
-                                                  .withCorrelationId(UUID.randomUUID().toString())
-                                                  .build();
-
-    lastExecutionNodes.removeAll(canaryNewHostNames);
-    if (lastExecutionNodes.isEmpty()) {
-      logger.error("Control and test nodes are same. Will not be running splunk analysis");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
-    }
-
-    triggerSplunkDataCollection(context);
-
-    final SplunkAnalysisResponse response = anSplunkAnalysisResponse()
-                                                .withSplunkExecutionData(executionData)
-                                                .withExecutionStatus(ExecutionStatus.SUCCESS)
-                                                .build();
-    pythonExecutorService = createPythonExecutorService(context);
-    final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.schedule(() -> {
-      try {
-        pythonExecutorService.shutdown();
-        pythonExecutorService.awaitTermination(1, TimeUnit.MINUTES);
-        waitNotifyEngine.notify(executionData.getCorrelationId(), response);
-      } catch (InterruptedException e) {
-        pythonExecutorService.shutdown();
-      }
-    }, Long.parseLong(timeDuration) + SplunkDataCollectionTask.DELAY_MINUTES + 1, TimeUnit.MINUTES);
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.RUNNING)
-        .withErrorMessage("Splunk Verification running")
-        .withStateExecutionData(executionData)
-        .build();
-  }
-
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
-    if (analysisSummary == null) {
-      logger.warn("No analysis summary. This can happen if there is no data with the given queries");
-      return generateAnalysisResponse(
-          context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
-    }
-
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
-      logger.error("Found anomolies. Marking it failed." + analysisSummary.getAnalysisSummaryMessage());
-      executionStatus = ExecutionStatus.FAILED;
-    }
-
-    SplunkAnalysisResponse executionResponse = (SplunkAnalysisResponse) response.values().iterator().next();
-    executionResponse.getSplunkExecutionData().setStatus(executionStatus);
-    return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(executionResponse.getSplunkExecutionData())
-        .build();
-  }
-
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {
-    try {
-      pythonExecutorService.shutdown();
-      pythonExecutorService.awaitTermination(1, TimeUnit.MINUTES);
-    } catch (InterruptedException e) {
-      pythonExecutorService.shutdown();
-    }
-
-    final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
-
-    if (analysisSummary == null) {
-      generateAnalysisResponse(context, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
-    }
-  }
-
-  private ExecutionResponse generateAnalysisResponse(ExecutionContext context, ExecutionStatus status, String message) {
-    SplunkExecutionData executionData = SplunkExecutionData.Builder.anSplunkExecutionData()
-                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                            .withSplunkConfigID(splunkConfigId)
-                                            .withSplunkQueries(Sets.newHashSet(query.split(",")))
-                                            .withAnalysisDuration(Integer.parseInt(timeDuration))
-                                            .withStatus(status)
-                                            .withCorrelationId(UUID.randomUUID().toString())
-                                            .build();
-    for (String splunkQuery : query.split(",")) {
-      final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
-      analysisRecord.setStateType(StateType.SPLUNKV2);
-      analysisRecord.setApplicationId(context.getAppId());
-      analysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
-      executionData.setStatus(status);
-      analysisRecord.setQuery(splunkQuery);
-      analysisRecord.setAnalysisSummaryMessage(message);
-      analysisRecord.setControl_events(Collections.emptyMap());
-      analysisRecord.setTest_events(Collections.emptyMap());
-      analysisService.saveLogAnalysisRecords(analysisRecord, StateType.SPLUNKV2);
-    }
-
-    return anExecutionResponse()
-        .withAsync(false)
-        .withExecutionStatus(status)
-        .withStateExecutionData(executionData)
-        .withErrorMessage(message)
-        .build();
-  }
-
-  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context) {
-    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(
-        new SplunkAnalysisGenerator(context), SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
-    return scheduledExecutorService;
-  }
-
-  private long triggerSplunkDataCollection(ExecutionContext context) {
+  protected void triggerAnalysisDataCollection(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(splunkConfigId);
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + splunkConfigId + " found");
+      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
     }
 
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
@@ -290,7 +81,22 @@ public class SplunkV2State extends AbstractAnalysisState {
                                     .build();
     waitNotifyEngine.waitForAll(new SplunkLogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
-    return logCollectionStartTimeStamp;
+  }
+
+  @Override
+  public String getAnalysisServerConfigId() {
+    return analysisServerConfigId;
+  }
+
+  @Override
+  public void setAnalysisServerConfigId(String analysisServerConfigId) {
+    this.analysisServerConfigId = analysisServerConfigId;
+  }
+
+  @Override
+  @SchemaIgnore
+  protected Runnable getLogAnanlysisGenerator(ExecutionContext context) {
+    return new SplunkAnalysisGenerator(context);
   }
 
   private class SplunkAnalysisGenerator implements Runnable {
@@ -413,24 +219,15 @@ public class SplunkV2State extends AbstractAnalysisState {
       final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
           context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
       if (analysisSummary == null) {
-        generateAnalysisResponse(context, ExecutionStatus.RUNNING, "No data with given queries has been found yet.");
+        generateAnalysisResponse(
+            context, ExecutionStatus.RUNNING, analysisServerConfigId, "No data with given queries has been found yet.");
       }
     }
   }
 
   @Override
+  @SchemaIgnore
   public Logger getLogger() {
     return logger;
-  }
-
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (StringUtils.isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
-
-  public void setComparisonStrategy(String comparisonStrategy) {
-    this.comparisonStrategy = comparisonStrategy;
   }
 }
