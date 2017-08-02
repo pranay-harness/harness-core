@@ -110,7 +110,7 @@ public interface DelegateService {
    * @return the t
    * @throws InterruptedException the interrupted exception
    */
-  <T extends NotifyResponseData> T executeTask(@Valid DelegateTask task) throws InterruptedException;
+  <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
   /**
    * Gets delegate tasks.
