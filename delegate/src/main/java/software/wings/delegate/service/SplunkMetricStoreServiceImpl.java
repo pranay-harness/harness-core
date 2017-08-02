@@ -4,7 +4,7 @@ import static software.wings.managerclient.SafeHttpCall.execute;
 
 import software.wings.delegatetasks.SplunkMetricStoreService;
 import software.wings.managerclient.ManagerClient;
-import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.analysis.LogElement;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +20,7 @@ public class SplunkMetricStoreServiceImpl implements SplunkMetricStoreService {
 
   @Override
   public void save(String accountId, String appId, String stateExecutionId, String workflowId,
-      List<SplunkLogElement> splunkLogs) throws IOException {
+      List<LogElement> splunkLogs) throws IOException {
     execute(managerClient.saveSplunkLogs(accountId, appId, stateExecutionId, workflowId, splunkLogs));
   }
 }

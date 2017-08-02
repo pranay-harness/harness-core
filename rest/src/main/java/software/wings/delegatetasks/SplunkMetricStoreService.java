@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.analysis.LogElement;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,5 +10,5 @@ import java.util.List;
  */
 public interface SplunkMetricStoreService {
   void save(String accountId, String appId, String stateExecutionId, String workflowExecutionId,
-      List<SplunkLogElement> splunkLogs) throws IOException;
+      List<LogElement> splunkLogs) throws IOException;
 }

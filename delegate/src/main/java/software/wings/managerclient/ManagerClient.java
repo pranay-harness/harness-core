@@ -23,7 +23,7 @@ import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
@@ -83,7 +83,7 @@ public interface ManagerClient {
   @POST("splunk/save-logs")
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
-      @Body List<SplunkLogElement> metricData);
+      @Body List<LogElement> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,

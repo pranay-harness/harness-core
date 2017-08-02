@@ -132,9 +132,14 @@ public enum StateType implements StateTypeDescriptor {
   SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
 
   /**
+   * Elk state type.
+   */
+  ELK(SplunkV2State.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+
+  /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 6, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.

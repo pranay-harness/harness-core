@@ -5,14 +5,16 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 
 import com.google.common.collect.TreeBasedTable;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.service.impl.splunk.SplunkLogDataRecord;
-import software.wings.service.impl.splunk.SplunkLogRequest;
+import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogRequest;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +35,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(Arrays.asList(SplunkLogDataRecord.class));
+    deleteAllDocuments(Arrays.asList(LogDataRecord.class));
   }
 
   @Test
@@ -47,7 +49,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     final String workflowId = "some-workflow";
     final String query = "some-query";
     final String applicationId = "some-application";
-    final TreeBasedTable<Integer, Integer, List<SplunkLogDataRecord>> addedMessages = TreeBasedTable.create();
+    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
     final Set<String> hosts = new HashSet<>();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
@@ -69,17 +71,29 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             final String logMD5Hash = "lmsgHash" + recordNumber;
             final String clusterLabel = "cluster" + recordNumber;
 
-            final SplunkLogDataRecord splunkLogDataRecord =
-                new SplunkLogDataRecord(applicationId, stateExecutionId, workflowId, query, clusterLabel, host,
-                    timeStamp, count, logMessage, logMD5Hash, false, logCollectionMinute);
-            splunkLogDataRecord.setCreatedAt(timeStamp);
-            wingsPersistence.save(splunkLogDataRecord);
+            final LogDataRecord logDataRecord = new LogDataRecord();
+            logDataRecord.setStateType(StateType.SPLUNKV2);
+            logDataRecord.setWorkflowId(workflowId);
+            logDataRecord.setStateExecutionId(stateExecutionId);
+            logDataRecord.setQuery(query);
+            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setClusterLabel(clusterLabel);
+            logDataRecord.setHost(host);
+            logDataRecord.setTimeStamp(timeStamp);
+            logDataRecord.setCount(count);
+            logDataRecord.setLogMessage(logMessage);
+            logDataRecord.setLogMD5Hash(logMD5Hash);
+            logDataRecord.setProcessed(false);
+            logDataRecord.setLogCollectionMinute(logCollectionMinute);
+            logDataRecord.setCreatedAt(timeStamp);
+
+            wingsPersistence.save(logDataRecord);
 
             if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
               addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
             }
 
-            addedMessages.get(executionNumber, logCollectionMinute).add(splunkLogDataRecord);
+            addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
           }
           Thread.sleep(100);
         }
@@ -88,10 +102,9 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/splunk/get-logs?accountId=" + accountId + "&compareCurrent=true");
-      final SplunkLogRequest logRequest =
-          new SplunkLogRequest(query, applicationId, "se2", workflowId, hosts, collectionMinute);
-      RestResponse<List<SplunkLogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<SplunkLogDataRecord>>>() {});
+      final LogRequest logRequest = new LogRequest(query, applicationId, "se2", workflowId, hosts, collectionMinute);
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       Assert.assertEquals(
           "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
     }
@@ -108,7 +121,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     final String workflowId = "some-workflow";
     final String query = "some-query";
     final String applicationId = "some-application";
-    final TreeBasedTable<Integer, Integer, List<SplunkLogDataRecord>> addedMessages = TreeBasedTable.create();
+    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
                                               .withStatus(ExecutionStatus.SUCCESS)
@@ -128,17 +141,28 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             final String logMD5Hash = UUID.randomUUID().toString();
             final String clusterLabel = UUID.randomUUID().toString();
 
-            final SplunkLogDataRecord splunkLogDataRecord =
-                new SplunkLogDataRecord(applicationId, stateExecutionId, workflowId, query, clusterLabel, host,
-                    timeStamp, count, logMessage, logMD5Hash, r.nextBoolean(), logCollectionMinute);
-            splunkLogDataRecord.setCreatedAt(timeStamp);
-            wingsPersistence.save(splunkLogDataRecord);
+            final LogDataRecord logDataRecord = new LogDataRecord();
+            logDataRecord.setStateType(StateType.SPLUNKV2);
+            logDataRecord.setWorkflowId(workflowId);
+            logDataRecord.setStateExecutionId(stateExecutionId);
+            logDataRecord.setQuery(query);
+            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setClusterLabel(clusterLabel);
+            logDataRecord.setHost(host);
+            logDataRecord.setTimeStamp(timeStamp);
+            logDataRecord.setCount(count);
+            logDataRecord.setLogMessage(logMessage);
+            logDataRecord.setLogMD5Hash(logMD5Hash);
+            logDataRecord.setProcessed(false);
+            logDataRecord.setLogCollectionMinute(logCollectionMinute);
+            logDataRecord.setCreatedAt(timeStamp);
+            wingsPersistence.save(logDataRecord);
 
             if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
               addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
             }
 
-            addedMessages.get(executionNumber, logCollectionMinute).add(splunkLogDataRecord);
+            addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
           }
           Thread.sleep(100);
         }
@@ -147,10 +171,10 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/splunk/get-logs?accountId=" + accountId + "&compareCurrent=false");
-      final SplunkLogRequest logRequest = new SplunkLogRequest(query, applicationId, UUID.randomUUID().toString(),
-          workflowId, Collections.singleton(UUID.randomUUID().toString()), collectionMinute);
-      RestResponse<List<SplunkLogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
-          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<SplunkLogDataRecord>>>() {});
+      final LogRequest logRequest = new LogRequest(query, applicationId, UUID.randomUUID().toString(), workflowId,
+          Collections.singleton(UUID.randomUUID().toString()), collectionMinute);
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+          Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       Assert.assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
           restResponse.getResource());
     }

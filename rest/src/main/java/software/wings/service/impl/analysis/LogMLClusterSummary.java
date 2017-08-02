@@ -1,4 +1,4 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import lombok.Data;
 
@@ -10,8 +10,8 @@ import java.util.Map;
  */
 
 @Data
-public class SplunkMLClusterSummary {
-  private Map<String, SplunkMLHostSummary> hostSummary;
+public class LogMLClusterSummary {
+  private Map<String, LogMLHostSummary> hostSummary;
   private String logText;
   private List<String> tags;
 }

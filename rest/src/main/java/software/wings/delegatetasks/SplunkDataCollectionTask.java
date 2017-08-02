@@ -17,7 +17,7 @@ import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult.SplunkDataCollectionTaskStatus;
-import software.wings.service.impl.splunk.SplunkLogElement;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.Misc;
 
@@ -153,9 +153,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
           InputStream results = job.getResults(resultsArgs);
           ResultsReaderJson resultsReader = new ResultsReaderJson(results);
           HashMap<String, String> event;
-          final List<SplunkLogElement> logElements = new ArrayList<>();
+          final List<LogElement> logElements = new ArrayList<>();
           while ((event = resultsReader.getNextEvent()) != null) {
-            final SplunkLogElement splunkLogElement = new SplunkLogElement();
+            final LogElement splunkLogElement = new LogElement();
             splunkLogElement.setQuery(query);
             splunkLogElement.setClusterLabel(event.get("cluster_label"));
             splunkLogElement.setHost(event.get("host"));

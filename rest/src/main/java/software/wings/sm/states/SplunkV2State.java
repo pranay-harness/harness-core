@@ -30,10 +30,10 @@ import software.wings.service.impl.splunk.SplunkAnalysisResponse;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkExecutionData;
 import software.wings.service.impl.splunk.SplunkLogCollectionCallback;
-import software.wings.service.impl.splunk.SplunkLogMLAnalysisRecord;
-import software.wings.service.impl.splunk.SplunkMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
-import software.wings.service.intfc.splunk.SplunkService;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -76,7 +76,7 @@ public class SplunkV2State extends AbstractAnalysisState {
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
-  @Transient @Inject private SplunkService splunkService;
+  @Transient @Inject private AnalysisService analysisService;
 
   @Transient @SchemaIgnore private ScheduledExecutorService pythonExecutorService;
 
@@ -189,8 +189,8 @@ public class SplunkV2State extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    final SplunkMLAnalysisSummary analysisSummary =
-        splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+    final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
+        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
     if (analysisSummary == null) {
       logger.warn("No analysis summary. This can happen if there is no data with the given queries");
       return generateAnalysisResponse(
@@ -220,8 +220,8 @@ public class SplunkV2State extends AbstractAnalysisState {
       pythonExecutorService.shutdown();
     }
 
-    final SplunkMLAnalysisSummary analysisSummary =
-        splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+    final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
+        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
 
     if (analysisSummary == null) {
       generateAnalysisResponse(context, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
@@ -238,7 +238,8 @@ public class SplunkV2State extends AbstractAnalysisState {
                                             .withCorrelationId(UUID.randomUUID().toString())
                                             .build();
     for (String splunkQuery : query.split(",")) {
-      final SplunkLogMLAnalysisRecord analysisRecord = new SplunkLogMLAnalysisRecord();
+      final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
+      analysisRecord.setStateType(StateType.SPLUNKV2);
       analysisRecord.setApplicationId(context.getAppId());
       analysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
       executionData.setStatus(status);
@@ -246,7 +247,7 @@ public class SplunkV2State extends AbstractAnalysisState {
       analysisRecord.setAnalysisSummaryMessage(message);
       analysisRecord.setControl_events(Collections.emptyMap());
       analysisRecord.setTest_events(Collections.emptyMap());
-      splunkService.saveSplunkAnalysisRecords(analysisRecord);
+      analysisService.saveLogAnalysisRecords(analysisRecord, StateType.SPLUNKV2);
     }
 
     return anExecutionResponse()
@@ -328,8 +329,8 @@ public class SplunkV2State extends AbstractAnalysisState {
 
       for (String query : queries) {
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-            && !splunkService.isLogDataCollected(
-                   applicationId, context.getStateExecutionInstanceId(), query, logCollectionMinute)) {
+            && !analysisService.isLogDataCollected(applicationId, context.getStateExecutionInstanceId(), query,
+                   logCollectionMinute, StateType.SPLUNKV2)) {
           logger.warn("No data collected for minute " + logCollectionMinute + " for application: " + applicationId
               + " stateExecution: " + context.getStateExecutionInstanceId()
               + ". No ML analysis will be run this minute");
@@ -381,7 +382,8 @@ public class SplunkV2State extends AbstractAnalysisState {
 
             switch (result.getExitValue()) {
               case 0:
-                splunkService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime);
+                analysisService.markProcessed(
+                    context.getStateExecutionInstanceId(), context.getAppId(), endTime, StateType.SPLUNKV2);
                 logger.info("Splunk analysis done for " + context.getStateExecutionInstanceId() + "for minute "
                     + logCollectionMinute);
                 attempt += PYTHON_JOB_RETRIES;
@@ -408,8 +410,8 @@ public class SplunkV2State extends AbstractAnalysisState {
       logCollectionMinute++;
 
       // if no data generated till this time, generate a response
-      final SplunkMLAnalysisSummary analysisSummary =
-          splunkService.getAnalysisSummary(context.getStateExecutionInstanceId(), context.getAppId());
+      final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
+          context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
       if (analysisSummary == null) {
         generateAnalysisResponse(context, ExecutionStatus.RUNNING, "No data with given queries has been found yet.");
       }
