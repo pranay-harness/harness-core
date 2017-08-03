@@ -9,6 +9,8 @@ public class Variable {
   private boolean mandatory;
   private String value;
 
+  private VariableType type = VariableType.TEXT;
+
   public String getName() {
     return name;
   }
@@ -39,6 +41,14 @@ public class Variable {
 
   public void setValue(String value) {
     this.value = value;
+  }
+
+  public VariableType getType() {
+    return type;
+  }
+
+  public void setType(VariableType type) {
+    this.type = type;
   }
 
   @Override
@@ -73,6 +83,7 @@ public class Variable {
     private String description;
     private boolean mandatory;
     private String value;
+    private VariableType type = VariableType.TEXT;
 
     private VariableBuilder() {}
 
@@ -100,12 +111,18 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder withType(VariableType type) {
+      this.type = type;
+      return this;
+    }
+
     public Variable build() {
       Variable variable = new Variable();
       variable.setName(name);
       variable.setDescription(description);
       variable.setMandatory(mandatory);
       variable.setValue(value);
+      variable.setType(type);
       return variable;
     }
   }

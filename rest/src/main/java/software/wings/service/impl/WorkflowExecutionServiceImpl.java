@@ -31,9 +31,9 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
-import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
@@ -51,6 +51,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -422,6 +423,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
+    if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (canaryOrchestrationWorkflow.getUserVariables() != null) {
+        stdParams.setWorkflowElement(aWorkflowElement()
+                                         .withVariables(canaryOrchestrationWorkflow.getUserVariables().stream().collect(
+                                             toMap(Variable::getName, Variable::getValue)))
+                                         .build());
+      }
+    }
+
     return triggerExecution(
         workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
   }
@@ -537,12 +549,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
         + String.format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
               workflowExecution.getEnvId(), workflowExecution.getUuid());
-    WorkflowElement workflowElement = aWorkflowElement()
-                                          .withUuid(workflowExecutionId)
-                                          .withName(workflowExecution.getName())
-                                          .withUrl(workflowUrl)
-                                          .build();
-    stdParams.setWorkflowElement(workflowElement);
+    if (stdParams.getWorkflowElement() == null) {
+      stdParams.setWorkflowElement(aWorkflowElement()
+                                       .withUuid(workflowExecutionId)
+                                       .withName(workflowExecution.getName())
+                                       .withUrl(workflowUrl)
+                                       .build());
+    } else {
+      stdParams.getWorkflowElement().setName(workflowExecution.getName());
+      stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
+      stdParams.getWorkflowElement().setUrl(workflowUrl);
+    }
 
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
