@@ -20,7 +20,6 @@ import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
-import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -78,6 +77,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
+  public static final String HARNESS_NEXUS = "Harness Nexus";
+  public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
+  public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
 
   /**
    * The Test folder.
@@ -155,7 +157,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void createGlobalSettings() {
     SettingAttribute jenkinsSettingAttribute =
         aSettingAttribute()
-            .withName("Harness Jenkins")
+            .withName(HARNESS_JENKINS)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(aJenkinsConfig()
@@ -168,7 +170,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
 
     SettingAttribute nexusSettingAttribute = aSettingAttribute()
-                                                 .withName("Harness Nexus")
+                                                 .withName(HARNESS_NEXUS)
                                                  .withCategory(Category.CONNECTOR)
                                                  .withAccountId(accountId)
                                                  .withValue(aNexusConfig()
@@ -182,7 +184,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
-            .withName("Harness BambooService")
+            .withName(HARNESS_BAMBOO_SERVICE)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(BambooConfig.Builder.aBambooConfig()
@@ -195,7 +197,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
 
     SettingAttribute dockerSettingAttribute = aSettingAttribute()
-                                                  .withName("Harness Docker Registry")
+                                                  .withName(HARNESS_DOCKER_REGISTRY)
                                                   .withCategory(Category.CONNECTOR)
                                                   .withAccountId(accountId)
                                                   .withValue(DockerConfig.Builder.aDockerConfig()
@@ -453,11 +455,5 @@ public class DataGenUtil extends BaseIntegrationTest {
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
-  }
-
-  private String randomText(int length) { // TODO: choose words start to word end boundary
-    int low = randomInt(50);
-    int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
-    return randomSeedString.substring(low, high);
   }
 }

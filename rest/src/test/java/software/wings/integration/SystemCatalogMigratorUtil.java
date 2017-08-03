@@ -97,6 +97,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
       systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78-hardened.tar.gz");
       systemCatalog.setVersion("7.0.78");
       systemCatalog.setHardened(true);
+      systemCatalog.setStackRootDirectory("apache-tomcat-7.0.78-hardened");
       systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
     }
     if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15.tar.gz")) {
@@ -131,6 +132,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
       systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15-hardened.tar.gz");
       systemCatalog.setVersion("8.5.15");
       systemCatalog.setHardened(true);
+      systemCatalog.setStackRootDirectory("apache-tomcat-8.5.15-hardened");
       systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
     }
   }
@@ -178,6 +180,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
             storedAppContainer.setHardened(systemCatalog.isHardened());
             storedAppContainer.setDescription(systemCatalog.getNotes());
             storedAppContainer.setFileName(systemCatalog.getFileName());
+            storedAppContainer.setStackRootDirectory(systemCatalog.getStackRootDirectory());
             appContainerService.update(storedAppContainer);
           }
         } catch (Exception e) {

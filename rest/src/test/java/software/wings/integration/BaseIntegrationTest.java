@@ -5,10 +5,13 @@ import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.integration.IntegrationTestUtil.randomInt;
+import static software.wings.integration.SeedData.randomSeedString;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -35,14 +38,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.License;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.JsonSubtypeResolver;
 
@@ -53,6 +59,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -82,6 +89,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;
+  @Inject protected AppService appService;
 
   protected static final char[] JENKINS_PASSWORD = "admin".toCharArray();
   protected static final String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
@@ -95,6 +103,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
   protected static final String DOCKER_USERNAME = "wingsplugins";
   protected static final char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
+  protected static final String HARNESS_JENKINS = "Harness Jenkins";
 
   //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 
@@ -260,5 +269,48 @@ private void addAdminUser() {
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+}
+
+protected Application createApp(String appName) {
+  WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
+  RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
+      Entity.entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
+          APPLICATION_JSON),
+      new GenericType<RestResponse<Application>>() {});
+  assertThat(response.getResource()).isInstanceOf(Application.class);
+  assertThat(response.getResource().getName()).isEqualTo(appName);
+  return response.getResource();
+}
+
+protected Service createService(String appId, Map<String, Object> serviceMap) {
+  WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
+
+  RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
+      Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+  assertThat(response.getResource()).isInstanceOf(Service.class);
+  String serviceId = response.getResource().getUuid();
+  Service service = wingsPersistence.get(Service.class, serviceId);
+  assertThat(service).isNotNull();
+  assertThat(service.getUuid()).isNotNull();
+  return service;
+}
+protected void deleteApp(String appId) {
+  WebTarget target = client.target(API_BASE + "/artifactstreams/?appId=" + appId);
+  RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
+
+  });
+  assertThat(response).isNotNull();
+}
+protected void deleteService(String serviceId) {
+  WebTarget target = client.target(API_BASE + "/services/?appId=" + serviceId);
+  RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
+
+  });
+  assertThat(response).isNotNull();
+}
+protected String randomText(int length) { // TODO: choose words start to word end boundary
+  int low = randomInt(50);
+  int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
+  return randomSeedString.substring(low, high);
 }
 }

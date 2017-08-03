@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import org.mongodb.morphia.mapping.Mapper;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -105,9 +107,16 @@ public class AppContainerServiceImpl implements AppContainerService {
   public AppContainer update(AppContainer appContainer) {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     Validator.notNullCheck("App Stack", storedAppContainer);
-    wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
-        of("name", appContainer.getName(), "description", appContainer.getDescription(), "version",
-            appContainer.getVersion(), "hardened", appContainer.isHardened(), "fileName", appContainer.getFileName()));
+    Map<String, Object> updatedFields = Maps.newHashMap();
+    if (appContainer.getStackRootDirectory() != null) {
+      updatedFields.put("stackRootDirectory", appContainer.getStackRootDirectory());
+    }
+    updatedFields.put("name", appContainer.getName());
+    updatedFields.put("description", appContainer.getDescription());
+    updatedFields.put("version", appContainer.getVersion());
+    updatedFields.put("hardened", appContainer.isHardened());
+    updatedFields.put("fileName", appContainer.getFileName());
+    wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(), updatedFields);
     return get(appContainer.getAccountId(), appContainer.getUuid());
   }
 
