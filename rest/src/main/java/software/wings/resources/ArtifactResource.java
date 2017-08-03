@@ -1,19 +1,14 @@
 package software.wings.resources;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.SortOrder.OrderType.DESC;
-import static software.wings.dl.PageResponse.Builder.*;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ArtifactService;
@@ -21,9 +16,6 @@ import software.wings.service.intfc.ArtifactService;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -73,14 +65,8 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    Comparator<Artifact> byBuildNo = Comparator.comparing(artifact -> artifact.getBuildNo(), Comparator.reverseOrder());
-    PageResponse<Artifact> pageResponse = artifactService.list(pageRequest, false);
-    if (pageResponse != null && pageResponse.getResponse() != null) {
-      List<Artifact> response = pageResponse.getResponse().stream().sorted(byBuildNo).collect(toList());
-      return new RestResponse<>(aPageResponse().withTotal(pageResponse.getTotal()).withResponse(response).build());
-    }
-    return new RestResponse<>(pageResponse);
+    pageRequest.addFilter("appId", appId, EQ);
+    return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 
   /**

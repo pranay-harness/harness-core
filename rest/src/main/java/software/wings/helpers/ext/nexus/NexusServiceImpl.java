@@ -32,6 +32,8 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +49,7 @@ public class NexusServiceImpl implements NexusService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public Map<String, String> getRepositories(final NexusConfig nexusConfig) {
+    logger.info("Retrieving repositories");
     final Map<String, String> repos = new HashMap<>();
     try {
       final Call<RepositoryListResourceResponse> request =
@@ -65,6 +68,7 @@ public class NexusServiceImpl implements NexusService {
       responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
+    logger.info("Retrieving repositories success");
     return repos;
   }
 
@@ -113,7 +117,7 @@ public class NexusServiceImpl implements NexusService {
   public Pair<String, InputStream> downloadArtifact(
       NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version) {
     // First Get the maven
-    logger.debug(
+    logger.info(
         "Downloading artifact of repo {} group {} artifact {} and version  ", repoType, groupId, artifactName, version);
     final Project project = getPomModel(nexusConfig, repoType, groupId, artifactName, version);
     final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/"
@@ -142,13 +146,14 @@ public class NexusServiceImpl implements NexusService {
         if (child.getType().equals("V")) {
           List<IndexBrowserTreeNode> artifacts = child.getChildren();
           for (IndexBrowserTreeNode artifact : artifacts) {
-            if (artifact.getPackaging().equals(project.getPackaging())) {
+            if (!artifact.getNodeName().endsWith("pom")) {
               artifactToUrls.put(artifact.getNodeName(), artifact.getPath());
               final String resourceUrl =
                   getBaseUrl(nexusConfig) + "service/local/repositories/" + repoType + "/content" + artifact.getPath();
               logger.info("Resource url " + resourceUrl);
               try {
-                URL server = new URL(resourceUrl); // works for https and not for http, i needed https in  my case.
+                Authenticator.setDefault(
+                    new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
                 Misc.error(logger, "Error occurred while getting the input stream", ex);
@@ -171,6 +176,7 @@ public class NexusServiceImpl implements NexusService {
   }
 
   public void getGroupIdPaths(NexusConfig nexusConfig, String repoId, String path, List<String> groupIds) {
+    logger.info("Retrieving groupId paths");
     try {
       final String url = getIndexContentPathUrl(nexusConfig, repoId, path);
       final Response<IndexBrowserTreeViewResponse> response =
@@ -202,10 +208,12 @@ public class NexusServiceImpl implements NexusService {
       responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
+    logger.info("Retrieving groupId paths success");
   }
 
   @Override
   public List<String> getGroupIdPaths(NexusConfig nexusConfig, String repoId) {
+    logger.info("Retrieving groupId paths");
     List<String> groupIds = new ArrayList<>();
     try {
       final Call<IndexBrowserTreeViewResponse> request =
@@ -241,12 +249,13 @@ public class NexusServiceImpl implements NexusService {
       responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
-
+    logger.info("Retrieving groupId paths success");
     return groupIds;
   }
 
   @Override
   public List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path) {
+    logger.info("Retrieving Artifact Names");
     final List<String> artifactNames = new ArrayList<>();
     String modifiedPath = getGroupId(path);
     final String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
@@ -274,6 +283,7 @@ public class NexusServiceImpl implements NexusService {
       responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
+    logger.info("Retrieving Artifact Names success");
     return artifactNames;
   }
 
@@ -285,6 +295,7 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
+    logger.info("Retrieving versions");
     String modifiedPath = getGroupId(groupId);
     String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     url = url + artifactName + "/";
@@ -322,14 +333,17 @@ public class NexusServiceImpl implements NexusService {
       responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
+    logger.info("Retrieving versions success");
     return buildDetails;
   }
 
   @Override
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
-    logger.debug("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
+    logger.info("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
     Project project = getPomModel(nexusConfig, repoId, groupId, artifactName, "LATEST");
     String version = project.getVersion() != null ? project.getVersion() : project.getParent().getVersion();
+    // final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/" + version + "/";
+    logger.info("Retrieving the latest version {}", project);
     return aBuildDetails().withNumber(version).withRevision(version).build();
   }
 
@@ -381,7 +395,9 @@ public class NexusServiceImpl implements NexusService {
       if (isSuccessful(response)) {
         project = response.body();
       } else {
-        ErrorCode errorCode = ErrorCode.DEFAULT_ERROR_CODE;
+        logger.error("Error while getting the latest version from Nexus url and queryParams {}. Reason:{}", resolveUrl,
+            queryParams, response.message());
+        ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
         throw new WingsException(errorCode, "message", response.message());
       }
     } catch (IOException e) {
@@ -437,11 +453,24 @@ public class NexusServiceImpl implements NexusService {
     return true;
   }
 
+  static class MyAuthenticator extends Authenticator {
+    private String username, password;
+
+    public MyAuthenticator(String user, String pass) {
+      username = user;
+      password = pass;
+    }
+
+    protected PasswordAuthentication getPasswordAuthentication() {
+      return new PasswordAuthentication(username, password.toCharArray());
+    }
+  }
+
   public static void main(String... args) throws Exception {
     NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
-                                  .withNexusUrl("http://localhost:8081/nexus/")
+                                  .withNexusUrl("https://nexus.wings.software/")
                                   .withUsername("admin")
-                                  .withPassword("admin123".toCharArray())
+                                  .withPassword("wings123!".toCharArray())
                                   .build();
 
     NexusServiceImpl nexusService = new NexusServiceImpl();
@@ -449,18 +478,25 @@ public class NexusServiceImpl implements NexusService {
     // nexusService.getGroupIdPaths(nexusConfig, "releases");
     // List<String> names = nexusService.getArtifactNames(nexusConfig, "releases", null);
 
-    List<BuildDetails> details =
-        nexusService.getVersions(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+    /*List<BuildDetails> details = nexusService
+        .getVersions(nexusConfig, "releases", "org.apache.maven", "maven-artifact");
 
-    details.forEach(name -> { System.out.println(name.getNumber()); });
+    details.forEach(name -> {
+      System.out.println(name.getNumber());
+    });
 
-    Project project =
-        nexusService.getPomModel(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
+    Project project = nexusService
+        .getPomModel(nexusConfig, "releases", "org.apache.maven", "maven-artifact", "LATEST");
 
     System.out.println("Project package type " + project.getPackaging());
 
-    Pair<String, InputStream> map =
-        nexusService.downloadArtifact(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
-    System.out.println("Return inputstream " + map.getValue());
+    Pair<String, InputStream> map = nexusService
+        .downloadArtifact(nexusConfig, "releases", "org.apache.maven", "maven-artifact",
+            "LATEST");
+    System.out.println("Return inputstream " + map.getValue());*/
+
+    List<String> artifactPaths =
+        nexusService.getArtifactPaths(nexusConfig, "releases", "org/apache/maven/maven-artifact/3.0.5/");
+    artifactPaths.forEach(s -> System.out.println("s = " + s));
   }
 }

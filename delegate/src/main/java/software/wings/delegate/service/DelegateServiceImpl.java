@@ -359,8 +359,8 @@ public class DelegateServiceImpl implements DelegateService {
                   .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
                   .build()));
         }
-      } catch (IOException e) {
-        Misc.error(logger, "Exception while sending heartbeat", e);
+      } catch (Exception ex) {
+        Misc.error(logger, "Exception while sending heartbeat", ex);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }

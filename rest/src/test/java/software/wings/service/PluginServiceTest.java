@@ -17,6 +17,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
@@ -40,7 +41,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(15)
+        .hasSize(16)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -106,6 +107,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(ElkConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Elk")
+                .withType("ELK")
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(SmtpConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -168,8 +177,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(15)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GCP",
+        .hasSize(16)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "AWS", "GCP",
             "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "ECR");
   }
 }

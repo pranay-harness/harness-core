@@ -6,6 +6,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesConfig;
@@ -15,6 +16,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.elk.ElkService;
 import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.settings.SettingValue;
 
@@ -32,6 +34,7 @@ public class SettingValidationService {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private SplunkService splunkService;
+  @Inject private ElkService elkService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -51,6 +54,8 @@ public class SettingValidationService {
       kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     } else if (settingValue instanceof SplunkConfig) {
       splunkService.validateConfig(settingAttribute);
+    } else if (settingValue instanceof ElkConfig) {
+      elkService.validateConfig(settingAttribute);
     }
     return true;
   }

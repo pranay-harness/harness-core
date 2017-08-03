@@ -7,8 +7,8 @@ import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.SystemCatalogService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
@@ -18,7 +18,6 @@ import software.wings.utils.Validator;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -50,7 +49,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
     }
     wingsPersistence.updateFields(SystemCatalog.class, systemCatalog.getUuid(),
         of("name", systemCatalog.getName(), "notes", systemCatalog.getNotes(), "version", systemCatalog.getVersion(),
-            "hardened", systemCatalog.isHardened()));
+            "hardened", systemCatalog.isHardened(), "stackRootDirectory", systemCatalog.getStackRootDirectory()));
     return get(systemCatalog.getUuid());
   }
 

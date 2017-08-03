@@ -23,6 +23,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
@@ -122,6 +123,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("SPLUNK")
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema("SPLUNK"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ElkConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Elk")
+            .withType("ELK")
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema("ELK"))
             .build(),
         anAccountPlugin()
             .withSettingClass(SmtpConfig.class)

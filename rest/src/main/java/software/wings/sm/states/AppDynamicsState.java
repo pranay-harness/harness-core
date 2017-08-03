@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.AnalysisComparisonStrategy;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.beans.AppDynamicsConfig;
@@ -26,9 +27,6 @@ import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -40,7 +38,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,19 +70,11 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   @Attributes(title = "Ignore verification failure") private Boolean ignoreVerificationFailure = false;
 
-  @Inject @Transient private WaitNotifyEngine waitNotifyEngine;
-
-  @Inject @Transient private WorkflowExecutionService workflowExecutionService;
-
   @Inject @Transient private AppdynamicsService appdynamicsService;
 
   @Inject @Transient private WingsPersistence wingsPersistence;
 
-  @Inject @Transient private SettingsService settingsService;
-
   @Inject @Transient private AppService appService;
-
-  @Inject @Transient private DelegateService delegateService;
 
   /**
    * Create a new Http State with given name.
@@ -220,7 +209,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
       try {
         wingsPersistence.save(finalMetrics);
       } catch (Exception e) {
-        logger.error("Could not save analysis report", e);
+        Misc.error(logger, "Could not save analysis report", e);
         executionStatus = ExecutionStatus.FAILED;
         executionResponse.getAppDynamicsExecutionData().setErrorMsg(
             "Could not save analysis report, Please contact support");
@@ -286,5 +275,11 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public Logger getLogger() {
     return logger;
+  }
+
+  @Override
+  @SchemaIgnore
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    return super.getComparisonStrategy();
   }
 }

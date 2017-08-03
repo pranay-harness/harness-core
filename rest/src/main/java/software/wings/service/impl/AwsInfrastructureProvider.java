@@ -8,12 +8,16 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -28,6 +32,7 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.ecs.AmazonECSClient;
+import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
@@ -45,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -56,6 +62,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -79,25 +86,29 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Override
   public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    try {
+      AmazonEC2Client amazonEC2Client =
+          awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
+          new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
 
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
-
-    List<Host> awsHosts =
-        describeInstancesResult.getReservations()
-            .stream()
-            .flatMap(reservation -> reservation.getInstances().stream())
-            .map(instance
-                -> aHost()
-                       .withAppId(Base.GLOBAL_APP_ID)
-                       .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
-                       .withPublicDns(instance.getPublicDnsName())
-                       .withEc2Instance(instance)
-                       .build())
-            .collect(toList());
-    return aPageResponse().withResponse(awsHosts).build();
+      List<Host> awsHosts =
+          describeInstancesResult.getReservations()
+              .stream()
+              .flatMap(reservation -> reservation.getInstances().stream())
+              .map(instance
+                  -> aHost()
+                         .withAppId(Base.GLOBAL_APP_ID)
+                         .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                         .withPublicDns(instance.getPublicDnsName())
+                         .withEc2Instance(instance)
+                         .build())
+              .collect(toList());
+      return aPageResponse().withResponse(awsHosts).build();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return aPageResponse().withResponse(new ArrayList()).build();
   }
 
   @Override
@@ -248,43 +259,63 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    // TODO:: remove direct usage of LaunchConfiguration
-    return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
+    try {
+      AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
+          Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      // TODO:: remove direct usage of LaunchConfiguration
+      return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonECSClient amazonEcsClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    ListClustersResult listClustersResult = amazonEcsClient.listClusters(new ListClustersRequest());
-    return listClustersResult.getClusterArns().stream().map(awsHelperService::getIdFromArn).collect(toList());
+    try {
+      AmazonECSClient amazonEcsClient =
+          awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      ListClustersResult listClustersResult = amazonEcsClient.listClusters(new ListClustersRequest());
+      return listClustersResult.getClusterArns().stream().map(awsHelperService::getIdFromArn).collect(toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listAMIs(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
-    imageIds.addAll(Lists
-                        .newArrayList(amazonEC2Client
-                                          .describeImages(new DescribeImagesRequest().withFilters(
-                                              new Filter().withName("is-public").withValues("false"),
-                                              new Filter().withName("state").withValues("available"),
-                                              new Filter().withName("virtualization-type").withValues("hvm")))
-                                          .getImages())
-                        .stream()
-                        .map(Image::getImageId)
-                        .collect(toList()));
-    return imageIds;
+    try {
+      AmazonEC2Client amazonEC2Client =
+          awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
+      imageIds.addAll(Lists
+                          .newArrayList(amazonEC2Client
+                                            .describeImages(new DescribeImagesRequest().withFilters(
+                                                new Filter().withName("is-public").withValues("false"),
+                                                new Filter().withName("state").withValues("available"),
+                                                new Filter().withName("virtualization-type").withValues("hvm")))
+                                            .getImages())
+                          .stream()
+                          .map(Image::getImageId)
+                          .collect(toList()));
+      return imageIds;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listRegions(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonEC2Client amazonEC2Client = awsHelperService.getAmazonEc2Client(
-        Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
+    try {
+      AmazonEC2Client amazonEC2Client = awsHelperService.getAmazonEc2Client(
+          Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listInstanceTypes(SettingAttribute computeProviderSetting) {
@@ -293,94 +324,140 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listIAMInstanceRoles(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonIdentityManagementClient amazonIdentityManagementClient =
-        awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    return amazonIdentityManagementClient.listInstanceProfiles()
-        .getInstanceProfiles()
-        .stream()
-        .map(InstanceProfile::getInstanceProfileName)
-        .collect(toList());
+    try {
+      AmazonIdentityManagementClient amazonIdentityManagementClient =
+          awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonIdentityManagementClient.listInstanceProfiles()
+          .getInstanceProfiles()
+          .stream()
+          .map(InstanceProfile::getInstanceProfileName)
+          .collect(toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public Map<String, String> listIAMRoles(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonIdentityManagementClient amazonIdentityManagementClient =
-        awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    try {
+      AmazonIdentityManagementClient amazonIdentityManagementClient =
+          awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-    return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
-        .getRoles()
-        .stream()
-        .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
+      return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
+          .getRoles()
+          .stream()
+          .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Maps.newHashMap();
   }
 
   public List<String> listVPCs(String region, SettingAttribute computeProviderSetting) {
     List<String> results = Lists.newArrayList();
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    results.addAll(
-        amazonEC2Client
-            .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"),
-                new Filter().withName("isDefault").withValues("true")))
-            .getVpcs()
-            .stream()
-            .map(Vpc::getVpcId)
-            .collect(toList()));
-    results.addAll(
-        amazonEC2Client
-            .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"),
-                new Filter().withName("isDefault").withValues("false")))
-            .getVpcs()
-            .stream()
-            .map(Vpc::getVpcId)
-            .collect(toList()));
+    try {
+      AmazonEC2Client amazonEC2Client =
+          awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      results.addAll(amazonEC2Client
+                         .describeVpcs(new DescribeVpcsRequest().withFilters(
+                             new Filter().withName("state").withValues("available"),
+                             new Filter().withName("isDefault").withValues("true")))
+                         .getVpcs()
+                         .stream()
+                         .map(Vpc::getVpcId)
+                         .collect(toList()));
+      results.addAll(amazonEC2Client
+                         .describeVpcs(new DescribeVpcsRequest().withFilters(
+                             new Filter().withName("state").withValues("available"),
+                             new Filter().withName("isDefault").withValues("false")))
+                         .getVpcs()
+                         .stream()
+                         .map(Vpc::getVpcId)
+                         .collect(toList()));
+      return results;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
     return results;
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    try {
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+          awsHelperService.getAmazonElasticLoadBalancingClient(
+              Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getAmazonElasticLoadBalancingClient(
-            Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-    return amazonElasticLoadBalancingClient.describeLoadBalancers(new DescribeLoadBalancersRequest().withPageSize(400))
-        .getLoadBalancers()
-        .stream()
-        .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
-        .map(LoadBalancer::getLoadBalancerName)
-        .collect(Collectors.toList());
+      return amazonElasticLoadBalancingClient
+          .describeLoadBalancers(new DescribeLoadBalancersRequest().withPageSize(400))
+          .getLoadBalancers()
+          .stream()
+          .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
+          .map(LoadBalancer::getLoadBalancerName)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-
-    List<LoadBalancerDescription> describeLoadBalancers =
-        awsHelperService.getLoadBalancerDescriptions(region, awsConfig);
-    return describeLoadBalancers.stream()
-        .map(LoadBalancerDescription::getLoadBalancerName)
-        .collect(Collectors.toList());
+    try {
+      List<LoadBalancerDescription> describeLoadBalancers =
+          awsHelperService.getLoadBalancerDescriptions(region, awsConfig);
+      return describeLoadBalancers.stream()
+          .map(LoadBalancerDescription::getLoadBalancerName)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
-    com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getClassicElbClient(Regions.valueOf(region), accessKey, secretKey);
+    try {
+      com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+          awsHelperService.getClassicElbClient(Regions.valueOf(region), accessKey, secretKey);
 
-    return amazonElasticLoadBalancingClient
-        .describeLoadBalancers(
-            new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
-        .getLoadBalancerDescriptions()
-        .stream()
-        .map(LoadBalancerDescription::getLoadBalancerName)
-        .collect(Collectors.toList());
+      return amazonElasticLoadBalancingClient
+          .describeLoadBalancers(
+              new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
+          .getLoadBalancerDescriptions()
+          .stream()
+          .map(LoadBalancerDescription::getLoadBalancerName)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ArrayList<>();
   }
 
   public Map<String, String> listTargetGroups(
       SettingAttribute computeProviderSetting, String region, String loadBalancerName) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    try {
+      List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForElb(region, loadBalancerName, awsConfig);
+      return targetGroups.stream().collect(
+          Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Maps.newHashMap();
+  }
 
-    List<TargetGroup> targetGroups = awsHelperService.listTargetGroupsForElb(region, loadBalancerName, awsConfig);
-    return targetGroups.stream().collect(
-        Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
+  private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
+    Misc.error(logger, "AWS API call exception", amazonServiceException);
+    if (amazonServiceException instanceof AmazonCodeDeployException) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
+    } else if (amazonServiceException instanceof AmazonEC2Exception) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    } else if (amazonServiceException instanceof AmazonECSException) {
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    }
+    logger.error("Unhandled aws exception");
+    throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
   }
 }

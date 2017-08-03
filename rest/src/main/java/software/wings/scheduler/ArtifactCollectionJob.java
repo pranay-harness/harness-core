@@ -93,15 +93,17 @@ public class ArtifactCollectionJob implements Job {
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      logger.debug("Collecting Artifact for artifact stream {} ", NEXUS.name());
+      logger.info("Collecting Artifact for artifact stream {} ", NEXUS.name());
       BuildDetails latestVersion =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
+      logger.info("Latest version in Nexus server {}", latestVersion);
       if (latestVersion != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
         String buildNo =
             (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
             ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
             : "";
+        logger.info("Last collected Nexus artifact version {} ", buildNo);
         if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
           logger.info(
               "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",

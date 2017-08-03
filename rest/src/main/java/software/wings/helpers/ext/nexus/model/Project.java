@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.nexus.model;
 
+import com.google.common.base.MoreObjects;
+
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -74,5 +76,18 @@ public class Project implements Serializable {
 
   public void setParent(Parent parent) {
     this.parent = parent;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("modelVersion", modelVersion)
+        .add("groupId", groupId)
+        .add("artifactId", artifactId)
+        .add("version", version)
+        .add("packaging", packaging)
+        .add("description", description)
+        .add("parent", parent)
+        .toString();
   }
 }

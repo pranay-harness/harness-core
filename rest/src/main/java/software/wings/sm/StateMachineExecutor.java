@@ -258,7 +258,7 @@ public class StateMachineExecutor {
     if (!updated) {
       WingsException ex =
           new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
-      logger.error(ex.getMessage(), ex);
+      Misc.error(logger, ex.getMessage(), ex);
       throw ex;
     }
     State currentState =
@@ -830,7 +830,7 @@ public class StateMachineExecutor {
         && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
       WingsException ex = new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid()
           + " status is no longer in RUNNING/PAUSED state");
-      logger.error(ex.getMessage(), ex);
+      Misc.error(logger, ex.getMessage(), ex);
       throw ex;
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);

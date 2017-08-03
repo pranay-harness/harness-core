@@ -187,7 +187,7 @@ public class JsonUtils {
       // No filters used in this.
       return objectMapper.writer(filterProvider).writeValueAsString(obj);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
+      logException(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -219,7 +219,7 @@ public class JsonUtils {
     try {
       return objectMapper.readValue(jsonString, classToConvert);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
+      logException(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -379,7 +379,7 @@ public class JsonUtils {
     try {
       return objectMapper.readTree(json);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logException(e.getMessage(), e);
       Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw Throwables.propagate(e);
     }
@@ -424,11 +424,11 @@ public class JsonUtils {
   }
 
   private static void logException(String msg, Throwable t) {
-    logger.error(msg, t);
+    logger.error(msg);
     while (t != null) {
-      logger.error("***** Caused by: " + t.getClass().getCanonicalName()
-          + (t.getMessage() != null ? ": " + t.getMessage() : ""));
-      Arrays.stream(t.getStackTrace()).forEach(elem -> logger.error(" --- Trace: " + elem));
+      logger.warn(
+          "Caused by: " + t.getClass().getCanonicalName() + (t.getMessage() != null ? ": " + t.getMessage() : ""));
+      Arrays.stream(t.getStackTrace()).forEach(elem -> logger.warn("\tat " + elem));
       t = t.getCause();
     }
   }
