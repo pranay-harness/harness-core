@@ -55,7 +55,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    getLogger().debug("Executing splunk state");
+    getLogger().debug("Executing analysis state");
 
     Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
@@ -72,7 +72,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             "Skipping analysis due to lack of baseline data (First time deployment).");
       }
 
-      triggerAnalysisDataCollection(context);
+      triggerAnalysisDataCollection(context, canaryNewHostNames);
       getLogger().warn(
           "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, getAnalysisServerConfigId(),
@@ -98,7 +98,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
-    triggerAnalysisDataCollection(context);
+    Set<String> hostsToBeCollected = new HashSet<>();
+    hostsToBeCollected.addAll(lastExecutionNodes);
+    hostsToBeCollected.addAll(canaryNewHostNames);
+    triggerAnalysisDataCollection(context, hostsToBeCollected);
 
     final LogAnalysisResponse response = aLogAnalysisResponse()
                                              .withLogAnalysisExecutionData(executionData)

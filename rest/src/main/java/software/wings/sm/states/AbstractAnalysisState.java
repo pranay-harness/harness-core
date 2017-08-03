@@ -163,7 +163,7 @@ public abstract class AbstractAnalysisState extends State {
 
   abstract public void setAnalysisServerConfigId(String analysisServerConfigId);
 
-  protected abstract void triggerAnalysisDataCollection(ExecutionContext context);
+  protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
 
   @SchemaIgnore protected abstract Runnable getLogAnanlysisGenerator(ExecutionContext context);
 

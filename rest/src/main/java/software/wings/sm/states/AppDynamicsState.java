@@ -112,7 +112,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
-    triggerAnalysisDataCollection(context);
+    triggerAnalysisDataCollection(context, null);
     final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -181,7 +181,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context) {
+  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");

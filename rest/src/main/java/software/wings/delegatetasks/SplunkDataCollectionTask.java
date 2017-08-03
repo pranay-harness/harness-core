@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static software.wings.service.impl.splunk.SplunkDataCollectionTaskResult.Builder.aSplunkDataCollectionTaskResult;
+import static software.wings.service.impl.analysis.LogDataCollectionTaskResult.Builder.aLogDataCollectionTaskResult;
 
 import com.splunk.HttpService;
 import com.splunk.Job;
@@ -14,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SplunkConfig;
+import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
-import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult;
-import software.wings.service.impl.splunk.SplunkDataCollectionTaskResult.SplunkDataCollectionTaskStatus;
+import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.Misc;
@@ -37,8 +37,8 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<SplunkDataCollectionTaskResult> {
-  public static final int DELAY_MINUTES = 2;
+public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
+  public static final int DELAY_MINUTES = 0;
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private final Object lockObject = new Object();
@@ -47,12 +47,12 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
   @Inject private SplunkMetricStoreService splunkMetricStoreService;
 
   public SplunkDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<SplunkDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<LogDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
   @Override
-  public SplunkDataCollectionTaskResult run(Object[] parameters) {
+  public LogDataCollectionTaskResult run(Object[] parameters) {
     final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
 
@@ -92,7 +92,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<Splun
         }
       }
     }
-    return aSplunkDataCollectionTaskResult().withStatus(SplunkDataCollectionTaskStatus.SUCCESS).build();
+    return aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(

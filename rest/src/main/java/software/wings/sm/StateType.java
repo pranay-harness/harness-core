@@ -51,6 +51,7 @@ import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.ElasticLoadBalancerState;
+import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -134,7 +135,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Elk state type.
    */
-  ELK(SplunkV2State.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

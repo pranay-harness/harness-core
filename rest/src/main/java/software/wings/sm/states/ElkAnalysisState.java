@@ -16,15 +16,15 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.AnalysisComparisonStrategy;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
-import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -41,18 +41,18 @@ import java.util.Set;
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
-public class SplunkV2State extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
+public class ElkAnalysisState extends AbstractLogAnalysisState {
+  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 
   private static final String SPLUNKML_ROOT = "SPLUNKML_ROOT";
   private static final String SPLUNKML_SHELL_FILE_NAME = "run_splunkml.sh";
 
-  @EnumData(enumDataProvider = SplunkSettingProvider.class)
-  @Attributes(required = true, title = "Splunk Server")
+  @EnumData(enumDataProvider = ElkSettingProvider.class)
+  @Attributes(required = true, title = "Elastic Search Server")
   private String analysisServerConfigId;
 
-  public SplunkV2State(String name) {
-    super(name, StateType.SPLUNKV2.getType());
+  public ElkAnalysisState(String name) {
+    super(name, StateType.ELK.getType());
   }
 
   @Override
@@ -61,18 +61,18 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
+      throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
     }
 
-    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+    final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
+    final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
+        getWorkflowId(context), elkConfig, queries, hosts, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
+                                    .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
@@ -96,10 +96,10 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @Override
   @SchemaIgnore
   protected Runnable getLogAnanlysisGenerator(ExecutionContext context) {
-    return new SplunkAnalysisGenerator(context);
+    return new ElkAnalysisGenerator(context);
   }
 
-  private class SplunkAnalysisGenerator implements Runnable {
+  private class ElkAnalysisGenerator implements Runnable {
     private final ExecutionContext context;
     private final String pythonScriptRoot;
     private final String serverUrl;
@@ -111,15 +111,15 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     private final Set<String> queries;
     private int logCollectionMinute = 0;
 
-    public SplunkAnalysisGenerator(ExecutionContext context) {
+    public ElkAnalysisGenerator(ExecutionContext context) {
       this.context = context;
       this.pythonScriptRoot = System.getenv(SPLUNKML_ROOT);
       Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
 
-      String protocol = SplunkV2State.this.configuration.isSslEnabled() ? "https" : "http";
-      this.serverUrl = protocol + "://localhost:" + SplunkV2State.this.configuration.getApplicationPort();
+      String protocol = ElkAnalysisState.this.configuration.isSslEnabled() ? "https" : "http";
+      this.serverUrl = protocol + "://localhost:" + ElkAnalysisState.this.configuration.getApplicationPort();
       this.applicationId = context.getAppId();
-      this.accountId = SplunkV2State.this.appService.get(this.applicationId).getAccountId();
+      this.accountId = ElkAnalysisState.this.appService.get(this.applicationId).getAccountId();
       this.workflowId = getWorkflowId(context);
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
@@ -129,6 +129,9 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
     @Override
     public void run() {
+      if (true) {
+        return;
+      }
       if (logCollectionMinute > Integer.parseInt(timeDuration)) {
         return;
       }
