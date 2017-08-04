@@ -1,10 +1,8 @@
 package software.wings.service.impl.elk;
 
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.entity.ContentType;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -41,7 +39,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = getElkRestClient(elkConfig).search(logFetchRequest.toElasticSearchJson());
+    final Call<Object> request = getElkRestClient(elkConfig).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();

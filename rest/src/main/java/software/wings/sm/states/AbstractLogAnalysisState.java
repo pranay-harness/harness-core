@@ -3,11 +3,17 @@ package software.wings.sm.states;
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.AnalysisComparisonStrategy;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.metrics.RiskLevel;
@@ -20,10 +26,14 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
+import software.wings.time.WingsTimeUtils;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -35,6 +45,9 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
+  protected static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
+  protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
+
   protected String query;
 
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
@@ -79,6 +92,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           "Skipping analysis due to lack of baseline data (First time deployment).");
     }
 
+    lastExecutionNodes.removeAll(canaryNewHostNames);
+    if (lastExecutionNodes.isEmpty()) {
+      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED, getAnalysisServerConfigId(),
+          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
+    }
+
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
             .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
@@ -91,13 +111,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .withCorrelationId(UUID.randomUUID().toString())
             .build();
 
-    lastExecutionNodes.removeAll(canaryNewHostNames);
-    if (lastExecutionNodes.isEmpty()) {
-      getLogger().error("Control and test nodes are same. Will not be running splunk analysis");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED, getAnalysisServerConfigId(),
-          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
-    }
-
     Set<String> hostsToBeCollected = new HashSet<>();
     hostsToBeCollected.addAll(lastExecutionNodes);
     hostsToBeCollected.addAll(canaryNewHostNames);
@@ -107,17 +120,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                              .withLogAnalysisExecutionData(executionData)
                                              .withExecutionStatus(ExecutionStatus.SUCCESS)
                                              .build();
-    pythonExecutorService = createPythonExecutorService(context);
-    final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.schedule(() -> {
-      try {
-        pythonExecutorService.shutdown();
-        pythonExecutorService.awaitTermination(1, TimeUnit.MINUTES);
-        waitNotifyEngine.notify(executionData.getCorrelationId(), response);
-      } catch (InterruptedException e) {
-        pythonExecutorService.shutdown();
-      }
-    }, Long.parseLong(timeDuration) + SplunkDataCollectionTask.DELAY_MINUTES + 1, TimeUnit.MINUTES);
+    pythonExecutorService = createPythonExecutorService(context, response);
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
@@ -127,10 +130,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .build();
   }
 
+  private void shutDownGenerator(LogAnalysisResponse response) {
+    waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
+    pythonExecutorService.shutdown();
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
+        context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(getStateType()));
     if (analysisSummary == null) {
       getLogger().warn("No analysis summary. This can happen if there is no data with the given queries");
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, getAnalysisServerConfigId(),
@@ -161,7 +169,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionInstanceId(), context.getAppId(), StateType.SPLUNKV2);
+        context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(getStateType()));
 
     if (analysisSummary == null) {
       generateAnalysisResponse(
@@ -169,14 +177,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context) {
+  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context, LogAnalysisResponse response) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        getLogAnanlysisGenerator(context), SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
+        new LogMLAnalysisGenerator(context, response), SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
-
-  @SchemaIgnore protected abstract Runnable getLogAnanlysisGenerator(ExecutionContext context);
 
   protected ExecutionResponse generateAnalysisResponse(
       ExecutionContext context, ExecutionStatus status, String serverConfigId, String message) {
@@ -188,17 +194,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                                  .withStatus(status)
                                                  .withCorrelationId(UUID.randomUUID().toString())
                                                  .build();
-    for (String splunkQuery : query.split(",")) {
+    for (String logQuery : query.split(",")) {
       final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
       analysisRecord.setStateType(StateType.valueOf(getStateType()));
       analysisRecord.setApplicationId(context.getAppId());
       analysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
       executionData.setStatus(status);
-      analysisRecord.setQuery(splunkQuery);
+      analysisRecord.setQuery(logQuery);
       analysisRecord.setAnalysisSummaryMessage(message);
       analysisRecord.setControl_events(Collections.emptyMap());
       analysisRecord.setTest_events(Collections.emptyMap());
-      analysisService.saveLogAnalysisRecords(analysisRecord, StateType.SPLUNKV2);
+      analysisService.saveLogAnalysisRecords(analysisRecord, StateType.valueOf(getStateType()));
     }
 
     return anExecutionResponse()
@@ -207,5 +213,141 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .withStateExecutionData(executionData)
         .withErrorMessage(message)
         .build();
+  }
+
+  @SchemaIgnore protected abstract String getStateBaseUrl();
+
+  private class LogMLAnalysisGenerator implements Runnable {
+    private final ExecutionContext context;
+    private final LogAnalysisResponse logAnalysisResponse;
+    private final String pythonScriptRoot;
+    private final String serverUrl;
+    private final String accountId;
+    private final String applicationId;
+    private final String workflowId;
+    private final Set<String> testNodes;
+    private final Set<String> controlNodes;
+    private final Set<String> queries;
+    private int logAnalysisMinute = 0;
+
+    public LogMLAnalysisGenerator(ExecutionContext context, LogAnalysisResponse logAnalysisResponse) {
+      this.context = context;
+      this.logAnalysisResponse = logAnalysisResponse;
+      this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
+      Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
+
+      String protocol = AbstractLogAnalysisState.this.configuration.isSslEnabled() ? "https" : "http";
+      this.serverUrl = protocol + "://localhost:" + AbstractLogAnalysisState.this.configuration.getApplicationPort();
+      this.applicationId = context.getAppId();
+      this.accountId = AbstractLogAnalysisState.this.appService.get(this.applicationId).getAccountId();
+      this.workflowId = getWorkflowId(context);
+      this.testNodes = getCanaryNewHostNames(context);
+      this.controlNodes = getLastExecutionNodes(context);
+      this.controlNodes.removeAll(this.testNodes);
+      this.queries = Sets.newHashSet(query.split(","));
+    }
+
+    @Override
+    public void run() {
+      if (logAnalysisMinute > Integer.parseInt(timeDuration)) {
+        return;
+      }
+
+      for (String query : queries) {
+        if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+            && !analysisService.isLogDataCollected(applicationId, context.getStateExecutionInstanceId(), query,
+                   logAnalysisMinute, StateType.valueOf(getStateType()))) {
+          getLogger().warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
+              + " stateExecution: " + context.getStateExecutionInstanceId()
+              + ". No ML analysis will be run this minute");
+          continue;
+        }
+
+        try {
+          final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
+          final String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl() + "/get-logs?accountId=" + accountId
+              + "&compareCurrent=true";
+          String controlInputUrl =
+              this.serverUrl + "/api/" + getStateBaseUrl() + "/get-logs?accountId=" + accountId + "&compareCurrent=";
+          controlInputUrl = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+              ? controlInputUrl + true
+              : controlInputUrl + false;
+          final String logAnalysisSaveUrl = this.serverUrl + "/api/" + getStateBaseUrl()
+              + "/save-analysis-records?accountId=" + accountId + "&applicationId=" + applicationId
+              + "&stateExecutionId=" + context.getStateExecutionInstanceId();
+          final String logAnalysisGetUrl =
+              this.serverUrl + "/api/" + getStateBaseUrl() + "/get-analysis-records?accountId=" + accountId;
+          final List<String> command = new ArrayList<>();
+          command.add(this.pythonScriptRoot + "/" + LOG_ML_SHELL_FILE_NAME);
+          command.add("--query=" + query);
+          command.add("--control_input_url");
+          command.add(controlInputUrl);
+          command.add("--test_input_url");
+          command.add(testInputUrl);
+          command.add("--auth_token=" + generateAuthToken());
+          command.add("--application_id=" + applicationId);
+          command.add("--workflow_id=" + workflowId);
+          command.add("--control_nodes");
+          command.addAll(controlNodes);
+          command.add("--test_nodes");
+          command.addAll(testNodes);
+          command.add("--sim_threshold");
+          command.add(String.valueOf(0.9));
+          command.add("--log_collection_minute");
+          command.add(String.valueOf(logAnalysisMinute));
+          command.add("--state_execution_id=" + context.getStateExecutionInstanceId());
+          command.add("--log_analysis_save_url");
+          command.add(logAnalysisSaveUrl);
+          command.add("--log_analysis_get_url");
+          command.add(logAnalysisGetUrl);
+
+          for (int attempt = 0; attempt < PYTHON_JOB_RETRIES; attempt++) {
+            final ProcessResult result = new ProcessExecutor(command)
+                                             .redirectOutput(Slf4jStream
+                                                                 .of(LoggerFactory.getLogger(getClass().getName() + "."
+                                                                     + context.getStateExecutionInstanceId()))
+                                                                 .asInfo())
+                                             .execute();
+
+            switch (result.getExitValue()) {
+              case 0:
+                analysisService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime,
+                    StateType.valueOf(getStateType()));
+                getLogger().info("Log analysis done for " + context.getStateExecutionInstanceId() + "for minute "
+                    + logAnalysisMinute);
+                attempt += PYTHON_JOB_RETRIES;
+                break;
+              case 2:
+                getLogger().warn("No test data from the deployed nodes " + context.getStateExecutionInstanceId()
+                    + "for minute " + logAnalysisMinute);
+                attempt += PYTHON_JOB_RETRIES;
+                break;
+              default:
+                getLogger().error("Log analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+                    + logAnalysisMinute + " trial: " + (attempt + 1));
+                Thread.sleep(2000);
+            }
+          }
+
+        } catch (Exception e) {
+          Misc.error(getLogger(),
+              "Log analysis failed for " + context.getStateExecutionInstanceId() + "for minute " + logAnalysisMinute,
+              e);
+        }
+      }
+      logAnalysisMinute++;
+
+      // if no data generated till this time, generate a response
+      final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
+          context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(getStateType()));
+      if (analysisSummary == null) {
+        generateAnalysisResponse(context, ExecutionStatus.RUNNING, getAnalysisServerConfigId(),
+            "No data with given queries has been found yet.");
+      }
+
+      if (logAnalysisMinute >= Integer.parseInt(timeDuration)) {
+        shutDownGenerator(logAnalysisResponse);
+      }
+    }
   }
 }

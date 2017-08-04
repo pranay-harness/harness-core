@@ -18,6 +18,7 @@ import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.Misc;
 
@@ -38,13 +39,13 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
-  public static final int DELAY_MINUTES = 0;
+  public static final int DELAY_MINUTES = 2;
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private final Object lockObject = new Object();
   private final AtomicBoolean completed = new AtomicBoolean(false);
 
-  @Inject private SplunkMetricStoreService splunkMetricStoreService;
+  @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public SplunkDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<LogDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
@@ -99,7 +100,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
       SplunkDataCollectionInfo dataCollectionInfo, Service splunkService) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        new SplunkDataCollector(dataCollectionInfo, splunkService, splunkMetricStoreService), DELAY_MINUTES, 1,
+        new SplunkDataCollector(dataCollectionInfo, splunkService, logAnalysisStoreService), DELAY_MINUTES, 1,
         TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
@@ -107,15 +108,15 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
   private static class SplunkDataCollector implements Runnable {
     private final SplunkDataCollectionInfo dataCollectionInfo;
     private final Service splunkService;
-    private final SplunkMetricStoreService splunkMetricStoreService;
+    private final LogAnalysisStoreService logAnalysisStoreService;
     private long collectionStartTime;
     private int logCollectionMinute = 0;
 
     private SplunkDataCollector(SplunkDataCollectionInfo dataCollectionInfo, Service splunkService,
-        SplunkMetricStoreService splunkMetricStoreService) {
+        LogAnalysisStoreService logAnalysisStoreService) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.splunkService = splunkService;
-      this.splunkMetricStoreService = splunkMetricStoreService;
+      this.logAnalysisStoreService = logAnalysisStoreService;
       this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
     }
 
@@ -166,8 +167,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
             logElements.add(splunkLogElement);
           }
           resultsReader.close();
-          splunkMetricStoreService.save(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
-              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(), logElements);
+          logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+              dataCollectionInfo.getWorkflowId(), logElements);
           logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);

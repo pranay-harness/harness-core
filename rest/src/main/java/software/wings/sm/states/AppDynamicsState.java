@@ -245,12 +245,6 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   @Override
   @SchemaIgnore
-  protected Runnable getLogAnanlysisGenerator(ExecutionContext context) {
-    throw new NotImplementedException();
-  }
-
-  @Override
-  @SchemaIgnore
   public AnalysisComparisonStrategy getComparisonStrategy() {
     throw new NotImplementedException();
   }

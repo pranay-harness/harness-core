@@ -25,6 +25,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 
 import java.util.List;
 
@@ -80,8 +81,13 @@ public interface ManagerClient {
       @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
       @Body List<AppdynamicsMetricData> metricData);
 
-  @POST("splunk/save-logs")
+  @POST(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
+      @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
+      @Body List<LogElement> metricData);
+
+  @POST(LogAnalysisResource.ELK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
+  Call<RestResponse<Boolean>> saveElkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
       @Body List<LogElement> metricData);
 

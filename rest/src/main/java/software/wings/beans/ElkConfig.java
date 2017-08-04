@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.security.annotations.Encrypted;
@@ -16,6 +17,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("ELK")
 @Data
+@ToString(exclude = "password")
 public class ElkConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;

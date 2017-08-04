@@ -165,8 +165,6 @@ public abstract class AbstractAnalysisState extends State {
 
   protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
 
-  @SchemaIgnore protected abstract Runnable getLogAnanlysisGenerator(ExecutionContext context);
-
   protected String generateAuthToken() throws UnsupportedEncodingException {
     final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
     if (jwtExternalServiceSecret == null) {

@@ -14,5 +14,5 @@ public interface ElkRestClient {
   @GET("_xpack/security/_authenticate")
   Call<ElkAuthenticationResponse> authenticate(@Header("Authorization") String authorization);
 
-  @POST("_search") Call<Object> search(@Body String elkLogFetchRequest);
+  @POST("_search?size=10000") Call<Object> search(@Body Object elkLogFetchRequest);
 }

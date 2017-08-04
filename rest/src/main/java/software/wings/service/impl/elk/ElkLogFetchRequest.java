@@ -3,6 +3,7 @@ package software.wings.service.impl.elk;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.json.JSONObject;
+import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +24,7 @@ public class ElkLogFetchRequest {
   private final long startTime;
   private final long endTime;
 
-  public String toElasticSearchJson() {
+  public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
       hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put("beat.hostname", host)));
@@ -45,7 +46,8 @@ public class ElkLogFetchRequest {
     mustArrayObjects.get("must").add(boolObject);
     mustArrayObjects.get("must").add(rangeObject);
 
-    return new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
+    String jsonOut = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
+    return JsonUtils.asObject(jsonOut, Object.class);
   }
 
   public static void main(String[] args) {
@@ -53,6 +55,8 @@ public class ElkLogFetchRequest {
     hosts.add("cdcd");
     hosts.add("csdcd");
 
-    System.out.println(new ElkLogFetchRequest("dssdcsd", hosts, 38465l, 98344l).toElasticSearchJson());
+    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest("dssdcsd", hosts, 38465l, 98344l);
+    Object jsonObject = elkLogFetchRequest.toElasticSearchJsonObject();
+    System.out.println(jsonObject);
   }
 }

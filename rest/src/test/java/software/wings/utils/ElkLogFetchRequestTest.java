@@ -51,6 +51,6 @@ public class ElkLogFetchRequestTest {
 
     String expectedJson = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
 
-    Assert.assertEquals(expectedJson, elkLogFetchRequest.toElasticSearchJson());
+    Assert.assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 }

@@ -46,6 +46,8 @@ public class LogAnalysisExecutionData extends StateExecutionData {
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
     if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
       elapsedMinutes = 0;
+    } else {
+      elapsedMinutes = elapsedMinutes - (SplunkDataCollectionTask.DELAY_MINUTES + 1);
     }
     final CountsByStatuses breakdown = new CountsByStatuses();
     if (getStatus() == ExecutionStatus.FAILED) {
