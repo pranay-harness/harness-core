@@ -29,6 +29,7 @@ public class ExecutionArgs {
   private ErrorStrategy errorStrategy;
   private boolean triggeredFromPipeline;
   private String pipelineId;
+  private Map<String, String> workflowVariables;
 
   /**
    * Gets service id.
@@ -250,5 +251,13 @@ public class ExecutionArgs {
    */
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;
+  }
+
+  public Map<String, String> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  public void setWorkflowVariables(Map<String, String> workflowVariables) {
+    this.workflowVariables = workflowVariables;
   }
 }

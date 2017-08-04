@@ -1243,8 +1243,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateUserVariables() {
     Workflow workflow1 = createCanaryWorkflow();
-
-    List<Variable> userVariables = newArrayList(aVariable().build());
+    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     List<Variable> updated =
         workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
 

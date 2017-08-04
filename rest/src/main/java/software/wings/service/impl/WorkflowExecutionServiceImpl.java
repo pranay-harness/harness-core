@@ -100,6 +100,7 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -411,6 +412,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()
             == OrchestrationWorkflowType.MULTI_SERVICE) {
       stdParams = new CanaryWorkflowStandardParams();
+
+      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+        if (canaryOrchestrationWorkflow.getUserVariables() != null) {
+          stdParams.setWorkflowElement(
+              aWorkflowElement()
+                  .withVariables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
+                  .build());
+        }
+      }
     } else {
       stdParams = new WorkflowStandardParams();
     }
@@ -423,19 +435,36 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-      if (canaryOrchestrationWorkflow.getUserVariables() != null) {
-        stdParams.setWorkflowElement(aWorkflowElement()
-                                         .withVariables(canaryOrchestrationWorkflow.getUserVariables().stream().collect(
-                                             toMap(Variable::getName, Variable::getValue)))
-                                         .build());
-      }
-    }
-
     return triggerExecution(
         workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
+  }
+
+  private Map<String, Object> getWorkflowVariables(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, ExecutionArgs executionArgs) {
+    Map<String, Object> variables = new HashMap<>();
+    if (orchestrationWorkflow.getUserVariables() == null) {
+      return variables;
+    }
+    for (Variable variable : orchestrationWorkflow.getUserVariables()) {
+      if (variable.isFixed()) {
+        variables.put(variable.getName(), variable.getValue());
+        continue;
+      }
+
+      // no input from user
+      if (executionArgs == null || executionArgs.getWorkflowVariables() == null
+          || executionArgs.getWorkflowVariables().isEmpty()
+          || StringUtils.isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
+        if (variable.isMandatory() && variable.getValue() == null) {
+          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+              "Workflow variable " + variable.getName() + " is mandatory for execution");
+        }
+        variables.put(variable.getName(), variable.getValue());
+        continue;
+      }
+      variables.put(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()));
+    }
+    return variables;
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,

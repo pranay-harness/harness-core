@@ -73,6 +73,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Transient @JsonIgnore private transient ExecutionContext context;
 
+  private Map<String, Object> workflowVariables;
+
   /**
    * {@inheritDoc}
    */
@@ -327,6 +329,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public void setWorkflowElement(WorkflowElement workflowElement) {
     this.workflowElement = workflowElement;
+  }
+
+  public Map<String, Object> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  public void setWorkflowVariables(Map<String, Object> workflowVariables) {
+    this.workflowVariables = workflowVariables;
   }
 
   /**

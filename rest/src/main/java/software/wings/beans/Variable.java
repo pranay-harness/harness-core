@@ -8,6 +8,7 @@ public class Variable {
   private String description;
   private boolean mandatory;
   private String value;
+  private boolean fixed;
 
   private VariableType type = VariableType.TEXT;
 
@@ -51,6 +52,14 @@ public class Variable {
     this.type = type;
   }
 
+  public boolean isFixed() {
+    return fixed;
+  }
+
+  public void setFixed(boolean fixed) {
+    this.fixed = fixed;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -83,6 +92,7 @@ public class Variable {
     private String description;
     private boolean mandatory;
     private String value;
+    private boolean fixed;
     private VariableType type = VariableType.TEXT;
 
     private VariableBuilder() {}
@@ -111,6 +121,11 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder withFixed(boolean fixed) {
+      this.fixed = fixed;
+      return this;
+    }
+
     public VariableBuilder withType(VariableType type) {
       this.type = type;
       return this;
@@ -122,6 +137,7 @@ public class Variable {
       variable.setDescription(description);
       variable.setMandatory(mandatory);
       variable.setValue(value);
+      variable.setFixed(fixed);
       variable.setType(type);
       return variable;
     }
