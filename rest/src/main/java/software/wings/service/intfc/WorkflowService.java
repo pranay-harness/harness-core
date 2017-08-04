@@ -183,4 +183,6 @@ public interface WorkflowService {
   Node updateGraphNode(@NotNull String appId, @NotNull String workflowId, @NotNull String subworkflowId, Node node);
 
   Workflow cloneWorkflow(String appId, String workflowId, Workflow workflow);
+
+  Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
 }

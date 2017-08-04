@@ -859,6 +859,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion) {
+    Workflow workflow = readWorkflow(appId, workflowId, null);
+    wingsPersistence.update(
+        workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
+    return readWorkflow(appId, workflowId, defaultVersion);
+  }
+
+  @Override
   public List<NotificationRule> updateNotificationRules(
       String appId, String workflowId, List<NotificationRule> notificationRules) {
     Workflow workflow = readWorkflow(appId, workflowId);
