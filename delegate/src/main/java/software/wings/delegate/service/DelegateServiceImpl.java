@@ -244,9 +244,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleMessageSubmit(
       String message, ExecutorService fixedThreadPool, String delegateId, String accountId) {
-    logger.info("Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
     fixedThreadPool.submit(() -> { handleMessage(message, delegateId, accountId); });
-    logger.info("Submitted: Event:{}, time:{}, message:[{}]", Event.MESSAGE.name(), new Date(), message);
   }
 
   private void handleMessage(String message, String delegateId, String accountId) {
