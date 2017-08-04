@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -31,7 +32,6 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
-import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -74,13 +74,9 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(context.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
     when(settingsService.get(Base.GLOBAL_APP_ID, SETTING_ID))
-        .thenReturn(
-            aSettingAttribute()
-                .withValue(AwsConfig.Builder.anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
-                .build());
-    when(awsHelperService.getAwsCloudWatchClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonCloudWatchClient);
-    when(amazonCloudWatchClient.getMetricStatistics(any(GetMetricStatisticsRequest.class)))
-        .thenReturn(new GetMetricStatisticsResult());
+        .thenReturn(aSettingAttribute()
+                        .withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
+                        .build());
   }
 
   @Test
@@ -88,8 +84,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(context.evaluateExpression(eq(ASSERTION), any(Datapoint.class))).thenReturn(true);
     ArgumentCaptor<GetMetricStatisticsRequest> argumentCaptor =
         ArgumentCaptor.forClass(GetMetricStatisticsRequest.class);
-    when(amazonCloudWatchClient.getMetricStatistics(argumentCaptor.capture()))
-        .thenReturn(new GetMetricStatisticsResult());
+    when(awsHelperService.getCloudWatchMetricStatistics(any(AwsConfig.class), argumentCaptor.capture()))
+        .thenReturn(new Datapoint());
 
     cloudWatchState.setAwsCredentialsConfigId(SETTING_ID);
     cloudWatchState.setAssertion(ASSERTION);
@@ -118,7 +114,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
 
     AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(awsCredentials);
 
-    ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
+    cloudWatchClient.listMetrics();
 
     GetMetricStatisticsRequest getMetricRequest = new GetMetricStatisticsRequest();
 

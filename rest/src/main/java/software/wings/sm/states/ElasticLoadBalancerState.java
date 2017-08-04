@@ -4,10 +4,6 @@ import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecuti
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
-import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerRequest;
-import com.amazonaws.services.elasticloadbalancing.model.Instance;
-import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -90,8 +86,6 @@ public class ElasticLoadBalancerState extends State {
   public ExecutionResponse execute(
       ExecutionContext context, String loadBalancerName, Regions region, String accessKey, char[] secretKey) {
     ExecutionStatus status;
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        awsHelperService.getClassicElbClient(region, accessKey, secretKey);
 
     InstanceElement instance = context.getContextElement(ContextElementType.INSTANCE);
     final String instanceId = instance.getHost().getInstanceId() != null
@@ -101,21 +95,10 @@ public class ElasticLoadBalancerState extends State {
     String errorMessage = "";
 
     try {
-      boolean result = operation == Operation.Enable
-          ? amazonElasticLoadBalancingClient
-                .registerInstancesWithLoadBalancer(new RegisterInstancesWithLoadBalancerRequest()
-                                                       .withLoadBalancerName(loadBalancerName)
-                                                       .withInstances(new Instance(instanceId)))
-                .getInstances()
-                .stream()
-                .anyMatch(inst -> inst.getInstanceId().equals(instanceId))
-          : amazonElasticLoadBalancingClient
-                .deregisterInstancesFromLoadBalancer(new DeregisterInstancesFromLoadBalancerRequest()
-                                                         .withLoadBalancerName(loadBalancerName)
-                                                         .withInstances(new Instance(instanceId)))
-                .getInstances()
-                .stream()
-                .noneMatch(inst -> inst.getInstanceId().equals(instanceId));
+      boolean result = operation == Operation.Enable ? awsHelperService.registerInstancesWithLoadBalancer(
+                                                           region, accessKey, secretKey, loadBalancerName, instanceId)
+                                                     : awsHelperService.deregisterInstancesFromLoadBalancer(
+                                                           region, accessKey, secretKey, loadBalancerName, instanceId);
       status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       status = ExecutionStatus.ERROR;

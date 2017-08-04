@@ -18,7 +18,6 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
-import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -51,7 +50,6 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -133,9 +131,6 @@ public class CloudWatchState extends State {
       stateExecutionData.setDimensions(evaluatedDimensions);
     }
 
-    AmazonCloudWatchClient cloudWatchClient =
-        awsHelperService.getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
     GetMetricStatisticsRequest getMetricRequest = new GetMetricStatisticsRequest();
 
     getMetricRequest.setNamespace(namespace);
@@ -155,9 +150,7 @@ public class CloudWatchState extends State {
     getMetricRequest.setStartTime(new Date(startEpoch));
     getMetricRequest.setEndTime(new Date(endEpoch));
 
-    GetMetricStatisticsResult metricStatistics = cloudWatchClient.getMetricStatistics(getMetricRequest);
-    Datapoint datapoint =
-        metricStatistics.getDatapoints().stream().max(Comparator.comparing(Datapoint::getTimestamp)).orElse(null);
+    Datapoint datapoint = awsHelperService.getCloudWatchMetricStatistics(awsConfig, getMetricRequest);
 
     stateExecutionData.setDatapoint(datapoint);
 

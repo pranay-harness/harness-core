@@ -2,10 +2,8 @@ package software.wings.service.impl;
 
 import com.google.inject.Singleton;
 
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
-import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -27,39 +25,38 @@ public class CloudWatchServiceImpl implements CloudWatchService {
 
   @Override
   public List<String> listNamespaces(String settingId) {
-    AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(settingId);
-    ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
-    return listMetricsResult.getMetrics().stream().map(Metric::getNamespace).distinct().collect(Collectors.toList());
+    return awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId))
+        .stream()
+        .map(Metric::getNamespace)
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<String> listMetrics(String settingId, String namespace) {
-    AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(settingId);
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.setNamespace(namespace);
-    ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(listMetricsRequest);
-    return listMetricsResult.getMetrics().stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), listMetricsRequest);
+    return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
   }
 
   @Override
   public List<String> listDimensions(String settingId, String namespace, String metricName) {
-    AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(settingId);
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.withNamespace(namespace).withMetricName(metricName);
-    ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(listMetricsRequest);
-    return listMetricsResult.getMetrics()
-        .stream()
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), listMetricsRequest);
+    return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()
         .collect(Collectors.toList());
   }
 
-  private AmazonCloudWatchClient getAmazonCloudWatchClient(String settingId) {
+  private AwsConfig getAwsConfig(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
       throw new StateExecutionException("AWS account setting not found");
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    return awsHelperService.getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    return awsConfig;
   }
 }

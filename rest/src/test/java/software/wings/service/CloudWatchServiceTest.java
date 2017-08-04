@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.NAMESPACE;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
@@ -23,6 +22,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
@@ -37,8 +37,6 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private AwsHelperService awsHelperService;
 
-  @Mock private AmazonCloudWatchClient amazonCloudWatchClient;
-
   @Inject @InjectMocks private CloudWatchService cloudWatchService;
 
   @Before
@@ -47,15 +45,14 @@ public class CloudWatchServiceTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute()
                         .withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
                         .build());
-    when(awsHelperService.getAwsCloudWatchClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonCloudWatchClient);
-
     ListMetricsResult listMetricsResult = new ListMetricsResult().withMetrics(
         asList(new Metric()
                    .withNamespace(NAMESPACE)
                    .withMetricName(METRIC_NAME)
                    .withDimensions(asList(new Dimension().withName(METRIC_DIMENSION)))));
-    when(amazonCloudWatchClient.listMetrics()).thenReturn(listMetricsResult);
-    when(amazonCloudWatchClient.listMetrics(any(ListMetricsRequest.class))).thenReturn(listMetricsResult);
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class))).thenReturn(listMetricsResult.getMetrics());
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), any(ListMetricsRequest.class)))
+        .thenReturn(listMetricsResult.getMetrics());
   }
 
   @Test

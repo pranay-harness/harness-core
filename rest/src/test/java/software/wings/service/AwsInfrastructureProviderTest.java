@@ -22,25 +22,19 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
-import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
-import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
-import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -49,6 +43,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -58,8 +53,6 @@ import javax.inject.Inject;
 public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private AwsHelperService awsHelperService;
-  @Mock private AmazonEC2Client amazonEC2Client;
-  @Mock private AmazonAutoScalingClient amazonAutoScalingClient;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
 
@@ -68,14 +61,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
           .withUuid(SETTING_ID)
           .withValue(anAwsConfig().withSecretKey(SECRET_KEY).withAccessKey(ACCESS_KEY).build())
           .build();
-
+  private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before
-  public void setUp() throws Exception {
-    when(awsHelperService.getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
-        .thenReturn(amazonEC2Client);
-    when(awsHelperService.getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY))
-        .thenReturn(amazonAutoScalingClient);
-  }
+  public void setUp() throws Exception {}
 
   @Test
   public void shouldListHosts() {
@@ -84,7 +72,9 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     DescribeInstancesResult describeInstancesResult =
         new DescribeInstancesResult().withReservations(new Reservation().withInstances(
             new Instance().withPublicDnsName("HOST_NAME_1"), new Instance().withPublicDnsName("HOST_NAME_2")));
-    when(amazonEC2Client.describeInstances(instancesRequest)).thenReturn(describeInstancesResult);
+    when(awsHelperService.describeEc2Instances(
+             (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
+        .thenReturn(describeInstancesResult);
 
     PageResponse<Host> hosts =
         infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, new PageRequest<>());
@@ -94,7 +84,25 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .hasOnlyElementsOfType(Host.class)
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
-    verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
+    verify(awsHelperService)
+        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest);
+  }
+
+  @Test
+  public void shouldListHostsEmpty() {
+    DescribeInstancesRequest instancesRequest =
+        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", asList("running")));
+    DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
+
+    when(awsHelperService.describeEc2Instances(
+             (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
+        .thenReturn(describeInstancesResult);
+
+    PageResponse<Host> hosts =
+        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, new PageRequest<>());
+
+    assertThat(hosts).hasSize(0);
+    verify(awsHelperService).describeEc2Instances(awsConfig, Regions.US_EAST_1.getName(), instancesRequest);
   }
 
   @Test
@@ -130,15 +138,12 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
   @Test
   public void shouldProvisionHosts() {
-    when(amazonAutoScalingClient.describeLaunchConfigurations(any(DescribeLaunchConfigurationsRequest.class)))
-        .thenReturn(new DescribeLaunchConfigurationsResult().withLaunchConfigurations(
-            new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
+    String region = Regions.US_EAST_1.getName();
+    when(awsHelperService.listRunInstances(awsConfig, region, "LAUNCH_CONFIG", 1))
+        .thenReturn(asList(new Instance().withInstanceId("INSTANCE_ID")));
 
-    when(amazonEC2Client.runInstances(any(RunInstancesRequest.class)))
-        .thenReturn(new RunInstancesResult().withReservation(
-            new Reservation().withInstances(new Instance().withInstanceId("INSTANCE_ID"))));
-
-    when(amazonEC2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
+    when(awsHelperService.describeEc2Instances(
+             awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
         .thenReturn(new DescribeInstancesResult().withReservations(
             new Reservation().withInstances(new Instance()
                                                 .withPrivateDnsName(HOST_NAME)
@@ -148,8 +153,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
     when(awsHelperService.getHostnameFromDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
-    List<Host> hosts =
-        infrastructureProvider.provisionHosts(Regions.US_EAST_1.getName(), awsSetting, "LAUNCH_CONFIG", 1);
+    List<Host> hosts = infrastructureProvider.provisionHosts(region, awsSetting, "LAUNCH_CONFIG", 1);
 
     assertThat(hosts)
         .hasSize(1)
@@ -157,12 +161,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .isEqualTo(asList(
             aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
-    verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(awsHelperService).getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY);
     verify(awsHelperService).canConnectToHost(HOST_NAME, 22, 30000);
-    verify(amazonAutoScalingClient).describeLaunchConfigurations(any(DescribeLaunchConfigurationsRequest.class));
-    verify(amazonEC2Client).runInstances(any(RunInstancesRequest.class));
-    verify(amazonEC2Client, times(3)).describeInstances(any(DescribeInstancesRequest.class));
+    verify(awsHelperService).listRunInstances(awsConfig, region, "LAUNCH_CONFIG", 1);
+    verify(awsHelperService, times(3))
+        .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
   }
 
   @Test
@@ -176,24 +178,23 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     infrastructureProvider.deProvisionHosts(
         APP_ID, INFRA_MAPPING_ID, awsSetting, Regions.US_EAST_1.getName(), singletonList(HOST_NAME));
 
-    verify(amazonEC2Client).terminateInstances(new TerminateInstancesRequest().withInstanceIds("INSTANCE_ID"));
-    verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
+    verify(awsHelperService)
+        .terminateEc2Instances(awsConfig, Regions.US_EAST_1.getName(), Arrays.asList("INSTANCE_ID"));
   }
 
   @Test
   public void shouldListLaunchConfigs() {
-    when(amazonAutoScalingClient.describeLaunchConfigurations())
-        .thenReturn(new DescribeLaunchConfigurationsResult().withLaunchConfigurations(
-            new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
+    String region = Regions.US_EAST_1.getName();
+    when(awsHelperService.describeLaunchConfigurations(awsConfig, region))
+        .thenReturn(Arrays.asList(new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
 
     List<LaunchConfiguration> launchConfigurations =
-        infrastructureProvider.listLaunchConfigurations(awsSetting, Regions.US_EAST_1.getName());
+        infrastructureProvider.listLaunchConfigurations(awsSetting, region);
 
     assertThat(launchConfigurations)
         .hasSize(1)
         .extracting(LaunchConfiguration::getLaunchConfigurationName)
         .containsExactly("LAUNCH_CONFIG");
-    verify(awsHelperService).getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY);
-    verify(amazonAutoScalingClient).describeLaunchConfigurations();
+    verify(awsHelperService).describeLaunchConfigurations(awsConfig, region);
   }
 }

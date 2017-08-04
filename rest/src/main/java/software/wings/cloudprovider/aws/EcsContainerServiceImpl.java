@@ -6,29 +6,22 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
-import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
-import com.amazonaws.services.ecs.model.DeleteServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
@@ -84,9 +77,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * @throws InterruptedException the interrupted exception
    */
   public void createCluster() throws InterruptedException {
-    AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
-        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray());
-    CreateStackResult result = amazonCloudFormationClient.createStack(
+    CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
+        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -408,13 +400,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")));
-
     result.getStackId();
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
-        (stack = amazonCloudFormationClient
-                     .describeStacks(new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
+        (stack = awsHelperService
+                     .describeStacks("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
@@ -430,9 +422,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * @throws InterruptedException the interrupted exception
    */
   public void destroyCluster() throws InterruptedException {
-    AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
-        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray());
-    CreateStackResult result = amazonCloudFormationClient.createStack(
+    CreateStackResult result = awsHelperService.createStack("AKIAJLEKM45P4PO5QUFQ",
+        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -759,8 +750,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
-        (stack = amazonCloudFormationClient
-                     .describeStacks(new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
+        (stack = awsHelperService
+                     .describeStacks("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
@@ -775,15 +767,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       String launchConfigName, Map<String, Object> params) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
-    AmazonECSClient amazonEcsClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     String clusterName = (String) params.get("clusterName");
-    amazonEcsClient.createCluster(new CreateClusterRequest().withClusterName(clusterName));
+    awsHelperService.createCluster(region, awsConfig, new CreateClusterRequest().withClusterName(clusterName));
     logger.info("Successfully created empty cluster " + params.get("clusterName"));
 
     logger.info("Creating autoscaling group for cluster...");
-    AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
-        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     Integer maxSize = (Integer) params.computeIfAbsent("maxSize", s -> 2 * clusterSize); // default 200%
     Integer minSize = (Integer) params.computeIfAbsent("minSize", s -> clusterSize / 2); // default 50%
@@ -791,28 +779,29 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     String vpcZoneIdentifiers = (String) params.get("vpcZoneIdentifiers");
     List<String> availabilityZones = (List<String>) params.get("availabilityZones");
 
-    CreateAutoScalingGroupResult createAutoScalingGroupResult =
-        amazonAutoScalingClient.createAutoScalingGroup(new CreateAutoScalingGroupRequest()
-                                                           .withLaunchConfigurationName(launchConfigName)
-                                                           .withDesiredCapacity(clusterSize)
-                                                           .withMaxSize(maxSize)
-                                                           .withMinSize(minSize)
-                                                           .withAutoScalingGroupName(autoScalingGroupName)
-                                                           .withAvailabilityZones(availabilityZones)
-                                                           .withVPCZoneIdentifier(vpcZoneIdentifiers));
+    logger.info("Creating autoscaling group for cluster...");
+    awsHelperService.createAutoScalingGroup(awsConfig, region,
+        new CreateAutoScalingGroupRequest()
+            .withLaunchConfigurationName(launchConfigName)
+            .withDesiredCapacity(clusterSize)
+            .withMaxSize(maxSize)
+            .withMinSize(minSize)
+            .withAutoScalingGroupName(autoScalingGroupName)
+            .withAvailabilityZones(availabilityZones)
+            .withVPCZoneIdentifier(vpcZoneIdentifiers));
 
     logger.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
 
-    waitForAllInstancesToBeReady(autoScalingGroupName, clusterSize, amazonAutoScalingClient);
-    waitForAllInstanceToRegisterWithCluster(clusterName, clusterSize, amazonEcsClient);
+    waitForAllInstancesToBeReady(awsConfig, region, autoScalingGroupName, clusterSize);
+    waitForAllInstanceToRegisterWithCluster(region, awsConfig, clusterName, clusterSize);
 
     logger.info("All instances are ready for deployment");
   }
 
   private void waitForAllInstanceToRegisterWithCluster(
-      String clusterName, Integer clusterSize, AmazonECSClient amazonEcsClient) {
+      String region, AwsConfig awsConfig, String clusterName, Integer clusterSize) {
     int retryCount = RETRY_COUNTER;
-    while (!allInstancesRegisteredWithCluster(amazonEcsClient, clusterName, clusterSize)) {
+    while (!allInstancesRegisteredWithCluster(region, awsConfig, clusterName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
       }
@@ -821,9 +810,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   private void waitForAllInstancesToBeReady(
-      String autoscalingGroupName, Integer clusterSize, AmazonAutoScalingClient amazonAutoScalingClient) {
+      AwsConfig awsConfig, String region, String autoscalingGroupName, Integer clusterSize) {
     int retryCount = RETRY_COUNTER;
-    while (!allInstanceInReadyState(amazonAutoScalingClient, autoscalingGroupName, clusterSize)) {
+    while (!allInstanceInReadyState(awsConfig, region, autoscalingGroupName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
       }
@@ -831,20 +820,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private boolean allInstancesRegisteredWithCluster(AmazonECSClient amazonEcsClient, String name, Integer clusterSize) {
+  private boolean allInstancesRegisteredWithCluster(
+      String region, AwsConfig awsConfig, String name, Integer clusterSize) {
     Cluster cluster =
-        amazonEcsClient.describeClusters(new DescribeClustersRequest().withClusters(name)).getClusters().get(0);
+        awsHelperService.describeClusters(region, awsConfig, new DescribeClustersRequest().withClusters(name))
+            .getClusters()
+            .get(0);
     logger.info("Waiting for instances to register with cluster. {}/{} registered...",
         cluster.getRegisteredContainerInstancesCount(), clusterSize);
 
     return cluster.getRegisteredContainerInstancesCount() == clusterSize;
   }
 
-  private boolean allInstanceInReadyState(
-      AmazonAutoScalingClient amazonAutoScalingClient, String name, Integer clusterSize) {
+  private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, String name, Integer clusterSize) {
     AutoScalingGroup autoScalingGroup =
-        amazonAutoScalingClient
-            .describeAutoScalingGroups(
+        awsHelperService
+            .describeAutoScalingGroups(awsConfig, region,
                 new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(name)))
             .getAutoScalingGroups()
             .get(0);
@@ -857,8 +848,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public String deployService(String region, SettingAttribute connectorConfig, String serviceDefinition) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     CreateServiceRequest createServiceRequest = null;
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
@@ -866,18 +855,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       ex.printStackTrace();
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
-    CreateServiceResult createServiceResult = amazonECSClient.createService(createServiceRequest);
+    CreateServiceResult createServiceResult = awsHelperService.createService(region, awsConfig, createServiceRequest);
 
-    waitForTasksToBeInRunningState(amazonECSClient, createServiceRequest.getCluster(),
+    waitForTasksToBeInRunningState(region, awsConfig, createServiceRequest.getCluster(),
         createServiceRequest.getServiceName(), new ExecutionLogCallback());
 
     return createServiceResult.getService().getServiceArn();
   }
 
-  private void waitForTasksToBeInRunningState(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback) {
+  private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig, String clusterName,
+      String serviceName, ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(region, awsConfig, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
@@ -885,10 +874,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private void waitForTasksToBeInRunningStateButDontThrowException(AmazonECSClient amazonECSClient, String clusterName,
-      String serviceName, ExecutionLogCallback executionLogCallback) {
+  private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
+      String clusterName, String serviceName, ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(region, awsConfig, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         break;
       }
@@ -896,13 +885,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private boolean allDesiredTaskRunning(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
+  private boolean allDesiredTaskRunning(String region, AwsConfig awsConfig, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
-    Service service =
-        amazonECSClient
-            .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-            .getServices()
-            .get(0);
+    Service service = awsHelperService
+                          .describeServices(region, awsConfig,
+                              new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                          .getServices()
+                          .get(0);
 
     logger.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
@@ -916,10 +905,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void deleteService(String region, SettingAttribute connectorConfig, String clusterName, String serviceName) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    DeleteServiceResult deleteServiceResult =
-        amazonECSClient.deleteService(new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
+    awsHelperService.deleteService(
+        region, awsConfig, new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
   }
 
   @Override
@@ -927,20 +914,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-    UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
+    UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
     executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
     waitForTasksToBeInRunningStateButDontThrowException(
-        amazonECSClient, clusterName, serviceName, executionLogCallback);
+        region, awsConfig, clusterName, serviceName, executionLogCallback);
 
     List<String> taskArns =
-        amazonECSClient.listTasks(new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
+        awsHelperService
+            .listTasks(region, awsConfig, new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
             .getTaskArns();
     if (taskArns == null || taskArns.size() == 0) {
       return Arrays.asList();
@@ -948,28 +931,28 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     logger.info("Task arns = " + taskArns);
     List<Task> tasks =
-        amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+        awsHelperService
+            .describeTasks(region, awsConfig, new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
             .getTasks();
     List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
     logger.info("Container Instances = " + containerInstances);
 
-    List<ContainerInstance> containerInstanceList =
-        amazonECSClient
-            .describeContainerInstances(new DescribeContainerInstancesRequest()
-                                            .withCluster(clusterName)
-                                            .withContainerInstances(containerInstances))
-            .getContainerInstances();
+    List<ContainerInstance> containerInstanceList = awsHelperService
+                                                        .describeContainerInstances(region, awsConfig,
+                                                            new DescribeContainerInstancesRequest()
+                                                                .withCluster(clusterName)
+                                                                .withContainerInstances(containerInstances))
+                                                        .getContainerInstances();
     List<ContainerInfo> containerInfos = new ArrayList<>();
     containerInstanceList.forEach(containerInstance -> {
-      String ipAddress =
-          amazonEC2Client
-              .describeInstances(new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
-              .getReservations()
-              .get(0)
-              .getInstances()
-              .get(0)
-              .getPrivateIpAddress();
-
+      String ipAddress = awsHelperService
+                             .describeEc2Instances(awsConfig, region,
+                                 new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
+                             .getReservations()
+                             .get(0)
+                             .getInstances()
+                             .get(0)
+                             .getPrivateIpAddress();
       try {
         executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
         executionLogCallback.saveExecutionLog(
@@ -1007,38 +990,33 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public void createService(
       String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    amazonECSClient.createService(clusterConfiguration);
+    awsHelperService.createService(region, awsConfig, clusterConfiguration);
   }
 
   @Override
   public TaskDefinition createTask(
       String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    return amazonECSClient.registerTaskDefinition(registerTaskDefinitionRequest).getTaskDefinition();
+    return awsHelperService.registerTaskDefinition(region, awsConfig, registerTaskDefinitionRequest)
+        .getTaskDefinition();
   }
 
   @Override
   public List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
     List<Service> services = new ArrayList<>();
     ListServicesResult listServicesResult;
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
     do {
-      listServicesResult = amazonECSClient.listServices(listServicesRequest);
+      listServicesResult = awsHelperService.listServices(region, awsConfig, listServicesRequest);
       if (listServicesResult.getServiceArns() == null || listServicesResult.getServiceArns().size() == 0) {
         break;
       }
-      services.addAll(amazonECSClient
-                          .describeServices(new DescribeServicesRequest()
-                                                .withCluster(clusterName)
-                                                .withServices(listServicesResult.getServiceArns()))
+      services.addAll(awsHelperService
+                          .describeServices(region, awsConfig,
+                              new DescribeServicesRequest()
+                                  .withCluster(clusterName)
+                                  .withServices(listServicesResult.getServiceArns()))
                           .getServices());
       listServicesRequest.setNextToken(listServicesResult.getNextToken());
     } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);

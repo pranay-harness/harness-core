@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
@@ -14,22 +15,17 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.Cluster;
-import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersResult;
-import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
@@ -56,14 +52,13 @@ import javax.inject.Inject;
  */
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
-  @Mock private AmazonAutoScalingClient amazonAutoScalingClient;
-  @Mock private AmazonECSClient amazonECSClient;
-  @Mock private AmazonEC2Client amazonEC2Client;
 
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
       aSettingAttribute().withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build()).build();
+
+  private AwsConfig awsConfig = (AwsConfig) connectorConfig.getValue();
 
   private static final int DESIRED_CAPACITY = 2;
 
@@ -71,12 +66,6 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(awsHelperService.validateAndGetAwsConfig(any(SettingAttribute.class)))
         .thenReturn((AwsConfig) connectorConfig.getValue());
-    when(awsHelperService.getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
-        .thenReturn(amazonEC2Client);
-    when(awsHelperService.getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
-        .thenReturn(amazonECSClient);
-    when(awsHelperService.getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY))
-        .thenReturn(amazonAutoScalingClient);
   }
 
   @Test
@@ -84,12 +73,12 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     DescribeAutoScalingGroupsResult autoScalingGroupsResult =
         new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new AutoScalingGroup().withInstances(Arrays.asList(
             new Instance().withLifecycleState("InService"), new Instance().withLifecycleState("InService"))));
-    when(amazonAutoScalingClient.describeAutoScalingGroups(
+
+    DescribeClustersResult describeClustersResult = new DescribeClustersResult().withClusters(
+        Arrays.asList(new Cluster().withClusterName(CLUSTER_NAME).withRegisteredContainerInstancesCount(2)));
+    when(awsHelperService.describeAutoScalingGroups(awsConfig, Regions.US_EAST_1.getName(),
              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(AUTO_SCALING_GROUP_NAME))))
         .thenReturn(autoScalingGroupsResult);
-
-    when(amazonECSClient.describeClusters(new DescribeClustersRequest().withClusters(CLUSTER_NAME)))
-        .thenReturn(new DescribeClustersResult().withClusters(new Cluster().withRegisteredContainerInstancesCount(2)));
 
     Map<String, Object> params = new HashMap<>();
     params.put("autoScalingGroupName", AUTO_SCALING_GROUP_NAME);
@@ -97,24 +86,25 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     params.put("availabilityZones", Arrays.asList("AZ1", "AZ2"));
     params.put("vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
+    when(awsHelperService.describeClusters(
+             Regions.US_EAST_1.getName(), awsConfig, new DescribeClustersRequest().withClusters(CLUSTER_NAME)))
+        .thenReturn(describeClustersResult);
     ecsContainerService.provisionNodes(
         Regions.US_EAST_1.getName(), connectorConfig, DESIRED_CAPACITY, LAUNCHER_TEMPLATE_NAME, params);
 
-    verify(awsHelperService).getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(amazonECSClient).createCluster(new CreateClusterRequest().withClusterName(CLUSTER_NAME));
-    verify(amazonAutoScalingClient)
-        .createAutoScalingGroup(new CreateAutoScalingGroupRequest()
-                                    .withLaunchConfigurationName(LAUNCHER_TEMPLATE_NAME)
-                                    .withDesiredCapacity(DESIRED_CAPACITY)
-                                    .withMaxSize(2 * DESIRED_CAPACITY)
-                                    .withMinSize(DESIRED_CAPACITY / 2)
-                                    .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
-                                    .withAvailabilityZones(Arrays.asList("AZ1", "AZ2"))
-                                    .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"));
-    verify(amazonAutoScalingClient)
-        .describeAutoScalingGroups(
+    verify(awsHelperService)
+        .createAutoScalingGroup(awsConfig, Regions.US_EAST_1.getName(),
+            new CreateAutoScalingGroupRequest()
+                .withLaunchConfigurationName(LAUNCHER_TEMPLATE_NAME)
+                .withDesiredCapacity(DESIRED_CAPACITY)
+                .withMaxSize(2 * DESIRED_CAPACITY)
+                .withMinSize(DESIRED_CAPACITY / 2)
+                .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
+                .withAvailabilityZones(Arrays.asList("AZ1", "AZ2"))
+                .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"));
+    verify(awsHelperService)
+        .describeAutoScalingGroups(awsConfig, Regions.US_EAST_1.getName(),
             new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(AUTO_SCALING_GROUP_NAME)));
-    verify(amazonECSClient).describeClusters(new DescribeClustersRequest().withClusters(CLUSTER_NAME));
   }
 
   @Test
@@ -126,43 +116,45 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                                                     .withServiceName(SERVICE_NAME)
                                                     .withTaskDefinition("TASK_TEMPLATE")
                                                     .withDesiredCount(DESIRED_CAPACITY);
-    when(amazonECSClient.createService(createServiceRequest))
-        .thenReturn(new CreateServiceResult().withService(new Service().withServiceArn("SERVICE_ARN")));
+    Service service = new Service()
+                          .withDesiredCount(DESIRED_CAPACITY)
+                          .withRunningCount(DESIRED_CAPACITY)
+                          .withServiceArn("SERVICE_ARN");
+    when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any()))
+        .thenReturn(new DescribeServicesResult().withServices(Arrays.asList(service)));
 
-    when(amazonECSClient.describeServices(
-             new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME)))
-        .thenReturn(new DescribeServicesResult().withServices(
-            new Service().withRunningCount(DESIRED_CAPACITY).withDesiredCount(DESIRED_CAPACITY)));
+    when(awsHelperService.createService(Regions.US_EAST_1.getName(), awsConfig, createServiceRequest))
+        .thenReturn(new CreateServiceResult().withService(service));
     String serviceArn = ecsContainerService.deployService(Regions.US_EAST_1.getName(), connectorConfig, serviceJson);
 
-    verify(awsHelperService).getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(amazonECSClient).createService(createServiceRequest);
+    verify(awsHelperService).createService(Regions.US_EAST_1.getName(), awsConfig, createServiceRequest);
     assertThat(serviceArn).isEqualTo("SERVICE_ARN");
   }
 
   @Test
   public void shouldDeleteService() {
     ecsContainerService.deleteService(Regions.US_EAST_1.getName(), connectorConfig, CLUSTER_NAME, SERVICE_NAME);
-    verify(awsHelperService).getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(amazonECSClient)
-        .deleteService(new DeleteServiceRequest().withCluster(CLUSTER_NAME).withService(SERVICE_NAME));
+    verify(awsHelperService)
+        .deleteService(Regions.US_EAST_1.getName(), (AwsConfig) connectorConfig.getValue(),
+            new DeleteServiceRequest().withCluster(CLUSTER_NAME).withService(SERVICE_NAME));
   }
 
   @Test
   @Ignore // TODO:: remove ignore
   public void shouldProvisionTasks() {
-    when(amazonECSClient.describeServices(any()))
+    when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any()))
         .thenReturn(new DescribeServicesResult().withServices(
             Arrays.asList(new Service().withDesiredCount(DESIRED_CAPACITY).withRunningCount(DESIRED_CAPACITY))));
-    when(amazonECSClient.describeTasks(any())).thenReturn(new DescribeTasksResult());
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any()))
+        .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(Regions.US_EAST_1.getName(), connectorConfig, CLUSTER_NAME, SERVICE_NAME,
         DESIRED_CAPACITY, new ExecutionLogCallback());
-    verify(awsHelperService).getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(amazonECSClient)
-        .updateService(new UpdateServiceRequest()
-                           .withCluster(CLUSTER_NAME)
-                           .withService(SERVICE_NAME)
-                           .withDesiredCount(DESIRED_CAPACITY));
-    verify(amazonECSClient).describeTasks(any(DescribeTasksRequest.class));
+    verify(awsHelperService)
+        .updateService(Regions.US_EAST_1.getName(), awsConfig,
+            new UpdateServiceRequest()
+                .withCluster(CLUSTER_NAME)
+                .withService(SERVICE_NAME)
+                .withDesiredCount(DESIRED_CAPACITY));
+    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(DescribeTasksRequest.class));
   }
 }
