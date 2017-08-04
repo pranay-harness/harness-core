@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.ImmutableMap;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -24,11 +26,13 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -55,12 +59,15 @@ import javax.ws.rs.core.Response;
 @AuthRule(ResourceType.DELEGATE)
 public class DelegateResource {
   private DelegateService delegateService;
+  private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject
-  public DelegateResource(DelegateService delegateService, DownloadTokenService downloadTokenService) {
+  public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
+      DownloadTokenService downloadTokenService) {
     this.delegateService = delegateService;
+    this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
   }
 
@@ -75,34 +82,74 @@ public class DelegateResource {
   }
 
   @GET
-  @Path("{deletgateId}")
+  @Path("{delegateId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Delegate> get(
-      @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.get(accountId, delegateId));
   }
 
   @DELETE
-  @Path("{deletgateId}")
+  @Path("{delegateId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Void> delete(
-      @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     delegateService.delete(accountId, delegateId);
     return new RestResponse<Void>();
   }
 
   @DelegateAuth
   @PUT
-  @Path("{deletgateId}")
+  @Path("{delegateId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Delegate> update(@PathParam("deletgateId") @NotEmpty String delegateId,
+  public RestResponse<Delegate> update(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     return new RestResponse<>(delegateService.update(delegate));
+  }
+
+  @DelegateAuth
+  @PUT
+  @Path("{delegateId}/scopes")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
+    Delegate delegate = delegateService.get(accountId, delegateId);
+    delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
+                                  .stream()
+                                  .map(s -> delegateScopeService.get(accountId, s))
+                                  .collect(toList()));
+    delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
+                                  .stream()
+                                  .map(s -> delegateScopeService.get(accountId, s))
+                                  .collect(toList()));
+    return new RestResponse<>(delegateService.update(delegate));
+  }
+
+  private static class DelegateScopes {
+    private List<String> includeScopeIds;
+    private List<String> excludeScopeIds;
+
+    public List<String> getIncludeScopeIds() {
+      return includeScopeIds;
+    }
+
+    public void setIncludeScopeIds(List<String> includeScopeIds) {
+      this.includeScopeIds = includeScopeIds;
+    }
+
+    public List<String> getExcludeScopeIds() {
+      return excludeScopeIds;
+    }
+
+    public void setExcludeScopeIds(List<String> excludeScopeIds) {
+      this.excludeScopeIds = excludeScopeIds;
+    }
   }
 
   @DelegateAuth
@@ -199,11 +246,11 @@ public class DelegateResource {
 
   @DelegateAuth
   @GET
-  @Path("{deletgateId}/upgrade")
+  @Path("{delegateId}/upgrade")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
-      @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
+      @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
         accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
@@ -211,11 +258,11 @@ public class DelegateResource {
 
   @DelegateAuth
   @GET
-  @Path("{deletgateId}/upgrade-check")
+  @Path("{delegateId}/upgrade-check")
   @Timed
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgradeScripts(@Context HttpServletRequest request,
-      @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
+      @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
         accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));

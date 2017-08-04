@@ -306,7 +306,7 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    return delegate;
+    return savedDelegate;
   }
 
   @Override
