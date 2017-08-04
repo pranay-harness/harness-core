@@ -7,6 +7,7 @@ echo 'starting server'
 export HOSTNAME
 java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
      -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
+     -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=manager \
      -Dfile.encoding=UTF-8 -jar rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
 
 echo 'sleep for server to start'
@@ -62,7 +63,7 @@ fi
 sed -i -e 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
 rm -rf $HOME/appagent/ver4.3.1.0/logs/
 java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-     -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=$(hostname) \
+     -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=delegate \
      -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml > delgate.out 2>&1 &
 
 #wait for delegate to start
