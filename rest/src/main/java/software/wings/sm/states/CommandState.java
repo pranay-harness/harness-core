@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
@@ -316,6 +317,8 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).build();
 
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
       delegateTaskId = delegateService.queueTask(aDelegateTask()
                                                      .withAccountId(application.getAccountId())
                                                      .withAppId(appId)
@@ -323,6 +326,7 @@ public class CommandState extends State {
                                                      .withWaitId(activityId)
                                                      .withParameters(new Object[] {command, commandExecutionContext})
                                                      .withEnvId(envId)
+                                                     .withInfrastructureMappingId(infrastructureMappingId)
                                                      .build());
     } catch (Exception e) {
       Misc.error(logger, "Exception in command execution", e);
