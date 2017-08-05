@@ -26,7 +26,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private EnvironmentService environmentService;
 
   @Override
-  public boolean assign(DelegateTask task, String delegateId) {
+  public boolean canAssign(DelegateTask task, String delegateId) {
     if (task == null || task.getEnvId() == null) {
       return true;
     }
@@ -57,11 +57,21 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     boolean match = true;
 
-    if (match && !delegateScope.getEnvironmentTypes().isEmpty()) {
+    if (!delegateScope.getEnvironmentTypes().isEmpty()) {
       match = delegateScope.getEnvironmentTypes().contains(env.getEnvironmentType());
+    }
+    if (match && !delegateScope.getApplications().isEmpty()) {
+      match = delegateScope.getApplications().contains(task.getAppId());
     }
     if (match && !delegateScope.getEnvironments().isEmpty()) {
       match = delegateScope.getEnvironments().contains(task.getEnvId());
+    }
+    if (match && !delegateScope.getServiceInfrastructures().isEmpty()) {
+      match = delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
+    }
+    if (match && !delegateScope.getTaskTypes().isEmpty()) {
+      // TODO: Check task type from task
+      // match = delegateScope.getServiceInfrastructures().contains(task.get());
     }
 
     return match;

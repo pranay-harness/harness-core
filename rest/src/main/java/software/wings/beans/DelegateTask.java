@@ -3,8 +3,6 @@ package software.wings.beans;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
-import com.google.common.base.MoreObjects;
-
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
@@ -16,6 +14,7 @@ import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -36,8 +35,7 @@ public class DelegateTask extends Base {
   private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
   private boolean async = true;
   private String envId;
-
-  // TODO(brett): Store envId, serviceID, etc, for delegate task filtering
+  private String infrastructureMappingId;
 
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
@@ -202,43 +200,12 @@ public class DelegateTask extends Base {
     this.envId = envId;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(taskType, parameters, tag, accountId, waitId, queueName, status, delegateId, envId);
+  public String getInfrastructureMappingId() {
+    return infrastructureMappingId;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final DelegateTask other = (DelegateTask) obj;
-    return Objects.equals(this.taskType, other.taskType) && Objects.deepEquals(this.parameters, other.parameters)
-        && Objects.equals(this.tag, other.tag) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.queueName, other.queueName)
-        && Objects.equals(this.status, other.status) && Objects.equals(this.delegateId, other.delegateId)
-        && Objects.equals(this.envId, other.envId);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("taskType", taskType)
-        .add("tag", tag)
-        .add("accountId", accountId)
-        .add("waitId", waitId)
-        .add("queueName", queueName)
-        .add("status", status)
-        .add("delegateId", delegateId)
-        .add("envId", envId)
-        .toString();
+  public void setInfrastructureMappingId(String infrastructureMappingId) {
+    this.infrastructureMappingId = infrastructureMappingId;
   }
 
   /**
@@ -293,6 +260,40 @@ public class DelegateTask extends Base {
    */
   public void setAsync(boolean async) {
     this.async = async;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    if (!super.equals(o))
+      return false;
+    DelegateTask that = (DelegateTask) o;
+    return timeout == that.timeout && async == that.async && taskType == that.taskType
+        && Arrays.equals(parameters, that.parameters) && Objects.equals(tag, that.tag)
+        && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId)
+        && Objects.equals(queueName, that.queueName) && status == that.status
+        && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
+        && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
+        && Objects.equals(delegateRunnableTask, that.delegateRunnableTask);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), taskType, parameters, tag, accountId, waitId, queueName, status, delegateId,
+        timeout, async, envId, infrastructureMappingId, delegateRunnableTask);
+  }
+
+  @Override
+  public String toString() {
+    return "DelegateTask{"
+        + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tag + '\''
+        + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + ", queueName='" + queueName + '\''
+        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
+        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
+        + ", delegateRunnableTask=" + delegateRunnableTask + '}';
   }
 
   /**
@@ -464,9 +465,6 @@ public class DelegateTask extends Base {
     ABORTED
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private TaskType taskType;
     private Object[] parameters;
@@ -476,12 +474,12 @@ public class DelegateTask extends Base {
     private String queueName;
     private Status status = Status.QUEUED;
     private String delegateId;
-    private String envId;
     private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
-    private String uuid;
     private boolean async = true;
+    private String envId;
+    private String uuid;
+    private String infrastructureMappingId;
     private String appId;
-    private transient DelegateRunnableTask delegateRunnableTask;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -489,100 +487,57 @@ public class DelegateTask extends Base {
 
     private Builder() {}
 
-    /**
-     * A delegate task builder.
-     *
-     * @return the builder
-     */
     public static Builder aDelegateTask() {
       return new Builder();
     }
 
-    /**
-     * With task type builder.
-     *
-     * @param taskType the task type
-     * @return the builder
-     */
     public Builder withTaskType(TaskType taskType) {
       this.taskType = taskType;
       return this;
     }
 
-    /**
-     * With parameters builder.
-     *
-     * @param parameters the parameters
-     * @return the builder
-     */
     public Builder withParameters(Object[] parameters) {
       this.parameters = parameters;
       return this;
     }
 
-    /**
-     * With tag builder.
-     *
-     * @param tag the tag
-     * @return the builder
-     */
     public Builder withTag(String tag) {
       this.tag = tag;
       return this;
     }
 
-    /**
-     * With account id builder.
-     *
-     * @param accountId the account id
-     * @return the builder
-     */
     public Builder withAccountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    /**
-     * With wait id builder.
-     *
-     * @param waitId the wait id
-     * @return the builder
-     */
     public Builder withWaitId(String waitId) {
       this.waitId = waitId;
       return this;
     }
 
-    /**
-     * With queue name builder.
-     *
-     * @param queueName the queue name
-     * @return the builder
-     */
     public Builder withQueueName(String queueName) {
       this.queueName = queueName;
       return this;
     }
 
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
     public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
-    /**
-     * With delegate id builder.
-     *
-     * @param delegateId the delegate id
-     * @return the builder
-     */
     public Builder withDelegateId(String delegateId) {
       this.delegateId = delegateId;
+      return this;
+    }
+
+    public Builder withTimeout(long timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    public Builder withAsync(boolean async) {
+      this.async = async;
       return this;
     }
 
@@ -591,110 +546,41 @@ public class DelegateTask extends Base {
       return this;
     }
 
-    /**
-     * With timeout builder.
-     *
-     * @param timeout the timeout
-     * @return the builder
-     */
-    public Builder withTimeout(long timeout) {
-      this.timeout = timeout;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With async builder.
-     *
-     * @param async the async
-     * @return the builder
-     */
-    public Builder withAsync(boolean async) {
-      this.async = async;
+    public Builder withInfrastructureMappingId(String infrastructureMappingId) {
+      this.infrastructureMappingId = infrastructureMappingId;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With delegate runnable task builder.
-     *
-     * @param delegateRunnableTask the delegate runnable task
-     * @return the builder
-     */
-    public Builder withDelegateRunnableTask(DelegateRunnableTask delegateRunnableTask) {
-      this.delegateRunnableTask = delegateRunnableTask;
-      return this;
-    }
-
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aDelegateTask()
           .withTaskType(taskType)
@@ -705,23 +591,18 @@ public class DelegateTask extends Base {
           .withQueueName(queueName)
           .withStatus(status)
           .withDelegateId(delegateId)
-          .withEnvId(envId)
           .withTimeout(timeout)
-          .withUuid(uuid)
           .withAsync(async)
+          .withEnvId(envId)
+          .withUuid(uuid)
+          .withInfrastructureMappingId(infrastructureMappingId)
           .withAppId(appId)
-          .withDelegateRunnableTask(delegateRunnableTask)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build delegate task.
-     *
-     * @return the delegate task
-     */
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
       delegateTask.setTaskType(taskType);
@@ -732,12 +613,12 @@ public class DelegateTask extends Base {
       delegateTask.setQueueName(queueName);
       delegateTask.setStatus(status);
       delegateTask.setDelegateId(delegateId);
-      delegateTask.setEnvId(envId);
       delegateTask.setTimeout(timeout);
-      delegateTask.setUuid(uuid);
       delegateTask.setAsync(async);
+      delegateTask.setEnvId(envId);
+      delegateTask.setUuid(uuid);
+      delegateTask.setInfrastructureMappingId(infrastructureMappingId);
       delegateTask.setAppId(appId);
-      delegateTask.setDelegateRunnableTask(delegateRunnableTask);
       delegateTask.setCreatedBy(createdBy);
       delegateTask.setCreatedAt(createdAt);
       delegateTask.setLastUpdatedBy(lastUpdatedBy);

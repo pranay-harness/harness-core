@@ -12,12 +12,14 @@ import org.slf4j.LoggerFactory;
 import software.wings.AnalysisComparisonStrategy;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.AppdynamicsAnalysisResponse;
+import software.wings.api.PhaseElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.collect.AppdynamicsMetricDataCallback;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -240,6 +242,8 @@ public class AppDynamicsState extends AbstractAnalysisState {
         new AppdynamicsDataCollectionInfo(appDynamicsConfig, context.getAppId(), context.getStateExecutionInstanceId(),
             Long.parseLong(applicationId), Long.parseLong(tierId), Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
@@ -247,6 +251,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
+                                    .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);

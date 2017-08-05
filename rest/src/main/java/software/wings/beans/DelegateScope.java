@@ -1,23 +1,23 @@
 package software.wings.beans;
 
-import com.google.common.base.Objects;
-
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Environment.EnvironmentType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Created by bzane on 7/20/17
+ * Created by brett on 7/20/17
  */
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
 
-  // TODO: Task Types, Env Types, Applications, Environments, Service Infrastructures
-
-  private List<String> environments = new ArrayList<>();
+  private List<TaskType> taskTypes = new ArrayList<>();
   private List<EnvironmentType> environmentTypes = new ArrayList<>();
+  private List<String> applications = new ArrayList<>();
+  private List<String> environments = new ArrayList<>();
+  private List<String> serviceInfrastructures = new ArrayList<>();
 
   public String getAccountId() {
     return accountId;
@@ -25,6 +25,30 @@ public class DelegateScope extends Base {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  public List<TaskType> getTaskTypes() {
+    return taskTypes;
+  }
+
+  public void setTaskTypes(List<TaskType> taskTypes) {
+    this.taskTypes = taskTypes;
+  }
+
+  public List<EnvironmentType> getEnvironmentTypes() {
+    return environmentTypes;
+  }
+
+  public void setEnvironmentTypes(List<EnvironmentType> environmentTypes) {
+    this.environmentTypes = environmentTypes;
+  }
+
+  public List<String> getApplications() {
+    return applications;
+  }
+
+  public void setApplications(List<String> applications) {
+    this.applications = applications;
   }
 
   public List<String> getEnvironments() {
@@ -35,12 +59,12 @@ public class DelegateScope extends Base {
     this.environments = environments;
   }
 
-  public List<EnvironmentType> getEnvironmentTypes() {
-    return environmentTypes;
+  public List<String> getServiceInfrastructures() {
+    return serviceInfrastructures;
   }
 
-  public void setEnvironmentTypes(List<EnvironmentType> environmentTypes) {
-    this.environmentTypes = environmentTypes;
+  public void setServiceInfrastructures(List<String> serviceInfrastructures) {
+    this.serviceInfrastructures = serviceInfrastructures;
   }
 
   public boolean isEmpty() {
@@ -56,26 +80,33 @@ public class DelegateScope extends Base {
     if (!super.equals(o))
       return false;
     DelegateScope that = (DelegateScope) o;
-    return Objects.equal(accountId, that.accountId) && Objects.equal(environments, that.environments)
-        && Objects.equal(environmentTypes, that.environmentTypes);
+    return Objects.equals(accountId, that.accountId) && Objects.equals(taskTypes, that.taskTypes)
+        && Objects.equals(environmentTypes, that.environmentTypes) && Objects.equals(applications, that.applications)
+        && Objects.equals(environments, that.environments)
+        && Objects.equals(serviceInfrastructures, that.serviceInfrastructures);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), accountId, environments, environmentTypes);
+    return Objects.hash(
+        super.hashCode(), accountId, taskTypes, environmentTypes, applications, environments, serviceInfrastructures);
   }
 
   @Override
   public String toString() {
     return "DelegateScope{"
-        + "accountId='" + accountId + '\'' + ", environments=" + environments + ", environmentTypes=" + environmentTypes
-        + '}';
+        + "accountId='" + accountId + '\'' + ", taskTypes=" + taskTypes + ", environmentTypes=" + environmentTypes
+        + ", applications=" + applications + ", environments=" + environments
+        + ", serviceInfrastructures=" + serviceInfrastructures + '}';
   }
 
   public static final class DelegateScopeBuilder {
     private String accountId;
-    private List<String> environments = new ArrayList<>();
+    private List<TaskType> taskTypes = new ArrayList<>();
     private List<EnvironmentType> environmentTypes = new ArrayList<>();
+    private List<String> applications = new ArrayList<>();
+    private List<String> environments = new ArrayList<>();
+    private List<String> serviceInfrastructures = new ArrayList<>();
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -94,13 +125,28 @@ public class DelegateScope extends Base {
       return this;
     }
 
-    public DelegateScopeBuilder withEnvironments(List<String> environments) {
-      this.environments = environments;
+    public DelegateScopeBuilder withTaskTypes(List<TaskType> taskTypes) {
+      this.taskTypes = taskTypes;
       return this;
     }
 
     public DelegateScopeBuilder withEnvironmentTypes(List<EnvironmentType> environmentTypes) {
       this.environmentTypes = environmentTypes;
+      return this;
+    }
+
+    public DelegateScopeBuilder withApplications(List<String> applications) {
+      this.applications = applications;
+      return this;
+    }
+
+    public DelegateScopeBuilder withEnvironments(List<String> environments) {
+      this.environments = environments;
+      return this;
+    }
+
+    public DelegateScopeBuilder withServiceInfrastructures(List<String> serviceInfrastructures) {
+      this.serviceInfrastructures = serviceInfrastructures;
       return this;
     }
 
@@ -137,8 +183,11 @@ public class DelegateScope extends Base {
     public DelegateScopeBuilder but() {
       return aDelegateScope()
           .withAccountId(accountId)
-          .withEnvironments(environments)
+          .withTaskTypes(taskTypes)
           .withEnvironmentTypes(environmentTypes)
+          .withApplications(applications)
+          .withEnvironments(environments)
+          .withServiceInfrastructures(serviceInfrastructures)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -150,8 +199,11 @@ public class DelegateScope extends Base {
     public DelegateScope build() {
       DelegateScope delegateScope = new DelegateScope();
       delegateScope.setAccountId(accountId);
-      delegateScope.setEnvironments(environments);
+      delegateScope.setTaskTypes(taskTypes);
       delegateScope.setEnvironmentTypes(environmentTypes);
+      delegateScope.setApplications(applications);
+      delegateScope.setEnvironments(environments);
+      delegateScope.setServiceInfrastructures(serviceInfrastructures);
       delegateScope.setUuid(uuid);
       delegateScope.setAppId(appId);
       delegateScope.setCreatedBy(createdBy);

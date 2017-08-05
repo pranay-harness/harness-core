@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -10,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
@@ -44,6 +47,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -57,6 +61,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Service;
@@ -140,6 +145,7 @@ public class CommandStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
+  public static final PhaseElement PHASE_ELEMENT = aPhaseElement().withInfraMappingId(INFRA_MAPPING_ID).build();
   private AbstractCommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
   private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
@@ -179,7 +185,7 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(COMMAND).build());
-    when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START")).thenReturn(asList());
+    when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START")).thenReturn(emptyList());
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
 
@@ -192,7 +198,8 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute().withValue(aStringValue().withValue(STAGING_PATH).build()).build());
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
-    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(asList(SIMPLE_WORKFLOW_PARAM));
+    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(singletonList(SIMPLE_WORKFLOW_PARAM));
+    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
 
     when(context.getContextElement(ContextElementType.SERVICE))
         .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
@@ -256,10 +263,12 @@ public class CommandStateTest extends WingsBaseTest {
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)
+                       .withInfrastructureMappingId(INFRA_MAPPING_ID)
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();
@@ -357,10 +366,12 @@ public class CommandStateTest extends WingsBaseTest {
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)
+                       .withInfrastructureMappingId(INFRA_MAPPING_ID)
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
     verify(context, times(3)).getWorkflowExecutionId();

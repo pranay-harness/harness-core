@@ -181,6 +181,7 @@ public class AwsCodeDeployState extends State {
                                       .withWaitId(activity.getUuid())
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
+                                      .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
     return anExecutionResponse()
