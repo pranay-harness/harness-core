@@ -15,7 +15,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.DelegateScripts;
-import software.wings.managerclient.ManagerClient;
 import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
@@ -31,7 +30,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 
 /**
@@ -41,13 +39,30 @@ import javax.inject.Inject;
 public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
-  @Inject private ManagerClient managerClient;
-
   @Inject private TimeLimiter timeLimiter;
 
   @Inject private SignalService signalService;
 
-  private AtomicBoolean isUpgrading = new AtomicBoolean(false);
+  @Override
+  public void doRestart() {
+    StartedProcess process = null;
+    try {
+      logger.info("Restarting delegate");
+      PipedInputStream pipedInputStream = new PipedInputStream();
+      process = new ProcessExecutor()
+                    .timeout(1, TimeUnit.MINUTES)
+                    .command("if ./stop.sh; then ./run.sh; fi")
+                    .redirectOutput(new PipedOutputStream(pipedInputStream))
+                    .readOutput(true)
+                    .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                    .start();
+      logger.info("restart executed " + process.getProcess().isAlive());
+    } catch (Exception e) {
+      e.printStackTrace();
+      Misc.error(logger, "Exception while restarting", e);
+      killProcess(process);
+    }
+  }
 
   @Override
   public void doUpgrade(DelegateScripts delegateScripts, String version)
@@ -96,24 +111,28 @@ public class UpgradeServiceImpl implements UpgradeService {
     } catch (Exception e) {
       e.printStackTrace();
       Misc.error(logger, "Exception while upgrading", e);
-      if (process != null) {
-        // Something went wrong restart yourself
-        try {
-          process.getProcess().destroy();
-          process.getProcess().waitFor();
-        } catch (Exception ex) {
-          // ignore
-        }
-        try {
-          if (process.getProcess().isAlive()) {
-            process.getProcess().destroyForcibly();
-            if (process.getProcess() != null) {
-              process.getProcess().waitFor();
-            }
+      killProcess(process);
+    }
+  }
+
+  private void killProcess(StartedProcess process) {
+    if (process != null) {
+      // Something went wrong restart yourself
+      try {
+        process.getProcess().destroy();
+        process.getProcess().waitFor();
+      } catch (Exception ex) {
+        // ignore
+      }
+      try {
+        if (process.getProcess().isAlive()) {
+          process.getProcess().destroyForcibly();
+          if (process.getProcess() != null) {
+            process.getProcess().waitFor();
           }
-        } catch (Exception ex) {
-          Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
         }
+      } catch (Exception ex) {
+        Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
       }
     }
   }
@@ -138,7 +157,10 @@ public class UpgradeServiceImpl implements UpgradeService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh")) {
+    // TODO(brett): Remove after all delegates have been upgraded to use start/stop/restart scripts
+    Files.deleteIfExists(Paths.get("run.sh"));
+
+    for (String fileName : asList("upgrade.sh", "start.sh", "stop.sh", "restart.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);

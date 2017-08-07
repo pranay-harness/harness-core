@@ -95,5 +95,5 @@ then
   exit 1
 else
   echo "Delegate not running"
-  exit 1
+  exit 0
 fi

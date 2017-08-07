@@ -15,7 +15,6 @@ import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
@@ -54,6 +53,7 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.Optional;
@@ -73,6 +73,8 @@ import javax.net.ssl.SSLException;
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
+  private static final int MAX_CONNECT_ATTEMPTS = 90;
+  private static final int CONNECT_INTERVAL_SECONDS = 10;
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -145,8 +147,8 @@ public class DelegateServiceImpl implements DelegateService {
       Options clientOptions = client.newOptionsBuilder()
                                   .runtime(asyncHttpClient, true)
                                   .reconnect(true)
-                                  .reconnectAttempts(Integer.MAX_VALUE)
-                                  .pauseBeforeReconnectInMilliseconds(RandomUtils.nextInt(1000, 10000))
+                                  .reconnectAttempts(MAX_CONNECT_ATTEMPTS)
+                                  .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
                                   .build();
       socket = client.create(clientOptions);
       socket
@@ -231,6 +233,9 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (IOException ex) {
         Misc.error(logger, "Unable to open socket", e);
       }
+    } else if (e instanceof ConnectException) {
+      logger.warn("Failed to connect after {} attempts. Restarting delegate.", MAX_CONNECT_ATTEMPTS);
+      upgradeService.doRestart();
     } else {
       Misc.error(logger, "Exception: " + e.getMessage(), e);
       try {
