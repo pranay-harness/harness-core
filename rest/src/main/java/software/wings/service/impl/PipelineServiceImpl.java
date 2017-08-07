@@ -9,10 +9,14 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
+import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.CANARY;
+import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.WorkflowVariable.Builder.aWorkflowVariable;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -38,8 +42,12 @@ import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.BasicOrchestrationWorkflow;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.MultiServiceOrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -48,7 +56,10 @@ import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
+import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowVariable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -370,19 +381,42 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {
     List<Service> services = new ArrayList<>();
+    List<WorkflowVariable> workflowVariables = new ArrayList<>();
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+        .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
+        .forEach(pse -> {
+          try {
+            Workflow workflow =
+                workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
+            OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+            List<Variable> variables = new ArrayList<>();
+            if (orchestrationWorkflow != null) {
+              if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
+                variables = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
+              } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
+                variables = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
+              } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
+                variables = ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
+              }
+              if (variables.size() > 0) {
+                WorkflowVariable workflowVariable = aWorkflowVariable()
+                                                        .withWorkflowId(workflow.getUuid())
+                                                        .withWorkflowName(workflow.getName())
+                                                        .withVariables(variables)
+                                                        .build();
+                workflowVariables.add(workflowVariable);
+              }
+            }
+            services.addAll(workflow.getServices());
+          } catch (Exception ex) {
+            logger.warn("Exception occured while reading workflow associated to the pipeline {}", pipeline);
+          }
+        });
 
-    services.addAll(
-        pipeline.getPipelineStages()
-            .stream()
-            .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
-            .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
-            .flatMap(pse
-                -> workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"))
-                       .getServices()
-                       .stream())
-            .collect(Collectors.toMap(Service::getUuid, id -> id, (id1, id2) -> id1))
-            .values());
     pipeline.setServices(services);
+    pipeline.setWorkflowVariables(workflowVariables);
   }
 
   @Override
