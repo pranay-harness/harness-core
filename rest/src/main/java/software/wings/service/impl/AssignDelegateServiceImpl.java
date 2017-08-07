@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AssignDelegateService;
@@ -27,21 +26,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public boolean canAssign(DelegateTask task, String delegateId) {
-    if (task == null || task.getEnvId() == null) {
+    if (task == null) {
       return true;
     }
     Delegate delegate = delegateService.get(task.getAccountId(), delegateId);
     boolean assign = delegate.getIncludeScopes().isEmpty();
-    Environment env = environmentService.get(task.getAppId(), task.getEnvId(), false);
     for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
-      if (scopeMatch(delegateScope, task, env)) {
+      if (scopeMatch(delegateScope, task)) {
         assign = true;
         break;
       }
     }
     if (assign) {
       for (DelegateScope delegateScope : delegate.getExcludeScopes()) {
-        if (scopeMatch(delegateScope, task, env)) {
+        if (scopeMatch(delegateScope, task)) {
           assign = false;
           break;
         }
@@ -50,7 +48,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return assign;
   }
 
-  private boolean scopeMatch(DelegateScope delegateScope, DelegateTask task, Environment env) {
+  private boolean scopeMatch(DelegateScope delegateScope, DelegateTask task) {
     if (delegateScope.isEmpty()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Delegate scope cannot be empty.");
@@ -58,7 +56,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     boolean match = true;
 
     if (!delegateScope.getEnvironmentTypes().isEmpty()) {
-      match = delegateScope.getEnvironmentTypes().contains(env.getEnvironmentType());
+      match = task.getAppId() != null && task.getEnvId() != null
+          && delegateScope.getEnvironmentTypes().contains(
+                 environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType());
     }
     if (match && !delegateScope.getApplications().isEmpty()) {
       match = delegateScope.getApplications().contains(task.getAppId());
@@ -70,8 +70,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       match = delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
     }
     if (match && !delegateScope.getTaskTypes().isEmpty()) {
-      // TODO: Check task type from task
-      // match = delegateScope.getServiceInfrastructures().contains(task.get());
+      match = delegateScope.getTaskTypes().contains(task.getTaskType());
     }
 
     return match;

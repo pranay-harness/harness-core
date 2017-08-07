@@ -56,7 +56,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -183,7 +182,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       startHeartbeat(builder, socket);
 
-      startUpgradeCheck(accountId, delegateId, getVersion()); // don't auto-upgrade for now
+      startUpgradeCheck(accountId, delegateId, getVersion());
 
       if (upgrade) {
         logger.info("Delegate upgraded.");
@@ -327,16 +326,15 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     upgradeExecutor.scheduleWithFixedDelay(() -> {
-      logger.info("checking for upgrade");
+      logger.info("Checking for upgrade");
       try {
         RestResponse<DelegateScripts> restResponse =
             execute(managerClient.checkForUpgrade(version, delegateId, accountId));
-        // TODO(brett): Store the Delegate object to check for task filtering on acquire
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");
           upgradeService.doUpgrade(restResponse.getResource(), getVersion());
         } else {
-          logger.info("delegate uptodate...");
+          logger.info("Delegate up to date");
         }
       } catch (Exception e) {
         Misc.error(logger, "Exception while checking for upgrade", e);
@@ -347,7 +345,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
-      logger.debug("sending heartbeat..");
+      logger.debug("sending heartbeat...");
       try {
         if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
           socket.fire(JsonUtils.asJson(
@@ -370,7 +368,6 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
-    // TODO(brett): Check whether to acquire based on task attributes
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
     if (delegateTaskEvent.getDelegateTaskId() != null
         && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
@@ -379,6 +376,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
+      // TODO(brett): Check whether to acquire based on task attributes
       logger.info("DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
           delegateTaskEvent.getAccountId());
       DelegateTask delegateTask =
