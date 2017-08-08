@@ -73,7 +73,7 @@ import javax.net.ssl.SSLException;
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
-  private static final int MAX_CONNECT_ATTEMPTS = 90;
+  private static final int MAX_CONNECT_ATTEMPTS = 9999;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   Object waiter = new Object();
