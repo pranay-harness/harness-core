@@ -159,10 +159,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
-    // TODO(brett): Remove after all delegates have been upgraded to use start/stop/restart scripts
-    Files.deleteIfExists(Paths.get("run.sh"));
-
-    for (String fileName : asList("upgrade.sh", "start.sh", "stop.sh", "restart.sh")) {
+    for (String fileName : asList("upgrade.sh", "run.sh", "stop.sh")) {
       Files.deleteIfExists(Paths.get(fileName));
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
