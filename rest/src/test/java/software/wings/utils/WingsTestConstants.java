@@ -406,6 +406,11 @@ public class WingsTestConstants {
   public static final String DOCKER_IMAGE = "DOCKER_IMAGE";
 
   /**
+   * The constant DOCKER_SOURCE.
+   */
+  public static final String DOCKER_SOURCE = "DOCKER_SOURCE";
+
+  /**
    * The constant TASK_FAMILY.
    */
   public static final String TASK_FAMILY = "TASK_FAMILY";

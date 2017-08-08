@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.DOCKER_IMAGE;
+import static software.wings.utils.WingsTestConstants.DOCKER_SOURCE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -127,8 +128,11 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                   .withUuid(ARTIFACT_ID)
                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
-  private ArtifactStream artifactStream =
-      aDockerArtifactStream().withImageName(DOCKER_IMAGE).withSettingId(SETTING_ID).build();
+  private ArtifactStream artifactStream = aDockerArtifactStream()
+                                              .withImageName(DOCKER_IMAGE)
+                                              .withSourceName(DOCKER_SOURCE)
+                                              .withSettingId(SETTING_ID)
+                                              .build();
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
