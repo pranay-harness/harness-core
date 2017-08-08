@@ -52,7 +52,9 @@ public class UpgradeServiceImpl implements UpgradeService {
       process = new ProcessExecutor()
                     .timeout(1, TimeUnit.MINUTES)
                     .command("if ./stop.sh; then ./run.sh; fi")
-                    .redirectOutput(new PipedOutputStream(pipedInputStream))
+                    .redirectError(Slf4jStream.of("RestartCommand").asError())
+                    .redirectOutput(Slf4jStream.of("RestartCommand").asInfo())
+                    .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
