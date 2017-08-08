@@ -109,6 +109,7 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.elk.ElkServiceImpl;
+import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.splunk.SplunkServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
@@ -165,6 +166,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.elk.ElkService;
+import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -265,6 +267,7 @@ public class WingsModule extends AbstractModule {
     bind(GcrBuildService.class).to(GcrBuildServiceImpl.class);
     bind(AwsHelperResourceService.class).to(AwsHelperResourceServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
+    bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
