@@ -45,24 +45,20 @@ public class UpgradeServiceImpl implements UpgradeService {
 
   @Override
   public void doRestart() {
-    StartedProcess process = null;
     try {
       logger.info("Restarting delegate");
-      PipedInputStream pipedInputStream = new PipedInputStream();
-      process = new ProcessExecutor()
-                    .timeout(1, TimeUnit.MINUTES)
-                    .command("if ./stop.sh; then ./run.sh; fi")
-                    .redirectError(Slf4jStream.of("RestartCommand").asError())
-                    .redirectOutput(Slf4jStream.of("RestartCommand").asInfo())
-                    .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
-                    .readOutput(true)
-                    .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                    .start();
-      logger.info("restart executed " + process.getProcess().isAlive());
+      new ProcessExecutor()
+          .timeout(1, TimeUnit.MINUTES)
+          .command("./restart.sh")
+          .redirectError(Slf4jStream.of("RestartScript").asError())
+          .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
+          .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
+          .readOutput(true)
+          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+          .start();
     } catch (Exception e) {
       e.printStackTrace();
       Misc.error(logger, "Exception while restarting", e);
-      killProcess(process);
     }
   }
 
@@ -113,28 +109,23 @@ public class UpgradeServiceImpl implements UpgradeService {
     } catch (Exception e) {
       e.printStackTrace();
       Misc.error(logger, "Exception while upgrading", e);
-      killProcess(process);
-    }
-  }
-
-  private void killProcess(StartedProcess process) {
-    if (process != null) {
-      // Something went wrong restart yourself
-      try {
-        process.getProcess().destroy();
-        process.getProcess().waitFor();
-      } catch (Exception ex) {
-        // ignore
-      }
-      try {
-        if (process.getProcess().isAlive()) {
-          process.getProcess().destroyForcibly();
-          if (process.getProcess() != null) {
-            process.getProcess().waitFor();
-          }
+      if (process != null) {
+        try {
+          process.getProcess().destroy();
+          process.getProcess().waitFor();
+        } catch (Exception ex) {
+          // ignore
         }
-      } catch (Exception ex) {
-        Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
+        try {
+          if (process.getProcess().isAlive()) {
+            process.getProcess().destroyForcibly();
+            if (process.getProcess() != null) {
+              process.getProcess().waitFor();
+            }
+          }
+        } catch (Exception ex) {
+          Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
+        }
       }
     }
   }

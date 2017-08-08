@@ -8,6 +8,7 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -50,12 +51,16 @@ import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -73,7 +78,7 @@ import javax.net.ssl.SSLException;
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
-  private static final int MAX_CONNECT_ATTEMPTS = 9999;
+  private static final int MAX_CONNECT_ATTEMPTS = 100;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   Object waiter = new Object();
@@ -292,6 +297,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
+    writeRestartScript();
     try {
       return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
@@ -319,6 +325,25 @@ public class DelegateServiceImpl implements DelegateService {
       String msg = "Timeout occurred while registering Delegate [" + accountId + "] with manager";
       Misc.error(logger, msg, e);
       throw new WingsException(msg, e);
+    }
+  }
+
+  private void writeRestartScript() {
+    File scriptFile = new File("restart.sh");
+    String script = "#!/bin/bash -e\n\nif ./stop.sh; then ./run.sh; fi\n";
+
+    try {
+      try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
+        writer.write(script, 0, script.length());
+        writer.flush();
+      }
+      logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
+      Files.setPosixFilePermissions(scriptFile.toPath(),
+          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+      logger.info("Done setting file permissions");
+    } catch (IOException e) {
+      Misc.error(logger, "Couldn't write restart script.", e);
     }
   }
 
