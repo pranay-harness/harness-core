@@ -60,6 +60,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -329,10 +330,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void writeRestartScript() {
-    File scriptFile = new File("restart.sh");
+    String filename = "restart.sh";
     String script = "#!/bin/bash -e\n\nif ./stop.sh; then ./run.sh; fi\n";
 
     try {
+      Files.deleteIfExists(Paths.get(filename));
+      File scriptFile = new File(filename);
       try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
         writer.write(script, 0, script.length());
         writer.flush();
