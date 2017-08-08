@@ -32,6 +32,8 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
@@ -54,6 +56,8 @@ import software.wings.utils.Misc;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
@@ -241,7 +245,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (e instanceof ConnectException) {
       logger.warn("Failed to connect after {} attempts. Restarting delegate.", MAX_CONNECT_ATTEMPTS);
-      upgradeService.doRestart();
+      restartDelegate();
     } else {
       Misc.error(logger, "Exception: " + e.getMessage(), e);
       try {
@@ -347,6 +351,24 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Done setting file permissions");
     } catch (IOException e) {
       Misc.error(logger, "Couldn't write restart script.", e);
+    }
+  }
+
+  private void restartDelegate() {
+    try {
+      logger.info("Restarting delegate");
+      new ProcessExecutor()
+          .timeout(1, TimeUnit.MINUTES)
+          .command("./restart.sh")
+          .redirectError(Slf4jStream.of("RestartScript").asError())
+          .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
+          .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
+          .readOutput(true)
+          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+          .start();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      Misc.error(logger, "Exception while restarting", ex);
     }
   }
 

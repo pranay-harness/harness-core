@@ -44,25 +44,6 @@ public class UpgradeServiceImpl implements UpgradeService {
   @Inject private SignalService signalService;
 
   @Override
-  public void doRestart() {
-    try {
-      logger.info("Restarting delegate");
-      new ProcessExecutor()
-          .timeout(1, TimeUnit.MINUTES)
-          .command("./restart.sh")
-          .redirectError(Slf4jStream.of("RestartScript").asError())
-          .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
-          .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
-          .readOutput(true)
-          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-          .start();
-    } catch (Exception e) {
-      e.printStackTrace();
-      Misc.error(logger, "Exception while restarting", e);
-    }
-  }
-
-  @Override
   public void doUpgrade(DelegateScripts delegateScripts, String version)
       throws IOException, TimeoutException, InterruptedException {
     logger.info("Replace run scripts");
