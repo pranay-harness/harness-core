@@ -45,9 +45,10 @@ public class SplunkResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("appId") final String appId, List<LogElement> logData) throws IOException {
-    return new RestResponse<>(
-        analysisService.saveLogData(StateType.SPLUNKV2, appId, stateExecutionId, workflowId, logData));
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
+      List<LogElement> logData) throws IOException {
+    return new RestResponse<>(analysisService.saveLogData(
+        StateType.SPLUNKV2, appId, stateExecutionId, workflowId, workflowExecutionId, logData));
   }
 
   @POST

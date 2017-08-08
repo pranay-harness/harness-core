@@ -28,6 +28,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -56,9 +57,10 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(
+    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
+        getWorkflowId(context), context.getWorkflowExecutionId(), queries, logCollectionStartTimeStamp,
+        Integer.parseInt(timeDuration), Collections.EMPTY_SET);
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

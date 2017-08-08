@@ -10,6 +10,6 @@ import java.util.List;
  * Created by rsingh on 5/18/17.
  */
 public interface LogAnalysisStoreService {
-  void save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowExecutionId,
-      List<LogElement> splunkLogs) throws IOException;
+  void save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
+      String workflowExecutionId, List<LogElement> splunkLogs) throws IOException;
 }

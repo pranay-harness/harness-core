@@ -18,7 +18,6 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -152,7 +151,7 @@ public class ElkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataC
 
             logAnalysisStoreService.save(StateType.ELK, dataCollectionInfo.getAccountId(),
                 dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getWorkflowId(), logElements);
+                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
             logger.info("sent elk search records to server. Num of events: " + logElements.size()
                 + " application: " + dataCollectionInfo.getApplicationId() + " stateExecutionId: "
                 + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute + " host: " + hostName);

@@ -55,10 +55,10 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public Boolean saveLogData(StateType stateType, String appId, String stateExecutionId, String workflowId,
-      List<LogElement> logData) throws IOException {
+      String workflowExecutionId, List<LogElement> logData) throws IOException {
     logger.debug("inserting " + logData.size() + " pieces of splunk log data");
     final List<LogDataRecord> logDataRecords =
-        LogDataRecord.generateDataRecords(stateType, appId, stateExecutionId, workflowId, logData);
+        LogDataRecord.generateDataRecords(stateType, appId, stateExecutionId, workflowId, workflowExecutionId, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.debug("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
     return true;
@@ -89,27 +89,41 @@ public class AnalysisServiceImpl implements AnalysisService {
           getLastSuccessfulWorkflowExecution(logRequest.getApplicationId(), logRequest.getWorkflowId());
       Preconditions.checkNotNull(
           workflowExecution, "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
-      final Query<LogDataRecord> lastSuccessfulExecutionData = wingsPersistence.createQuery(LogDataRecord.class)
-                                                                   .field("stateType")
-                                                                   .equal(stateType)
-                                                                   .field("workflowId")
-                                                                   .equal(logRequest.getWorkflowId())
-                                                                   .field("stateExecutionId")
-                                                                   .notEqual(logRequest.getStateExecutionId())
-                                                                   .field("applicationId")
-                                                                   .equal(logRequest.getApplicationId())
-                                                                   .field("query")
-                                                                   .equal(logRequest.getQuery())
-                                                                   .order("-createdAt")
-                                                                   .field("logCollectionMinute")
-                                                                   .equal(logRequest.getLogCollectionMinute());
 
-      LogDataRecord record = wingsPersistence.executeGetOneQuery(lastSuccessfulExecutionData);
+      final PageRequest<LogDataRecord> lastSuccessfulExecutionData =
+          PageRequest.Builder.aPageRequest()
+              .addFilter("stateType", Operator.EQ, stateType)
+              .addFilter("workflowId", Operator.EQ, logRequest.getWorkflowId())
+              .addFilter("workflowExecutionId", Operator.EQ, workflowExecution.getUuid())
+              .addFilter("stateExecutionId", Operator.NOT_EQ, logRequest.getStateExecutionId())
+              .addFilter("applicationId", Operator.EQ, logRequest.getApplicationId())
+              .addFilter("query", Operator.EQ, logRequest.getQuery())
+              .addFilter("logCollectionMinute", Operator.EQ, logRequest.getLogCollectionMinute())
+              .addOrder("createdAt", OrderType.DESC)
+              .withLimit("1")
+              .build();
+
+      PageResponse<LogDataRecord> lastSuccessfullRecords =
+          wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
+
+      Preconditions.checkState(lastSuccessfullRecords.size() == 1, "Multiple records found for give query");
+      //      final Query<LogDataRecord> lastSuccessfulExecutionData = wingsPersistence.createQuery(LogDataRecord.class)
+      //          .field("stateType").equal(stateType)
+      //          .field("workflowId").equal(logRequest.getWorkflowId())
+      //          .field("stateExecutionId").notEqual(logRequest.getStateExecutionId())
+      //          .field("applicationId").equal(logRequest.getApplicationId())
+      //          .field("query").equal(logRequest.getQuery())
+      //          .order("-createdAt")
+      //          .field("logCollectionMinute").equal(logRequest.getLogCollectionMinute());
+
+      LogDataRecord record = lastSuccessfullRecords.get(0);
       if (record == null) {
         logger.error("Could not find any logs collected for minute {} for previous successful workflow {}",
             logRequest.getLogCollectionMinute(), logRequest.getWorkflowId());
         return Collections.emptyList();
       }
+      logger.info("returning logs for workflowExecutionId: " + workflowExecution.getWorkflowId()
+          + " stateExecutionId: " + record.getStateExecutionId());
       splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
                                      .field("stateType")
                                      .equal(stateType)

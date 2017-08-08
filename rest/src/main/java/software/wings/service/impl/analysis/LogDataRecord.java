@@ -34,6 +34,8 @@ public class LogDataRecord extends Base {
 
   @NotEmpty @Indexed private String workflowId;
 
+  @NotEmpty @Indexed private String workflowExecutionId;
+
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private String query;
@@ -51,12 +53,13 @@ public class LogDataRecord extends Base {
   @Indexed private int logCollectionMinute;
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
-      String stateExecutionId, String workflowId, List<LogElement> logElements) {
+      String stateExecutionId, String workflowId, String workflowExecutionId, List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
       final LogDataRecord record = new LogDataRecord();
       record.setStateType(stateType);
       record.setWorkflowId(workflowId);
+      record.setWorkflowExecutionId(workflowExecutionId);
       record.setStateExecutionId(stateExecutionId);
       record.setQuery(logElement.getQuery());
       record.setApplicationId(applicationId);

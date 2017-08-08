@@ -47,7 +47,8 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("appId") final String appId, List<LogElement> logData) throws IOException;
+      @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
+      List<LogElement> logData) throws IOException;
 
   RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("compareCurrent") boolean compareCurrent, LogRequest logRequest) throws IOException;
