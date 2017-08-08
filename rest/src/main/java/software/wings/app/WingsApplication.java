@@ -70,6 +70,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
+import software.wings.yaml.AppYamlFeature;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -319,6 +320,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(WingsExceptionMapper.class);
     environment.jersey().register(GenericExceptionMapper.class);
     environment.jersey().register(MultiPartFeature.class);
+
+    environment.jersey().register(AppYamlFeature.class);
   }
 
   private void registerAuthFilters(MainConfiguration configuration, Environment environment, Injector injector) {
