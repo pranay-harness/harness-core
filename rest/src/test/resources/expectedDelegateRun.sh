@@ -133,7 +133,7 @@ else
       echo "Delegate started"
     else
       echo "Failed to start Delegate."
-      echo "$(tail delegate.log)"
+      echo "$(tail -n 30 delegate.log)"
     fi
   fi
 fi

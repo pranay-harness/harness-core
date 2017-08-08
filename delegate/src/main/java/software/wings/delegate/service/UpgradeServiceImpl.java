@@ -15,7 +15,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.DelegateScripts;
-import software.wings.managerclient.ManagerClient;
 import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
@@ -31,7 +30,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 
 /**
@@ -41,13 +39,9 @@ import javax.inject.Inject;
 public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
-  @Inject private ManagerClient managerClient;
-
   @Inject private TimeLimiter timeLimiter;
 
   @Inject private SignalService signalService;
-
-  private AtomicBoolean isUpgrading = new AtomicBoolean(false);
 
   @Override
   public void doUpgrade(DelegateScripts delegateScripts, String version)
@@ -97,7 +91,6 @@ public class UpgradeServiceImpl implements UpgradeService {
       e.printStackTrace();
       Misc.error(logger, "Exception while upgrading", e);
       if (process != null) {
-        // Something went wrong restart yourself
         try {
           process.getProcess().destroy();
           process.getProcess().waitFor();

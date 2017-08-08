@@ -5,6 +5,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -62,7 +63,8 @@ public class ArtifactCollectionJob implements Job {
     Validator.notNullCheck("Artifact Stream", artifactStream);
 
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
-        || artifactStream.getArtifactStreamType().equals(ECR.name())) {
+        || artifactStream.getArtifactStreamType().equals(ECR.name())
+        || artifactStream.getArtifactStreamType().equals(GCR.name())) {
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
       List<Artifact> artifacts = artifactService
                                      .list(aPageRequest()

@@ -22,6 +22,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import software.wings.api.InstanceElement;
 import software.wings.api.JenkinsExecutionData;
+import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -29,6 +30,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
+import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
@@ -217,6 +219,8 @@ public class JenkinsState extends State {
       });
     }
 
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(getTaskType())
@@ -226,6 +230,7 @@ public class JenkinsState extends State {
             .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
                 jenkinsConfig.getPassword(), finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
             .withEnvId(envId)
+            .withInfrastructureMappingId(infrastructureMappingId)
             .build();
 
     if (getTimeoutMillis() != null) {

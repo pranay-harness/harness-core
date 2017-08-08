@@ -53,6 +53,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -171,8 +172,8 @@ public class KubernetesReplicationControllerSetup extends State {
         KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
     kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
-        createReplicationControllerDefinition(
-            replicationControllerName, controllerLabels, serviceId, imageDetails.name, app, secretName));
+        createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageDetails.name,
+            artifact.getBuildNo(), app, secretName));
 
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
@@ -211,6 +212,7 @@ public class KubernetesReplicationControllerSetup extends State {
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())
                                                           .build();
 
+    String dockerImageName = imageDetails.name + ":" + artifact.getBuildNo();
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addContextElement(containerServiceElement)
@@ -221,7 +223,7 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withKubernetesServiceName(kubernetesServiceName)
                                     .withKubernetesServiceClusterIP(serviceClusterIP)
                                     .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
-                                    .withDockerImageName(imageDetails.name)
+                                    .withDockerImageName(dockerImageName)
                                     .build())
         .build();
   }
@@ -299,7 +301,8 @@ public class KubernetesReplicationControllerSetup extends State {
    * Creates replication controller definition
    */
   private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
-      Map<String, String> controllerLabels, String serviceId, String imageName, Application app, String secretName) {
+      Map<String, String> controllerLabels, String serviceId, String imageName, String tag, Application app,
+      String secretName) {
     KubernetesContainerTask kubernetesContainerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
@@ -313,11 +316,11 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     String containerName = KubernetesConvention.getContainerName(imageName);
-
+    String dockerImageName = imageName + ":" + tag;
     List<Container> containerDefinitions =
         kubernetesContainerTask.getContainerDefinitions()
             .stream()
-            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
+            .map(containerDefinition -> createContainerDefinition(dockerImageName, containerName, containerDefinition))
             .collect(Collectors.toList());
 
     List<Volume> volumeList = new ArrayList<>();
@@ -494,6 +497,12 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.username = "AWS";
       imageDetails.password = AwsHelperService.getAmazonEcrAuthToken(
           ecrConfig.getEcrUrl(), ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
+    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
+      GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
+      String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
+      imageDetails.name = imageName;
+      imageDetails.sourceName = imageName;
+      imageDetails.registryUrl = imageName;
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       imageDetails.name = artifactoryArtifactStream.getImageName();

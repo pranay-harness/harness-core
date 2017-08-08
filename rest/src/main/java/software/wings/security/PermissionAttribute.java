@@ -130,7 +130,7 @@ public class PermissionAttribute {
                     * Deployment resource.
                     */
     DEPLOYMENT(ENV), /**
-                      * Artifcats resource.
+                      * Artifacts resource.
                       */
     ARTIFACT(APP), /**
                     * User resource.
@@ -158,7 +158,11 @@ public class PermissionAttribute {
     /**
      * Delegate resource type.
      */
-    DELEGATE(PermissionScope.DELEGATE);
+    DELEGATE(PermissionScope.DELEGATE),
+    /**
+     * Delegate Scope resource type.
+     */
+    DELEGATE_SCOPE(PermissionScope.DELEGATE);
 
     private ImmutableMap<Action, PermissionScope> actionPermissionScopeMap;
 

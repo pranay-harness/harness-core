@@ -32,6 +32,9 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
                                                  * ECR source type.
                                                  */
   ECR(EcrArtifactStream.class, "ECR"), /**
+                                        * Google Container Registry source type.
+                                        */
+  GCR(GcrArtifactStream.class, "GCR"), /**
                                         * Nexus Artifact source type.
                                         */
   NEXUS(NexusArtifactStream.class, "NEXUS"), /**

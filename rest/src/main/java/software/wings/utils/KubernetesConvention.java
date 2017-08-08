@@ -25,11 +25,11 @@ public class KubernetesConvention {
   }
 
   public static String getKubernetesServiceName(String appName, String serviceName, String envName) {
-    return normalize(appName + DASH + serviceName + DASH + envName);
+    return normalize(noDot(appName) + DASH + noDot(serviceName) + DASH + noDot(envName));
   }
 
   public static String getKubernetesSecretName(String appName, String serviceName, String envName, String imageSource) {
-    return normalize(appName + DASH + serviceName + DASH + envName + DASH + imageSource);
+    return normalize(noDot(appName) + DASH + noDot(serviceName) + DASH + noDot(envName) + DASH + noDot(imageSource));
   }
 
   public static int getRevisionFromControllerName(String name) {
@@ -47,7 +47,7 @@ public class KubernetesConvention {
   }
 
   public static String getContainerName(String imageName) {
-    return normalize(imageName);
+    return normalize(noDot(imageName));
   }
 
   public static String getVolumeName(String path) {
@@ -60,5 +60,9 @@ public class KubernetesConvention {
 
   private static String normalize(String expression) {
     return wildCharPattern.matcher(expression).replaceAll(DASH).toLowerCase();
+  }
+
+  private static String noDot(String str) {
+    return str != null ? str.replaceAll("\\.", DASH) : "null";
   }
 }

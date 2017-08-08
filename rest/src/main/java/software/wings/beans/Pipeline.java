@@ -30,6 +30,7 @@ public class Pipeline extends Base {
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
+  @Transient private List<WorkflowVariable> workflowVariables = new ArrayList<>();
 
   /**
    * Gets state eta map.
@@ -101,6 +102,22 @@ public class Pipeline extends Base {
    */
   public void setPipelineStages(List<PipelineStage> pipelineStages) {
     this.pipelineStages = pipelineStages;
+  }
+
+  /**
+   * Get workflow variables
+   * @return
+   */
+  public List<WorkflowVariable> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  /**
+   * Set workflow variables
+   * @param workflowVariables
+   */
+  public void setWorkflowVariables(List<WorkflowVariable> workflowVariables) {
+    this.workflowVariables = workflowVariables;
   }
 
   @Override

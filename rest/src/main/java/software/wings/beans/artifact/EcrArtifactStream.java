@@ -2,7 +2,7 @@ package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
+import static software.wings.beans.artifact.EcrArtifactStream.Builder.anEcrArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -84,7 +84,7 @@ public class EcrArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStream clone() {
-    return aDockerArtifactStream()
+    return anEcrArtifactStream()
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
@@ -114,11 +114,11 @@ public class EcrArtifactStream extends ArtifactStream {
     private Builder() {}
 
     /**
-     * A docker artifact stream builder.
+     * A ECR artifact stream builder.
      *
      * @return the builder
      */
-    public static Builder aDockerArtifactStream() {
+    public static Builder anEcrArtifactStream() {
       return new Builder();
     }
 
@@ -271,7 +271,7 @@ public class EcrArtifactStream extends ArtifactStream {
      * @return the builder
      */
     public Builder but() {
-      return aDockerArtifactStream()
+      return anEcrArtifactStream()
           .withImageName(imageName)
           .withSourceName(sourceName)
           .withSettingId(settingId)

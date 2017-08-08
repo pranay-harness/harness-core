@@ -306,7 +306,7 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-    return delegate;
+    return savedDelegate;
   }
 
   @Override
@@ -371,27 +371,37 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void ensureDelegateAvailableToExecuteTask(DelegateTask task) {
-    List<Key<Delegate>> availableDelegates = wingsPersistence.createQuery(Delegate.class)
-                                                 .field("accountId")
-                                                 .equal(task.getAccountId())
-                                                 .field("connected")
-                                                 .equal(true)
-                                                 .field("status")
-                                                 .equal(Status.ENABLED)
-                                                 .field("supportedTaskTypes")
-                                                 .contains(task.getTaskType().name())
-                                                 .field("lastHeartBeat")
-                                                 .greaterThanOrEq(System.currentTimeMillis() - 3 * 60 * 1000)
-                                                 .asKeyList(); // TODO:: make it more reliable. take out time factor
+    List<Key<Delegate>> activeDelegates = wingsPersistence.createQuery(Delegate.class)
+                                              .field("accountId")
+                                              .equal(task.getAccountId())
+                                              .field("connected")
+                                              .equal(true)
+                                              .field("status")
+                                              .equal(Status.ENABLED)
+                                              .field("supportedTaskTypes")
+                                              .contains(task.getTaskType().name())
+                                              .field("lastHeartBeat")
+                                              .greaterThanOrEq(System.currentTimeMillis() - 3 * 60 * 1000)
+                                              .asKeyList(); // TODO:: make it more reliable. take out time factor
 
-    logger.info("{} availableDelegates [{}] available to execute the task", availableDelegates.size(),
-        availableDelegates.stream()
-            .map(delegateKey -> delegateKey.getId().toString())
-            .collect(Collectors.joining(", ")));
-    if (availableDelegates.size() == 0) {
-      logger.warn("No delegate available to execute the task for the accountId: {}", task.getAccountId());
+    logger.info("{} delegates [{}] are active", activeDelegates.size(),
+        activeDelegates.stream().map(delegateKey -> delegateKey.getId().toString()).collect(Collectors.joining(", ")));
+
+    List<Key<Delegate>> eligibleDelegates =
+        activeDelegates.stream()
+            .filter(delegateKey -> assignDelegateService.canAssign(task, delegateKey.getId().toString()))
+            .collect(toList());
+
+    if (eligibleDelegates.size() == 0) {
+      logger.warn("{} delegates active, no delegates are eligible to execute task [{}] for the accountId: {}",
+          activeDelegates.size(), task.getUuid(), task.getAccountId());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
+
+    logger.info("{} delegates [{}] eligible to execute the task", eligibleDelegates.size(),
+        eligibleDelegates.stream()
+            .map(delegateKey -> delegateKey.getId().toString())
+            .collect(Collectors.joining(", ")));
   }
 
   @Override
@@ -415,7 +425,7 @@ public class DelegateServiceImpl implements DelegateService {
                                       .doesNotExist()
                                       .field(ID_KEY)
                                       .equal(taskId);
-      if (!assignDelegateService.assign(wingsPersistence.executeGetOneQuery(query), delegateId)) {
+      if (!assignDelegateService.canAssign(wingsPersistence.executeGetOneQuery(query), delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
         delegateTask = null;
       } else {
@@ -430,7 +440,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (!isBlank(delegateTask.getDelegateId())) {
         logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
         delegateTask = null;
-      } else if (!assignDelegateService.assign(delegateTask, delegateId)) {
+      } else if (!assignDelegateService.canAssign(delegateTask, delegateId)) {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
         delegateTask = null;
       } else {

@@ -29,6 +29,7 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.ResourceTestRule;
@@ -49,6 +50,7 @@ import javax.ws.rs.core.Response;
  */
 public class DelegateResourceTest {
   private static DelegateService DELEGATE_SERVICE = mock(DelegateService.class);
+  private static DelegateScopeService DELEGATE_SCOPE_SERVICE = mock(DelegateScopeService.class);
   private static DownloadTokenService DOWNLOAD_TOKEN_SERVICE = mock(DownloadTokenService.class);
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
@@ -56,7 +58,7 @@ public class DelegateResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new DelegateResource(DELEGATE_SERVICE, DOWNLOAD_TOKEN_SERVICE))
+          .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {

@@ -24,7 +24,8 @@ public class ArtifactSourceTypeEnumDataProvider implements DataProvider {
     Service service = serviceResourceService.get(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name(),
-          ArtifactStreamType.ECR.name(), ArtifactStreamType.ECR.name());
+          ArtifactStreamType.ECR.name(), ArtifactStreamType.ECR.name(), ArtifactStreamType.GCR.name(),
+          ArtifactStreamType.GCR.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name());

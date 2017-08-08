@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -46,6 +47,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -53,6 +55,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
@@ -153,6 +156,31 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  public void shouldGetPipelineWithWorkflowVariables() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.Builder.aPipeline()
+                        .withAppId(APP_ID)
+                        .withUuid(PIPELINE_ID)
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
+                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .build());
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        aCanaryOrchestrationWorkflow()
+            .withUserVariables(
+                asList(Variable.VariableBuilder.aVariable().withName("httpUrl").withValue("google.com").build()))
+            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().withUuid(WORKFLOW_ID).withOrchestrationWorkflow(orchestrationWorkflow).build());
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    assertThat(pipeline.getWorkflowVariables()).hasSize(1).extracting("workflowId").isEqualTo(asList(WORKFLOW_ID));
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 

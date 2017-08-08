@@ -9,10 +9,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogCollectionCallback;
@@ -58,6 +60,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), splunkConfig, queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration));
     String waitId = UUIDGenerator.getUuid();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
@@ -65,6 +69,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
+                                    .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
     waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);

@@ -8,6 +8,7 @@ import static software.wings.utils.Validator.validateUuid;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
@@ -118,6 +119,28 @@ public class WorkflowResource {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
     return new RestResponse<>((workflowService.createWorkflow(workflow)));
+  }
+
+  @PUT
+  @Path("{workflowId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Workflow> update(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowVersion workflowVersion) {
+    return new RestResponse<>((workflowService.updateWorkflow(appId, workflowId, workflowVersion.getDefaultVersion())));
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  private static class WorkflowVersion {
+    private Integer defaultVersion;
+
+    public Integer getDefaultVersion() {
+      return defaultVersion;
+    }
+
+    public void setDefaultVersion(Integer defaultVersion) {
+      this.defaultVersion = defaultVersion;
+    }
   }
 
   /**

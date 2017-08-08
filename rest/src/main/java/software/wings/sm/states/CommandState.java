@@ -6,6 +6,9 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -23,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
@@ -40,7 +44,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -293,8 +296,9 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-        if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())
-            || artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
+        if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
+            || artifactStream.getArtifactStreamType().equals(ECR.name())
+            || artifactStream.getArtifactStreamType().equals(GCR.name())) {
           ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
           artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
           commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
@@ -316,6 +320,8 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).build();
 
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
       delegateTaskId = delegateService.queueTask(aDelegateTask()
                                                      .withAccountId(application.getAccountId())
                                                      .withAppId(appId)
@@ -323,6 +329,7 @@ public class CommandState extends State {
                                                      .withWaitId(activityId)
                                                      .withParameters(new Object[] {command, commandExecutionContext})
                                                      .withEnvId(envId)
+                                                     .withInfrastructureMappingId(infrastructureMappingId)
                                                      .build());
     } catch (Exception e) {
       Misc.error(logger, "Exception in command execution", e);

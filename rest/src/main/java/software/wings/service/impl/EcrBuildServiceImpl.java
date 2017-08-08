@@ -1,14 +1,13 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -33,7 +32,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig) {
-    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ECR.name());
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
     List<BuildDetails> builds = ecrService.getBuilds(ecrConfig, artifactStreamAttributes.getImageName(), 50);
     return builds;
   }

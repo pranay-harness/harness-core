@@ -128,12 +128,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
           response = registryRestClient.getApiVersion("Bearer " + dockerRegistryToken.getToken()).execute();
         }
       }
-      isSuccessful(response);
+      return isSuccessful(response);
     } catch (IOException e) {
       Misc.error(logger, "Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
     }
-    return false;
   }
 
   private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {

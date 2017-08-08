@@ -187,6 +187,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withWaitId(activity.getUuid())
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
+                                      .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
     return anExecutionResponse()
@@ -298,6 +299,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withWaitId(commandStateExecutionData.getActivityId())
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
+                                      .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
     return anExecutionResponse()

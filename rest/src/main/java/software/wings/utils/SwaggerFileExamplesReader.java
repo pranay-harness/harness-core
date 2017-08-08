@@ -65,7 +65,7 @@ public class SwaggerFileExamplesReader implements ReaderListener {
             String json = JsonUtils.asJson(JsonUtils.readResource("/apiexamples/" + exampleFileName), mapper);
             ((BodyParameter) bodyParameter.get()).setExamples(ImmutableMap.of("default", json));
           } catch (Exception e) {
-            Misc.warn(logger, "Missing api example file " + exampleFileName, e);
+            logger.warn("Missing api example file " + exampleFileName);
           }
         }
       }

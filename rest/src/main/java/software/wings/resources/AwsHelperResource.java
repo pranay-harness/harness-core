@@ -1,26 +1,19 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
-import com.amazonaws.regions.Regions;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AwsHelperResourceService;
-import software.wings.service.intfc.CloudWatchService;
 
 import java.util.Map;
-
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;

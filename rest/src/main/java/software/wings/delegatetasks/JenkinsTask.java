@@ -20,6 +20,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.utils.Misc;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -54,15 +55,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
 
       QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
 
-      Build jenkinsBuild;
-      while ((jenkinsBuild = jenkins.getBuild(queueItem)) == null) {
-        Misc.sleepWithRuntimeException(1000);
-      }
-      BuildWithDetails jenkinsBuildWithDetails;
-      while ((jenkinsBuildWithDetails = jenkinsBuild.details()).isBuilding()) {
-        Misc.sleepWithRuntimeException((int) (Math.max(
-            5000, jenkinsBuildWithDetails.getDuration() - jenkinsBuildWithDetails.getEstimatedDuration())));
-      }
+      Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
+      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild);
+
       jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
 
       BuildResult buildResult = jenkinsBuildWithDetails.getResult();
@@ -116,5 +111,31 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
     }
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
     return jenkinsExecutionResponse;
+  }
+
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild) throws IOException {
+    BuildWithDetails jenkinsBuildWithDetails = null;
+    do {
+      Misc.sleepWithRuntimeException(5000);
+      try {
+        jenkinsBuildWithDetails = jenkinsBuild.details();
+      } catch (IOException ex) {
+        logger.warn("Jenkins server unreachable {}", ex.getMessage());
+      }
+    } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
+    return jenkinsBuildWithDetails;
+  }
+
+  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {
+    Build jenkinsBuild = null;
+    do {
+      Misc.sleepWithRuntimeException(1000);
+      try {
+        jenkinsBuild = jenkins.getBuild(queueItem);
+      } catch (IOException ex) {
+        logger.warn("Jenkins server unreachable {}", ex.getMessage());
+      }
+    } while (jenkinsBuild == null);
+    return jenkinsBuild;
   }
 }
