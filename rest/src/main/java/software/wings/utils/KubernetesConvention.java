@@ -63,6 +63,6 @@ public class KubernetesConvention {
   }
 
   private static String noDot(String str) {
-    return str.replaceAll("\\.", DASH);
+    return str != null ? str.replaceAll("\\.", DASH) : "null";
   }
 }
