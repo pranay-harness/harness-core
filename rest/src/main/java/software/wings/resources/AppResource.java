@@ -6,6 +6,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
@@ -27,6 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 
 /**
  * Application Resource class.
@@ -39,6 +42,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(APPLICATION)
 public class AppResource {
   private AppService appService;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Instantiates a new app resource.
@@ -113,11 +117,37 @@ public class AppResource {
   @ExceptionMetered
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
+      @QueryParam("overviewDays") @DefaultValue("30") int overviewDays,
+      @QueryParam("yaml") @DefaultValue("false") boolean yaml) {
+    if (status == null) {
+      status = COMPLETE; // don't verify setup status
+    }
+
+    logger.info("****************** yaml = " + yaml);
+
+    return new RestResponse<>(appService.get(appId, status, true, overviewDays));
+  }
+
+  /**
+   * Gets the yaml version of an app by addId
+   *
+   * @param appId  the app id
+   * @param status the status
+   * @return the response
+   */
+  @GET
+  @Path("/yaml/{appId}")
+  @Produces("text/yaml")
+  @Timed
+  @ExceptionMetered
+  public Response get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
+      @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
     }
-    return new RestResponse<>(appService.get(appId, status, true, overviewDays));
+
+    return Response.ok(appService.get(appId, status, true, overviewDays)).build();
   }
 
   /**
