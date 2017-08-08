@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
+import com.google.api.services.container.Container.Builder;
 import com.google.api.services.container.ContainerScopes;
 import com.google.inject.Singleton;
 
@@ -57,11 +58,9 @@ public class GcpHelperService {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = GoogleCredential.fromStream(IOUtils.toInputStream(credentials));
-      if (credential.createScopedRequired()) {
-        credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
-      }
-      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
+      GoogleCredential credential = getGoogleCredential(credentials);
+      Container container = new Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
+      return container;
     } catch (GeneralSecurityException e) {
       Misc.error(logger, "Security exception getting Google container service", e);
       throw new WingsException(
@@ -71,6 +70,14 @@ public class GcpHelperService {
       throw new WingsException(
           ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
     }
+  }
+
+  public GoogleCredential getGoogleCredential(String credentials) throws IOException {
+    GoogleCredential credential = GoogleCredential.fromStream(IOUtils.toInputStream(credentials));
+    if (credential.createScopedRequired()) {
+      credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
+    }
+    return credential;
   }
 
   /**

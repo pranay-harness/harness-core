@@ -41,6 +41,7 @@ public class kube {
 
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
+          .withUuid("GCP_ID")
           .withValue(
               aGcpConfig()
                   .withServiceAccountKeyFileContent("{\n"
@@ -121,7 +122,7 @@ public class kube {
             .addToLabels("tier", "backend")
             .endMetadata()
             .withNewSpec()
-            .withReplicas(2)
+            .withReplicas(0)
             .withNewTemplate()
             .withNewMetadata()
             .addToLabels("app", "testApp")
@@ -130,7 +131,7 @@ public class kube {
             .withNewSpec()
             .addNewContainer()
             .withName("server")
-            .withImage("gcr.io/gdg-apps-1090/graphviz-server")
+            .withImage("gcr.io/exploration-161417/todolist")
             .withArgs("8080")
             .withNewResources()
             .withRequests(ImmutableMap.of("cpu", new Quantity("10m"), "memory", new Quantity(("10Mi"))))
@@ -174,7 +175,7 @@ public class kube {
             .addToLabels("tier", "frontend")
             .endMetadata()
             .withNewSpec()
-            .withReplicas(2)
+            .withReplicas(0)
             .withNewTemplate()
             .withNewMetadata()
             .addToLabels("app", "testApp")
@@ -183,7 +184,7 @@ public class kube {
             .withNewSpec()
             .addNewContainer()
             .withName("webapp")
-            .withImage("gcr.io/gdg-apps-1090/graphviz-webapp")
+            .withImage("gcr.io/exploration-161417/todolist:latest")
             .addNewEnv()
             .withName("GET_HOSTS_FROM")
             .withValue("dns")
@@ -221,7 +222,7 @@ public class kube {
             .endSpec()
             .build());
 
-    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 5, new ExecutionLogCallback());
+    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 2, new ExecutionLogCallback());
 
     int backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
     int frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");

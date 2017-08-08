@@ -48,6 +48,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
@@ -365,6 +366,9 @@ public class EcsServiceSetup extends State {
       }
       String imageName = registry + ecrArtifactStream.getImageName() + ":" + artifact.getBuildNo();
       return imageName;
+    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
+      GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
+      return gcrArtifactStream.getDockerImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       return artifactoryArtifactStream.getImageName();

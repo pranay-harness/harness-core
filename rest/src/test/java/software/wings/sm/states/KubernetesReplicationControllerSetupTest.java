@@ -192,7 +192,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
             .withNewSpec()
             .addNewContainer()
             .withName("server")
-            .withImage("gcr.io/gdg-apps-1090/graphviz-server")
+            .withImage("gcr.io/exploration-161417/todolist")
             .withArgs("8080")
             .withNewResources()
             .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))

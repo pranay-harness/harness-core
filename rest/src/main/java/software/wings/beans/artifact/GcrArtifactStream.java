@@ -1,14 +1,15 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.EcrArtifactStream.Builder.anEcrArtifactStream;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.GcrArtifactStream.Builder.aGcrArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
@@ -16,17 +17,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by brett on 7/16/17.
+ * @author rktummala on 8/4/17.
  */
-@JsonTypeName("ECR")
-public class EcrArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String imageName;
+@JsonTypeName("GCR")
+public class GcrArtifactStream extends ArtifactStream {
+  @UIOrder(4)
+  @NotEmpty
+  @DefaultValue("gcr.io")
+  @Attributes(title = "Registry Host Name", required = true)
+  private String registryHostName;
+
+  @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String dockerImageName;
 
   /**
    * Instantiates a new Docker artifact stream.
    */
-  public EcrArtifactStream() {
-    super(ECR.name());
+  public GcrArtifactStream() {
+    super(GCR.name());
     super.setAutoApproveForProduction(true);
     super.setAutoDownload(true);
   }
@@ -34,7 +41,7 @@ public class EcrArtifactStream extends ArtifactStream {
   @Override
   @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
+    return String.format("%s_%s_%s", getDockerImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
@@ -42,17 +49,17 @@ public class EcrArtifactStream extends ArtifactStream {
    *
    * @return the image name
    */
-  public String getImageName() {
-    return imageName;
+  public String getDockerImageName() {
+    return dockerImageName;
   }
 
   /**
    * Sets image name.
    *
-   * @param imageName the image name
+   * @param dockerImageName the image name
    */
-  public void setImageName(String imageName) {
-    this.imageName = imageName;
+  public void setDockerImageName(String dockerImageName) {
+    this.dockerImageName = dockerImageName;
   }
 
   @Override
@@ -60,7 +67,8 @@ public class EcrArtifactStream extends ArtifactStream {
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
-        .withImageName(imageName)
+        .withImageName(dockerImageName)
+        .withRegistryHostName(registryHostName)
         .build();
   }
 
@@ -82,14 +90,23 @@ public class EcrArtifactStream extends ArtifactStream {
     return super.isAutoApproveForProduction();
   }
 
+  public String getRegistryHostName() {
+    return registryHostName;
+  }
+
+  public void setRegistryHostName(String registryHostName) {
+    this.registryHostName = registryHostName;
+  }
+
   @Override
   public ArtifactStream clone() {
-    return anEcrArtifactStream()
+    return aGcrArtifactStream()
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withImageName(getImageName())
+        .withDockerImageName(getDockerImageName())
+        .withRegistryHostName(getRegistryHostName())
         .build();
   }
 
@@ -97,7 +114,8 @@ public class EcrArtifactStream extends ArtifactStream {
    * The type Builder.
    */
   public static final class Builder {
-    private String imageName;
+    private String dockerImageName;
+    private String registryHostName;
     private String sourceName;
     private String settingId;
     private String serviceId;
@@ -114,12 +132,23 @@ public class EcrArtifactStream extends ArtifactStream {
     private Builder() {}
 
     /**
-     * A ECR artifact stream builder.
+     * A docker artifact stream builder.
      *
      * @return the builder
      */
-    public static Builder anEcrArtifactStream() {
+    public static Builder aGcrArtifactStream() {
       return new Builder();
+    }
+
+    /**
+     * With registryHostName builder.
+     *
+     * @param registryHostName registry host name. For example, us.gcr.io
+     * @return the builder
+     */
+    public Builder withRegistryHostName(String registryHostName) {
+      this.registryHostName = registryHostName;
+      return this;
     }
 
     /**
@@ -128,8 +157,8 @@ public class EcrArtifactStream extends ArtifactStream {
      * @param imageName the image name
      * @return the builder
      */
-    public Builder withImageName(String imageName) {
-      this.imageName = imageName;
+    public Builder withDockerImageName(String imageName) {
+      this.dockerImageName = imageName;
       return this;
     }
 
@@ -271,8 +300,9 @@ public class EcrArtifactStream extends ArtifactStream {
      * @return the builder
      */
     public Builder but() {
-      return anEcrArtifactStream()
-          .withImageName(imageName)
+      return aGcrArtifactStream()
+          .withDockerImageName(dockerImageName)
+          .withRegistryHostName(registryHostName)
           .withSourceName(sourceName)
           .withSettingId(settingId)
           .withServiceId(serviceId)
@@ -291,24 +321,25 @@ public class EcrArtifactStream extends ArtifactStream {
     /**
      * Build docker artifact stream.
      *
-     * @return the ecr artifact stream
+     * @return the gcr artifact stream
      */
-    public EcrArtifactStream build() {
-      EcrArtifactStream ecrArtifactStream = new EcrArtifactStream();
-      ecrArtifactStream.setImageName(imageName);
-      ecrArtifactStream.setSourceName(sourceName);
-      ecrArtifactStream.setSettingId(settingId);
-      ecrArtifactStream.setServiceId(serviceId);
-      ecrArtifactStream.setUuid(uuid);
-      ecrArtifactStream.setAppId(appId);
-      ecrArtifactStream.setCreatedBy(createdBy);
-      ecrArtifactStream.setCreatedAt(createdAt);
-      ecrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      ecrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      ecrArtifactStream.setAutoDownload(autoDownload);
-      ecrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      ecrArtifactStream.setStreamActions(streamActions);
-      return ecrArtifactStream;
+    public GcrArtifactStream build() {
+      GcrArtifactStream gcrArtifactStream = new GcrArtifactStream();
+      gcrArtifactStream.setDockerImageName(dockerImageName);
+      gcrArtifactStream.setRegistryHostName(registryHostName);
+      gcrArtifactStream.setSourceName(sourceName);
+      gcrArtifactStream.setSettingId(settingId);
+      gcrArtifactStream.setServiceId(serviceId);
+      gcrArtifactStream.setUuid(uuid);
+      gcrArtifactStream.setAppId(appId);
+      gcrArtifactStream.setCreatedBy(createdBy);
+      gcrArtifactStream.setCreatedAt(createdAt);
+      gcrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
+      gcrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      gcrArtifactStream.setAutoDownload(autoDownload);
+      gcrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      gcrArtifactStream.setStreamActions(streamActions);
+      return gcrArtifactStream;
     }
   }
 }

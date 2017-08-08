@@ -7,6 +7,10 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +78,6 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -123,8 +126,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
-    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())
-        || ArtifactStreamType.ECR.name().equals(artifactStream.getArtifactStreamType())) {
+    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        || ECR.name().equals(artifactStream.getArtifactStreamType())
+        || GCR.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
@@ -159,8 +163,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
-    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())
-        || ArtifactStreamType.ECR.name().equals(artifactStream.getArtifactStreamType())) {
+    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        || ECR.name().equals(artifactStream.getArtifactStreamType())
+        || GCR.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
@@ -481,14 +486,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name(),
-          ArtifactStreamType.ECR.name(), ArtifactStreamType.ECR.name(), ArtifactStreamType.ARTIFACTORY.name(),
-          ArtifactStreamType.ARTIFACTORY.name());
+      return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
+          ARTIFACTORY.name(), ARTIFACTORY.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-          ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(),
-          ArtifactStreamType.ARTIFACTORY.name());
+          ArtifactStreamType.NEXUS.name(), ARTIFACTORY.name(), ARTIFACTORY.name());
     }
   }
 

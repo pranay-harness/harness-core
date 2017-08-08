@@ -128,6 +128,11 @@ public abstract class SettingValue implements ExtensionPoint {
     ECR("Amazon EC2 Container Registry"),
 
     /**
+     * Google Container Registry setting variable types.
+     */
+    GCR("Google Container Registry"),
+
+    /**
      * Physical data center setting variable types.
      */
     PHYSICAL_DATA_CENTER("Physical Data Center"),

@@ -9,6 +9,7 @@ import software.wings.utils.ArtifactType;
 public class ArtifactStreamAttributes {
   private String jobName;
   private String imageName;
+  private String registryHostName;
   private String artifactStreamType;
   private SettingAttribute serverSetting;
   // TODO : Refactoring has to be done
@@ -51,6 +52,22 @@ public class ArtifactStreamAttributes {
    */
   public void setImageName(String imageName) {
     this.imageName = imageName;
+  }
+
+  /**
+   * Gets registry url
+   * @return registry url
+   */
+  public String getRegistryHostName() {
+    return registryHostName;
+  }
+
+  /**
+   * Sets registry url
+   * @param registryHostName registry url
+   */
+  public void setRegistryHostName(String registryHostName) {
+    this.registryHostName = registryHostName;
   }
 
   /**
@@ -158,6 +175,7 @@ public class ArtifactStreamAttributes {
    */
   public static final class Builder {
     private String jobName;
+    private String registryHostName;
     private String imageName;
     private String artifactStreamType;
     private SettingAttribute serverSetting;
@@ -196,6 +214,17 @@ public class ArtifactStreamAttributes {
      */
     public Builder withImageName(String imageName) {
       this.imageName = imageName;
+      return this;
+    }
+
+    /**
+     * With registry url builder.
+     *
+     * @param registryHostName registry host name
+     * @return the builder
+     */
+    public Builder withRegistryHostName(String registryHostName) {
+      this.registryHostName = registryHostName;
       return this;
     }
 
@@ -264,6 +293,7 @@ public class ArtifactStreamAttributes {
       return anArtifactStreamAttributes()
           .withJobName(jobName)
           .withImageName(imageName)
+          .withRegistryHostName(registryHostName)
           .withArtifactStreamType(artifactStreamType)
           .withServerSetting(serverSetting)
           .withGroupId(groupId)
@@ -281,6 +311,7 @@ public class ArtifactStreamAttributes {
       ArtifactStreamAttributes artifactStreamAttributes = new ArtifactStreamAttributes();
       artifactStreamAttributes.setJobName(jobName);
       artifactStreamAttributes.setImageName(imageName);
+      artifactStreamAttributes.setRegistryHostName(registryHostName);
       artifactStreamAttributes.setArtifactStreamType(artifactStreamType);
       artifactStreamAttributes.setServerSetting(serverSetting);
       artifactStreamAttributes.setGroupId(groupId);
