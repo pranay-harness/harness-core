@@ -90,6 +90,8 @@ public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+  // length of string https://
+  private static final int HTTPS_LENGTH = 8;
 
   private ServiceType serviceType;
   private Integer port;
@@ -490,9 +492,9 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.password = new String(dockerConfig.getPassword());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      imageDetails.name = ecrArtifactStream.getImageName();
-      imageDetails.sourceName = ecrArtifactStream.getSourceName();
       EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
+      imageDetails.name = constructImageName(ecrConfig.getEcrUrl(), ecrArtifactStream.getImageName());
+      imageDetails.sourceName = ecrArtifactStream.getSourceName();
       imageDetails.registryUrl = ecrConfig.getEcrUrl();
       imageDetails.username = "AWS";
       imageDetails.password = AwsHelperService.getAmazonEcrAuthToken(
@@ -516,6 +518,17 @@ public class KubernetesReplicationControllerSetup extends State {
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
     }
     return imageDetails;
+  }
+
+  private String constructImageName(String ecrUrl, String imageName) {
+    String subString = ecrUrl.substring(HTTPS_LENGTH);
+    StringBuilder sb = new StringBuilder(subString);
+    if (!subString.endsWith("/")) {
+      sb.append("/");
+    }
+
+    sb.append(imageName);
+    return sb.toString();
   }
 
   private ClusterElement getClusterElement(ExecutionContext context) {

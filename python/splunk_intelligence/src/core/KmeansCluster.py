@@ -41,10 +41,10 @@ class KmeansCluster(object):
         """
         lower = 1
         upper = self.feature_matrix.shape[0]
-        while (lower <= upper):
-            mid = (int)(lower + (upper - lower) / 2)
+        mid = min(100, (int)(lower + (upper - lower) / 2))
+        while lower <= upper:
             logger.info("Running kemans with k = " + str(mid))
-            curr_km = KMeans(n_clusters=mid)
+            curr_km = KMeans(n_clusters=mid, n_jobs=-2)
             curr_km.fit(self.feature_matrix)
             clusters = np.array(curr_km.labels_.tolist())
             found = True
@@ -64,6 +64,9 @@ class KmeansCluster(object):
                 self.num_clusters = mid
                 self.km = curr_km
                 upper = mid - 1
+
+            mid = int(lower + (upper - lower) / 2)
+
 
     def get_clusters(self):
         """

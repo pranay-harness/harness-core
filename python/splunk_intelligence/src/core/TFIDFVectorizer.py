@@ -2,6 +2,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import MDS
 from sklearn.metrics.pairwise import cosine_similarity
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 """
 Vectorizer based on TF-IDF
@@ -24,7 +27,7 @@ class TFIDFVectorizer(object):
                                                 min_df=self.min_df,
                                                 max_df=self.max_df,
                                                 stop_words='english',
-                                                use_idf=True, tokenizer=self.tokenizer, ngram_range=(1, 3))
+                                                use_idf=True, tokenizer=self.tokenizer, ngram_range=(1, 1))
 
     def fit_transform(self, texts):
         """
@@ -56,10 +59,16 @@ class TFIDFVectorizer(object):
         :param tfidf_matrix: the tfid feature matrix
         :return: the cosine distance
         """
+
+        logger.info("start cosine_similarity")
         dist = 1 - cosine_similarity(tfidf_matrix)
 
-        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
+        logger.info("done cosine_similarity")
+
+        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1, n_init=1)
 
         pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
+
+        logger.info("done mds scaling")
 
         return pos
