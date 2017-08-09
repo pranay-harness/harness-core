@@ -251,6 +251,17 @@ public class Application extends Base {
         .toString();
   }
 
+  public String getYamlString() {
+    StringBuilder yamlString = new StringBuilder();
+
+    yamlString.append("--- ");
+    yamlString.append("# app.yaml for appId: " + this.getAppId() + "\n");
+    yamlString.append("name: " + this.getName() + "\n");
+    yamlString.append("description: " + this.getDescription() + "\n");
+
+    return yamlString.toString();
+  }
+
   /**
    * The type Builder.
    */
