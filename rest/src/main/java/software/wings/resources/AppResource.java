@@ -5,7 +5,11 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -16,10 +20,13 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
+import software.wings.yaml.YamlPayload;
 
+import java.io.File;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -148,6 +155,76 @@ public class AppResource {
     }
 
     return Response.ok(appService.get(appId, status, true, overviewDays)).build();
+  }
+
+  /**
+   * Save an app that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param accountId  the account id
+   * @param yamlPayload the yaml version of app
+   * @return the rest response
+   */
+  @POST
+  @Path("/yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Application> saveFromYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    String yaml = yamlPayload.getYaml();
+
+    logger.info("****************** saveFromYaml (POST): yaml = " + yaml);
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    Application app = null;
+
+    try {
+      app = mapper.readValue(yaml, Application.class);
+
+      System.out.println(
+          "****************** " + ReflectionToStringBuilder.toString(app, ToStringStyle.MULTI_LINE_STYLE));
+
+      app.setAccountId(accountId);
+
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return new RestResponse<>(appService.save(app));
+  }
+
+  /**
+   * Update an app that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param appId  the app id
+   * @param yamlPayload the yaml version of app
+   * @return the rest response
+   */
+  @PUT
+  @Path("/yaml/{appId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Application> updateFromYaml(@PathParam("appId") String appId, YamlPayload yamlPayload) {
+    String yaml = yamlPayload.getYaml();
+
+    logger.info("****************** updateFromYaml (PUT): yaml = " + yaml);
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    Application app = null;
+
+    try {
+      app = mapper.readValue(yaml, Application.class);
+
+      System.out.println(
+          "****************** " + ReflectionToStringBuilder.toString(app, ToStringStyle.MULTI_LINE_STYLE));
+
+      app.setUuid(appId);
+
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return new RestResponse<>(appService.update(app));
   }
 
   /**
