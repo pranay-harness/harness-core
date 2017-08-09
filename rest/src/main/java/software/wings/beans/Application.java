@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -11,6 +12,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.stats.AppKeyStatistics;
+import software.wings.yaml.YamlPayload;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -251,15 +253,17 @@ public class Application extends Base {
         .toString();
   }
 
-  public String getYamlString() {
-    StringBuilder yamlString = new StringBuilder();
+  public String getYaml() {
+    StringBuilder yamlSB = new StringBuilder();
 
-    yamlString.append("--- ");
-    yamlString.append("# app.yaml for appId: " + this.getAppId() + "\n");
-    yamlString.append("name: " + this.getName() + "\n");
-    yamlString.append("description: " + this.getDescription() + "\n");
+    yamlSB.append("--- ");
+    yamlSB.append("# app.yaml for appId: " + this.getAppId() + "\n");
+    yamlSB.append("name: " + this.getName() + "\n");
+    yamlSB.append("description: " + this.getDescription() + "\n");
 
-    return yamlString.toString();
+    YamlPayload.validateYamlString(yamlSB.toString());
+
+    return yamlSB.toString();
   }
 
   /**
