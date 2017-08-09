@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * Created by brett on 7/20/17
  */
-@Entity(value = "delegateScope")
+@Entity(value = "delegateScopes")
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
 
