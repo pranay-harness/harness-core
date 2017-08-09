@@ -24,6 +24,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 12/8/16.
  */
+@Ignore
 public class BambooServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9095);
 
@@ -40,6 +41,7 @@ public class BambooServiceTest extends WingsBaseTest {
   public void shouldGetJobKeys() {}
 
   @Test
+  @Ignore
   public void shouldGetPlanKeys() {
     wireMockRule.stubFor(
         get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
@@ -53,6 +55,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldGetPlanKeysException() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
                              .willReturn(aResponse()
