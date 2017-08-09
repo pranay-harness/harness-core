@@ -1,8 +1,6 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
@@ -13,7 +11,6 @@ import java.util.Objects;
 /**
  * Created by brett on 7/20/17
  */
-@JsonTypeInfo(use = Id.NAME, property = "delegateScopeType")
 @Entity(value = "delegateScope")
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
