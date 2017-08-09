@@ -69,6 +69,7 @@ public class BambooServiceTest extends WingsBaseTest {
   public void shouldGetLastSuccessfulBuild() {}
 
   @Test
+  @Ignore
   public void shouldGetBuildsForJob() {
     wireMockRule.stubFor(
         get(urlEqualTo(
@@ -86,6 +87,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldGetBuildsForJobError() {
     wireMockRule.stubFor(get(
         urlEqualTo(
