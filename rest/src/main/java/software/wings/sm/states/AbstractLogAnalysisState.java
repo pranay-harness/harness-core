@@ -93,7 +93,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     lastExecutionNodes.removeAll(canaryNewHostNames);
-    if (lastExecutionNodes.isEmpty()) {
+    if (lastExecutionNodes.isEmpty() && getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       getLogger().error("Control and test nodes are same. Will not be running Log analysis");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, getAnalysisServerConfigId(),
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
@@ -243,7 +243,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       this.workflowId = getWorkflowId(context);
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
-      this.controlNodes.removeAll(this.testNodes);
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        this.controlNodes.removeAll(this.testNodes);
+      }
       this.queries = Sets.newHashSet(query.split(","));
     }
 
