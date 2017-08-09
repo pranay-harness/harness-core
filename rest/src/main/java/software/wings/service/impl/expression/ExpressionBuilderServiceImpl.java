@@ -21,7 +21,7 @@ import java.util.List;
 public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private AppService appService;
 
-  @Inject private ServiceExpressions serviceExpressions;
+  @Inject private ServiceExpressionBuilder serviceExpressionsBuilder;
 
   @Override
   public List<String> listExpressions(String appId, String entityId, EntityType entityType) {
@@ -30,8 +30,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     Validator.notNullCheck("entityId", entityId);
     List<String> expressions = new ArrayList<>();
     if (entityType.equals(EntityType.SERVICE)) {
-      expressions.addAll(serviceExpressions.getExpressions());
-      expressions.addAll(serviceExpressions.getDynamicExpressions(appId, entityId));
+      expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId));
     } else {
       return asList();
     }
