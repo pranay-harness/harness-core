@@ -120,21 +120,26 @@ public class DelegateResource {
   public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
     Delegate delegate = delegateService.get(accountId, delegateId);
-    if (delegateScopes.getIncludeScopeIds() != null && !delegateScopes.getIncludeScopeIds().isEmpty()) {
-      delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
-                                    .stream()
-                                    .map(s -> delegateScopeService.get(accountId, s))
-                                    .collect(toList()));
-    } else {
+    if (delegateScopes == null) {
       delegate.setIncludeScopes(null);
-    }
-    if (delegateScopes.getExcludeScopeIds() != null && !delegateScopes.getExcludeScopeIds().isEmpty()) {
-      delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
-                                    .stream()
-                                    .map(s -> delegateScopeService.get(accountId, s))
-                                    .collect(toList()));
-    } else {
       delegate.setExcludeScopes(null);
+    } else {
+      if (delegateScopes.getIncludeScopeIds() != null && !delegateScopes.getIncludeScopeIds().isEmpty()) {
+        delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
+                                      .stream()
+                                      .map(s -> delegateScopeService.get(accountId, s))
+                                      .collect(toList()));
+      } else {
+        delegate.setIncludeScopes(null);
+      }
+      if (delegateScopes.getExcludeScopeIds() != null && !delegateScopes.getExcludeScopeIds().isEmpty()) {
+        delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
+                                      .stream()
+                                      .map(s -> delegateScopeService.get(accountId, s))
+                                      .collect(toList()));
+      } else {
+        delegate.setExcludeScopes(null);
+      }
     }
     return new RestResponse<>(delegateService.updateScopes(delegate));
   }
