@@ -261,7 +261,11 @@ public class Application extends Base {
     yamlSB.append("name: " + this.getName() + "\n");
     yamlSB.append("description: " + this.getDescription() + "\n");
 
-    YamlPayload.validateYamlString(yamlSB.toString());
+    boolean validYaml = YamlPayload.validateYamlString(yamlSB.toString());
+
+    if (!YamlPayload.validateYamlString(yamlSB.toString())) {
+      return "ERROR: Yaml constructed in Application.getYaml is not valid!";
+    }
 
     return yamlSB.toString();
   }
