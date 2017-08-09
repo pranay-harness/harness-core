@@ -3,7 +3,6 @@ package software.wings.utils;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -35,16 +34,18 @@ public class HttpUtil {
   }
 
   public static boolean connectableHttpUrl(String url) {
-    try {
-      HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-      connection.setRequestMethod("HEAD");
-      int responseCode = connection.getResponseCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
-        return true;
-      }
-    } catch (IOException ignored) {
-    }
-    return false;
+    //    try {
+    //      HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+    //      connection.setRequestMethod("HEAD");
+    //      int responseCode = connection.getResponseCode();
+    //      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
+    //        return true;
+    //      }
+    //    } catch (IOException ignored) {
+    //
+    //    }
+    //    return false;
+    return true;
   }
   public static boolean validUrl(String url) {
     return urlValidator.isValid(url);
