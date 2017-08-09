@@ -25,6 +25,7 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,11 +79,14 @@ public class BambooServiceImpl implements BambooService {
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
-      JsonNode jsonNode = response.body();
-      return aBuildDetails()
-          .withNumber(jsonNode.get("buildNumber").asText())
-          .withRevision(jsonNode.get("vcsRevisionKey").asText())
-          .build();
+      JsonNode resultNode = response.body().at("/results/result");
+      if (resultNode != null && resultNode.elements().hasNext()) {
+        JsonNode next = resultNode.elements().next();
+        return aBuildDetails()
+            .withNumber(next.get("buildNumber").asText())
+            .withRevision(next.get("vcsRevisionKey").asText())
+            .build();
+      }
     } catch (Exception ex) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
@@ -194,6 +198,21 @@ public class BambooServiceImpl implements BambooService {
     return null;
   }
 
+  //  @Override
+  //  public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig, String planKey, String buildNumber,
+  //  String artifactPathRegex) {
+  //    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
+  //    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+  //    Entry<String, String> artifactPath = artifactPathMap.entrySet().stream()
+  //        .filter(entry -> extractRelativePath(entry.getValue()) != null &&
+  //        pattern.matcher(extractRelativePath(entry.getValue())).matches()).findFirst() .orElse(null);
+  //    try {
+  //      return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
+  //    } catch (IOException ex) {
+  //      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
+  //    }
+  //  }
+
   @Override
   public Pair<String, InputStream> downloadArtifact(
       BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
@@ -207,13 +226,26 @@ public class BambooServiceImpl implements BambooService {
                     && pattern.matcher(extractRelativePath(entry.getValue())).matches())
             .findFirst()
             .orElse(null);
+    //    artifactPath.setValue("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/browse/TOD-TOD-39/artifact/JOB1/artifacts/todolist.war");
     try {
-      return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
+      //      try {
+      //        Response<ResponseBody> response =
+      //        getBambooClient(bambooConfig).downloadArtifact(getBasicAuthCredentials(bambooConfig),
+      //        artifactPath.getValue()).execute(); File file = new File("/tmp/todolist.war"); FileOutputStream
+      //        fileOutputStream = new FileOutputStream(file); IOUtils.write(response.body().bytes(), fileOutputStream);
+      //      }
+      //      catch (Exception ex){
+      //        ex.printStackTrace();
+      //      }
+
+      URL url = new URL(artifactPath.getValue());
+      URLConnection uc = url.openConnection();
+      uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+      return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
     } catch (IOException ex) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
     }
   }
-
   @Override
   public boolean isRunning(BambooConfig bambooConfig) {
     return getPlanKeys(bambooConfig) != null; // TODO:: use status API

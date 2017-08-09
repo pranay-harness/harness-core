@@ -1,11 +1,13 @@
 package software.wings.helpers.ext.bamboo;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -38,7 +40,7 @@ public interface BambooRestClient {
    * @return the call
    */
   @GET(
-      "rest/api/latest/result/{planKey}/latest.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
+      "rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&max-results=1&expand=results.result.artifacts.artifact")
   Call<JsonNode>
   lastSuccessfulBuildForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey);
 
@@ -50,7 +52,7 @@ public interface BambooRestClient {
    * @param maxResult     the max result
    * @return the call
    */
-  @GET("rest/api/latest/result/{planKey}.json?authType=basic&buildState=Successful&expand=results.result")
+  @GET("rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&expand=results.result")
   Call<JsonNode> listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
       @Query("max-result") int maxResult);
 
@@ -67,4 +69,13 @@ public interface BambooRestClient {
   Call<JsonNode>
   getBuildArtifacts(
       @Header("Authorization") String authorization, @Path("planKey") String planKey, @Path("buildNo") String buildNo);
+
+  /**
+   * Download artifact call.
+   *
+   * @param authorization the authorization
+   * @param fileUrl       the file url
+   * @return the call
+   */
+  @GET Call<ResponseBody> downloadArtifact(@Header("Authorization") String authorization, @Url String fileUrl);
 }
