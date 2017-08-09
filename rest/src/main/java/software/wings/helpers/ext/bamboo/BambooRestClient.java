@@ -20,7 +20,7 @@ public interface BambooRestClient {
    * @param planKey       the plan key
    * @return the call
    */
-  @GET("rest/api/latest/plan/{planKey}.json?authType=basic&expand=stages.stage.plans.plan")
+  @GET("rest/api/latest/plan/{planKey}.json?authType=basic&expand=stages.stage.plans.plan&max-results=10000")
   Call<JsonNode> listPlanWithJobDetails(@Header("Authorization") String authorization, @Path("planKey") String planKey);
 
   /**
@@ -29,7 +29,7 @@ public interface BambooRestClient {
    * @param authorization the authorization
    * @return the call
    */
-  @GET("rest/api/latest/plan.json?authType=basic")
+  @GET("rest/api/latest/plan.json?authType=basic&max-results=10000")
   Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization);
 
   /**
@@ -52,8 +52,10 @@ public interface BambooRestClient {
    * @param maxResult     the max result
    * @return the call
    */
-  @GET("rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&expand=results.result")
-  Call<JsonNode> listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
+  @GET(
+      "rest/api/latest/result/{planKey}.json?authType=basic&buildstate=Successful&max-results=10000&expand=results.result")
+  Call<JsonNode>
+  listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
       @Query("max-result") int maxResult);
 
   /**
