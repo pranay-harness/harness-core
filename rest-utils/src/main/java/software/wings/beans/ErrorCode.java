@@ -383,7 +383,16 @@ public enum ErrorCode {
   PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"), /**
                                                                      * Aws access denied error code.
                                                                      */
-  AWS_ACCESS_DENIED("AWS_ACCESS_DENIED");
+  AWS_ACCESS_DENIED("AWS_ACCESS_DENIED"),
+
+  /**
+   * Invalid YamlPayload
+   */
+  INVALID_YAML_PAYLOAD("INVALID_YAML_PAYLOAD"),
+  /**
+   * Unrecognized Yaml fields
+   */
+  UNRECOGNIZED_YAML_FIELDS("UNRECOGNIZED_YAML_FIELDS");
 
   /**
    * The constant ARGS_NAME.

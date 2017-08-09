@@ -14,6 +14,9 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
@@ -24,6 +27,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.yaml.YamlPayload;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
@@ -156,7 +160,18 @@ public class AppResource {
 
     Application app = appService.get(appId, status, true, overviewDays);
 
-    return new RestResponse<>(new YamlPayload(app.getYaml()));
+    RestResponse rr = new RestResponse<>();
+
+    if (app != null) {
+      YamlPayload yp = new YamlPayload(app.getYaml());
+      rr.setResponseMessages(yp.getResponseMessages());
+
+      if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
+        rr.setResource(yp);
+      }
+    }
+
+    return rr;
   }
 
   /**
@@ -175,15 +190,25 @@ public class AppResource {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Application app = null;
 
-    try {
-      app = mapper.readValue(yaml, Application.class);
-      app.setAccountId(accountId);
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    RestResponse rr = new RestResponse<>();
+    rr.setResponseMessages(yamlPayload.getResponseMessages());
+
+    if (yaml != null && !yaml.isEmpty()) {
+      try {
+        app = mapper.readValue(yaml, Application.class);
+        app.setAccountId(accountId);
+
+        app = appService.save(app);
+
+        if (app != null) {
+          rr.setResource(app);
+        }
+      } catch (Exception e) {
+        addUnrecognizedFieldsMessage(rr);
+      }
     }
 
-    return new RestResponse<>(appService.save(app));
+    return rr;
   }
 
   /**
@@ -202,16 +227,25 @@ public class AppResource {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Application app = null;
 
-    try {
-      app = mapper.readValue(yaml, Application.class);
-      app.setUuid(appId);
+    RestResponse rr = new RestResponse<>();
+    rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    if (yaml != null && !yaml.isEmpty()) {
+      try {
+        app = mapper.readValue(yaml, Application.class);
+        app.setUuid(appId);
+
+        app = appService.update(app);
+
+        if (app != null) {
+          rr.setResource(app);
+        }
+      } catch (Exception e) {
+        addUnrecognizedFieldsMessage(rr);
+      }
     }
 
-    return new RestResponse<>(appService.update(app));
+    return rr;
   }
 
   /**
@@ -227,5 +261,16 @@ public class AppResource {
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);
     return new RestResponse();
+  }
+
+  private void addUnrecognizedFieldsMessage(RestResponse rr) {
+    ResponseMessage rm = new ResponseMessage();
+    rm.setCode(ErrorCode.UNRECOGNIZED_YAML_FIELDS);
+    rm.setErrorType(ResponseTypeEnum.ERROR);
+    rm.setMessage("ERROR: The Yaml provided contains unrecognized fields!");
+
+    List<ResponseMessage> responseMessages = rr.getResponseMessages();
+    responseMessages.add(rm);
+    rr.setResponseMessages(responseMessages);
   }
 }
