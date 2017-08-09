@@ -117,6 +117,8 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "connected", delegate.isConnected());
     setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
     setUnset(updateOperations, "version", delegate.getVersion());
+    setUnset(updateOperations, "includeScopes", delegate.getIncludeScopes());
+    setUnset(updateOperations, "excludeScopes", delegate.getExcludeScopes());
 
     logger.info("Updating delegate : {}", delegate.getUuid());
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
