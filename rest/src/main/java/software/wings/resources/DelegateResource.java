@@ -128,7 +128,7 @@ public class DelegateResource {
                                   .stream()
                                   .map(s -> delegateScopeService.get(accountId, s))
                                   .collect(toList()));
-    return new RestResponse<>(delegateService.update(delegate));
+    return new RestResponse<>(delegateService.updateScopes(delegate));
   }
 
   private static class DelegateScopes {
