@@ -46,6 +46,14 @@ public interface DelegateService {
   Delegate update(@Valid Delegate delegate);
 
   /**
+   * Update delegate scopes.
+   *
+   * @param delegate the delegate
+   * @return the delegate
+   */
+  Delegate updateScopes(@Valid Delegate delegate);
+
+  /**
    * Check for upgrade delegate.
    *
    * @param accountId   the account id

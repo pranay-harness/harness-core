@@ -14,6 +14,7 @@ import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.expression.ExpressionBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * Created by sgurubelli on 8/7/17.
  */
 @Singleton
-public class ServiceExpressions implements ExpressionBuilder {
+public class ServiceExpressionBuilder implements ExpressionBuilder {
   public static final String appName = "app.name";
   public static final String appDescription = "app.description";
   public static final String serviceName = "service.name";
@@ -31,8 +32,11 @@ public class ServiceExpressions implements ExpressionBuilder {
   @Inject private ServiceVariableService serviceVariablesService;
 
   @Override
-  public List<String> getExpressions() {
-    return Arrays.asList(appName, appDescription, serviceName, serviceDescription);
+  public List<String> getExpressions(String appId, String entityId) {
+    List<String> expressions = new ArrayList<>();
+    expressions.addAll(getStaticExpressions(appId, entityId));
+    expressions.addAll(getDynamicExpressions(appId, entityId));
+    return expressions;
   }
 
   @Override
@@ -44,8 +48,16 @@ public class ServiceExpressions implements ExpressionBuilder {
 
     List<ServiceVariable> serviceVariables = serviceVariablesService.list(pageRequest, true);
     if (CollectionUtils.isNotEmpty(serviceVariables)) {
-      return serviceVariables.stream().map(ServiceVariable::getName).collect(Collectors.toList());
+      // return serviceVariables.stream().map(ServiceVariable::getName).collect(Collectors.toList());
+      return serviceVariables.stream()
+          .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
+          .collect(Collectors.toList());
     }
     return Arrays.asList();
+  }
+
+  @Override
+  public List<String> getStaticExpressions(String appId, String entityId) {
+    return Arrays.asList(appName, appDescription, serviceName, serviceDescription);
   }
 }

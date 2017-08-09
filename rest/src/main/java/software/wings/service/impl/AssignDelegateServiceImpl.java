@@ -30,14 +30,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return true;
     }
     Delegate delegate = delegateService.get(task.getAccountId(), delegateId);
-    boolean assign = delegate.getIncludeScopes().isEmpty();
-    for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
-      if (scopeMatch(delegateScope, task)) {
-        assign = true;
-        break;
+    boolean assign = delegate.getIncludeScopes() == null || delegate.getIncludeScopes().isEmpty();
+    if (delegate.getIncludeScopes() != null) {
+      for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
+        if (scopeMatch(delegateScope, task)) {
+          assign = true;
+          break;
+        }
       }
     }
-    if (assign) {
+    if (assign && delegate.getExcludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getExcludeScopes()) {
         if (scopeMatch(delegateScope, task)) {
           assign = false;
@@ -55,21 +57,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     boolean match = true;
 
-    if (!delegateScope.getEnvironmentTypes().isEmpty()) {
+    if (delegateScope.getEnvironmentTypes() != null && !delegateScope.getEnvironmentTypes().isEmpty()) {
       match = task.getAppId() != null && task.getEnvId() != null
           && delegateScope.getEnvironmentTypes().contains(
                  environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType());
     }
-    if (match && !delegateScope.getApplications().isEmpty()) {
+    if (match && delegateScope.getApplications() != null && !delegateScope.getApplications().isEmpty()) {
       match = delegateScope.getApplications().contains(task.getAppId());
     }
-    if (match && !delegateScope.getEnvironments().isEmpty()) {
+    if (match && delegateScope.getEnvironments() != null && !delegateScope.getEnvironments().isEmpty()) {
       match = delegateScope.getEnvironments().contains(task.getEnvId());
     }
-    if (match && !delegateScope.getServiceInfrastructures().isEmpty()) {
+    if (match && delegateScope.getServiceInfrastructures() != null
+        && !delegateScope.getServiceInfrastructures().isEmpty()) {
       match = delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
     }
-    if (match && !delegateScope.getTaskTypes().isEmpty()) {
+    if (match && delegateScope.getTaskTypes() != null && !delegateScope.getTaskTypes().isEmpty()) {
       match = delegateScope.getTaskTypes().contains(task.getTaskType());
     }
 

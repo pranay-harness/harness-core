@@ -119,6 +119,21 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "version", delegate.getVersion());
 
     logger.info("Updating delegate : {}", delegate.getUuid());
+    return updateDelegate(delegate, updateOperations);
+  }
+
+  @Override
+  public Delegate updateScopes(Delegate delegate) {
+    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    setUnset(updateOperations, "includeScopes", delegate.getIncludeScopes());
+    setUnset(updateOperations, "excludeScopes", delegate.getExcludeScopes());
+
+    logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
+        delegate.getIncludeScopes(), delegate.getExcludeScopes());
+    return updateDelegate(delegate, updateOperations);
+  }
+
+  private Delegate updateDelegate(Delegate delegate, UpdateOperations<Delegate> updateOperations) {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(delegate.getAccountId())
@@ -393,8 +408,8 @@ public class DelegateServiceImpl implements DelegateService {
             .collect(toList());
 
     if (eligibleDelegates.size() == 0) {
-      logger.warn("{} delegates active, no delegates are eligible to execute task [{}] for the accountId: {}",
-          activeDelegates.size(), task.getUuid(), task.getAccountId());
+      logger.warn("{} delegates active, no delegates are eligible to execute task [{}:{}] for the accountId: {}",
+          activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
 

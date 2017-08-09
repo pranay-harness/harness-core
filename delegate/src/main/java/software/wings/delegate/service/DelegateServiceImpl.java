@@ -66,6 +66,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -113,7 +114,9 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
                                      .withVersion(getVersion())
-                                     .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
+                                     .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()))
+                                     .withIncludeScopes(new ArrayList<>())
+                                     .withExcludeScopes(new ArrayList<>());
 
       if (upgrade) {
         System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
