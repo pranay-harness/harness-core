@@ -393,8 +393,8 @@ public class DelegateServiceImpl implements DelegateService {
             .collect(toList());
 
     if (eligibleDelegates.size() == 0) {
-      logger.warn("{} delegates active, no delegates are eligible to execute task [{}] for the accountId: {}",
-          activeDelegates.size(), task.getUuid(), task.getAccountId());
+      logger.warn("{} delegates active, no delegates are eligible to execute task [{}:{}] for the accountId: {}",
+          activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
 

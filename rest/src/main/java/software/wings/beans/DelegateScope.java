@@ -1,23 +1,32 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * Created by brett on 7/20/17
  */
+@JsonTypeInfo(use = Id.NAME, property = "delegateScopeType")
+@Entity(value = "delegateScope")
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
 
-  private List<TaskType> taskTypes = new ArrayList<>();
-  private List<EnvironmentType> environmentTypes = new ArrayList<>();
-  private List<String> applications = new ArrayList<>();
-  private List<String> environments = new ArrayList<>();
-  private List<String> serviceInfrastructures = new ArrayList<>();
+  @JsonIgnore
+  private String empty; // TODO(brett): Not sure why, but this is needed when delegate has include/exclude scopes and
+                        // delegate is restarted. Investigate.
+
+  private List<TaskType> taskTypes;
+  private List<EnvironmentType> environmentTypes;
+  private List<String> applications;
+  private List<String> environments;
+  private List<String> serviceInfrastructures;
 
   public String getAccountId() {
     return accountId;
@@ -68,7 +77,9 @@ public class DelegateScope extends Base {
   }
 
   public boolean isEmpty() {
-    return environments.isEmpty() && environmentTypes.isEmpty();
+    return (taskTypes == null || taskTypes.isEmpty()) && (environmentTypes == null || environmentTypes.isEmpty())
+        && (applications == null || applications.isEmpty()) && (environments == null || environments.isEmpty())
+        && (serviceInfrastructures == null || serviceInfrastructures.isEmpty());
   }
 
   @Override
@@ -102,11 +113,11 @@ public class DelegateScope extends Base {
 
   public static final class DelegateScopeBuilder {
     private String accountId;
-    private List<TaskType> taskTypes = new ArrayList<>();
-    private List<EnvironmentType> environmentTypes = new ArrayList<>();
-    private List<String> applications = new ArrayList<>();
-    private List<String> environments = new ArrayList<>();
-    private List<String> serviceInfrastructures = new ArrayList<>();
+    private List<TaskType> taskTypes;
+    private List<EnvironmentType> environmentTypes;
+    private List<String> applications;
+    private List<String> environments;
+    private List<String> serviceInfrastructures;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;

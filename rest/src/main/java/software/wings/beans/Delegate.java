@@ -5,7 +5,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,8 +24,8 @@ public class Delegate extends Base {
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
-  private List<DelegateScope> includeScopes = new ArrayList<>();
-  private List<DelegateScope> excludeScopes = new ArrayList<>();
+  private List<DelegateScope> includeScopes;
+  private List<DelegateScope> excludeScopes;
 
   public List<DelegateScope> getIncludeScopes() {
     return includeScopes;
