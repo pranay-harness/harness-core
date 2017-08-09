@@ -24,11 +24,13 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -49,9 +51,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractAnalysisState extends State {
   protected static final int PYTHON_JOB_RETRIES = 3;
 
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  @Attributes(
-      title = "How do you want to compare for analyis", description = "Compare with previous run or current run")
+  protected String timeDuration;
   protected String comparisonStrategy;
 
   @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
@@ -60,18 +60,41 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject protected SettingsService settingsService;
 
+  @Inject @Transient protected WingsPersistence wingsPersistence;
+
   @Transient @Inject protected AppService appService;
 
   @Transient @Inject protected DelegateService delegateService;
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   * @param stateType the state type
-   */
+  @Transient @Inject protected AnalysisService analysisService;
+
+  @DefaultValue("15")
+  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
+  public String getTimeDuration() {
+    return timeDuration;
+  }
+
+  public void setTimeDuration(String timeDuration) {
+    this.timeDuration = timeDuration;
+  }
+
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
+  @Attributes(required = true, title = "How do you want to compare for analyis",
+      description = "Compare with previous run or current run")
+  public AnalysisComparisonStrategy
+  getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  public void setComparisonStrategy(String comparisonStrategy) {
+    this.comparisonStrategy = comparisonStrategy;
+  }
+
   public AbstractAnalysisState(String name, String stateType) {
     super(name, stateType);
   }
@@ -136,16 +159,11 @@ public abstract class AbstractAnalysisState extends State {
 
   @SchemaIgnore abstract public Logger getLogger();
 
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (StringUtils.isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
+  abstract public String getAnalysisServerConfigId();
 
-  public void setComparisonStrategy(String comparisonStrategy) {
-    this.comparisonStrategy = comparisonStrategy;
-  }
+  abstract public void setAnalysisServerConfigId(String analysisServerConfigId);
+
+  protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
 
   protected String generateAuthToken() throws UnsupportedEncodingException {
     final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();

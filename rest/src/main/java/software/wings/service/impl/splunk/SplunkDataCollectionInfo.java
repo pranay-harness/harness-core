@@ -1,11 +1,10 @@
 package software.wings.service.impl.splunk;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.SplunkConfig;
+import software.wings.service.impl.analysis.LogDataCollectionInfo;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -13,14 +12,14 @@ import java.util.Set;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class SplunkDataCollectionInfo {
-  private String accountId;
-  private String applicationId;
-  private String stateExecutionId;
-  private String workflowId;
+public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
   private SplunkConfig splunkConfig;
-  private Set<String> queries = new HashSet<>();
-  private long startTime;
-  private int collectionTime;
+
+  public SplunkDataCollectionInfo(SplunkConfig splunkConfig, String accountId, String applicationId,
+      String stateExecutionId, String workflowId, String workflowExecutionId, Set<String> queries, long startTime,
+      int collectionTime, Set<String> hosts) {
+    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, queries, startTime,
+        collectionTime, hosts);
+    this.splunkConfig = splunkConfig;
+  }
 }

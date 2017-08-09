@@ -1,19 +1,19 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import software.wings.waitnotify.NotifyResponseData;
 
 /**
  * Created by rsingh on 5/18/17.
  */
-public class SplunkDataCollectionTaskResult implements NotifyResponseData {
-  private SplunkDataCollectionTaskStatus status;
+public class LogDataCollectionTaskResult implements NotifyResponseData {
+  private LogDataCollectionTaskStatus status;
   private String errorMessage;
 
-  public SplunkDataCollectionTaskStatus getStatus() {
+  public LogDataCollectionTaskStatus getStatus() {
     return status;
   }
 
-  public void setStatus(SplunkDataCollectionTaskStatus status) {
+  public void setStatus(LogDataCollectionTaskStatus status) {
     this.status = status;
   }
 
@@ -27,12 +27,12 @@ public class SplunkDataCollectionTaskResult implements NotifyResponseData {
 
   @Override
   public String toString() {
-    return "SplunkDataCollectionTaskResult{"
+    return "LogDataCollectionTaskResult{"
         + "status=" + status + ", errorMessage='" + errorMessage + '\'' + '}';
   }
 
   public static final class Builder {
-    private SplunkDataCollectionTaskStatus status;
+    private LogDataCollectionTaskStatus status;
     private String errorMessage;
 
     private Builder() {}
@@ -42,8 +42,8 @@ public class SplunkDataCollectionTaskResult implements NotifyResponseData {
      *
      * @return the builder
      */
-    public static SplunkDataCollectionTaskResult.Builder aSplunkDataCollectionTaskResult() {
-      return new SplunkDataCollectionTaskResult.Builder();
+    public static LogDataCollectionTaskResult.Builder aLogDataCollectionTaskResult() {
+      return new LogDataCollectionTaskResult.Builder();
     }
 
     /**
@@ -52,7 +52,7 @@ public class SplunkDataCollectionTaskResult implements NotifyResponseData {
      * @param status the status
      * @return the builder
      */
-    public SplunkDataCollectionTaskResult.Builder withStatus(SplunkDataCollectionTaskStatus status) {
+    public LogDataCollectionTaskResult.Builder withStatus(LogDataCollectionTaskStatus status) {
       this.status = status;
       return this;
     }
@@ -63,7 +63,7 @@ public class SplunkDataCollectionTaskResult implements NotifyResponseData {
      * @param errorMessage the error message
      * @return the builder
      */
-    public SplunkDataCollectionTaskResult.Builder withErrorMessage(String errorMessage) {
+    public LogDataCollectionTaskResult.Builder withErrorMessage(String errorMessage) {
       this.errorMessage = errorMessage;
       return this;
     }
@@ -73,15 +73,15 @@ public class SplunkDataCollectionTaskResult implements NotifyResponseData {
      *
      * @return the command execution result
      */
-    public SplunkDataCollectionTaskResult build() {
-      SplunkDataCollectionTaskResult splunkDataCollectionTaskResult = new SplunkDataCollectionTaskResult();
-      splunkDataCollectionTaskResult.setStatus(status);
-      splunkDataCollectionTaskResult.setErrorMessage(errorMessage);
-      return splunkDataCollectionTaskResult;
+    public LogDataCollectionTaskResult build() {
+      LogDataCollectionTaskResult logDataCollectionTaskResult = new LogDataCollectionTaskResult();
+      logDataCollectionTaskResult.setStatus(status);
+      logDataCollectionTaskResult.setErrorMessage(errorMessage);
+      return logDataCollectionTaskResult;
     }
   }
 
-  public enum SplunkDataCollectionTaskStatus {
+  public enum LogDataCollectionTaskStatus {
     /**
      * Success execution status.
      */

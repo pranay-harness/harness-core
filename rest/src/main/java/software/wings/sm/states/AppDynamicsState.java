@@ -6,6 +6,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.NotImplementedException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +22,12 @@ import software.wings.beans.TaskType;
 import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -36,7 +35,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
@@ -60,23 +58,15 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
-  private String appDynamicsConfigId;
+  private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
 
   @Attributes(required = true, title = "Tier Name") private String tierId;
 
-  @DefaultValue("15")
-  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
-  private String timeDuration;
-
   @Attributes(title = "Ignore verification failure") private Boolean ignoreVerificationFailure = false;
 
   @Inject @Transient private AppdynamicsService appdynamicsService;
-
-  @Inject @Transient private WingsPersistence wingsPersistence;
-
-  @Inject @Transient private AppService appService;
 
   /**
    * Create a new Http State with given name.
@@ -113,42 +103,6 @@ public class AppDynamicsState extends AbstractAnalysisState {
     this.tierId = tierId;
   }
 
-  /**
-   * Gets time duration.
-   *
-   * @return the time duration
-   */
-  public String getTimeDuration() {
-    return timeDuration;
-  }
-
-  /**
-   * Sets time duration.
-   *
-   * @param timeDuration the time duration
-   */
-  public void setTimeDuration(String timeDuration) {
-    this.timeDuration = timeDuration;
-  }
-
-  /**
-   * Getter for property 'appDynamicsConfigId'.
-   *
-   * @return Value for property 'appDynamicsConfigId'.
-   */
-  public String getAppDynamicsConfigId() {
-    return appDynamicsConfigId;
-  }
-
-  /**
-   * Setter for property 'appDynamicsConfigId'.
-   *
-   * @param appDynamicsConfigId Value to set for property 'appDynamicsConfigId'.
-   */
-  public void setAppDynamicsConfigId(String appDynamicsConfigId) {
-    this.appDynamicsConfigId = appDynamicsConfigId;
-  }
-
   public Boolean getIgnoreVerificationFailure() {
     return ignoreVerificationFailure;
   }
@@ -160,7 +114,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
-    triggerAppdynamicsDataCollection(context);
+    triggerAnalysisDataCollection(context, null);
     final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -168,7 +122,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
             .withCanaryNewHostNames(canaryNewHostNames)
             .withBtNames(btNames)
-            .withAppDynamicsConfigID(appDynamicsConfigId)
+            .withAppDynamicsConfigID(analysisServerConfigId)
             .withAppDynamicsApplicationId(Long.parseLong(applicationId))
             .withAppdynamicsTierId(Long.parseLong(tierId))
             .withAnalysisDuration(Integer.parseInt(timeDuration))
@@ -228,10 +182,11 @@ public class AppDynamicsState extends AbstractAnalysisState {
         .build();
   }
 
-  private void triggerAppdynamicsDataCollection(final ExecutionContext context) {
-    final SettingAttribute settingAttribute = settingsService.get(appDynamicsConfigId);
+  @Override
+  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No appdynamics setting with id: " + appDynamicsConfigId + " found");
+      throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -260,7 +215,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   private List<String> getBtNames() {
     try {
       final List<AppdynamicsMetric> appdynamicsMetrics = appdynamicsService.getTierBTMetrics(
-          appDynamicsConfigId, Long.parseLong(applicationId), Long.parseLong(tierId));
+          analysisServerConfigId, Long.parseLong(applicationId), Long.parseLong(tierId));
       final List<String> btNames = new ArrayList<>();
       for (AppdynamicsMetric appdynamicsMetric : appdynamicsMetrics) {
         btNames.add(appdynamicsMetric.getName());
@@ -278,13 +233,24 @@ public class AppDynamicsState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
+  @SchemaIgnore
   public Logger getLogger() {
     return logger;
   }
 
   @Override
+  public String getAnalysisServerConfigId() {
+    return analysisServerConfigId;
+  }
+
+  @Override
+  public void setAnalysisServerConfigId(String analysisServerConfigId) {
+    this.analysisServerConfigId = analysisServerConfigId;
+  }
+
+  @Override
   @SchemaIgnore
   public AnalysisComparisonStrategy getComparisonStrategy() {
-    return super.getComparisonStrategy();
+    throw new NotImplementedException();
   }
 }

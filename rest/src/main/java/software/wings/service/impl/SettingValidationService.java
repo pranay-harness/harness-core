@@ -15,10 +15,10 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.elk.ElkService;
-import software.wings.service.intfc.splunk.SplunkService;
 import software.wings.settings.SettingValue;
+import software.wings.sm.StateType;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,8 +33,7 @@ public class SettingValidationService {
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private KubernetesHelperService kubernetesHelperService;
-  @Inject private SplunkService splunkService;
-  @Inject private ElkService elkService;
+  @Inject private AnalysisService analysisService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -53,9 +52,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof KubernetesConfig) {
       kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     } else if (settingValue instanceof SplunkConfig) {
-      splunkService.validateConfig(settingAttribute);
+      analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
     } else if (settingValue instanceof ElkConfig) {
-      elkService.validateConfig(settingAttribute);
+      analysisService.validateConfig(settingAttribute, StateType.ELK);
     }
     return true;
   }

@@ -1,4 +1,4 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * Created by rsingh on 6/21/17.
  */
 @Data
-public class SplunkMLAnalysisRequest {
+public class LogMLAnalysisRequest {
   private final String query;
   private final String applicationId;
   private final String stateExecutionId;

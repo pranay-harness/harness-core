@@ -1,4 +1,4 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SplunkLogRequest {
+public class LogRequest {
   private String query;
   private String applicationId;
   private String stateExecutionId;

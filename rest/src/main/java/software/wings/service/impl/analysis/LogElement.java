@@ -1,4 +1,4 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * Created by rsingh on 6/20/17.
  */
 @Data
-public class SplunkLogElement {
+public class LogElement {
   private String query;
   private String clusterLabel;
   private String host;

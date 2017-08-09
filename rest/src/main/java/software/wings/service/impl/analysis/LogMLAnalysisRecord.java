@@ -1,10 +1,12 @@
-package software.wings.service.impl.splunk;
+package software.wings.service.impl.analysis;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Map;
@@ -12,12 +14,14 @@ import java.util.Map;
 /**
  * Created by rsingh on 6/23/17.
  */
-@Entity(value = "splunkAnalysisRecords", noClassnameStored = true)
+@Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @Data
-public class SplunkLogMLAnalysisRecord extends Base {
+public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private String applicationId;
+
+  @NotEmpty @Indexed private StateType stateType;
 
   private String query;
   private String analysisSummaryMessage;

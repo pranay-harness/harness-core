@@ -9,17 +9,15 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.PhaseElement;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
-import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogCollectionCallback;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
-import software.wings.service.impl.splunk.SplunkSettingProvider;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -28,21 +26,20 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
-import java.util.Collections;
 import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.
  */
-public class SplunkV2State extends AbstractLogAnalysisState {
-  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(SplunkV2State.class);
+public class ElkAnalysisState extends AbstractLogAnalysisState {
+  @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 
-  @EnumData(enumDataProvider = SplunkSettingProvider.class)
-  @Attributes(required = true, title = "Splunk Server")
+  @EnumData(enumDataProvider = ElkSettingProvider.class)
+  @Attributes(required = true, title = "Elastic Search Server")
   private String analysisServerConfigId;
 
-  public SplunkV2State(String name) {
-    super(name, StateType.SPLUNKV2.getType());
+  public ElkAnalysisState(String name) {
+    super(name, StateType.ELK.getType());
   }
 
   @Override
@@ -51,27 +48,24 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
+      throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
     }
 
-    final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+    final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
-        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), queries, logCollectionStartTimeStamp,
-        Integer.parseInt(timeDuration), Collections.EMPTY_SET);
+    final ElkDataCollectionInfo dataCollectionInfo =
+        new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
+            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(), queries,
+            logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.SPLUNK_COLLECT_LOG_DATA)
+                                    .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
     waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
@@ -95,6 +89,6 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
   @Override
   protected String getStateBaseUrl() {
-    return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
+    return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
   }
 }
