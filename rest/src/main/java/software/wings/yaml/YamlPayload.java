@@ -7,6 +7,12 @@ package software.wings.yaml;
 public class YamlPayload {
   private String yaml;
 
+  public YamlPayload() {}
+
+  public YamlPayload(String yaml) {
+    this.yaml = yaml;
+  }
+
   public String getYaml() {
     return yaml;
   }
@@ -15,3 +21,8 @@ public class YamlPayload {
     this.yaml = yaml;
   }
 }
+
+/*
+    Yaml y = new Yaml();
+    y.load(yamlString);
+ */

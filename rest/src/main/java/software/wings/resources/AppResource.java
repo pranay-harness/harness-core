@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -144,17 +145,20 @@ public class AppResource {
    */
   @GET
   @Path("/yaml/{appId}")
-  @Produces("text/yaml")
   @Timed
   @ExceptionMetered
-  public Response get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
+  public RestResponse<YamlPayload> getYaml(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
     }
 
-    return Response.ok(appService.get(appId, status, true, overviewDays)).build();
+    Application app = appService.get(appId, status, true, overviewDays);
+    String yamlString = app.getYamlString();
+    YamlPayload yamlPayload = new YamlPayload(yamlString);
+
+    return new RestResponse<>(yamlPayload);
   }
 
   /**
@@ -170,20 +174,12 @@ public class AppResource {
   @ExceptionMetered
   public RestResponse<Application> saveFromYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
-
-    logger.info("****************** saveFromYaml (POST): yaml = " + yaml);
-
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Application app = null;
 
     try {
       app = mapper.readValue(yaml, Application.class);
-
-      System.out.println(
-          "****************** " + ReflectionToStringBuilder.toString(app, ToStringStyle.MULTI_LINE_STYLE));
-
       app.setAccountId(accountId);
-
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -205,18 +201,11 @@ public class AppResource {
   @ExceptionMetered
   public RestResponse<Application> updateFromYaml(@PathParam("appId") String appId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
-
-    logger.info("****************** updateFromYaml (PUT): yaml = " + yaml);
-
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Application app = null;
 
     try {
       app = mapper.readValue(yaml, Application.class);
-
-      System.out.println(
-          "****************** " + ReflectionToStringBuilder.toString(app, ToStringStyle.MULTI_LINE_STYLE));
-
       app.setUuid(appId);
 
     } catch (Exception e) {
