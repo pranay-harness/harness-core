@@ -155,10 +155,8 @@ public class AppResource {
     }
 
     Application app = appService.get(appId, status, true, overviewDays);
-    String yamlString = app.getYamlString();
-    YamlPayload yamlPayload = new YamlPayload(yamlString);
 
-    return new RestResponse<>(yamlPayload);
+    return new RestResponse<>(new YamlPayload(app.getYaml()));
   }
 
   /**
