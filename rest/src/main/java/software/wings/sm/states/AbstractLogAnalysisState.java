@@ -92,8 +92,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           "Skipping analysis due to lack of baseline data (First time deployment).");
     }
 
-    lastExecutionNodes.removeAll(canaryNewHostNames);
-    if (lastExecutionNodes.isEmpty() && getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+        && lastExecutionNodes.equals(canaryNewHostNames)) {
       getLogger().error("Control and test nodes are same. Will not be running Log analysis");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, getAnalysisServerConfigId(),
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
