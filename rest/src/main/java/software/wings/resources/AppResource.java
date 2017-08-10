@@ -129,13 +129,10 @@ public class AppResource {
   @ExceptionMetered
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
-      @QueryParam("overviewDays") @DefaultValue("30") int overviewDays,
-      @QueryParam("yaml") @DefaultValue("false") boolean yaml) {
+      @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
     }
-
-    logger.info("****************** yaml = " + yaml);
 
     return new RestResponse<>(appService.get(appId, status, true, overviewDays));
   }
