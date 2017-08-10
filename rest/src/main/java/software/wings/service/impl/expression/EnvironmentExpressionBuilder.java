@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 @Singleton
 public class EnvironmentExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
+
   @Override
   public List<String> getExpressions(String appId, String entityId, String serviceId) {
     if (serviceId == null) {

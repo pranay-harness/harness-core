@@ -2,6 +2,8 @@ package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
 
+import software.wings.sm.StateType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +44,33 @@ public abstract class ExpressionBuilder {
   protected static final String HOST_INSTANCE_SUBNETID = "host.ec2Instance.subnetId";
   protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
 
-  public List<String> getExpressions(String appId, String serviceId, String entityId) {
+  protected static final String START_TS = "startTs";
+  protected static final String END_TS = "endTs";
+  protected static final String STATUS = "status";
+  protected static final String ERROR_MSG = "errorMsg";
+
+  protected static final String HTTP_URL = "httpUrl";
+  protected static final String HTTP_RESPONSE_METHOD = "httpResponseMethod";
+  protected static final String HTTP_RESPONSE_CODE = "httpResponseCode";
+  protected static final String HTTP_RESPONSE_BODY = "httpResponseBody";
+  protected static final String ASSERTION_STATEMENT = "assertionStatement";
+  protected static final String ASSERTION_STATUS = "assertionStatus";
+  protected static final String XPATH = "xpath('//status/text()')";
+  protected static final String JSONPATH = "jsonpath('health.status')";
+
+  protected static final String APPROVEDBY_NAME = "approvedBy.name";
+  protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
+
+  protected static final String EMAIl_TO_ADDRESS = "toAddress";
+  protected static final String EMAIL_CC_ADDRESS = "ccAddress";
+  protected static final String EMAIL_SUBJECT = "subject";
+  protected static final String EMAIL_BODY = "body";
+
+  public List<String> getExpressions(String appId, String entityId, String serviceId) {
+    return getExpressions(appId, entityId);
+  }
+
+  public List<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
     return getExpressions(appId, entityId);
   }
 
@@ -57,10 +85,31 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION));
 
+    expressions.addAll(asList(INSTANCE_NAME, INSTANCE_HOSTNAME, INSTANCE_HOST_PUBLICDNS));
+
     expressions.addAll(asList(HOST_NAME, HOST_HOSTNAME, HOST_PUBLICDNS, HOST_INSTANCE_ID, HOST_INSTANCE_TYPE,
         HOST_INSTANCE_IMAGEID, HOST_INSTANCE_ARCH, HOST_INSTANCE_KERNELID, HOST_INSTANCE_KEY_NAME, HOST_INSTANCE_PVTDNS,
         HOST_INSTANCE_PRIVATEIP, HOST_INSTANCE_PUBLICDNS, HOST_INSTANCE_PUBLICIP, HOST_INSTANCE_SUBNETID,
         HOST_INSTANCE_VPCID));
+
+    return expressions;
+  }
+
+  protected List<String> getStateTypeExpressions(StateType stateType) {
+    List<String> expressions = new ArrayList<>();
+    expressions.addAll(asList(START_TS, END_TS, STATUS, ERROR_MSG));
+    switch (stateType) {
+      case HTTP:
+        expressions.addAll(asList(HTTP_URL, HTTP_RESPONSE_METHOD, HTTP_RESPONSE_CODE, HTTP_RESPONSE_BODY,
+            ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH));
+        break;
+      case APPROVAL:
+        expressions.addAll(asList(APPROVEDBY_NAME, APPROVEDBY_EMAIL));
+        break;
+      case EMAIL:
+        expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY));
+        break;
+    }
 
     return expressions;
   }

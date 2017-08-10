@@ -49,4 +49,8 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     }
     return Arrays.asList();
   }
+
+  private List<String> getServiceTemplateVariableExpressions(String appId, String serviceId) {
+    return Arrays.asList();
+  }
 }

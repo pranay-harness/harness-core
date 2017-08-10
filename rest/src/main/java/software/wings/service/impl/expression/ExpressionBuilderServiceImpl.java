@@ -21,10 +21,9 @@ import java.util.List;
 @Singleton
 public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private AppService appService;
-
   @Inject private ServiceExpressionBuilder serviceExpressionsBuilder;
-
   @Inject private EnvironmentExpressionBuilder envExpressionBuilder;
+  @Inject private WorkflowExpressionBuilder workflowExpressionBuilder;
 
   @Override
   public List<String> listExpressions(String appId, String entityId, EntityType entityType) {
@@ -47,6 +46,8 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId));
     } else if (entityType.equals(EntityType.ENVIRONMENT)) {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
+    } else if (entityType.equals(EntityType.WORKFLOW)) {
+      expressions.addAll(workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType));
     } else {
       return asList();
     }
