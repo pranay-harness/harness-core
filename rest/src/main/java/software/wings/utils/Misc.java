@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
  */
 public class Misc {
   private static final Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
-  private static final int MAX_STACK_TRACE_LINES = 500;
 
   static String normalizeExpression(String expression) {
     return normalizeExpression(expression, "__");
@@ -128,41 +127,23 @@ public class Misc {
   }
 
   private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
-    logIt(logger, level, isNotEmpty(msg) ? msg : "An exception occurred: " + t.getClass().getSimpleName());
-    if (level == LoggingLevel.ERROR) {
-      level = LoggingLevel.WARN;
-    }
-    int traceLines = 0;
-    while (t != null && traceLines < MAX_STACK_TRACE_LINES) {
-      logIt(logger, level,
-          (traceLines > 0 ? "Caused by: " : "") + t.getClass().getCanonicalName()
-              + (isNotEmpty(t.getMessage()) ? ": " + t.getMessage() : ""));
-      for (StackTraceElement elem : t.getStackTrace()) {
-        logIt(logger, level, "\tat " + elem);
-        traceLines++;
-        if (traceLines > MAX_STACK_TRACE_LINES) {
-          logIt(logger, level, "\t... truncated after " + MAX_STACK_TRACE_LINES + " stack trace lines");
-          break;
-        }
-      }
-      t = t.getCause();
-    }
+    logIt(logger, level, isNotEmpty(msg) ? msg : "An exception occurred: " + t.getClass().getSimpleName(), t);
   }
 
-  private static void logIt(Logger logger, LoggingLevel level, String msg) {
+  private static void logIt(Logger logger, LoggingLevel level, String msg, Throwable t) {
     switch (level) {
       case ERROR:
-        logger.error(msg);
+        logger.error(msg, t);
         break;
       case WARN:
-        logger.warn(msg);
+        logger.warn(msg, t);
         break;
       case DEBUG:
-        logger.debug(msg);
+        logger.debug(msg, t);
         break;
       case INFO:
       default:
-        logger.info(msg);
+        logger.info(msg, t);
     }
   }
 

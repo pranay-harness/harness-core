@@ -30,7 +30,7 @@
 
     <appender name="SYSLOG-TLS" class="software.wings.logging.CloudBeesSyslogAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%date{ISO8601} %boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </layout>
 
         <host>syslog-a.logdna.com</host>
