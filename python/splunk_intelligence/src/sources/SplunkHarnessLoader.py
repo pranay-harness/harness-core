@@ -74,8 +74,9 @@ class SplunkHarnessLoader(object):
         return json.loads(text)['resource']
 
     @staticmethod
-    def load_from_wings_server(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
-        headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "ExternalService " + auth_token}
+    def load_from_harness_raw(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
+        headers = {"Accept": "application/json", "Content-Type": "application/json",
+                   "Authorization": "ExternalService " + auth_token}
         payload = dict(applicationId=app_id, workflowId=workflow_id, stateExecutionId=state_execution_id,
                        logCollectionMinute=log_collection_minute, nodes=nodes,
                        query=query)
@@ -83,14 +84,23 @@ class SplunkHarnessLoader(object):
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
         if status_code != 200:
             logger.error(
-                "Failed to fetch data from Harness manager. Got status_code = " + str(status_code) + ' for ' + json.dumps(
+                "Failed to fetch data from Harness manager. Got status_code = " + str(
+                    status_code) + ' for ' + json.dumps(
                     payload))
             sys.exit(-1)
         data = json.loads(text)
-        raw_events = []
         if data is None or data['resource'] is None:
             logging.error("Server returned no data for " + json.dumps(payload))
             sys.exit(1)
+
+        return data
+
+    #TODO rename wings to harness
+    @staticmethod
+    def load_from_wings_server(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
+        data = SplunkHarnessLoader.load_from_harness_raw(url, auth_token, app_id, workflow_id,
+                                                     state_execution_id, log_collection_minute, nodes, query)
+        raw_events = []
         for resp in data['resource']:
             raw_event = {'cluster_count': resp['count'], 'cluster_label': resp['clusterLabel'],
                          '_time': resp['timeStamp'], '_raw': resp['logMessage'], 'host': resp['host']}
