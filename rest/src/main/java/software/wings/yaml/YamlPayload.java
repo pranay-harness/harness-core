@@ -18,6 +18,7 @@ public class YamlPayload {
   private String yaml = "";
   @JsonIgnore private List<ResponseMessage> responseMessages = new ArrayList<>();
 
+  // required no arg constructor
   public YamlPayload() {}
 
   public YamlPayload(String yamlString) {
@@ -55,8 +56,8 @@ public class YamlPayload {
     Yaml yamlObj = new Yaml();
 
     try {
-      yamlObj.load(yamlString); // NOTE: we don't do anything with the Yaml Object
-
+      // NOTE: we don't do anything with the Yaml Object
+      yamlObj.load(yamlString);
       return true;
     } catch (Exception e) {
       // TODO Auto-generated catch block
