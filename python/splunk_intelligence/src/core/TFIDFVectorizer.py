@@ -65,7 +65,7 @@ class TFIDFVectorizer(object):
 
         logger.info("done cosine_similarity")
 
-        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1, n_init=1)
+        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
 
         pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
 
