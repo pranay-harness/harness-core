@@ -3,6 +3,7 @@ package software.wings.service.impl.expression;
 import static com.google.common.truth.Truth.assertThat;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import org.junit.Test;
@@ -32,5 +33,13 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     List<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, EntityType.SERVICE);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("service.name"));
+  }
+
+  @Test
+  public void shouldGetEnvironmentExpressions() {
+    Mockito.when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    List<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, EntityType.ENVIRONMENT, SERVICE_ID);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.contains("env.name"));
   }
 }

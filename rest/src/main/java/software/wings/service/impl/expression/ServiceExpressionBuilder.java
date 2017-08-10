@@ -12,7 +12,6 @@ import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.expression.ExpressionBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,18 +22,13 @@ import java.util.stream.Collectors;
  * Created by sgurubelli on 8/7/17.
  */
 @Singleton
-public class ServiceExpressionBuilder implements ExpressionBuilder {
-  public static final String appName = "app.name";
-  public static final String appDescription = "app.description";
-  public static final String serviceName = "service.name";
-  public static final String serviceDescription = "service.description";
-
+public class ServiceExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceVariableService serviceVariablesService;
 
   @Override
   public List<String> getExpressions(String appId, String entityId) {
     List<String> expressions = new ArrayList<>();
-    expressions.addAll(getStaticExpressions(appId, entityId));
+    expressions.addAll(getStaticExpressions());
     expressions.addAll(getDynamicExpressions(appId, entityId));
     return expressions;
   }
@@ -54,10 +48,5 @@ public class ServiceExpressionBuilder implements ExpressionBuilder {
           .collect(Collectors.toList());
     }
     return Arrays.asList();
-  }
-
-  @Override
-  public List<String> getStaticExpressions(String appId, String entityId) {
-    return Arrays.asList(appName, appDescription, serviceName, serviceDescription);
   }
 }

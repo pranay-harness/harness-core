@@ -11,6 +11,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
+import software.wings.sm.StateType;
 
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -34,7 +35,14 @@ public class ExpressionBuilderResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listExpressions(@QueryParam("appId") String appId,
-      @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType) {
+      @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType,
+      @QueryParam("serviceId") String serviceId, @QueryParam("stateType") StateType stateType) {
+    if (serviceId != null && stateType != null) {
+      return new RestResponse(
+          expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType));
+    } else if (serviceId != null && stateType == null) {
+      return new RestResponse(expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId));
+    }
     return new RestResponse(expressionBuilderService.listExpressions(appId, entityId, entityType));
   }
 }
