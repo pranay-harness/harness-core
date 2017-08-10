@@ -10,7 +10,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalServiceAuth;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -23,6 +22,7 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -43,23 +43,25 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   @Timed
   @DelegateAuth
+  @ExternalServiceAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      List<LogElement> logData) throws IOException {
-    return new RestResponse<>(
-        analysisService.saveLogData(StateType.ELK, appId, stateExecutionId, workflowId, workflowExecutionId, logData));
+      @QueryParam("processed") boolean processed, List<LogElement> logData) throws IOException {
+    return new RestResponse<>(analysisService.saveLogData(
+        StateType.ELK, accountId, appId, stateExecutionId, workflowId, workflowExecutionId, processed, logData));
   }
 
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @ExternalServiceAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent, LogRequest logRequest) throws IOException {
-    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, StateType.ELK));
+      @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("processed") boolean processed,
+      LogRequest logRequest) throws IOException {
+    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, processed, StateType.ELK));
   }
 
   @POST
