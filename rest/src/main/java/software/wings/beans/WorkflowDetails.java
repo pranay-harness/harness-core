@@ -6,9 +6,10 @@ import java.util.List;
 /**
  * Created by sgurubelli on 8/7/17.
  */
-public class WorkflowVariable {
+public class WorkflowDetails {
   String workflowId;
   String workflowName;
+  String pipelineStageName;
   List<Variable> variables = new ArrayList<>();
 
   public String getWorkflowId() {
@@ -27,6 +28,14 @@ public class WorkflowVariable {
     this.workflowName = workflowName;
   }
 
+  public String getPipelineStageName() {
+    return pipelineStageName;
+  }
+
+  public void setPipelineStageName(String pipelineStageName) {
+    this.pipelineStageName = pipelineStageName;
+  }
+
   public List<Variable> getVariables() {
     return variables;
   }
@@ -38,11 +47,12 @@ public class WorkflowVariable {
   public static final class Builder {
     String workflowId;
     String workflowName;
+    String pipelineStageName;
     List<Variable> variables = new ArrayList<>();
 
     private Builder() {}
 
-    public static Builder aWorkflowVariable() {
+    public static Builder aWorkflowDetails() {
       return new Builder();
     }
 
@@ -58,13 +68,18 @@ public class WorkflowVariable {
       this.variables = variables;
       return this;
     }
+    public Builder withPipelineStageName(String pipelineStageName) {
+      this.pipelineStageName = pipelineStageName;
+      return this;
+    }
 
-    public WorkflowVariable build() {
-      WorkflowVariable workflowVariable = new WorkflowVariable();
-      workflowVariable.setWorkflowId(this.workflowId);
-      workflowVariable.setWorkflowName(this.workflowName);
-      workflowVariable.setVariables(variables);
-      return workflowVariable;
+    public WorkflowDetails build() {
+      WorkflowDetails workflowDetails = new WorkflowDetails();
+      workflowDetails.setWorkflowId(workflowId);
+      workflowDetails.setWorkflowName(this.workflowName);
+      workflowDetails.setVariables(variables);
+      workflowDetails.setPipelineStageName(pipelineStageName);
+      return workflowDetails;
     }
   }
 }

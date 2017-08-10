@@ -15,8 +15,8 @@ import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowDetails.Builder.aWorkflowDetails;
 import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.beans.WorkflowVariable.Builder.aWorkflowVariable;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -58,8 +58,8 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowDetails;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowVariable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -381,7 +381,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {
     List<Service> services = new ArrayList<>();
-    List<WorkflowVariable> workflowVariables = new ArrayList<>();
+    List<WorkflowDetails> workflowDetails = new ArrayList<>();
     pipeline.getPipelineStages()
         .stream()
         .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
@@ -401,12 +401,12 @@ public class PipelineServiceImpl implements PipelineService {
                 variables = ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
               }
               if (variables.size() > 0) {
-                WorkflowVariable workflowVariable = aWorkflowVariable()
-                                                        .withWorkflowId(workflow.getUuid())
-                                                        .withWorkflowName(workflow.getName())
-                                                        .withVariables(variables)
-                                                        .build();
-                workflowVariables.add(workflowVariable);
+                WorkflowDetails workflowDetail = aWorkflowDetails()
+                                                     .withWorkflowId(workflow.getUuid())
+                                                     .withWorkflowName(workflow.getName())
+                                                     .withPipelineStageName(pse.getName())
+                                                     .build();
+                workflowDetails.add(workflowDetail);
               }
             }
             services.addAll(workflow.getServices());
@@ -416,7 +416,7 @@ public class PipelineServiceImpl implements PipelineService {
         });
 
     pipeline.setServices(services);
-    pipeline.setWorkflowVariables(workflowVariables);
+    pipeline.setWorkflowDetails(workflowDetails);
   }
 
   @Override
