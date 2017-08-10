@@ -55,4 +55,13 @@ public class AppResourceTest {
     assertThat(actual.getResource()).isEqualTo(testApp);
     verify(appService).get(TEST_UUID, COMPLETE, true, 30);
   }
+
+  @Test
+  public void testGetYaml() {}
+
+  @Test
+  public void testSaveFromYaml() {}
+
+  @Test
+  public void testUpdateFromYaml() {}
 }

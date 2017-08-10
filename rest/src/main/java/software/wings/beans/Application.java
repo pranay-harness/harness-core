@@ -253,7 +253,7 @@ public class Application extends Base {
         .toString();
   }
 
-  public String getYaml() {
+  public String toYaml() {
     StringBuilder yamlSB = new StringBuilder();
 
     yamlSB.append("--- ");
@@ -264,7 +264,7 @@ public class Application extends Base {
     boolean validYaml = YamlPayload.validateYamlString(yamlSB.toString());
 
     if (!YamlPayload.validateYamlString(yamlSB.toString())) {
-      return "ERROR: Yaml constructed in Application.getYaml is not valid!";
+      return "ERROR: Yaml constructed in Application.toYaml is not valid!";
     }
 
     return yamlSB.toString();
