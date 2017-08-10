@@ -163,7 +163,7 @@ public class AppResource {
     RestResponse rr = new RestResponse<>();
 
     if (app != null) {
-      YamlPayload yp = new YamlPayload(app.getYaml());
+      YamlPayload yp = new YamlPayload(app.toYaml());
       rr.setResponseMessages(yp.getResponseMessages());
 
       if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
