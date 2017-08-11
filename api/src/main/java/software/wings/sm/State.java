@@ -3,6 +3,7 @@ package software.wings.sm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.beans.EntityType;
+import software.wings.beans.TemplateExpression;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public abstract class State {
   @SchemaIgnore private Integer timeoutMillis;
 
   @SchemaIgnore private boolean ignoreFailure;
+
+  @SchemaIgnore private List<TemplateExpression> templateExpressions;
 
   /**
    * Instantiates a new state.

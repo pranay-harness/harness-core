@@ -21,6 +21,8 @@ public class Phase {
   private String envName;
   private Map<String, List<String>> hostInstances = new HashMap<>();
 
+  private List<TemplateExpression> templateExpressions;
+
   /**
    * Gets name.
    *
@@ -109,5 +111,21 @@ public class Phase {
    */
   public void setEnvName(String envName) {
     this.envName = envName;
+  }
+
+  /**
+   * Get template expressions
+   * @return
+   */
+  public List<TemplateExpression> getTemplateExpressions() {
+    return templateExpressions;
+  }
+
+  /**
+   * Set template expressions
+   * @param templateExpressions
+   */
+  public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    this.templateExpressions = templateExpressions;
   }
 }
