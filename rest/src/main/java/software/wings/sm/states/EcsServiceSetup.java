@@ -168,6 +168,7 @@ public class EcsServiceSetup extends State {
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
 
+    logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
     TaskDefinition taskDefinition =
         awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
 
@@ -211,6 +212,7 @@ public class EcsServiceSetup extends State {
           .withTargetGroupArn(targetGroupArn);
     }
 
+    logger.info("Creating ECS service {}", ecsServiceName);
     awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
 
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
@@ -242,7 +244,7 @@ public class EcsServiceSetup extends State {
         variables.put(key, value);
       });
     } catch (Exception ex) {
-      Misc.error(logger, "Exception occured in processing service variables ", ex);
+      Misc.error(logger, "Exception occurred in processing service variables ", ex);
     }
     return variables;
   }
