@@ -1,5 +1,6 @@
 config:
   applications:
   {{#applications}}
-    {{>/resources/templates/mustacheyaml/application.mustache}}
+    {{>application.mustache}}
   {{/applications}}
+  account:
