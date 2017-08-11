@@ -3,11 +3,13 @@ config:
   {{#applications}}
     name: {{name}}
     description: {{description}}
+    services:
     {{#services}}
         name: {{name}}
         artifactType: {{artifactType}}
         description: {{description}}
     {{/services}}
+    environments:
     {{#environments}}
         name: {{name}}
         environmentType: {{environmentType}}
