@@ -193,7 +193,7 @@ public class WorkflowResource {
   public RestResponse<Workflow> templatizeWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
     workflow.setAppId(appId);
-    return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, workflow));
+    return new RestResponse<>(workflowService.templatizeWorkflow(appId, workflowId, workflow));
   }
 
   /**
