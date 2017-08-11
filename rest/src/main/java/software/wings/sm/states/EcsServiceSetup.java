@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
@@ -76,6 +77,8 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class EcsServiceSetup extends State {
+  @Attributes(title = "Service Name") private String serviceName;
+
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
   @Attributes(title = "Elastic Load Balancer") private String loadBalancerName;
@@ -159,10 +162,11 @@ public class EcsServiceSetup extends State {
                 -> createContainerDefinition(imageName, containerName, containerDefinition, serviceVariables))
             .collect(toList());
 
+    String taskFamily = isNotEmpty(serviceName)
+        ? serviceName
+        : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
-        new RegisterTaskDefinitionRequest()
-            .withContainerDefinitions(containerDefinitions)
-            .withFamily(EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
+        new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
 
     TaskDefinition taskDefinition =
         awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
@@ -270,25 +274,25 @@ public class EcsServiceSetup extends State {
    *
    * @param imageName                the image name
    * @param containerName            the container name
-   * @param wingsContainerDefinition the wings container definition
+   * @param harnessContainerDefinition the harness container definition
    * @param serviceVariables
    * @return the container definition
    */
   private ContainerDefinition createContainerDefinition(String imageName, String containerName,
-      EcsContainerTask.ContainerDefinition wingsContainerDefinition, Map<String, String> serviceVariables) {
+      EcsContainerTask.ContainerDefinition harnessContainerDefinition, Map<String, String> serviceVariables) {
     ContainerDefinition containerDefinition =
         new ContainerDefinition().withName(strip(containerName)).withImage(strip(imageName));
 
-    if (wingsContainerDefinition.getCpu() != null && wingsContainerDefinition.getMemory() > 0) {
-      containerDefinition.setCpu(wingsContainerDefinition.getCpu());
+    if (harnessContainerDefinition.getCpu() != null && harnessContainerDefinition.getMemory() > 0) {
+      containerDefinition.setCpu(harnessContainerDefinition.getCpu());
     }
 
-    if (wingsContainerDefinition.getMemory() != null && wingsContainerDefinition.getMemory() > 0) {
-      containerDefinition.setMemory(wingsContainerDefinition.getMemory());
+    if (harnessContainerDefinition.getMemory() != null && harnessContainerDefinition.getMemory() > 0) {
+      containerDefinition.setMemory(harnessContainerDefinition.getMemory());
     }
 
-    if (wingsContainerDefinition.getPortMappings() != null) {
-      List<PortMapping> portMappings = wingsContainerDefinition.getPortMappings()
+    if (harnessContainerDefinition.getPortMappings() != null) {
+      List<PortMapping> portMappings = harnessContainerDefinition.getPortMappings()
                                            .stream()
                                            .map(portMapping
                                                -> new PortMapping()
@@ -299,7 +303,7 @@ public class EcsServiceSetup extends State {
       containerDefinition.setPortMappings(portMappings);
     }
 
-    List<String> commands = Optional.ofNullable(wingsContainerDefinition.getCommands())
+    List<String> commands = Optional.ofNullable(harnessContainerDefinition.getCommands())
                                 .orElse(emptyList())
                                 .stream()
                                 .filter(StringUtils::isNotBlank)
@@ -307,12 +311,12 @@ public class EcsServiceSetup extends State {
                                 .collect(toList());
     containerDefinition.setCommand(commands);
 
-    if (wingsContainerDefinition.getLogConfiguration() != null) {
-      EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
-      if (isNotBlank(wingsLogConfiguration.getLogDriver())) {
+    if (harnessContainerDefinition.getLogConfiguration() != null) {
+      EcsContainerTask.LogConfiguration harnessLogConfiguration = harnessContainerDefinition.getLogConfiguration();
+      if (isNotBlank(harnessLogConfiguration.getLogDriver())) {
         LogConfiguration logConfiguration =
-            new LogConfiguration().withLogDriver(strip(wingsLogConfiguration.getLogDriver()));
-        Optional.ofNullable(wingsLogConfiguration.getOptions())
+            new LogConfiguration().withLogDriver(strip(harnessLogConfiguration.getLogDriver()));
+        Optional.ofNullable(harnessLogConfiguration.getOptions())
             .orElse(emptyList())
             .forEach(
                 logOption -> logConfiguration.addOptionsEntry(strip(logOption.getKey()), strip(logOption.getValue())));
@@ -320,11 +324,11 @@ public class EcsServiceSetup extends State {
       }
     }
 
-    if (isNotEmpty(wingsContainerDefinition.getStorageConfigurations())) {
-      List<EcsContainerTask.StorageConfiguration> wingsStorageConfigurations =
-          wingsContainerDefinition.getStorageConfigurations();
+    if (isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
+      List<EcsContainerTask.StorageConfiguration> harnessStorageConfigurations =
+          harnessContainerDefinition.getStorageConfigurations();
       containerDefinition.setMountPoints(
-          wingsStorageConfigurations.stream()
+          harnessStorageConfigurations.stream()
               .map(storageConfiguration
                   -> new MountPoint()
                          .withContainerPath(strip(storageConfiguration.getContainerPath()))
@@ -463,159 +467,103 @@ public class EcsServiceSetup extends State {
     this.useLoadBalancer = useLoadBalancer;
   }
 
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
+  public static final class EcsServiceSetupBuilder {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
+    private String serviceName;
     private boolean useLoadBalancer;
     private String loadBalancerName;
     private String targetGroupArn;
     private String roleArn;
 
-    private Builder() {}
+    private EcsServiceSetupBuilder() {}
 
-    /**
-     * An ecs service setup builder.
-     *
-     * @return the builder
-     */
-    public static Builder anEcsServiceSetup() {
-      return new Builder();
+    public static EcsServiceSetupBuilder anEcsServiceSetup() {
+      return new EcsServiceSetupBuilder();
     }
 
-    /**
-     * With id builder.
-     *
-     * @param id the id
-     * @return the builder
-     */
-    public Builder withId(String id) {
+    public EcsServiceSetupBuilder withId(String id) {
       this.id = id;
       return this;
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
+    public EcsServiceSetupBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With required context element type builder.
-     *
-     * @param requiredContextElementType the required context element type
-     * @return the builder
-     */
-    public Builder withRequiredContextElementType(ContextElementType requiredContextElementType) {
+    public EcsServiceSetupBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
       this.requiredContextElementType = requiredContextElementType;
       return this;
     }
 
-    /**
-     * With state type builder.
-     *
-     * @param stateType the state type
-     * @return the builder
-     */
-    public Builder withStateType(String stateType) {
+    public EcsServiceSetupBuilder withStateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
-    /**
-     * With rollback builder.
-     *
-     * @param rollback the rollback
-     * @return the builder
-     */
-    public Builder withRollback(boolean rollback) {
+    public EcsServiceSetupBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
     }
 
-    /**
-     * With use load balancer builder.
-     *
-     * @param useLoadBalancer the use load balancer
-     * @return the builder
-     */
-    public Builder withUseLoadBalancer(boolean useLoadBalancer) {
+    public EcsServiceSetupBuilder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withUseLoadBalancer(boolean useLoadBalancer) {
       this.useLoadBalancer = useLoadBalancer;
       return this;
     }
 
-    /**
-     * With load balancer name builder.
-     *
-     * @param loadBalancerName the load balancer name
-     * @return the builder
-     */
-    public Builder withLoadBalancerName(String loadBalancerName) {
+    public EcsServiceSetupBuilder withLoadBalancerName(String loadBalancerName) {
       this.loadBalancerName = loadBalancerName;
       return this;
     }
 
-    /**
-     * With target group arn builder.
-     *
-     * @param targetGroupArn the target group arn
-     * @return the builder
-     */
-    public Builder withTargetGroupArn(String targetGroupArn) {
+    public EcsServiceSetupBuilder withTargetGroupArn(String targetGroupArn) {
       this.targetGroupArn = targetGroupArn;
       return this;
     }
 
-    /**
-     * With role arn builder.
-     *
-     * @param roleArn the role arn
-     * @return the builder
-     */
-    public Builder withRoleArn(String roleArn) {
+    public EcsServiceSetupBuilder withRoleArn(String roleArn) {
       this.roleArn = roleArn;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
+    public EcsServiceSetupBuilder but() {
       return anEcsServiceSetup()
           .withId(id)
           .withName(name)
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)
+          .withServiceName(serviceName)
           .withUseLoadBalancer(useLoadBalancer)
           .withLoadBalancerName(loadBalancerName)
           .withTargetGroupArn(targetGroupArn)
           .withRoleArn(roleArn);
     }
 
-    /**
-     * Build ecs service setup.
-     *
-     * @return the ecs service setup
-     */
     public EcsServiceSetup build() {
       EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
       ecsServiceSetup.setId(id);
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
+      ecsServiceSetup.setServiceName(serviceName);
       ecsServiceSetup.setUseLoadBalancer(useLoadBalancer);
       ecsServiceSetup.setLoadBalancerName(loadBalancerName);
       ecsServiceSetup.setTargetGroupArn(targetGroupArn);
