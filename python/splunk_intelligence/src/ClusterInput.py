@@ -116,7 +116,8 @@ class ClusterInput(object):
                                                                     self._options.state_execution_id,
                                                                     self._options.log_collection_minute,
                                                                     self._options.nodes,
-                                                                    self._options.query)
+                                                                    self._options.query)['resource']
+        #print(self.raw_events)
         self.texts = [event.get('logMessage') for event in self.raw_events]
         logger.info('# of messages = ' + str(len(self.texts)))
 
@@ -192,11 +193,17 @@ class ClusterInput(object):
                 self.raw_events[i]['clusterLabel'] = label
                 label = label + 1
                 self.raw_events[i]['count'] = len(cols)
-                self.results.append(self.raw_events[i])
+                self.results.append(dict(query=self.raw_events[i].get('query'),
+                                        clusterLabel=self.raw_events[i].get('clusterLabel'),
+                                        host=self.raw_events[i].get('host'),
+                                        timeStamp=self.raw_events[i].get('timeStamp'),
+                                        count=self.raw_events[i].get('count'),
+                                        logMessage=self.raw_events[i].get('logMessage'),
+                                        logCollectionMinute=self.raw_events[i].get('logCollectionMinute')))
 
-        logger.info(clusters)
-        logger.info(np.unique(clusters))
-        logger.info(json.dumps(self.results))
+        logger.debug(clusters)
+        logger.debug(np.unique(clusters))
+        logger.debug(json.dumps(self.results))
         logger.info("done clustering")
 
     def run(self):
@@ -243,7 +250,7 @@ def main(args):
     options = parse(args[1:])
     logger.info(options)
 
-    run_debug(options)
+    #run_debug(options)
 
     cluster_input = ClusterInput(options)
     cluster_input.run()

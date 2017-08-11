@@ -1,10 +1,8 @@
 package software.wings.service.impl.analysis;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.logging.Log;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -24,7 +22,8 @@ import java.util.List;
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("stateType"), @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash")
+    @Field("stateType")
+    , @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("processed")
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
@@ -53,7 +52,8 @@ public class LogDataRecord extends Base {
   @Indexed private int logCollectionMinute;
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
-      String stateExecutionId, String workflowId, String workflowExecutionId, List<LogElement> logElements) {
+      String stateExecutionId, String workflowId, String workflowExecutionId, boolean processed,
+      List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
       final LogDataRecord record = new LogDataRecord();
@@ -69,7 +69,7 @@ public class LogDataRecord extends Base {
       record.setCount(logElement.getCount());
       record.setLogMessage(logElement.getLogMessage());
       record.setLogMD5Hash(DigestUtils.md5Hex(logElement.getLogMessage()));
-      record.setProcessed(false);
+      record.setProcessed(processed);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
 
       records.add(record);

@@ -405,6 +405,7 @@ public class PipelineServiceImpl implements PipelineService {
                                                      .withWorkflowId(workflow.getUuid())
                                                      .withWorkflowName(workflow.getName())
                                                      .withPipelineStageName(pse.getName())
+                                                     .withVariables(variables)
                                                      .build();
                 workflowDetails.add(workflowDetail);
               }

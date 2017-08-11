@@ -29,6 +29,8 @@ public class Workflow extends Base {
 
   private Integer defaultVersion;
 
+  private boolean templatized;
+
   @Transient private String notes;
 
   @Transient private OrchestrationWorkflow orchestrationWorkflow;
@@ -147,12 +149,21 @@ public class Workflow extends Base {
     this.infraMappingId = infraMappingId;
   }
 
+  public boolean isTemplatized() {
+    return templatized;
+  }
+
+  public void setTemplatized(boolean templatized) {
+    this.templatized = templatized;
+  }
+
   public Workflow clone() {
     return aWorkflow()
         .withAppId(getAppId())
         .withEnvId(getEnvId())
         .withWorkflowType(getWorkflowType())
         .withName(getName())
+        .withTemplatized(isTemplatized())
         .build();
   }
 
@@ -174,6 +185,7 @@ public class Workflow extends Base {
     private long lastUpdatedAt;
     private String serviceId;
     private String infraMappingId;
+    private boolean templatized;
 
     private WorkflowBuilder() {}
 
@@ -266,6 +278,11 @@ public class Workflow extends Base {
       return this;
     }
 
+    public WorkflowBuilder withTemplatized(boolean templatized) {
+      this.templatized = templatized;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -285,6 +302,7 @@ public class Workflow extends Base {
       workflow.setLastUpdatedAt(lastUpdatedAt);
       workflow.setServiceId(serviceId);
       workflow.setInfraMappingId(infraMappingId);
+      workflow.setTemplatized(templatized);
       return workflow;
     }
   }

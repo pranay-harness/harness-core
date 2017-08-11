@@ -22,6 +22,7 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -46,9 +47,9 @@ public class SplunkResource implements LogAnalysisResource {
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      List<LogElement> logData) throws IOException {
+      @DefaultValue("true") @QueryParam("processed") boolean processed, List<LogElement> logData) throws IOException {
     return new RestResponse<>(analysisService.saveLogData(
-        StateType.SPLUNKV2, appId, stateExecutionId, workflowId, workflowExecutionId, logData));
+        StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId, processed, logData));
   }
 
   @POST
@@ -57,8 +58,9 @@ public class SplunkResource implements LogAnalysisResource {
   @ExceptionMetered
   @ExternalServiceAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent, LogRequest logRequest) throws IOException {
-    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, StateType.SPLUNKV2));
+      @QueryParam("compareCurrent") boolean compareCurrent,
+      @DefaultValue("true") @QueryParam("processed") boolean processed, LogRequest logRequest) throws IOException {
+    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, processed, StateType.SPLUNKV2));
   }
 
   @POST

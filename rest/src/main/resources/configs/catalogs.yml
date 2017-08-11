@@ -121,6 +121,20 @@ REPAIR_ACTION_CODE:
       value: ROLLBACK_PHASE
     - name: Ignore
       value: IGNORE
+    - name: Retry
+      value: RETRY
+
+ACTION_AFTER_RETRY:
+    - name: Manual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+    - name: Retry
+      value: RETRY
 
 PHASE_STEP_TYPE:
     - name: Provision Nodes

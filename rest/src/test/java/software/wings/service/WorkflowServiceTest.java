@@ -1309,4 +1309,45 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow5 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
     assertThat(workflow5).isNotNull();
   }
+
+  @Test
+  public void shouldTemplatizeWorkflow() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    Workflow templatizedWorkflow =
+        workflowService.templatizeWorkflow(workflow2.getAppId(), workflow2.getUuid(), workflow2);
+    assertThat(templatizedWorkflow).isNotNull();
+    assertThat(templatizedWorkflow.isTemplatized()).isTrue();
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) templatizedWorkflow.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+  }
 }
