@@ -1,0 +1,15 @@
+config:
+  applications:
+  {{#applications}}
+    name: {{name}}
+    description: {{description}}
+    {{#services}}
+        name: {{name}}
+        artifactType: {{artifactType}}
+        description: {{description}}
+    {{/services}}
+    {{#environments}}
+        name: {{name}}
+        environmentType: {{environmentType}}
+    {{/environments}}
+  {{/applications}}
