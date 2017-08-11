@@ -121,6 +121,8 @@ REPAIR_ACTION_CODE:
       value: ROLLBACK_PHASE
     - name: Ignore
       value: IGNORE
+    - name: Retry
+      value: RETRY
 
 PHASE_STEP_TYPE:
     - name: Provision Nodes
