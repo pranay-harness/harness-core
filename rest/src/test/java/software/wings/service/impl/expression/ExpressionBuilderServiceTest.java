@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -14,7 +15,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.ServiceTemplate.Builder.*;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -35,7 +36,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Application;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Variable;
@@ -67,7 +67,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceExpressions() {
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     List<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("service.name"));
@@ -75,6 +75,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceVariableExpressions() {
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
+
     PageResponse<ServiceVariable> serviceVariables = aPageResponse()
                                                          .withResponse(asList(aServiceVariable()
                                                                                   .withName(SERVICE_VARIABLE_NAME)
@@ -82,12 +84,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                                                                                   .withEntityType(SERVICE)
                                                                                   .build()))
                                                          .build();
-
     PageRequest<ServiceVariable> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     pageRequest.addFilter("appId", APP_ID, EQ);
     pageRequest.addFilter("entityId", SERVICE_ID, EQ);
     pageRequest.addFilter("entityType", SERVICE, EQ);
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+
     when(serviceVariableService.list(pageRequest, true)).thenReturn(serviceVariables);
     List<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
@@ -108,7 +109,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     pageRequest.addFilter("appId", APP_ID, EQ);
     pageRequest.addFilter("entityId", SERVICE_ID, EQ);
     pageRequest.addFilter("entityType", SERVICE, EQ);
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     when(serviceVariableService.list(pageRequest, true)).thenReturn(serviceVariables);
 
     PageRequest<ServiceTemplate> templatePageRequest = aPageRequest().withLimit(UNLIMITED).build();
@@ -140,15 +141,39 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetEnvironmentExpressions() {
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     List<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("env.name"));
   }
 
   @Test
+  public void shouldGetEnvironmentServiceVariableExpressions() {
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
+
+    PageResponse<ServiceVariable> serviceVariables = aPageResponse()
+                                                         .withResponse(asList(aServiceVariable()
+                                                                                  .withName(SERVICE_VARIABLE_NAME)
+                                                                                  .withEntityId(SERVICE_ID)
+                                                                                  .withEntityType(SERVICE)
+                                                                                  .build()))
+                                                         .build();
+    PageRequest<ServiceVariable> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
+    pageRequest.addFilter("appId", APP_ID, EQ);
+    pageRequest.addFilter("entityId", SERVICE_ID, EQ);
+    pageRequest.addFilter("entityType", SERVICE, EQ);
+
+    when(serviceVariableService.list(pageRequest, true)).thenReturn(serviceVariables);
+
+    List<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.contains("env.name"));
+    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME"));
+  }
+
+  @Test
   public void shouldGetWorkflowExpressions() {
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     List<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("env.name"));
@@ -170,7 +195,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                     .build())
             .build();
 
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     List<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
     assertThat(expressions).isNotNull();
@@ -194,7 +219,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                     .build())
             .build();
 
-    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withName(APP_NAME).build());
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     List<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, HTTP);
     assertThat(expressions).isNotNull();

@@ -69,7 +69,6 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
       pageRequest.addFilter("entityId", serviceTemplateIds, IN);
       List<ServiceVariable> serviceVariables = serviceVariablesService.list(variablePageRequest, true);
       if (CollectionUtils.isNotEmpty(serviceVariables)) {
-        // return serviceVariables.stream().map(ServiceVariable::getName).collect(Collectors.toList());
         return serviceVariables.stream()
             .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
             .collect(Collectors.toList());
