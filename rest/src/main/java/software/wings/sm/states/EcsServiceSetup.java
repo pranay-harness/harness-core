@@ -212,7 +212,7 @@ public class EcsServiceSetup extends State {
           .withTargetGroupArn(targetGroupArn);
     }
 
-    logger.info("Creating ECS service {}", ecsServiceName);
+    logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
     awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
 
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
