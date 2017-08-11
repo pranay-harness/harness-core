@@ -32,9 +32,9 @@ public class YamlMustacheTemplateConfig {
     service1.setDescription("blah service1 blah");
 
     Service service2 = new Service();
-    service1.setName("TestService2");
-    service1.setArtifactType(ArtifactType.WAR);
-    service1.setDescription("blah service2 blah");
+    service2.setName("TestService2");
+    service2.setArtifactType(ArtifactType.WAR);
+    service2.setDescription("blah service2 blah");
 
     List<Service> services1 = app1.getServices();
     services1.add(service1);
@@ -46,12 +46,12 @@ public class YamlMustacheTemplateConfig {
     env1.setEnvironmentType(EnvironmentType.NON_PROD);
 
     Environment env2 = new Environment();
-    env1.setName("Quality Assurance");
-    env1.setEnvironmentType(EnvironmentType.NON_PROD);
+    env2.setName("Quality Assurance");
+    env2.setEnvironmentType(EnvironmentType.NON_PROD);
 
     Environment env3 = new Environment();
-    env1.setName("Production");
-    env1.setEnvironmentType(EnvironmentType.PROD);
+    env3.setName("Production");
+    env3.setEnvironmentType(EnvironmentType.PROD);
 
     List<Environment> environments1 = app1.getEnvironments();
     environments1.add(env1);
@@ -61,7 +61,6 @@ public class YamlMustacheTemplateConfig {
 
     applications.add(app1);
 
-    /*
     Application app2 = new Application();
     app2.setName("TestApp2");
     app2.setDescription("blah app2 blah");
@@ -88,7 +87,6 @@ public class YamlMustacheTemplateConfig {
     app2.setEnvironments(environments2);
 
     applications.add(app2);
-    */
 
     return applications;
   }
