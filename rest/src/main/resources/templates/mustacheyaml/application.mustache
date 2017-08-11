@@ -1,10 +1,11 @@
-name: {{name}}
-description: {{description}}
-services:
-  {{#services}}
-    {{>/resources/templates/mustacheyaml/service.mustache}}
-  {{/services}}
-environments:
-  {{#environments}}
-    {{>/resources/templates/mustacheyaml/environment.mustache}}
-  {{/environments}}
+-
+    name: {{name}}
+    description: {{description}}
+    services:
+      {{#services}}
+        {{>service.mustache}}
+      {{/services}}
+    environments:
+      {{#environments}}
+        {{>environment.mustache}}
+      {{/environments}}
