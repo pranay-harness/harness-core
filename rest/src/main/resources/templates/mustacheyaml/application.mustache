@@ -1,11 +1,10 @@
--
-    name: {{name}}
-    description: {{description}}
-    services:
+- name: {{name}}
+      description: {{description}}
+      services:
       {{#services}}
         {{>service.mustache}}
       {{/services}}
-    environments:
+      environments:
       {{#environments}}
         {{>environment.mustache}}
       {{/environments}}
