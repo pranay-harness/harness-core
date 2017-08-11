@@ -2,43 +2,45 @@
 config:
   applications:
     - name: TestApp1
-      description: "blah app blah"
+      description: blah app1 blah
       services:
         - name: TestService1
           artifactType: WAR
-          description: "blah service1 blah"
+          description: blah service1 blah
 
         - name: TestService2
           artifactType: WAR
-          description: "blah service2 blah"
+          description: blah service2 blah
 
       environments:
         - name: Development
           environmentType: NON_PROD
 
-        - name: "Quality Assurance"
+        - name: Quality Assurance
           environmentType: NON_PROD
 
         - name: Production
           environmentType: PROD
 
     - name: TestApp2
-      description: "blah app2 blah"
+      description: blah app2 blah
       services:
         - name: TestService3
           artifactType: WAR
-          description: "blah service3 blah"
+          description: blah service3 blah
 
         - name: TestService4
           artifactType: WAR
-          description: "blah service4 blah"
+          description: blah service4 blah
 
       environments:
         - name: Development
           environmentType: NON_PROD
 
-        - name: "Quality Assurance"
+        - name: Quality Assurance
           environmentType: NON_PROD
 
         - name: Production
           environmentType: PROD
+
+  account:
