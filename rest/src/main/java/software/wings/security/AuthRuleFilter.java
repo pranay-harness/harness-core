@@ -103,6 +103,22 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
+    if (isDelegateRequest(requestContext) && isExternalServiceRequest(requestContext)) {
+      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+      String header = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+      if (header.contains("Delegate")) {
+        authService.validateDelegateToken(
+            accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
+      } else if (header.contains("ExternalService")) {
+        authService.validateExternalServiceToken(
+            accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "ExternalService "));
+      } else {
+        throw new IllegalStateException("Invalid header:" + header);
+      }
+
+      return;
+    }
+
     if (isDelegateRequest(requestContext)) {
       String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
       authService.validateDelegateToken(

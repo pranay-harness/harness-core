@@ -18,7 +18,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkSettingProvider;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -85,10 +84,5 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
-  }
-
-  @Override
-  protected String getStateBaseUrl() {
-    return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
   }
 }
