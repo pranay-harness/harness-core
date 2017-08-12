@@ -1,16 +1,21 @@
 package software.wings.yaml;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.utils.ArtifactType;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -95,6 +100,32 @@ public class YamlMustacheTemplateConfig {
     MustacheFactory mf = new DefaultMustacheFactory();
 
     Mustache mustache = mf.compile("rest/src/main/resources/templates/mustacheyaml/config_with_partials.mustache");
-    mustache.execute(new PrintWriter(System.out), new YamlMustacheTemplateConfig()).flush();
+
+    Writer writer = new StringWriter();
+    mustache.execute(writer, new YamlMustacheTemplateConfig()).flush();
+    String configYaml = writer.toString();
+
+    System.out.println(configYaml);
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    Config config = null;
+
+    if (configYaml != null && !configYaml.isEmpty()) {
+      try {
+        config = mapper.readValue(configYaml, Config.class);
+      } catch (Exception e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+
+    System.out.println("************ Roundtrip ************");
+
+    if (config != null) {
+      mustache.execute(writer, config).flush();
+      configYaml = writer.toString();
+
+      System.out.println(configYaml);
+    }
   }
 }
