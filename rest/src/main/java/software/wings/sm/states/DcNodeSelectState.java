@@ -18,10 +18,10 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -57,6 +57,12 @@ public class DcNodeSelectState extends State {
     List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
     List<String> excludedServiceInstanceIds =
         hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
+    if (excludedServiceInstanceIds == null || excludedServiceInstanceIds.isEmpty()) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("No node selected")
+          .build();
+    }
     List<ServiceInstance> serviceInstances =
         infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
             aServiceInstanceSelectionParams()
