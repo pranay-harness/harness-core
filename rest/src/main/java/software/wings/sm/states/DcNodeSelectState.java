@@ -57,12 +57,6 @@ public class DcNodeSelectState extends State {
     List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
     List<String> excludedServiceInstanceIds =
         hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
-    if (excludedServiceInstanceIds == null || excludedServiceInstanceIds.isEmpty()) {
-      return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("No node selected")
-          .build();
-    }
     List<ServiceInstance> serviceInstances =
         infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
             aServiceInstanceSelectionParams()
@@ -71,6 +65,13 @@ public class DcNodeSelectState extends State {
                 .withHostNames(hostNames)
                 .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
                 .build());
+
+    if (serviceInstances == null || serviceInstances.isEmpty()) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("No node selected")
+          .build();
+    }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
     selectedNodeExecutionData.setServiceInstanceList(serviceInstances);

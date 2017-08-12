@@ -75,12 +75,6 @@ public class AwsNodeSelectState extends State {
       List<String> excludedServiceInstanceIds =
           hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
 
-      if (excludedServiceInstanceIds == null || excludedServiceInstanceIds.isEmpty()) {
-        return anExecutionResponse()
-            .withExecutionStatus(ExecutionStatus.FAILED)
-            .withErrorMessage("No node selected")
-            .build();
-      }
       serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
           aServiceInstanceSelectionParams()
               .withSelectSpecificHosts(specificHosts)
@@ -88,6 +82,12 @@ public class AwsNodeSelectState extends State {
               .withHostNames(hostNames)
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
               .build());
+      if (serviceInstances == null || serviceInstances.isEmpty()) {
+        return anExecutionResponse()
+            .withExecutionStatus(ExecutionStatus.FAILED)
+            .withErrorMessage("No node selected")
+            .build();
+      }
     }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
