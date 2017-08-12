@@ -859,6 +859,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Workflow templatizeWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
+    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
+    Workflow templatizedWorkflow = originalWorkflow.clone();
+    templatizedWorkflow.setName(workflow.getName());
+    templatizedWorkflow.setDescription(workflow.getDescription());
+    templatizedWorkflow.setTemplatized(true);
+    Workflow savedWorkflow = createWorkflow(templatizedWorkflow);
+    savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false);
+  }
+
+  @Override
   public Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion) {
     Workflow workflow = readWorkflow(appId, workflowId, null);
     wingsPersistence.update(

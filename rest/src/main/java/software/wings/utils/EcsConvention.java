@@ -14,11 +14,11 @@ public class EcsConvention {
   }
 
   public static String getServiceName(String family, Integer revision) {
-    return Misc.normalizeExpression(family + DELIMITER + revision);
+    return family + DELIMITER + revision;
   }
 
   public static String getServiceNamePrefix(String family) {
-    return Misc.normalizeExpression(family + DELIMITER);
+    return family + DELIMITER;
   }
 
   public static String getServiceNamePrefixFromServiceName(String serviceName) {

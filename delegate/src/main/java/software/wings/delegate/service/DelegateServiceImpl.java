@@ -315,13 +315,15 @@ public class DelegateServiceImpl implements DelegateService {
         } catch (Exception e) {
           String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
           Misc.error(logger, msg, e);
-          throw new WingsException(msg, e);
+          Thread.sleep(55000);
+          return null;
         }
         if (delegateResponse == null) {
           String msg = "Error occurred while registering Delegate [" + accountId
               + "] with manager. Please see the manager log for more information.";
           logger.error(msg);
-          throw new WingsException(msg);
+          Thread.sleep(55000);
+          return null;
         }
         builder.withUuid(delegateResponse.getResource().getUuid())
             .withStatus(delegateResponse.getResource().getStatus());

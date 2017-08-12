@@ -107,14 +107,6 @@ public class AnalysisServiceImpl implements AnalysisService {
           wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
 
       Preconditions.checkState(lastSuccessfullRecords.size() == 1, "Multiple records found for give query");
-      //      final Query<LogDataRecord> lastSuccessfulExecutionData = wingsPersistence.createQuery(LogDataRecord.class)
-      //          .field("stateType").equal(stateType)
-      //          .field("workflowId").equal(logRequest.getWorkflowId())
-      //          .field("stateExecutionId").notEqual(logRequest.getStateExecutionId())
-      //          .field("applicationId").equal(logRequest.getApplicationId())
-      //          .field("query").equal(logRequest.getQuery())
-      //          .order("-createdAt")
-      //          .field("logCollectionMinute").equal(logRequest.getLogCollectionMinute());
 
       LogDataRecord record = lastSuccessfullRecords.get(0);
       if (record == null) {
@@ -133,6 +125,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
                                      .equal(logRequest.getQuery())
+                                     .field("host")
+                                     .hasAnyOf(logRequest.getNodes())
                                      .field("logCollectionMinute")
                                      .equal(logRequest.getLogCollectionMinute());
     }

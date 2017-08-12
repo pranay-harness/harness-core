@@ -469,7 +469,7 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
+    logger.warn("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
 
     updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null, null);

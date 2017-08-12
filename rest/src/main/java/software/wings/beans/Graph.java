@@ -352,6 +352,7 @@ public class Graph {
 
     private List<ElementExecutionSummary> elementStatusSummary;
     private List<InstanceStatusSummary> instanceStatusSummary;
+    private List<TemplateExpression> templateExpressions;
 
     @Embedded private Map<String, Object> properties = new HashMap<>();
 
@@ -688,6 +689,23 @@ public class Graph {
      */
     public void setInstanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
       this.instanceStatusSummary = instanceStatusSummary;
+    }
+
+    /**
+     * Gets template expressions
+     *
+     * @return the template expressions
+     */
+    public List<TemplateExpression> getTemplateExpressions() {
+      return templateExpressions;
+    }
+
+    /**
+     * Sets template expressions
+     * @param templateExpressions
+     */
+    public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
+      this.templateExpressions = templateExpressions;
     }
 
     public boolean isValid() {
