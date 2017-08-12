@@ -4,6 +4,8 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
+import com.google.common.io.Files;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.mongodb.client.gridfs.model.GridFSFile;
@@ -16,10 +18,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
+import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
@@ -89,7 +93,6 @@ public class DelegateFileResource {
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") int version,
       @QueryParam("accountId") @NotEmpty String accountId) {
     logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId, fileBucket, version);
-
     return new RestResponse<>(fileService.getFileIdByVersion(entityId, version, fileBucket));
   }
 
@@ -99,11 +102,18 @@ public class DelegateFileResource {
   @Timed
   @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
-      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.debug("fileId: {}, fileBucket: {}", fileId, fileBucket);
-
+      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("encrypted") boolean encrypted) {
+    logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
     return output -> {
-      fileService.downloadToStream(fileId, output, fileBucket);
+      if (encrypted) {
+        File file = new File(Files.createTempDir(), UUIDGenerator.getUuid());
+        logger.info("Temp file path [{}]", file.getAbsolutePath());
+        fileService.download(fileId, file, fileBucket);
+        EncryptionUtils.decryptToStream(file, accountId, output);
+      } else {
+        fileService.downloadToStream(fileId, output, fileBucket);
+      }
     };
   }
 

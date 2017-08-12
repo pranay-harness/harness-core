@@ -27,6 +27,7 @@ import software.wings.dl.FileBucketHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 
 import java.io.File;
@@ -117,7 +118,8 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public String uploadFromStream(String filename, InputStream in, FileBucket bucket, Map<String, Object> metaData) {
+  public String uploadFromStream(
+      String filename, BoundedInputStream in, FileBucket bucket, Map<String, Object> metaData) {
     GridFSUploadOptions gridFSOptions =
         new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize()).metadata(new Document(metaData));
     ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(bucket).uploadFromStream(filename, in, gridFSOptions);
@@ -195,7 +197,6 @@ public class FileServiceImpl implements FileService {
     verifyFileIntegrity(baseFile, gridFsFile);
     baseFile.setChecksum(gridFsFile.getMD5());
     baseFile.setFileUuid(fileId);
-    baseFile.setSize(gridFsFile.getLength());
     return fileId;
   }
 

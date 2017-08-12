@@ -23,6 +23,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -71,7 +72,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     ConfigFile appConfigFile = configFileBuilder.but().build();
 
     FileInputStream fileInputStream = new FileInputStream(createRandomFile(FILE_NAME));
-    String configId = configService.save(appConfigFile, fileInputStream);
+    String configId = configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
     ConfigFile configFile = configService.get(service.getAppId(), configId);
     assertThat(configFile).isNotNull().hasFieldOrPropertyWithValue("fileName", FILE_NAME);
@@ -80,14 +81,14 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldUpdateServiceConfigFile() throws IOException {
     FileInputStream fileInputStream = new FileInputStream(createRandomFile(FILE_NAME));
-    String configId = configService.save(configFileBuilder.but().build(), fileInputStream);
+    String configId = configService.save(configFileBuilder.but().build(), new BoundedInputStream(fileInputStream));
     fileInputStream.close();
     ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
     // update
     ConfigFile configFile = configFileBuilder.but().build();
     configFile.setUuid(configId);
     fileInputStream = new FileInputStream(createRandomFile(FILE_NAME + "_1"));
-    configService.update(configFile, fileInputStream);
+    configService.update(configFile, new BoundedInputStream(fileInputStream));
     ConfigFile updatedConfigFile = configService.get(service.getAppId(), configId);
     assertThat(updatedConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", originalConfigFile.getFileName());
     assertThat(originalConfigFile.getFileUuid()).isNotEmpty().isNotEqualTo(updatedConfigFile.getFileUuid());

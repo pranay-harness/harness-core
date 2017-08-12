@@ -12,6 +12,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.utils.Misc.isNullOrEmpty;
 import static software.wings.utils.Misc.sleepWithRuntimeException;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -88,7 +90,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * Instantiates a new abstract ssh executor.
    *
    * @param delegateFileManager the file service
-   * @param logService  the log service
+   * @param logService          the log service
    */
   @Inject
   public AbstractSshExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService) {
@@ -225,7 +227,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                   @Override
                   public void downloadToStream(OutputStream outputStream) throws IOException {
                     try (InputStream inputStream = delegateFileManager.downloadByFileId(
-                             fileBucket, fileNamesId.getKey(), config.getAccountId())) {
+                             fileBucket, fileNamesId.getKey(), config.getAccountId(), false)) {
                       IOUtils.copy(inputStream, outputStream);
                     }
                   }
@@ -233,6 +235,28 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
         .findFirst()
         .orElse(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Override
+  public CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData) {
+    if (isNullOrEmpty(configFileMetaData.getFileId()) || isNullOrEmpty(configFileMetaData.getFilename())) {
+      saveExecutionLog("There are no artifacts to copy. " + configFileMetaData.toString());
+      return CommandExecutionStatus.SUCCESS;
+    }
+    return scpOneFile(configFileMetaData.getDestinationDirectoryPath(), new FileProvider() {
+      @Override
+      public Pair<String, Long> getInfo() throws IOException {
+        return ImmutablePair.of(configFileMetaData.getFilename(), configFileMetaData.getLength());
+      }
+
+      @Override
+      public void downloadToStream(OutputStream outputStream) throws IOException {
+        try (InputStream inputStream = delegateFileManager.downloadByFileId(configFileMetaData.getFileBucket(),
+                 configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
+          IOUtils.copy(inputStream, outputStream);
+        }
+      }
+    });
   }
 
   @Override

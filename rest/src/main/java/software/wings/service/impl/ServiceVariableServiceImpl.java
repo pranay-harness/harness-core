@@ -114,8 +114,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
                                    .map(Key::getId)
                                    .collect(Collectors.toList());
 
-    Query<ServiceVariable> query =
-        wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(existingServiceVariable.getAppId());
+    Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
+                                       .field("appId")
+                                       .equal(existingServiceVariable.getAppId())
+                                       .field("name")
+                                       .equal(existingServiceVariable.getName());
     query.or(query.criteria("entityId").equal(existingServiceVariable.getEntityId()),
         query.criteria("templateId").in(templateIds));
 

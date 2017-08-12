@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
@@ -21,6 +22,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.JsonUtils;
@@ -55,6 +57,7 @@ import javax.ws.rs.core.Response;
 public class ConfigResource {
   @Inject private ConfigService configService;
   @Inject private MainConfiguration configuration;
+  @Inject private AppService appService;
 
   /**
    * List.
@@ -87,7 +90,9 @@ public class ConfigResource {
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
-    configFile.setAppId(appId);
+    Application application = appService.get(appId);
+    configFile.setAppId(application.getAppId());
+    configFile.setAccountId(application.getAccountId());
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setFileName(new File(fileDetail.getFileName()).getName());
@@ -139,7 +144,9 @@ public class ConfigResource {
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
-    configFile.setAppId(appId);
+    Application application = appService.get(appId);
+    configFile.setAppId(application.getAppId());
+    configFile.setAccountId(application.getAccountId());
     configFile.setUuid(configId);
     try {
       Map<String, EntityVersion> envIdVersionMap =
@@ -153,7 +160,7 @@ public class ConfigResource {
     }
     configService.update(configFile,
         uploadedInputStream == null
-            ? uploadedInputStream
+            ? null
             : new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
     return new RestResponse();
   }
