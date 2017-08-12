@@ -21,7 +21,6 @@ import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -46,7 +45,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
-  public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
+  protected static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
   protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
 
   protected String query;
@@ -216,17 +215,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .build();
   }
 
-  @SchemaIgnore
-  public static String getStateBaseUrl(StateType stateType) {
-    switch (stateType) {
-      case ELK:
-        return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
-      case SPLUNKV2:
-        return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
-      default:
-        throw new IllegalArgumentException("invalid stateType: " + stateType);
-    }
-  }
+  @SchemaIgnore protected abstract String getStateBaseUrl();
 
   private class LogMLAnalysisGenerator implements Runnable {
     private final ExecutionContext context;
@@ -266,7 +255,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         return;
       }
 
-      final StateType stateType = StateType.valueOf(getStateType());
       for (String query : queries) {
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && !analysisService.isLogDataCollected(applicationId, context.getStateExecutionInstanceId(), query,
@@ -278,20 +266,19 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         try {
-          final String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
-              + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-              + "&processed=true&compareCurrent=true";
-          String controlInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
-              + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-              + "&processed=true&compareCurrent=";
+          final long endTime = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1;
+          final String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl() + "/get-logs?accountId=" + accountId
+              + "&compareCurrent=true";
+          String controlInputUrl =
+              this.serverUrl + "/api/" + getStateBaseUrl() + "/get-logs?accountId=" + accountId + "&compareCurrent=";
           controlInputUrl = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
               ? controlInputUrl + true
               : controlInputUrl + false;
-          final String logAnalysisSaveUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
-              + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
-              + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
-          final String logAnalysisGetUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
-              + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
+          final String logAnalysisSaveUrl = this.serverUrl + "/api/" + getStateBaseUrl()
+              + "/save-analysis-records?accountId=" + accountId + "&applicationId=" + applicationId
+              + "&stateExecutionId=" + context.getStateExecutionInstanceId();
+          final String logAnalysisGetUrl =
+              this.serverUrl + "/api/" + getStateBaseUrl() + "/get-analysis-records?accountId=" + accountId;
           final List<String> command = new ArrayList<>();
           command.add(this.pythonScriptRoot + "/" + LOG_ML_SHELL_FILE_NAME);
           command.add("--query=" + query);
@@ -326,6 +313,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
             switch (result.getExitValue()) {
               case 0:
+                analysisService.markProcessed(context.getStateExecutionInstanceId(), context.getAppId(), endTime,
+                    StateType.valueOf(getStateType()));
                 getLogger().info("Log analysis done for " + context.getStateExecutionInstanceId() + "for minute "
                     + logAnalysisMinute);
                 attempt += PYTHON_JOB_RETRIES;

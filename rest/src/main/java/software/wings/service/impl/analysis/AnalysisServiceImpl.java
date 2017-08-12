@@ -1,18 +1,12 @@
 package software.wings.service.impl.analysis;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.sm.states.AbstractAnalysisState.PYTHON_JOB_RETRIES;
 
 import com.google.common.base.Preconditions;
 
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
@@ -31,14 +25,10 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.sm.states.AbstractAnalysisState;
-import software.wings.sm.states.AbstractLogAnalysisState;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,8 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -58,44 +46,26 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class AnalysisServiceImpl implements AnalysisService {
-  private static final String CLUSTER_ML_SHELL_FILE_NAME = "run_cluster_log_ml.sh";
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
-  private static int NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS =
-      StringUtils.isBlank(System.getProperty("clustering.threads"))
-      ? 10
-      : Integer.parseInt(System.getProperty("clustering.threads"));
   private final Random random = new Random();
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected WorkflowExecutionService workflowExecutionService;
-  @Inject protected MainConfiguration configuration;
-
-  private ExecutorService firstLevelClusteringService =
-      Executors.newFixedThreadPool(NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS, r -> new Thread(r, "clustering_thread"));
 
   @Override
-  public Boolean saveLogData(StateType stateType, String accountId, String appId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, boolean processed, List<LogElement> logData) throws IOException {
-    logger.debug("inserting " + logData.size() + " pieces of log data");
-    List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(
-        stateType, appId, stateExecutionId, workflowId, workflowExecutionId, processed, logData);
+  public Boolean saveLogData(StateType stateType, String appId, String stateExecutionId, String workflowId,
+      String workflowExecutionId, List<LogElement> logData) throws IOException {
+    logger.debug("inserting " + logData.size() + " pieces of splunk log data");
+    final List<LogDataRecord> logDataRecords =
+        LogDataRecord.generateDataRecords(stateType, appId, stateExecutionId, workflowId, workflowExecutionId, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.debug("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
-
-    if (!processed && !logData.isEmpty()) {
-      final LogElement log = logData.get(0);
-      final LogRequest logRequest = new LogRequest(log.getQuery(), appId, stateExecutionId, workflowId,
-          Collections.singleton(log.getHost()), log.getLogCollectionMinute());
-      firstLevelClusteringService.submit(
-          new LogMessageClusterTask(stateType, accountId, workflowExecutionId, logRequest));
-    }
     return true;
   }
 
   @Override
-  public List<LogDataRecord> getLogData(
-      LogRequest logRequest, boolean compareCurrent, boolean processed, StateType stateType) {
+  public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, StateType stateType) {
     Query<LogDataRecord> splunkLogDataRecordQuery = null;
     List<LogDataRecord> records = null;
     if (compareCurrent) {
@@ -109,7 +79,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .field("query")
                                      .equal(logRequest.getQuery())
                                      .field("processed")
-                                     .equal(processed)
+                                     .equal(false)
                                      .field("logCollectionMinute")
                                      .equal(logRequest.getLogCollectionMinute())
                                      .field("host")
@@ -135,8 +105,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
       PageResponse<LogDataRecord> lastSuccessfullRecords =
           wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
-      Preconditions.checkState(lastSuccessfullRecords.size() == 1,
-          "Did not find expected records for given query, records found: " + lastSuccessfullRecords.size());
+
+      Preconditions.checkState(lastSuccessfullRecords.size() == 1, "Multiple records found for give query");
 
       LogDataRecord record = lastSuccessfullRecords.get(0);
       if (record == null) {
@@ -157,8 +127,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(logRequest.getQuery())
                                      .field("host")
                                      .hasAnyOf(logRequest.getNodes())
-                                     .field("processed")
-                                     .equal(processed)
                                      .field("logCollectionMinute")
                                      .equal(logRequest.getLogCollectionMinute());
     }
@@ -169,24 +137,20 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Boolean deleteProcessed(LogRequest logRequest, StateType stateType) {
+  public Boolean markProcessed(String stateExecutionId, String applicationId, long tillTimeStamp, StateType stateType) {
     Query<LogDataRecord> splunkLogDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
                                                     .field("stateType")
                                                     .equal(stateType)
                                                     .field("stateExecutionId")
-                                                    .equal(logRequest.getStateExecutionId())
+                                                    .equal(stateExecutionId)
                                                     .field("applicationId")
-                                                    .equal(logRequest.getApplicationId())
-                                                    .field("processed")
-                                                    .equal(false)
-                                                    .field("query")
-                                                    .equal(logRequest.getQuery())
-                                                    .field("host")
-                                                    .hasAnyOf(logRequest.getNodes())
-                                                    .field("logCollectionMinute")
-                                                    .equal(logRequest.getLogCollectionMinute());
+                                                    .equal("applicationId")
+                                                    .field("timeStamp")
+                                                    .lessThanOrEq(tillTimeStamp);
 
-    return wingsPersistence.delete(splunkLogDataRecords);
+    wingsPersistence.update(
+        splunkLogDataRecords, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("processed", true));
+    return true;
   }
 
   @Override
@@ -393,82 +357,5 @@ public class AnalysisServiceImpl implements AnalysisService {
     final int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
-  }
-
-  private class LogMessageClusterTask implements Runnable {
-    private final StateType stateType;
-    private final String accountId;
-    private final String workflowExecutionId;
-    private final LogRequest logRequest;
-    private final String serverUrl;
-    private final String pythonScriptRoot;
-
-    private LogMessageClusterTask(
-        StateType stateType, String accountId, String workflowExecutionId, LogRequest logRequest) {
-      this.stateType = stateType;
-      this.accountId = accountId;
-      this.workflowExecutionId = workflowExecutionId;
-      this.logRequest = logRequest;
-      String protocol = AnalysisServiceImpl.this.configuration.isSslEnabled() ? "https" : "http";
-      this.serverUrl = protocol + "://localhost:" + AnalysisServiceImpl.this.configuration.getApplicationPort();
-      this.pythonScriptRoot = System.getenv(AbstractLogAnalysisState.LOG_ML_ROOT);
-      Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
-    }
-
-    @Override
-    public void run() {
-      try {
-        final String inputLogsUrl = this.serverUrl + "/api/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&compareCurrent=true&processed=false";
-        String clusteredLogSaveUrl = this.serverUrl + "/api/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
-            + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId + "&stateExecutionId="
-            + logRequest.getStateExecutionId() + "&workflowId=" + logRequest.getWorkflowId() + "&workflowExecutionId="
-            + workflowExecutionId + "&appId=" + logRequest.getApplicationId() + "&processed=true";
-
-        final List<String> command = new ArrayList<>();
-        command.add(this.pythonScriptRoot + "/" + CLUSTER_ML_SHELL_FILE_NAME);
-        command.add("--input_url");
-        command.add(inputLogsUrl);
-        command.add("--output_url");
-        command.add(clusteredLogSaveUrl);
-        command.add("--auth_token="
-            + AbstractAnalysisState.generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret()));
-        command.add("--application_id=" + logRequest.getApplicationId());
-        command.add("--workflow_id=" + logRequest.getWorkflowId());
-        command.add("--state_execution_id=" + logRequest.getStateExecutionId());
-        command.add("--nodes");
-        command.addAll(logRequest.getNodes());
-        command.add("--sim_threshold");
-        command.add(String.valueOf(0.99));
-        command.add("--log_collection_minute");
-        command.add(String.valueOf(logRequest.getLogCollectionMinute()));
-        command.add("--query=" + logRequest.getQuery());
-
-        for (int attempt = 0; attempt < PYTHON_JOB_RETRIES; attempt++) {
-          final ProcessResult result =
-              new ProcessExecutor(command)
-                  .redirectOutput(
-                      Slf4jStream
-                          .of(LoggerFactory.getLogger(getClass().getName() + "." + logRequest.getStateExecutionId()))
-                          .asInfo())
-                  .execute();
-
-          switch (result.getExitValue()) {
-            case 0:
-              logger.info("First level clustering done for " + logRequest);
-              attempt += PYTHON_JOB_RETRIES;
-              break;
-            default:
-              logger.error("First level clustering failed for " + logRequest + " trial: " + (attempt + 1));
-              Thread.sleep(2000);
-          }
-        }
-
-      } catch (Exception e) {
-        Misc.error(logger, "First level clustering failed for " + logRequest, e);
-      }
-      deleteProcessed(logRequest, stateType);
-    }
   }
 }

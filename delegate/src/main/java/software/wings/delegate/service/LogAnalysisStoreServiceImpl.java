@@ -21,15 +21,15 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
 
   @Override
   public void save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, List<LogElement> logs) throws IOException {
+      String workflowExecutionId, List<LogElement> splunkLogs) throws IOException {
     switch (stateType) {
       case SPLUNKV2:
         execute(managerClient.saveSplunkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, true, logs));
+            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, splunkLogs));
         break;
       case ELK:
-        execute(managerClient.saveElkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, false, logs));
+        execute(
+            managerClient.saveElkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId, splunkLogs));
         break;
 
       default:

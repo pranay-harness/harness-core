@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractAnalysisState extends State {
-  public static final int PYTHON_JOB_RETRIES = 3;
+  protected static final int PYTHON_JOB_RETRIES = 3;
 
   protected String timeDuration;
   protected String comparisonStrategy;
@@ -166,15 +166,12 @@ public abstract class AbstractAnalysisState extends State {
   protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
 
   protected String generateAuthToken() throws UnsupportedEncodingException {
-    return generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret());
-  }
-
-  public static String generateAuthToken(final String secret) throws UnsupportedEncodingException {
-    if (secret == null) {
+    final String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
+    if (jwtExternalServiceSecret == null) {
       throw new WingsException(INVALID_REQUEST, "message", "No secret present for external service");
     }
 
-    Algorithm algorithm = Algorithm.HMAC256(secret);
+    Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
     return JWT.create()
         .withIssuer("Harness Inc")
         .withIssuedAt(new Date())

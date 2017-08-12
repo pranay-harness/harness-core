@@ -10,7 +10,6 @@ import software.wings.service.impl.analysis.LogRequest;
 
 import java.io.IOException;
 import java.util.List;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 
 /**
@@ -49,11 +48,10 @@ public interface LogAnalysisResource {
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      @QueryParam("processed") boolean processed, List<LogElement> logData) throws IOException;
+      List<LogElement> logData) throws IOException;
 
   RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("processed") boolean processed,
-      LogRequest logRequest) throws IOException;
+      @QueryParam("compareCurrent") boolean compareCurrent, LogRequest logRequest) throws IOException;
 
   RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,

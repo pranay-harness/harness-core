@@ -12,7 +12,6 @@ import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -21,15 +20,14 @@ import javax.validation.constraints.NotNull;
  */
 public interface AnalysisService {
   @ValidationGroups(Create.class)
-  Boolean saveLogData(@NotNull StateType stateType, String accountId, @NotNull String appId,
-      @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, boolean processed,
-      @Valid List<LogElement> logData) throws IOException;
+  Boolean saveLogData(@NotNull StateType stateType, @NotNull String appId, @NotNull String stateExecutionId,
+      String workflowId, String workflowExecutionId, @Valid List<LogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class)
-  List<LogDataRecord> getLogData(
-      @Valid LogRequest logRequest, boolean compareCurrent, boolean processed, StateType splunkv2);
+  List<LogDataRecord> getLogData(@Valid LogRequest logRequest, boolean compareCurrent, StateType splunkv2);
 
-  Boolean deleteProcessed(LogRequest logRequest, StateType stateType);
+  Boolean markProcessed(
+      @NotNull String stateExecutionId, @NotNull String applicationId, long timeStamp, StateType splunkv2);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
