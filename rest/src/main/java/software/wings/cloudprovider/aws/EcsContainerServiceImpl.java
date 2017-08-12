@@ -978,7 +978,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       } catch (IOException ex) {
         executionLogCallback.saveExecutionLog(
             "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
-        Misc.error(logger, "Container meta data fetch failed on EC2 host: " + ipAddress, ex);
+        logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
         containerInfos.add(new ContainerInfo(ipAddress, Status.SUCCESS));
       }
     });

@@ -244,7 +244,7 @@ public class EcsServiceSetup extends State {
         variables.put(key, value);
       });
     } catch (Exception ex) {
-      Misc.error(logger, "Exception occurred in processing service variables ", ex);
+      logger.error("Exception occurred in processing service variables ", ex);
     }
     return variables;
   }

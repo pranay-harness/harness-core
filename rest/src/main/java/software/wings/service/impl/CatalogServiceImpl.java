@@ -50,7 +50,7 @@ public class CatalogServiceImpl implements CatalogService {
         Collections.sort(catalogItems, CatalogItem.displayOrderComparator);
       }
     } catch (Exception e) {
-      Misc.error(logger, "Error in initializing catalog", e);
+      logger.error("Error in initializing catalog", e);
       throw new WingsException(e);
     }
   }

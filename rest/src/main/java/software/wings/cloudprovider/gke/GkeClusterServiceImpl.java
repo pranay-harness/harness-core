@@ -148,7 +148,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                         .getStatus()
                         .equals("RUNNING");
           } catch (IOException e) {
-            Misc.error(logger, "Error checking operation status", e);
+            logger.error("Error checking operation status", e);
             return true;
           }
         });
@@ -201,7 +201,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                                     .collect(Collectors.toList())
                               : ImmutableList.of();
     } catch (IOException e) {
-      Misc.error(logger, "Error listing clusters for project " + projectId, e);
+      logger.error("Error listing clusters for project " + projectId, e);
     }
     return null;
   }
@@ -242,10 +242,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   private void logNotFoundOrError(IOException e, String projectId, String zone, String clusterName, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
         && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      Misc.warn(logger,
+      logger.warn(
           String.format("Cluster %s does not exist in zone %s for project %s", clusterName, zone, projectId), e);
     } else {
-      Misc.error(logger,
+      logger.error(
           String.format("Error %s cluster %s in zone %s for project %s", actionVerb, clusterName, zone, projectId), e);
     }
   }

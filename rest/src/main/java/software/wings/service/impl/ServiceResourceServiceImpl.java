@@ -212,7 +212,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       try {
         configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
       } catch (FileNotFoundException e) {
-        Misc.error(logger, "Error in cloning config file " + originalConfigFile.toString(), e);
+        logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
         // Ignore and continue adding more files
       }
     });
@@ -544,7 +544,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     try {
       return serviceCommand.getCommand().getGraph().isLinear();
     } catch (Exception ex) {
-      Misc.error(logger, "Exception in validating command graph " + serviceCommand.getCommand(), ex);
+      logger.error("Exception in validating command graph " + serviceCommand.getCommand(), ex);
       return false;
     }
   }

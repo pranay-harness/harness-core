@@ -98,9 +98,8 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         entityVersion = wingsPersistence.saveAndGet(EntityVersionCollection.class, entityVersion);
         done = true;
       } catch (Exception e) {
-        Misc.warn(logger,
-            String.format("EntityVersion save failed for entityType: %s, entityUuid: %s- attemptNo: %s", entityType,
-                entityUuid, i),
+        logger.warn(String.format("EntityVersion save failed for entityType: %s, entityUuid: %s- attemptNo: %s",
+                        entityType, entityUuid, i),
             e);
         i++;
       }

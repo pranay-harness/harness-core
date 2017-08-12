@@ -44,11 +44,11 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
             responseMessage -> logIgnoredErrorCodes.contains(responseMessage.getCode()))) {
       String msg = "Exception occurred: " + ex.getMessage();
       if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == ERROR)) {
-        Misc.error(logger, msg, ex);
+        logger.error(msg, ex);
       } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getErrorType() == WARN)) {
-        Misc.warn(logger, msg, ex);
+        logger.warn(msg, ex);
       } else {
-        Misc.info(logger, msg, ex);
+        logger.info(msg, ex);
       }
       responseMessages.forEach(responseMessage -> {
         switch (responseMessage.getErrorType()) {

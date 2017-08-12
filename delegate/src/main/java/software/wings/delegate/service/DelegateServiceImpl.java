@@ -210,7 +210,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
     } catch (Exception e) {
-      Misc.error(logger, "Exception while starting/running delegate", e);
+      logger.error("Exception while starting/running delegate", e);
     }
   }
 
@@ -227,7 +227,7 @@ public class DelegateServiceImpl implements DelegateService {
                       .withConnected(true)
                       .build());
     } catch (IOException e) {
-      Misc.error(logger, "Error connecting", e);
+      logger.error("Error connecting", e);
       e.printStackTrace();
     }
   }
@@ -244,13 +244,13 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
       } catch (IOException ex) {
-        Misc.error(logger, "Unable to open socket", e);
+        logger.error("Unable to open socket", e);
       }
     } else if (e instanceof ConnectException) {
       logger.warn("Failed to connect after {} attempts. Restarting delegate.", MAX_CONNECT_ATTEMPTS);
       restartDelegate();
     } else {
-      Misc.error(logger, "Exception: " + e.getMessage(), e);
+      logger.error("Exception: " + e.getMessage(), e);
       try {
         socket.close();
       } catch (Exception ex) {
@@ -276,7 +276,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       } catch (Exception e) {
         System.out.println(message);
-        Misc.error(logger, "Exception while decoding task", e);
+        logger.error("Exception while decoding task", e);
       }
     }
   }
@@ -291,7 +291,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
     } catch (IOException e) {
-      Misc.error(logger, "Failed to resume.", e);
+      logger.error("Failed to resume.", e);
       stop();
     }
   }
@@ -314,7 +314,7 @@ public class DelegateServiceImpl implements DelegateService {
               builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
           String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
-          Misc.error(logger, msg, e);
+          logger.error(msg, e);
           Thread.sleep(55000);
           return null;
         }
@@ -333,7 +333,7 @@ public class DelegateServiceImpl implements DelegateService {
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
       String msg = "Timeout occurred while registering Delegate [" + accountId + "] with manager";
-      Misc.error(logger, msg, e);
+      logger.error(msg, e);
       throw new WingsException(msg, e);
     }
   }
@@ -355,7 +355,7 @@ public class DelegateServiceImpl implements DelegateService {
               PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
       logger.info("Done setting file permissions");
     } catch (IOException e) {
-      Misc.error(logger, "Couldn't write restart script.", e);
+      logger.error("Couldn't write restart script.", e);
     }
   }
 
@@ -373,7 +373,7 @@ public class DelegateServiceImpl implements DelegateService {
           .start();
     } catch (Exception ex) {
       ex.printStackTrace();
-      Misc.error(logger, "Exception while restarting", ex);
+      logger.error("Exception while restarting", ex);
     }
   }
 
@@ -397,7 +397,7 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("Delegate up to date");
         }
       } catch (Exception e) {
-        Misc.error(logger, "Exception while checking for upgrade", e);
+        logger.error("Exception while checking for upgrade", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -416,7 +416,7 @@ public class DelegateServiceImpl implements DelegateService {
                   .build()));
         }
       } catch (Exception ex) {
-        Misc.error(logger, "Exception while sending heartbeat", ex);
+        logger.error("Exception while sending heartbeat", ex);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
@@ -460,7 +460,7 @@ public class DelegateServiceImpl implements DelegateService {
                                    .execute();
                     logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
                   } catch (IOException e) {
-                    Misc.error(logger, "Unable to send response to manager", e);
+                    logger.error("Unable to send response to manager", e);
                   } finally {
                     currentlyExecutingTasks.remove(delegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
@@ -485,7 +485,7 @@ public class DelegateServiceImpl implements DelegateService {
                     }
                     return taskAcquired;
                   } catch (IOException e) {
-                    Misc.error(logger, "Unable to update task status on manager", e);
+                    logger.error("Unable to update task status on manager", e);
                     return false;
                   }
                 });
@@ -498,7 +498,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
       }
     } catch (IOException e) {
-      Misc.error(logger, "Unable to acquire task", e);
+      logger.error("Unable to acquire task", e);
     }
   }
 

@@ -24,7 +24,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
    */
   @Override
   public Response toResponse(Throwable exception) {
-    Misc.error(logger, "Exception occurred: " + exception.getMessage(), exception);
+    logger.error("Exception occurred: " + exception.getMessage(), exception);
     RestResponse<T> restResponse = new RestResponse<>();
 
     // No known exception or error code

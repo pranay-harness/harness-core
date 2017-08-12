@@ -23,7 +23,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 
 /**
  * The Class EmailState.
@@ -82,7 +81,7 @@ public class EmailState extends State {
     } catch (Exception e) {
       executionResponse.setErrorMessage(e.getCause() == null ? e.getMessage() : e.getCause().getMessage());
       executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
-      Misc.error(logger, "Exception while sending email", e);
+      logger.error("Exception while sending email", e);
     }
 
     executionResponse.setStateExecutionData(emailStateExecutionData);

@@ -27,7 +27,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.time.WingsTimeUtils;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -332,7 +331,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           }
 
         } catch (Exception e) {
-          Misc.error(getLogger(),
+          getLogger().error(
               "Log analysis failed for " + context.getStateExecutionInstanceId() + "for minute " + logAnalysisMinute,
               e);
         }

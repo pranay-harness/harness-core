@@ -177,7 +177,7 @@ public class StencilPostProcessor {
         return overridingStencil;
       }
     } catch (Exception e) {
-      Misc.warn(logger,
+      logger.warn(
           String.format("Unable to set default value for stencil %s:field %s with value %s", stencil, fieldName, value),
           e);
     }
@@ -200,7 +200,7 @@ public class StencilPostProcessor {
         });
       }
     } catch (Exception e) {
-      Misc.warn(logger,
+      logger.warn(
           String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return Stream.of(t);
@@ -220,7 +220,7 @@ public class StencilPostProcessor {
         });
       }
     } catch (Exception e) {
-      Misc.warn(logger,
+      logger.warn(
           String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return Stream.of(t);
@@ -238,7 +238,7 @@ public class StencilPostProcessor {
         return overridingStencil;
       }
     } catch (Exception e) {
-      Misc.warn(logger,
+      logger.warn(
           String.format("Unable to fill in values for stencil %s:field %s with data %s", t, fieldName, data), e);
     }
     return t;
