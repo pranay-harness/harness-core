@@ -163,7 +163,7 @@ public class EcsServiceSetup extends State {
             .collect(toList());
 
     String taskFamily = isNotEmpty(serviceName)
-        ? serviceName
+        ? context.renderExpression(serviceName)
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
