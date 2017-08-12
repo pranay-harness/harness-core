@@ -79,7 +79,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -412,7 +411,7 @@ public class PipelineServiceImpl implements PipelineService {
             }
             services.addAll(workflow.getServices());
           } catch (Exception ex) {
-            logger.warn("Exception occured while reading workflow associated to the pipeline {}", pipeline);
+            logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
           }
         });
 
