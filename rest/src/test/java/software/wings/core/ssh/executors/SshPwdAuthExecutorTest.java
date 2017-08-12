@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
@@ -234,7 +235,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
-    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString())).thenReturn(fileInputStream);
+    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
+        .thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 
     assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null)))).isEqualTo(SUCCESS);
@@ -263,7 +265,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
-    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString())).thenReturn(fileInputStream);
+    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
+        .thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 
     assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt")))).isEqualTo(SUCCESS);

@@ -22,10 +22,23 @@ public class Misc {
   private static final Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private static final int MAX_STACK_TRACE_LINES = 500;
 
+  /**
+   * Normalize expression string.
+   *
+   * @param expression the expression
+   * @return the string
+   */
   static String normalizeExpression(String expression) {
     return normalizeExpression(expression, "__");
   }
 
+  /**
+   * Normalize expression string.
+   *
+   * @param expression  the expression
+   * @param replacement the replacement
+   * @return the string
+   */
   static String normalizeExpression(String expression, String replacement) {
     Matcher matcher = wildCharPattern.matcher(expression);
     return matcher.replaceAll(replacement);
@@ -44,16 +57,37 @@ public class Misc {
     }
   }
 
+  /**
+   * Quiet sleep.
+   *
+   * @param delay the delay
+   * @param unit  the unit
+   */
   public static void quietSleep(int delay, TimeUnit unit) {
     quietSleep((int) unit.toMillis(delay));
   }
 
+  /**
+   * Sleep with runtime exception.
+   *
+   * @param delay the delay
+   */
   public static void sleepWithRuntimeException(int delay) {
     try {
       Thread.sleep(delay);
     } catch (InterruptedException exception) {
       Throwables.propagate(exception);
     }
+  }
+
+  /**
+   * Is null or empty boolean.
+   *
+   * @param str the str
+   * @return the boolean
+   */
+  public static boolean isNullOrEmpty(String str) {
+    return str == null || str.length() == 0;
   }
 
   /**
@@ -111,18 +145,46 @@ public class Misc {
     }
   }
 
+  /**
+   * Error.
+   *
+   * @param logger the logger
+   * @param msg    the msg
+   * @param t      the t
+   */
   public static void error(Logger logger, String msg, Throwable t) {
     writeException(logger, LoggingLevel.ERROR, msg, t);
   }
 
+  /**
+   * Warn.
+   *
+   * @param logger the logger
+   * @param msg    the msg
+   * @param t      the t
+   */
   public static void warn(Logger logger, String msg, Throwable t) {
     writeException(logger, LoggingLevel.WARN, msg, t);
   }
 
+  /**
+   * Info.
+   *
+   * @param logger the logger
+   * @param msg    the msg
+   * @param t      the t
+   */
   public static void info(Logger logger, String msg, Throwable t) {
     writeException(logger, LoggingLevel.INFO, msg, t);
   }
 
+  /**
+   * Debug.
+   *
+   * @param logger the logger
+   * @param msg    the msg
+   * @param t      the t
+   */
   public static void debug(Logger logger, String msg, Throwable t) {
     writeException(logger, LoggingLevel.DEBUG, msg, t);
   }

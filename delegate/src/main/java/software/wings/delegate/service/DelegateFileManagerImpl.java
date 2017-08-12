@@ -87,10 +87,11 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
-  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId) throws IOException {
+  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+      throws IOException {
     Response<ResponseBody> response = null;
     try {
-      response = managerClient.downloadFile(fileId, bucket, accountId).execute();
+      response = managerClient.downloadFile(fileId, bucket, accountId, encrypted).execute();
       return response.body().byteStream();
     } finally {
       if (response != null && !response.isSuccessful()) {

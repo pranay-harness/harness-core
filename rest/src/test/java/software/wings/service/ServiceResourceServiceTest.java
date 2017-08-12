@@ -93,6 +93,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.Stencil;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -371,7 +372,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(configService).download(APP_ID, "CONFIG_FILE_ID");
-    verify(configService).save(any(ConfigFile.class), any(InputStream.class));
+    verify(configService).save(any(ConfigFile.class), new BoundedInputStream(any(InputStream.class)));
     verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false);
     verify(serviceVariableService).save(any(ServiceVariable.class));
     verify(artifactStreamService).list(any(PageRequest.class));

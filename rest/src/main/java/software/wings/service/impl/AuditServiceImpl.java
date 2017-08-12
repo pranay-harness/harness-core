@@ -22,6 +22,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
@@ -103,7 +104,8 @@ public class AuditServiceImpl implements AuditService {
     if (requestType != null) {
       metaData.put("requestType", requestType.name());
     }
-    return fileService.uploadFromStream(requestType + "-" + headerId, inputStream, FileBucket.AUDITS, metaData);
+    return fileService.uploadFromStream(
+        requestType + "-" + headerId, new BoundedInputStream(inputStream), FileBucket.AUDITS, metaData);
   }
 
   /**
