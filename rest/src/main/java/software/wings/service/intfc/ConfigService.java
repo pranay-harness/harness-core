@@ -6,11 +6,11 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.List;
 import javax.validation.Valid;
 
@@ -33,7 +33,7 @@ public interface ConfigService {
    * @param inputStream the input stream
    * @return the string
    */
-  @ValidationGroups(Create.class) String save(@Valid ConfigFile configFile, InputStream inputStream);
+  @ValidationGroups(Create.class) String save(@Valid ConfigFile configFile, BoundedInputStream inputStream);
 
   /**
    * Validate and compute relative path string.
@@ -68,7 +68,7 @@ public interface ConfigService {
    * @param configFile  the config file
    * @param inputStream the input stream
    */
-  @ValidationGroups(Update.class) void update(@Valid ConfigFile configFile, InputStream inputStream);
+  @ValidationGroups(Update.class) void update(@Valid ConfigFile configFile, BoundedInputStream inputStream);
 
   /**
    * Delete.

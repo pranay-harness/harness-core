@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
@@ -45,6 +46,14 @@ public interface SshExecutor {
    */
   CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
+
+  /**
+   * Copy grid fs files command execution status.
+   *
+   * @param configFileMetaData the config file meta data
+   * @return the command execution status
+   */
+  CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData);
 
   /**
    * Scp files execution result.

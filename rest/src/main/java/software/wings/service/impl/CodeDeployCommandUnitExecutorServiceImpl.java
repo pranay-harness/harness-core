@@ -65,7 +65,7 @@ public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExec
       commandExecutionStatus = commandUnit.execute(context);
     } catch (Exception ex) {
       ex.printStackTrace();
-      Misc.error(logger, "Error while executing command", ex);
+      logger.error("Error while executing command", ex);
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

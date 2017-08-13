@@ -256,7 +256,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (ParseException e) {
-      Misc.error(logger, "Error parsing cron expression: " + cronExpression, e);
+      logger.error("Error parsing cron expression: " + cronExpression, e);
       return cronExpression;
     }
   }

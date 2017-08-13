@@ -36,7 +36,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
           (String) parameters[4], (List<String>) parameters[5], (String) parameters[6],
           (Map<String, String>) parameters[7]);
     } catch (Exception e) {
-      Misc.error(logger, "Exception occurred while collecting artifact", e);
+      logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
@@ -70,7 +70,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
         res.addData(artifactFile);*//*
       }
     } catch (Exception e) {
-      Misc.warn(logger, "Exception", e);
+      logger.warn("Exception", e);
       //TODO: better error handling
 
 //      if (e instanceof WingsException)

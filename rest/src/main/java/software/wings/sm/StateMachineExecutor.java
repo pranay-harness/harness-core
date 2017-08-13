@@ -258,7 +258,7 @@ public class StateMachineExecutor {
     if (!updated) {
       WingsException ex =
           new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
-      Misc.error(logger, ex.getMessage(), ex);
+      logger.error(ex.getMessage(), ex);
       throw ex;
     }
     State currentState =
@@ -304,7 +304,7 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
-      Misc.warn(logger, "Error in " + stateExecutionInstance.getStateName() + " execution", exception);
+      logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
       ex = exception;
     }
 
@@ -486,7 +486,7 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
+    logger.warn("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
 
     updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null, null);
@@ -494,7 +494,7 @@ public class StateMachineExecutor {
     try {
       return failedTransition(context, exception);
     } catch (Exception e2) {
-      Misc.error(logger, "Error in transitioning to failure state", e2);
+      logger.error("Error in transitioning to failure state", e2);
     }
     return null;
   }
@@ -599,7 +599,7 @@ public class StateMachineExecutor {
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
-      Misc.error(logger, "Error in aborting", e);
+      logger.error("Error in aborting", e);
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());
@@ -847,7 +847,7 @@ public class StateMachineExecutor {
         && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
       WingsException ex = new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid()
           + " status is no longer in RUNNING/PAUSED state");
-      Misc.error(logger, ex.getMessage(), ex);
+      logger.error(ex.getMessage(), ex);
       throw ex;
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);

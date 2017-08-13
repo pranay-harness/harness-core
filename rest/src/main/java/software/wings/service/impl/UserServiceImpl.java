@@ -176,7 +176,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      Misc.error(logger, "Add account email couldn't be sent", e);
+      logger.error("Add account email couldn't be sent", e);
     }
   }
 
@@ -225,7 +225,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      Misc.error(logger, "Verification email couldn't be sent", e);
+      logger.error("Verification email couldn't be sent", e);
     }
   }
 
@@ -353,7 +353,7 @@ public class UserServiceImpl implements UserService {
               .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      Misc.error(logger, "Invitation email couldn't be sent ", e);
+      logger.error("Invitation email couldn't be sent ", e);
     }
   }
 
@@ -372,7 +372,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      Misc.error(logger, "Add account email couldn't be sent", e);
+      logger.error("Add account email couldn't be sent", e);
     }
   }
 
@@ -516,7 +516,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      Misc.error(logger, "Reset password email couldn't be sent", e);
+      logger.error("Reset password email couldn't be sent", e);
     }
   }
 

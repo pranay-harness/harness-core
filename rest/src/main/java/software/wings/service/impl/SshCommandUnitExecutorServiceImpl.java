@@ -162,7 +162,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           throw e;
         }
       } else {
-        Misc.error(logger, "Error while executing command", e);
+        logger.error("Error while executing command", e);
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())
@@ -176,7 +176,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR);
       }
     } catch (Exception e) {
-      Misc.error(logger, "Error while executing command", e);
+      logger.error("Error while executing command", e);
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

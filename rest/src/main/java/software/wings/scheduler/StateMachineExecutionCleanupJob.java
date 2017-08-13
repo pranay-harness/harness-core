@@ -61,7 +61,7 @@ public class StateMachineExecutionCleanupJob implements Job {
 
         executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       } catch (WingsException e) {
-        Misc.error(logger, "Error in interrupt for stateExecutionInstance: " + stateExecutionInstance.getUuid(), e);
+        logger.error("Error in interrupt for stateExecutionInstance: " + stateExecutionInstance.getUuid(), e);
       }
     }
   }

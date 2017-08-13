@@ -90,4 +90,8 @@ public class BoundedInputStream extends InputStream {
   public int read(byte bytes[], int off, int len) throws IOException {
     return updateTotalBytesRead(inputStream.read(bytes, off, len));
   }
+
+  public long getTotalBytesRead() {
+    return totalBytesRead;
+  }
 }

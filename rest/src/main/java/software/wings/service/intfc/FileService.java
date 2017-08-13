@@ -4,6 +4,7 @@ import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.InputStream;
@@ -109,7 +110,7 @@ public interface FileService {
    * @param metaData   the meta data
    * @return the string
    */
-  String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, Map<String, Object> metaData);
+  String uploadFromStream(String filename, BoundedInputStream in, FileBucket fileBucket, Map<String, Object> metaData);
 
   /**
    * Gets the files meta data.

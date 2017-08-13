@@ -263,8 +263,7 @@ public class KubernetesReplicationControllerSetup extends State {
             return loadBalancerReady;
           });
         } catch (ConditionTimeoutException e) {
-          Misc.warn(
-              logger, String.format("Timed out waiting for service [%s] load balancer to be ready.", serviceName), e);
+          logger.warn(String.format("Timed out waiting for service [%s] load balancer to be ready.", serviceName), e);
           return null;
         }
         loadBalancer =

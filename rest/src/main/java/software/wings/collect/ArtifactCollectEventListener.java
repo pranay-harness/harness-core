@@ -76,7 +76,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      Misc.error(logger, ex.getMessage(), ex);
+      logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

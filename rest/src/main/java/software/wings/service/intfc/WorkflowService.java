@@ -184,5 +184,7 @@ public interface WorkflowService {
 
   Workflow cloneWorkflow(String appId, String workflowId, Workflow workflow);
 
+  Workflow templatizeWorkflow(String appId, String workflowId, Workflow workflow);
+
   Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
 }

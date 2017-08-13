@@ -74,7 +74,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
         wingsPersistence.delete(notifyResponse);
       }
     } catch (Exception exception) {
-      Misc.error(logger, "Error in NotifyResponseCleanupHandler", exception);
+      logger.error("Error in NotifyResponseCleanupHandler", exception);
     }
   }
 }

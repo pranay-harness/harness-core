@@ -278,9 +278,8 @@ public class History extends Base {
       try {
         entityOldValue = (Base) asObject(entityOldValueStr, Class.forName(entityOldValueClass));
       } catch (Exception e) {
-        Misc.error(logger,
-            String.format("Error in Json conversion- entityOldValueClass: %s, entityOldValueStr: %s",
-                entityOldValueClass, entityOldValueStr),
+        logger.error(String.format("Error in Json conversion- entityOldValueClass: %s, entityOldValueStr: %s",
+                         entityOldValueClass, entityOldValueStr),
             e);
       }
     }
@@ -289,9 +288,8 @@ public class History extends Base {
       try {
         entityNewValue = (Base) asObject(entityNewValueStr, Class.forName(entityNewValueClass));
       } catch (Exception e) {
-        Misc.error(logger,
-            String.format("Error in Json conversion- entityNewValueClass: %s, entityNewValueStr: %s",
-                entityNewValueClass, entityNewValueStr),
+        logger.error(String.format("Error in Json conversion- entityNewValueClass: %s, entityNewValueStr: %s",
+                         entityNewValueClass, entityNewValueStr),
             e);
       }
     }

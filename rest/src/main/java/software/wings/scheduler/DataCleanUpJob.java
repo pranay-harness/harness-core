@@ -36,7 +36,7 @@ public class DataCleanUpJob implements Job {
       artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
       logger.info("Deleting artifacts success");
     } catch (Exception e) {
-      Misc.warn(logger, "Deleting artifacts failed.", e);
+      logger.warn("Deleting artifacts failed.", e);
     }
   }
   private void deleteAuditRecords() {
@@ -45,7 +45,7 @@ public class DataCleanUpJob implements Job {
       auditService.deleteAuditRecords(AUDIT_RETENTION_TIME);
       logger.info("Deleting audit records success");
     } catch (Exception e) {
-      Misc.warn(logger, "Deleting audit records failed.", e);
+      logger.warn("Deleting audit records failed.", e);
     }
   }
 }

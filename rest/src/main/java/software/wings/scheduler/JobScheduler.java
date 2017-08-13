@@ -120,7 +120,7 @@ public class JobScheduler {
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
-        Misc.error(logger, String.format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
+        logger.error(String.format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
       }
     }
     return false;

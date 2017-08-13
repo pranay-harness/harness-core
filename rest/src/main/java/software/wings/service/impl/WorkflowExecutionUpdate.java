@@ -140,7 +140,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     try {
       workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
     } catch (Exception e) {
-      Misc.error(logger, "Error in breakdown refresh", e);
+      logger.error("Error in breakdown refresh", e);
     }
   }
 

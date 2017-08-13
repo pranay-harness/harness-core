@@ -114,7 +114,7 @@ public class AwsClusterSetup extends State {
     if (nodeCount <= 0) {
       nodeCount = 2;
     }
-    String clusterName = "wings-" + EcsConvention.getTaskFamily(app.getName(), serviceName, env);
+    String clusterName = "harness-" + EcsConvention.getTaskFamily(app.getName(), serviceName, env);
     String regionCluster = region + "/" + clusterName;
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);

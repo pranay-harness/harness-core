@@ -75,7 +75,7 @@ public class GcrServiceImpl implements GcrService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
-      Misc.error(logger, "Error occurred while getting builds from " + imageName, e);
+      logger.error("Error occurred while getting builds from " + imageName, e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
     }
   }
@@ -115,7 +115,7 @@ public class GcrServiceImpl implements GcrService {
             "Image name [" + imageName + "] does not exist in Google Container Registry.");
       }
     } catch (IOException e) {
-      Misc.error(logger, e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Registry server");
     }
     return true;
@@ -130,7 +130,7 @@ public class GcrServiceImpl implements GcrService {
           registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
       return isSuccessful(response);
     } catch (IOException e) {
-      Misc.error(logger,
+      logger.error(
           "Error occurred while sending request to server " + artifactStreamAttributes.getRegistryHostName(), e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
     }

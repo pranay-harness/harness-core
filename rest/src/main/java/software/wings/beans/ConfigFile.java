@@ -22,7 +22,6 @@ import software.wings.utils.validation.Create;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -44,6 +43,8 @@ public class ConfigFile extends BaseFile implements Encryptable {
    * The constant DEFAULT_TEMPLATE_ID.
    */
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
+
+  @NotEmpty private String accountId;
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
@@ -421,10 +422,20 @@ public class ConfigFile extends BaseFile implements Encryptable {
     this.instances = instances;
   }
 
+  /**
+   * Is encrypted boolean.
+   *
+   * @return the boolean
+   */
   public boolean isEncrypted() {
     return encrypted;
   }
 
+  /**
+   * Sets encrypted.
+   *
+   * @param encrypted the encrypted
+   */
   public void setEncrypted(boolean encrypted) {
     this.encrypted = encrypted;
   }
@@ -432,15 +443,18 @@ public class ConfigFile extends BaseFile implements Encryptable {
   @Override
   @SchemaIgnore
   public String getAccountId() {
-    return envId;
+    return accountId;
   }
 
   @Override
-  public void setAccountId(String accountId) {}
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
         .add("templateId", templateId)
         .add("envId", envId)
         .add("entityType", entityType)
@@ -461,44 +475,6 @@ public class ConfigFile extends BaseFile implements Encryptable {
         .add("overriddenConfigFile", overriddenConfigFile)
         .add("encrypted", encrypted)
         .toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
-              targetToAllEnv, defaultVersion, envIdVersionMap, envIdVersionMapString, setAsDefault, notes, overridePath,
-              configOverrideType, configOverrideExpression, instances, overriddenConfigFile, encrypted);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
-        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
-        && Objects.equals(this.description, other.description)
-        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
-        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv)
-        && Objects.equals(this.defaultVersion, other.defaultVersion)
-        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
-        && Objects.equals(this.envIdVersionMapString, other.envIdVersionMapString)
-        && Objects.equals(this.setAsDefault, other.setAsDefault) && Objects.equals(this.notes, other.notes)
-        && Objects.equals(this.overridePath, other.overridePath)
-        && Objects.equals(this.configOverrideType, other.configOverrideType)
-        && Objects.equals(this.configOverrideExpression, other.configOverrideExpression)
-        && Objects.equals(this.instances, other.instances)
-        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile)
-        && Objects.equals(this.encrypted, other.encrypted);
   }
 
   /**
@@ -531,7 +507,13 @@ public class ConfigFile extends BaseFile implements Encryptable {
         .build();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
+    /**
+     * The constant DEFAULT_TEMPLATE_ID.
+     */
     private String name;
     private String fileUuid;
     private String fileName;
@@ -545,6 +527,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
     private String templateId;
     private String envId;
     private EntityType entityType;
@@ -563,174 +546,387 @@ public class ConfigFile extends BaseFile implements Encryptable {
     private String configOverrideExpression;
     private List<String> instances;
     private ConfigFile overriddenConfigFile;
-    private boolean encrypted;
+    private boolean encrypted = false;
 
     private Builder() {}
 
+    /**
+     * A config file builder.
+     *
+     * @return the builder
+     */
     public static Builder aConfigFile() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With file uuid builder.
+     *
+     * @param fileUuid the file uuid
+     * @return the builder
+     */
     public Builder withFileUuid(String fileUuid) {
       this.fileUuid = fileUuid;
       return this;
     }
 
+    /**
+     * With file name builder.
+     *
+     * @param fileName the file name
+     * @return the builder
+     */
     public Builder withFileName(String fileName) {
       this.fileName = fileName;
       return this;
     }
 
+    /**
+     * With mime type builder.
+     *
+     * @param mimeType the mime type
+     * @return the builder
+     */
     public Builder withMimeType(String mimeType) {
       this.mimeType = mimeType;
       return this;
     }
 
+    /**
+     * With size builder.
+     *
+     * @param size the size
+     * @return the builder
+     */
     public Builder withSize(long size) {
       this.size = size;
       return this;
     }
 
+    /**
+     * With checksum type builder.
+     *
+     * @param checksumType the checksum type
+     * @return the builder
+     */
     public Builder withChecksumType(ChecksumType checksumType) {
       this.checksumType = checksumType;
       return this;
     }
 
+    /**
+     * With checksum builder.
+     *
+     * @param checksum the checksum
+     * @return the builder
+     */
     public Builder withChecksum(String checksum) {
       this.checksum = checksum;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With account id builder.
+     *
+     * @param accountId the account id
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
+     * With template id builder.
+     *
+     * @param templateId the template id
+     * @return the builder
+     */
     public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With parent config file id builder.
+     *
+     * @param parentConfigFileId the parent config file id
+     * @return the builder
+     */
     public Builder withParentConfigFileId(String parentConfigFileId) {
       this.parentConfigFileId = parentConfigFileId;
       return this;
     }
 
+    /**
+     * With relative file path builder.
+     *
+     * @param relativeFilePath the relative file path
+     * @return the builder
+     */
     public Builder withRelativeFilePath(String relativeFilePath) {
       this.relativeFilePath = relativeFilePath;
       return this;
     }
 
+    /**
+     * With target to all env builder.
+     *
+     * @param targetToAllEnv the target to all env
+     * @return the builder
+     */
     public Builder withTargetToAllEnv(boolean targetToAllEnv) {
       this.targetToAllEnv = targetToAllEnv;
       return this;
     }
 
+    /**
+     * With default version builder.
+     *
+     * @param defaultVersion the default version
+     * @return the builder
+     */
     public Builder withDefaultVersion(int defaultVersion) {
       this.defaultVersion = defaultVersion;
       return this;
     }
 
+    /**
+     * With env id version map builder.
+     *
+     * @param envIdVersionMap the env id version map
+     * @return the builder
+     */
     public Builder withEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
       this.envIdVersionMap = envIdVersionMap;
       return this;
     }
 
+    /**
+     * With env id version map string builder.
+     *
+     * @param envIdVersionMapString the env id version map string
+     * @return the builder
+     */
     public Builder withEnvIdVersionMapString(String envIdVersionMapString) {
       this.envIdVersionMapString = envIdVersionMapString;
       return this;
     }
 
+    /**
+     * With set as default builder.
+     *
+     * @param setAsDefault the set as default
+     * @return the builder
+     */
     public Builder withSetAsDefault(boolean setAsDefault) {
       this.setAsDefault = setAsDefault;
       return this;
     }
 
+    /**
+     * With notes builder.
+     *
+     * @param notes the notes
+     * @return the builder
+     */
     public Builder withNotes(String notes) {
       this.notes = notes;
       return this;
     }
 
+    /**
+     * With override path builder.
+     *
+     * @param overridePath the override path
+     * @return the builder
+     */
     public Builder withOverridePath(String overridePath) {
       this.overridePath = overridePath;
       return this;
     }
 
+    /**
+     * With config override type builder.
+     *
+     * @param configOverrideType the config override type
+     * @return the builder
+     */
     public Builder withConfigOverrideType(ConfigOverrideType configOverrideType) {
       this.configOverrideType = configOverrideType;
       return this;
     }
 
+    /**
+     * With config override expression builder.
+     *
+     * @param configOverrideExpression the config override expression
+     * @return the builder
+     */
     public Builder withConfigOverrideExpression(String configOverrideExpression) {
       this.configOverrideExpression = configOverrideExpression;
       return this;
     }
 
+    /**
+     * With instances builder.
+     *
+     * @param instances the instances
+     * @return the builder
+     */
     public Builder withInstances(List<String> instances) {
       this.instances = instances;
       return this;
     }
 
+    /**
+     * With overridden config file builder.
+     *
+     * @param overriddenConfigFile the overridden config file
+     * @return the builder
+     */
     public Builder withOverriddenConfigFile(ConfigFile overriddenConfigFile) {
       this.overriddenConfigFile = overriddenConfigFile;
       return this;
     }
 
+    /**
+     * With encrypted builder.
+     *
+     * @param encrypted the encrypted
+     * @return the builder
+     */
     public Builder withEncrypted(boolean encrypted) {
       this.encrypted = encrypted;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aConfigFile()
           .withName(name)
@@ -746,6 +942,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withAccountId(accountId)
           .withTemplateId(templateId)
           .withEnvId(envId)
           .withEntityType(entityType)
@@ -767,6 +964,11 @@ public class ConfigFile extends BaseFile implements Encryptable {
           .withEncrypted(encrypted);
     }
 
+    /**
+     * Build config file.
+     *
+     * @return the config file
+     */
     public ConfigFile build() {
       ConfigFile configFile = new ConfigFile();
       configFile.setName(name);
@@ -782,6 +984,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
       configFile.setCreatedAt(createdAt);
       configFile.setLastUpdatedBy(lastUpdatedBy);
       configFile.setLastUpdatedAt(lastUpdatedAt);
+      configFile.setAccountId(accountId);
       configFile.setTemplateId(templateId);
       configFile.setEnvId(envId);
       configFile.setEntityType(entityType);

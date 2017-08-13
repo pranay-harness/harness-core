@@ -188,7 +188,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         return allRunning;
       });
     } catch (ConditionTimeoutException e) {
-      Misc.warn(logger, "Timed out waiting for pods to be ready.", e);
+      logger.warn("Timed out waiting for pods to be ready.", e);
     }
 
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();
