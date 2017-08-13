@@ -21,13 +21,14 @@ xxxxxxxx
       validateCerts: false
   requestLog:
     appenders:
-      - type: rsyslog-tcp-ssl
-        name: syslog-accesslogs-appender
-        threshold: TRACE
-        host: syslog-a.logdna.com
-        port: 6514
-        key: 9a3e6eac4dcdbdc41a93ca99100537df
-        programName: manager-saas-accesslogs
+      - type: console
+#      - type: rsyslog-tcp-ssl
+#        name: syslog-accesslogs-appender
+#        threshold: TRACE
+#        host: syslog-a.logdna.com
+#        port: 6514
+#        key: 9a3e6eac4dcdbdc41a93ca99100537df
+#        programName: manager-saas-accesslogs
 
 hazelcast:
   awsConfig:
@@ -60,13 +61,13 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
-    - type: rsyslog-tcp-ssl
-      threshold: TRACE
-      logFormat: "%green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
-      host: syslog-a.logdna.com
-      port: 6514
-      key: 9a3e6eac4dcdbdc41a93ca99100537df
-      programName: manager-saas
+#    - type: rsyslog-tcp-ssl
+#      threshold: TRACE
+#      logFormat: "%green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n"
+#      host: syslog-a.logdna.com
+#      port: 6514
+#      key: 9a3e6eac4dcdbdc41a93ca99100537df
+#      programName: manager-saas
 
 mongo:
   uri: mongodb://localhost:27017/harness
