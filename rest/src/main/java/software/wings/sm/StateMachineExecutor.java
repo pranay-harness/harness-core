@@ -273,19 +273,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      String resumeId = UUIDGenerator.getUuid();
-
-      long wakeupTs = System.currentTimeMillis() + (currentState.getWaitInterval() * 1000);
-      JobDetail job = JobBuilder.newJob(NotifyJob.class)
-                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
-                          .usingJobData("correlationId", resumeId)
-                          .usingJobData("executionStatus", ExecutionStatus.SUCCESS.name())
-                          .build();
-      Trigger trigger =
-          TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new Date(wakeupTs)).forJob(job).build();
-      jobScheduler.scheduleJob(job, trigger);
-
-      logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", currentState.getWaitInterval());
+      String resumeId = scheduleWaitNotify(currentState.getWaitInterval());
       waitNotifyEngine.waitForAll(
           new ExecutionWaitCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid()), resumeId);
       return;
@@ -438,6 +426,19 @@ public class StateMachineExecutor {
         endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, null);
         break;
       }
+      case RETRY: {
+        if (executionEventAdvice.getWaitInterval() != null && executionEventAdvice.getWaitInterval() > 0) {
+          logger.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
+          String resumeId = scheduleWaitNotify(executionEventAdvice.getWaitInterval());
+          waitNotifyEngine.waitForAll(
+              new ExecutionWaitRetryCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid()),
+              resumeId);
+        } else {
+          logger.info("No Retry Wait Interval found");
+          retryStateExecutionInstance(stateExecutionInstance);
+        }
+        break;
+      }
       default: {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
             "executionEventAdvice.getExecutionInterruptType: " + executionEventAdvice.getExecutionInterruptType());
@@ -445,6 +446,22 @@ public class StateMachineExecutor {
     }
 
     return stateExecutionInstance;
+  }
+
+  private String scheduleWaitNotify(int waitInterval) {
+    String resumeId = UUIDGenerator.getUuid();
+    long wakeupTs = System.currentTimeMillis() + (waitInterval * 1000);
+    JobDetail job = JobBuilder.newJob(NotifyJob.class)
+                        .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
+                        .usingJobData("correlationId", resumeId)
+                        .usingJobData("executionStatus", ExecutionStatus.SUCCESS.name())
+                        .build();
+    Trigger trigger =
+        TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new Date(wakeupTs)).forJob(job).build();
+    jobScheduler.scheduleJob(job, trigger);
+
+    logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", waitInterval);
+    return resumeId;
   }
 
   private StateExecutionInstance executionEventAdviceTransition(
@@ -886,17 +903,8 @@ public class StateMachineExecutor {
         StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
             workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getStateExecutionInstanceId());
 
-        clearStateExecutionData(stateExecutionInstance);
-        StateMachine sm = wingsPersistence.get(
-            StateMachine.class, workflowExecutionInterrupt.getAppId(), stateExecutionInstance.getStateMachineId());
+        retryStateExecutionInstance(stateExecutionInstance);
 
-        State currentState =
-            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-        injector.injectMembers(currentState);
-
-        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-        injector.injectMembers(context);
-        executorService.execute(new SmExecutionDispatcher(context, this));
         break;
       }
 
@@ -951,6 +959,26 @@ public class StateMachineExecutor {
     // TODO - more cases
   }
 
+  void retryStateExecutionInstance(String appId, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    retryStateExecutionInstance(stateExecutionInstance);
+  }
+
+  private void retryStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
+    clearStateExecutionData(stateExecutionInstance);
+    StateMachine sm = wingsPersistence.get(
+        StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId());
+
+    State currentState =
+        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    injector.injectMembers(currentState);
+
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+    injector.injectMembers(context);
+    executorService.execute(new SmExecutionDispatcher(context, this));
+  }
+
   private void clearStateExecutionData(StateExecutionInstance stateExecutionInstance) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
@@ -971,14 +999,16 @@ public class StateMachineExecutor {
       stateExecutionInstance.setEndTs(null);
       ops.unset("endTs");
     }
+    ops.set("status", ExecutionStatus.NEW);
 
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(stateExecutionInstance.getAppId())
-                                              .field(ID_KEY)
-                                              .equal(stateExecutionInstance.getUuid())
-                                              .field("status")
-                                              .equal(ExecutionStatus.WAITING);
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .field("appId")
+            .equal(stateExecutionInstance.getAppId())
+            .field(ID_KEY)
+            .equal(stateExecutionInstance.getUuid())
+            .field("status")
+            .in(asList(ExecutionStatus.WAITING, ExecutionStatus.FAILED, ExecutionStatus.ERROR));
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {

@@ -7,6 +7,7 @@ public class ExecutionEventAdvice {
   private ExecutionInterruptType executionInterruptType;
   private String nextStateName;
   private String nextChildStateMachineId;
+  private Integer waitInterval;
 
   public ExecutionInterruptType getExecutionInterruptType() {
     return executionInterruptType;
@@ -32,10 +33,19 @@ public class ExecutionEventAdvice {
     this.nextChildStateMachineId = nextChildStateMachineId;
   }
 
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
+  }
+
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
     private String nextStateName;
     private String nextChildStateMachineId;
+    private Integer waitInterval;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -58,11 +68,17 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withWaitInterval(Integer waitInterval) {
+      this.waitInterval = waitInterval;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
       executionEventAdvice.setNextStateName(nextStateName);
       executionEventAdvice.setNextChildStateMachineId(nextChildStateMachineId);
+      executionEventAdvice.setWaitInterval(waitInterval);
       return executionEventAdvice;
     }
   }
