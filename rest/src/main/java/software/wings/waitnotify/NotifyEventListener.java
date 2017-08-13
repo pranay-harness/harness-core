@@ -138,7 +138,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           }
         } catch (Exception exception) {
           status = ExecutionStatus.ERROR;
-          Misc.error(logger, "WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
+          logger.error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
           try {
             WaitInstanceError waitInstanceError = new WaitInstanceError();
             waitInstanceError.setWaitInstanceId(waitInstanceId);
@@ -147,7 +147,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
             wingsPersistence.save(waitInstanceError);
           } catch (Exception e2) {
-            Misc.error(logger, "Error in persisting waitInstanceError", e2);
+            logger.error("Error in persisting waitInstanceError", e2);
           }
         }
       }
@@ -158,7 +158,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
             wingsPersistence.createUpdateOperations(WaitInstance.class).set("status", status);
         wingsPersistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
-        Misc.error(logger, "Error in waitInstanceUpdate", exception);
+        logger.error("Error in waitInstanceUpdate", exception);
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
@@ -168,7 +168,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
         } catch (Exception exception) {
-          Misc.error(logger, "Error in waitQueue cleanup", exception);
+          logger.error("Error in waitQueue cleanup", exception);
         }
       }
     } finally {

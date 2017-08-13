@@ -125,11 +125,11 @@ public class DatabaseModule extends AbstractModule {
                       .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
                           indexed.unique() || indexed.options().unique());
                 } catch (MongoCommandException mex1) {
-                  Misc.error(logger, "Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
+                  logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
                   throw mex1;
                 }
               } else {
-                Misc.error(logger, "Index creation failed for class " + mc.getClazz().getCanonicalName(), mex);
+                logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex);
                 throw mex;
               }
             }

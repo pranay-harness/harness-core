@@ -227,7 +227,7 @@ public class AccountServiceImpl implements AccountService {
       try {
         appContainerService.save(appContainer);
       } catch (Exception e) {
-        Misc.warn(logger, "Error while creating system app container " + appContainer, e);
+        logger.warn("Error while creating system app container " + appContainer, e);
       }
     }
   }
@@ -237,7 +237,7 @@ public class AccountServiceImpl implements AccountService {
     try {
       keyGen = KeyGenerator.getInstance("AES");
     } catch (NoSuchAlgorithmException e) {
-      Misc.error(logger, "Exception while generating account key", e);
+      logger.error("Exception while generating account key", e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
     keyGen.init(128);

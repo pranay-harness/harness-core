@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
-import software.wings.utils.Misc;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -30,7 +29,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * If the error is in the JSON generation, it's a server error.
      */
     if (exception instanceof JsonGenerationException) {
-      Misc.warn(LOGGER, "Error generating JSON", exception);
+      LOGGER.warn("Error generating JSON", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -49,7 +48,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
      * server error and we should inform the developer.
      */
     if (message.startsWith("No suitable constructor found")) {
-      Misc.error(LOGGER, "Unable to deserialize the specific type", exception);
+      LOGGER.error("Unable to deserialize the specific type", exception);
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
@@ -64,7 +63,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     /*
      * Otherwise, it's those pesky users.
      */
-    Misc.info(LOGGER, "Unable to process JSON", exception);
+    LOGGER.info("Unable to process JSON", exception);
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(aResponseMessage()

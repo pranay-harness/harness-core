@@ -163,7 +163,7 @@ public class EcsServiceSetup extends State {
             .collect(toList());
 
     String taskFamily = isNotEmpty(serviceName)
-        ? serviceName
+        ? context.renderExpression(serviceName)
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
@@ -244,7 +244,7 @@ public class EcsServiceSetup extends State {
         variables.put(key, value);
       });
     } catch (Exception ex) {
-      Misc.error(logger, "Exception occurred in processing service variables ", ex);
+      logger.error("Exception occurred in processing service variables ", ex);
     }
     return variables;
   }

@@ -161,7 +161,7 @@ public class CloudWatchState extends State {
       logger.info("assertion status: {}", status);
     } catch (Exception e) {
       errorMsg = getMessage(e);
-      Misc.error(logger, "Error in Cloudwatch assertion evaluation", e);
+      logger.error("Error in Cloudwatch assertion evaluation", e);
       status = false;
     }
 

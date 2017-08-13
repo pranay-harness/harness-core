@@ -171,7 +171,7 @@ public class AuthServiceImpl implements AuthService {
     try {
       encryptedJWT = EncryptedJWT.parse(tokenString);
     } catch (ParseException e) {
-      Misc.error(logger, "Invalid token for delegate " + tokenString, e);
+      logger.error("Invalid token for delegate " + tokenString, e);
       throw new WingsException(INVALID_TOKEN);
     }
 
@@ -179,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
     try {
       encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
     } catch (DecoderException e) {
-      Misc.error(logger, "Invalid hex account key " + account.getAccountKey(), e);
+      logger.error("Invalid hex account key " + account.getAccountKey(), e);
       throw new WingsException(DEFAULT_ERROR_CODE); // ShouldNotHappen
     }
 
@@ -187,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
     try {
       decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      Misc.error(logger, "Invalid account key " + account.getAccountKey(), e);
+      logger.error("Invalid account key " + account.getAccountKey(), e);
       throw new WingsException(DEFAULT_ERROR_CODE);
     }
 

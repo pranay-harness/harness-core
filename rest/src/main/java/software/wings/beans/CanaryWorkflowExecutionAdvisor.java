@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 
 import org.mongodb.morphia.annotations.Transient;
@@ -12,12 +13,14 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionEventAdvice;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
@@ -100,17 +103,22 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
       if (phaseStep != null && phaseStep.getFailureStrategies() != null
           && !phaseStep.getFailureStrategies().isEmpty()) {
-        RepairActionCode repairActionCode = rollbackStrategy(phaseStep.getFailureStrategies(), state);
-        return getExecutionEventAdvice(orchestrationWorkflow, repairActionCode, executionEvent, null);
+        FailureStrategy failureStrategy = rollbackStrategy(phaseStep.getFailureStrategies(), state);
+        return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, null);
       }
     }
-    RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
+    FailureStrategy failureStrategy = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
 
-    return getExecutionEventAdvice(orchestrationWorkflow, repairActionCode, executionEvent, phaseSubWorkflow);
+    return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow);
   }
 
   private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
-      RepairActionCode repairActionCode, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow) {
+      FailureStrategy failureStrategy, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow) {
+    if (failureStrategy == null) {
+      return null;
+    }
+
+    RepairActionCode repairActionCode = failureStrategy.getRepairActionCode();
     switch (repairActionCode) {
       case IGNORE: {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
@@ -170,13 +178,51 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .withNextStateName(rollbackPhase.getName())
             .build();
       }
+      case RETRY: {
+        String stateType = executionEvent.getState().getStateType();
+        if (stateType.equals(StateType.PHASE.name()) || stateType.equals(StateType.PHASE_STEP.name())
+            || stateType.equals(StateType.SUB_WORKFLOW.name()) || stateType.equals(StateType.FORK.name())
+            || stateType.equals(StateType.REPEAT.name())) {
+          // Retry is only at the leaf node
+          FailureStrategy failureStrategyAfterRetry =
+              aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          return getExecutionEventAdvice(
+              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow);
+        }
+
+        List<StateExecutionData> stateExecutionDataHistory = ((ExecutionContextImpl) executionEvent.getContext())
+                                                                 .getStateExecutionInstance()
+                                                                 .getStateExecutionDataHistory();
+        if (stateExecutionDataHistory == null || stateExecutionDataHistory.size() < failureStrategy.getRetryCount()) {
+          int waitInterval = 0;
+          List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
+          if (retryIntervals != null && !retryIntervals.isEmpty()) {
+            if (stateExecutionDataHistory == null || stateExecutionDataHistory.isEmpty()) {
+              waitInterval = retryIntervals.get(0);
+            } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
+              waitInterval = retryIntervals.get(retryIntervals.size() - 1);
+            } else {
+              waitInterval = retryIntervals.get(stateExecutionDataHistory.size());
+            }
+          }
+          return anExecutionEventAdvice()
+              .withExecutionInterruptType(ExecutionInterruptType.RETRY)
+              .withWaitInterval(waitInterval)
+              .build();
+        } else {
+          FailureStrategy failureStrategyAfterRetry =
+              aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          return getExecutionEventAdvice(
+              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow);
+        }
+      }
       default:
         return null;
     }
   }
 
-  private RepairActionCode rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
-    if (failureStrategies == null) {
+  private FailureStrategy rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
+    if (failureStrategies == null || failureStrategies.isEmpty()) {
       return null;
     }
     Optional<FailureStrategy> rollbackStrategy =
@@ -185,31 +231,16 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .findFirst();
 
     if (rollbackStrategy.isPresent()) {
-      return rollbackStrategy.get().getRepairActionCode();
+      return rollbackStrategy.get();
     }
 
     rollbackStrategy =
         failureStrategies.stream().filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE).findFirst();
 
     if (rollbackStrategy.isPresent()) {
-      return rollbackStrategy.get().getRepairActionCode();
+      return rollbackStrategy.get();
     }
 
-    rollbackStrategy = failureStrategies.stream()
-                           .filter(f -> f.getRepairActionCode() == RepairActionCode.MANUAL_INTERVENTION)
-                           .findFirst();
-
-    if (rollbackStrategy.isPresent()) {
-      return rollbackStrategy.get().getRepairActionCode();
-    }
-
-    rollbackStrategy =
-        failureStrategies.stream().filter(f -> f.getRepairActionCode() == RepairActionCode.IGNORE).findFirst();
-
-    if (rollbackStrategy.isPresent()) {
-      return rollbackStrategy.get().getRepairActionCode();
-    }
-
-    return null;
+    return failureStrategies.get(0);
   }
 }

@@ -409,7 +409,7 @@ public class AwsHelperService {
       client.close();
       return true;
     } catch (IOException e) {
-      Misc.error(logger, e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       e.printStackTrace();
       return false;
     } finally {
@@ -426,7 +426,7 @@ public class AwsHelperService {
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    Misc.error(logger, "AWS API call exception", amazonServiceException);
+    logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {

@@ -190,7 +190,7 @@ public class AuditServiceImpl implements AuditService {
               .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
 
         } catch (Exception ex) {
-          Misc.info(logger, "Failed to delete audit audit records of size: " + auditHeaders.size(), ex);
+          logger.info("Failed to delete audit audit records of size: " + auditHeaders.size(), ex);
         }
         logger.info("Deleting audit records of size: {} success", auditHeaders.size());
         if (auditHeaders.size() < limit) {
@@ -199,8 +199,7 @@ public class AuditServiceImpl implements AuditService {
         return false;
       });
     } catch (Exception ex) {
-      Misc.info(
-          logger, String.format("Failed to delete audit records older than last %s days within 10 minutes.", days), ex);
+      logger.info(String.format("Failed to delete audit records older than last %s days within 10 minutes.", days), ex);
     }
     logger.info("Deleted audit records  older than {} days", days);
   }

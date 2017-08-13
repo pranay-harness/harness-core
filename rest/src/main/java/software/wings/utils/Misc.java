@@ -1,12 +1,8 @@
 package software.wings.utils;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 import com.google.api.client.util.Throwables;
 
-import com.codahale.metrics.Slf4jReporter.LoggingLevel;
 import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
 import software.wings.common.Constants;
 
 import java.util.concurrent.TimeUnit;
@@ -141,71 +137,6 @@ public class Misc {
     } catch (Exception e) {
       // Ignore
       return defaultValue;
-    }
-  }
-
-  /**
-   * Error.
-   *
-   * @param logger the logger
-   * @param msg    the msg
-   * @param t      the t
-   */
-  public static void error(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.ERROR, msg, t);
-  }
-
-  /**
-   * Warn.
-   *
-   * @param logger the logger
-   * @param msg    the msg
-   * @param t      the t
-   */
-  public static void warn(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.WARN, msg, t);
-  }
-
-  /**
-   * Info.
-   *
-   * @param logger the logger
-   * @param msg    the msg
-   * @param t      the t
-   */
-  public static void info(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.INFO, msg, t);
-  }
-
-  /**
-   * Debug.
-   *
-   * @param logger the logger
-   * @param msg    the msg
-   * @param t      the t
-   */
-  public static void debug(Logger logger, String msg, Throwable t) {
-    writeException(logger, LoggingLevel.DEBUG, msg, t);
-  }
-
-  private static void writeException(Logger logger, LoggingLevel level, String msg, Throwable t) {
-    logIt(logger, level, isNotEmpty(msg) ? msg : "An exception occurred: " + t.getClass().getSimpleName(), t);
-  }
-
-  private static void logIt(Logger logger, LoggingLevel level, String msg, Throwable t) {
-    switch (level) {
-      case ERROR:
-        logger.error(msg, t);
-        break;
-      case WARN:
-        logger.warn(msg, t);
-        break;
-      case DEBUG:
-        logger.debug(msg, t);
-        break;
-      case INFO:
-      default:
-        logger.info(msg, t);
     }
   }
 

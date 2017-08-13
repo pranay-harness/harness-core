@@ -33,9 +33,8 @@ public class SmExecutionCleanupSchedulerUtil extends WingsBaseTest {
       try {
         appServiceImpl.deleteCronForStateMachineExecutionCleanup(application.getUuid());
       } catch (Exception e) {
-        Misc.error(logger,
-            String.format(
-                "Error in delete schedule - appId: %s, name: %s", application.getUuid(), application.getName()),
+        logger.error(String.format("Error in delete schedule - appId: %s, name: %s", application.getUuid(),
+                         application.getName()),
             e);
       }
       appServiceImpl.addCronForStateMachineExecutionCleanup(application);

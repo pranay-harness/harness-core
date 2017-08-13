@@ -93,7 +93,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
       try {
         wingsPersistence.save(serviceInstance);
       } catch (DuplicateKeyException ex) {
-        Misc.warn(logger, "Reinserting an existing service instance ignore", ex);
+        logger.warn("Reinserting an existing service instance ignore", ex);
       }
     });
   }

@@ -19,6 +19,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
@@ -73,6 +74,7 @@ public class AwsNodeSelectState extends State {
       List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
       List<String> excludedServiceInstanceIds =
           hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
+
       serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
           aServiceInstanceSelectionParams()
               .withSelectSpecificHosts(specificHosts)
@@ -80,6 +82,12 @@ public class AwsNodeSelectState extends State {
               .withHostNames(hostNames)
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
               .build());
+      if (serviceInstances == null || serviceInstances.isEmpty()) {
+        return anExecutionResponse()
+            .withExecutionStatus(ExecutionStatus.FAILED)
+            .withErrorMessage("No node selected")
+            .build();
+      }
     }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();

@@ -138,7 +138,7 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
       executionDataBuilder.withHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
-      Misc.error(logger, "Exception occurred during HTTP task execution", e);
+      logger.error("Exception occurred during HTTP task execution", e);
       executionDataBuilder.withHttpResponseCode(500)
           .withHttpResponseBody(getMessage(e))
           .withErrorMsg(getMessage(e))

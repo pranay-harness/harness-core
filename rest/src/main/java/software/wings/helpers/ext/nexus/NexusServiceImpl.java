@@ -28,7 +28,6 @@ import software.wings.helpers.ext.nexus.model.Data;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,8 +61,7 @@ public class NexusServiceImpl implements NexusService {
         repositories.forEach(repo -> { repos.put(repo.getId(), repo.getName()); });
       }
     } catch (final IOException e) {
-      Misc.error(
-          logger, "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
+      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
       responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
@@ -81,8 +79,7 @@ public class NexusServiceImpl implements NexusService {
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
       return getArtifactPaths(request);
     } catch (final IOException e) {
-      Misc.error(logger,
-          "Error occurred while retrieving repository contents  from Nexus Server " + nexusConfig.getNexusUrl()
+      logger.error("Error occurred while retrieving repository contents  from Nexus Server " + nexusConfig.getNexusUrl()
               + " for repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -103,8 +100,7 @@ public class NexusServiceImpl implements NexusService {
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId, name);
       return getArtifactPaths(request);
     } catch (final IOException e) {
-      Misc.error(logger,
-          "Error occurred while retrieving Repository contents from Nexus server " + nexusConfig.getNexusUrl()
+      logger.error("Error occurred while retrieving Repository contents from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -132,7 +128,7 @@ public class NexusServiceImpl implements NexusService {
         return getUrlInputStream(nexusConfig, project, treeNodes, repoType);
       }
     } catch (IOException e) {
-      Misc.error(logger, "Error occurred while downloading the artifact", e);
+      logger.error("Error occurred while downloading the artifact", e);
     }
     return null;
   }
@@ -156,7 +152,7 @@ public class NexusServiceImpl implements NexusService {
                     new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
-                Misc.error(logger, "Error occurred while getting the input stream", ex);
+                logger.error("Error occurred while getting the input stream", ex);
                 throw new WingsException(ErrorCode.INVALID_REQUEST, "message", ex.getMessage());
               }
             }
@@ -200,8 +196,7 @@ public class NexusServiceImpl implements NexusService {
         );
       }
     } catch (final IOException e) {
-      Misc.error(logger,
-          "Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
+      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
               + " for repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -241,8 +236,7 @@ public class NexusServiceImpl implements NexusService {
         );
       }
     } catch (final IOException e) {
-      Misc.error(logger,
-          "Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
+      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -275,8 +269,7 @@ public class NexusServiceImpl implements NexusService {
         }
       }
     } catch (final IOException e) {
-      Misc.error(logger,
-          "Error occurred while retrieving artifact names from Nexus server " + nexusConfig.getNexusUrl()
+      logger.error("Error occurred while retrieving artifact names from Nexus server " + nexusConfig.getNexusUrl()
               + " for Repository " + repoId + " under path " + path,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
@@ -324,7 +317,7 @@ public class NexusServiceImpl implements NexusService {
         }
       }
     } catch (final IOException e) {
-      Misc.error(logger,
+      logger.error(
           String.format(
               "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %S and artifact name %s",
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
@@ -401,7 +394,7 @@ public class NexusServiceImpl implements NexusService {
         throw new WingsException(errorCode, "message", response.message());
       }
     } catch (IOException e) {
-      Misc.error(logger, "Error occurred while retrieving pom model from url " + resolveUrl, e);
+      logger.error("Error occurred while retrieving pom model from url " + resolveUrl, e);
     }
     return project;
   }
