@@ -114,6 +114,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
       FailureStrategy failureStrategy, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow) {
+    if (failureStrategy == null) {
+      return null;
+    }
+
     RepairActionCode repairActionCode = failureStrategy.getRepairActionCode();
     switch (repairActionCode) {
       case IGNORE: {
