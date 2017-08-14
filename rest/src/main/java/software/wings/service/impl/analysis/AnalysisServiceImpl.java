@@ -1,7 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.sm.states.AbstractAnalysisState.PYTHON_JOB_RETRIES;
 
 import com.google.common.base.Preconditions;
 
@@ -39,7 +38,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.sm.states.AbstractLogAnalysisState;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -483,7 +481,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
 
       } catch (Exception e) {
-        Misc.error(logger, "First level clustering failed for " + logRequest, e);
+        logger.error("First level clustering failed for " + logRequest, e);
       }
       deleteProcessed(logRequest, stateType, fromLevel);
     }
