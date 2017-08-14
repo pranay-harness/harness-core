@@ -2,6 +2,8 @@ package software.wings.yaml;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -103,9 +105,26 @@ public class YamlMustacheTemplateConfig {
 
     Writer writer = new StringWriter();
     mustache.execute(writer, new YamlMustacheTemplateConfig()).flush();
-    String configYaml = writer.toString();
+    String configYaml = "---\n" + writer.toString();
 
     System.out.println(configYaml);
+
+    //---------------------------
+    /*
+    Yaml yamlObj = new Yaml();
+
+    try {
+      // NOTE: we don't do anything with the Yaml Object
+      yamlObj.load(configYaml);
+
+      System.out.println(yamlObj);
+      System.out.println(Yaml.dump(yamlObj));
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    */
+    //---------------------------
 
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Config config = null;
@@ -113,6 +132,18 @@ public class YamlMustacheTemplateConfig {
     if (configYaml != null && !configYaml.isEmpty()) {
       try {
         config = mapper.readValue(configYaml, Config.class);
+
+        //-------
+        System.out.println("************************");
+
+        DumperOptions dumpOpts = new DumperOptions();
+        dumpOpts.setPrettyFlow(true);
+        Yaml yaml = new Yaml(new YamlRepresenter(), dumpOpts);
+        String yamlFromConfig = yaml.dump(config);
+
+        System.out.println(yamlFromConfig);
+        //-------
+
       } catch (Exception e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
@@ -123,7 +154,7 @@ public class YamlMustacheTemplateConfig {
 
     if (config != null) {
       mustache.execute(writer, config).flush();
-      configYaml = writer.toString();
+      configYaml = "---\n" + writer.toString();
 
       System.out.println(configYaml);
     }
