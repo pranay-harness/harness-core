@@ -58,7 +58,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -351,7 +350,7 @@ public class DelegateServiceImpl implements DelegateService {
     } else {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
-      delegate.setStatus(existingDelegate.getStatus() == Status.DISABLED ? Status.DISABLED : delegate.getStatus());
+      delegate.setStatus(existingDelegate.getStatus());
       return update(delegate);
     }
   }
