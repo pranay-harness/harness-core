@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.yaml.YamlSerialize;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,9 +24,9 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
-  @NotEmpty private String name;
-  private String description;
-  @NotNull private EnvironmentType environmentType = NON_PROD;
+  @NotEmpty @YamlSerialize private String name;
+  @YamlSerialize private String description;
+  @NotNull @YamlSerialize private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
