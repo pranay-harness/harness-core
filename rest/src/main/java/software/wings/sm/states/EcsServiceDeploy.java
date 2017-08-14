@@ -35,7 +35,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   @Attributes(title = "Instance Unit Type (Count/Percentage)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("Count")
+  @DefaultValue("COUNT")
   private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
   @Attributes(title = "Command")
