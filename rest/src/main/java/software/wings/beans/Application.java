@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +28,13 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Application extends Base {
-  @NotEmpty private String name;
-  private String description;
+  @NotEmpty @YamlSerialize private String name;
+  @YamlSerialize private String description;
 
   @Indexed @NotEmpty private String accountId;
 
-  @Transient private List<Service> services = new ArrayList<>();
-  @Transient private List<Environment> environments = new ArrayList<>();
+  @Transient @YamlSerialize private List<Service> services = new ArrayList<>();
+  @Transient @YamlSerialize private List<Environment> environments = new ArrayList<>();
 
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
