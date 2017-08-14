@@ -78,7 +78,7 @@ import java.util.Optional;
  */
 public class EcsServiceSetup extends State {
   @DefaultValue("${app.name}_${service.name}_${env.name}")
-  @Attributes(title = "Service Name")
+  @Attributes(title = "ECS Service Name")
   private String serviceName;
 
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
@@ -176,8 +176,7 @@ public class EcsServiceSetup extends State {
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
-    String lastEcsServiceName = lastECSService(
-        region, computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+    String lastEcsServiceName = lastECSService(region, computeProviderSetting, clusterName, taskDefinition.getFamily());
 
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
