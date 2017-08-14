@@ -27,6 +27,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -91,4 +92,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public Logger getLogger() {
     return logger;
   }
+
+  @Override
+  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {}
 }

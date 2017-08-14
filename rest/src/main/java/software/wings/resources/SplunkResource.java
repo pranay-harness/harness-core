@@ -17,6 +17,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
@@ -47,9 +48,9 @@ public class SplunkResource implements LogAnalysisResource {
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
-      @DefaultValue("true") @QueryParam("processed") boolean processed, List<LogElement> logData) throws IOException {
-    return new RestResponse<>(analysisService.saveLogData(
-        StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId, processed, logData));
+      @QueryParam("clusterLevel") ClusterLevel clusterLevel, List<LogElement> logData) throws IOException {
+    return new RestResponse<>(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId,
+        workflowId, workflowExecutionId, clusterLevel, logData));
   }
 
   @POST
@@ -58,9 +59,9 @@ public class SplunkResource implements LogAnalysisResource {
   @ExceptionMetered
   @ExternalServiceAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent,
-      @DefaultValue("true") @QueryParam("processed") boolean processed, LogRequest logRequest) throws IOException {
-    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, processed, StateType.SPLUNKV2));
+      @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      LogRequest logRequest) throws IOException {
+    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, clusterLevel, StateType.SPLUNKV2));
   }
 
   @POST

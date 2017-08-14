@@ -22,14 +22,16 @@ import javax.validation.constraints.NotNull;
 public interface AnalysisService {
   @ValidationGroups(Create.class)
   Boolean saveLogData(@NotNull StateType stateType, String accountId, @NotNull String appId,
-      @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, boolean processed,
+      @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, ClusterLevel clusterLevel,
       @Valid List<LogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class)
   List<LogDataRecord> getLogData(
-      @Valid LogRequest logRequest, boolean compareCurrent, boolean processed, StateType splunkv2);
+      @Valid LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType splunkv2);
 
-  Boolean deleteProcessed(LogRequest logRequest, StateType stateType);
+  void finalizeLogCollection(String accountId, StateType stateType, String workflowExecutionId, LogRequest logRequest);
+
+  Boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);

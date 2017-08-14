@@ -16,6 +16,7 @@ import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogCollectionCallback;
+import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -25,6 +26,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -84,5 +88,25 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
+  }
+
+  @Override
+  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {
+    Set<String> testNodes = getCanaryNewHostNames(context);
+    Set<String> controlNodes = getLastExecutionNodes(context);
+    Set<String> allNodes = new HashSet<>();
+
+    if (controlNodes != null) {
+      allNodes.addAll(controlNodes);
+    }
+
+    if (testNodes != null) {
+      allNodes.addAll(testNodes);
+    }
+
+    final String accountId = appService.get(context.getAppId()).getAccountId();
+    LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
+        getWorkflowId(context), allNodes, logAnalysisMinute);
+    analysisService.finalizeLogCollection(accountId, StateType.ELK, context.getWorkflowExecutionId(), logRequest);
   }
 }

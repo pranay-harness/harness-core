@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -23,7 +24,8 @@ import java.util.List;
 @Indexes({
   @Index(fields = {
     @Field("stateType")
-    , @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("processed")
+    , @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("processed"),
+        @Field("clusterLevel")
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
@@ -48,11 +50,11 @@ public class LogDataRecord extends Base {
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
-  @Indexed private boolean processed;
+  @Indexed private ClusterLevel clusterLevel;
   @Indexed private int logCollectionMinute;
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
-      String stateExecutionId, String workflowId, String workflowExecutionId, boolean processed,
+      String stateExecutionId, String workflowId, String workflowExecutionId, ClusterLevel clusterLevel,
       List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
@@ -69,7 +71,7 @@ public class LogDataRecord extends Base {
       record.setCount(logElement.getCount());
       record.setLogMessage(logElement.getLogMessage());
       record.setLogMD5Hash(DigestUtils.md5Hex(logElement.getLogMessage()));
-      record.setProcessed(processed);
+      record.setClusterLevel(clusterLevel);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
 
       records.add(record);

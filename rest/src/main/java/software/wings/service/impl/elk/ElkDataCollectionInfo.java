@@ -3,6 +3,7 @@ package software.wings.service.impl.elk;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import software.wings.beans.ElkConfig;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 
@@ -14,6 +15,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true)
 public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private ElkConfig elkConfig;
 

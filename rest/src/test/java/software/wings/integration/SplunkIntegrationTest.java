@@ -13,6 +13,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
@@ -83,7 +84,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setCount(count);
             logDataRecord.setLogMessage(logMessage);
             logDataRecord.setLogMD5Hash(logMD5Hash);
-            logDataRecord.setProcessed(false);
+            logDataRecord.setClusterLevel(ClusterLevel.L0);
             logDataRecord.setLogCollectionMinute(logCollectionMinute);
             logDataRecord.setCreatedAt(timeStamp);
 
@@ -153,7 +154,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setCount(count);
             logDataRecord.setLogMessage(logMessage);
             logDataRecord.setLogMD5Hash(logMD5Hash);
-            logDataRecord.setProcessed(false);
+            logDataRecord.setClusterLevel(ClusterLevel.L0);
             logDataRecord.setLogCollectionMinute(logCollectionMinute);
             logDataRecord.setCreatedAt(timeStamp);
             wingsPersistence.save(logDataRecord);

@@ -5,6 +5,7 @@ import static software.wings.managerclient.SafeHttpCall.execute;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -25,11 +26,11 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
     switch (stateType) {
       case SPLUNKV2:
         execute(managerClient.saveSplunkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, true, logs));
+            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, ClusterLevel.L2, logs));
         break;
       case ELK:
         execute(managerClient.saveElkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, false, logs));
+            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, ClusterLevel.L0, logs));
         break;
 
       default:
