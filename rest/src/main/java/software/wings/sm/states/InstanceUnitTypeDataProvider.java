@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.InstanceUnitType.COUNT;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+
 import com.google.common.collect.ImmutableMap;
 
-import software.wings.beans.InstanceUnitType;
 import software.wings.stencils.DataProvider;
 
 import java.util.Map;
@@ -13,6 +15,7 @@ import java.util.Map;
 public class InstanceUnitTypeDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return ImmutableMap.of(InstanceUnitType.COUNT.name(), "Count", InstanceUnitType.PERCENTAGE.name(), "Percentage");
+    // TODO: make it plain english
+    return ImmutableMap.of(COUNT.name(), COUNT.name(), PERCENTAGE.name(), PERCENTAGE.name());
   }
 }
