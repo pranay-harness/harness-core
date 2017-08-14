@@ -48,7 +48,12 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   }
 
   @Override
-  public int fetchDesiredCount() {
+  public int getInstanceCount() {
+    return 0;
+  }
+
+  @Override
+  public int fetchDesiredCount(Integer previousDesiredCount) {
     return 0;
   }
 

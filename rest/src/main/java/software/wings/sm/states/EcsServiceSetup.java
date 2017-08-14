@@ -65,8 +65,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +77,9 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class EcsServiceSetup extends State {
-  @Attributes(title = "Service Name") private String serviceName;
+  @DefaultValue("${app.name}_${service.name}_${env.name}")
+  @Attributes(title = "Service Name")
+  private String serviceName;
 
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
@@ -258,8 +260,10 @@ public class EcsServiceSetup extends State {
     }
     List<com.amazonaws.services.ecs.model.Service> serviceList =
         services.stream()
-            .filter(
-                service -> (service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0))
+            .filter(service
+                -> ((service.getServiceName().equals(serviceNamePrefix)
+                        || service.getServiceName().startsWith(serviceNamePrefix + EcsConvention.DELIMITER))
+                    && service.getDesiredCount() > 0))
             .collect(toList());
 
     com.amazonaws.services.ecs.model.Service lastECSService = null;

@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
@@ -31,6 +32,11 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
 
   @Attributes(title = "Number of instances") private int instanceCount;
+
+  @Attributes(title = "Instance Unit Type (Count/Percentage)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("Count")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -81,8 +87,17 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  public int fetchDesiredCount() {
-    return getInstanceCount();
+  public int fetchDesiredCount(Integer previousDesiredCount) {
+    if (instanceUnitType != null && instanceUnitType == InstanceUnitType.PERCENTAGE) {
+      // TODO: take care of previous occurance and ensure total does not exceed previousDesiredCount
+      int realCount = (getInstanceCount() * previousDesiredCount) / 100;
+      if (realCount < 1) {
+        realCount = 1;
+      }
+      return realCount;
+    } else {
+      return getInstanceCount();
+    }
   }
 
   @Override
@@ -102,6 +117,14 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     this.instanceCount = instanceCount;
   }
 
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
+  }
+
   public static final class EcsServiceDeployBuilder {
     private String id;
     private String name;
@@ -109,6 +132,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     private String stateType;
     private String commandName;
     private int instanceCount;
+    private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
     private EcsServiceDeployBuilder(String name) {
       this.name = name;
@@ -148,6 +172,11 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       return this;
     }
 
+    public EcsServiceDeployBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
+      this.instanceUnitType = instanceUnitType;
+      return this;
+    }
+
     public EcsServiceDeploy build() {
       EcsServiceDeploy ecsServiceDeploy = new EcsServiceDeploy(name);
       ecsServiceDeploy.setId(id);
@@ -156,6 +185,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       ecsServiceDeploy.setRollback(false);
       ecsServiceDeploy.setCommandName(commandName);
       ecsServiceDeploy.setInstanceCount(instanceCount);
+      ecsServiceDeploy.setInstanceUnitType(instanceUnitType);
       return ecsServiceDeploy;
     }
   }

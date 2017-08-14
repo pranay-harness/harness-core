@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import software.wings.beans.InstanceUnitType;
+
 import java.util.List;
 
 /**
@@ -11,6 +13,7 @@ public class InfraNodeRequest {
   private int instanceCount;
   private List<String> nodeNames;
   private PhaseElement phaseElement;
+  private InstanceUnitType instanceUnitType;
 
   public boolean isProvisionNodes() {
     return provisionNodes;
@@ -44,6 +47,14 @@ public class InfraNodeRequest {
     this.phaseElement = phaseElement;
   }
 
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
+  }
+
   @Override
   public String toString() {
     return "InfraNodeRequest{"
@@ -57,6 +68,7 @@ public class InfraNodeRequest {
     private int instanceCount;
     private List<String> nodeNames;
     private PhaseElement phaseElement;
+    private InstanceUnitType instanceUnitType;
 
     private InfraNodeRequestBuilder() {}
 
@@ -89,6 +101,11 @@ public class InfraNodeRequest {
       return this;
     }
 
+    public InfraNodeRequestBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
+      this.instanceUnitType = instanceUnitType;
+      return this;
+    }
+
     public InfraNodeRequest build() {
       InfraNodeRequest infraNodeRequest = new InfraNodeRequest();
       infraNodeRequest.setProvisionNodes(provisionNodes);
@@ -96,6 +113,7 @@ public class InfraNodeRequest {
       infraNodeRequest.setNodeNames(nodeNames);
       infraNodeRequest.setPhaseElement(phaseElement);
       infraNodeRequest.deploymentType = this.deploymentType;
+      infraNodeRequest.setInstanceUnitType(instanceUnitType);
       return infraNodeRequest;
     }
   }

@@ -171,7 +171,7 @@ public abstract class ContainerServiceDeploy extends State {
             ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + serviceName);
       }
       executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
-      desiredCount = previousDesiredCount.get() + fetchDesiredCount();
+      desiredCount = previousDesiredCount.get() + fetchDesiredCount(previousDesiredCount.get());
     }
 
     logger.info("Desired count for service {} is {}", serviceName, desiredCount);
@@ -274,7 +274,7 @@ public abstract class ContainerServiceDeploy extends State {
         return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
       commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount.get());
-      desiredCount = Math.max(previousDesiredCount.get() - fetchDesiredCount(), 0);
+      desiredCount = Math.max(previousDesiredCount.get() - fetchDesiredCount(previousDesiredCount.get()), 0);
     }
 
     logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
@@ -330,10 +330,12 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  public abstract int getInstanceCount();
+
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && fetchDesiredCount() == 0) {
+    if (!isRollback() && getInstanceCount() == 0) {
       invalidFields.put("instanceCount", "instanceCount needs to be greater than 0");
     }
     if (getCommandName() == null) {
@@ -422,7 +424,7 @@ public abstract class ContainerServiceDeploy extends State {
     return commandExecutionContext;
   }
 
-  public abstract int fetchDesiredCount();
+  public abstract int fetchDesiredCount(Integer integer);
 
   public abstract String getCommandName();
 
