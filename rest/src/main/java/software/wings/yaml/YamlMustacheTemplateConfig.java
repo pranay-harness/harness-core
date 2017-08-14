@@ -3,7 +3,10 @@ package software.wings.yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -136,16 +139,21 @@ public class YamlMustacheTemplateConfig {
         //-------
         System.out.println("************************");
 
+        YamlRepresenter representer = new YamlRepresenter();
+        representer.addClassTag(Config.class, new Tag("!config"));
+
         DumperOptions dumpOpts = new DumperOptions();
         dumpOpts.setPrettyFlow(true);
-        Yaml yaml = new Yaml(new YamlRepresenter(), dumpOpts);
+        dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
+        dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
+
+        Yaml yaml = new Yaml(representer, dumpOpts);
         String yamlFromConfig = yaml.dump(config);
 
         System.out.println(yamlFromConfig);
         //-------
 
       } catch (Exception e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
     }
