@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
  * Created by rishi on 2/7/17.
  */
 public class EcsConvention {
-  public static final String DELIMITER = "_";
+  public static final String DELIMITER = "__";
   private static Pattern wildCharPattern = Pattern.compile("[:.+*/\\\\ &$|\"']");
 
   public static String getTaskFamily(String appName, String serviceName, String envName) {
@@ -15,10 +15,6 @@ public class EcsConvention {
 
   public static String getServiceName(String family, Integer revision) {
     return family + DELIMITER + revision;
-  }
-
-  public static String getServiceNamePrefix(String family) {
-    return family + DELIMITER;
   }
 
   public static String getServiceNamePrefixFromServiceName(String serviceName) {
