@@ -5,8 +5,8 @@ import software.wings.beans.Application;
 import java.util.List;
 
 public class ConfigFromYaml {
-  private List<Application> applications;
-  private String account;
+  @YamlSerialize private List<Application> applications;
+  @YamlSerialize private String account;
 
   public List<Application> getApplications() {
     return applications;

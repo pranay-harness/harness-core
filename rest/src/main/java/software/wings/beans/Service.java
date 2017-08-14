@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Version;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
+import software.wings.yaml.YamlSerialize;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,9 +33,9 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Service extends Base {
-  private String name;
-  private String description;
-  private ArtifactType artifactType;
+  @YamlSerialize private String name;
+  @YamlSerialize private String description;
+  @YamlSerialize private ArtifactType artifactType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
