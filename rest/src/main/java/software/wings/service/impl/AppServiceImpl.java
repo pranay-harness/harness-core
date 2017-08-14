@@ -97,6 +97,7 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application save(Application app) {
+    Validator.notNullCheck("accountId", app.getAccountId());
     Application application =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);

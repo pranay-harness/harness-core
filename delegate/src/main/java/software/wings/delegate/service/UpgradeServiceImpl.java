@@ -15,7 +15,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.DelegateScripts;
-import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -89,7 +88,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      Misc.error(logger, "Exception while upgrading", e);
+      logger.error("Exception while upgrading", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -105,7 +104,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          Misc.error(logger, "ALERT: Couldn't kill forcibly.", ex);
+          logger.error("ALERT: Couldn't kill forcibly.", ex);
         }
       }
     }
@@ -115,8 +114,8 @@ public class UpgradeServiceImpl implements UpgradeService {
     try {
       cleanup(new File(System.getProperty("user.dir")), version, delegateScripts.getVersion(), "backup.");
     } catch (Exception ex) {
-      Misc.error(
-          logger, String.format("Failed to clean delegate version [%s] from Backup", delegateScripts.getVersion()), ex);
+      logger.error(
+          String.format("Failed to clean delegate version [%s] from Backup", delegateScripts.getVersion()), ex);
     }
   }
 
@@ -125,7 +124,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegateScripts.getVersion(),
           "delegate-");
     } catch (Exception ex) {
-      Misc.error(logger,
+      logger.error(
           String.format("Failed to clean delegate version [%s] from Capsule", delegateScripts.getVersion()), ex);
     }
   }

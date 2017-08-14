@@ -4,14 +4,12 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.Query;
@@ -27,7 +25,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.security.encryption.SimpleEncryption;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -35,11 +33,10 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -83,7 +80,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#save(software.wings.beans.ConfigFile, java.io.InputStream)
    */
   @Override
-  public String save(ConfigFile configFile, InputStream inputStream) {
+  public String save(ConfigFile configFile, BoundedInputStream inputStream) {
     validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
     InputStream toWrite = inputStream;
     String envId = configFile.getEntityType().equals(SERVICE) || configFile.getEntityType().equals(ENVIRONMENT)
@@ -94,9 +91,10 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
     if (configFile.isEncrypted()) {
-      toWrite = encrypt(inputStream, configFile.getAccountId());
+      toWrite = EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
     }
 
+    configFile.setSize(inputStream.getTotalBytesRead());
     String fileId = fileService.saveFile(configFile, toWrite, CONFIGS);
     String id = wingsPersistence.save(configFile);
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
@@ -168,7 +166,7 @@ public class ConfigServiceImpl implements ConfigService {
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = decrypt(file, configFile.getAccountId());
+      file = EncryptionUtils.decrypt(file, configFile.getAccountId());
     }
     return file;
   }
@@ -176,12 +174,13 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public File download(String appId, String configId, Integer version) {
     ConfigFile configFile = get(appId, configId);
-    File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     int fileVersion = (version == null) ? configFile.getDefaultVersion() : version;
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
+
+    File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(fileId, file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = decrypt(file, configFile.getAccountId());
+      file = EncryptionUtils.decrypt(file, configFile.getAccountId());
     }
     return file;
   }
@@ -190,7 +189,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#update(software.wings.beans.ConfigFile, java.io.InputStream)
    */
   @Override
-  public void update(ConfigFile inputConfigFile, InputStream uploadedInputStream) {
+  public void update(ConfigFile inputConfigFile, BoundedInputStream uploadedInputStream) {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
     Validator.notNullCheck("Configuration File", savedConfigFile);
 
@@ -207,7 +206,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
-        toWrite = encrypt(uploadedInputStream, inputConfigFile.getAccountId());
+        toWrite = EncryptionUtils.encrypt(uploadedInputStream, inputConfigFile.getAccountId());
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -220,8 +219,9 @@ public class ConfigServiceImpl implements ConfigService {
       }
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
-      updateMap.put("size", inputConfigFile.getSize());
+      updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
+      updateMap.put("encrypted", inputConfigFile.isEncrypted());
     }
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
@@ -261,8 +261,11 @@ public class ConfigServiceImpl implements ConfigService {
             .map(serviceTemplateKey -> serviceTemplateKey.getId())
             .collect(Collectors.toList());
 
-    Query<ConfigFile> query =
-        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(existingConfigFile.getAppId());
+    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
+                                  .field("appId")
+                                  .equal(existingConfigFile.getAppId())
+                                  .field("relativeFilePath")
+                                  .equal(existingConfigFile.getRelativeFilePath());
     query.or(query.criteria("entityId").equal(existingConfigFile.getEntityId()),
         query.criteria("templateId").in(templateIds));
 
@@ -347,25 +350,5 @@ public class ConfigServiceImpl implements ConfigService {
         .equal(entityId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
-  }
-
-  private InputStream encrypt(InputStream content, String containerId) {
-    try {
-      SimpleEncryption encryption = new SimpleEncryption(containerId);
-      return new ByteArrayInputStream(encryption.encrypt(ByteStreams.toByteArray(content)));
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
-  }
-
-  private File decrypt(File file, String containerId) {
-    try {
-      SimpleEncryption encryption = new SimpleEncryption(containerId);
-      byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
-      Files.write(outputBytes, file);
-      return file;
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
   }
 }

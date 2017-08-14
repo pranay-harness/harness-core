@@ -105,7 +105,7 @@ public class RepeatState extends State {
         }
       }
     } catch (Exception ex) {
-      Misc.error(logger, "Error in getting repeat elements", ex);
+      logger.error("Error in getting repeat elements", ex);
       throw new WingsException(ex);
     }
 
@@ -125,7 +125,7 @@ public class RepeatState extends State {
       try {
         executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
       } catch (Exception ex) {
-        Misc.error(logger, "Error in evaluating executionStrategy... default to SERIAL", ex);
+        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
       }
     }
 

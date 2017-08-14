@@ -112,7 +112,7 @@ public List<String> getJobKeys(BambooConfig bambooConfig, String planKey) {
     response = getHttpRequestExecutionResponse(request);
     return extractJobKeyFromNestedProjectResponseJson(response);
   } catch (Exception ex) {
-    Misc.error(logger, "Job keys fetch failed with exception", ex);
+    logger.error("Job keys fetch failed with exception", ex);
     if (response != null && !response.isSuccessful()) {
       IOUtils.closeQuietly(response.errorBody());
     }
@@ -139,7 +139,7 @@ public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String pla
     if (response != null && !response.isSuccessful()) {
       IOUtils.closeQuietly(response.errorBody());
     }
-    Misc.error(logger, "BambooService job keys fetch failed with exception", ex);
+    logger.error("BambooService job keys fetch failed with exception", ex);
   }
   return null;
 }
@@ -174,7 +174,7 @@ public Map<String, String> getPlanKeys(BambooConfig bambooConfig) {
     if (response != null && !response.isSuccessful()) {
       IOUtils.closeQuietly(response.errorBody());
     }
-    Misc.error(logger, "Job keys fetch failed with exception", ex);
+    logger.error("Job keys fetch failed with exception", ex);
     throw new WingsException(
         ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching project plans from bamboo server", ex);
   }
@@ -213,7 +213,7 @@ public List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, i
     if (response != null && !response.isSuccessful()) {
       IOUtils.closeQuietly(response.errorBody());
     }
-    Misc.error(logger, "BambooService job keys fetch failed with exception", ex);
+    logger.error("BambooService job keys fetch failed with exception", ex);
     throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from bamboo server", ex);
   }
   return buildDetailsList;
@@ -335,7 +335,7 @@ public Map<String, String> getBuildArtifactsUrlMap(BambooConfig bambooConfig, St
       });
     }
   } catch (IOException ex) {
-    Misc.error(logger, "Download artifact failed with exception", ex);
+    logger.error("Download artifact failed with exception", ex);
   }
   return artifactPathMap;
 }

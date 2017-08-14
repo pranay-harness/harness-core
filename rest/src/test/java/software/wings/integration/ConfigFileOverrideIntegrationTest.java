@@ -37,6 +37,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -208,7 +209,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
       appConfigFile.setTargetToAllEnv(true);
     }
     FileInputStream fileInputStream = new FileInputStream(createRandomFile());
-    configService.save(appConfigFile, fileInputStream);
+    configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
     log().info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
         entityId);

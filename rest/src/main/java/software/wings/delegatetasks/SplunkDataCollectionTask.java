@@ -178,7 +178,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
         logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
-        Misc.error(logger, "error fetching splunk logs", e);
+        logger.error("error fetching splunk logs", e);
       }
     }
   }

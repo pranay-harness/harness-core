@@ -130,7 +130,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return isSuccessful(response);
     } catch (IOException e) {
-      Misc.error(logger, "Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
+      logger.error("Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
     }
   }
@@ -164,7 +164,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
       }
     } catch (IOException e) {
-      Misc.warn(logger, "Exception occurred while fetching token", e);
+      logger.warn("Exception occurred while fetching token", e);
     }
     return null;
   }

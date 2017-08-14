@@ -69,6 +69,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
@@ -209,9 +210,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       clonedConfigFile.setEntityId(savedCloneService.getUuid());
 
       try {
-        configService.save(clonedConfigFile, new FileInputStream(file));
+        configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
       } catch (FileNotFoundException e) {
-        Misc.error(logger, "Error in cloning config file " + originalConfigFile.toString(), e);
+        logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
         // Ignore and continue adding more files
       }
     });
@@ -543,7 +544,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     try {
       return serviceCommand.getCommand().getGraph().isLinear();
     } catch (Exception ex) {
-      Misc.error(logger, "Exception in validating command graph " + serviceCommand.getCommand(), ex);
+      logger.error("Exception in validating command graph " + serviceCommand.getCommand(), ex);
       return false;
     }
   }

@@ -1,5 +1,17 @@
 package software.wings.security.encryption;
 
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+
+import software.wings.exception.WingsException;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -36,5 +48,36 @@ public class EncryptionUtils {
     Arrays.fill(charBuffer.array(), '\u0000');
     Arrays.fill(byteBuffer.array(), (byte) 0);
     return bytes;
+  }
+
+  public static InputStream encrypt(InputStream content, String containerId) {
+    try {
+      SimpleEncryption encryption = new SimpleEncryption(containerId);
+      return new ByteArrayInputStream(encryption.encrypt(ByteStreams.toByteArray(content)));
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  public static File decrypt(File file, String containerId) {
+    try {
+      SimpleEncryption encryption = new SimpleEncryption(containerId);
+      byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
+      Files.write(outputBytes, file);
+      return file;
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  public static void decryptToStream(File file, String containerId, OutputStream output) {
+    try {
+      SimpleEncryption encryption = new SimpleEncryption(containerId);
+      byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
+      output.write(outputBytes, 0, outputBytes.length);
+      output.flush();
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
   }
 }

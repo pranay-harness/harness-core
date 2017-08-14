@@ -75,6 +75,7 @@ import com.amazonaws.services.ecr.model.ListImagesResult;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
+import com.amazonaws.services.ecs.model.ClientException;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateClusterResult;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
@@ -408,7 +409,7 @@ public class AwsHelperService {
       client.close();
       return true;
     } catch (IOException e) {
-      Misc.error(logger, e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       e.printStackTrace();
       return false;
     } finally {
@@ -425,16 +426,21 @@ public class AwsHelperService {
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    Misc.error(logger, "AWS API call exception", amazonServiceException);
+    logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
     } else if (amazonServiceException instanceof AmazonECSException) {
+      if (amazonServiceException instanceof ClientException) {
+        logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
+        throw amazonServiceException;
+      }
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+    } else {
+      logger.error("Unhandled aws exception");
+      throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
     }
-    logger.error("Unhandled aws exception");
-    throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
   }
 
   public ListDeploymentGroupsResult listDeploymentGroupsResult(

@@ -65,8 +65,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.utils.EcsConvention;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +77,9 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class EcsServiceSetup extends State {
-  @Attributes(title = "Service Name") private String serviceName;
+  @DefaultValue("${app.name}_${service.name}_${env.name}")
+  @Attributes(title = "ECS Service Name")
+  private String serviceName;
 
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
@@ -163,7 +165,7 @@ public class EcsServiceSetup extends State {
             .collect(toList());
 
     String taskFamily = isNotEmpty(serviceName)
-        ? serviceName
+        ? context.renderExpression(serviceName)
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
@@ -174,8 +176,7 @@ public class EcsServiceSetup extends State {
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
-    String lastEcsServiceName = lastECSService(
-        region, computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+    String lastEcsServiceName = lastECSService(region, computeProviderSetting, clusterName, taskDefinition.getFamily());
 
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -244,7 +245,7 @@ public class EcsServiceSetup extends State {
         variables.put(key, value);
       });
     } catch (Exception ex) {
-      Misc.error(logger, "Exception occurred in processing service variables ", ex);
+      logger.error("Exception occurred in processing service variables ", ex);
     }
     return variables;
   }
@@ -258,8 +259,10 @@ public class EcsServiceSetup extends State {
     }
     List<com.amazonaws.services.ecs.model.Service> serviceList =
         services.stream()
-            .filter(
-                service -> (service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0))
+            .filter(service
+                -> ((service.getServiceName().equals(serviceNamePrefix)
+                        || service.getServiceName().startsWith(serviceNamePrefix + EcsConvention.DELIMITER))
+                    && service.getDesiredCount() > 0))
             .collect(toList());
 
     com.amazonaws.services.ecs.model.Service lastECSService = null;

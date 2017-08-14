@@ -165,7 +165,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
       try {
         wingsPersistence.save(finalMetrics);
       } catch (Exception e) {
-        Misc.error(logger, "Could not save analysis report", e);
+        logger.error("Could not save analysis report", e);
         executionStatus = ExecutionStatus.FAILED;
         executionResponse.getAppDynamicsExecutionData().setErrorMsg(
             "Could not save analysis report, Please contact support");
@@ -224,7 +224,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
       return btNames;
     } catch (Exception e) {
-      Misc.error(logger, "error fetching Appdynamics BTs", e);
+      logger.error("error fetching Appdynamics BTs", e);
       throw new WingsException("error fetching Appdynamics BTs", e);
     }
   }

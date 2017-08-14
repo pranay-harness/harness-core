@@ -1114,7 +1114,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         UpdateResults updated = wingsPersistence.update(query, updateOps);
         logger.info("Updated : {} row", updated.getWriteResult().getN());
       } catch (java.lang.Exception e) {
-        Misc.error(logger, "Error in breakdown retrieval", e);
+        logger.error("Error in breakdown retrieval", e);
       }
     }
   }

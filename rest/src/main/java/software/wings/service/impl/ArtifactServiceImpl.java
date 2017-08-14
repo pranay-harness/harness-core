@@ -351,9 +351,8 @@ public class ArtifactServiceImpl implements ArtifactService {
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
     } catch (Exception ex) {
-      Misc.warn(logger,
-          String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
-              artifactStreamId, toBeDeletedArtifacts.size(), appId),
+      logger.warn(String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
+                      artifactStreamId, toBeDeletedArtifacts.size(), appId),
           ex);
     }
     logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {} success", artifactStreamId,
@@ -376,7 +375,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
     } catch (Exception ex) {
-      Misc.warn(logger, "Failed to purge (delete) the artifact files", ex);
+      logger.warn("Failed to purge (delete) the artifact files", ex);
     }
   }
 }

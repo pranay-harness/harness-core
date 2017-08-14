@@ -101,8 +101,8 @@ public interface ManagerClient {
       @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
 
   @GET("delegateFiles/download")
-  Call<ResponseBody> downloadFile(
-      @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
+  Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket,
+      @Query("accountId") String accountId, @Query("encrypted") boolean encrypted);
 
   @GET("delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(

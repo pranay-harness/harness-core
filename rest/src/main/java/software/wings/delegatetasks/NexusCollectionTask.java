@@ -43,7 +43,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
       return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
           (String) parameters[4], (List<String>) parameters[5], (Map<String, String>) parameters[6]);
     } catch (Exception e) {
-      Misc.error(logger, "Exception occurred while collecting artifact", e);
+      logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
@@ -78,7 +78,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
         res.addData(artifactFile);
       }
     } catch (Exception e) {
-      Misc.warn(logger, "Exception: " + e.getMessage(), e);
+      logger.warn("Exception: " + e.getMessage(), e);
       // TODO: better error handling
 
       //      if (e instanceof WingsException)

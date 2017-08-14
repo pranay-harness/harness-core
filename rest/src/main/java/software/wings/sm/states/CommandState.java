@@ -332,7 +332,7 @@ public class CommandState extends State {
                                                      .withInfrastructureMappingId(infrastructureMappingId)
                                                      .build());
     } catch (Exception e) {
-      Misc.error(logger, "Exception in command execution", e);
+      logger.error("Exception in command execution", e);
       handleCommandException(context, activityId, appId);
       updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()

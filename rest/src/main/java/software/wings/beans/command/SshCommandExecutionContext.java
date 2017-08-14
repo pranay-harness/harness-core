@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -25,6 +26,11 @@ public class SshCommandExecutionContext extends CommandExecutionContext {
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     return sshExecutor.copyGridFsFiles(evaluateVariable(destinationDirectoryPath), fileBucket, fileNamesIds);
+  }
+
+  public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
+    configFileMetaData.setDestinationDirectoryPath(evaluateVariable(configFileMetaData.getDestinationDirectoryPath()));
+    return sshExecutor.copyGridFsFiles(configFileMetaData);
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {

@@ -45,7 +45,12 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   }
 
   @Override
-  public int fetchDesiredCount() {
+  public int getInstanceCount() {
+    return 0;
+  }
+
+  @Override
+  public int fetchDesiredCount(Integer integer) {
     return 0;
   }
 

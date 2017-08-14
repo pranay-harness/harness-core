@@ -3,6 +3,9 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -19,7 +22,6 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.Builder;
 import software.wings.common.UUIDGenerator;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
@@ -105,8 +107,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ServiceTemplateElement st = new ServiceTemplateElement();
     st.setUuid(UUIDGenerator.getUuid());
     st.setName("st1");
-    st.setServiceElement(
-        ServiceElement.Builder.aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("svc2").build());
+    st.setServiceElement(aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("svc2").build());
     context.pushContextElement(st);
 
     HostElement host = new HostElement();
@@ -114,10 +115,10 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     host.setHostName("host1");
     context.pushContextElement(host);
 
-    Application app = Application.Builder.anApplication().withName("AppA").build();
+    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
-    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();
