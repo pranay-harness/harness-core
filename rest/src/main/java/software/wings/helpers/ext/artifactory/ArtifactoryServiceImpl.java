@@ -8,7 +8,7 @@ import groovyx.net.http.HttpResponseException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jfrog.artifactory.client.Artifactory;
-import org.jfrog.artifactory.client.ArtifactoryClient;
+import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
 import org.jfrog.artifactory.client.impl.ArtifactoryRequestImpl;
 import org.jfrog.artifactory.client.model.PackageType;
@@ -21,7 +21,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -324,20 +323,23 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    */
 
   private Artifactory getArtifactoryClient(ArtifactoryConfig artifactoryConfig) {
-    Artifactory artifactory = null;
     try {
+      ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
+      builder.setUrl(getBaseUrl(artifactoryConfig));
       if (StringUtils.isBlank(artifactoryConfig.getUsername())) {
-        logger.info("Username is not for artifactory config { } . Will use anonymous access.");
-        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig));
+        logger.info("Username is not for artifactory config {} . Will use anonymous access.",
+            artifactoryConfig.getArtifactoryUrl());
       } else if (artifactoryConfig.getPassword() == null
           || StringUtils.isBlank(new String(artifactoryConfig.getPassword()))) {
-        logger.info("Username is set. However no password set for artifactory config { }");
-        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig), artifactory.getUsername());
+        logger.info("Username is set. However no password set for artifactory config {}",
+            artifactoryConfig.getArtifactoryUrl());
+        builder.setUsername(artifactoryConfig.getUsername());
       } else {
-        artifactory = ArtifactoryClient.create(getBaseUrl(artifactoryConfig), artifactoryConfig.getUsername(),
-            new String(artifactoryConfig.getPassword()));
+        builder.setUsername(artifactoryConfig.getUsername());
+        builder.setPassword(new String(artifactoryConfig.getPassword()));
       }
-      return artifactory;
+      // TODO Ignore SSL issues -
+      return builder.build();
     } catch (Exception ex) {
       logger.error("Error occurred while trying to initialize artifactory", ex);
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
@@ -354,7 +356,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   public static void main(String... args) {
     String url = "https://artifactory.harness.io/artifactory";
-    // url = "http://localhost/artifactory/";
+    // url = "https://127.0.0.1:8000/";
 
     ArtifactoryServiceImpl artifactoryService = new ArtifactoryServiceImpl();
     System.out.println("Hello welcome to Artifactory");
@@ -370,8 +372,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
      Number" +  buildDetail.getNumber());
      }*/
 
-    // Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
-    // System.out.println("Repositories" + repositories);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
+    System.out.println("Repositories" + repositories);
 
     // List<String> images = artifactoryService.listDockerImages(artifactoryConfig, "docker");
     // images.forEach(s -> System.out.println(s));
