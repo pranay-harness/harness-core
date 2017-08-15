@@ -24,13 +24,30 @@ class SplunkIntelOptimized(object):
         self.splunkDatasetNew = splunk_dataset_new
         self._options = _options
 
+    def create_feature_vector(self, texts, min_df=1, max_df=1.0):
+        processed = False
+        while not processed:
+            try:
+                combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
+                combined_tfidf_matrix = combined_vectorizer.fit_transform(texts)
+                logging.info("Finish create combined dist")
+                processed = True
+            except ValueError:
+                if max_df == 1.0:
+                    raise
+                max_df = 1.0
+        if combined_tfidf_matrix is None or combined_tfidf_matrix is None:
+            logger.error("Unable to vectorize texts for min_df = " + str(min_df) + " max_df = " + str(max_df))
+            sys.exit(-1)
+        return combined_vectorizer, combined_tfidf_matrix
+
     # TODO run in parallel
     def set_xy(self):
         logging.info("Create combined dist")
         min_df = 1
         max_df = 0.99 if len(self.splunkDatasetNew.get_events_for_xy()) > 1 else 1.0
-        combined_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
-        combined_tfidf_matrix = combined_vectorizer.fit_transform(self.splunkDatasetNew.get_events_for_xy())
+        combined_vectorizer, combined_tfidf_matrix = self.create_feature_vector(
+            self.splunkDatasetNew.get_events_for_xy(), min_df, max_df)
 
         logging.info("Finish create combined dist")
 
@@ -47,9 +64,8 @@ class SplunkIntelOptimized(object):
             min_df = 1
             max_df = 0.99 if len(unknown_anomalies_text) > 1 else 1.0
 
-            # TODO 0.99 can throw error if all events are the same. How to handle this ?
-            anom_vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
-            tfidf_feature_matrix_anom = anom_vectorizer.fit_transform(np.array(unknown_anomalies_text))
+            anom_vectorizer, tfidf_feature_matrix_anom = self.create_feature_vector(np.array(unknown_anomalies_text),
+                                                                                    min_df, max_df)
 
             anom_kmeans = KmeansCluster(tfidf_feature_matrix_anom, self._options.sim_threshold)
             anom_kmeans.cluster_cosine_threshold()
@@ -74,11 +90,10 @@ class SplunkIntelOptimized(object):
         # TODO Can min_df be set higher or max_df set lower
         min_df = 1
         max_df = 0.99 if len(self.splunkDatasetNew.get_control_events_text_as_np()) > 1 else 1.0
-
-        logging.info("Start vectorization....")
         logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
-        vectorizer = TFIDFVectorizer(Tokenizer.default_tokenizer, min_df, max_df)
-        tfidf_feature_matrix = vectorizer.fit_transform(self.splunkDatasetNew.get_control_events_text_as_np())
+        logging.info("Start vectorization....")
+        vectorizer, tfidf_feature_matrix = self.create_feature_vector(
+            self.splunkDatasetNew.get_control_events_text_as_np(), min_df, max_df)
 
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()

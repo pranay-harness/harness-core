@@ -44,10 +44,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.inject.Inject;
@@ -337,15 +339,15 @@ public class AnalysisServiceImpl implements AnalysisService {
       unknownClusters = analysisSummary.getUnknownClusters().size();
     }
 
-    int unknownFrequency = getUnexpectedFrequency(analysisSummary);
+    int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
     if (unknownFrequency > 0) {
       riskLevel = RiskLevel.HIGH;
     }
 
     if (unknownClusters > 0 || unknownFrequency > 0) {
       final int totalAnomalies = unknownClusters + unknownFrequency;
-      analysisSummaryMsg =
-          totalAnomalies == 1 ? totalAnomalies + " anomalous event found" : totalAnomalies + " anomalous events found";
+      analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
+                                               : totalAnomalies + " anomalous clusters found";
     }
 
     analysisSummary.setRiskLevel(riskLevel);
@@ -424,11 +426,28 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (analysisSummary.getTestClusters() == null) {
       return unexpectedFrequency;
     }
-
     for (LogMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
       for (Entry<String, LogMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
-        if (hostEntry.getValue().isUnexpectedFreq()) {
+        if (!hostEntry.getValue().isUnexpectedFreq()) {
           unexpectedFrequency++;
+        }
+      }
+    }
+
+    return unexpectedFrequency;
+  }
+
+  private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
+    int unexpectedFrequency = 0;
+    if (testClusters == null) {
+      return unexpectedFrequency;
+    }
+    for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
+      for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
+        final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
+        if (analysisCluster.isUnexpected_freq()) {
+          unexpectedFrequency++;
+          break;
         }
       }
     }
