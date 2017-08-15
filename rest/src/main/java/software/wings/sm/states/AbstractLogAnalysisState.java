@@ -78,7 +78,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     Set<String> lastExecutionNodes = getLastExecutionNodes(context);
-    boolean isBaseLineCollectionData = false;
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
@@ -86,7 +85,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             "Skipping analysis due to lack of baseline data (First time deployment).");
       }
 
-      isBaseLineCollectionData = true;
       getLogger().warn(
           "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
     }
@@ -121,17 +119,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                              .withLogAnalysisExecutionData(executionData)
                                              .withExecutionStatus(ExecutionStatus.SUCCESS)
                                              .build();
-    pythonExecutorService = createPythonExecutorService(context, response, isBaseLineCollectionData);
-    return isBaseLineCollectionData
-        ? generateAnalysisResponse(context, ExecutionStatus.SUCCESS, getAnalysisServerConfigId(),
-              "Skipping analysis due to lack of baseline data (First time deployment).")
-        : anExecutionResponse()
-              .withAsync(true)
-              .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-              .withExecutionStatus(ExecutionStatus.RUNNING)
-              .withErrorMessage("Log Verification running")
-              .withStateExecutionData(executionData)
-              .build();
+    pythonExecutorService = createPythonExecutorService(context, response);
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
+        .withExecutionStatus(ExecutionStatus.RUNNING)
+        .withErrorMessage("Log Verification running")
+        .withStateExecutionData(executionData)
+        .build();
   }
 
   private void shutDownGenerator(LogAnalysisResponse response) {
@@ -183,12 +178,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private ScheduledExecutorService createPythonExecutorService(
-      ExecutionContext context, LogAnalysisResponse response, boolean isBaseLineCollectionData) {
+  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context, LogAnalysisResponse response) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        new LogMLAnalysisGenerator(context, response, isBaseLineCollectionData),
-        SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
+        new LogMLAnalysisGenerator(context, response), SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
@@ -246,11 +239,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
     private final Set<String> queries;
-    private final boolean isBaseLineCollectionData;
     private int logAnalysisMinute = 0;
 
-    public LogMLAnalysisGenerator(
-        ExecutionContext context, LogAnalysisResponse logAnalysisResponse, boolean isBaseLineCollectionData) {
+    public LogMLAnalysisGenerator(ExecutionContext context, LogAnalysisResponse logAnalysisResponse) {
       this.context = context;
       this.logAnalysisResponse = logAnalysisResponse;
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
@@ -267,7 +258,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         this.controlNodes.removeAll(this.testNodes);
       }
       this.queries = Sets.newHashSet(query.split(","));
-      this.isBaseLineCollectionData = isBaseLineCollectionData;
     }
 
     @Override
@@ -277,9 +267,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       preProcess(context, logAnalysisMinute);
-      if (!isBaseLineCollectionData) {
-        generateAnalysis();
-      }
+      generateAnalysis();
       logAnalysisMinute++;
 
       // if no data generated till this time, generate a response
