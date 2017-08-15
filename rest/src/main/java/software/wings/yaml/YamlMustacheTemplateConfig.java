@@ -129,6 +129,14 @@ public class YamlMustacheTemplateConfig {
     */
     //---------------------------
 
+    YamlRepresenter representer = new YamlRepresenter();
+    representer.addClassTag(Config.class, new Tag("!config"));
+
+    DumperOptions dumpOpts = new DumperOptions();
+    dumpOpts.setPrettyFlow(true);
+    dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
+    dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
+
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     Config config = null;
 
@@ -138,14 +146,6 @@ public class YamlMustacheTemplateConfig {
 
         //-------
         System.out.println("************************");
-
-        YamlRepresenter representer = new YamlRepresenter();
-        representer.addClassTag(Config.class, new Tag("!config"));
-
-        DumperOptions dumpOpts = new DumperOptions();
-        dumpOpts.setPrettyFlow(true);
-        dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
-        dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
 
         Yaml yaml = new Yaml(representer, dumpOpts);
         String yamlFromConfig = yaml.dump(config);
@@ -157,6 +157,18 @@ public class YamlMustacheTemplateConfig {
         e.printStackTrace();
       }
     }
+
+    System.out.println("************************");
+
+    Config config2 = new Config();
+    ConfigFromYaml cfy2 = new ConfigFromYaml();
+    cfy2.setApplications(new YamlMustacheTemplateConfig().applications());
+    config2.setConfig(cfy2);
+
+    Yaml yaml2 = new Yaml(representer, dumpOpts);
+    String yamlFromConfig2 = yaml2.dump(config2);
+
+    System.out.println(yamlFromConfig2);
 
     System.out.println("************ Roundtrip ************");
 
