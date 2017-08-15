@@ -131,10 +131,10 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .field("host")
                                      .hasAnyOf(logRequest.getNodes());
     } else {
-      final WorkflowExecution workflowExecution =
-          getLastSuccessfulWorkflowExecution(logRequest.getApplicationId(), logRequest.getWorkflowId());
-      Preconditions.checkNotNull(
-          workflowExecution, "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
+      final String lastSuccessfulWorkflowExecutionId = getLastSuccessfulWorkflowExecutionIdWithLogs(stateType,
+          logRequest.getApplicationId(), logRequest.getServiceId(), logRequest.getQuery(), logRequest.getWorkflowId());
+      Preconditions.checkNotNull(lastSuccessfulWorkflowExecutionId,
+          "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
 
       splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
                                      .field("stateType")
@@ -144,7 +144,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .field("workflowId")
                                      .equal(logRequest.getWorkflowId())
                                      .field("workflowExecutionId")
-                                     .equal(workflowExecution.getUuid())
+                                     .equal(lastSuccessfulWorkflowExecutionId)
                                      .field("applicationId")
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
@@ -206,7 +206,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    final List<String> successfulExecutions = getSuccessfulWorkflowExecutionIds(applicationId, workflowId);
+    final List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(applicationId, workflowId);
     if (successfulExecutions.isEmpty()) {
       return false;
     }
@@ -227,27 +227,33 @@ public class AnalysisServiceImpl implements AnalysisService {
     return lastSuccessfulRecords.asList().size() > 0;
   }
 
-  private WorkflowExecution getLastSuccessfulWorkflowExecution(String appId, String workflowId) {
-    final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("workflowId", Operator.EQ, workflowId)
-                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addOrder("createdAt", OrderType.DESC)
-                                                           .withLimit("1")
-                                                           .build();
+  private String getLastSuccessfulWorkflowExecutionIdWithLogs(
+      StateType stateType, String appId, String serviceId, String query, String workflowId) {
+    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
+    for (String successfulExecution : successfulExecutions) {
+      Query<LogDataRecord> lastSuccessfulRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                                                           .field("stateType")
+                                                           .equal(stateType)
+                                                           .field("workflowId")
+                                                           .equal(workflowId)
+                                                           .field("workflowExecutionId")
+                                                           .equal(successfulExecution)
+                                                           .field("serviceId")
+                                                           .equal(serviceId)
+                                                           .field("query")
+                                                           .equal(query)
+                                                           .limit(1);
 
-    final PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
-    if (workflowExecutions.isEmpty()) {
-      logger.error("Could not get a successful workflow to find control nodes");
-      return null;
+      List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
+      if (lastSuccessfulRecords != null && lastSuccessfulRecords.size() > 0) {
+        return successfulExecution;
+      }
     }
-
-    Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
-    return workflowExecutions.get(0);
+    logger.error("Could not get a successful workflow to find control nodes");
+    return null;
   }
 
-  private List<String> getSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
+  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
     final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
