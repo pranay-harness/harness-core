@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-class YamlRepresenter extends Representer {
+public class YamlRepresenter extends Representer {
   public YamlRepresenter() {
     // this.representers.put(Dice.class, new RepresentDice());
     // this.representers.put(Application.class, new RepresentApplication());
@@ -42,8 +42,7 @@ class YamlRepresenter extends Representer {
 */
 
   @Override
-  protected NodeTuple representJavaBeanProperty(
-      Object javaBean, Property property, Object propertyValue, Tag customTag) {
+  public NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
     Class aClass = javaBean.getClass();
     Field[] fields = aClass.getDeclaredFields();
     Set<String> yamlSerializableFields = new HashSet<>();

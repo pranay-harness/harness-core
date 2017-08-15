@@ -7,7 +7,11 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -24,7 +28,9 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
+import software.wings.yaml.Config;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlRepresenter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -161,6 +167,42 @@ public class AppResource {
 
     if (app != null) {
       YamlPayload yp = new YamlPayload(app.toYaml());
+      rr.setResponseMessages(yp.getResponseMessages());
+
+      if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
+        rr.setResource(yp);
+      }
+    }
+
+    return rr;
+  }
+
+  @GET
+  @Path("/yaml-ALT/{appId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getYamlALT(@PathParam("appId") String appId,
+      @QueryParam("status") SetupStatus status, @QueryParam("overview") @DefaultValue("false") boolean overview,
+      @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
+    if (status == null) {
+      status = COMPLETE; // don't verify setup status
+    }
+
+    Application app = appService.get(appId, status, true, overviewDays);
+
+    RestResponse rr = new RestResponse<>();
+
+    if (app != null) {
+      YamlRepresenter representer = new YamlRepresenter();
+      representer.addClassTag(Config.class, new Tag("!config"));
+
+      DumperOptions dumpOpts = new DumperOptions();
+      dumpOpts.setPrettyFlow(true);
+      dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
+      dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
+
+      Yaml yaml = new Yaml(representer, dumpOpts);
+      YamlPayload yp = new YamlPayload(yaml.dump(app));
       rr.setResponseMessages(yp.getResponseMessages());
 
       if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
