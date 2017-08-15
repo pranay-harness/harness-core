@@ -9,18 +9,16 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -163,7 +161,7 @@ public class NexusServiceTest {
                                              .withHeader("Content-Type", "application/xml")));
     assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining("Expected leading");
+        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
 
   @Test
