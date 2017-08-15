@@ -1,6 +1,7 @@
 package software.wings.service.intfc.analysis;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.AnalysisComparisonStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -31,7 +32,7 @@ public interface AnalysisService {
 
   void finalizeLogCollection(String accountId, StateType stateType, String workflowExecutionId, LogRequest logRequest);
 
-  Boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel);
+  boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
@@ -44,4 +45,7 @@ public interface AnalysisService {
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
+
+  boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String applicationId,
+      String workflowId, String workflowExecutionId, String serviceId, String query);
 }

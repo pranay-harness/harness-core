@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import software.wings.AnalysisComparisonStrategy;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -121,6 +122,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
                                      .equal(logRequest.getQuery())
+                                     .field("serviceId")
+                                     .equal(logRequest.getServiceId())
                                      .field("clusterLevel")
                                      .equal(clusterLevel)
                                      .field("logCollectionMinute")
@@ -133,37 +136,15 @@ public class AnalysisServiceImpl implements AnalysisService {
       Preconditions.checkNotNull(
           workflowExecution, "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
 
-      final PageRequest<LogDataRecord> lastSuccessfulExecutionData =
-          PageRequest.Builder.aPageRequest()
-              .addFilter("stateType", Operator.EQ, stateType)
-              .addFilter("workflowId", Operator.EQ, logRequest.getWorkflowId())
-              .addFilter("workflowExecutionId", Operator.EQ, workflowExecution.getUuid())
-              .addFilter("stateExecutionId", Operator.NOT_EQ, logRequest.getStateExecutionId())
-              .addFilter("applicationId", Operator.EQ, logRequest.getApplicationId())
-              .addFilter("query", Operator.EQ, logRequest.getQuery())
-              .addFilter("logCollectionMinute", Operator.EQ, logRequest.getLogCollectionMinute())
-              .addOrder("createdAt", OrderType.DESC)
-              .withLimit("1")
-              .build();
-
-      PageResponse<LogDataRecord> lastSuccessfullRecords =
-          wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
-      Preconditions.checkState(lastSuccessfullRecords.size() == 1,
-          "Did not find expected records for given query, records found: " + lastSuccessfullRecords.size());
-
-      LogDataRecord record = lastSuccessfullRecords.get(0);
-      if (record == null) {
-        logger.error("Could not find any logs collected for minute {} for previous successful workflow {}",
-            logRequest.getLogCollectionMinute(), logRequest.getWorkflowId());
-        return Collections.emptyList();
-      }
-      logger.info("returning logs for workflowExecutionId: " + workflowExecution.getWorkflowId()
-          + " stateExecutionId: " + record.getStateExecutionId());
       splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
                                      .field("stateType")
                                      .equal(stateType)
-                                     .field("stateExecutionId")
-                                     .equal(record.getStateExecutionId())
+                                     .field("serviceId")
+                                     .equal(logRequest.getServiceId())
+                                     .field("workflowId")
+                                     .equal(logRequest.getWorkflowId())
+                                     .field("workflowExecutionId")
+                                     .equal(workflowExecution.getUuid())
                                      .field("applicationId")
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
@@ -182,7 +163,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel) {
+  public boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel) {
     Query<LogDataRecord> splunkLogDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
                                                     .field("stateType")
                                                     .equal(stateType)
@@ -219,6 +200,30 @@ public class AnalysisServiceImpl implements AnalysisService {
     return splunkLogDataRecordQuery.asList().size() > 0;
   }
 
+  @Override
+  public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType,
+      String applicationId, String workflowId, String workflowExecutionId, String serviceId, String query) {
+    if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+      return true;
+    }
+    final List<String> successfulExecutions = getSuccessfulWorkflowExecutionIds(applicationId, workflowId);
+    if (successfulExecutions.isEmpty()) {
+      return false;
+    }
+    final PageRequest<LogDataRecord> lastSuccessfulExecutionData =
+        PageRequest.Builder.aPageRequest()
+            .addFilter("stateType", Operator.EQ, stateType)
+            .addFilter("workflowId", Operator.EQ, workflowId)
+            .addFilter("workflowExecutionId", Operator.IN, successfulExecutions)
+            .addFilter("serviceId", Operator.EQ, serviceId)
+            .addFilter("query", Operator.EQ, query)
+            .withLimit("1")
+            .build();
+    PageResponse<LogDataRecord> lastSuccessfulRecords =
+        wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
+    return lastSuccessfulRecords.size() > 0;
+  }
+
   private WorkflowExecution getLastSuccessfulWorkflowExecution(String appId, String workflowId) {
     final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
@@ -237,6 +242,26 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
     return workflowExecutions.get(0);
+  }
+
+  private List<String> getSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
+    final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+                                                           .addFilter("appId", Operator.EQ, appId)
+                                                           .addFilter("workflowId", Operator.EQ, workflowId)
+                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .build();
+
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
+    final List<String> workflowExecutionIds = new ArrayList<>();
+
+    if (workflowExecutions != null) {
+      for (WorkflowExecution workflowExecution : workflowExecutions) {
+        workflowExecutionIds.add(workflowExecution.getUuid());
+      }
+    }
+    return workflowExecutionIds;
   }
 
   @Override

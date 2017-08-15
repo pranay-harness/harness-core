@@ -298,7 +298,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         try {
-          final String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
+          final boolean isBaselineCreated = analysisService.isBaselineCreated(getComparisonStrategy(), stateType,
+              applicationId, workflowId, context.getWorkflowExecutionId(), serviceId, query);
+          String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
               + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
               + "&clusterLevel=" + ClusterLevel.L2.name() + "&compareCurrent=true";
           String controlInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
@@ -307,6 +309,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           controlInputUrl = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
               ? controlInputUrl + true
               : controlInputUrl + false;
+
           final String logAnalysisSaveUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
               + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
               + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
@@ -315,18 +318,25 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           final List<String> command = new ArrayList<>();
           command.add(this.pythonScriptRoot + "/" + LOG_ML_SHELL_FILE_NAME);
           command.add("--query=" + query);
-          command.add("--control_input_url");
-          command.add(controlInputUrl);
-          command.add("--test_input_url");
-          command.add(testInputUrl);
+          if (isBaselineCreated) {
+            command.add("--control_input_url");
+            command.add(controlInputUrl);
+            command.add("--test_input_url");
+            command.add(testInputUrl);
+            command.add("--control_nodes");
+            command.addAll(controlNodes);
+            command.add("--test_nodes");
+            command.addAll(testNodes);
+          } else {
+            command.add("--control_input_url");
+            command.add(testInputUrl);
+            command.add("--control_nodes");
+            command.addAll(testNodes);
+          }
           command.add("--auth_token=" + generateAuthToken());
           command.add("--application_id=" + applicationId);
           command.add("--workflow_id=" + workflowId);
           command.add("--service_id=" + serviceId);
-          command.add("--control_nodes");
-          command.addAll(controlNodes);
-          command.add("--test_nodes");
-          command.addAll(testNodes);
           command.add("--sim_threshold");
           command.add(String.valueOf(0.9));
           command.add("--log_collection_minute");
