@@ -130,6 +130,15 @@ public abstract class State {
     return stateType;
   }
 
+  @SchemaIgnore
+  public List<TemplateExpression> getTemplateExpressions() {
+    return templateExpressions;
+  }
+
+  public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    this.templateExpressions = templateExpressions;
+  }
+
   /**
    * Sets state type.
    *

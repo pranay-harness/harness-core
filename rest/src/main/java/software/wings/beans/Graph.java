@@ -838,6 +838,7 @@ public class Graph {
       private boolean origin;
       private boolean rollback;
       private Map<String, Object> properties = new HashMap<>();
+      private List<TemplateExpression> templateExpressions;
 
       private Builder() {}
 
@@ -984,12 +985,27 @@ public class Graph {
       }
 
       /**
+       * With template expressions
+       */
+      public Builder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+        this.templateExpressions = templateExpressions;
+        return this;
+      }
+
+      /**
        * But.
        *
        * @return the builder
        */
       public Builder but() {
-        return aNode().withId(id).withName(name).withType(type).withX(x).withY(y).withProperties(properties);
+        return aNode()
+            .withId(id)
+            .withName(name)
+            .withType(type)
+            .withX(x)
+            .withY(y)
+            .withProperties(properties)
+            .withTemplateExpressions(templateExpressions);
       }
 
       /**
@@ -1010,6 +1026,7 @@ public class Graph {
         node.setProperties(properties);
         node.setOrigin(origin);
         node.setRollback(rollback);
+        node.setTemplateExpressions(templateExpressions);
         return node;
       }
     }

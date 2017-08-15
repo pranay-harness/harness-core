@@ -160,6 +160,7 @@ public class WorkflowPhase implements UuidAware {
   public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
     this.templateExpressions = templateExpressions;
   }
+
   public Node generatePhaseNode() {
     return aNode()
         .withId(uuid)
@@ -173,6 +174,7 @@ public class WorkflowPhase implements UuidAware {
         .addProperty("infraMappingId", infraMappingId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .addProperty("phaseNameForRollback", phaseNameForRollback)
+        .withTemplateExpressions(templateExpressions)
         .build();
   }
 

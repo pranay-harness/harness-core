@@ -234,6 +234,8 @@ public class StateMachine extends Base {
       properties.put("id", node.getId());
       state.setRollback(node.getRollback());
 
+      state.setTemplateExpressions(node.getTemplateExpressions());
+
       // populate properties
       MapperUtils.mapObject(properties, state);
 
