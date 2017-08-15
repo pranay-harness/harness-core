@@ -50,6 +50,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     final String workflowId = "some-workflow";
     final String query = "some-query";
     final String applicationId = "some-application";
+    final String serviceId = "some-service";
     final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
     final Set<String> hosts = new HashSet<>();
 
@@ -87,6 +88,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setClusterLevel(ClusterLevel.L0);
             logDataRecord.setLogCollectionMinute(logCollectionMinute);
             logDataRecord.setCreatedAt(timeStamp);
+            logDataRecord.setServiceId(serviceId);
 
             wingsPersistence.save(logDataRecord);
 
@@ -103,7 +105,8 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/splunk/get-logs?accountId=" + accountId + "&compareCurrent=true");
-      final LogRequest logRequest = new LogRequest(query, applicationId, "se2", workflowId, hosts, collectionMinute);
+      final LogRequest logRequest =
+          new LogRequest(query, applicationId, "se2", workflowId, serviceId, hosts, collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
           Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       Assert.assertEquals(
@@ -122,6 +125,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     final String workflowId = "some-workflow";
     final String query = "some-query";
     final String applicationId = "some-application";
+    final String serviceId = "some-service";
     final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
 
     WorkflowExecution workflowExecution = aWorkflowExecution()
@@ -157,6 +161,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
             logDataRecord.setClusterLevel(ClusterLevel.L0);
             logDataRecord.setLogCollectionMinute(logCollectionMinute);
             logDataRecord.setCreatedAt(timeStamp);
+            logDataRecord.setServiceId(serviceId);
             wingsPersistence.save(logDataRecord);
 
             if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
@@ -173,7 +178,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
       WebTarget target = client.target(API_BASE + "/splunk/get-logs?accountId=" + accountId + "&compareCurrent=false");
       final LogRequest logRequest = new LogRequest(query, applicationId, UUID.randomUUID().toString(), workflowId,
-          Collections.singleton(UUID.randomUUID().toString()), collectionMinute);
+          serviceId, Collections.singleton(UUID.randomUUID().toString()), collectionMinute);
       RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
           Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       Assert.assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),

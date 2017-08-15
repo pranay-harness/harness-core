@@ -20,6 +20,7 @@ public class LogRequest {
   private String applicationId;
   private String stateExecutionId;
   private String workflowId;
+  private String serviceId;
   private Set<String> nodes;
   private int logCollectionMinute;
 }

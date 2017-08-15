@@ -151,6 +151,11 @@ public abstract class AbstractAnalysisState extends State {
     return rv;
   }
 
+  protected String getPhaseServiceId(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    return phaseElement.getServiceElement().getUuid();
+  }
+
   protected String getWorkflowId(ExecutionContext context) {
     final WorkflowExecution executionDetails =
         workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());

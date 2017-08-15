@@ -59,8 +59,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final ElkDataCollectionInfo dataCollectionInfo =
         new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(), queries,
-            logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+            getPhaseServiceId(context), queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
@@ -105,8 +105,9 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     }
 
     final String accountId = appService.get(context.getAppId()).getAccountId();
+    String serviceId = getPhaseServiceId(context);
     LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), allNodes, logAnalysisMinute);
+        getWorkflowId(context), serviceId, allNodes, logAnalysisMinute);
     analysisService.finalizeLogCollection(accountId, StateType.ELK, context.getWorkflowExecutionId(), logRequest);
   }
 }

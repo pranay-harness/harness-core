@@ -37,6 +37,8 @@ public class LogDataRecord extends Base {
 
   @NotEmpty @Indexed private String workflowExecutionId;
 
+  @NotEmpty @Indexed private String serviceId;
+
   @NotEmpty @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private String query;
@@ -54,8 +56,8 @@ public class LogDataRecord extends Base {
   @Indexed private int logCollectionMinute;
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
-      String stateExecutionId, String workflowId, String workflowExecutionId, ClusterLevel clusterLevel,
-      List<LogElement> logElements) {
+      String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
+      ClusterLevel clusterLevel, List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
       final LogDataRecord record = new LogDataRecord();
@@ -72,6 +74,7 @@ public class LogDataRecord extends Base {
       record.setLogMessage(logElement.getLogMessage());
       record.setLogMD5Hash(DigestUtils.md5Hex(logElement.getLogMessage()));
       record.setClusterLevel(clusterLevel);
+      record.setServiceId(serviceId);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
 
       records.add(record);

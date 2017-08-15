@@ -1,0 +1,45 @@
+package software.wings.service.intfc;
+
+import software.wings.beans.stats.dashboard.InstanceStatsByService;
+import software.wings.beans.stats.dashboard.InstanceSummaryStats;
+import software.wings.beans.stats.dashboard.service.ServiceInstanceDashboard;
+
+import java.util.List;
+
+/**
+ * Serves all the service and infrastructure dashboard related statistics
+ * @author rktummala on 08/13/17
+ */
+public interface DashboardStatisticsService {
+  /**
+   * Gets the total instance summary stats for the given apps.
+   * The results are grouped by the given entity types.
+   * @param appIds application ids
+   * @param groupByEntityTypes the entity types user wants to group by
+   * @return instance summary statistics
+   */
+  InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes);
+
+  /**
+   * Gets the total instance summary stats for the given service.
+   * The results are grouped by the given entity types.
+   * @param serviceId service id
+   * @param groupByEntityTypes the entity types user wants to group by
+   * @return instance summary statistics
+   */
+  InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes);
+
+  /**
+   * Gets the total instance stats for the given apps.
+   * @param appIds application ids
+   * @return instance summary statistics
+   */
+  List<InstanceStatsByService> getAppInstanceStats(List<String> appIds);
+
+  /**
+   * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.
+   * @param serviceId service id
+   * @return service dashboard with cloud instance info
+   */
+  ServiceInstanceDashboard getServiceInstanceDashboard(String serviceId);
+}

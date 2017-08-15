@@ -59,8 +59,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), queries, logCollectionStartTimeStamp,
-        Integer.parseInt(timeDuration), hosts);
+        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
+        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

@@ -185,6 +185,7 @@ def parse(cli_args):
     # unwanted parameters. only here since the java api needs it
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
+    parser.add_argument("--service_id", required=True)
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--query", required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
@@ -207,6 +208,7 @@ def load_from_wings_server(options):
                                                            options.application_id,
                                                            options.workflow_id,
                                                            options.state_execution_id,
+                                                           options.service_id,
                                                            options.log_collection_minute,
                                                            options.nodes,
                                                            options.query)['resource']

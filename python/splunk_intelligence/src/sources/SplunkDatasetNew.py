@@ -90,6 +90,7 @@ class SplunkDatasetNew(object):
                                                                     options.application_id,
                                                                     options.workflow_id,
                                                                     options.state_execution_id,
+                                                                    options.service_id,
                                                                     options.log_collection_minute,
                                                                     options.control_nodes,
                                                                     options.query)
@@ -101,6 +102,7 @@ class SplunkDatasetNew(object):
                                                                  options.application_id,
                                                                  options.workflow_id,
                                                                  options.state_execution_id,
+                                                                 options.service_id,
                                                                  options.log_collection_minute,
                                                                  options.test_nodes,
                                                                  options.query)
@@ -114,8 +116,10 @@ class SplunkDatasetNew(object):
         self.new_data = True
         for event in control_events:
             self.add_event(event, 'control')
-        for event in test_events:
-            self.add_event(event, 'test')
+
+        if test_events is not None:
+            for event in test_events:
+                self.add_event(event, 'test')
 
         prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
                                                                        options.auth_token,
