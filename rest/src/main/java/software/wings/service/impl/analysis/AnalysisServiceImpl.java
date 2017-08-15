@@ -44,12 +44,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.inject.Inject;
@@ -419,22 +417,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     return count;
-  }
-
-  private int getUnexpectedFrequency(LogMLAnalysisSummary analysisSummary) {
-    int unexpectedFrequency = 0;
-    if (analysisSummary.getTestClusters() == null) {
-      return unexpectedFrequency;
-    }
-    for (LogMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
-      for (Entry<String, LogMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
-        if (!hostEntry.getValue().isUnexpectedFreq()) {
-          unexpectedFrequency++;
-        }
-      }
-    }
-
-    return unexpectedFrequency;
   }
 
   private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
