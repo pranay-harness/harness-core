@@ -95,7 +95,9 @@ class SplunkDatasetNew(object):
                                                                     options.control_nodes,
                                                                     options.query)
 
-        test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
+        test_events = None
+        if options.test_nodes and options.test_input_url:
+            test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
                                                                  options.auth_token,
                                                                  options.application_id,
                                                                  options.workflow_id,
@@ -104,6 +106,8 @@ class SplunkDatasetNew(object):
                                                                  options.log_collection_minute,
                                                                  options.test_nodes,
                                                                  options.query)
+        else:
+            logger.info("No test url or nodes provided. This is a baseline run")
 
         if control_events is None and test_events is None:
             logger.error("No new control events or test events")

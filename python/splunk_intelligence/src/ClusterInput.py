@@ -260,16 +260,17 @@ def create_response(raw_events, clusters, counts, level):
             if event.get('host') not in clusters_dict:
                 clusters_dict[event.get('host')] = {}
             if event.get('clusterLabel') not in clusters_dict[event.get('host')]:
-                event['clusterLabel'] = clusters[i]
-                results.append(dict(query=event.get('query'),
+                clusters_dict[event.get('host')][event.get('clusterLabel')] = clusters[i]
+                i = i + 1
+
+            event['clusterLabel'] = clusters_dict[event.get('host')][event.get('clusterLabel')]
+            results.append(dict(query=event.get('query'),
                                     clusterLabel=event.get('clusterLabel'),
                                     host=event.get('host'),
                                     timeStamp=event.get('timeStamp'),
                                     count=event.get('count'),
                                     logMessage=event.get('logMessage'),
                                     logCollectionMinute=event.get('logCollectionMinute')))
-                clusters_dict[event.get('host')][event.get('clusterLabel')] = clusters[i]
-                i = i + 1
         logger.info('# of L2 returned = ' + str(len(results)))
         return results
 

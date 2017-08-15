@@ -175,14 +175,14 @@ class SplunkIntelOptimized(object):
 def parse(cli_args):
     parser = argparse.ArgumentParser()
     parser.add_argument("--control_input_url", required=True)
-    parser.add_argument("--test_input_url", required=True)
+    parser.add_argument("--test_input_url", required=False)
     parser.add_argument("--auth_token", required=True)
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
     parser.add_argument("--service_id", required=True)
     parser.add_argument("--sim_threshold", type=float, required=True)
     parser.add_argument("--control_nodes", nargs='+', type=str, required=True)
-    parser.add_argument("--test_nodes", nargs='+', type=str, required=True)
+    parser.add_argument("--test_nodes", nargs='+', type=str, required=False)
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--log_analysis_save_url", required=True)
     parser.add_argument("--log_analysis_get_url", required=True)
@@ -260,7 +260,7 @@ def main(args):
     options = parse(args[1:])
     logger.info(options)
 
-    #run_debug_prev_run(options)
+    run_debug_prev_run(options)
 
     splunk_dataset = SplunkDatasetNew()
 

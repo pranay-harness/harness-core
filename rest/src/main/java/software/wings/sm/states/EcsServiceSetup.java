@@ -24,7 +24,6 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
-import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -65,8 +64,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.EcsConvention;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,17 +76,10 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class EcsServiceSetup extends State {
-  @DefaultValue("${app.name}_${service.name}_${env.name}")
-  @Attributes(title = "ECS Service Name")
-  private String serviceName;
-
-  @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
-
-  @Attributes(title = "Elastic Load Balancer") private String loadBalancerName;
-
-  @Attributes(title = "Target Group") private String targetGroupArn;
-
-  @Attributes(title = "IAM Role", description = "Role with AmazonEC2ContainerServiceRole policy attached.")
+  private String ecsServiceName;
+  private boolean useLoadBalancer;
+  private String loadBalancerName;
+  private String targetGroupArn;
   private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
@@ -164,8 +156,8 @@ public class EcsServiceSetup extends State {
                 -> createContainerDefinition(imageName, containerName, containerDefinition, serviceVariables))
             .collect(toList());
 
-    String taskFamily = isNotEmpty(serviceName)
-        ? context.renderExpression(serviceName)
+    String taskFamily = isNotEmpty(ecsServiceName)
+        ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
@@ -472,12 +464,12 @@ public class EcsServiceSetup extends State {
     this.useLoadBalancer = useLoadBalancer;
   }
 
-  public String getServiceName() {
-    return serviceName;
+  public String getEcsServiceName() {
+    return ecsServiceName;
   }
 
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
+  public void setEcsServiceName(String ecsServiceName) {
+    this.ecsServiceName = ecsServiceName;
   }
 
   public static final class EcsServiceSetupBuilder {
@@ -568,7 +560,7 @@ public class EcsServiceSetup extends State {
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
-      ecsServiceSetup.setServiceName(serviceName);
+      ecsServiceSetup.setEcsServiceName(serviceName);
       ecsServiceSetup.setUseLoadBalancer(useLoadBalancer);
       ecsServiceSetup.setLoadBalancerName(loadBalancerName);
       ecsServiceSetup.setTargetGroupArn(targetGroupArn);
