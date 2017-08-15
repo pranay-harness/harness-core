@@ -116,8 +116,10 @@ class SplunkDatasetNew(object):
         self.new_data = True
         for event in control_events:
             self.add_event(event, 'control')
-        for event in test_events:
-            self.add_event(event, 'test')
+
+        if test_events is not None:
+            for event in test_events:
+                self.add_event(event, 'test')
 
         prev_state = SplunkHarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
                                                                        options.auth_token,

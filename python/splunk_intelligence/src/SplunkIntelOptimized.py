@@ -260,7 +260,7 @@ def main(args):
     options = parse(args[1:])
     logger.info(options)
 
-    run_debug_prev_run(options)
+    #run_debug_prev_run(options)
 
     splunk_dataset = SplunkDatasetNew()
 

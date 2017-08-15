@@ -210,18 +210,21 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (successfulExecutions.isEmpty()) {
       return false;
     }
-    final PageRequest<LogDataRecord> lastSuccessfulExecutionData =
-        PageRequest.Builder.aPageRequest()
-            .addFilter("stateType", Operator.EQ, stateType)
-            .addFilter("workflowId", Operator.EQ, workflowId)
-            .addFilter("workflowExecutionId", Operator.IN, successfulExecutions)
-            .addFilter("serviceId", Operator.EQ, serviceId)
-            .addFilter("query", Operator.EQ, query)
-            .withLimit("1")
-            .build();
-    PageResponse<LogDataRecord> lastSuccessfulRecords =
-        wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
-    return lastSuccessfulRecords.size() > 0;
+
+    Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
+                                                     .field("stateType")
+                                                     .equal(stateType)
+                                                     .field("workflowId")
+                                                     .equal(workflowId)
+                                                     .field("workflowExecutionId")
+                                                     .hasAnyOf(successfulExecutions)
+                                                     .field("serviceId")
+                                                     .equal(serviceId)
+                                                     .field("query")
+                                                     .equal(query)
+                                                     .limit(1);
+
+    return lastSuccessfulRecords.asList().size() > 0;
   }
 
   private WorkflowExecution getLastSuccessfulWorkflowExecution(String appId, String workflowId) {
