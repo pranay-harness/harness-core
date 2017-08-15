@@ -179,6 +179,7 @@ def parse(cli_args):
     parser.add_argument("--auth_token", required=True)
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
+    parser.add_argument("--service_id", required=True)
     parser.add_argument("--sim_threshold", type=float, required=True)
     parser.add_argument("--control_nodes", nargs='+', type=str, required=True)
     parser.add_argument("--test_nodes", nargs='+', type=str, required=True)

@@ -75,11 +75,11 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public Boolean saveLogData(StateType stateType, String accountId, String appId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, ClusterLevel clusterLevel, List<LogElement> logData)
-      throws IOException {
+      String workflowId, String workflowExecutionId, String serviceId, ClusterLevel clusterLevel,
+      List<LogElement> logData) throws IOException {
     logger.info("inserting " + logData.size() + " pieces of log data");
     List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(
-        stateType, appId, stateExecutionId, workflowId, workflowExecutionId, clusterLevel, logData);
+        stateType, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, clusterLevel, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
     logger.info("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
 
@@ -87,7 +87,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       switch (stateType) {
         case ELK:
           final LogElement log = logData.get(0);
-          final LogRequest logRequest = new LogRequest(log.getQuery(), appId, stateExecutionId, workflowId,
+          final LogRequest logRequest = new LogRequest(log.getQuery(), appId, stateExecutionId, workflowId, serviceId,
               Collections.singleton(log.getHost()), log.getLogCollectionMinute());
           firstLevelClusteringService.submit(new LogMessageClusterTask(
               stateType, accountId, workflowExecutionId, ClusterLevel.L0, ClusterLevel.L1, logRequest));
@@ -439,9 +439,10 @@ public class AnalysisServiceImpl implements AnalysisService {
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
             + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
         String clusteredLogSaveUrl = this.serverUrl + "/api/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
-            + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId + "&stateExecutionId="
-            + logRequest.getStateExecutionId() + "&workflowId=" + logRequest.getWorkflowId() + "&workflowExecutionId="
-            + workflowExecutionId + "&appId=" + logRequest.getApplicationId() + "&clusterLevel=" + toLevel.name();
+            + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId
+            + "&stateExecutionId=" + logRequest.getStateExecutionId() + "&workflowId=" + logRequest.getWorkflowId()
+            + "&workflowExecutionId=" + workflowExecutionId + "&serviceId=" + logRequest.getServiceId()
+            + "&appId=" + logRequest.getApplicationId() + "&clusterLevel=" + toLevel.name();
 
         final List<String> command = new ArrayList<>();
         command.add(this.pythonScriptRoot + "/" + CLUSTER_ML_SHELL_FILE_NAME);
@@ -454,6 +455,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         command.add("--application_id=" + logRequest.getApplicationId());
         command.add("--workflow_id=" + logRequest.getWorkflowId());
         command.add("--state_execution_id=" + logRequest.getStateExecutionId());
+        command.add("--service_id=" + logRequest.getServiceId());
         command.add("--nodes");
         command.addAll(logRequest.getNodes());
         command.add("--sim_threshold");

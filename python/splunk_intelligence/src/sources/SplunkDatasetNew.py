@@ -90,6 +90,7 @@ class SplunkDatasetNew(object):
                                                                     options.application_id,
                                                                     options.workflow_id,
                                                                     options.state_execution_id,
+                                                                    options.service_id,
                                                                     options.log_collection_minute,
                                                                     options.control_nodes,
                                                                     options.query)
@@ -99,6 +100,7 @@ class SplunkDatasetNew(object):
                                                                  options.application_id,
                                                                  options.workflow_id,
                                                                  options.state_execution_id,
+                                                                 options.service_id,
                                                                  options.log_collection_minute,
                                                                  options.test_nodes,
                                                                  options.query)

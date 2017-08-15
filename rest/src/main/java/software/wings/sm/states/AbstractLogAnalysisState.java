@@ -236,6 +236,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     private final String accountId;
     private final String applicationId;
     private final String workflowId;
+    private final String serviceId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
     private final Set<String> queries;
@@ -252,6 +253,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       this.applicationId = context.getAppId();
       this.accountId = AbstractLogAnalysisState.this.appService.get(this.applicationId).getAccountId();
       this.workflowId = getWorkflowId(context);
+      this.serviceId = getPhaseServiceId(context);
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
@@ -320,6 +322,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           command.add("--auth_token=" + generateAuthToken());
           command.add("--application_id=" + applicationId);
           command.add("--workflow_id=" + workflowId);
+          command.add("--service_id=" + serviceId);
           command.add("--control_nodes");
           command.addAll(controlNodes);
           command.add("--test_nodes");

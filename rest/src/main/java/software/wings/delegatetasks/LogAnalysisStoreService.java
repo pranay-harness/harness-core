@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface LogAnalysisStoreService {
   void save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, List<LogElement> splunkLogs) throws IOException;
+      String workflowExecutionId, String serviceId, List<LogElement> splunkLogs) throws IOException;
 }

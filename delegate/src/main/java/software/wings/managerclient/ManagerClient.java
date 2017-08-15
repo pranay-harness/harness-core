@@ -87,14 +87,14 @@ public interface ManagerClient {
   @POST(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
-      @Query("workflowExecutionId") String workflowExecutionId, @Query("clusterLevel") ClusterLevel clusterLevel,
-      @Body List<LogElement> metricData);
+      @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
 
   @POST(LogAnalysisResource.ELK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveElkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
-      @Query("workflowExecutionId") String workflowExecutionId, @Query("clusterLevel") ClusterLevel clusterLevel,
-      @Body List<LogElement> metricData);
+      @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
