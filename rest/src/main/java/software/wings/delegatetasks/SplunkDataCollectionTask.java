@@ -185,7 +185,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
           resultsReader.close();
           logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
               dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
+              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+              dataCollectionInfo.getServiceId(), logElements);
           logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);

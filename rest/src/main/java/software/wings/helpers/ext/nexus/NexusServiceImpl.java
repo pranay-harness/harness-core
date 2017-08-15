@@ -73,6 +73,8 @@ public class NexusServiceImpl implements NexusService {
           }
           logger.info("Retrieving repositories success");
           return repos;
+        } catch (WingsException e) {
+          throw e;
         } catch (Exception e) {
           logger.error(
               "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
@@ -480,9 +482,9 @@ public class NexusServiceImpl implements NexusService {
   }
 
   public static void main(String... args) throws Exception {
-    String url = "https://127.0.0.1:8000"; //"https://nexus.wings.software/";
+    String url = "https://nexus.wings.software/"; //"https://127.0.0.1:8000"; //;
     NexusConfig nexusConfig =
-        aNexusConfig().withNexusUrl(url).withUsername("admin").withPassword("wings123!".toCharArray()).build();
+        aNexusConfig().withNexusUrl(url).withUsername("admin").withPassword("wings123ss!".toCharArray()).build();
 
     NexusServiceImpl nexusService = new NexusServiceImpl();
     nexusService.getRepositories(nexusConfig);

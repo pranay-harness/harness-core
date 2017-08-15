@@ -151,7 +151,8 @@ public class ElkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataC
 
             logAnalysisStoreService.save(StateType.ELK, dataCollectionInfo.getAccountId(),
                 dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
+                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                dataCollectionInfo.getServiceId(), logElements);
             logger.info("sent elk search records to server. Num of events: " + logElements.size()
                 + " application: " + dataCollectionInfo.getApplicationId() + " stateExecutionId: "
                 + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute + " host: " + hostName);
