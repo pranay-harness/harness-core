@@ -103,7 +103,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
     }
 
     return (AwsConfig) computeProviderSetting.getValue();
