@@ -41,6 +41,8 @@ public class WorkflowPhase implements UuidAware {
   private boolean valid;
   private String validationMessage;
 
+  private List<TemplateExpression> templateExpressions;
+
   @Embedded private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
@@ -143,6 +145,21 @@ public class WorkflowPhase implements UuidAware {
     this.validationMessage = validationMessage;
   }
 
+  /**
+   * Get template expressions
+   * @return
+   */
+  public List<TemplateExpression> getTemplateExpressions() {
+    return templateExpressions;
+  }
+
+  /**
+   * Set template expressions
+   * @param templateExpressions
+   */
+  public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    this.templateExpressions = templateExpressions;
+  }
   public Node generatePhaseNode() {
     return aNode()
         .withId(uuid)
