@@ -111,6 +111,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     this.commandName = commandName;
   }
 
+  @Override
   public int getInstanceCount() {
     return instanceCount;
   }
