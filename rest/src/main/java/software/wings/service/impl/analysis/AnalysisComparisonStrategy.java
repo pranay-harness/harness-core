@@ -1,4 +1,4 @@
-package software.wings;
+package software.wings.service.impl.analysis;
 
 /**
  * Created by rsingh on 7/25/17.

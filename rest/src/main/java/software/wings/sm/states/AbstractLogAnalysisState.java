@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
@@ -52,7 +52,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
 
-  @Attributes(required = true, title = "Query")
+  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
   @DefaultValue("*exception*")
   public String getQuery() {
     return query;
