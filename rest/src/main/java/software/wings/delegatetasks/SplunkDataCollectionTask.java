@@ -39,7 +39,7 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
-  public static final int DELAY_MINUTES = 1;
+  public static final int DELAY_MINUTES = 2;
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private final Object lockObject = new Object();
