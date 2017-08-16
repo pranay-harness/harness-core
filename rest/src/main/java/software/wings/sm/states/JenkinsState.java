@@ -5,7 +5,10 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
@@ -29,13 +32,17 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.dl.PageRequest;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -46,6 +53,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Validator;
 import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -55,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -181,11 +190,38 @@ public class JenkinsState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
+
+    String jenkinsConfigExpression = null;
+    String jobNameExpression = null;
+    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
+    List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (getTemplateExpressions() != null && !getTemplateExpressions().isEmpty()) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        String fieldName = templateExpression.getFieldName();
+        if (fieldName != null) {
+          if (fieldName.equals("jenkinsConfigId")) {
+            jenkinsConfigExpression = templateExpression.getExpression();
+          } else if (fieldName.equals("jobName")) {
+            jobNameExpression = templateExpression.getExpression();
+          }
+        }
+      }
+    }
+    JenkinsConfig jenkinsConfig;
+    if (jenkinsConfigExpression != null) {
+      jenkinsConfig = resolveJenkinsConfig(context, accountId, jenkinsConfigExpression);
+    } else {
+      jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
+    }
+    Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
 
     String evaluatedJobName;
     try {
-      evaluatedJobName = context.renderExpression(jobName);
+      if (jobNameExpression != null) {
+        evaluatedJobName = context.renderExpression(jobName);
+      } else {
+        evaluatedJobName = context.renderExpression(jobName);
+      }
     } catch (Exception e) {
       evaluatedJobName = jobName;
     }
@@ -248,6 +284,29 @@ public class JenkinsState extends State {
         .build();
   }
 
+  private JenkinsConfig resolveJenkinsConfig(ExecutionContext context, String accountId, String expression) {
+    String displayName = context.renderExpression(expression);
+    PageRequest<SettingAttribute> pageRequest = aPageRequest()
+                                                    .addFilter("accountId", EQ, accountId)
+                                                    .addFilter("category", EQ, CONNECTOR)
+                                                    .addFilter("name", EQ, displayName)
+                                                    .build();
+
+    List<SettingAttribute> settingAttributes = settingsService.list(pageRequest);
+    if (settingAttributes == null || settingAttributes.isEmpty()) {
+      return null;
+    }
+    Optional<SettingAttribute> jenkinsAttribute = settingAttributes.stream().findAny();
+    if (jenkinsAttribute.isPresent()) {
+      SettingValue settingValue = jenkinsAttribute.get().getValue();
+      if (settingValue instanceof JenkinsConfig) {
+        return (JenkinsConfig) settingValue;
+      } else {
+        return null;
+      }
+    }
+    return null;
+  }
   protected TaskType getTaskType() {
     return TaskType.JENKINS;
   }

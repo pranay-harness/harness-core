@@ -29,6 +29,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -249,11 +250,38 @@ public class HttpState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
-    String evaluatedUrl = context.renderExpression(getFinalUrl(context));
+    String finalUrl = getFinalUrl(context);
+    String bodyExpression = null;
+    String headerExpression = null;
+    String methodExpression = null;
+    String assertionExpression = null;
+    List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (getTemplateExpressions() != null && !getTemplateExpressions().isEmpty()) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        String fieldName = templateExpression.getFieldName();
+        if (fieldName != null) {
+          if (fieldName.equals("url")) {
+            finalUrl = templateExpression.getExpression();
+          } else if (fieldName.equals("header")) {
+            headerExpression = templateExpression.getExpression();
+          } else if (fieldName.equals("body")) {
+            bodyExpression = templateExpression.getExpression();
+          } else if (fieldName.equals("method")) {
+            methodExpression = templateExpression.getExpression();
+          } else if (fieldName.equals("assertion")) {
+            assertionExpression = templateExpression.getExpression();
+          }
+        }
+      }
+    }
+    String evaluatedUrl = context.renderExpression(finalUrl);
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
     try {
       evaluatedBody = getFinalBody(context);
+      if (bodyExpression != null) {
+        evaluatedBody = bodyExpression;
+      }
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }
@@ -264,25 +292,37 @@ public class HttpState extends State {
 
     String evaluatedHeader = getFinalHeader(context);
     if (evaluatedHeader != null) {
+      if (headerExpression != null) {
+        evaluatedHeader = headerExpression;
+      }
       evaluatedHeader = context.renderExpression(evaluatedHeader);
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
+
+    String evaluatedMethod = getFinalMethod(context);
+    if (methodExpression != null) {
+      evaluatedMethod = context.renderExpression(evaluatedMethod);
+    }
+
+    if (assertionExpression != null) {
+      assertion = context.renderExpression(assertionExpression);
+    }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    String delegateTaksId =
-        delegateService.queueTask(aDelegateTask()
-                                      .withTaskType(getTaskType())
-                                      .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                      .withWaitId(activityId)
-                                      .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                      .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl,
-                                          evaluatedBody, evaluatedHeader, socketTimeoutMillis})
-                                      .withEnvId(envId)
-                                      .withInfrastructureMappingId(infrastructureMappingId)
-                                      .build());
+    String delegateTaksId = delegateService.queueTask(
+        aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(
+                new Object[] {evaluatedMethod, evaluatedUrl, evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+            .withEnvId(envId)
+            .withInfrastructureMappingId(infrastructureMappingId)
+            .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(getFinalMethod(context));
+        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(evaluatedMethod);
 
     return anExecutionResponse()
         .withAsync(true)

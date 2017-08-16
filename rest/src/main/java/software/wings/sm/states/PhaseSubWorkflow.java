@@ -66,11 +66,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
-    Service service = null;
-    InfrastructureMapping infrastructureMapping = null;
-    String finalServiceId = serviceId;
-    String finalInfraMappingId = infraMappingId;
 
+    Service service;
+    InfrastructureMapping infrastructureMapping = null;
     String serviceIdExpression = null;
     String infraMappingIdExpression = null;
 
@@ -87,15 +85,13 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     }
     if (serviceIdExpression != null) {
       service = resolveService(context, app, serviceIdExpression);
-    }
-    if (infraMappingIdExpression != null) {
-      infrastructureMapping = resolveInfraMapping(context, app, service.getUuid(), infraMappingIdExpression);
-    }
-    if (service == null) {
+    } else {
       service = serviceResourceService.get(app.getAppId(), serviceId, false);
     }
     Validator.notNullCheck("Service", service);
-    if (infrastructureMapping == null) {
+    if (infraMappingIdExpression != null) {
+      infrastructureMapping = resolveInfraMapping(context, app, service.getUuid(), infraMappingIdExpression);
+    } else {
       infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
     }
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
@@ -109,10 +105,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             .withComputeProviderType(
                 SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
                     .getDisplayName())
-            .withInfraMappingId(finalInfraMappingId)
+            .withInfraMappingId(infrastructureMapping.getUuid())
             .withInfraMappingName(infrastructureMapping.getDisplayName())
             .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName())
-            .withServiceId(finalServiceId)
+            .withServiceId(service.getUuid())
             .withServiceName(service.getName())
             .build();
     if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
