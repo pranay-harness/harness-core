@@ -33,7 +33,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
   private String programName;
   private String key;
-  private String localhostName;
+  private String localhostName = "localhost";
   private Layout<E> layout;
   private ObjectMapper mapper = new ObjectMapper();
   private ConcurrentLinkedQueue<LogLine> logQueue; // don't call size(), it runs in linear time
@@ -56,22 +56,21 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   }
 
   private void submitLogs() {
-    int batchSize = 0;
-    LogLines logLines = new LogLines();
-    while (!logQueue.isEmpty() && batchSize < MAX_BATCH_SIZE) {
-      LogLine logLine = logQueue.poll();
-      if (logLine == null) { // no more element in the queue. break from loop
-        break;
-      }
-      logLines.add(logLine);
-      batchSize++; // increment unconditionally to break the loop
-    }
-
-    if (logLines.size() == 0) {
-      return;
-    }
-
     try {
+      int batchSize = 0;
+      LogLines logLines = new LogLines();
+      while (!logQueue.isEmpty() && batchSize < MAX_BATCH_SIZE) {
+        LogLine logLine = logQueue.poll();
+        if (logLine == null) { // no more element in the queue. break from loop
+          break;
+        }
+        logLines.add(logLine);
+        batchSize++; // increment unconditionally to break the loop
+      }
+
+      if (logLines.size() == 0) {
+        return;
+      }
       Request.Post(String.format(LOGDNA_INGEST_URL, localhostName))
           .addHeader("authorization", getAuthHeader())
           .bodyString(mapper.writeValueAsString(logLines), APPLICATION_JSON)
@@ -79,8 +78,8 @@ public class RestLogAppender<E> extends AppenderBase<E> {
           .socketTimeout(30000)
           .execute()
           .handleResponse(httpResponse -> httpResponse.getStatusLine().getStatusCode() == 200);
-    } catch (IOException e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
   }
 
@@ -91,14 +90,18 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   @Override
   protected void append(E eventObject) {
     appenderPool.submit(() -> {
-      String logLevel = Level.INFO.toString();
-      String message = layout.doLayout(eventObject);
-      if (eventObject instanceof ILoggingEvent) {
-        ILoggingEvent event = (ILoggingEvent) eventObject;
-        logLevel = event.getLevel().toString();
+      try {
+        String logLevel = Level.INFO.toString();
+        String message = layout.doLayout(eventObject);
+        if (eventObject instanceof ILoggingEvent) {
+          ILoggingEvent event = (ILoggingEvent) eventObject;
+          logLevel = event.getLevel().toString();
+        }
+        LogLine logLine = new LogLine(message, logLevel, programName);
+        logQueue.add(logLine);
+      } catch (Exception ex) {
+        ex.printStackTrace();
       }
-      LogLine logLine = new LogLine(message, logLevel, programName);
-      logQueue.add(logLine);
     });
   }
 
