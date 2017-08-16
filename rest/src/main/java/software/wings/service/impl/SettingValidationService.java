@@ -5,7 +5,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
@@ -45,7 +44,7 @@ public class SettingValidationService {
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
-        || settingValue instanceof EcrConfig || settingValue instanceof ArtifactoryConfig) {
+        || settingValue instanceof ArtifactoryConfig) {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
       appdynamicsService.validateConfig(settingAttribute);

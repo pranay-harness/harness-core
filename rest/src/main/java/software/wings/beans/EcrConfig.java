@@ -19,9 +19,14 @@ import software.wings.stencils.EnumData;
 import java.util.Arrays;
 
 /**
+ * ECR Artifact Server / Connector has been deprecated.
+ * Instead, we use AWS cloud provider to fetch all the connection details.
+ * This class is not deleted since there might be existing configs in the mongo db.
+ * We can only delete this class when the entries are migrated to use cloud provider.
  * Created by brett on 7/16/17
  */
 @JsonTypeName("ECR")
+@Deprecated
 public class EcrConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;

@@ -17,6 +17,7 @@ public class ArtifactStreamAttributes {
   private String artifactName;
   private ArtifactType artifactType;
   private String artifactPattern;
+  private String region;
 
   /**
    * Gets job name.
@@ -170,6 +171,14 @@ public class ArtifactStreamAttributes {
     this.artifactPattern = artifactPattern;
   }
 
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
   /**
    * The type Builder.
    */
@@ -183,6 +192,7 @@ public class ArtifactStreamAttributes {
     private String artifactName;
     private ArtifactType artifactType;
     private String artifactPattern;
+    private String region;
 
     private Builder() {}
 
@@ -284,6 +294,12 @@ public class ArtifactStreamAttributes {
       this.artifactPattern = artifactPattern;
       return this;
     }
+
+    public Builder withRegion(String region) {
+      this.region = region;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -299,7 +315,8 @@ public class ArtifactStreamAttributes {
           .withGroupId(groupId)
           .withArtifactName(artifactName)
           .withArtifactType(artifactType)
-          .withArtifactPattern(artifactPattern);
+          .withArtifactPattern(artifactPattern)
+          .withRegion(region);
     }
 
     /**
@@ -318,6 +335,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setArtifactName(artifactName);
       artifactStreamAttributes.setArtifactType(artifactType);
       artifactStreamAttributes.setArtifactPattern(artifactPattern);
+      artifactStreamAttributes.setRegion(region);
       return artifactStreamAttributes;
     }
   }
