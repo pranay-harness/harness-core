@@ -5,6 +5,7 @@ import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
+import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -31,61 +32,55 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig) {
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
-    List<BuildDetails> builds = ecrService.getBuilds(ecrConfig, artifactStreamAttributes.getImageName(), 50);
+    List<BuildDetails> builds = ecrService.getBuilds(
+        awsConfig, artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName(), 50);
     return builds;
   }
 
   @Override
-  public List<JobDetails> getJobs(EcrConfig ecrConfig, Optional<String> parentJobName) {
-    List<String> strings = ecrService.listEcrRegistry(ecrConfig);
-    return wrapJobNameWithJobDetails(strings);
+  public List<JobDetails> getJobs(AwsConfig awsConfig, Optional<String> parentJobName) {
+    List<String> regions = ecrService.listRegions(awsConfig);
+    return wrapJobNameWithJobDetails(regions);
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, String groupId, EcrConfig config) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+  public List<String> getArtifactPaths(String region, String groupId, AwsConfig awsConfig) {
+    return ecrService.listEcrRegistry(awsConfig, region);
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig) {
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override
-  public Map<String, String> getPlans(EcrConfig config) {
+  public Map<String, String> getPlans(AwsConfig config) {
     return getJobs(config, Optional.empty())
         .stream()
         .collect(Collectors.toMap(o -> o.getJobName(), o -> o.getJobName()));
   }
 
   @Override
-  public Map<String, String> getPlans(EcrConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType) {
     return getPlans(config);
   }
 
   @Override
-  public List<String> getGroupIds(String jobName, EcrConfig config) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+  public List<String> getGroupIds(String jobName, AwsConfig config) {
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override
-  public boolean validateArtifactServer(EcrConfig config) {
-    if (!validUrl(config.getEcrUrl())) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Amazon EC2 Container Registry URL must be a valid URL");
-    }
-    if (!connectableHttpUrl(config.getEcrUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
-          "Could not reach Amazon EC2 Container Registry at : " + config.getEcrUrl());
-    }
-    return ecrService.validateCredentials(config);
+  public boolean validateArtifactServer(AwsConfig config) {
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by ECR Artifact Stream");
   }
 
   @Override
-  public boolean validateArtifactSource(EcrConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
-    return ecrService.verifyRepository(config, artifactStreamAttributes.getImageName());
+  public boolean validateArtifactSource(AwsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return ecrService.verifyRepository(
+        config, artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName());
   }
 }

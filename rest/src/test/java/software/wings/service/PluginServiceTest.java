@@ -15,7 +15,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
@@ -41,7 +40,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(16)
+        .hasSize(15)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -64,14 +63,6 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Docker Registry")
                 .withType("DOCKER")
-                .withPluginCategories(asList(Artifact))
-                .build(),
-            anAccountPlugin()
-                .withSettingClass(EcrConfig.class)
-                .withAccountId(accountId)
-                .withIsEnabled(true)
-                .withDisplayName("Amazon EC2 Container Registry")
-                .withType("ECR")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -177,8 +168,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(16)
+        .hasSize(15)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "AWS", "GCP",
-            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "ECR");
+            "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
   }
 }
