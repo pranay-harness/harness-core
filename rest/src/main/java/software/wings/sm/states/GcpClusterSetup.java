@@ -85,7 +85,9 @@ public class GcpClusterSetup extends State {
     if (StringUtils.isEmpty(machineType)) {
       machineType = "n1-standard-2";
     }
-    String clusterName = "wings-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+    String clusterName = "harness-"
+        + KubernetesConvention.getKubernetesServiceName(
+              KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
     String zoneCluster = zone + "/" + clusterName;
     gkeClusterService.createCluster(computeProviderSetting, zoneCluster,
         ImmutableMap.<String, String>builder()

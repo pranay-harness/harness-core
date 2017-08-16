@@ -33,7 +33,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -94,16 +93,23 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   private KubernetesConfig configFromCluster(Cluster cluster) {
+    String user = cluster.getMasterAuth().getUsername();
+    String password = cluster.getMasterAuth().getPassword();
+    if (user == null || password == null) {
+      String msg = "Could not get kubernetes credentials from cluster.";
+      logger.warn(msg);
+      throw new WingsException(INVALID_ARGUMENT, "args", msg);
+    }
     return KubernetesConfig.Builder.aKubernetesConfig()
         .withMasterUrl("https://" + cluster.getEndpoint() + "/")
-        .withUsername(cluster.getMasterAuth().getUsername())
-        .withPassword(cluster.getMasterAuth().getPassword().toCharArray())
+        .withUsername(user)
+        .withPassword(password.toCharArray())
         .build();
   }
 
   private String validateAndGetCredentials(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
     }
     return ((GcpConfig) computeProviderSetting.getValue()).getServiceAccountKeyFileContent();
   }

@@ -1,3 +1,0 @@
-{
-  "ui:order": ["serviceName","useLoadBalancer","loadBalancerName", "targetGroupArn", "roleArn"]
-}

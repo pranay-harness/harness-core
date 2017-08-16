@@ -128,7 +128,23 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
 
       try {
         for (String query : dataCollectionInfo.getQueries()) {
-          final String searchQuery = "search " + query
+          String hostStr = null;
+          for (String host : dataCollectionInfo.getHosts()) {
+            if (hostStr == null) {
+              hostStr = "host = " + host;
+            } else {
+              hostStr += " OR "
+                  + " host = " + host;
+            }
+          }
+
+          if (hostStr == null) {
+            throw new IllegalArgumentException("No hosts found for SplunkV2Task " + dataCollectionInfo.toString());
+          }
+
+          hostStr = " (" + hostStr + ") ";
+
+          final String searchQuery = "search " + query + hostStr
               + " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
               + "| table _time, _raw,cluster_label, host | "
               + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
@@ -169,7 +185,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
           resultsReader.close();
           logAnalysisStoreService.save(StateType.SPLUNKV2, dataCollectionInfo.getAccountId(),
               dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
+              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+              dataCollectionInfo.getServiceId(), logElements);
           logger.info("sent splunk search records to server. Num of events: " + job.getEventCount()
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);

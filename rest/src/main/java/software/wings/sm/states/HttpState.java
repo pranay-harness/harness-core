@@ -42,7 +42,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -425,7 +424,7 @@ public class HttpState extends State {
     try {
       return URLEncoder.encode(queryString, "UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Couldn't url-encode " + queryString);
     }
   }
 

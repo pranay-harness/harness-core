@@ -74,11 +74,11 @@ class SplunkHarnessLoader(object):
         return json.loads(text)['resource']
 
     @staticmethod
-    def load_from_harness_raw(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
+    def load_from_harness_raw(url, auth_token, app_id, workflow_id, state_execution_id, service_id, log_collection_minute, nodes, query):
         headers = {"Accept": "application/json", "Content-Type": "application/json",
                    "Authorization": "ExternalService " + auth_token}
         payload = dict(applicationId=app_id, workflowId=workflow_id, stateExecutionId=state_execution_id,
-                       logCollectionMinute=log_collection_minute, nodes=nodes,
+                       serviceId=service_id, logCollectionMinute=log_collection_minute, nodes=nodes,
                        query=query)
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
@@ -97,9 +97,9 @@ class SplunkHarnessLoader(object):
 
     #TODO rename wings to harness
     @staticmethod
-    def load_from_wings_server(url, auth_token, app_id, workflow_id, state_execution_id, log_collection_minute, nodes, query):
+    def load_from_wings_server(url, auth_token, app_id, workflow_id, state_execution_id, service_id, log_collection_minute, nodes, query):
         data = SplunkHarnessLoader.load_from_harness_raw(url, auth_token, app_id, workflow_id,
-                                                     state_execution_id, log_collection_minute, nodes, query)
+                                                     state_execution_id, service_id, log_collection_minute, nodes, query)
         raw_events = []
         for resp in data['resource']:
             raw_event = {'cluster_count': resp['count'], 'cluster_label': resp['clusterLabel'],
