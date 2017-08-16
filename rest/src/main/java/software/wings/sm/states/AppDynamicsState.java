@@ -10,7 +10,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.api.PhaseElement;
@@ -36,7 +36,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;

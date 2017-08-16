@@ -12,7 +12,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
-import software.wings.AnalysisComparisonStrategy;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -26,6 +25,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -37,6 +38,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
@@ -71,7 +73,7 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected AnalysisService analysisService;
 
   @DefaultValue("15")
-  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   public String getTimeDuration() {
     return timeDuration;
   }
@@ -80,16 +82,7 @@ public abstract class AbstractAnalysisState extends State {
     this.timeDuration = timeDuration;
   }
 
-  @DefaultValue("COMPARE_WITH_PREVIOUS")
-  @Attributes(required = true, title = "How do you want to compare for analyis",
-      description = "Compare with previous run or current run")
-  public AnalysisComparisonStrategy
-  getComparisonStrategy() {
-    if (StringUtils.isBlank(comparisonStrategy)) {
-      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-    }
-    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
-  }
+  public abstract AnalysisComparisonStrategy getComparisonStrategy();
 
   public void setComparisonStrategy(String comparisonStrategy) {
     this.comparisonStrategy = comparisonStrategy;
