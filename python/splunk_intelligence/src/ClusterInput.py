@@ -185,6 +185,7 @@ def parse(cli_args):
     # unwanted parameters. only here since the java api needs it
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
+    parser.add_argument("--service_id", required=True)
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--query", required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
@@ -207,6 +208,7 @@ def load_from_wings_server(options):
                                                            options.application_id,
                                                            options.workflow_id,
                                                            options.state_execution_id,
+                                                           options.service_id,
                                                            options.log_collection_minute,
                                                            options.nodes,
                                                            options.query)['resource']
@@ -258,16 +260,17 @@ def create_response(raw_events, clusters, counts, level):
             if event.get('host') not in clusters_dict:
                 clusters_dict[event.get('host')] = {}
             if event.get('clusterLabel') not in clusters_dict[event.get('host')]:
-                event['clusterLabel'] = clusters[i]
-                results.append(dict(query=event.get('query'),
+                clusters_dict[event.get('host')][event.get('clusterLabel')] = clusters[i]
+                i = i + 1
+
+            event['clusterLabel'] = clusters_dict[event.get('host')][event.get('clusterLabel')]
+            results.append(dict(query=event.get('query'),
                                     clusterLabel=event.get('clusterLabel'),
                                     host=event.get('host'),
                                     timeStamp=event.get('timeStamp'),
                                     count=event.get('count'),
                                     logMessage=event.get('logMessage'),
                                     logCollectionMinute=event.get('logCollectionMinute')))
-                clusters_dict[event.get('host')][event.get('clusterLabel')] = clusters[i]
-                i = i + 1
         logger.info('# of L2 returned = ' + str(len(results)))
         return results
 

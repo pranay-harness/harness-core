@@ -72,7 +72,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,6 +92,7 @@ public class KubernetesReplicationControllerSetup extends State {
   // length of string https://
   private static final int HTTPS_LENGTH = 8;
 
+  private String replicationControllerName;
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -152,12 +152,13 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }
 
-    String lastReplicationControllerName = lastReplicationController(
-        kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
+    String rcNamePrefix = isNotEmpty(replicationControllerName)
+        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
+        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
-    String replicationControllerName =
-        KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env, revision);
+    String replicationControllerName = KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
 
     Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
                                             .put("app", KubernetesConvention.getLabelValue(app.getName()))
@@ -170,8 +171,9 @@ public class KubernetesReplicationControllerSetup extends State {
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
-    String secretName =
-        KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
+
+    String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
     kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageDetails.name,
@@ -180,7 +182,6 @@ public class KubernetesReplicationControllerSetup extends State {
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
     if (serviceType != null && serviceType != ServiceType.None) {
@@ -284,10 +285,13 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     ReplicationController lastReplicationController = null;
-    for (ReplicationController controller : replicationControllers.getItems()
-                                                .stream()
-                                                .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix))
-                                                .collect(Collectors.toList())) {
+    for (ReplicationController controller :
+        replicationControllers.getItems()
+            .stream()
+            .filter(c
+                -> c.getMetadata().getName().equals(controllerNamePrefix)
+                    || c.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
+            .collect(Collectors.toList())) {
       if (lastReplicationController == null
           || controller.getMetadata().getCreationTimestamp().compareTo(
                  lastReplicationController.getMetadata().getCreationTimestamp())
@@ -542,6 +546,14 @@ public class KubernetesReplicationControllerSetup extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  public String getReplicationControllerName() {
+    return replicationControllerName;
+  }
+
+  public void setReplicationControllerName(String replicationControllerName) {
+    this.replicationControllerName = replicationControllerName;
+  }
 
   /**
    * Gets service type.

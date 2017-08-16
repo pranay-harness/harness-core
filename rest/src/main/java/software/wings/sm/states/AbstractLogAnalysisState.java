@@ -78,7 +78,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     Set<String> lastExecutionNodes = getLastExecutionNodes(context);
-    boolean isBaseLineCollectionData = false;
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
@@ -86,7 +85,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             "Skipping analysis due to lack of baseline data (First time deployment).");
       }
 
-      isBaseLineCollectionData = true;
       getLogger().warn(
           "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
     }
@@ -121,17 +119,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                              .withLogAnalysisExecutionData(executionData)
                                              .withExecutionStatus(ExecutionStatus.SUCCESS)
                                              .build();
-    pythonExecutorService = createPythonExecutorService(context, response, isBaseLineCollectionData);
-    return isBaseLineCollectionData
-        ? generateAnalysisResponse(context, ExecutionStatus.SUCCESS, getAnalysisServerConfigId(),
-              "Skipping analysis due to lack of baseline data (First time deployment).")
-        : anExecutionResponse()
-              .withAsync(true)
-              .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-              .withExecutionStatus(ExecutionStatus.RUNNING)
-              .withErrorMessage("Log Verification running")
-              .withStateExecutionData(executionData)
-              .build();
+    pythonExecutorService = createPythonExecutorService(context, response);
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
+        .withExecutionStatus(ExecutionStatus.RUNNING)
+        .withErrorMessage("Log Verification running")
+        .withStateExecutionData(executionData)
+        .build();
   }
 
   private void shutDownGenerator(LogAnalysisResponse response) {
@@ -183,12 +178,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private ScheduledExecutorService createPythonExecutorService(
-      ExecutionContext context, LogAnalysisResponse response, boolean isBaseLineCollectionData) {
+  private ScheduledExecutorService createPythonExecutorService(ExecutionContext context, LogAnalysisResponse response) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        new LogMLAnalysisGenerator(context, response, isBaseLineCollectionData),
-        SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
+        new LogMLAnalysisGenerator(context, response), SplunkDataCollectionTask.DELAY_MINUTES + 1, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
@@ -243,14 +236,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     private final String accountId;
     private final String applicationId;
     private final String workflowId;
+    private final String serviceId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
     private final Set<String> queries;
-    private final boolean isBaseLineCollectionData;
     private int logAnalysisMinute = 0;
 
-    public LogMLAnalysisGenerator(
-        ExecutionContext context, LogAnalysisResponse logAnalysisResponse, boolean isBaseLineCollectionData) {
+    public LogMLAnalysisGenerator(ExecutionContext context, LogAnalysisResponse logAnalysisResponse) {
       this.context = context;
       this.logAnalysisResponse = logAnalysisResponse;
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
@@ -261,13 +253,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       this.applicationId = context.getAppId();
       this.accountId = AbstractLogAnalysisState.this.appService.get(this.applicationId).getAccountId();
       this.workflowId = getWorkflowId(context);
+      this.serviceId = getPhaseServiceId(context);
       this.testNodes = getCanaryNewHostNames(context);
       this.controlNodes = getLastExecutionNodes(context);
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         this.controlNodes.removeAll(this.testNodes);
       }
       this.queries = Sets.newHashSet(query.split(","));
-      this.isBaseLineCollectionData = isBaseLineCollectionData;
     }
 
     @Override
@@ -277,9 +269,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       preProcess(context, logAnalysisMinute);
-      if (!isBaseLineCollectionData) {
-        generateAnalysis();
-      }
+      generateAnalysis();
       logAnalysisMinute++;
 
       // if no data generated till this time, generate a response
@@ -308,7 +298,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         try {
-          final String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
+          final boolean isBaselineCreated = analysisService.isBaselineCreated(getComparisonStrategy(), stateType,
+              applicationId, workflowId, context.getWorkflowExecutionId(), serviceId, query);
+          String testInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
               + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
               + "&clusterLevel=" + ClusterLevel.L2.name() + "&compareCurrent=true";
           String controlInputUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
@@ -317,6 +309,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           controlInputUrl = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
               ? controlInputUrl + true
               : controlInputUrl + false;
+
           final String logAnalysisSaveUrl = this.serverUrl + "/api/" + getStateBaseUrl(stateType)
               + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
               + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionInstanceId();
@@ -325,17 +318,25 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           final List<String> command = new ArrayList<>();
           command.add(this.pythonScriptRoot + "/" + LOG_ML_SHELL_FILE_NAME);
           command.add("--query=" + query);
-          command.add("--control_input_url");
-          command.add(controlInputUrl);
-          command.add("--test_input_url");
-          command.add(testInputUrl);
+          if (isBaselineCreated) {
+            command.add("--control_input_url");
+            command.add(controlInputUrl);
+            command.add("--test_input_url");
+            command.add(testInputUrl);
+            command.add("--control_nodes");
+            command.addAll(controlNodes);
+            command.add("--test_nodes");
+            command.addAll(testNodes);
+          } else {
+            command.add("--control_input_url");
+            command.add(testInputUrl);
+            command.add("--control_nodes");
+            command.addAll(testNodes);
+          }
           command.add("--auth_token=" + generateAuthToken());
           command.add("--application_id=" + applicationId);
           command.add("--workflow_id=" + workflowId);
-          command.add("--control_nodes");
-          command.addAll(controlNodes);
-          command.add("--test_nodes");
-          command.addAll(testNodes);
+          command.add("--service_id=" + serviceId);
           command.add("--sim_threshold");
           command.add(String.valueOf(0.9));
           command.add("--log_collection_minute");

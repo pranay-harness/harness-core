@@ -46,14 +46,18 @@ public class LogAnalysisExecutionData extends StateExecutionData {
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
     if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
       elapsedMinutes = 0;
-    } else {
-      elapsedMinutes = elapsedMinutes - (SplunkDataCollectionTask.DELAY_MINUTES + 1);
     }
     final CountsByStatuses breakdown = new CountsByStatuses();
-    if (getStatus() == ExecutionStatus.FAILED) {
-      breakdown.setFailed(Math.min(elapsedMinutes, total));
-    } else {
-      breakdown.setSuccess(Math.min(elapsedMinutes, total));
+    switch (getStatus()) {
+      case FAILED:
+        breakdown.setFailed(total);
+        break;
+      case SUCCESS:
+        breakdown.setSuccess(total);
+        break;
+      default:
+        breakdown.setSuccess(Math.min(elapsedMinutes, total));
+        break;
     }
     putNotNull(executionDetails, "breakdown",
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());

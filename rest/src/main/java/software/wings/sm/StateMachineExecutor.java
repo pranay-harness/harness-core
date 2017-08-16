@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -10,6 +11,7 @@ import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotif
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -29,6 +31,7 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.common.cache.ResponseCodeCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -478,21 +481,34 @@ public class StateMachineExecutor {
    * Handle execute response exception state execution instance.
    *
    * @param context   the context
-   * @param exception the exception
+   * @param e the exception
    * @return the state execution instance
    */
-  StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception exception) {
+  StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception e) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     logger.warn("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
-        stateExecutionInstance.getUuid(), exception);
+        stateExecutionInstance.getUuid(), e);
 
-    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null, null);
+    String errorMessage;
+    if (e instanceof WingsException) {
+      WingsException ex = (WingsException) e;
+      errorMessage = Joiner.on(",").join(ex.getResponseMessageList()
+                                             .stream()
+                                             .map(responseMessage
+                                                 -> ResponseCodeCache.getInstance()
+                                                        .getResponseMessage(responseMessage.getCode(), ex.getParams())
+                                                        .getMessage())
+                                             .collect(toList()));
+    } else {
+      errorMessage = e.getMessage();
+    }
+    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, errorMessage, null, null);
 
     try {
-      return failedTransition(context, exception);
+      return failedTransition(context, e);
     } catch (Exception e2) {
       logger.error("Error in transitioning to failure state", e2);
     }

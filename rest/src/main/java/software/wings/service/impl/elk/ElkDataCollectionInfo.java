@@ -20,9 +20,9 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private ElkConfig elkConfig;
 
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, Set<String> queries, long startTime, int collectionTime,
-      Set<String> hosts) {
-    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, queries, startTime,
+      String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, long startTime,
+      int collectionTime, Set<String> hosts) {
+    super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
         collectionTime, hosts);
     this.elkConfig = elkConfig;
   }
