@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>delegate.log</file>
@@ -28,24 +28,20 @@
         </encoder>
     </appender>
 
-    <!--<appender name="SYSLOG-TLS" class="software.wings.logging.CloudBeesSyslogAppender">-->
-        <!--<layout class="ch.qos.logback.classic.PatternLayout">-->
-            <!--<pattern>%boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>-->
-        <!--</layout>-->
-
-        <!--<host>syslog-a.logdna.com</host>-->
-        <!--<port>6514</port>-->
-        <!--<programName>delegate</programName>-->
-        <!--<key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>-->
-        <!--<threshold>TRACE</threshold>-->
-    <!--</appender>-->
-
+    <appender name="REST" class="software.wings.logging.RestLogAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+        </layout>
+        <programName>delegate</programName>
+        <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>
+        <threshold>TRACE</threshold>
+    </appender>
 
     <logger name="software.wings" level="INFO"/>
     <logger name="org.zeroturnaround" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="file"/>
-        <appender-ref ref="SYSLOG-TLS"/>
+        <appender-ref ref="REST"/>
     </root>
 </configuration>
