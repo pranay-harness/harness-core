@@ -256,7 +256,7 @@ public class HttpState extends State {
     String methodExpression = null;
     String assertionExpression = null;
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (getTemplateExpressions() != null && !getTemplateExpressions().isEmpty()) {
+    if (templateExpressions != null && !templateExpressions.isEmpty()) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {

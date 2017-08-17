@@ -16,7 +16,9 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.PageRequest;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -62,6 +64,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
+  @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -73,7 +77,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     String infraMappingIdExpression = null;
 
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (getTemplateExpressions() != null && !getTemplateExpressions().isEmpty()) {
+    if (templateExpressions != null && templateExpressions.isEmpty()) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null && fieldName.equals("serviceId")) {
@@ -84,13 +88,16 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
     if (serviceIdExpression != null) {
-      service = resolveService(context, app, serviceIdExpression);
+      if (infraMappingIdExpression == null) {
+        throw new WingsException("Service templatized so service infrastructure should be templatized");
+      }
+      service = templateExpressionProcessor.resolveService(context, app, serviceIdExpression);
     } else {
       service = serviceResourceService.get(app.getAppId(), serviceId, false);
     }
-    Validator.notNullCheck("Service", service);
     if (infraMappingIdExpression != null) {
-      infrastructureMapping = resolveInfraMapping(context, app, service.getUuid(), infraMappingIdExpression);
+      infrastructureMapping =
+          templateExpressionProcessor.resolveInfraMapping(context, app, service.getUuid(), infraMappingIdExpression);
     } else {
       infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
     }

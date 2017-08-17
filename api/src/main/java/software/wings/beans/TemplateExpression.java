@@ -6,6 +6,7 @@ package software.wings.beans;
 public class TemplateExpression {
   private String fieldName;
   private String expression;
+  private EntityType entityType;
 
   public String getFieldName() {
     return fieldName;
@@ -21,5 +22,13 @@ public class TemplateExpression {
 
   public void setExpression(String expression) {
     this.expression = expression;
+  }
+
+  public EntityType getEntityType() {
+    return entityType;
+  }
+
+  public void setEntityType(EntityType entityType) {
+    this.entityType = entityType;
   }
 }
