@@ -5,11 +5,11 @@ import java.util.List;
 public class SetupYaml {
   @YamlSerialize public List<String> applications;
 
-  public List<String> getApplications() {
+  public List<String> getAppNames() {
     return applications;
   }
 
-  public void setApplications(List<String> applications) {
-    this.applications = applications;
+  public void setAppNames(List<String> appNames) {
+    this.applications = appNames;
   }
 }
