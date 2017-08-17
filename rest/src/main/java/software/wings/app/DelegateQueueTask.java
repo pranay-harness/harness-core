@@ -22,6 +22,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.cache.Caching;
 import javax.inject.Inject;
 
 /**
@@ -104,12 +105,19 @@ public class DelegateQueueTask implements Runnable {
 
       // Re-broadcast queued sync tasks not picked up by any Delegate
       cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).forEach(stringDelegateTaskEntry -> {
-        DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
-        if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-          logger.info("Broadcast queued sync task [{}, {}, {}]", syncDelegateTask.getUuid(),
-              syncDelegateTask.getDelegateId(), syncDelegateTask.getStatus());
-          broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
-              .broadcast(syncDelegateTask);
+        try {
+          DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+          if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
+            logger.info("Broadcast queued sync task [{}, {}, {}]", syncDelegateTask.getUuid(),
+                syncDelegateTask.getDelegateId(), syncDelegateTask.getStatus());
+            broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+                .broadcast(syncDelegateTask);
+          }
+        } catch (Exception ex) {
+          logger.error("Could not fetch delegate task from queue ", ex);
+          logger.warn("Remove Delegate task [{}] from cache", stringDelegateTaskEntry.getKey());
+          Caching.getCache("delegateSyncCache", String.class, DelegateTask.class)
+              .remove(stringDelegateTaskEntry.getKey());
         }
       });
 
