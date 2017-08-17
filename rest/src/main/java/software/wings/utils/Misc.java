@@ -23,7 +23,7 @@ public class Misc {
    * @param expression the expression
    * @return the string
    */
-  static String normalizeExpression(String expression) {
+  public static String normalizeExpression(String expression) {
     return normalizeExpression(expression, "__");
   }
 
@@ -34,7 +34,7 @@ public class Misc {
    * @param replacement the replacement
    * @return the string
    */
-  static String normalizeExpression(String expression, String replacement) {
+  public static String normalizeExpression(String expression, String replacement) {
     Matcher matcher = wildCharPattern.matcher(expression);
     return matcher.replaceAll(replacement);
   }

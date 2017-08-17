@@ -22,7 +22,6 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -153,14 +152,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
           "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
-
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-    boolean running = jenkins.isRunning();
-    if (!running) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Jenkins credentials");
-    }
-    return running;
+
+    return jenkins.isRunning();
   }
 
   @Override

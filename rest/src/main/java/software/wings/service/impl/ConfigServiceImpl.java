@@ -142,7 +142,7 @@ public class ConfigServiceImpl implements ConfigService {
   public ConfigFile get(String appId, String configId) {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
     if (configFile == null) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
+      throw new WingsException(INVALID_ARGUMENT, "args", "ConfigFile not found");
     }
     return configFile;
   }

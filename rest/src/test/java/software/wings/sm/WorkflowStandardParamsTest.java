@@ -69,7 +69,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetApp() {
-    Application app = Application.Builder.anApplication().withName("AppA").build();
+    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();

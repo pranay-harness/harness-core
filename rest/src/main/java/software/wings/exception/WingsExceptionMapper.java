@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Set;
@@ -26,8 +25,9 @@ import javax.ws.rs.ext.ExceptionMapper;
  */
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final Set<ErrorCode> logIgnoredErrorCodes = Sets.newHashSet(ErrorCode.INVALID_TOKEN, ErrorCode.EXPIRED_TOKEN,
-      ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND);
+  private final Set<ErrorCode> logIgnoredErrorCodes = Sets.newHashSet(ErrorCode.INVALID_TOKEN,
+      ErrorCode.INVALID_CREDENTIAL, ErrorCode.EXPIRED_TOKEN, ErrorCode.USER_DOES_NOT_EXIST,
+      ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.UNAVAILABLE_DELEGATES);
 
   /**
    * {@inheritDoc}

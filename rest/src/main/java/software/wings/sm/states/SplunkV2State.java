@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +18,11 @@ import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -28,6 +30,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -45,6 +48,15 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     super(name, StateType.SPLUNKV2.getType());
   }
 
+  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
+  @Attributes(required = true, title = "Baseline for Risk Analysis")
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
   @Override
   protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -59,8 +71,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), queries, logCollectionStartTimeStamp,
-        Integer.parseInt(timeDuration), Collections.EMPTY_SET);
+        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
+        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -94,7 +106,5 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected String getStateBaseUrl() {
-    return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
-  }
+  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {}
 }

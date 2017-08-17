@@ -24,7 +24,6 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
-import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -35,6 +34,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -54,19 +54,23 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.ecr.EcrClassicService;
+import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.EcsConvention;
+import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,20 +81,17 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class EcsServiceSetup extends State {
-  @DefaultValue("${app.name}_${service.name}_${env.name}")
-  @Attributes(title = "Service Name")
-  private String serviceName;
-
-  @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
-
-  @Attributes(title = "Elastic Load Balancer") private String loadBalancerName;
-
-  @Attributes(title = "Target Group") private String targetGroupArn;
-
-  @Attributes(title = "IAM Role", description = "Role with AmazonEC2ContainerServiceRole policy attached.")
+  private String ecsServiceName;
+  private boolean useLoadBalancer;
+  private String loadBalancerName;
+  private String targetGroupArn;
   private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
+
+  @Inject @Transient private transient EcrService ecrService;
+
+  @Inject @Transient private transient EcrClassicService ecrClassicService;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -164,8 +165,8 @@ public class EcsServiceSetup extends State {
                 -> createContainerDefinition(imageName, containerName, containerDefinition, serviceVariables))
             .collect(toList());
 
-    String taskFamily = isNotEmpty(serviceName)
-        ? context.renderExpression(serviceName)
+    String taskFamily = isNotEmpty(ecsServiceName)
+        ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
@@ -176,8 +177,7 @@ public class EcsServiceSetup extends State {
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
-    String lastEcsServiceName = lastECSService(
-        region, computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+    String lastEcsServiceName = lastECSService(region, computeProviderSetting, clusterName, taskDefinition.getFamily());
 
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -369,13 +369,8 @@ public class EcsServiceSetup extends State {
       return dockerArtifactStream.getImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      EcrConfig ecrConfig = (EcrConfig) settingsService.get(ecrArtifactStream.getSettingId()).getValue();
-      String registry = ecrConfig.getEcrUrl().substring(8);
-      if (!registry.endsWith("/")) {
-        registry += "/";
-      }
-      String imageName = registry + ecrArtifactStream.getImageName() + ":" + artifact.getBuildNo();
-      return imageName;
+      String imageUrl = getImageUrl(ecrArtifactStream);
+      return imageUrl + ":" + artifact.getBuildNo();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
       return gcrArtifactStream.getDockerImageName();
@@ -385,6 +380,18 @@ public class EcsServiceSetup extends State {
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
+    }
+  }
+
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream) {
+    SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
+    SettingValue value = settingAttribute.getValue();
+    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
+      AwsConfig awsConfig = (AwsConfig) value;
+      return ecrService.getEcrImageUrl(awsConfig, ecrArtifactStream.getRegion(), ecrArtifactStream);
+    } else {
+      EcrConfig ecrConfig = (EcrConfig) value;
+      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
     }
   }
 
@@ -473,12 +480,12 @@ public class EcsServiceSetup extends State {
     this.useLoadBalancer = useLoadBalancer;
   }
 
-  public String getServiceName() {
-    return serviceName;
+  public String getEcsServiceName() {
+    return ecsServiceName;
   }
 
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
+  public void setEcsServiceName(String ecsServiceName) {
+    this.ecsServiceName = ecsServiceName;
   }
 
   public static final class EcsServiceSetupBuilder {
@@ -569,7 +576,7 @@ public class EcsServiceSetup extends State {
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
-      ecsServiceSetup.setServiceName(serviceName);
+      ecsServiceSetup.setEcsServiceName(serviceName);
       ecsServiceSetup.setUseLoadBalancer(useLoadBalancer);
       ecsServiceSetup.setLoadBalancerName(loadBalancerName);
       ecsServiceSetup.setTargetGroupArn(targetGroupArn);

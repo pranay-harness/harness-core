@@ -4,9 +4,14 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 
 import com.google.common.base.Preconditions;
 
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
@@ -25,10 +30,14 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState;
+import software.wings.sm.states.AbstractLogAnalysisState;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -46,26 +57,58 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class AnalysisServiceImpl implements AnalysisService {
+  private static final String CLUSTER_ML_SHELL_FILE_NAME = "run_cluster_log_ml.sh";
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
+  private static int NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS =
+      StringUtils.isBlank(System.getProperty("clustering.threads"))
+      ? 10
+      : Integer.parseInt(System.getProperty("clustering.threads"));
   private final Random random = new Random();
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected WorkflowExecutionService workflowExecutionService;
+  @Inject protected MainConfiguration configuration;
+
+  private ExecutorService firstLevelClusteringService =
+      Executors.newFixedThreadPool(NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS, r -> new Thread(r, "clustering_thread"));
 
   @Override
-  public Boolean saveLogData(StateType stateType, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, List<LogElement> logData) throws IOException {
-    logger.debug("inserting " + logData.size() + " pieces of splunk log data");
-    final List<LogDataRecord> logDataRecords =
-        LogDataRecord.generateDataRecords(stateType, appId, stateExecutionId, workflowId, workflowExecutionId, logData);
+  public Boolean saveLogData(StateType stateType, String accountId, String appId, String stateExecutionId,
+      String workflowId, String workflowExecutionId, String serviceId, ClusterLevel clusterLevel,
+      List<LogElement> logData) throws IOException {
+    logger.info("inserting " + logData.size() + " pieces of log data");
+    List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(
+        stateType, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, clusterLevel, logData);
     wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
-    logger.debug("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
+    logger.info("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
+
+    if (clusterLevel == ClusterLevel.L0 && !logData.isEmpty()) {
+      switch (stateType) {
+        case ELK:
+          final LogElement log = logData.get(0);
+          final LogRequest logRequest = new LogRequest(log.getQuery(), appId, stateExecutionId, workflowId, serviceId,
+              Collections.singleton(log.getHost()), log.getLogCollectionMinute());
+          firstLevelClusteringService.submit(new LogMessageClusterTask(
+              stateType, accountId, workflowExecutionId, ClusterLevel.L0, ClusterLevel.L1, logRequest));
+          break;
+        default:
+          throw new IllegalStateException("invalid state: " + stateType);
+      }
+    }
     return true;
   }
 
   @Override
-  public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, StateType stateType) {
+  public void finalizeLogCollection(
+      String accountId, StateType stateType, String workflowExecutionId, LogRequest logRequest) {
+    new LogMessageClusterTask(stateType, accountId, workflowExecutionId, ClusterLevel.L1, ClusterLevel.L2, logRequest)
+        .run();
+  }
+
+  @Override
+  public List<LogDataRecord> getLogData(
+      LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType stateType) {
     Query<LogDataRecord> splunkLogDataRecordQuery = null;
     List<LogDataRecord> records = null;
     if (compareCurrent) {
@@ -78,55 +121,37 @@ public class AnalysisServiceImpl implements AnalysisService {
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
                                      .equal(logRequest.getQuery())
-                                     .field("processed")
-                                     .equal(false)
+                                     .field("serviceId")
+                                     .equal(logRequest.getServiceId())
+                                     .field("clusterLevel")
+                                     .equal(clusterLevel)
                                      .field("logCollectionMinute")
                                      .equal(logRequest.getLogCollectionMinute())
                                      .field("host")
                                      .hasAnyOf(logRequest.getNodes());
     } else {
-      final WorkflowExecution workflowExecution =
-          getLastSuccessfulWorkflowExecution(logRequest.getApplicationId(), logRequest.getWorkflowId());
-      Preconditions.checkNotNull(
-          workflowExecution, "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
+      final String lastSuccessfulWorkflowExecutionId = getLastSuccessfulWorkflowExecutionIdWithLogs(stateType,
+          logRequest.getApplicationId(), logRequest.getServiceId(), logRequest.getQuery(), logRequest.getWorkflowId());
+      Preconditions.checkNotNull(lastSuccessfulWorkflowExecutionId,
+          "No successful workflow execution found for workflowId: " + logRequest.getWorkflowId());
 
-      final PageRequest<LogDataRecord> lastSuccessfulExecutionData =
-          PageRequest.Builder.aPageRequest()
-              .addFilter("stateType", Operator.EQ, stateType)
-              .addFilter("workflowId", Operator.EQ, logRequest.getWorkflowId())
-              .addFilter("workflowExecutionId", Operator.EQ, workflowExecution.getUuid())
-              .addFilter("stateExecutionId", Operator.NOT_EQ, logRequest.getStateExecutionId())
-              .addFilter("applicationId", Operator.EQ, logRequest.getApplicationId())
-              .addFilter("query", Operator.EQ, logRequest.getQuery())
-              .addFilter("logCollectionMinute", Operator.EQ, logRequest.getLogCollectionMinute())
-              .addOrder("createdAt", OrderType.DESC)
-              .withLimit("1")
-              .build();
-
-      PageResponse<LogDataRecord> lastSuccessfullRecords =
-          wingsPersistence.query(LogDataRecord.class, lastSuccessfulExecutionData);
-
-      Preconditions.checkState(lastSuccessfullRecords.size() == 1, "Multiple records found for give query");
-
-      LogDataRecord record = lastSuccessfullRecords.get(0);
-      if (record == null) {
-        logger.error("Could not find any logs collected for minute {} for previous successful workflow {}",
-            logRequest.getLogCollectionMinute(), logRequest.getWorkflowId());
-        return Collections.emptyList();
-      }
-      logger.info("returning logs for workflowExecutionId: " + workflowExecution.getWorkflowId()
-          + " stateExecutionId: " + record.getStateExecutionId());
       splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
                                      .field("stateType")
                                      .equal(stateType)
-                                     .field("stateExecutionId")
-                                     .equal(record.getStateExecutionId())
+                                     .field("serviceId")
+                                     .equal(logRequest.getServiceId())
+                                     .field("workflowId")
+                                     .equal(logRequest.getWorkflowId())
+                                     .field("workflowExecutionId")
+                                     .equal(lastSuccessfulWorkflowExecutionId)
                                      .field("applicationId")
                                      .equal(logRequest.getApplicationId())
                                      .field("query")
                                      .equal(logRequest.getQuery())
                                      .field("host")
                                      .hasAnyOf(logRequest.getNodes())
+                                     .field("clusterLevel")
+                                     .equal(clusterLevel)
                                      .field("logCollectionMinute")
                                      .equal(logRequest.getLogCollectionMinute());
     }
@@ -137,20 +162,24 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Boolean markProcessed(String stateExecutionId, String applicationId, long tillTimeStamp, StateType stateType) {
+  public boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel) {
     Query<LogDataRecord> splunkLogDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
                                                     .field("stateType")
                                                     .equal(stateType)
                                                     .field("stateExecutionId")
-                                                    .equal(stateExecutionId)
+                                                    .equal(logRequest.getStateExecutionId())
                                                     .field("applicationId")
-                                                    .equal("applicationId")
-                                                    .field("timeStamp")
-                                                    .lessThanOrEq(tillTimeStamp);
+                                                    .equal(logRequest.getApplicationId())
+                                                    .field("clusterLevel")
+                                                    .equal(clusterLevel)
+                                                    .field("query")
+                                                    .equal(logRequest.getQuery())
+                                                    .field("host")
+                                                    .hasAnyOf(logRequest.getNodes())
+                                                    .field("logCollectionMinute")
+                                                    .equal(logRequest.getLogCollectionMinute());
 
-    wingsPersistence.update(
-        splunkLogDataRecords, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("processed", true));
-    return true;
+    return wingsPersistence.delete(splunkLogDataRecords);
   }
 
   @Override
@@ -170,24 +199,77 @@ public class AnalysisServiceImpl implements AnalysisService {
     return splunkLogDataRecordQuery.asList().size() > 0;
   }
 
-  private WorkflowExecution getLastSuccessfulWorkflowExecution(String appId, String workflowId) {
+  @Override
+  public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType,
+      String applicationId, String workflowId, String workflowExecutionId, String serviceId, String query) {
+    if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+      return true;
+    }
+    final List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(applicationId, workflowId);
+    if (successfulExecutions.isEmpty()) {
+      return false;
+    }
+
+    Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
+                                                     .field("stateType")
+                                                     .equal(stateType)
+                                                     .field("workflowId")
+                                                     .equal(workflowId)
+                                                     .field("workflowExecutionId")
+                                                     .hasAnyOf(successfulExecutions)
+                                                     .field("serviceId")
+                                                     .equal(serviceId)
+                                                     .field("query")
+                                                     .equal(query)
+                                                     .limit(1);
+
+    return lastSuccessfulRecords.asList().size() > 0;
+  }
+
+  private String getLastSuccessfulWorkflowExecutionIdWithLogs(
+      StateType stateType, String appId, String serviceId, String query, String workflowId) {
+    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
+    for (String successfulExecution : successfulExecutions) {
+      Query<LogDataRecord> lastSuccessfulRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                                                           .field("stateType")
+                                                           .equal(stateType)
+                                                           .field("workflowId")
+                                                           .equal(workflowId)
+                                                           .field("workflowExecutionId")
+                                                           .equal(successfulExecution)
+                                                           .field("serviceId")
+                                                           .equal(serviceId)
+                                                           .field("query")
+                                                           .equal(query)
+                                                           .limit(1);
+
+      List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
+      if (lastSuccessfulRecords != null && lastSuccessfulRecords.size() > 0) {
+        return successfulExecution;
+      }
+    }
+    logger.error("Could not get a successful workflow to find control nodes");
+    return null;
+  }
+
+  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
     final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
                                                            .addOrder("createdAt", OrderType.DESC)
-                                                           .withLimit("1")
                                                            .build();
 
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
-    if (workflowExecutions.isEmpty()) {
-      logger.error("Could not get a successful workflow to find control nodes");
-      return null;
-    }
+    final List<String> workflowExecutionIds = new ArrayList<>();
 
-    Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
-    return workflowExecutions.get(0);
+    if (workflowExecutions != null) {
+      for (WorkflowExecution workflowExecution : workflowExecutions) {
+        workflowExecutionIds.add(workflowExecution.getUuid());
+      }
+    }
+    return workflowExecutionIds;
   }
 
   @Override
@@ -254,15 +336,15 @@ public class AnalysisServiceImpl implements AnalysisService {
       unknownClusters = analysisSummary.getUnknownClusters().size();
     }
 
-    int unknownFrequency = getUnexpectedFrequency(analysisSummary);
+    int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
     if (unknownFrequency > 0) {
       riskLevel = RiskLevel.HIGH;
     }
 
     if (unknownClusters > 0 || unknownFrequency > 0) {
       final int totalAnomalies = unknownClusters + unknownFrequency;
-      analysisSummaryMsg =
-          totalAnomalies == 1 ? totalAnomalies + " anomalous event found" : totalAnomalies + " anomalous events found";
+      analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
+                                               : totalAnomalies + " anomalous clusters found";
     }
 
     analysisSummary.setRiskLevel(riskLevel);
@@ -316,8 +398,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
         clusterSummary.getHostSummary().put(hostEntry.getKey(), hostSummary);
-        analysisSummaries.add(clusterSummary);
       }
+      analysisSummaries.add(clusterSummary);
     }
 
     return analysisSummaries;
@@ -336,16 +418,17 @@ public class AnalysisServiceImpl implements AnalysisService {
     return count;
   }
 
-  private int getUnexpectedFrequency(LogMLAnalysisSummary analysisSummary) {
+  private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
     int unexpectedFrequency = 0;
-    if (analysisSummary.getTestClusters() == null) {
+    if (testClusters == null) {
       return unexpectedFrequency;
     }
-
-    for (LogMLClusterSummary clusterSummary : analysisSummary.getTestClusters()) {
-      for (Entry<String, LogMLHostSummary> hostEntry : clusterSummary.getHostSummary().entrySet()) {
-        if (hostEntry.getValue().isUnexpectedFreq()) {
+    for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
+      for (Entry<String, SplunkAnalysisCluster> hostEntry : labelEntry.getValue().entrySet()) {
+        final SplunkAnalysisCluster analysisCluster = hostEntry.getValue();
+        if (analysisCluster.isUnexpected_freq()) {
           unexpectedFrequency++;
+          break;
         }
       }
     }
@@ -357,5 +440,86 @@ public class AnalysisServiceImpl implements AnalysisService {
     final int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
+  }
+
+  private class LogMessageClusterTask implements Runnable {
+    private final StateType stateType;
+    private final String accountId;
+    private final String workflowExecutionId;
+    private final ClusterLevel fromLevel;
+    private final ClusterLevel toLevel;
+    private final LogRequest logRequest;
+    private final String serverUrl;
+    private final String pythonScriptRoot;
+
+    private LogMessageClusterTask(StateType stateType, String accountId, String workflowExecutionId,
+        ClusterLevel fromLevel, ClusterLevel toLevel, LogRequest logRequest) {
+      this.stateType = stateType;
+      this.accountId = accountId;
+      this.workflowExecutionId = workflowExecutionId;
+      this.fromLevel = fromLevel;
+      this.toLevel = toLevel;
+      this.logRequest = logRequest;
+      String protocol = AnalysisServiceImpl.this.configuration.isSslEnabled() ? "https" : "http";
+      this.serverUrl = protocol + "://localhost:" + AnalysisServiceImpl.this.configuration.getApplicationPort();
+      this.pythonScriptRoot = System.getenv(AbstractLogAnalysisState.LOG_ML_ROOT);
+      Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
+    }
+
+    @Override
+    public void run() {
+      try {
+        final String inputLogsUrl = this.serverUrl + "/api/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
+            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
+            + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
+        String clusteredLogSaveUrl = this.serverUrl + "/api/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
+            + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId
+            + "&stateExecutionId=" + logRequest.getStateExecutionId() + "&workflowId=" + logRequest.getWorkflowId()
+            + "&workflowExecutionId=" + workflowExecutionId + "&serviceId=" + logRequest.getServiceId()
+            + "&appId=" + logRequest.getApplicationId() + "&clusterLevel=" + toLevel.name();
+
+        final List<String> command = new ArrayList<>();
+        command.add(this.pythonScriptRoot + "/" + CLUSTER_ML_SHELL_FILE_NAME);
+        command.add("--input_url");
+        command.add(inputLogsUrl);
+        command.add("--output_url");
+        command.add(clusteredLogSaveUrl);
+        command.add("--auth_token="
+            + AbstractAnalysisState.generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret()));
+        command.add("--application_id=" + logRequest.getApplicationId());
+        command.add("--workflow_id=" + logRequest.getWorkflowId());
+        command.add("--state_execution_id=" + logRequest.getStateExecutionId());
+        command.add("--service_id=" + logRequest.getServiceId());
+        command.add("--nodes");
+        command.addAll(logRequest.getNodes());
+        command.add("--sim_threshold");
+        command.add(String.valueOf(0.99));
+        command.add("--log_collection_minute");
+        command.add(String.valueOf(logRequest.getLogCollectionMinute()));
+        command.add("--cluster_level");
+        command.add(String.valueOf(toLevel.getLevel()));
+        command.add("--query=" + logRequest.getQuery());
+
+        final ProcessResult result =
+            new ProcessExecutor(command)
+                .redirectOutput(
+                    Slf4jStream
+                        .of(LoggerFactory.getLogger(getClass().getName() + "." + logRequest.getStateExecutionId()))
+                        .asInfo())
+                .execute();
+
+        switch (result.getExitValue()) {
+          case 0:
+            logger.info("First level clustering done for " + logRequest);
+            break;
+          default:
+            logger.error("First level clustering failed for " + logRequest);
+        }
+
+      } catch (Exception e) {
+        logger.error("First level clustering failed for " + logRequest, e);
+      }
+      deleteProcessed(logRequest, stateType, fromLevel);
+    }
   }
 }

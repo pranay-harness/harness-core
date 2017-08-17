@@ -1,6 +1,7 @@
 package software.wings.service.intfc.analysis;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -20,14 +21,17 @@ import javax.validation.constraints.NotNull;
  */
 public interface AnalysisService {
   @ValidationGroups(Create.class)
-  Boolean saveLogData(@NotNull StateType stateType, @NotNull String appId, @NotNull String stateExecutionId,
-      String workflowId, String workflowExecutionId, @Valid List<LogElement> logData) throws IOException;
+  Boolean saveLogData(@NotNull StateType stateType, String accountId, @NotNull String appId,
+      @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
+      ClusterLevel clusterLevel, @Valid List<LogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class)
-  List<LogDataRecord> getLogData(@Valid LogRequest logRequest, boolean compareCurrent, StateType splunkv2);
+  List<LogDataRecord> getLogData(
+      @Valid LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType splunkv2);
 
-  Boolean markProcessed(
-      @NotNull String stateExecutionId, @NotNull String applicationId, long timeStamp, StateType splunkv2);
+  void finalizeLogCollection(String accountId, StateType stateType, String workflowExecutionId, LogRequest logRequest);
+
+  boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
@@ -40,4 +44,7 @@ public interface AnalysisService {
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
+
+  boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String applicationId,
+      String workflowId, String workflowExecutionId, String serviceId, String query);
 }

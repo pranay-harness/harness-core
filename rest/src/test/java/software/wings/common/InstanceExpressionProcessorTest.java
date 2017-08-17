@@ -349,7 +349,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
-    Application app = anApplication().withName("AppA").build();
+    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
@@ -418,7 +418,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldFetchInstanceElements() {
-    Application app = anApplication().withName("AppA").build();
+    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
