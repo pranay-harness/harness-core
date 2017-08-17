@@ -26,6 +26,7 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
   private String key;
   private String host;
   private int port;
+  private String localhostName;
 
   public CloudBeesSyslogAppender() {}
 
@@ -56,7 +57,7 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
               .withMsg(layout.doLayout(loggingEvent))
               .withFacility(Facility.USER)
               .withAppName(programName)
-              .withHostname(InetAddress.getLocalHost().getHostName());
+              .withHostname(localhostName);
       messageSender.sendMessage(syslogMessage);
     } catch (IOException e) {
       e.printStackTrace();
@@ -77,7 +78,13 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
         messageSender.setSyslogServerPort(port);
         messageSender.setMessageFormat(MessageFormat.RFC_5424); // optional, default is RFC 3164
         messageSender.setSsl(true);
+        messageSender.setSocketConnectTimeoutInMillis(5000);
       }
+    }
+    try {
+      this.localhostName = InetAddress.getLocalHost().getHostName();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
@@ -174,5 +181,13 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
    */
   public void setPort(int port) {
     this.port = port;
+  }
+
+  public String getLocalhostName() {
+    return localhostName;
+  }
+
+  public void setLocalhostName(String localhostName) {
+    this.localhostName = localhostName;
   }
 }

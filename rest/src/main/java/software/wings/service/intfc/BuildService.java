@@ -7,6 +7,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.utils.ArtifactType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,7 +98,7 @@ public interface BuildService<T> {
   boolean validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
 
   default List
-    <JobDetails> wrapJobNameWithJobDetails(List<String> jobNames) {
+    <JobDetails> wrapJobNameWithJobDetails(Collection<String> jobNames) {
       List<JobDetails> jobDetailsList = Lists.newArrayListWithExpectedSize(jobNames.size());
       for (String jobName : jobNames) {
         JobDetails jobDetails = new JobDetails(jobName, false);

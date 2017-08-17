@@ -17,18 +17,21 @@ public class LogDataCollectionInfo {
   private String stateExecutionId;
   private String workflowId;
   private String workflowExecutionId;
+  private String serviceId;
   private Set<String> queries = new HashSet<>();
   private long startTime;
   private int collectionTime;
   private Set<String> hosts;
 
   public LogDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, Set<String> queries, long startTime, int collectionTime, Set<String> hosts) {
+      String workflowExecutionId, String serviceId, Set<String> queries, long startTime, int collectionTime,
+      Set<String> hosts) {
     this.accountId = accountId;
     this.applicationId = applicationId;
     this.stateExecutionId = stateExecutionId;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
+    this.serviceId = serviceId;
     this.queries = queries;
     this.startTime = startTime;
     this.collectionTime = collectionTime;

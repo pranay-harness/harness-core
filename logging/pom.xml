@@ -31,5 +31,9 @@
             <version>1.0.8</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+        </dependency>
     </dependencies>
 </project>

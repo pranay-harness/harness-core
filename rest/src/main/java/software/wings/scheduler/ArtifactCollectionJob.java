@@ -27,7 +27,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.List;

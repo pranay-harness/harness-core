@@ -15,13 +15,9 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 12/6/16.
  */
-@JsonTypeName("rsyslog-tcp-ssl")
+@JsonTypeName("rest-log")
 public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends AbstractAppenderFactory<E> {
-  @NotNull private String name = "rsyslog-tcp-ssl-appender";
-
-  @NotNull private String host;
-
-  @NotNull private int port;
+  @NotNull private String name = "rest-log-appender";
 
   @NotNull private String programName;
 
@@ -47,46 +43,6 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @JsonProperty
   public void setName(String name) {
     this.name = name;
-  }
-
-  /**
-   * Getter for property 'host'.
-   *
-   * @return Value for property 'host'.
-   */
-  @JsonProperty
-  public String getHost() {
-    return host;
-  }
-
-  /**
-   * Setter for property 'host'.
-   *
-   * @param host Value to set for property 'host'.
-   */
-  @JsonProperty
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  /**
-   * Getter for property 'port'.
-   *
-   * @return Value for property 'port'.
-   */
-  @JsonProperty
-  public int getPort() {
-    return port;
-  }
-
-  /**
-   * Setter for property 'port'.
-   *
-   * @param port Value to set for property 'port'.
-   */
-  @JsonProperty
-  public void setPort(int port) {
-    this.port = port;
   }
 
   /**
@@ -152,7 +108,8 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    CloudBeesSyslogAppender<E> appender = new CloudBeesSyslogAppender<E>(programName, key, host, port);
+    //   CloudBeesSyslogAppender<E> appender = new CloudBeesSyslogAppender<E>(programName, key, host, port);
+    RestLogAppender<E> appender = new RestLogAppender<>(programName, key);
     appender.setName(name);
     appender.setContext(context);
     appender.setLayout(buildLayout(context, layoutFactory));

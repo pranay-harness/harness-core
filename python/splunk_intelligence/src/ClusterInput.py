@@ -97,43 +97,10 @@ class ClusterInput(object):
 
     """
 
-    def __init__(self, options):
+    def __init__(self, options, texts):
         self.tfidf_feature_matrix = None
         self._options = options
-        self.raw_events = None
-        self.texts = []
-        self.results = []
-
-    def post_to_wings_server(self):
-        SplunkHarnessLoader.post_to_wings_server(self._options.output_url, self._options.auth_token,
-                                                 json.dumps(self.results))
-
-    def load_from_wings_server(self):
-        self.raw_events = SplunkHarnessLoader.load_from_harness_raw(self._options.input_url,
-                                                                    self._options.auth_token,
-                                                                    self._options.application_id,
-                                                                    self._options.workflow_id,
-                                                                    self._options.state_execution_id,
-                                                                    self._options.log_collection_minute,
-                                                                    self._options.nodes,
-                                                                    self._options.query)
-        self.texts = [event.get('logMessage') for event in self.raw_events]
-        logger.info('# of messages = ' + str(len(self.texts)))
-
-    def load_from_file(self, input_file):
-        """
-        Useful for running program from a file input for local debugging.
-        This is not used in the prod workflow
-        """
-        self.raw_events = SplunkFileSource.load_data(input_file)
-        self.texts = []
-        count = 0
-        for idx, event in enumerate(self.raw_events):
-            if event.get('logCollectionMinute') == 1:
-                count += 1
-                self.texts.append(event.get('logMessage'))
-        self.texts.extend(self.texts)
-        logger.info('# of messages = ' + str(len(self.texts)))
+        self.texts = texts
 
     def create_hashing_feature_matrix(self):
         logger.info("creating feature matrix")
@@ -185,36 +152,25 @@ class ClusterInput(object):
 
         label = 0
         clusters = np.array([-1] * x.shape[0])
+        counts = np.array([0] * x.shape[0])
         for i in range(x.shape[0]):
             if clusters[i] == -1:
                 cols = np.where(x[i, :] > self._options.sim_threshold)[1]
                 clusters[cols] = label
-                self.raw_events[i]['clusterLabel'] = label
+                counts[cols] = len(cols)
                 label = label + 1
-                self.raw_events[i]['count'] = len(cols)
-                self.results.append(self.raw_events[i])
 
-        logger.info(clusters)
-        logger.info(np.unique(clusters))
-        logger.info(json.dumps(self.results))
+        logger.debug(clusters)
+        logger.debug(np.unique(clusters))
         logger.info("done clustering")
+        return clusters, counts
 
     def run(self):
         start = time.time()
-        self.load_from_wings_server()
         self.create_hashing_feature_matrix()
-        self.create_clusters()
-        self.post_to_wings_server()
+        clusters, counts = self.create_clusters()
         logger.info('complete run with time ' + str(time.time() - start) + ' seconds')
-
-
-def run_debug(options):
-    start = time.time()
-    ci = ClusterInput(options)
-    ci.load_from_file(options.input_file)
-    ci.create_hashing_feature_matrix()
-    ci.create_clusters()
-    logger.info('complete run with time ' + str(time.time() - start) + ' seconds')
+        return clusters, counts
 
 
 def parse(cli_args):
@@ -223,10 +179,13 @@ def parse(cli_args):
     parser.add_argument("--output_url", required=True)
     parser.add_argument("--auth_token", required=True)
     parser.add_argument("--sim_threshold", type=float, required=True)
+    parser.add_argument("--cluster_level", type=int, required=True)
+    parser.add_argument("--debug", required=False)
 
     # unwanted parameters. only here since the java api needs it
     parser.add_argument("--application_id", required=True)
     parser.add_argument("--workflow_id", required=True)
+    parser.add_argument("--service_id", required=True)
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--query", required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
@@ -238,15 +197,137 @@ def parse(cli_args):
     return parser.parse_args(cli_args)
 
 
+def post_to_wings_server(options, results):
+    SplunkHarnessLoader.post_to_wings_server(options.output_url, options.auth_token,
+                                             json.dumps(results))
+
+
+def load_from_wings_server(options):
+    raw_events = SplunkHarnessLoader.load_from_harness_raw(options.input_url,
+                                                           options.auth_token,
+                                                           options.application_id,
+                                                           options.workflow_id,
+                                                           options.state_execution_id,
+                                                           options.service_id,
+                                                           options.log_collection_minute,
+                                                           options.nodes,
+                                                           options.query)['resource']
+    return parse_data(raw_events, options.cluster_level)
+
+
+def parse_data(raw_events, level):
+    if level == 1:
+        # print(self.raw_events)
+        texts = [event.get('logMessage') for event in raw_events]
+        logger.info('# of L0 messages = ' + str(len(texts)))
+        return raw_events, texts
+    else:
+        texts = []
+        clusters = {}
+        for event in raw_events:
+            if event.get('host') not in clusters:
+                clusters[event.get('host')] = set()
+            if event.get('clusterLabel') not in clusters[event.get('host')]:
+                clusters[event.get('host')].add(event.get('clusterLabel'))
+                texts.append(event.get('logMessage'))
+        logger.info('# of L1 raw messages = ' + str(len(raw_events)))
+        logger.info('# of L1 messages = ' + str(len(texts)))
+        return raw_events, texts
+
+
+def create_response(raw_events, clusters, counts, level):
+    results = []
+    if level == 1:
+        visited_clusters = set()
+        for i in range(len(clusters)):
+            if clusters[i] not in visited_clusters:
+                raw_events[i]['clusterLabel'] = clusters[i]
+                raw_events[i]['count'] = counts[i]
+                results.append(dict(query=raw_events[i].get('query'),
+                                    clusterLabel=raw_events[i].get('clusterLabel'),
+                                    host=raw_events[i].get('host'),
+                                    timeStamp=raw_events[i].get('timeStamp'),
+                                    count=raw_events[i].get('count'),
+                                    logMessage=raw_events[i].get('logMessage'),
+                                    logCollectionMinute=raw_events[i].get('logCollectionMinute')))
+                visited_clusters.add(clusters[i])
+        logger.info('# of L1 returned = ' + str(len(results)))
+        return results
+    else:
+        i = 0
+        clusters_dict = {}
+        for m, event in enumerate(raw_events):
+            if event.get('host') not in clusters_dict:
+                clusters_dict[event.get('host')] = {}
+            if event.get('clusterLabel') not in clusters_dict[event.get('host')]:
+                clusters_dict[event.get('host')][event.get('clusterLabel')] = clusters[i]
+                i = i + 1
+
+            event['clusterLabel'] = clusters_dict[event.get('host')][event.get('clusterLabel')]
+            results.append(dict(query=event.get('query'),
+                                    clusterLabel=event.get('clusterLabel'),
+                                    host=event.get('host'),
+                                    timeStamp=event.get('timeStamp'),
+                                    count=event.get('count'),
+                                    logMessage=event.get('logMessage'),
+                                    logCollectionMinute=event.get('logCollectionMinute')))
+        logger.info('# of L2 returned = ' + str(len(results)))
+        return results
+
+
+def load_from_file(input_file, level):
+    """
+    Useful for running program from a file input for local debugging.
+    This is not used in the prod workflow
+    """
+    if level == 1:
+        all_events = SplunkFileSource.load_data(input_file)
+        raw_events = []
+        count = 0
+        for idx, event in enumerate(all_events):
+            if event.get('logCollectionMinute') == 1:
+                count += 1
+                raw_events.append(event)
+        return parse_data(raw_events, level)
+    elif level == 2:
+        raw_events = SplunkFileSource.load_data(input_file)
+        count = 0
+        for idx, event in enumerate(raw_events):
+            if event.get('logCollectionMinute') == 1:
+                count += 1
+                raw_events.append(event)
+        return parse_data(raw_events, level)
+
+
+def run_debug(options):
+    start = time.time()
+    raw_events, texts = load_from_file(options.input_file, options.cluster_level)
+    ci = ClusterInput(options, texts)
+    ci.create_hashing_feature_matrix()
+    clusters, counts = ci.create_clusters()
+    create_response(raw_events, clusters, counts, options.cluster_level)
+    logger.info('complete run with time ' + str(time.time() - start) + ' seconds')
+
+
 def main(args):
     logger.info(args)
     options = parse(args[1:])
     logger.info(options)
 
-    run_debug(options)
+    logger.info("Running cluster level " + str(options.cluster_level))
 
-    cluster_input = ClusterInput(options)
-    cluster_input.run()
+    if options.cluster_level != 1 and options.cluster_level != 2:
+        logger.error("Unknown cluster level " + str(options.cluster_level) + " . only level 1 and 2 supported")
+        sys.exit(-1)
+
+    if options.debug:
+        run_debug(options)
+    else:
+        raw_events, texts = load_from_wings_server(options)
+        cluster_input = ClusterInput(options, texts)
+        clusters, counts = cluster_input.run()
+        results = create_response(raw_events, clusters, counts, options.cluster_level)
+        post_to_wings_server(options, results)
 
 
 if __name__ == "__main__":

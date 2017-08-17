@@ -8,28 +8,28 @@ import java.util.regex.Pattern;
 public class KubernetesConvention {
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
-  private static final String DOT = ".";
-  private static final String DASH = "-";
+  public static final String DOT = ".";
+  public static final String DASH = "-";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
-  public static String getReplicationControllerName(String appName, String serviceName, String envName, int revision) {
-    return getReplicationControllerNamePrefix(appName, serviceName, envName) + revision;
+  public static String getReplicationControllerName(String prefix, int revision) {
+    return normalize(prefix) + DOT + revision;
   }
 
   public static String getReplicationControllerNamePrefix(String appName, String serviceName, String envName) {
-    return normalize(appName + DOT + serviceName + DOT + envName + DOT);
+    return normalize(appName + DOT + serviceName + DOT + envName);
   }
 
   public static String getReplicationControllerNamePrefixFromControllerName(String controllerName) {
     return controllerName.substring(0, controllerName.lastIndexOf(DOT) + DOT.length());
   }
 
-  public static String getKubernetesServiceName(String appName, String serviceName, String envName) {
-    return normalize(noDot(appName) + DASH + noDot(serviceName) + DASH + noDot(envName));
+  public static String getKubernetesServiceName(String rcNamePrefix) {
+    return noDot(normalize(rcNamePrefix));
   }
 
-  public static String getKubernetesSecretName(String appName, String serviceName, String envName, String imageSource) {
-    return normalize(noDot(appName) + DASH + noDot(serviceName) + DASH + noDot(envName) + DASH + noDot(imageSource));
+  public static String getKubernetesSecretName(String serviceName, String imageSource) {
+    return normalize(serviceName + DASH + noDot(imageSource));
   }
 
   public static int getRevisionFromControllerName(String name) {
@@ -58,7 +58,7 @@ public class KubernetesConvention {
     return normalize(value);
   }
 
-  private static String normalize(String expression) {
+  public static String normalize(String expression) {
     return wildCharPattern.matcher(expression).replaceAll(DASH).toLowerCase();
   }
 

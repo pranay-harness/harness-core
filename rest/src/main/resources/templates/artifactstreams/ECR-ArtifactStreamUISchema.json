@@ -1,3 +1,3 @@
 {
-  "ui:order": [ "artifactStreamType", "settingId", "serviceId", "imageName", "*"]
+  "ui:order": [ "artifactStreamType", "settingId", "serviceId", "region", "imageName", "*"]
 }

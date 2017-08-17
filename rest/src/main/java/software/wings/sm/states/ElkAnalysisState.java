@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
+import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkSettingProvider;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -26,6 +29,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -42,6 +48,15 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     super(name, StateType.ELK.getType());
   }
 
+  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
+  @Attributes(required = true, title = "Baseline for Risk Analysis")
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
   @Override
   protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -56,8 +71,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final ElkDataCollectionInfo dataCollectionInfo =
         new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(), queries,
-            logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
+            getPhaseServiceId(context), queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
@@ -88,7 +103,23 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected String getStateBaseUrl() {
-    return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
+  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {
+    Set<String> testNodes = getCanaryNewHostNames(context);
+    Set<String> controlNodes = getLastExecutionNodes(context);
+    Set<String> allNodes = new HashSet<>();
+
+    if (controlNodes != null) {
+      allNodes.addAll(controlNodes);
+    }
+
+    if (testNodes != null) {
+      allNodes.addAll(testNodes);
+    }
+
+    final String accountId = appService.get(context.getAppId()).getAccountId();
+    String serviceId = getPhaseServiceId(context);
+    LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
+        getWorkflowId(context), serviceId, allNodes, logAnalysisMinute);
+    analysisService.finalizeLogCollection(accountId, StateType.ELK, context.getWorkflowExecutionId(), logRequest);
   }
 }

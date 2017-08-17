@@ -48,6 +48,7 @@ public enum TaskType {
   ECR_GET_BUILDS(ServiceImplDelegateTask.class),
   ECR_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
   ECR_GET_PLANS(ServiceImplDelegateTask.class),
+  ECR_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
   ECR_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),
   GCR_GET_BUILDS(ServiceImplDelegateTask.class),
   GCR_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),

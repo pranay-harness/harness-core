@@ -119,7 +119,8 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveApplication() {
-    Application app = anApplication().withName("AppA").withDescription("Description1").build();
+    Application app =
+        anApplication().withName("AppA").withAccountId(ACCOUNT_ID).withDescription("Description1").build();
     Application savedApp = anApplication()
                                .withUuid(APP_ID)
                                .withAccountId("ACCOUNT_ID")

@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
+import static org.awaitility.Awaitility.with;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Singleton;
@@ -8,6 +11,8 @@ import okhttp3.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.nexus.rest.model.ContentListResource;
@@ -28,6 +33,7 @@ import software.wings.helpers.ext.nexus.model.Data;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +45,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import javax.xml.stream.XMLStreamException;
 
 /**
  * Created by srinivas on 3/28/17.
@@ -48,26 +56,39 @@ public class NexusServiceImpl implements NexusService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public Map<String, String> getRepositories(final NexusConfig nexusConfig) {
-    logger.info("Retrieving repositories");
-    final Map<String, String> repos = new HashMap<>();
     try {
-      final Call<RepositoryListResourceResponse> request =
-          getRestClient(nexusConfig)
-              .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-      final Response<RepositoryListResourceResponse> response = request.execute();
-      if (isSuccessful(response)) {
-        final RepositoryListResourceResponse repositoryResponse = response.body();
-        final List<RepositoryListResource> repositories = repositoryResponse.getData();
-        repositories.forEach(repo -> { repos.put(repo.getId(), repo.getName()); });
-      }
-    } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
-      List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
-      throw new WingsException(responseMessages, e.getMessage(), e);
+      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+        try {
+          logger.info("Retrieving repositories");
+          final Map<String, String> repos = new HashMap<>();
+          final Call<RepositoryListResourceResponse> request =
+              getRestClient(nexusConfig)
+                  .getAllRepositories(
+                      Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+          final Response<RepositoryListResourceResponse> response = request.execute();
+          if (isSuccessful(response)) {
+            final RepositoryListResourceResponse repositoryResponse = response.body();
+            final List<RepositoryListResource> repositories = repositoryResponse.getData();
+            repositories.forEach(repo -> repos.put(repo.getId(), repo.getName()));
+          }
+          logger.info("Retrieving repositories success");
+          return repos;
+        } catch (WingsException e) {
+          throw e;
+        } catch (Exception e) {
+          logger.error(
+              "Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
+          if (e.getCause() instanceof XMLStreamException) {
+            throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus may not be running");
+          }
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
+        }
+      }, notNullValue());
+
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Nexus server request did not succeed within 20 secs", e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Nexus server took too long to respond");
     }
-    logger.info("Retrieving repositories success");
-    return repos;
   }
 
   @Override
@@ -323,7 +344,7 @@ public class NexusServiceImpl implements NexusService {
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving versions success");
@@ -404,6 +425,7 @@ public class NexusServiceImpl implements NexusService {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .addConverterFactory(SimpleXmlConverterFactory.createNonStrict())
+                                  .client(HttpUtil.getUnsafeOkHttpClient())
                                   .build();
     NexusRestClient nexusRestClient = retrofit.create(NexusRestClient.class);
     return nexusRestClient;
@@ -460,14 +482,12 @@ public class NexusServiceImpl implements NexusService {
   }
 
   public static void main(String... args) throws Exception {
-    NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
-                                  .withNexusUrl("https://nexus.wings.software/")
-                                  .withUsername("admin")
-                                  .withPassword("wings123!".toCharArray())
-                                  .build();
+    String url = "https://nexus.wings.software/"; //"https://127.0.0.1:8000"; //;
+    NexusConfig nexusConfig =
+        aNexusConfig().withNexusUrl(url).withUsername("admin").withPassword("wings123ss!".toCharArray()).build();
 
     NexusServiceImpl nexusService = new NexusServiceImpl();
-    // nexusService.getRepositories(nexusConfig);
+    nexusService.getRepositories(nexusConfig);
     // nexusService.getGroupIdPaths(nexusConfig, "releases");
     // List<String> names = nexusService.getArtifactNames(nexusConfig, "releases", null);
 

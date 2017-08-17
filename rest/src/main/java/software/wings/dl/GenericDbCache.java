@@ -6,7 +6,6 @@ import com.google.common.cache.LoadingCache;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.Misc;
 
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
@@ -61,7 +60,7 @@ public class GenericDbCache {
       Object obj = cache.get(makeCacheKey(cls, objKey));
       return (T) obj;
     } catch (Exception ex) {
-      logger.error(String.format("Exception occurred in fetching key %s, %s", cls.getSimpleName(), objKey), ex);
+      logger.warn(String.format("Exception occurred in fetching key %s, %s", cls.getSimpleName(), objKey), ex);
     }
     return null;
   }

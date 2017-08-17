@@ -10,7 +10,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalServiceAuth;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -18,6 +17,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
@@ -43,23 +43,26 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   @Timed
   @DelegateAuth
+  @ExternalServiceAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
       List<LogElement> logData) throws IOException {
-    return new RestResponse<>(
-        analysisService.saveLogData(StateType.ELK, appId, stateExecutionId, workflowId, workflowExecutionId, logData));
+    return new RestResponse<>(analysisService.saveLogData(StateType.ELK, accountId, appId, stateExecutionId, workflowId,
+        workflowExecutionId, serviceId, clusterLevel, logData));
   }
 
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @ExternalServiceAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
-      @QueryParam("compareCurrent") boolean compareCurrent, LogRequest logRequest) throws IOException {
-    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, StateType.ELK));
+      @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
+      LogRequest logRequest) throws IOException {
+    return new RestResponse<>(analysisService.getLogData(logRequest, compareCurrent, clusterLevel, StateType.ELK));
   }
 
   @POST

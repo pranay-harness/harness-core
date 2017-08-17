@@ -58,7 +58,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -229,7 +228,7 @@ public class DelegateServiceImpl implements DelegateService {
                           .execute()
                           .handleResponse(response -> response.getStatusLine().getStatusCode() == 200);
     } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information", e);
+      logger.warn("Unable to fetch delegate version information", e);
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", version, latestVersion,
           delegateJarDownloadUrl);
     }
@@ -351,7 +350,7 @@ public class DelegateServiceImpl implements DelegateService {
     } else {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
-      delegate.setStatus(existingDelegate.getStatus() == Status.DISABLED ? Status.DISABLED : delegate.getStatus());
+      delegate.setStatus(existingDelegate.getStatus());
       return update(delegate);
     }
   }
@@ -380,7 +379,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (responseData == null) {
       logger.warn("Task [{}] timed out. remove it from cache", task.toString());
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_DIR);
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", Constants.DELEGATE_NAME);
     }
     return responseData;
   }

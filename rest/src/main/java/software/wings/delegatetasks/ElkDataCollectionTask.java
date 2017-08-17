@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
+import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
@@ -151,7 +151,8 @@ public class ElkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataC
 
             logAnalysisStoreService.save(StateType.ELK, dataCollectionInfo.getAccountId(),
                 dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
-                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(), logElements);
+                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
+                dataCollectionInfo.getServiceId(), logElements);
             logger.info("sent elk search records to server. Num of events: " + logElements.size()
                 + " application: " + dataCollectionInfo.getApplicationId() + " stateExecutionId: "
                 + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute + " host: " + hostName);

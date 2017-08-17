@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +136,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
@@ -333,6 +334,7 @@ public enum StateType implements StateTypeDescriptor {
   }
 
   @Override
+  @JsonValue
   public String getType() {
     return name();
   }

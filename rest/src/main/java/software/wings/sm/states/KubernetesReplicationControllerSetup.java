@@ -39,6 +39,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
@@ -60,11 +61,15 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.ecr.EcrClassicService;
+import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -72,7 +77,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,9 +94,8 @@ public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
-  // length of string https://
-  private static final int HTTPS_LENGTH = 8;
 
+  private String replicationControllerName;
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -108,6 +111,11 @@ public class KubernetesReplicationControllerSetup extends State {
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
+  @Inject @Transient private transient AwsHelperService awsHelperService;
+
+  @Inject @Transient private transient EcrService ecrService;
+
+  @Inject @Transient private transient EcrClassicService ecrClassicService;
 
   /**
    * Instantiates a new state.
@@ -152,12 +160,13 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }
 
-    String lastReplicationControllerName = lastReplicationController(
-        kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
+    String rcNamePrefix = isNotEmpty(replicationControllerName)
+        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
+        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
-    String replicationControllerName =
-        KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env, revision);
+    String replicationControllerName = KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
 
     Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
                                             .put("app", KubernetesConvention.getLabelValue(app.getName()))
@@ -170,8 +179,9 @@ public class KubernetesReplicationControllerSetup extends State {
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
-    String secretName =
-        KubernetesConvention.getKubernetesSecretName(app.getName(), serviceName, env, imageDetails.sourceName);
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
+
+    String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
     kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageDetails.name,
@@ -180,7 +190,6 @@ public class KubernetesReplicationControllerSetup extends State {
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
     if (serviceType != null && serviceType != ServiceType.None) {
@@ -284,10 +293,13 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     ReplicationController lastReplicationController = null;
-    for (ReplicationController controller : replicationControllers.getItems()
-                                                .stream()
-                                                .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix))
-                                                .collect(Collectors.toList())) {
+    for (ReplicationController controller :
+        replicationControllers.getItems()
+            .stream()
+            .filter(c
+                -> c.getMetadata().getName().equals(controllerNamePrefix)
+                    || c.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
+            .collect(Collectors.toList())) {
       if (lastReplicationController == null
           || controller.getMetadata().getCreationTimestamp().compareTo(
                  lastReplicationController.getMetadata().getCreationTimestamp())
@@ -491,13 +503,28 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.password = new String(dockerConfig.getPassword());
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
-      imageDetails.name = constructImageName(ecrConfig.getEcrUrl(), ecrArtifactStream.getImageName());
+      // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
+      String imageUrl = getImageUrl(ecrArtifactStream);
+      imageDetails.name = imageUrl;
+      // sourceName should be todolist
       imageDetails.sourceName = ecrArtifactStream.getSourceName();
-      imageDetails.registryUrl = ecrConfig.getEcrUrl();
+      // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
+      imageDetails.registryUrl = constructEcrRegistryUrl(imageUrl);
       imageDetails.username = "AWS";
-      imageDetails.password = AwsHelperService.getAmazonEcrAuthToken(
-          ecrConfig.getEcrUrl(), ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
+
+      SettingValue settingValue = settingsService.get(settingId).getValue();
+
+      // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
+      if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
+        AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
+        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(
+            getAwsAccount(imageUrl), ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      } else {
+        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
+        // migration happens. The deployment code handles both the cases.
+        EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
+        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(ecrConfig);
+      }
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
       String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
@@ -519,15 +546,30 @@ public class KubernetesReplicationControllerSetup extends State {
     return imageDetails;
   }
 
-  private String constructImageName(String ecrUrl, String imageName) {
-    String subString = ecrUrl.substring(HTTPS_LENGTH);
-    StringBuilder sb = new StringBuilder(subString);
-    if (!subString.endsWith("/")) {
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream) {
+    SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
+    SettingValue value = settingAttribute.getValue();
+    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
+      AwsConfig awsConfig = (AwsConfig) value;
+      return ecrService.getEcrImageUrl(awsConfig, ecrArtifactStream.getRegion(), ecrArtifactStream);
+    } else {
+      EcrConfig ecrConfig = (EcrConfig) value;
+      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
+    }
+  }
+
+  private String constructEcrRegistryUrl(String imageUrl) {
+    StringBuilder sb = new StringBuilder("https://");
+    sb.append(imageUrl);
+    if (!imageUrl.endsWith("/")) {
       sb.append("/");
     }
 
-    sb.append(imageName);
     return sb.toString();
+  }
+
+  private String getAwsAccount(String imageUrl) {
+    return imageUrl.substring(0, imageUrl.indexOf('.'));
   }
 
   private ClusterElement getClusterElement(ExecutionContext context) {
@@ -542,6 +584,14 @@ public class KubernetesReplicationControllerSetup extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  public String getReplicationControllerName() {
+    return replicationControllerName;
+  }
+
+  public void setReplicationControllerName(String replicationControllerName) {
+    this.replicationControllerName = replicationControllerName;
+  }
 
   /**
    * Gets service type.
