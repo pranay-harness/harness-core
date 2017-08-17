@@ -66,7 +66,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     deleteAllDocuments(
         asList(Application.class, Service.class, SettingAttribute.class, ServiceInstance.class, Host.class));
 
-    app = appService.save(anApplication().withName("AppA").build());
+    app = appService.save(anApplication().withName("AppA").withAccountId(accountId).build());
     service =
         serviceResourceService.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
 
