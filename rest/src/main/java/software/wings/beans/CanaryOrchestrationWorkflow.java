@@ -198,6 +198,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
+  private void addToUserVariables(List<TemplateExpression> templateExpressions) {}
   /**
    * Invoked after loading document from mongo by morphia.
    */

@@ -5,10 +5,8 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
@@ -36,13 +34,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -63,7 +60,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -91,6 +87,8 @@ public class JenkinsState extends State {
   @Transient @Inject private ExecutorService executorService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -195,7 +193,7 @@ public class JenkinsState extends State {
     String jobNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (getTemplateExpressions() != null && !getTemplateExpressions().isEmpty()) {
+    if (templateExpressions != null && !templateExpressions.isEmpty()) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
@@ -207,9 +205,13 @@ public class JenkinsState extends State {
         }
       }
     }
-    JenkinsConfig jenkinsConfig;
+    JenkinsConfig jenkinsConfig = null;
     if (jenkinsConfigExpression != null) {
-      jenkinsConfig = resolveJenkinsConfig(context, accountId, jenkinsConfigExpression);
+      SettingAttribute settingAttribute =
+          templateExpressionProcessor.resolveSettingAttribute(context, accountId, jenkinsConfigExpression, CONNECTOR);
+      if (settingAttribute.getValue() instanceof JenkinsConfig) {
+        jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
+      }
     } else {
       jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
     }
@@ -218,7 +220,7 @@ public class JenkinsState extends State {
     String evaluatedJobName;
     try {
       if (jobNameExpression != null) {
-        evaluatedJobName = context.renderExpression(jobName);
+        evaluatedJobName = context.renderExpression(jobNameExpression);
       } else {
         evaluatedJobName = context.renderExpression(jobName);
       }
@@ -284,29 +286,6 @@ public class JenkinsState extends State {
         .build();
   }
 
-  private JenkinsConfig resolveJenkinsConfig(ExecutionContext context, String accountId, String expression) {
-    String displayName = context.renderExpression(expression);
-    PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter("accountId", EQ, accountId)
-                                                    .addFilter("category", EQ, CONNECTOR)
-                                                    .addFilter("name", EQ, displayName)
-                                                    .build();
-
-    List<SettingAttribute> settingAttributes = settingsService.list(pageRequest);
-    if (settingAttributes == null || settingAttributes.isEmpty()) {
-      return null;
-    }
-    Optional<SettingAttribute> jenkinsAttribute = settingAttributes.stream().findAny();
-    if (jenkinsAttribute.isPresent()) {
-      SettingValue settingValue = jenkinsAttribute.get().getValue();
-      if (settingValue instanceof JenkinsConfig) {
-        return (JenkinsConfig) settingValue;
-      } else {
-        return null;
-      }
-    }
-    return null;
-  }
   protected TaskType getTaskType() {
     return TaskType.JENKINS;
   }
