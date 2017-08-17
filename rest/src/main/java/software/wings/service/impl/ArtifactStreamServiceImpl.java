@@ -486,6 +486,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
+    // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
+    if (service == null) {
+      throw new WingsException("Service " + serviceId + "for the given app " + appId + "doesnt exist ");
+    }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
           ARTIFACTORY.name(), ARTIFACTORY.name());
