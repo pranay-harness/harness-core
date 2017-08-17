@@ -80,7 +80,7 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Elk setting variable types.
      */
-    ELK("Elk"),
+    ELK("ELK"),
 
     /**
      * App dynamics setting variable types.

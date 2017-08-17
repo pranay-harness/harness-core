@@ -50,6 +50,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;

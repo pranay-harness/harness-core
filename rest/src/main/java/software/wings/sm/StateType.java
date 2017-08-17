@@ -135,7 +135,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
@@ -72,6 +73,7 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
+import com.amazonaws.services.ecr.model.Repository;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
@@ -122,7 +124,6 @@ import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -133,8 +134,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-// import com.amazonaws.services.ecr.A
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -152,6 +151,10 @@ public class AwsHelperService {
         throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
       }
     }
+  }
+
+  public void validateAwsAccountCredential(EcrConfig ecrConfig) {
+    validateAwsAccountCredential(ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
   }
 
   /**
@@ -180,32 +183,50 @@ public class AwsHelperService {
         .build();
   }
 
-  private AmazonECRClient getAmazonEcrClient(String region, String accessKey, char[] secretKey) {
+  private AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
     return (AmazonECRClient) AmazonECRClientBuilder.standard()
         .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .withCredentials(new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey()))))
+        .build();
+  }
+
+  public AmazonECRClient getAmazonEcrClient(EcrConfig ecrConfig) {
+    return (AmazonECRClient) AmazonECRClientBuilder.standard()
+        .withRegion(ecrConfig.getRegion())
+        .withCredentials(new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(ecrConfig.getAccessKey(), new String(ecrConfig.getSecretKey()))))
         .build();
   }
 
   /**
    * Gets amazon ecr client.
    *
-   * @param url       the url
-   * @param region    the region
-   * @param accessKey the access key
-   * @param secretKey the secret key
    * @return the auth token
    */
-  public static String getAmazonEcrAuthToken(String url, String region, String accessKey, char[] secretKey) {
+  public String getAmazonEcrAuthToken(EcrConfig ecrConfig) {
+    AmazonECRClient ecrClient = (AmazonECRClient) AmazonECRClientBuilder.standard()
+                                    .withRegion(ecrConfig.getRegion())
+                                    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                                        ecrConfig.getAccessKey(), new String(ecrConfig.getSecretKey()))))
+                                    .build();
+
+    String url = ecrConfig.getEcrUrl();
+    // Example: https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
+    String awsAccount = url.substring(8, url.indexOf("."));
+    return ecrClient
+        .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
+        .getAuthorizationData()
+        .get(0)
+        .getAuthorizationToken();
+  }
+
+  public String getAmazonEcrAuthToken(String awsAccount, String region, String accessKey, char[] secretKey) {
     AmazonECRClient ecrClient = (AmazonECRClient) AmazonECRClientBuilder.standard()
                                     .withRegion(region)
                                     .withCredentials(new AWSStaticCredentialsProvider(
                                         new BasicAWSCredentials(accessKey, new String(secretKey))))
                                     .build();
-
-    // https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-    String awsAccount = url.substring(8, url.indexOf("."));
-
     return ecrClient
         .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
         .getAuthorizationData()
@@ -709,10 +730,18 @@ public class AwsHelperService {
     return new DescribeContainerInstancesResult();
   }
 
+  public ListImagesResult listEcrImages(AwsConfig awsConfig, String region, ListImagesRequest listImagesRequest) {
+    try {
+      return getAmazonEcrClient(awsConfig, region).listImages(listImagesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListImagesResult();
+  }
+
   public ListImagesResult listEcrImages(EcrConfig ecrConfig, ListImagesRequest listImagesRequest) {
     try {
-      return getAmazonEcrClient(ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey())
-          .listImages(listImagesRequest);
+      return getAmazonEcrClient(ecrConfig).listImages(listImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -722,12 +751,33 @@ public class AwsHelperService {
   public DescribeRepositoriesResult listRepositories(
       EcrConfig ecrConfig, DescribeRepositoriesRequest describeRepositoriesRequest) {
     try {
-      return getAmazonEcrClient(ecrConfig.getRegion(), ecrConfig.getAccessKey(), ecrConfig.getSecretKey())
-          .describeRepositories(describeRepositoriesRequest);
+      return getAmazonEcrClient(ecrConfig).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeRepositoriesResult();
+  }
+
+  public DescribeRepositoriesResult listRepositories(
+      AwsConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
+    try {
+      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeRepositoriesResult();
+  }
+
+  public Repository getRepository(AwsConfig awsConfig, String region, String repositoryName) {
+    DescribeRepositoriesRequest describeRepositoriesRequest = new DescribeRepositoriesRequest();
+    describeRepositoriesRequest.setRepositoryNames(Lists.newArrayList(repositoryName));
+    DescribeRepositoriesResult describeRepositoriesResult =
+        listRepositories(awsConfig, describeRepositoriesRequest, region);
+    List<Repository> repositories = describeRepositoriesResult.getRepositories();
+    if (repositories != null && repositories.size() > 0) {
+      return repositories.get(0);
+    }
+    return null;
   }
 
   public List<LoadBalancerDescription> getLoadBalancerDescriptions(String region, AwsConfig awsConfig) {

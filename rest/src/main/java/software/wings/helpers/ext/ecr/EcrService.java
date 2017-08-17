@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.ecr;
 
+import com.amazonaws.services.ecr.model.Repository;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
@@ -12,44 +15,54 @@ public interface EcrService {
   /**
    * Gets builds.
    *
-   * @param ecrConfig         the ecr config
+   * @param awsConfig         the aws cloud provider config
+   * @param region            the region name
    * @param imageName         the image name
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(EcrConfig ecrConfig, String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(AwsConfig awsConfig, String region, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
    *
-   * @param ecrConfig the ecr config
+   * @param awsConfig the ecr config
    * @param imageName the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(EcrConfig ecrConfig, String imageName);
+  BuildDetails getLastSuccessfulBuild(AwsConfig awsConfig, String imageName);
 
   /**
    * Validates the Image
    *
-   * @param ecrConfig the ecr config
+   * @param awsConfig the ecr config
+   * @param region the aws region
    * @param imageName the image name
    * @return the boolean
    */
-  boolean verifyRepository(EcrConfig ecrConfig, String imageName);
+  boolean verifyRepository(AwsConfig awsConfig, String region, String imageName);
 
   /**
-   * Validate the credentials
-   *
-   * @param ecrConfig the ecr config
-   * @return boolean
+   * Lists aws regions
+   * @param awsConfig aws config
+   * @return
    */
-  boolean validateCredentials(EcrConfig ecrConfig);
+  List<String> listRegions(AwsConfig awsConfig);
 
   /**
    * List ecr registry list.
    *
-   * @param ecrConfig the ecr config
+   * @param awsConfig the ecr config
    * @return the list
    */
-  List<String> listEcrRegistry(EcrConfig ecrConfig);
+  List<String> listEcrRegistry(AwsConfig awsConfig, String region);
+
+  /**
+   * Get the ECR repository info for the given name
+   * @param awsConfig aws cloud provider config
+   * @param region aws region
+   * @param ecrArtifactStream repository name
+   * @return ecr image url
+   */
+  String getEcrImageUrl(AwsConfig awsConfig, String region, EcrArtifactStream ecrArtifactStream);
 }

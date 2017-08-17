@@ -187,7 +187,7 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
     });
   }
 
-  public class SimpleEncryptionAES128 implements EncryptionInterface {
+  public static class SimpleEncryptionAES128 implements EncryptionInterface {
     private final int AES_128_KEY_LENGTH = 16;
 
     // IV and KEY both need to be AES_128_KEY_LENGTH characters long.
