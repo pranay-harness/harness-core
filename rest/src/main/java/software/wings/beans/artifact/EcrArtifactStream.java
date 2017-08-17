@@ -8,7 +8,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.EnumData;
 import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
@@ -20,7 +22,9 @@ import java.util.List;
  */
 @JsonTypeName("ECR")
 public class EcrArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String imageName;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Region", required = true) private String region;
+
+  @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String imageName;
 
   /**
    * Instantiates a new Docker artifact stream.
@@ -55,11 +59,20 @@ public class EcrArtifactStream extends ArtifactStream {
     this.imageName = imageName;
   }
 
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
   @Override
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
+        .withRegion(region)
         .withImageName(imageName)
         .build();
   }
@@ -90,6 +103,7 @@ public class EcrArtifactStream extends ArtifactStream {
         .withSettingId(getSettingId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withImageName(getImageName())
+        .withRegion(getRegion())
         .build();
   }
 
@@ -98,6 +112,7 @@ public class EcrArtifactStream extends ArtifactStream {
    */
   public static final class Builder {
     private String imageName;
+    private String region;
     private String sourceName;
     private String settingId;
     private String serviceId;
@@ -130,6 +145,17 @@ public class EcrArtifactStream extends ArtifactStream {
      */
     public Builder withImageName(String imageName) {
       this.imageName = imageName;
+      return this;
+    }
+
+    /**
+     * With region builder.
+     *
+     * @param region the region
+     * @return the builder
+     */
+    public Builder withRegion(String region) {
+      this.region = region;
       return this;
     }
 
@@ -273,6 +299,7 @@ public class EcrArtifactStream extends ArtifactStream {
     public Builder but() {
       return anEcrArtifactStream()
           .withImageName(imageName)
+          .withRegion(region)
           .withSourceName(sourceName)
           .withSettingId(settingId)
           .withServiceId(serviceId)
@@ -296,6 +323,7 @@ public class EcrArtifactStream extends ArtifactStream {
     public EcrArtifactStream build() {
       EcrArtifactStream ecrArtifactStream = new EcrArtifactStream();
       ecrArtifactStream.setImageName(imageName);
+      ecrArtifactStream.setRegion(region);
       ecrArtifactStream.setSourceName(sourceName);
       ecrArtifactStream.setSettingId(settingId);
       ecrArtifactStream.setServiceId(serviceId);

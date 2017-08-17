@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,8 @@ import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
@@ -43,6 +46,15 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
+  }
+
+  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
+  @Attributes(required = true, title = "Baseline for Risk Analysis")
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
   @Override

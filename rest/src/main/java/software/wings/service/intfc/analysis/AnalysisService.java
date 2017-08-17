@@ -1,7 +1,7 @@
 package software.wings.service.intfc.analysis;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -13,7 +13,6 @@ import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 

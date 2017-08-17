@@ -34,6 +34,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -53,11 +54,15 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.ecr.EcrClassicService;
+import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -83,6 +88,10 @@ public class EcsServiceSetup extends State {
   private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
+
+  @Inject @Transient private transient EcrService ecrService;
+
+  @Inject @Transient private transient EcrClassicService ecrClassicService;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -360,13 +369,8 @@ public class EcsServiceSetup extends State {
       return dockerArtifactStream.getImageName();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      EcrConfig ecrConfig = (EcrConfig) settingsService.get(ecrArtifactStream.getSettingId()).getValue();
-      String registry = ecrConfig.getEcrUrl().substring(8);
-      if (!registry.endsWith("/")) {
-        registry += "/";
-      }
-      String imageName = registry + ecrArtifactStream.getImageName() + ":" + artifact.getBuildNo();
-      return imageName;
+      String imageUrl = getImageUrl(ecrArtifactStream);
+      return imageUrl + ":" + artifact.getBuildNo();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
       return gcrArtifactStream.getDockerImageName();
@@ -376,6 +380,18 @@ public class EcsServiceSetup extends State {
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
+    }
+  }
+
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream) {
+    SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
+    SettingValue value = settingAttribute.getValue();
+    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
+      AwsConfig awsConfig = (AwsConfig) value;
+      return ecrService.getEcrImageUrl(awsConfig, ecrArtifactStream.getRegion(), ecrArtifactStream);
+    } else {
+      EcrConfig ecrConfig = (EcrConfig) value;
+      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
     }
   }
 
