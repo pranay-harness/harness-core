@@ -298,6 +298,17 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
+  public List<String> getAppNamesByAccountId(String accountId) {
+    List<String> appIdList = new ArrayList<>();
+    wingsPersistence.createQuery(Application.class)
+        .field("accountId")
+        .equal(accountId)
+        .asList()
+        .forEach(application -> appIdList.add(application.getName().toString()));
+    return appIdList;
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.createQuery(SettingAttribute.class)
         .field("accountId")

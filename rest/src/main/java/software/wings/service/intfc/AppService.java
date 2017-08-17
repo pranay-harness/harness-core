@@ -96,6 +96,14 @@ public interface AppService {
   List<String> getAppIdsByAccountId(String accountId);
 
   /**
+   * Gets app names by account id.
+   *
+   * @param accountId the account id
+   * @return the app names by account id
+   */
+  List<String> getAppNamesByAccountId(String accountId);
+
+  /**
    * Delete by acount id.
    *
    * @param accountId the account id
