@@ -15,6 +15,7 @@ import java.util.List;
  * This is for a Yaml payload wrapped in JSON
  */
 public class YamlPayload {
+  private String name = "";
   private String yaml = "";
   @JsonIgnore private List<ResponseMessage> responseMessages = new ArrayList<>();
 
@@ -23,6 +24,14 @@ public class YamlPayload {
 
   public YamlPayload(String yamlString) {
     this.setYamlPayload(yamlString);
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getYaml() {
