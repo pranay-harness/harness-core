@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -81,7 +80,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         Assert.assertTrue(restResponse.getResource());
       }
 
-      Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(40));
       for (int collectionMinute = 0; collectionMinute < recordsByMinute.size(); collectionMinute++) {
         WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
@@ -99,7 +98,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
             Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
         Assert.assertEquals(
-            "failed for " + host + " for minute" + collectionMinute, 15, restResponse.getResource().size());
+            "failed for " + host + " for minute " + collectionMinute, 15, restResponse.getResource().size());
       }
     }
   }
