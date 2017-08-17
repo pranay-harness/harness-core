@@ -29,6 +29,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
 import software.wings.yaml.Config;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.YamlRepresenter;
 
@@ -243,7 +244,7 @@ public class AppResource {
           rr.setResource(app);
         }
       } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
+        YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
     }
 
@@ -280,7 +281,7 @@ public class AppResource {
           rr.setResource(app);
         }
       } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
+        YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
     }
 
@@ -300,16 +301,5 @@ public class AppResource {
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);
     return new RestResponse();
-  }
-
-  private void addUnrecognizedFieldsMessage(RestResponse rr) {
-    ResponseMessage rm = new ResponseMessage();
-    rm.setCode(ErrorCode.UNRECOGNIZED_YAML_FIELDS);
-    rm.setErrorType(ResponseTypeEnum.ERROR);
-    rm.setMessage("ERROR: The Yaml provided contains unrecognized fields!");
-
-    List<ResponseMessage> responseMessages = rr.getResponseMessages();
-    responseMessages.add(rm);
-    rr.setResponseMessages(responseMessages);
   }
 }
