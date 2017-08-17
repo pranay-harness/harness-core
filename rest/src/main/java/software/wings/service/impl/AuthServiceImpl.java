@@ -17,7 +17,7 @@ import com.google.inject.Singleton;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
@@ -51,9 +51,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.Misc;
 
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.List;
 import javax.cache.Cache;
@@ -212,8 +210,9 @@ public class AuthServiceImpl implements AuthService {
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
         throw new WingsException(EXPIRED_TOKEN);
       }
-    } catch (UnsupportedEncodingException e) {
-      throw new WingsException(e);
+    } catch (Exception ex) {
+      logger.warn("Error in verifying JWT token ", ex);
+      throw ex instanceof JWTVerificationException ? new WingsException(INVALID_TOKEN) : new WingsException(ex);
     }
   }
 

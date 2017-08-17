@@ -18,7 +18,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,8 +76,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
       if (!isEmpty(missingCorrelationIds)) {
-        logger.warn("Some of the correlationIds still needs to be waited, "
-                + "waitInstanceId: [{}], correlationIds: {}",
+        logger.warn("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
             waitInstanceId, missingCorrelationIds);
         return;
       }
@@ -105,8 +103,8 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIds.contains(s))
                                                .collect(toList());
-      logger.error("notifyResponses for the correlationIds: {} not found."
-              + " skipping the callback for the waitInstanceId: [{}]",
+      logger.warn(
+          "notifyResponses for the correlationIds: {} not found. skipping the callback for the waitInstanceId: [{}]",
           missingCorrelationIds, waitInstanceId);
       return;
     }
