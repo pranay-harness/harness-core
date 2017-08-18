@@ -84,7 +84,7 @@ public class AppYamlResource {
   @Path("/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getYaml(@PathParam("appId") String appId) {
+  public RestResponse<YamlPayload> get(@PathParam("appId") String appId) {
     RestResponse rr = new RestResponse<>();
 
     List<Service> services = serviceResourceService.findServicesByApp(appId);
@@ -124,7 +124,7 @@ public class AppYamlResource {
   @Path("/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> saveFromYaml(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  public RestResponse<Application> save(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -164,7 +164,7 @@ public class AppYamlResource {
   @Path("/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> updateFromYaml(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  public RestResponse<Application> update(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
