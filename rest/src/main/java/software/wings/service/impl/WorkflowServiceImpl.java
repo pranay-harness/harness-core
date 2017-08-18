@@ -80,6 +80,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -443,8 +444,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflow.isTemplatized() || workflow.getTemplateExpressions() != null) {
       if (orchestrationWorkflow == null) {
         workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
-        orchestrationWorkflow = propagateTemplateExpressions(workflow);
+        orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       }
+      orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, workflow.getTemplateExpressions());
     }
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
@@ -473,21 +475,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflow;
   }
 
-  private OrchestrationWorkflow propagateTemplateExpressions(Workflow workflow) {
-    OrchestrationWorkflow orchestrationWorkflow;
-    orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+  private OrchestrationWorkflow propagateTemplateExpressions(
+      OrchestrationWorkflow orchestrationWorkflow, List<TemplateExpression> templateExpressions) {
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
         BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-        workflowPhases = basicOrchestrationWorkflow.getWorkflowPhases();
+        if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
+          for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
+            phase.setTemplateExpressions(templateExpressions);
+          }
+        }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-        workflowPhases = multiServiceOrchestrationWorkflow.getWorkflowPhases();
-      }
-      for (WorkflowPhase phase : workflowPhases) {
-        phase.setTemplateExpressions(workflow.getTemplateExpressions());
+        if (multiServiceOrchestrationWorkflow.getWorkflowPhases() != null) {
+          for (WorkflowPhase phase : multiServiceOrchestrationWorkflow.getWorkflowPhases()) {
+            phase.setTemplateExpressions(templateExpressions);
+          }
+        }
       }
     }
     return orchestrationWorkflow;
