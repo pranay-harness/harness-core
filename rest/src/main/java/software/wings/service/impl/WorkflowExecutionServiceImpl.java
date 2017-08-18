@@ -63,6 +63,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.lock.PersistentLocker;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -95,7 +96,6 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -135,6 +135,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private PersistentLocker persistentLocker;
 
   /**
    * {@inheritDoc}
@@ -379,64 +380,77 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    List<WorkflowExecution> runningWorkflowExecutions =
-        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, workflowId);
-    if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      throw new WingsException(ErrorCode.WORKFLOW_ALREADY_TRIGGERED);
-    }
-    // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
-
-    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-
-    if (!workflow.getOrchestrationWorkflow().isValid()) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Workflow requested for execution is not valid/complete.");
-    }
-    StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + workflowId);
-    }
-
-    WorkflowExecution workflowExecution = new WorkflowExecution();
-    workflowExecution.setAppId(appId);
-    workflowExecution.setEnvId(envId);
-    workflowExecution.setWorkflowId(workflowId);
-    workflowExecution.setName(WORKFLOW_NAME_PREF + workflow.getName());
-    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
-    workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setExecutionArgs(executionArgs);
-
-    WorkflowStandardParams stdParams;
-    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()
-            == OrchestrationWorkflowType.MULTI_SERVICE) {
-      stdParams = new CanaryWorkflowStandardParams();
-
-      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-        if (canaryOrchestrationWorkflow.getUserVariables() != null) {
-          stdParams.setWorkflowElement(
-              aWorkflowElement()
-                  .withVariables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
-                  .build());
-        }
+    boolean lockAcquired = false;
+    try {
+      lockAcquired = persistentLocker.acquireLock(Workflow.class, workflowId);
+      if (!lockAcquired) {
+        logger.error("Persistent lock could not be acquired to trigger workflow: {}", workflowId);
+        return null;
       }
-    } else {
-      stdParams = new WorkflowStandardParams();
-    }
 
-    stdParams.setAppId(appId);
-    stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
-      stdParams.setArtifactIds(
-          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
-    }
-    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+      List<WorkflowExecution> runningWorkflowExecutions =
+          getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, workflowId);
+      if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
+        throw new WingsException(ErrorCode.WORKFLOW_ALREADY_TRIGGERED);
+      }
+      // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    return triggerExecution(
-        workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
+      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+
+      if (!workflow.getOrchestrationWorkflow().isValid()) {
+        throw new WingsException(
+            ErrorCode.INVALID_REQUEST, "message", "Workflow requested for execution is not valid/complete.");
+      }
+      StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
+      if (stateMachine == null) {
+        throw new WingsException("No stateMachine associated with " + workflowId);
+      }
+
+      WorkflowExecution workflowExecution = new WorkflowExecution();
+      workflowExecution.setAppId(appId);
+      workflowExecution.setEnvId(envId);
+      workflowExecution.setWorkflowId(workflowId);
+      workflowExecution.setName(WORKFLOW_NAME_PREF + workflow.getName());
+      workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
+      workflowExecution.setStateMachineId(stateMachine.getUuid());
+      workflowExecution.setExecutionArgs(executionArgs);
+
+      WorkflowStandardParams stdParams;
+      if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
+          || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+          || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()
+              == OrchestrationWorkflowType.MULTI_SERVICE) {
+        stdParams = new CanaryWorkflowStandardParams();
+
+        if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+          CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+              (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+          if (canaryOrchestrationWorkflow.getUserVariables() != null) {
+            stdParams.setWorkflowElement(
+                aWorkflowElement()
+                    .withVariables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
+                    .build());
+          }
+        }
+      } else {
+        stdParams = new WorkflowStandardParams();
+      }
+
+      stdParams.setAppId(appId);
+      stdParams.setEnvId(envId);
+      if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+        stdParams.setArtifactIds(
+            executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+      }
+      stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+
+      return triggerExecution(
+          workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
+    } finally {
+      if (lockAcquired) {
+        persistentLocker.releaseLock(Workflow.class, workflowId);
+      }
+    }
   }
 
   private Map<String, Object> getWorkflowVariables(

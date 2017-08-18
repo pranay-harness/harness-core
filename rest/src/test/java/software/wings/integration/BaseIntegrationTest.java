@@ -22,6 +22,16 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.DirectEncrypter;
+import com.nimbusds.jwt.EncryptedJWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
@@ -53,14 +63,19 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -81,6 +96,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
       : "http://localhost:9090/api";
   protected static final String adminUserName = "admin@harness.io";
   protected static final char[] adminPassword = "admin".toCharArray();
+  protected static final String delegateAccountSecret = "2f6b0988b6fb3370073c3d0505baee59";
 
   protected static String accountId = "INVALID_ID";
   protected static String userToken = "INVALID_TOKEN";
@@ -160,6 +176,10 @@ protected void loginAdminUser() {
 
 protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
   return target.request().header("Authorization", "Bearer " + userToken);
+}
+
+protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) throws UnknownHostException {
+  return target.request().header("Authorization", "Delegate " + getDelegateToken());
 }
 
 protected Builder getRequestBuilder(WebTarget target) {
@@ -294,6 +314,7 @@ protected Service createService(String appId, Map<String, Object> serviceMap) {
   assertThat(service.getUuid()).isNotNull();
   return service;
 }
+
 protected void deleteApp(String appId) {
   WebTarget target = client.target(API_BASE + "/artifactstreams/?appId=" + appId);
   RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
@@ -301,6 +322,7 @@ protected void deleteApp(String appId) {
   });
   assertThat(response).isNotNull();
 }
+
 protected void deleteService(String serviceId) {
   WebTarget target = client.target(API_BASE + "/services/?appId=" + serviceId);
   RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
@@ -308,9 +330,45 @@ protected void deleteService(String serviceId) {
   });
   assertThat(response).isNotNull();
 }
+
 protected String randomText(int length) { // TODO: choose words start to word end boundary
   int low = randomInt(50);
   int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
   return randomSeedString.substring(low, high);
+}
+
+public String getDelegateToken() throws UnknownHostException {
+  JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                               .issuer(InetAddress.getLocalHost().getHostName())
+                               .subject(accountId)
+                               .audience("https://localhost:9090")
+                               .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
+                               .notBeforeTime(new Date())
+                               .issueTime(new Date())
+                               .jwtID(UUID.randomUUID().toString())
+                               .build();
+
+  JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
+  EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
+  DirectEncrypter directEncrypter = null;
+  byte[] encodedKey = new byte[0];
+  try {
+    encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
+  } catch (DecoderException e) {
+    e.printStackTrace();
+  }
+  try {
+    directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+  } catch (KeyLengthException e) {
+    e.printStackTrace();
+  }
+
+  try {
+    jwt.encrypt(directEncrypter);
+  } catch (JOSEException e) {
+    e.printStackTrace();
+  }
+
+  return jwt.serialize();
 }
 }
