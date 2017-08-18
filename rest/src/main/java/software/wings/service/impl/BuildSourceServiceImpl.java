@@ -10,6 +10,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -41,6 +42,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceLocator serviceLocator;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -56,14 +58,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Map<String, String> getPlans(String appId, String settingId) {
+  public Map<String, String> getPlans(String appId, String settingId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return getBuildService(settingAttribute, appId).getPlans(settingAttribute.getValue());
+    return getBuildService(settingAttribute, appId, artifactStreamType).getPlans(settingAttribute.getValue());
   }
 
   @Override
-  public Map<String, String> getPlans(String appId, String settingId, String serviceId) {
+  public Map<String, String> getPlans(String appId, String settingId, String serviceId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     Service service = serviceResourceService.get(appId, serviceId);
@@ -72,11 +74,12 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Set<String> getArtifactPaths(String appId, String jobName, String settingId, String groupId) {
+  public Set<String> getArtifactPaths(
+      String appId, String jobName, String settingId, String groupId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return Sets.newHashSet(
-        getBuildService(settingAttribute, appId).getArtifactPaths(jobName, groupId, settingAttribute.getValue()));
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                               .getArtifactPaths(jobName, groupId, settingAttribute.getValue()));
   }
 
   @Override
@@ -102,15 +105,21 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
-    return getBuildService(settingAttribute, appId)
-        .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
+      return getBuildService(settingAttribute, appId, artifactStreamType)
+          .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingAttribute.getValue());
+    } else {
+      return getBuildService(settingAttribute, appId)
+          .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingAttribute.getValue());
+    }
   }
 
   @Override
   public Set<String> getGroupIds(String appId, String repoType, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return Sets.newHashSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, settingAttribute.getValue()));
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, settingAttribute.getValue()));
   }
 
   @Override
@@ -127,5 +136,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
+  }
+
+  private BuildService getBuildService(SettingAttribute settingAttribute, String appId, String artifactStreamType) {
+    if (artifactStreamType == null) {
+      return getBuildService(settingAttribute, appId);
+    }
+    Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 }

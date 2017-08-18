@@ -114,6 +114,8 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -230,6 +232,21 @@ public class AwsHelperService {
         .getAuthorizationData()
         .get(0)
         .getAuthorizationToken();
+  }
+
+  /**
+   * Gets amazon s3 client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon s3 client
+   */
+  public AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
+    return (AmazonS3Client) AmazonS3ClientBuilder.standard()
+        .withRegion("us-east-1")
+        .withCredentials(
+            new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, String.valueOf(secretKey))))
+        .build();
   }
 
   /**

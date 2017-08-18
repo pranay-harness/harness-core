@@ -58,11 +58,12 @@ public class BuildSourceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("appId") String appId,
-      @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId) {
+      @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("streamType") String streamType) {
     if (StringUtils.isBlank(serviceId)) {
-      return new RestResponse<>(buildSourceService.getPlans(appId, settingId));
+      return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
     }
-    return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId));
+    return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType));
   }
 
   /**
@@ -78,8 +79,8 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<Set<String>> getArtifactPaths(@QueryParam("appId") String appId,
       @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId,
-      @QueryParam("groupId") String groupId) {
-    return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId));
+      @QueryParam("groupId") String groupId, @QueryParam("streamType") String streamType) {
+    return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId, streamType));
   }
 
   /**

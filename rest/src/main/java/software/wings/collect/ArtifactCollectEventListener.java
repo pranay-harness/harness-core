@@ -5,6 +5,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
@@ -12,6 +13,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
@@ -25,6 +27,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AppService;
@@ -145,6 +148,20 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
                 artifactoryConfig.getPassword(), artifactoryArtifactStream.getJobname(),
                 artifactoryArtifactStream.getGroupId(), artifactoryArtifactStream.getArtifactPaths(),
                 artifactoryArtifactStream.getArtifactPattern(), artifact.getMetadata()})
+            .build();
+      }
+      case AMAZON_S3: {
+        AmazonS3ArtifactStream amazonS3ArtifactStream = (AmazonS3ArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(amazonS3ArtifactStream.getSettingId());
+        AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+
+        return aDelegateTask()
+            .withTaskType(TaskType.AMAZON_S3_COLLECTION)
+            .withAccountId(accountId)
+            .withAppId(amazonS3ArtifactStream.getAppId())
+            .withWaitId(waitId)
+            .withParameters(new Object[] {awsConfig.getAccountId(), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+                amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
             .build();
       }
 
