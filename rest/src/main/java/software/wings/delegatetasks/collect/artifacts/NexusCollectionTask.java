@@ -1,4 +1,4 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateFile;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
@@ -31,6 +34,8 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
   @Inject private NexusService nexusService;
 
   @Inject private DelegateFileManager delegateFileManager;
+
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   public NexusCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<ListNotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
@@ -59,23 +64,8 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
         logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
         Pair<String, InputStream> fileInfo =
             nexusService.downloadArtifact(nexusConfig, repoType, groupId, artifactPath);
-        if (fileInfo == null) {
-          throw new FileNotFoundException("Unable to get artifact from nexus for path " + artifactPath);
-        }
-        in = fileInfo.getValue();
-        logger.info("Uploading the file {} ", fileInfo.getKey());
-        DelegateFile delegateFile = aDelegateFile()
-                                        .withFileName(fileInfo.getKey())
-                                        .withDelegateId(getDelegateId())
-                                        .withTaskId(getTaskId())
-                                        .withAccountId(getAccountId())
-                                        .build(); // TODO: more about delegate and task info
-        DelegateFile fileRes = delegateFileManager.upload(delegateFile, in);
-        logger.info("Uploaded the file {} ", fileInfo.getKey());
-        ArtifactFile artifactFile = new ArtifactFile();
-        artifactFile.setFileUuid(fileRes.getFileId());
-        artifactFile.setName(fileInfo.getKey());
-        res.addData(artifactFile);
+        artifactCollectionTaskHelper.addDataToResponse(
+            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);

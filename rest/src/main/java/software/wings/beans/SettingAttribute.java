@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Arrays.stream;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
@@ -200,7 +201,7 @@ public class SettingAttribute extends Base {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, DIRECT)),
 
     CONNECTOR(Lists.newArrayList(
-        SMTP, JENKINS, BAMBOO, SPLUNK, ELK, APP_DYNAMICS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY)),
+        SMTP, JENKINS, BAMBOO, SPLUNK, ELK, APP_DYNAMICS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

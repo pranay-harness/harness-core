@@ -30,18 +30,21 @@ public interface BuildSourceService {
    *
    * @param appId     the app id
    * @param settingId the setting id
+   * @param artifactStreamType artifact stream type
    * @return the plans
    */
-  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId);
+  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, String artifactStreamType);
 
   /**
    * Gets plans.
    *
    * @param appId     the app id
    * @param settingId the setting id
+   * @param artifactStreamType artifact stream type
    * @return the plans
    */
-  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId);
+  Map<String, String> getPlans(
+      @NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId, String artifactStreamType);
 
   /**
    * Gets artifact paths.
@@ -50,10 +53,11 @@ public interface BuildSourceService {
    * @param jobName   the job name
    * @param settingId the setting id
    * @param groupId   the group id
+   * @param artifactStreamType artifact stream type
    * @return the artifact paths
    */
-  Set<String> getArtifactPaths(
-      @NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId, String groupId);
+  Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
+      String groupId, String artifactStreamType);
 
   /**
    * Gets builds.

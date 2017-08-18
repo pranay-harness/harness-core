@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -221,6 +222,33 @@ public class ArtifactCollectionJob implements Job {
                     .build();
             newArtifacts.add(artifactService.create(artifact));
           }
+        }
+      }
+    } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
+      logger.info("Collecting Artifact for artifact stream {} ", AMAZON_S3.name());
+      BuildDetails latestVersion =
+          buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
+      if (latestVersion != null) {
+        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+        String buildNo =
+            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+            ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
+            : "";
+        if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
+          logger.info(
+              "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
+              buildNo, latestVersion.getNumber(), artifactStreamId);
+          Artifact artifact = anArtifact()
+                                  .withAppId(appId)
+                                  .withArtifactStreamId(artifactStreamId)
+                                  .withArtifactSourceName(artifactStream.getSourceName())
+                                  .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
+                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
+                                  .withRevision(latestVersion.getRevision())
+                                  .build();
+          artifactService.create(artifact);
+        } else {
+          logger.info("Artifact of the version {} already collected.", buildNo);
         }
       }
     } else {

@@ -16,7 +16,7 @@ import javax.inject.Inject;
  */
 @Singleton
 public class ArtifactSourceTypeEnumDataProvider implements DataProvider {
-  @Inject private ServiceResourceService serviceResourceService;
+  @SuppressWarnings("unused") @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public Map<String, String> getData(String appId, String... params) {

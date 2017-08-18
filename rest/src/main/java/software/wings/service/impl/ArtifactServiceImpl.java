@@ -35,18 +35,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.CollectEvent;
+import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.amazons3.AmazonS3Service;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -60,7 +66,9 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -82,6 +90,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private FileService fileService;
   @Inject private Queue<CollectEvent> collectQueue;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private AmazonS3Service amazonS3Service;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
@@ -121,6 +130,17 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
     artifact.setStatus(status);
+    if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStream.getArtifactStreamType())) {
+      SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, artifactStream.getSettingId());
+      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+      BuildDetails artifactMetadata = amazonS3Service.getArtifactMetadata(
+          awsConfig, artifactStream.getArtifactStreamAttributes(), artifactStream.getAppId());
+      Map<String, String> metadataMap = new HashMap<>(artifact.getMetadata());
+      metadataMap.put(Constants.BUILD_NO, artifactMetadata.getNumber());
+      metadataMap.put(Constants.URL, artifactMetadata.getBuildParameters().get(Constants.URL));
+      artifact.setMetadata(metadataMap);
+    }
+
     String key = wingsPersistence.save(artifact);
 
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);

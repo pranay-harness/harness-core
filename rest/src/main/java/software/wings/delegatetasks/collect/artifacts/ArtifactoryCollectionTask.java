@@ -1,8 +1,10 @@
-package software.wings.delegatetasks;
+package software.wings.delegatetasks.collect.artifacts;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;

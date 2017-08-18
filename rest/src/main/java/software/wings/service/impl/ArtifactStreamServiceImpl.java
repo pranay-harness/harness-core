@@ -496,7 +496,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
-          ArtifactStreamType.NEXUS.name(), ARTIFACTORY.name(), ARTIFACTORY.name());
+          ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
+          ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMAZON_S3.name());
     }
   }
 
