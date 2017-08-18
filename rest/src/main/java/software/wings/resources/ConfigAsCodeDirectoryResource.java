@@ -76,7 +76,12 @@ public class ConfigAsCodeDirectoryResource {
 
     logger.info("***************** apps: " + apps);
 
-    //-------------------------
+    rr.setResource(sampleConfigAsCodeDirectory());
+
+    return rr;
+  }
+
+  private FolderNode sampleConfigAsCodeDirectory() {
     FolderNode config = new FolderNode("config", Setup.class);
     config.addChild(new YamlNode("setup.yaml", SetupYaml.class));
     FolderNode applications = new FolderNode("applications", Application.class);
@@ -108,31 +113,7 @@ public class ConfigAsCodeDirectoryResource {
     myapp2.addChild(new YamlNode("Myapp2.yaml", AppYaml.class));
     FolderNode myapp2_services = new FolderNode("services", Service.class);
     applications.addChild(myapp2_services);
-    //-------------------------
 
-    /*
-    AppYaml appYaml = new AppYaml();
-    appYaml.setServices(services);
-
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    String dumpedYaml = yaml.dump(appYaml);
-
-    // remove first line of Yaml:
-    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
-    Application app = appService.get(appId);
-    yp.setName(app.getName() + ".yaml");
-
-    rr.setResponseMessages(yp.getResponseMessages());
-
-    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
-      rr.setResource(yp);
-    }
-    */
-
-    rr.setResource(config);
-
-    return rr;
+    return config;
   }
 }

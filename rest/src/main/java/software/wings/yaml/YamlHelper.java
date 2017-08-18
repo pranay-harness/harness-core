@@ -3,6 +3,7 @@ package software.wings.yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
@@ -35,5 +36,26 @@ public class YamlHelper {
     dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
 
     return dumpOpts;
+  }
+
+  public static RestResponse<YamlPayload> getYamlRestResponse(GenericYaml theYaml, String payloadName) {
+    RestResponse rr = new RestResponse<>();
+
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
+    String dumpedYaml = yaml.dump(theYaml);
+
+    // remove first line of Yaml:
+    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
+
+    YamlPayload yp = new YamlPayload(dumpedYaml);
+    yp.setName(payloadName);
+
+    rr.setResponseMessages(yp.getResponseMessages());
+
+    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
+      rr.setResource(yp);
+    }
+
+    return rr;
   }
 }

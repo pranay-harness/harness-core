@@ -6,7 +6,7 @@ import software.wings.beans.command.ServiceCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceYaml {
+public class ServiceYaml extends GenericYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String description;
   @YamlSerialize public String artifactType;

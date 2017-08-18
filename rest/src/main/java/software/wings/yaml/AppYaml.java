@@ -5,7 +5,7 @@ import software.wings.beans.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppYaml {
+public class AppYaml extends GenericYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String description;
   @YamlSerialize public List<String> services = new ArrayList<String>();
