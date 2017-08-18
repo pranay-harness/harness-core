@@ -6,7 +6,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +14,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.yaml.AppYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
@@ -68,8 +65,6 @@ public class ServiceYamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("serviceId") String serviceId, @PathParam("appId") String appId) {
-    RestResponse rr = new RestResponse<>();
-
     Service service = serviceResourceService.get(appId, serviceId);
     List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
@@ -78,23 +73,10 @@ public class ServiceYamlResource {
     ServiceYaml serviceYaml = new ServiceYaml();
     serviceYaml.setServiceCommands(serviceCommands);
 
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    String dumpedYaml = yaml.dump(serviceYaml);
-
-    // remove first line of Yaml:
-    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
-    yp.setName(service.getName() + ".yaml");
-
-    rr.setResponseMessages(yp.getResponseMessages());
-
-    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
-      rr.setResource(yp);
-    }
-
-    return rr;
+    return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
   }
+
+  // TODO - NOTE: we probably don't need a PUT and a POST endpoint - there is really only one method - save
 
   /**
    * Save the changes reflected in serviceYaml (in a JSON "wrapper")
