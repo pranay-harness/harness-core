@@ -48,7 +48,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 /**
- * Application Resource class.
+ * Application Yaml Resource class.
  *
  * @author bsollish
  */
@@ -114,14 +114,14 @@ public class AppYamlResource {
   }
 
   /**
-   * Save the changes reflected in setupYaml (in a JSON "wrapper")
+   * Save the changes reflected in appYaml (in a JSON "wrapper")
    *
    * @param appId  the app id
    * @param yamlPayload the yaml version of app
    * @return the rest response
    */
   @POST
-  @Path("/{accountId}")
+  @Path("/{appId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Application> saveFromYaml(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
@@ -131,7 +131,7 @@ public class AppYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /*
+    /* TODO
     Application app = null;
 
     if (yaml != null && !yaml.isEmpty()) {
@@ -161,7 +161,7 @@ public class AppYamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/{accountId}")
+  @Path("/{appId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Application> updateFromYaml(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
@@ -171,7 +171,7 @@ public class AppYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /*
+    /* TODO
     Application app = null;
 
     if (yaml != null && !yaml.isEmpty()) {
