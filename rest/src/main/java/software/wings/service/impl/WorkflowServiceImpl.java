@@ -439,14 +439,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
-    setUnset(ops, "templateExpressions", workflow.getTemplateExpressions());
+    List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
+    setUnset(ops, "templateExpressions", templateExpressions);
 
-    if (workflow.isTemplatized() || workflow.getTemplateExpressions() != null) {
+    if (workflow.isTemplatized() || templateExpressions != null) {
       if (orchestrationWorkflow == null) {
         workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
         orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       }
-      orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, workflow.getTemplateExpressions());
+      orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, templateExpressions);
     }
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
@@ -1033,7 +1034,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if ("COMMAND".equals(step.getType())) {
           ServiceCommand command = serviceResourceService.getCommandByName(
               appId, serviceId, (String) step.getProperties().get("commandName"));
-          if (command.getCommand().isArtifactNeeded()) {
+          if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
             requiredEntityTypes.add(EntityType.ARTIFACT);
             phaseStep.setArtifactNeeded(true);
             break;
