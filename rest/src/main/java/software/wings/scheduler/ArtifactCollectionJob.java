@@ -29,9 +29,9 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -42,7 +42,6 @@ public class ArtifactCollectionJob implements Job {
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -50,16 +49,25 @@ public class ArtifactCollectionJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
+    List<Artifact> artifacts = null;
     try {
-      collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
+      artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
     } catch (Exception ex) {
       logger.warn("Artifact collection cron failed with error", ex);
     }
+
+    if (artifacts != null && artifacts.size() != 0) {
+      logger.info("[{}] new artifacts collected", artifacts.size());
+      artifacts.forEach(artifact -> logger.info(artifact.toString()));
+      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifacts.get(artifacts.size() - 1));
+    }
   }
 
-  private void collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
+  // TODO:: Simplify
+  private List<Artifact> collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("Artifact Stream", artifactStream);
+    List<Artifact> newArtifacts = new ArrayList<>();
 
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
         || artifactStream.getArtifactStreamType().equals(ECR.name())
@@ -90,7 +98,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
                                   .withRevision(buildDetails.getRevision())
                                   .build();
-          artifactService.create(artifact);
+          newArtifacts.add(artifactService.create(artifact));
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
@@ -117,7 +125,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
                                   .withRevision(latestVersion.getRevision())
                                   .build();
-          artifactService.create(artifact);
+          newArtifacts.add(artifactService.create(artifact));
         } else {
           logger.info("Artifact of the version {} already collected.", buildNo);
         }
@@ -152,7 +160,7 @@ public class ArtifactCollectionJob implements Job {
                                     .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
                                     .withRevision(buildDetails.getRevision())
                                     .build();
-            artifactService.create(artifact);
+            newArtifacts.add(artifactService.create(artifact));
           }
         });
       } else if (service.getArtifactType().equals(ArtifactType.RPM)) {
@@ -181,7 +189,7 @@ public class ArtifactCollectionJob implements Job {
                                         buildDetails.getArtifactPath(), Constants.ARTIFACT_FILE_NAME,
                                         buildDetails.getNumber(), Constants.BUILD_NO, buildDetails.getNumber()))
                                     .build();
-            artifactService.create(artifact);
+            newArtifacts.add(artifactService.create(artifact));
           }
         });
       } else {
@@ -211,7 +219,7 @@ public class ArtifactCollectionJob implements Job {
                     .withMetadata(ImmutableMap.of(Constants.ARTIFACT_PATH, lastSuccessfulBuild.getArtifactPath(),
                         Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
                     .build();
-            artifactService.create(artifact);
+            newArtifacts.add(artifactService.create(artifact));
           }
         }
       }
@@ -243,27 +251,27 @@ public class ArtifactCollectionJob implements Job {
                   .withMetadata(metadata)
                   .withRevision(lastSuccessfulBuild.getRevision())
                   .build();
-          artifactService.create(artifact);
+          newArtifacts.add(artifactService.create(artifact));
         } else {
           logger.info("Artifact of the version {} already collected.", buildNo);
         }
       }
     }
+    return newArtifacts;
   }
 
   /**
    * Compares two version strings.
-   *
+   * <p>
    * Use this instead of String.compareTo() for a non-lexicographical
    * comparison that works for version strings. e.g. "1.10".compareTo("1.6").
-   *
-   * @note It does not work if "1.10" is supposed to be equal to "1.10.0".
    *
    * @param str1 a string of ordinal numbers separated by decimal points.
    * @param str2 a string of ordinal numbers separated by decimal points.
    * @return The result is a negative integer if str1 is _numerically_ less than str2.
-   *         The result is a positive integer if str1 is _numerically_ greater than str2.
-   *         The result is zero if the strings are _numerically_ equal.
+   * The result is a positive integer if str1 is _numerically_ greater than str2.
+   * The result is zero if the strings are _numerically_ equal.
+   * @note It does not work if "1.10" is supposed to be equal to "1.10.0".
    */
   public static int versionCompare(String str1, String str2) {
     String[] vals1 = str1.split("\\.");

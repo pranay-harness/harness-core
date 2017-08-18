@@ -52,7 +52,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -128,11 +127,12 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (status.equals(QUEUED)) {
       logger.info("Sending event to collect artifact {} ", savedArtifact);
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
-    } else {
-      logger.info("Artifact stream {} set as Meta-data Only. Not collecting artifact", artifactStream);
-      logger.info("Triggering deployment trigger  on post artifact collection if any");
-      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(savedArtifact);
     }
+    //    else {
+    //      logger.info("Artifact stream {} set as Meta-data Only. Not collecting artifact", artifactStream);
+    //      logger.info("Triggering deployment trigger  on post artifact collection if any");
+    //      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(savedArtifact);
+    //    }
 
     return savedArtifact;
   }
