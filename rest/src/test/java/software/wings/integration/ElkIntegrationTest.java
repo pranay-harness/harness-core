@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.RestResponse;
@@ -69,7 +68,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
