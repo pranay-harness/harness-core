@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
@@ -55,6 +56,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
