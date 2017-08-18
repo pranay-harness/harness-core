@@ -1,44 +1,26 @@
 package software.wings.resources;
 
-import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.beans.Setup.SetupStatus;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.AppYaml;
-import software.wings.yaml.Config;
-import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
-import software.wings.yaml.YamlRepresenter;
 
 import java.util.List;
 import javax.inject.Inject;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -85,33 +67,19 @@ public class AppYamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId) {
-    RestResponse rr = new RestResponse<>();
-
     List<Service> services = serviceResourceService.findServicesByApp(appId);
 
     logger.info("***************** services: " + services);
 
+    Application app = appService.get(appId);
+
     AppYaml appYaml = new AppYaml();
     appYaml.setServices(services);
 
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    String dumpedYaml = yaml.dump(appYaml);
-
-    // remove first line of Yaml:
-    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
-    Application app = appService.get(appId);
-    yp.setName(app.getName() + ".yaml");
-
-    rr.setResponseMessages(yp.getResponseMessages());
-
-    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
-      rr.setResource(yp);
-    }
-
-    return rr;
+    return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
   }
+
+  // TODO - NOTE: we probably don't need a PUT and a POST endpoint - there is really only one method - save
 
   /**
    * Save the changes reflected in appYaml (in a JSON "wrapper")
