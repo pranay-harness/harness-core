@@ -14,7 +14,7 @@ class SplunkHarnessLoader(object):
         sleep_time = 1
         try:
             while max_retries > 0:
-                r = requests.get(url, verify=False)
+                r = requests.get(url, verify=False, timeout=30)
                 if r.status_code != 500 and r.status_code != 503:
                     return json.loads(r.text), r.status_code
                 else:
@@ -29,7 +29,7 @@ class SplunkHarnessLoader(object):
         sys.exit(1)
 
     @staticmethod
-    def send_request(url, payload, headers, ssl_verify=False, read_timeout=10, max_retries=1):
+    def send_request(url, payload, headers, ssl_verify=False, read_timeout=30, max_retries=1):
 
         sleep_time = 1
         try:
