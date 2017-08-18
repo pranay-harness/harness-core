@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
@@ -52,7 +51,6 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
-import com.amazonaws.services.ec2.model.DescribeAccountAttributesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -68,6 +66,7 @@ import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
+import com.amazonaws.services.ecr.model.AmazonECRException;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
@@ -144,8 +143,7 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      getAmazonEc2Client(Regions.US_EAST_1.getName(), accessKey, secretKey)
-          .describeAccountAttributes(new DescribeAccountAttributesRequest());
+      new AmazonEC2Client(new BasicAWSCredentials(accessKey, new String(secretKey))).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
@@ -452,7 +450,8 @@ public class AwsHelperService {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
-    } else if (amazonServiceException instanceof AmazonECSException) {
+    } else if (amazonServiceException instanceof AmazonECSException
+        || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
@@ -460,7 +459,7 @@ public class AwsHelperService {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
     }
   }
 
