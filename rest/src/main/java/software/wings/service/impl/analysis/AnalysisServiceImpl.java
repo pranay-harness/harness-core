@@ -20,6 +20,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
@@ -64,6 +65,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       ? 10
       : Integer.parseInt(System.getProperty("clustering.threads"));
   private final Random random = new Random();
+
+  public static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
@@ -521,5 +524,60 @@ public class AnalysisServiceImpl implements AnalysisService {
       }
       deleteProcessed(logRequest, stateType, fromLevel);
     }
+  }
+
+  @Override
+  public boolean purgeLogs() {
+    final PageRequest<Workflow> workflowRequest = PageRequest.Builder.aPageRequest().build();
+    PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, workflowRequest);
+    for (Workflow workflow : workflows) {
+      final PageRequest<WorkflowExecution> workflowExecutionRequest =
+          PageRequest.Builder.aPageRequest()
+              .addFilter("workflowId", Operator.EQ, workflow.getUuid())
+              .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+              .addOrder("createdAt", OrderType.DESC)
+              .build();
+      final PageResponse<WorkflowExecution> workflowExecutions =
+          workflowExecutionService.listExecutions(workflowExecutionRequest, false, true, false, false);
+      for (StateType stateType : logAnalysisStates) {
+        purgeLogs(stateType, workflowExecutions);
+      }
+    }
+    return true;
+  }
+
+  private void purgeLogs(StateType stateType, PageResponse<WorkflowExecution> workflowExecutions) {
+    for (WorkflowExecution workflowExecution : workflowExecutions) {
+      if (logExist(stateType, workflowExecution)) {
+        deleteNotRequiredLogs(stateType, workflowExecution);
+        return;
+      }
+    }
+  }
+
+  private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
+    Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
+                                                     .field("stateType")
+                                                     .equal(stateType)
+                                                     .field("workflowId")
+                                                     .equal(workflowExecution.getWorkflowId())
+                                                     .field("workflowExecutionId")
+                                                     .equal(workflowExecution.getUuid())
+                                                     .limit(1);
+
+    return lastSuccessfulRecords.asList().size() > 0;
+  }
+
+  private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
+    Query<LogDataRecord> deleteQuery = wingsPersistence.createQuery(LogDataRecord.class)
+                                           .field("stateType")
+                                           .equal(stateType)
+                                           .field("workflowId")
+                                           .equal(workflowExecution.getWorkflowId())
+                                           .field("workflowExecutionId")
+                                           .notEqual(workflowExecution.getUuid());
+    logger.info("deleting " + stateType + " logs for workflow:" + workflowExecution.getWorkflowId()
+        + " last successful execution: " + workflowExecution.getUuid());
+    wingsPersistence.delete(deleteQuery);
   }
 }
