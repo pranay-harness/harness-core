@@ -206,29 +206,30 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addToUserVariables(List<TemplateExpression> templateExpressions) {
     if (templateExpressions == null || templateExpressions.isEmpty()) {
+      // TODO: If templatized expression removed then remove it from use variables
       return;
     }
     for (TemplateExpression templateExpression : templateExpressions) {
       String expression = templateExpression.getExpression();
       Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
       if (matcher.matches()) {
-        while (matcher.find()) {
-          String templateVariable = matcher.group(0);
-          // remove $ and braces(${varName})
-          templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-          if (!templateVariable.startsWith("workflow.variables")) {
-            if (!userVariables.contains(templateVariable)) {
-              userVariables.add(aVariable()
-                                    .withName(templateVariable)
-                                    .withEntityType(templateExpression.getEntityType())
-                                    .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
-                                    .build());
-            }
-          }
-          {
-            // It means user already created workflow variables
+        // while (matcher.find()) {
+        String templateVariable = matcher.group(0);
+        // remove $ and braces(${varName})
+        templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
+        if (!templateVariable.startsWith("workflow.variables")) {
+          if (!userVariables.contains(templateVariable)) {
+            userVariables.add(aVariable()
+                                  .withName(templateVariable)
+                                  .withEntityType(templateExpression.getEntityType())
+                                  .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
+                                  .build());
           }
         }
+        {
+          // It means user already created workflow variables
+        }
+        // }
       } else {
         if (!userVariables.contains(expression)) {
           userVariables.add(aVariable()
