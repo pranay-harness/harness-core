@@ -67,7 +67,7 @@ public class ServiceYamlResource {
   @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getYaml(@PathParam("serviceId") String serviceId, @PathParam("appId") String appId) {
+  public RestResponse<YamlPayload> get(@PathParam("serviceId") String serviceId, @PathParam("appId") String appId) {
     RestResponse rr = new RestResponse<>();
 
     Service service = serviceResourceService.get(appId, serviceId);
@@ -104,10 +104,10 @@ public class ServiceYamlResource {
    * @return the rest response
    */
   @POST
-  @Path("/{serviceId}")
+  @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> saveFromYaml(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
+  public RestResponse<Application> save(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -144,10 +144,10 @@ public class ServiceYamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/{serviceId}")
+  @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> updateFromYaml(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
+  public RestResponse<Application> update(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 

@@ -287,6 +287,13 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
+  public List<Application> getAppsByAccountId(String accountId) {
+    List<Application> appList = new ArrayList<>();
+    appList = wingsPersistence.createQuery(Application.class).field("accountId").equal(accountId).asList();
+    return appList;
+  }
+
+  @Override
   public List<String> getAppIdsByAccountId(String accountId) {
     List<String> appIdList = new ArrayList<>();
     wingsPersistence.createQuery(Application.class)
