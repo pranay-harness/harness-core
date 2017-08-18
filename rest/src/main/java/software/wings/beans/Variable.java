@@ -9,6 +9,7 @@ public class Variable {
   private boolean mandatory;
   private String value;
   private boolean fixed;
+  private EntityType entityType;
 
   private VariableType type = VariableType.TEXT;
 
@@ -60,6 +61,14 @@ public class Variable {
     this.fixed = fixed;
   }
 
+  public EntityType getEntityType() {
+    return entityType;
+  }
+
+  public void setEntityType(EntityType entityType) {
+    this.entityType = entityType;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -93,6 +102,7 @@ public class Variable {
     private boolean mandatory;
     private String value;
     private boolean fixed;
+    private EntityType entityType;
     private VariableType type = VariableType.TEXT;
 
     private VariableBuilder() {}
@@ -126,6 +136,11 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder withEntityType(EntityType entityType) {
+      this.entityType = entityType;
+      return this;
+    }
+
     public VariableBuilder withType(VariableType type) {
       this.type = type;
       return this;
@@ -138,6 +153,7 @@ public class Variable {
       variable.setMandatory(mandatory);
       variable.setValue(value);
       variable.setFixed(fixed);
+      variable.setEntityType(entityType);
       variable.setType(type);
       return variable;
     }

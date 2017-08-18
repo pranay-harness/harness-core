@@ -4,6 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.VariableType.ENTITY;
+import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,12 +19,14 @@ import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.sm.TransitionType;
+import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
@@ -186,6 +191,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
+        addToUserVariables(workflowPhase.getTemplateExpressions());
         populatePhaseStepIds(workflowPhase);
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
@@ -198,7 +204,44 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
-  private void addToUserVariables(List<TemplateExpression> templateExpressions) {}
+  private void addToUserVariables(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions == null || templateExpressions.isEmpty()) {
+      return;
+    }
+    for (TemplateExpression templateExpression : templateExpressions) {
+      String expression = templateExpression.getExpression();
+      Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+      if (matcher.matches()) {
+        while (matcher.find()) {
+          String templateVariable = matcher.group(0);
+          // remove $ and braces(${varName})
+          templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
+          if (!templateVariable.startsWith("workflow.variables")) {
+            if (!userVariables.contains(templateVariable)) {
+              userVariables.add(aVariable()
+                                    .withName(templateVariable)
+                                    .withEntityType(templateExpression.getEntityType())
+                                    .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
+                                    .build());
+            }
+          }
+          {
+            // It means user already created workflow variables
+          }
+        }
+      } else {
+        if (!userVariables.contains(expression)) {
+          userVariables.add(aVariable()
+                                .withName(expression)
+                                .withEntityType(templateExpression.getEntityType())
+                                .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
+                                .build());
+        }
+        // throw new WingsException(INVALID_REQUEST, "message", "Invalid template expression :" +
+        // templateExpression.getExpression() + " for fieldName:" + templateExpression.getFieldName());
+      }
+    }
+  }
   /**
    * Invoked after loading document from mongo by morphia.
    */
