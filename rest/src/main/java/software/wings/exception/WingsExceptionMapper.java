@@ -25,9 +25,10 @@ import javax.ws.rs.ext.ExceptionMapper;
  */
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final Set<ErrorCode> logIgnoredErrorCodes = Sets.newHashSet(ErrorCode.INVALID_TOKEN,
-      ErrorCode.INVALID_CREDENTIAL, ErrorCode.EXPIRED_TOKEN, ErrorCode.USER_DOES_NOT_EXIST,
-      ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.UNAVAILABLE_DELEGATES);
+  private final Set<ErrorCode> logIgnoredErrorCodes =
+      Sets.newHashSet(ErrorCode.INVALID_TOKEN, ErrorCode.INVALID_CREDENTIAL, ErrorCode.EXPIRED_TOKEN,
+          ErrorCode.ACCOUNT_DOES_NOT_EXIT, ErrorCode.USER_DOES_NOT_EXIST, ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND,
+          ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.UNAVAILABLE_DELEGATES);
 
   /**
    * {@inheritDoc}
