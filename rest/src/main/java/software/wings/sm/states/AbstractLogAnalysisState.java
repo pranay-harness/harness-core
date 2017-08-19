@@ -50,6 +50,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   protected String query;
 
+  protected String indices;
+
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
 
   @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")

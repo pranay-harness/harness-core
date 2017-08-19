@@ -23,10 +23,11 @@ public class ElkLogFetchRequestTest {
     hosts.add("cdcd");
     hosts.add("csdcd");
     String query = "dskcdsds";
+    String indices = "_all";
     long startTime = System.currentTimeMillis();
     long endTime = startTime + TimeUnit.HOURS.toMillis(34);
 
-    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest(query, hosts, startTime, endTime);
+    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest(query, indices, hosts, startTime, endTime);
 
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {

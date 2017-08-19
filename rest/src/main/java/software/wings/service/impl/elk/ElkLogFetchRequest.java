@@ -20,6 +20,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class ElkLogFetchRequest {
   private final String query;
+  private final String indices;
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
@@ -55,7 +56,7 @@ public class ElkLogFetchRequest {
     hosts.add("cdcd");
     hosts.add("csdcd");
 
-    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest("dssdcsd", hosts, 38465l, 98344l);
+    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest("dssdcsd", "_all", hosts, 38465l, 98344l);
     Object jsonObject = elkLogFetchRequest.toElasticSearchJsonObject();
     System.out.println(jsonObject);
   }
