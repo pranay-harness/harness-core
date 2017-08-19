@@ -114,8 +114,9 @@ public class ElkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataC
       try {
         for (String query : dataCollectionInfo.getQueries()) {
           for (String hostName : dataCollectionInfo.getHosts()) {
-            final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest(query, Collections.singleton(hostName),
-                collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+            final ElkLogFetchRequest logFetchRequest =
+                new ElkLogFetchRequest(query, dataCollectionInfo.getIndices(), Collections.singleton(hostName),
+                    collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
 
             logger.info("running elk query: " + JsonUtils.asJson(logFetchRequest.toElasticSearchJsonObject()));
 
@@ -162,7 +163,7 @@ public class ElkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataC
         logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       } catch (Exception e) {
-        logger.error("error fetching splunk logs", e);
+        logger.error("error fetching elk logs", e);
       }
     }
   }

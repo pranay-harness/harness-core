@@ -26,6 +26,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
@@ -43,6 +44,18 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @EnumData(enumDataProvider = ElkSettingProvider.class)
   @Attributes(required = true, title = "Elastic Search Server")
   private String analysisServerConfigId;
+
+  @Attributes(required = true, title = "Elastic search indices to search",
+      description = "Comma separated list of indices : _index1,_index2")
+  @DefaultValue("_all")
+  public String
+  getIndices() {
+    return indices;
+  }
+
+  public void setIndices(String indices) {
+    this.indices = indices;
+  }
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
@@ -69,10 +82,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final ElkDataCollectionInfo dataCollectionInfo =
-        new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+    final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig,
+        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
+        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, indices,
+        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
