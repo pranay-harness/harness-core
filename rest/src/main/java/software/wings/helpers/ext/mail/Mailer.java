@@ -23,8 +23,7 @@ import java.io.StringWriter;
  */
 public class Mailer {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
-
-  private final static Logger logger = LoggerFactory.getLogger(Mailer.class);
+  public static final Logger logger = LoggerFactory.getLogger(Mailer.class);
 
   /**
    * Instantiates a new mailer.
@@ -43,20 +42,22 @@ public class Mailer {
    * @throws TemplateException the template exception
    */
   public void send(SmtpConfig smtpConfig, EmailData emailData) {
-    Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
-    email.setHostName(smtpConfig.getHost());
-    email.setSmtpPort(smtpConfig.getPort());
-    email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
-    email.setSSLOnConnect(smtpConfig.isUseSSL());
-    if (smtpConfig.isUseSSL()) {
-      email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
-    }
-
     try {
+      Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
+      email.setHostName(smtpConfig.getHost());
+      email.setSmtpPort(smtpConfig.getPort());
+      email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
+      email.setSSLOnConnect(smtpConfig.isUseSSL());
+      if (smtpConfig.isUseSSL()) {
+        email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
+      }
+
       email.setFrom(smtpConfig.getFromAddress(), "Harness Inc");
+
       for (String to : emailData.getTo()) {
         email.addTo(to);
       }
+
       for (String cc : emailData.getCc()) {
         email.addCc(cc);
       }
@@ -64,7 +65,7 @@ public class Mailer {
       String subject = emailData.getSubject();
       String body = emailData.getBody();
       if (isNotBlank(emailData.getTemplateName())) {
-        Template subjectTemplate = null;
+        Template subjectTemplate = cfg.getTemplate(emailData.getTemplateName() + "-subject.ftl");
         Template bodyTemplate = cfg.getTemplate(emailData.getTemplateName() + "-body.ftl");
 
         StringWriter subjectWriter = new StringWriter();
