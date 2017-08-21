@@ -392,7 +392,23 @@ public enum ErrorCode {
   /**
    * Unrecognized Yaml fields
    */
-  UNRECOGNIZED_YAML_FIELDS("UNRECOGNIZED_YAML_FIELDS");
+  UNRECOGNIZED_YAML_FIELDS("UNRECOGNIZED_YAML_FIELDS"),
+  /**
+   * Could not map before Yaml
+   */
+  COULD_NOT_MAP_BEFORE_YAML("COULD_NOT_MAP_BEFORE_YAML"),
+  /**
+   * Missing or empty before Yaml
+   */
+  MISSING_BEFORE_YAML("MISSING_BEFORE_YAML"),
+  /**
+   * Missing or empty Yaml
+   */
+  MISSING_YAML("MISSING_YAML"),
+  /**
+   * Non empty deletions
+   */
+  NON_EMPTY_DELETIONS("NON_EMPTY_DELETIONS");
 
   /**
    * The constant ARGS_NAME.
