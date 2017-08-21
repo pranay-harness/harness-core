@@ -50,14 +50,4 @@ public class ElkLogFetchRequest {
     String jsonOut = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
     return JsonUtils.asObject(jsonOut, Object.class);
   }
-
-  public static void main(String[] args) {
-    Set<String> hosts = new HashSet<>();
-    hosts.add("cdcd");
-    hosts.add("csdcd");
-
-    ElkLogFetchRequest elkLogFetchRequest = new ElkLogFetchRequest("dssdcsd", "_all", hosts, 38465l, 98344l);
-    Object jsonObject = elkLogFetchRequest.toElasticSearchJsonObject();
-    System.out.println(jsonObject);
-  }
 }

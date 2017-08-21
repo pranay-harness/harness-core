@@ -22,6 +22,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -34,6 +35,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
@@ -362,9 +364,9 @@ public class AnalysisServiceImpl implements AnalysisService {
       switch (stateType) {
         case SPLUNKV2:
           errorCode = ErrorCode.SPLUNK_CONFIGURATION_ERROR;
-          SyncTaskContext syncTaskContext =
+          SyncTaskContext splunkTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-          delegateProxyFactory.get(SplunkDelegateService.class, syncTaskContext)
+          delegateProxyFactory.get(SplunkDelegateService.class, splunkTaskContext)
               .validateConfig((SplunkConfig) settingAttribute.getValue());
           break;
         case ELK:
@@ -373,6 +375,13 @@ public class AnalysisServiceImpl implements AnalysisService {
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .validateConfig((ElkConfig) settingAttribute.getValue());
+          break;
+        case LOGZ:
+          errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
+          SyncTaskContext logzTaskContext =
+              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
+              .validateConfig((LogzConfig) settingAttribute.getValue());
           break;
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
