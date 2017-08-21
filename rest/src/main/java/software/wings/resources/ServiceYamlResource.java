@@ -19,8 +19,10 @@ import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -64,13 +66,11 @@ public class ServiceYamlResource {
   @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@PathParam("serviceId") String serviceId, @PathParam("appId") String appId) {
+  public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
     List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
-    logger.info("***************** serviceCommands: " + serviceCommands);
-
-    ServiceYaml serviceYaml = new ServiceYaml();
+    ServiceYaml serviceYaml = new ServiceYaml(service);
     serviceYaml.setServiceCommands(serviceCommands);
 
     return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
@@ -89,7 +89,8 @@ public class ServiceYamlResource {
   @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> save(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
+  public RestResponse<Application> save(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -129,31 +130,97 @@ public class ServiceYamlResource {
   @Path("/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> update(@QueryParam("serviceId") String serviceId, YamlPayload yamlPayload) {
+  public RestResponse<Application> update(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /* TODO
-    Application app = null;
+    //-------------
+    RestResponse beforeResponse = get(appId, serviceId);
+    YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
+    String beforeYaml = beforeYP.getYaml();
+
+    logger.info("************* BEFORE Yaml = " + beforeYaml);
+    //-------------
+
+    logger.info("************* AFTER Yaml = " + yaml);
+
+    // TODO - what are the serviceCommand changes? Which are additions and which are deletions?
+
+    List<String> addedServiceCommands = new ArrayList<String>();
+    List<String> deletedServiceCommands = new ArrayList<String>();
+
+    Service beforeService = null;
+
+    if (beforeYaml != null && !beforeYaml.isEmpty()) {
+      try {
+        beforeService = mapper.readValue(beforeYaml, Service.class);
+        beforeService.setUuid(serviceId);
+        beforeService.setAppId(appId);
+      } catch (Exception e) {
+        // bad before Yaml
+        YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+      }
+    } else {
+      // missing before Yaml
+      YamlHelper.addMissingBeforeYamlMessage(rr);
+    }
+
+    Service service = null;
 
     if (yaml != null && !yaml.isEmpty()) {
       try {
-        app = mapper.readValue(yaml, Application.class);
-        app.setUuid(appId);
+        service = mapper.readValue(yaml, Service.class);
+        service.setUuid(serviceId);
+        service.setAppId(appId);
 
-        app = setupYamlService.update(app);
+        List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
-        if (app != null) {
-          rr.setResource(app);
+        // initial the service commands to add from the after
+        for (ServiceCommand sc : serviceCommands) {
+          addedServiceCommands.add(sc.getName());
         }
+
+        if (beforeService != null) {
+          List<ServiceCommand> beforeServiceCommands = beforeService.getServiceCommands();
+
+          // initial the service commands to delete from the before, and remove the befores from the service commands to
+          // add list
+          for (ServiceCommand sc : beforeServiceCommands) {
+            deletedServiceCommands.add(sc.getName());
+            addedServiceCommands.remove(sc.getName());
+          }
+        }
+
+        // remove the afters from the service commands to delete list
+        for (ServiceCommand sc : serviceCommands) {
+          deletedServiceCommands.remove(sc.getName());
+        }
+
+        if (deletedServiceCommands.size() > 0 && !deleteEnabled) {
+          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+        } else {
+          // TODO - do the service command creations and deletions
+
+          // save the changes
+          service = serviceResourceService.update(service);
+
+          // return the new resource
+          if (service != null) {
+            rr.setResource(service);
+          }
+        }
+
       } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
+        YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
+    } else {
+      // missing Yaml
+      YamlHelper.addMissingYamlMessage(rr);
     }
-    */
 
     return rr;
   }

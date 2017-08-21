@@ -12,6 +12,14 @@ public class ServiceYaml extends GenericYaml {
   @YamlSerialize public String artifactType;
   @YamlSerialize public List<String> serviceCommands = new ArrayList<String>();
 
+  public ServiceYaml() {}
+
+  public ServiceYaml(Service service) {
+    this.name = service.getName();
+    this.description = service.getDescription();
+    this.artifactType = service.getArtifactType().toString();
+  }
+
   public String getName() {
     return name;
   }

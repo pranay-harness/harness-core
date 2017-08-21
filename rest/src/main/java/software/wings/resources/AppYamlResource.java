@@ -21,6 +21,7 @@ import software.wings.yaml.YamlPayload;
 
 import java.util.List;
 import javax.inject.Inject;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -92,7 +93,8 @@ public class AppYamlResource {
   @Path("/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> save(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  public RestResponse<Application> save(@PathParam("appId") String appId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -132,7 +134,8 @@ public class AppYamlResource {
   @Path("/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> update(@QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  public RestResponse<Application> update(@PathParam("appId") String appId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
