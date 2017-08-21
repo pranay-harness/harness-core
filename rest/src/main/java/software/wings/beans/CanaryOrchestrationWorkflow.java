@@ -204,7 +204,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
-  private void addToUserVariables(List<TemplateExpression> templateExpressions) {
+  public void addToUserVariables(List<TemplateExpression> templateExpressions) {
     if (templateExpressions == null || templateExpressions.isEmpty()) {
       // TODO: If templatized expression removed then remove it from use variables
       return;
@@ -223,6 +223,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                   .withName(templateVariable)
                                   .withEntityType(templateExpression.getEntityType())
                                   .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
+                                  .withMandatory(true)
                                   .build());
           }
         }
