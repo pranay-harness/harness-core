@@ -18,15 +18,40 @@ import software.wings.yaml.directory.YamlNode;
 import java.util.List;
 
 public class YamlHelper {
-  public static void addUnrecognizedFieldsMessage(RestResponse rr) {
+  public static void addResponseMessage(
+      RestResponse rr, ErrorCode errorCode, ResponseTypeEnum responseType, String message) {
     ResponseMessage rm = new ResponseMessage();
-    rm.setCode(ErrorCode.UNRECOGNIZED_YAML_FIELDS);
-    rm.setErrorType(ResponseTypeEnum.ERROR);
-    rm.setMessage("ERROR: The Yaml provided contains unrecognized fields!");
+    rm.setCode(errorCode);
+    rm.setErrorType(responseType);
+    rm.setMessage(message);
 
     List<ResponseMessage> responseMessages = rr.getResponseMessages();
     responseMessages.add(rm);
     rr.setResponseMessages(responseMessages);
+  }
+
+  public static void addUnrecognizedFieldsMessage(RestResponse rr) {
+    addResponseMessage(rr, ErrorCode.UNRECOGNIZED_YAML_FIELDS, ResponseTypeEnum.ERROR,
+        "ERROR: The Yaml provided contains unrecognized fields!");
+  }
+
+  public static void addCouldNotMapBeforeYamlMessage(RestResponse rr) {
+    addResponseMessage(
+        rr, ErrorCode.COULD_NOT_MAP_BEFORE_YAML, ResponseTypeEnum.ERROR, "ERROR: The BEFORE Yaml could not be mapped!");
+  }
+
+  public static void addMissingBeforeYamlMessage(RestResponse rr) {
+    addResponseMessage(
+        rr, ErrorCode.MISSING_BEFORE_YAML, ResponseTypeEnum.ERROR, "ERROR: The BEFORE Yaml is empty or missing!");
+  }
+
+  public static void addMissingYamlMessage(RestResponse rr) {
+    addResponseMessage(rr, ErrorCode.MISSING_YAML, ResponseTypeEnum.ERROR, "ERROR: The Yaml is empty or missing!");
+  }
+
+  public static void addNonEmptyDeletionsWarningMessage(RestResponse rr) {
+    addResponseMessage(
+        rr, ErrorCode.NON_EMPTY_DELETIONS, ResponseTypeEnum.WARN, "WARNING: This operation will delete objects!");
   }
 
   public static YamlRepresenter getRepresenter() {
