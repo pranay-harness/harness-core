@@ -32,6 +32,10 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
         execute(managerClient.saveElkLogs(
             accountId, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, ClusterLevel.L0, logs));
         break;
+      case LOGZ:
+        execute(managerClient.saveLogzLogs(
+            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, ClusterLevel.L0, logs));
+        break;
 
       default:
         throw new IllegalStateException("Invalid state: " + stateType);

@@ -8,7 +8,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
-import software.wings.delegatetasks.ElkDataCollectionTask;
+import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
@@ -80,9 +80,9 @@ public enum TaskType {
   SPLUNK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
-  ELK_COLLECT_LOG_DATA(ElkDataCollectionTask.class),
+  ELK_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
   LOGZ_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
-  LOGZ_COLLECT_LOG_DATA(ElkDataCollectionTask.class),
+  LOGZ_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
   ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),

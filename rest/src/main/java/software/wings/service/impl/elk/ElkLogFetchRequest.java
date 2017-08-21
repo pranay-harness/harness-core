@@ -2,6 +2,7 @@ package software.wings.service.impl.elk;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import software.wings.utils.JsonUtils;
 
@@ -47,7 +48,21 @@ public class ElkLogFetchRequest {
     mustArrayObjects.get("must").add(boolObject);
     mustArrayObjects.get("must").add(rangeObject);
 
-    String jsonOut = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
+    String jsonOut = null;
+    if (StringUtils.isBlank(indices)) {
+      JSONObject queryObject = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects));
+      jsonOut = queryObject.toString();
+    } else {
+      JSONObject indicesArray = new JSONObject();
+      for (String index : indices.split(",")) {
+        indicesArray.append("indices", index.trim());
+      }
+
+      indicesArray.put("query", new JSONObject().put("bool", mustArrayObjects));
+      JSONObject indicesObject = new JSONObject().put("indices", indicesArray);
+      jsonOut = new JSONObject().put("query", indicesObject).toString();
+    }
+
     return JsonUtils.asObject(jsonOut, Object.class);
   }
 }

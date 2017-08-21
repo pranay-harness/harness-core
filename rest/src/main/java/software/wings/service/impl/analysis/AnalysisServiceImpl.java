@@ -91,6 +91,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (clusterLevel == ClusterLevel.L0 && !logData.isEmpty()) {
       switch (stateType) {
         case ELK:
+        case LOGZ:
           final LogElement log = logData.get(0);
           final LogRequest logRequest = new LogRequest(log.getQuery(), appId, stateExecutionId, workflowId, serviceId,
               Collections.singleton(log.getHost()), log.getLogCollectionMinute());

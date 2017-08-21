@@ -23,7 +23,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   @Override
   public void validateConfig(LogzConfig logzConfig) {
     try {
-      final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest("Exception", Collections.EMPTY_SET,
+      final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest("Exception", null, Collections.EMPTY_SET,
           System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1), System.currentTimeMillis());
       final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
       final Response<Object> response = request.execute();
@@ -38,7 +38,13 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
 
   @Override
   public Object search(LogzConfig logzConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    return null;
+    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
+    final Response<Object> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    }
+
+    throw new WingsException(response.errorBody().string());
   }
 
   private LogzRestClient getLogzRestClient(final LogzConfig logzConfig) {
@@ -56,7 +62,8 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       return chain.proceed(request);
     });
 
-    final String baseUrl = logzConfig.getUrl().endsWith("/") ? logzConfig.getUrl() : logzConfig.getUrl() + "/";
+    final String baseUrl =
+        logzConfig.getLogzUrl().endsWith("/") ? logzConfig.getLogzUrl() : logzConfig.getLogzUrl() + "/";
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .addConverterFactory(JacksonConverterFactory.create())
