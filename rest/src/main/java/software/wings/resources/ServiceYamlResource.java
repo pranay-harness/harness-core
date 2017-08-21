@@ -162,6 +162,7 @@ public class ServiceYamlResource {
         beforeService.setAppId(appId);
       } catch (Exception e) {
         // bad before Yaml
+        e.printStackTrace();
         YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
       }
     } else {
@@ -205,6 +206,10 @@ public class ServiceYamlResource {
         } else {
           // TODO - do the service command creations and deletions
 
+          logger.info("************* addedServiceCommands = " + addedServiceCommands);
+          logger.info("************* deletedServiceCommands = " + deletedServiceCommands);
+
+          /*
           // save the changes
           service = serviceResourceService.update(service);
 
@@ -212,9 +217,11 @@ public class ServiceYamlResource {
           if (service != null) {
             rr.setResource(service);
           }
+          */
         }
 
       } catch (Exception e) {
+        e.printStackTrace();
         YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
     } else {
