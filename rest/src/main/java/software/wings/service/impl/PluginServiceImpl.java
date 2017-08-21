@@ -30,10 +30,12 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.PluginService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -118,10 +120,19 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(ElkConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName("Elk")
-            .withType("ELK")
+            .withDisplayName(SettingVariableTypes.ELK.name())
+            .withType(SettingVariableTypes.ELK.name())
             .withPluginCategories(asList(Verification))
-            .withUiSchema(readUiSchema("ELK"))
+            .withUiSchema(readUiSchema(SettingVariableTypes.ELK.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(LogzConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.LOGZ.name())
+            .withType(SettingVariableTypes.LOGZ.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.LOGZ.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SmtpConfig.class)

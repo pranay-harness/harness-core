@@ -83,6 +83,11 @@ public abstract class SettingValue implements ExtensionPoint {
     ELK("ELK"),
 
     /**
+     * Logz setting variable types.
+     */
+    LOGZ("LOGZ"),
+
+    /**
      * App dynamics setting variable types.
      */
     APP_DYNAMICS("AppDynamics"),

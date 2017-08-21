@@ -81,6 +81,8 @@ public enum TaskType {
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   ELK_COLLECT_LOG_DATA(ElkDataCollectionTask.class),
+  LOGZ_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
+  LOGZ_COLLECT_LOG_DATA(ElkDataCollectionTask.class),
   ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),
