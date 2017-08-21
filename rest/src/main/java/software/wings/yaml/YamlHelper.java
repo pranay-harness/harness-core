@@ -50,8 +50,8 @@ public class YamlHelper {
   }
 
   public static void addNonEmptyDeletionsWarningMessage(RestResponse rr) {
-    addResponseMessage(
-        rr, ErrorCode.NON_EMPTY_DELETIONS, ResponseTypeEnum.WARN, "WARNING: This operation will delete objects!");
+    addResponseMessage(rr, ErrorCode.NON_EMPTY_DELETIONS, ResponseTypeEnum.WARN,
+        "WARNING: This operation will delete objects! Pass 'deletEnabled=true' if you want to proceed.");
   }
 
   public static YamlRepresenter getRepresenter() {

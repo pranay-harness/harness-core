@@ -19,7 +19,10 @@ import software.wings.yaml.AppYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -75,7 +78,9 @@ public class AppYamlResource {
     Application app = appService.get(appId);
 
     AppYaml appYaml = new AppYaml();
-    appYaml.setServices(services);
+    appYaml.setName(app.getName());
+    appYaml.setDescription(app.getDescription());
+    appYaml.setServiceNamesFromServices(services);
 
     return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
   }
@@ -142,24 +147,122 @@ public class AppYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /* TODO
-    Application app = null;
+    //-------------
+    RestResponse beforeResponse = get(appId);
+    YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
+    String beforeYaml = beforeYP.getYaml();
+
+    logger.info("************* BEFORE Yaml = " + beforeYaml);
+    //-------------
+
+    logger.info("************* AFTER Yaml = " + yaml);
+
+    // what are the service changes? Which are additions and which are deletions?
+    List<String> addedServices = new ArrayList<String>();
+    List<String> deletedServices = new ArrayList<String>();
+
+    AppYaml beforeAppYaml = null;
+
+    if (beforeYaml != null && !beforeYaml.isEmpty()) {
+      try {
+        beforeAppYaml = mapper.readValue(beforeYaml, AppYaml.class);
+      } catch (Exception e) {
+        // bad before Yaml
+        e.printStackTrace();
+        YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+      }
+    } else {
+      // missing before Yaml
+      YamlHelper.addMissingBeforeYamlMessage(rr);
+    }
+
+    AppYaml appYaml = null;
 
     if (yaml != null && !yaml.isEmpty()) {
       try {
-        app = mapper.readValue(yaml, Application.class);
-        app.setUuid(appId);
+        appYaml = mapper.readValue(yaml, AppYaml.class);
 
-        app = setupYamlService.update(app);
+        List<String> serviceNames = appYaml.getServiceNames();
 
-        if (app != null) {
-          rr.setResource(app);
+        // initial the services to add from the after
+        for (String s : serviceNames) {
+          addedServices.add(s);
         }
+
+        if (beforeAppYaml != null) {
+          List<String> beforeServices = beforeAppYaml.getServiceNames();
+
+          // initial the services to delete from the before, and remove the befores from the services to add list
+          for (String s : beforeServices) {
+            deletedServices.add(s);
+            addedServices.remove(s);
+          }
+        }
+
+        // remove the afters from the services to delete list
+        for (String s : serviceNames) {
+          deletedServices.remove(s);
+        }
+
+        logger.info("************* addedServices = " + addedServices);
+        logger.info("************* deletedServices = " + deletedServices);
+
+        Application app = appService.get(appId);
+        List<Service> services = app.getServices();
+
+        Map<String, Service> serviceMap = new HashMap<String, Service>();
+
+        // populate the map
+        for (Service service : services) {
+          serviceMap.put(service.getName(), service);
+        }
+
+        // do additions
+        for (String s : addedServices) {
+          logger.info("    ------------- add Service: " + s);
+
+          // create the new Service
+          Service newService = new Service();
+          newService.setAppId(appId);
+          newService.setName(s);
+          serviceResourceService.save(newService);
+
+          // add new service to serviceMap
+          serviceMap.put(newService.getName(), newService);
+        }
+
+        if (deletedServices.size() > 0 && !deleteEnabled) {
+          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+        } else {
+          // do deletions
+          for (String servName : deletedServices) {
+            logger.info("    ------------- delete Service: " + servName);
+
+            serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
+            serviceMap.remove(servName);
+          }
+
+          // save the changes
+          app.setName(appYaml.getName());
+          app.setDescription(appYaml.getDescription());
+          app.setServices(new ArrayList(serviceMap.values()));
+
+          app = appService.update(app);
+
+          // return the new resource
+          if (app != null) {
+            rr.setResource(app);
+          }
+        }
+
       } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
+        e.printStackTrace();
+        YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
+    } else {
+      // missing Yaml
+      YamlHelper.addMissingYamlMessage(rr);
     }
-    */
 
     return rr;
   }
