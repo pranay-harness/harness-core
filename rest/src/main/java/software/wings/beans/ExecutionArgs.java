@@ -30,6 +30,7 @@ public class ExecutionArgs {
   private boolean triggeredFromPipeline;
   private String pipelineId;
   private Map<String, String> workflowVariables;
+  private EmbeddedUser triggeredBy;
 
   /**
    * Gets service id.
@@ -259,5 +260,17 @@ public class ExecutionArgs {
 
   public void setWorkflowVariables(Map<String, String> workflowVariables) {
     this.workflowVariables = workflowVariables;
+  }
+
+  /**
+   * Returns triggered by
+   * @return
+   */
+  public EmbeddedUser getTriggeredBy() {
+    return triggeredBy;
+  }
+
+  public void setTriggeredBy(EmbeddedUser triggeredBy) {
+    this.triggeredBy = triggeredBy;
   }
 }
