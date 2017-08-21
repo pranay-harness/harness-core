@@ -494,6 +494,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             phase.setTemplateExpressions(templateExpressions);
           }
         }
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+        canaryOrchestrationWorkflow.addToUserVariables(templateExpressions);
       }
     }
     return orchestrationWorkflow;
