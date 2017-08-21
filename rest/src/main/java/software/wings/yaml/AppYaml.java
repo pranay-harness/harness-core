@@ -30,11 +30,11 @@ public class AppYaml extends GenericYaml {
     return services;
   }
 
-  public void setServiceNames(List<String> serviceNames) {
+  public void setServices(List<String> serviceNames) {
     this.services = serviceNames;
   }
 
-  public void setServices(List<Service> services) {
+  public void setServiceNamesFromServices(List<Service> services) {
     for (Service service : services) {
       this.services.add(service.getName());
     }
