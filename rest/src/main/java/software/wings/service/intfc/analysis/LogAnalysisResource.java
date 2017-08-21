@@ -21,6 +21,8 @@ public interface LogAnalysisResource {
 
   String ELK_RESOURCE_BASE_URL = "elk";
 
+  String LOGZ_RESOURCE_BASE_URL = "logz";
+
   /**
    * url for delegate to send collected logs
    */

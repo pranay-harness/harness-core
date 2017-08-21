@@ -62,6 +62,7 @@ import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
+import software.wings.sm.states.LogzAnalysisState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
@@ -141,7 +142,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Elk state type.
    */
-  LOGZ(ElkAnalysisState.class, VERIFICATIONS, 6, "LOGZ.IO", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 6, "LOGZ", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

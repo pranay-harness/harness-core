@@ -75,6 +75,9 @@ public abstract class AbstractAnalysisState extends State {
   @DefaultValue("15")
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
     return timeDuration;
   }
 

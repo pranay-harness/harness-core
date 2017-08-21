@@ -50,8 +50,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   protected String query;
 
-  protected String indices;
-
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
 
   @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
@@ -223,6 +221,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     switch (stateType) {
       case ELK:
         return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
+      case LOGZ:
+        return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
       case SPLUNKV2:
         return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
       default:

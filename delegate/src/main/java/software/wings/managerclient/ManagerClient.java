@@ -96,6 +96,12 @@ public interface ManagerClient {
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
       @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
 
+  @POST(LogAnalysisResource.LOGZ_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
+  Call<RestResponse<Boolean>> saveLogzLogs(@Query("accountId") String accountId, @Query("appId") String appId,
+      @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
+      @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
+
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
       @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
