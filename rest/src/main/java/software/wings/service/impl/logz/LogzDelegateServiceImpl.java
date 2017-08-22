@@ -2,6 +2,7 @@ package software.wings.service.impl.logz;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -11,6 +12,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.logz.LogzRestClient;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
+import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -20,12 +22,13 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 8/21/17.
  */
 public class LogzDelegateServiceImpl implements LogzDelegateService {
+  private static final Object logzQuery = JsonUtils.asObject(
+      "{ \"size\": 0, \"query\": { \"bool\": { \"must\": [{ \"range\": { \"@timestamp\": { \"gte\": \"now-5m\", \"lte\": \"now\" } } }] } }, \"aggs\": { \"byType\": { \"terms\": { \"field\": \"type\", \"size\": 5 } } } }",
+      Object.class);
   @Override
   public void validateConfig(LogzConfig logzConfig) {
     try {
-      final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest("Exception", null, "beat.hostname", "message",
-          Collections.EMPTY_SET, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1), System.currentTimeMillis());
-      final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
+      final Call<Object> request = getLogzRestClient(logzConfig).search(logzQuery);
       final Response<Object> response = request.execute();
       if (response.isSuccessful()) {
         return;
