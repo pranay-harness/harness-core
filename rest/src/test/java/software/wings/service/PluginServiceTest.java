@@ -24,10 +24,12 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.intfc.PluginService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.
@@ -40,7 +42,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(15)
+        .hasSize(16)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -101,8 +103,16 @@ public class PluginServiceTest {
                 .withSettingClass(ElkConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("Elk")
+                .withDisplayName("ELK")
                 .withType("ELK")
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(LogzConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName(SettingVariableTypes.LOGZ.name())
+                .withType(SettingVariableTypes.LOGZ.name())
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -168,8 +178,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(15)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "AWS", "GCP",
+        .hasSize(16)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "AWS", "GCP",
             "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
   }
 }
