@@ -95,6 +95,7 @@ public class PauseStateTest extends WingsBaseTest {
                   .withCc(Lists.newArrayList("cc1", "cc2"))
                   .withSubject("subject")
                   .withBody("body")
+                  .withSystem(true)
                   .build());
   }
 }
