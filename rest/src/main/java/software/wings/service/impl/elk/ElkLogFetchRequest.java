@@ -81,7 +81,8 @@ public class ElkLogFetchRequest {
 
     String jsonOut = null;
     if (StringUtils.isBlank(indices)) {
-      JSONObject queryObject = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects));
+      JSONObject queryObject =
+          new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
       jsonOut = queryObject.toString();
     } else {
       JSONObject indicesArray = new JSONObject();
@@ -91,7 +92,7 @@ public class ElkLogFetchRequest {
 
       indicesArray.put("query", new JSONObject().put("bool", mustArrayObjects));
       JSONObject indicesObject = new JSONObject().put("indices", indicesArray);
-      jsonOut = new JSONObject().put("query", indicesObject).toString();
+      jsonOut = new JSONObject().put("query", indicesObject).put("size", 10000).toString();
     }
 
     return JsonUtils.asObject(jsonOut, Object.class);
