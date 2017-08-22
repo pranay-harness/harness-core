@@ -107,6 +107,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
         for (String query : dataCollectionInfo.getQueries()) {
           for (String hostName : dataCollectionInfo.getHosts()) {
             Object searchResponse;
+            String hostnameField;
+            String messageField;
             switch (dataCollectionInfo.getStateType()) {
               case ELK:
                 final ElkLogFetchRequest elkFetchRequest =
@@ -117,6 +119,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                 logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = elkDelegateService.search(
                     ((ElkDataCollectionInfo) dataCollectionInfo).getElkConfig(), elkFetchRequest);
+                hostnameField = ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField();
+                messageField = ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField();
                 break;
               case LOGZ:
                 final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query,
@@ -127,6 +131,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                 logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(
                     ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
+                hostnameField = ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField();
+                messageField = ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField();
                 break;
               default:
                 throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
@@ -146,8 +152,23 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                 continue;
               }
 
-              final String host = source.getJSONObject("beat").getString("hostname");
-              final String logMessage = source.getString("message");
+              JSONObject hostObject = null;
+              String[] hostPaths = hostnameField.split("\\.");
+              for (int j = 0; j < hostPaths.length - 1; ++j) {
+                hostObject = source.getJSONObject(hostPaths[j]);
+              }
+              final String host = hostObject == null ? source.getString(hostnameField)
+                                                     : hostObject.getString(hostPaths[hostPaths.length - 1]);
+
+              JSONObject messageObject = null;
+              String[] messagePaths = messageField.split("\\.");
+              for (int j = 0; j < messagePaths.length - 1; ++j) {
+                messageObject = source.getJSONObject(messagePaths[j]);
+              }
+
+              final String logMessage = messageObject == null
+                  ? source.getString(messageField)
+                  : messageObject.getString(messagePaths[messagePaths.length - 1]);
               final long timeStamp = ELK_DATE_FORMATER.parse(source.getString("@timestamp")).getTime();
 
               final LogElement elkLogElement = new LogElement();
