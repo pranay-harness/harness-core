@@ -12,6 +12,8 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -21,6 +23,7 @@ import java.io.StringWriter;
  */
 public class Mailer {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
+  public static final Logger logger = LoggerFactory.getLogger(Mailer.class);
 
   /**
    * Instantiates a new mailer.
@@ -38,46 +41,52 @@ public class Mailer {
    * @throws IOException       Signals that an I/O exception has occurred.
    * @throws TemplateException the template exception
    */
-  public void send(SmtpConfig smtpConfig, EmailData emailData) throws EmailException, IOException, TemplateException {
-    Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
-    email.setHostName(smtpConfig.getHost());
-    email.setSmtpPort(smtpConfig.getPort());
-    email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
-    email.setSSLOnConnect(smtpConfig.isUseSSL());
-    if (smtpConfig.isUseSSL()) {
-      email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
+  public void send(SmtpConfig smtpConfig, EmailData emailData) {
+    try {
+      Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
+      email.setHostName(smtpConfig.getHost());
+      email.setSmtpPort(smtpConfig.getPort());
+      email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
+      email.setSSLOnConnect(smtpConfig.isUseSSL());
+      if (smtpConfig.isUseSSL()) {
+        email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
+      }
+
+      email.setFrom(smtpConfig.getFromAddress(), "Harness Inc");
+
+      for (String to : emailData.getTo()) {
+        email.addTo(to);
+      }
+
+      for (String cc : emailData.getCc()) {
+        email.addCc(cc);
+      }
+
+      String subject = emailData.getSubject();
+      String body = emailData.getBody();
+      if (isNotBlank(emailData.getTemplateName())) {
+        Template subjectTemplate = cfg.getTemplate(emailData.getTemplateName() + "-subject.ftl");
+        Template bodyTemplate = cfg.getTemplate(emailData.getTemplateName() + "-body.ftl");
+
+        StringWriter subjectWriter = new StringWriter();
+        subjectTemplate.process(emailData.getTemplateModel(), subjectWriter);
+
+        subject = subjectWriter.toString();
+
+        StringWriter bodyWriter = new StringWriter();
+        bodyTemplate.process(emailData.getTemplateModel(), bodyWriter);
+
+        body = bodyWriter.toString();
+      }
+
+      email.setSubject(subject);
+      email.setMsg(body);
+
+      email.send();
+    } catch (EmailException | IOException e) {
+      logger.warn("Failed to send email. Reason: " + e.getMessage());
+    } catch (TemplateException e) {
+      logger.warn("Failed to parse email template . Reason: " + e.getMessage());
     }
-
-    email.setFrom(smtpConfig.getFromAddress(), "Harness Inc");
-
-    for (String to : emailData.getTo()) {
-      email.addTo(to);
-    }
-
-    for (String cc : emailData.getCc()) {
-      email.addCc(cc);
-    }
-
-    String subject = emailData.getSubject();
-    String body = emailData.getBody();
-    if (isNotBlank(emailData.getTemplateName())) {
-      Template subjectTemplate = cfg.getTemplate(emailData.getTemplateName() + "-subject.ftl");
-      Template bodyTemplate = cfg.getTemplate(emailData.getTemplateName() + "-body.ftl");
-
-      StringWriter subjectWriter = new StringWriter();
-      subjectTemplate.process(emailData.getTemplateModel(), subjectWriter);
-
-      subject = subjectWriter.toString();
-
-      StringWriter bodyWriter = new StringWriter();
-      bodyTemplate.process(emailData.getTemplateModel(), bodyWriter);
-
-      body = bodyWriter.toString();
-    }
-
-    email.setSubject(subject);
-    email.setMsg(body);
-
-    email.send();
   }
 }

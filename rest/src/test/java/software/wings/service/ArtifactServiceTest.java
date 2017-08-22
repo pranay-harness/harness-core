@@ -43,9 +43,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
@@ -96,6 +93,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldCreateArtifactTriggerArtifactStreamAction() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(aJenkinsArtifactStream()

@@ -1,7 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.sm.StateType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +13,7 @@ import java.util.Set;
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class LogDataCollectionInfo {
   private String accountId;
   private String applicationId;
@@ -22,19 +25,5 @@ public class LogDataCollectionInfo {
   private long startTime;
   private int collectionTime;
   private Set<String> hosts;
-
-  public LogDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, Set<String> queries, long startTime, int collectionTime,
-      Set<String> hosts) {
-    this.accountId = accountId;
-    this.applicationId = applicationId;
-    this.stateExecutionId = stateExecutionId;
-    this.workflowId = workflowId;
-    this.workflowExecutionId = workflowExecutionId;
-    this.serviceId = serviceId;
-    this.queries = queries;
-    this.startTime = startTime;
-    this.collectionTime = collectionTime;
-    this.hosts = hosts;
-  }
+  private StateType stateType;
 }

@@ -280,6 +280,7 @@ public interface Constants {
   int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   String BUILD_NO = "buildNo";
+  String URL = "url";
   String REVISION = "revision";
   String BUILD_PARAMS = "buildParameters";
   String ARTIFACT_PATH = "artifactPath";

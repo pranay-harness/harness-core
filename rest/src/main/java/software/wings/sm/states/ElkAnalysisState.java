@@ -26,6 +26,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
@@ -35,17 +36,33 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by peeyushaggarwal on 7/15/16.
+ * Created by raghu on 8/4/17.
  */
 public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
 
-  @EnumData(enumDataProvider = ElkSettingProvider.class)
-  @Attributes(required = true, title = "Elastic Search Server")
-  private String analysisServerConfigId;
+  @Attributes(required = true, title = "Elastic Search Server") protected String analysisServerConfigId;
+
+  protected String indices;
+
+  @Attributes(
+      title = "Elastic search indices to search", description = "Comma separated list of indices : _index1,_index2")
+  @DefaultValue("_all")
+  public String
+  getIndices() {
+    return indices;
+  }
+
+  public void setIndices(String indices) {
+    this.indices = indices;
+  }
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
+  }
+
+  public ElkAnalysisState(String name, String type) {
+    super(name, type);
   }
 
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
@@ -69,10 +86,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final ElkDataCollectionInfo dataCollectionInfo =
-        new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-            context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+    final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig,
+        appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
+        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, indices,
+        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
@@ -87,6 +104,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
+  @EnumData(enumDataProvider = ElkSettingProvider.class)
   public String getAnalysisServerConfigId() {
     return analysisServerConfigId;
   }

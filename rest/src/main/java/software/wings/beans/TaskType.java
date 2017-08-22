@@ -2,16 +2,17 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
-import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
-import software.wings.delegatetasks.ArtifactoryCollectionTask;
-import software.wings.delegatetasks.BambooCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
+import software.wings.delegatetasks.collect.AppdynamicsDataCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
-import software.wings.delegatetasks.ElkDataCollectionTask;
+import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.HttpTask;
-import software.wings.delegatetasks.JenkinsCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
-import software.wings.delegatetasks.NexusCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.waitnotify.NotifyResponseData;
@@ -62,6 +63,12 @@ public enum TaskType {
   NEXUS_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
   NEXUS_COLLECTION(NexusCollectionTask.class),
   NEXUS_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
+  AMAZON_S3_COLLECTION(AmazonS3CollectionTask.class),
+  AMAZON_S3_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
+  AMAZON_S3_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
+  AMAZON_S3_GET_ARTIFACT_NAMES(ServiceImplDelegateTask.class),
+  AMAZON_S3_GET_PLANS(ServiceImplDelegateTask.class),
+  AMAZON_S3_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_APP_TASK(ServiceImplDelegateTask.class),
@@ -73,7 +80,9 @@ public enum TaskType {
   SPLUNK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
-  ELK_COLLECT_LOG_DATA(ElkDataCollectionTask.class),
+  ELK_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
+  LOGZ_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
+  LOGZ_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
   ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),

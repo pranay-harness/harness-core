@@ -53,6 +53,11 @@ public enum ErrorCode {
   USER_DOES_NOT_EXIST("USER_DOES_NOT_EXIST", UNAUTHORIZED),
 
   /**
+   * User does not exist error codes.
+   */
+  ACCOUNT_DOES_NOT_EXIT("ACCOUNT_DOES_NOT_EXIST", UNAUTHORIZED),
+
+  /**
    * User domain not allowed.
    */
   USER_DOMAIN_NOT_ALLOWED("USER_DOMAIN_NOT_ALLOWED", UNAUTHORIZED),
@@ -359,9 +364,14 @@ public enum ErrorCode {
   SPLUNK_CONFIGURATION_ERROR("SPLUNK_CONFIGURATION_ERROR"),
 
   /**
-   * Splunk configuration error error code.
+   * Elk configuration error error code.
    */
-  ELK_CONFIGURATION_ERROR("SPLUNK_CONFIGURATION_ERROR"),
+  ELK_CONFIGURATION_ERROR("ELK_CONFIGURATION_ERROR"),
+
+  /**
+   * Logz configuration error error code.
+   */
+  LOGZ_CONFIGURATION_ERROR("LOGZ_CONFIGURATION_ERROR"),
 
   /**
    * Appdynamics error error code.

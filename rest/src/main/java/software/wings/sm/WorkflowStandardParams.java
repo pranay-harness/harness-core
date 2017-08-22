@@ -13,6 +13,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
@@ -74,6 +75,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Transient @JsonIgnore private transient ExecutionContext context;
 
   private Map<String, Object> workflowVariables;
+
+  @JsonIgnore private EmbeddedUser currentUser;
 
   /**
    * {@inheritDoc}
@@ -339,6 +342,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     this.workflowVariables = workflowVariables;
   }
 
+  public EmbeddedUser getCurrentUser() {
+    return currentUser;
+  }
+
+  public void setCurrentUser(EmbeddedUser currentUser) {
+    this.currentUser = currentUser;
+  }
+
   /**
    * Gets app.
    *
@@ -431,6 +442,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private Long startTs;
     private Long endTs;
     private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
+    private EmbeddedUser currentUser;
 
     private Builder() {}
 
@@ -532,6 +544,16 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
 
     /**
+     * With current user
+     * @param currentUser
+     * @return
+     */
+    public Builder withCurrentUser(EmbeddedUser currentUser) {
+      this.currentUser = currentUser;
+      return this;
+    }
+
+    /**
      * Build workflow standard params.
      *
      * @return the workflow standard params
@@ -546,6 +568,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setStartTs(startTs);
       workflowStandardParams.setEndTs(endTs);
       workflowStandardParams.setTimestampId(timestampId);
+      workflowStandardParams.setCurrentUser(currentUser);
       return workflowStandardParams;
     }
   }

@@ -1,11 +1,15 @@
 package software.wings.service.impl.analysis;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by rsingh on 6/20/17.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LogElement {
   private String query;
   private String clusterLabel;

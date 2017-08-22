@@ -19,6 +19,7 @@ import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -70,13 +71,18 @@ public class DelegateQueueTask implements Runnable {
           releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
 
       // Find tasks which are timed out and update their status to FAILED.
-      List<DelegateTask> longRunningTimedOutTasks = wingsPersistence.createQuery(DelegateTask.class)
-                                                        .field("status")
-                                                        .equal(Status.STARTED)
-                                                        .asList()
-                                                        .stream()
-                                                        .filter(DelegateTask::isTimedOut)
-                                                        .collect(Collectors.toList());
+      List<DelegateTask> longRunningTimedOutTasks = new ArrayList<>();
+      try {
+        longRunningTimedOutTasks = wingsPersistence.createQuery(DelegateTask.class)
+                                       .field("status")
+                                       .equal(Status.STARTED)
+                                       .asList()
+                                       .stream()
+                                       .filter(DelegateTask::isTimedOut)
+                                       .collect(Collectors.toList());
+      } catch (com.esotericsoftware.kryo.KryoException kryo) {
+        logger.warn("Delegate task schema backwards incompatibilty ", kryo);
+      }
 
       logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
       longRunningTimedOutTasks.forEach(delegateTask -> {

@@ -203,6 +203,7 @@ def parse(cli_args):
     parser.add_argument("--log_analysis_get_url", required=True)
     parser.add_argument("--query", required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
+    parser.add_argument("--debug", required=False)
 
     return parser.parse_args(cli_args)
 
@@ -275,7 +276,8 @@ def main(args):
     options = parse(args[1:])
     logger.info(options)
 
-    #run_debug_prev_run(options)
+    if options.debug:
+        run_debug_live_traffic(options)
 
     splunk_dataset = SplunkDatasetNew()
 

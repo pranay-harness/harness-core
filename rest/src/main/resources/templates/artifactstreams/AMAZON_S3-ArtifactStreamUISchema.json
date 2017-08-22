@@ -1,0 +1,3 @@
+{
+  "ui:order": [ "artifactStreamType", "settingId", "serviceId", "jobname", "artifactPaths",  "metadataOnly", "*"]
+}

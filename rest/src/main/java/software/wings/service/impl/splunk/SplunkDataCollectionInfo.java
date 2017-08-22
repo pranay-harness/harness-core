@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
+import software.wings.sm.StateType;
 
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo {
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId, Set<String> queries,
       long startTime, int collectionTime, Set<String> hosts) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
-        collectionTime, hosts);
+        collectionTime, hosts, StateType.SPLUNKV2);
     this.splunkConfig = splunkConfig;
   }
 }

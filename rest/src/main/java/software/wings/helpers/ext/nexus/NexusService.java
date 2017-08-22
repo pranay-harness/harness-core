@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.config.NexusConfig;
-import software.wings.delegatetasks.NexusCollectionTask;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 /**
