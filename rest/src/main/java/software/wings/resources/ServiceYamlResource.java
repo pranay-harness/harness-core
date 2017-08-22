@@ -13,6 +13,7 @@ import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.ServiceYaml;
@@ -160,6 +161,8 @@ public class ServiceYamlResource {
         beforeService = mapper.readValue(beforeYaml, Service.class);
         beforeService.setUuid(serviceId);
         beforeService.setAppId(appId);
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         // bad before Yaml
         e.printStackTrace();
@@ -220,6 +223,8 @@ public class ServiceYamlResource {
           */
         }
 
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         e.printStackTrace();
         YamlHelper.addUnrecognizedFieldsMessage(rr);
