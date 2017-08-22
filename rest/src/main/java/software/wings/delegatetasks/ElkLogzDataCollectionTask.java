@@ -117,9 +117,9 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                     ((ElkDataCollectionInfo) dataCollectionInfo).getElkConfig(), elkFetchRequest);
                 break;
               case LOGZ:
-                final ElkLogFetchRequest logzFetchRequest =
-                    new ElkLogFetchRequest(query, null, Collections.singleton(hostName), collectionStartTime,
-                        collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query,
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getIndices(), Collections.singleton(hostName),
+                    collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                 logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(
                     ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
