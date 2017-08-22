@@ -170,7 +170,9 @@ public class Variable {
     }
 
     public VariableBuilder withEntityType(EntityType entityType) {
-      this.metadata.put(ENTITY_TYPE, entityType);
+      if (entityType != null) {
+        this.metadata.put(ENTITY_TYPE, entityType);
+      }
       return this;
     }
 
@@ -179,13 +181,17 @@ public class Variable {
       return this;
     }
 
-    public VariableBuilder withArtifactType(ArtifactType artifactType) {
-      this.metadata.put(ARTIFACT_TYPE, artifactType);
+    public VariableBuilder withArtifactType(String artifactType) {
+      if (artifactType != null) {
+        this.metadata.put(ARTIFACT_TYPE, artifactType);
+      }
       return this;
     }
 
     public VariableBuilder withRelatedField(String relatedField) {
-      this.metadata.put(RELATED_FIELD, relatedField);
+      if (relatedField != null) {
+        this.metadata.put(RELATED_FIELD, relatedField);
+      }
       return this;
     }
 

@@ -27,7 +27,6 @@ import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.exception.WingsException;
 import software.wings.sm.TransitionType;
-import software.wings.utils.ArtifactType;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
@@ -225,7 +224,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     for (TemplateExpression templateExpression : templateExpressions) {
       EntityType entityType = null;
-      ArtifactType artifactType = null;
+      String artifactType = null;
       String relatedField = null;
       Map<String, Object> metadata = templateExpression.getMetadata();
       if (metadata != null) {
@@ -233,7 +232,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
         }
         if (metadata.get(ARTIFACT_TYPE) != null) {
-          artifactType = ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE));
+          artifactType = (String) metadata.get(ARTIFACT_TYPE);
         }
         if (metadata.get(RELATED_FIELD) != null) {
           relatedField = (String) metadata.get(RELATED_FIELD);
@@ -267,6 +266,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           userVariables.add(aVariable()
                                 .withName(expression)
                                 .withEntityType(entityType)
+                                .withArtifactType(artifactType)
+                                .withRelatedField(relatedField)
                                 .withType(entityType != null ? ENTITY : TEXT)
                                 .build());
         }
@@ -284,7 +285,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
               "Invalid template expression :" + templateExpression.getExpression()
                   + " for fieldName:" + templateExpression.getFieldName());
         }
-      }
+      } // Check for proper variable regex
     }
     return templateVariable;
   }
