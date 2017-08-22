@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -38,7 +39,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.PhaseSubWorkflow;
 
-import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -62,9 +62,12 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
 
   @Test
   public void shouldSendWorkflowStatusChangeNotification() {
-    NotificationRule notificationRule = aNotificationRule().withExecutionScope(ExecutionScope.WORKFLOW).build();
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                            .build();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(Arrays.asList(notificationRule)).build();
+        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
     when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
         .thenReturn(canaryOrchestrationWorkflow);
@@ -79,7 +82,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(Arrays.asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
@@ -90,9 +93,12 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
 
   @Test
   public void shouldSendWorkflowPhaseStatusChangeNotification() {
-    NotificationRule notificationRule = aNotificationRule().withExecutionScope(ExecutionScope.WORKFLOW_PHASE).build();
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW_PHASE)
+                                            .withConditions(asList(ExecutionStatus.FAILED))
+                                            .build();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(Arrays.asList(notificationRule)).build();
+        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
     when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
         .thenReturn(canaryOrchestrationWorkflow);
@@ -110,7 +116,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(Arrays.asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
