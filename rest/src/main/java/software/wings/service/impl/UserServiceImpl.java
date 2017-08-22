@@ -75,7 +75,6 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -640,7 +639,8 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(accountId);
     if (account == null) {
       String message = "Account [" + accountId + "] does not exist";
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
+      logger.warn(message);
+      throw new WingsException(ErrorCode.ACCOUNT_DOES_NOT_EXIT);
     }
     User user = get(userId);
 

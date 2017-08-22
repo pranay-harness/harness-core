@@ -86,6 +86,7 @@ public class EnvState extends State {
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
+    executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
 
     EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
     envStateExecutionData.setWorkflowId(workflowId);

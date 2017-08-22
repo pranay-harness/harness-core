@@ -146,7 +146,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
-      getLogger().error("Found anomolies. Marking it failed." + analysisSummary.getAnalysisSummaryMessage());
+      getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
       executionStatus = ExecutionStatus.FAILED;
     }
 
@@ -221,6 +221,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     switch (stateType) {
       case ELK:
         return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
+      case LOGZ:
+        return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
       case SPLUNKV2:
         return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
       default:

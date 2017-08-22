@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.ElkConfig;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
+import software.wings.sm.StateType;
 
 import java.util.Set;
 
@@ -18,12 +19,14 @@ import java.util.Set;
 @ToString(callSuper = true)
 public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private ElkConfig elkConfig;
+  private String indices;
 
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, long startTime,
-      int collectionTime, Set<String> hosts) {
+      String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
+      long startTime, int collectionTime, Set<String> hosts) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
-        collectionTime, hosts);
+        collectionTime, hosts, StateType.ELK);
     this.elkConfig = elkConfig;
+    this.indices = indices;
   }
 }

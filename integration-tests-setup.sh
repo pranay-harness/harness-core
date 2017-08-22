@@ -2,9 +2,13 @@
 sudo service mongod restart
 mvn clean install -DskipTests=true
 mvn test-compile
+cd python/splunk_intelligence; make init; make dist;
+cd ../../
 
 echo 'starting server'
 export HOSTNAME
+export SPLUNKML_ROOT=$(pwd)/python/splunk_intelligence
+export SPLUNKML_ENVIRONMENT=REMOTE
 java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
      -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
      -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=manager \

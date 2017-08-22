@@ -15,6 +15,15 @@ import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Created by rsingh on 8/01/17.
@@ -49,22 +58,26 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig) {
-    OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-    httpClient.addInterceptor(chain -> {
-      Request original = chain.request();
+    OkHttpClient.Builder httpClient =
+        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
+    httpClient
+        .addInterceptor(chain -> {
+          Request original = chain.request();
 
-      Request request = original.newBuilder()
-                            .header("Accept", "application/json")
-                            .header("Content-Type", "application/json")
-                            .header("Authorization", getHeaderWithCredentials(elkConfig))
-                            .method(original.method(), original.body())
-                            .build();
+          Request request = original.newBuilder()
+                                .header("Accept", "application/json")
+                                .header("Content-Type", "application/json")
+                                .header("Authorization", getHeaderWithCredentials(elkConfig))
+                                .method(original.method(), original.body())
+                                .build();
 
-      return chain.proceed(request);
-    });
+          return chain.proceed(request);
+        })
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS);
 
     final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl("http://" + elkConfig.getHost() + ":" + elkConfig.getPort() + "/")
+                                  .baseUrl(elkConfig.getElkUrl())
                                   .addConverterFactory(JacksonConverterFactory.create())
                                   .client(httpClient.build())
                                   .build();
@@ -76,4 +89,37 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         + Base64.encodeBase64String(String.format("%s:%s", elkConfig.getUsername(), new String(elkConfig.getPassword()))
                                         .getBytes(StandardCharsets.UTF_8));
   }
+
+  private static OkHttpClient.Builder getUnsafeOkHttpClient() {
+    try {
+      // Create a trust manager that does not validate certificate chains
+      final TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager(){
+          @Override public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+              throws CertificateException{}
+
+          @Override public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+              throws CertificateException{}
+
+                     @Override public java.security.cert.X509Certificate[] getAcceptedIssuers(){
+                         return new X509Certificate[] {};
+    }
+  }
+};
+
+// Install the all-trusting trust manager
+final SSLContext sslContext = SSLContext.getInstance("SSL");
+sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+// Create an ssl socket factory with our all-trusting manager
+final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+OkHttpClient.Builder builder = new OkHttpClient.Builder();
+builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+builder.hostnameVerifier((hostname, session) -> true);
+
+return builder;
+}
+catch (Exception e) {
+  throw new RuntimeException(e);
+}
+}
 }

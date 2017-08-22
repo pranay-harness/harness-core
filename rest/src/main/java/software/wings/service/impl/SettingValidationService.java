@@ -12,6 +12,7 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -54,6 +55,8 @@ public class SettingValidationService {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
     } else if (settingValue instanceof ElkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
+    } else if (settingValue instanceof LogzConfig) {
+      analysisService.validateConfig(settingAttribute, StateType.LOGZ);
     }
     return true;
   }

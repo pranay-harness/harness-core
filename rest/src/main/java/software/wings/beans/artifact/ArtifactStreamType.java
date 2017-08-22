@@ -43,7 +43,11 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   ARTIFACTORY(ArtifactoryArtifactStream.class, "ARTIFACTORY"), /**
 
    */
-  ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class, "ARTIFACTORYDOCKER");
+  ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class, "ARTIFACTORYDOCKER"),
+  /**
+   * Amazon S3 source type.
+   */
+  AMAZON_S3(AmazonS3ArtifactStream.class, "AMAZON_S3");
 
   private static final String stencilsPath = "/templates/artifactstreams/";
   private static final String uiSchemaSuffix = "-ArtifactStreamUISchema.json";

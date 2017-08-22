@@ -354,6 +354,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      stdParams.setCurrentUser(
+          anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build());
+    }
     workflowExecution.setExecutionArgs(executionArgs);
 
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
@@ -501,6 +506,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (user != null) {
       workflowExecution.setTriggeredBy(
           anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build());
+    } else if (workflowExecution.getExecutionArgs() != null
+        && workflowExecution.getExecutionArgs().getTriggeredBy() != null) {
+      workflowExecution.setTriggeredBy(workflowExecution.getExecutionArgs().getTriggeredBy());
+    } else {
+      // Triggered by Auto Trigger
+      workflowExecution.setTriggeredBy(anEmbeddedUser().withName("Deployment trigger").build());
     }
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
     if (executionArgs != null) {

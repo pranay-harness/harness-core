@@ -20,7 +20,6 @@ import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataC
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
-import software.wings.utils.Misc;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;

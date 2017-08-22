@@ -83,6 +83,11 @@ public abstract class SettingValue implements ExtensionPoint {
     ELK("ELK"),
 
     /**
+     * Logz setting variable types.
+     */
+    LOGZ("LOGZ"),
+
+    /**
      * App dynamics setting variable types.
      */
     APP_DYNAMICS("AppDynamics"),
@@ -155,7 +160,12 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Artifactory setting variable types
      */
-    ARTIFACTORY("Artifactory");
+    ARTIFACTORY("Artifactory"),
+
+    /**
+     * Amazon S3 setting variable types
+     */
+    AMAZON_S3("AmazonS3");
 
     private String displayName;
 

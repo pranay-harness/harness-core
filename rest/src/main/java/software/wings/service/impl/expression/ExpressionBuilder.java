@@ -15,11 +15,16 @@ public abstract class ExpressionBuilder {
   protected static final String APP_DESCRIPTION = "app.description";
 
   protected static final String ARTIFACT_NAME = "artifact.name";
+  protected static final String ARTIFACT_DESCRIPTION = "artifact.description";
   protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
   protected static final String ARTIFACT_REVISION = "artifact.revision";
+  protected static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
 
   protected static final String ENV_NAME = "env.name";
   protected static final String ENV_DESCRIPTION = "env.description";
+
+  protected static final String SERVICE_NAME = "service.name";
+  protected static final String SERVICE_DESCRIPTION = "service.description";
 
   protected static final String WORKFLOW_NAME = "workflow.name";
   protected static final String WORKFLOW_DESCRIPTION = "workflow.description";
@@ -81,8 +86,10 @@ public abstract class ExpressionBuilder {
   List<String> getStaticExpressions() {
     List<String> expressions = new ArrayList<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
-    expressions.addAll(asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION));
+    expressions.addAll(
+        asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION, ARTIFACT_FILE_NAME));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
+    expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION));
 
     expressions.addAll(asList(INSTANCE_NAME, INSTANCE_HOSTNAME, INSTANCE_HOST_PUBLICDNS));
