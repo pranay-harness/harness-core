@@ -1,12 +1,18 @@
 package software.wings.beans;
 
+import com.google.common.collect.Maps;
+
+import java.util.Map;
+
 /**
  * Created by sgurubelli on 8/11/17.
  */
 public class TemplateExpression {
   private String fieldName;
   private String expression;
-  private EntityType entityType;
+  private boolean expressionAllowed; // Can this template expression can contain other expression
+
+  private Map<String, Object> metadata = Maps.newHashMap();
 
   public String getFieldName() {
     return fieldName;
@@ -24,11 +30,18 @@ public class TemplateExpression {
     this.expression = expression;
   }
 
-  public EntityType getEntityType() {
-    return entityType;
+  public Map<String, Object> getMetadata() {
+    return metadata;
   }
 
-  public void setEntityType(EntityType entityType) {
-    this.entityType = entityType;
+  public void setMetadata(Map<String, Object> metadata) {
+    this.metadata = metadata;
+  }
+  public boolean isExpressionAllowed() {
+    return expressionAllowed;
+  }
+
+  public void setExpressionAllowed(boolean expressionAllowed) {
+    this.expressionAllowed = expressionAllowed;
   }
 }
