@@ -13,18 +13,14 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
@@ -33,12 +29,9 @@ import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.YamlRepresenter;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -48,7 +41,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
 
 /**
  * Application Resource class.
@@ -243,6 +235,8 @@ public class AppResource {
         if (app != null) {
           rr.setResource(app);
         }
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         YamlHelper.addUnrecognizedFieldsMessage(rr);
       }
@@ -280,6 +274,8 @@ public class AppResource {
         if (app != null) {
           rr.setResource(app);
         }
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         YamlHelper.addUnrecognizedFieldsMessage(rr);
       }

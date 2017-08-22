@@ -408,7 +408,11 @@ public enum ErrorCode {
   /**
    * Non empty deletions
    */
-  NON_EMPTY_DELETIONS("NON_EMPTY_DELETIONS");
+  NON_EMPTY_DELETIONS("NON_EMPTY_DELETIONS"),
+  /**
+   * General Yaml related error
+   */
+  GENERAL_YAML_ERROR("GENERAL_YAML_ERROR");
 
   /**
    * The constant ARGS_NAME.
