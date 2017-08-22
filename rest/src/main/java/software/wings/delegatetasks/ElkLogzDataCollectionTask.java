@@ -109,30 +109,38 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
             Object searchResponse;
             String hostnameField;
             String messageField;
+            String timestampField;
+            String timestampFieldFormat;
             switch (dataCollectionInfo.getStateType()) {
               case ELK:
-                final ElkLogFetchRequest elkFetchRequest =
-                    new ElkLogFetchRequest(query, ((ElkDataCollectionInfo) dataCollectionInfo).getIndices(),
-                        ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField(),
-                        ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField(), Collections.singleton(hostName),
-                        collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                final ElkLogFetchRequest elkFetchRequest = new ElkLogFetchRequest(query,
+                    ((ElkDataCollectionInfo) dataCollectionInfo).getIndices(),
+                    ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField(),
+                    ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField(),
+                    ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampField(), Collections.singleton(hostName),
+                    collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                 logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = elkDelegateService.search(
                     ((ElkDataCollectionInfo) dataCollectionInfo).getElkConfig(), elkFetchRequest);
                 hostnameField = ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField();
                 messageField = ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField();
+                timestampField = ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampField();
+                timestampFieldFormat = ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampFieldFormat();
                 break;
               case LOGZ:
                 final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query,
                     ((LogzDataCollectionInfo) dataCollectionInfo).getIndices(),
                     ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField(),
-                    ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(), Collections.singleton(hostName),
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(),
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField(), Collections.singleton(hostName),
                     collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                 logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(
                     ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
                 hostnameField = ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField();
                 messageField = ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField();
+                timestampField = ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField();
+                timestampFieldFormat = ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampFieldFormat();
                 break;
               default:
                 throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
@@ -165,11 +173,19 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
               for (int j = 0; j < messagePaths.length - 1; ++j) {
                 messageObject = source.getJSONObject(messagePaths[j]);
               }
-
               final String logMessage = messageObject == null
                   ? source.getString(messageField)
                   : messageObject.getString(messagePaths[messagePaths.length - 1]);
-              final long timeStamp = ELK_DATE_FORMATER.parse(source.getString("@timestamp")).getTime();
+
+              JSONObject timeStampObject = null;
+              String[] timeStampPaths = timestampField.split("\\.");
+              for (int j = 0; j < timeStampPaths.length - 1; ++j) {
+                timeStampObject = source.getJSONObject(timeStampPaths[j]);
+              }
+              final String timeStamp = timeStampObject == null
+                  ? source.getString("@timestamp")
+                  : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
+              final long timeStampValue = new SimpleDateFormat(timestampFieldFormat).parse(timeStamp).getTime();
 
               final LogElement elkLogElement = new LogElement();
               elkLogElement.setQuery(query);
@@ -177,7 +193,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
               elkLogElement.setHost(host);
               elkLogElement.setCount(1);
               elkLogElement.setLogMessage(logMessage);
-              elkLogElement.setTimeStamp(timeStamp);
+              elkLogElement.setTimeStamp(timeStampValue);
               elkLogElement.setLogCollectionMinute(logCollectionMinute);
               logElements.add(elkLogElement);
             }
