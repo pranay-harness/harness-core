@@ -49,6 +49,7 @@ public class EmailStateTest extends WingsBaseTest {
                                           .withCc(Lists.newArrayList("cc1", "cc2"))
                                           .withSubject("subject")
                                           .withBody("body")
+                                          .withSystem(true)
                                           .build();
   @Inject private Injector injector;
   @Mock private EmailNotificationService emailNotificationService;
@@ -135,6 +136,7 @@ public class EmailStateTest extends WingsBaseTest {
                 .withCc(Lists.newArrayList("cc1", "cc2"))
                 .withSubject("Deployed app123.application.com")
                 .withBody("Deployed to host app123.application.com")
+                .withSystem(true)
                 .build());
   }
 
