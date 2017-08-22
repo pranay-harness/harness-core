@@ -241,6 +241,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
       String expression = templateExpression.getExpression();
       Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+      if (relatedField != null) {
+        Matcher relatedFieldMatcher = ExpressionEvaluator.wingsVariablePattern.matcher(relatedField);
+        if (relatedFieldMatcher.matches()) {
+          relatedField = relatedField.substring(2, relatedField.length() - 1);
+        }
+      }
       if (matcher.matches()) {
         String templateVariable = matcher.group(0);
         templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
@@ -280,7 +286,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
     }
-    return null;
+    return templateVariable;
   }
   /**
    * Invoked after loading document from mongo by morphia.

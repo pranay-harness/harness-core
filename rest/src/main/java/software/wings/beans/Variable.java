@@ -3,10 +3,12 @@ package software.wings.beans;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.RELATED_FIELD;
+import static software.wings.common.Constants.STATE_TYPE;
 
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.sm.StateType;
 import software.wings.utils.ArtifactType;
 
 import java.beans.Transient;
@@ -88,18 +90,10 @@ public class Variable {
     return (EntityType) metadata.get(ENTITY_TYPE);
   }
 
-  public void setEntityType(EntityType entityType) {
-    metadata.put(ENTITY_TYPE, entityType);
-  }
-
   @Transient
   @JsonIgnore
   public ArtifactType getArtifactType() {
     return (ArtifactType) metadata.get(ARTIFACT_TYPE);
-  }
-
-  public void setArtifactType(ArtifactType artifactType) {
-    metadata.put(ARTIFACT_TYPE, artifactType);
   }
 
   @Transient
@@ -141,9 +135,6 @@ public class Variable {
     private boolean mandatory;
     private String value;
     private boolean fixed;
-    private EntityType entityType;
-    private ArtifactType artifactType;
-    private String relatedField;
     private VariableType type = VariableType.TEXT;
     private Map<String, Object> metadata = Maps.newHashMap();
 
@@ -179,7 +170,7 @@ public class Variable {
     }
 
     public VariableBuilder withEntityType(EntityType entityType) {
-      this.entityType = entityType;
+      this.metadata.put(ENTITY_TYPE, entityType);
       return this;
     }
 
@@ -189,15 +180,19 @@ public class Variable {
     }
 
     public VariableBuilder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
+      this.metadata.put(ARTIFACT_TYPE, artifactType);
       return this;
     }
 
     public VariableBuilder withRelatedField(String relatedField) {
-      this.relatedField = relatedField;
+      this.metadata.put(RELATED_FIELD, relatedField);
       return this;
     }
 
+    public VariableBuilder withStateType(StateType stateType) {
+      this.metadata.put(STATE_TYPE, relatedField);
+      return this;
+    }
     public VariableBuilder withMetadata(Map<String, Object> metadata) {
       this.metadata = metadata;
       return this;
@@ -210,7 +205,6 @@ public class Variable {
       variable.setMandatory(mandatory);
       variable.setValue(value);
       variable.setFixed(fixed);
-      variable.setEntityType(entityType);
       variable.setType(type);
       variable.setMetadata(metadata);
       return variable;
