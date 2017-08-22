@@ -1,6 +1,9 @@
 package software.wings.cloudprovider.aws;
 
+import static org.awaitility.Awaitility.with;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
@@ -39,6 +42,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.fluent.Request;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -58,6 +63,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -896,7 +903,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     logger.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
 
-    executionLogCallback.saveExecutionLog(String.format("Waiting for for pending tasks to finish. %s/%s running ...",
+    executionLogCallback.saveExecutionLog(String.format("Waiting for pending tasks to finish. %s/%s running ...",
                                               service.getRunningCount(), service.getDesiredCount()),
         LogLevel.INFO);
     return service.getDesiredCount().equals(service.getRunningCount());
@@ -917,6 +924,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
+    waitForServiceUpdateToComplete(
+        updateServiceResult, region, awsConfig, clusterName, serviceName, desiredCount, executionLogCallback);
     executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
     waitForTasksToBeInRunningStateButDontThrowException(
         region, awsConfig, clusterName, serviceName, executionLogCallback);
@@ -984,6 +993,30 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     });
     logger.info("Docker container ids = " + containerInfos);
     return containerInfos;
+  }
+
+  private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,
+      AwsConfig awsConfig, String clusterName, String serviceName, Integer desiredCount,
+      ExecutionLogCallback executionLogCallback) {
+    final Service[] service = {updateServiceResult.getService()};
+    try {
+      with().pollInterval(10L, TimeUnit.SECONDS).atMost(new Duration(60L, TimeUnit.SECONDS)).until(() -> {
+        service[0] = awsHelperService
+                         .describeServices(region, awsConfig,
+                             new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                         .getServices()
+                         .get(0);
+        return Objects.equals(service[0].getDesiredCount(), desiredCount);
+      }, equalTo(true));
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Service update failed {}", service[0]);
+      executionLogCallback.saveExecutionLog(
+          String.format("Service desired count didn't match. expected: [%s], found [%s]", desiredCount,
+              service[0].getDesiredCount()),
+          LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
+      throw new WingsException(INVALID_REQUEST, "message", "Service update failed");
+    }
   }
 
   @Override
