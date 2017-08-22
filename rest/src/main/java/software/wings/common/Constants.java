@@ -321,6 +321,13 @@ public interface Constants {
   String ARTIFACT_FILE_NAME = "artifactFileName";
 
   /**
+   * Template expression constants
+   */
+  String ENTITY_TYPE = "entityType";
+  String ARTIFACT_TYPE = "artifactType";
+  String RELATED_FIELD = "relatedField";
+
+  /**
    * The constant S3.
    */
   String S3 = "S3";

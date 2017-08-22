@@ -7,6 +7,14 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
+import static software.wings.common.Constants.ARTIFACT_TYPE;
+import static software.wings.common.Constants.ENTITY_TYPE;
+import static software.wings.common.Constants.PHASE_NAME_PREFIX;
+import static software.wings.common.Constants.POST_DEPLOYMENT;
+import static software.wings.common.Constants.PRE_DEPLOYMENT;
+import static software.wings.common.Constants.RELATED_FIELD;
+import static software.wings.common.Constants.ROLLBACK_PREFIX;
+import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,8 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
-import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.sm.TransitionType;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
@@ -40,8 +49,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
-  @Embedded
-  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+  @Embedded private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -51,8 +59,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  @Embedded
-  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+  @Embedded private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
 
   @Embedded private List<NotificationRule> notificationRules = new ArrayList<>();
 
@@ -188,14 +195,18 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
+        workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
-        addToUserVariables(workflowPhase.getTemplateExpressions());
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          templateExpressions.stream().forEach(templateExpression -> templateExpression.setExpressionAllowed(false));
+          addToUserVariables(templateExpressions);
+        }
         populatePhaseStepIds(workflowPhase);
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
-        rollbackPhase.setName(Constants.ROLLBACK_PREFIX + workflowPhase.getName());
+        rollbackPhase.setName(ROLLBACK_PREFIX + workflowPhase.getName());
         rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
         populatePhaseStepIds(rollbackPhase);
       }
@@ -204,45 +215,72 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
+  /**
+   * Adds template expression as workflow variables
+   * @param templateExpressions
+   */
   public void addToUserVariables(List<TemplateExpression> templateExpressions) {
     if (templateExpressions == null || templateExpressions.isEmpty()) {
-      // TODO: If templatized expression removed then remove it from use variables
       return;
     }
     for (TemplateExpression templateExpression : templateExpressions) {
+      EntityType entityType = null;
+      ArtifactType artifactType = null;
+      String relatedField = null;
+      Map<String, Object> metadata = templateExpression.getMetadata();
+      if (metadata != null) {
+        if (metadata.get(ENTITY_TYPE) != null) {
+          entityType = (EntityType) metadata.get(ENTITY_TYPE);
+        }
+        if (metadata.get(ARTIFACT_TYPE) != null) {
+          artifactType = (ArtifactType) metadata.get(ARTIFACT_TYPE);
+        }
+        if (metadata.get(RELATED_FIELD) != null) {
+          relatedField = (String) metadata.get(RELATED_FIELD);
+        }
+      }
       String expression = templateExpression.getExpression();
       Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
       if (matcher.matches()) {
-        // while (matcher.find()) {
         String templateVariable = matcher.group(0);
-        // remove $ and braces(${varName})
         templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-        if (!templateVariable.startsWith("workflow.variables")) {
-          if (!userVariables.contains(templateVariable)) {
-            userVariables.add(aVariable()
-                                  .withName(templateVariable)
-                                  .withEntityType(templateExpression.getEntityType())
-                                  .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
-                                  .withMandatory(true)
-                                  .build());
-          }
+        templateVariable = getTemplateExpressionName(templateExpression, templateVariable);
+        if (!userVariables.contains(templateVariable)) {
+          userVariables.add(aVariable()
+                                .withName(templateVariable)
+                                .withEntityType(entityType)
+                                .withArtifactType(artifactType)
+                                .withRelatedField(relatedField)
+                                .withType(entityType != null ? ENTITY : TEXT)
+                                .withMandatory(true)
+                                .build());
         }
-        {
-          // It means user already created workflow variables
-        }
-        // }
       } else {
+        expression = getTemplateExpressionName(templateExpression, expression);
         if (!userVariables.contains(expression)) {
           userVariables.add(aVariable()
                                 .withName(expression)
-                                .withEntityType(templateExpression.getEntityType())
-                                .withType(templateExpression.getEntityType() != null ? ENTITY : TEXT)
+                                .withEntityType(entityType)
+                                .withType(entityType != null ? ENTITY : TEXT)
                                 .build());
         }
-        // throw new WingsException(INVALID_REQUEST, "message", "Invalid template expression :" +
-        // templateExpression.getExpression() + " for fieldName:" + templateExpression.getFieldName());
       }
     }
+  }
+
+  private String getTemplateExpressionName(TemplateExpression templateExpression, String templateVariable) {
+    if (templateVariable != null) {
+      if (templateVariable.contains(".")) {
+        if (templateVariable.startsWith("workflow.variables.")) {
+          return templateVariable.replace("workflow.variables.", "");
+        } else if (!templateExpression.isExpressionAllowed()) {
+          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+              "Invalid template expression :" + templateExpression.getExpression()
+                  + " for fieldName:" + templateExpression.getFieldName());
+        }
+      }
+    }
+    return null;
   }
   /**
    * Invoked after loading document from mongo by morphia.
@@ -366,7 +404,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
       if (!invalid.isEmpty()) {
-        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalid));
+        setValidationMessage(String.format(WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
     }
     return isValid();
@@ -393,12 +431,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public static final class CanaryOrchestrationWorkflowBuilder {
     private Graph graph;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
     private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
     private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();

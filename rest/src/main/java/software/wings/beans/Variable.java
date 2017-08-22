@@ -1,5 +1,17 @@
 package software.wings.beans;
 
+import static software.wings.common.Constants.ARTIFACT_TYPE;
+import static software.wings.common.Constants.ENTITY_TYPE;
+import static software.wings.common.Constants.RELATED_FIELD;
+
+import com.google.common.collect.Maps;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.utils.ArtifactType;
+
+import java.beans.Transient;
+import java.util.Map;
+
 /**
  * Created by rishi on 12/21/16.
  */
@@ -9,7 +21,8 @@ public class Variable {
   private boolean mandatory;
   private String value;
   private boolean fixed;
-  private EntityType entityType;
+
+  private Map<String, Object> metadata = Maps.newHashMap();
 
   private VariableType type = VariableType.TEXT;
 
@@ -61,12 +74,38 @@ public class Variable {
     this.fixed = fixed;
   }
 
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, Object> metadata) {
+    this.metadata = metadata;
+  }
+
+  @Transient
+  @JsonIgnore
   public EntityType getEntityType() {
-    return entityType;
+    return (EntityType) metadata.get(ENTITY_TYPE);
   }
 
   public void setEntityType(EntityType entityType) {
-    this.entityType = entityType;
+    metadata.put(ENTITY_TYPE, entityType);
+  }
+
+  @Transient
+  @JsonIgnore
+  public ArtifactType getArtifactType() {
+    return (ArtifactType) metadata.get(ARTIFACT_TYPE);
+  }
+
+  public void setArtifactType(ArtifactType artifactType) {
+    metadata.put(ARTIFACT_TYPE, artifactType);
+  }
+
+  @Transient
+  @JsonIgnore
+  public String getRelatedField() {
+    return (String) metadata.get(RELATED_FIELD);
   }
 
   @Override
@@ -103,7 +142,10 @@ public class Variable {
     private String value;
     private boolean fixed;
     private EntityType entityType;
+    private ArtifactType artifactType;
+    private String relatedField;
     private VariableType type = VariableType.TEXT;
+    private Map<String, Object> metadata = Maps.newHashMap();
 
     private VariableBuilder() {}
 
@@ -146,6 +188,21 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
+
+    public VariableBuilder withRelatedField(String relatedField) {
+      this.relatedField = relatedField;
+      return this;
+    }
+
+    public VariableBuilder withMetadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
+      return this;
+    }
+
     public Variable build() {
       Variable variable = new Variable();
       variable.setName(name);
@@ -155,6 +212,7 @@ public class Variable {
       variable.setFixed(fixed);
       variable.setEntityType(entityType);
       variable.setType(type);
+      variable.setMetadata(metadata);
       return variable;
     }
   }
