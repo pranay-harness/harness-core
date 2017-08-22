@@ -10,6 +10,8 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.exception.WingsException;
@@ -148,25 +150,26 @@ public class AppYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    //-------------
+    // get the before Yaml
     RestResponse beforeResponse = get(appId);
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
-    logger.info("************* BEFORE Yaml = " + beforeYaml);
-    //-------------
-
-    logger.info("************* AFTER Yaml = " + yaml);
+    if (yaml.equals(beforeYaml)) {
+      return rr;
+    }
 
     // what are the service changes? Which are additions and which are deletions?
-    List<String> addedServices = new ArrayList<String>();
-    List<String> deletedServices = new ArrayList<String>();
+    List<String> servicesToAdd = new ArrayList<String>();
+    List<String> servicesToDelete = new ArrayList<String>();
 
     AppYaml beforeAppYaml = null;
 
     if (beforeYaml != null && !beforeYaml.isEmpty()) {
       try {
         beforeAppYaml = mapper.readValue(beforeYaml, AppYaml.class);
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         // bad before Yaml
         e.printStackTrace();
@@ -187,7 +190,7 @@ public class AppYamlResource {
 
         // initial the services to add from the after
         for (String s : serviceNames) {
-          addedServices.add(s);
+          servicesToAdd.add(s);
         }
 
         if (beforeAppYaml != null) {
@@ -195,41 +198,31 @@ public class AppYamlResource {
 
           // initial the services to delete from the before, and remove the befores from the services to add list
           for (String s : beforeServices) {
-            deletedServices.add(s);
-            addedServices.remove(s);
+            servicesToDelete.add(s);
+            servicesToAdd.remove(s);
           }
         }
 
         // remove the afters from the services to delete list
         for (String s : serviceNames) {
-          deletedServices.remove(s);
+          servicesToDelete.remove(s);
         }
 
-        logger.info("************* addedServices = " + addedServices);
-        logger.info("************* deletedServices = " + deletedServices);
+        logger.info("************* servicesToAdd = " + servicesToAdd);
+        logger.info("************* servicesToDelete = " + servicesToDelete);
 
         Application app = appService.get(appId);
 
-        logger.info("************* app.getName() = " + app.getName());
-
-        // List<Service> services = app.getServices();
         List<Service> services = serviceResourceService.findServicesByApp(appId);
-
-        logger.info("************* services.size() = " + services.size());
-
         Map<String, Service> serviceMap = new HashMap<String, Service>();
 
         // populate the map
         for (Service service : services) {
-          logger.info("    ------------- adding to serviceMap: |" + service.getName() + "|");
-
           serviceMap.put(service.getName(), service);
         }
 
         // do additions
-        for (String s : addedServices) {
-          logger.info("    ------------- add Service: " + s);
-
+        for (String s : servicesToAdd) {
           // create the new Service
           Service newService = new Service();
           newService.setAppId(appId);
@@ -240,21 +233,17 @@ public class AppYamlResource {
           // serviceMap.put(newService.getName(), newService);
         }
 
-        if (deletedServices.size() > 0 && !deleteEnabled) {
+        if (servicesToDelete.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
         } else {
           // do deletions - NOTE: CANNOT delete services with workflows!
-          for (String servName : deletedServices) {
-            logger.info("    ------------- delete Service: |" + servName + "|");
-
+          for (String servName : servicesToDelete) {
             if (serviceMap.containsKey(servName)) {
-              logger.info("    ------------- HAS IT --------------");
+              serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
             } else {
-              logger.info("    ------------- DOES NOT HAVE IT --------------");
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "serviceMap does not contain the key: " + servName + "!");
             }
-
-            serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
-            // serviceMap.remove(servName);
           }
 
           // save the changes
