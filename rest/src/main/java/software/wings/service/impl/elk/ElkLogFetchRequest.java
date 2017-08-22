@@ -24,6 +24,7 @@ public class ElkLogFetchRequest {
   private final String indices;
   private final String hostnameField;
   private final String messageField;
+  private final String timestampField;
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
@@ -42,7 +43,7 @@ public class ElkLogFetchRequest {
     JSONObject rangeObject = new JSONObject();
     rangeObject.put("range",
         new JSONObject().put(
-            "@timestamp", new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
+            timestampField, new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
     mustArrayObjects.put("must", new ArrayList<>());
@@ -71,7 +72,7 @@ public class ElkLogFetchRequest {
     JSONObject rangeObject = new JSONObject();
     rangeObject.put("range",
         new JSONObject().put(
-            "@timestamp", new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
+            timestampField, new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
     mustArrayObjects.put("must", new ArrayList<>());
