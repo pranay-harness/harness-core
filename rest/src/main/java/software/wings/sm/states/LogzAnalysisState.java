@@ -56,8 +56,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final LogzDataCollectionInfo dataCollectionInfo = new LogzDataCollectionInfo(logzConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, indices,
-        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+        getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, hostnameField,
+        messageField, indices, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
