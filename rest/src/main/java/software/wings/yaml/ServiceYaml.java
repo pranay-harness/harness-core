@@ -48,11 +48,11 @@ public class ServiceYaml extends GenericYaml {
     return serviceCommands;
   }
 
-  public void setServiceCommandNames(List<String> serviceCommandNames) {
+  public void setServiceCommands(List<String> serviceCommandNames) {
     this.serviceCommands = serviceCommandNames;
   }
 
-  public void setServiceCommands(List<ServiceCommand> serviceCommands) {
+  public void setServiceCommandNamesFromServiceCommands(List<ServiceCommand> serviceCommands) {
     for (ServiceCommand serviceCommand : serviceCommands) {
       this.serviceCommands.add(serviceCommand.getName());
     }
