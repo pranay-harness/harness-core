@@ -8,6 +8,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_RESUMED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RESUMED;
@@ -40,7 +41,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 /**
@@ -55,7 +55,7 @@ public class WorkflowNotificationHelper {
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW);
+        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW, status);
     if (notificationRules == null || notificationRules.size() == 0) {
       return;
     }
@@ -122,16 +122,24 @@ public class WorkflowNotificationHelper {
   }
 
   private List<NotificationRule> getNotificationApplicableToScope(
-      ExecutionContextImpl context, ExecutionScope executionScope) {
+      ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
+    if (status == FAILED || status == ERROR || status == ABORTED) {
+      status = FAILED;
+    }
+
+    List<NotificationRule> filteredNotificationRules = new ArrayList<>();
     OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       List<NotificationRule> notificationRules =
           ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getNotificationRules();
-      return notificationRules.stream()
-          .filter(notificationRule -> executionScope.equals(notificationRule.getExecutionScope()))
-          .collect(Collectors.toList());
+      for (NotificationRule notificationRule : notificationRules) {
+        if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
+            && notificationRule.getConditions().contains(status)) {
+          filteredNotificationRules.add(notificationRule);
+        }
+      }
     }
-    return new ArrayList<>();
+    return filteredNotificationRules;
   }
 
   private String getDateString(Long startTs) {
@@ -144,7 +152,7 @@ public class WorkflowNotificationHelper {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE);
+        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE, status);
     if (notificationRules == null || notificationRules.size() == 0) {
       return;
     }
