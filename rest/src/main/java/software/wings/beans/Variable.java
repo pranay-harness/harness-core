@@ -190,7 +190,7 @@ public class Variable {
     }
 
     public VariableBuilder withStateType(StateType stateType) {
-      this.metadata.put(STATE_TYPE, relatedField);
+      this.metadata.put(STATE_TYPE, stateType);
       return this;
     }
     public VariableBuilder withMetadata(Map<String, Object> metadata) {
