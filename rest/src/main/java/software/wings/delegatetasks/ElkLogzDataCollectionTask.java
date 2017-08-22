@@ -109,16 +109,20 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
             Object searchResponse;
             switch (dataCollectionInfo.getStateType()) {
               case ELK:
-                final ElkLogFetchRequest elkFetchRequest = new ElkLogFetchRequest(query,
-                    ((ElkDataCollectionInfo) dataCollectionInfo).getIndices(), Collections.singleton(hostName),
-                    collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                final ElkLogFetchRequest elkFetchRequest =
+                    new ElkLogFetchRequest(query, ((ElkDataCollectionInfo) dataCollectionInfo).getIndices(),
+                        ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField(),
+                        ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField(), Collections.singleton(hostName),
+                        collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                 logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = elkDelegateService.search(
                     ((ElkDataCollectionInfo) dataCollectionInfo).getElkConfig(), elkFetchRequest);
                 break;
               case LOGZ:
                 final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query,
-                    ((LogzDataCollectionInfo) dataCollectionInfo).getIndices(), Collections.singleton(hostName),
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getIndices(),
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField(),
+                    ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(), Collections.singleton(hostName),
                     collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                 logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(

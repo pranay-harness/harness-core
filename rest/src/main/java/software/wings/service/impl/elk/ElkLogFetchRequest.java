@@ -22,6 +22,8 @@ import java.util.Set;
 public class ElkLogFetchRequest {
   private final String query;
   private final String indices;
+  private final String hostnameField;
+  private final String messageField;
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
@@ -29,13 +31,42 @@ public class ElkLogFetchRequest {
   public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
-      hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put("beat.hostname", host)));
+      hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put(hostnameField, host)));
     }
 
     JSONObject boolObject = new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects));
 
     JSONObject regexObject = new JSONObject();
-    regexObject.put("regexp", new JSONObject().put("message", new JSONObject().put("value", query)));
+    regexObject.put("regexp", new JSONObject().put(messageField, new JSONObject().put("value", query)));
+
+    JSONObject rangeObject = new JSONObject();
+    rangeObject.put("range",
+        new JSONObject().put(
+            "@timestamp", new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
+
+    Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
+    mustArrayObjects.put("must", new ArrayList<>());
+    mustArrayObjects.get("must").add(regexObject);
+    mustArrayObjects.get("must").add(boolObject);
+    mustArrayObjects.get("must").add(rangeObject);
+
+    String jsonOut = null;
+    JSONObject queryObject = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects));
+    jsonOut = queryObject.toString();
+
+    return JsonUtils.asObject(jsonOut, Object.class);
+  }
+
+  public Object toLogzJsonObject() {
+    List<JSONObject> hostJsonObjects = new ArrayList<>();
+    for (String host : hosts) {
+      hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put(hostnameField, host)));
+    }
+
+    JSONObject boolObject = new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects));
+
+    JSONObject regexObject = new JSONObject();
+    regexObject.put("regexp", new JSONObject().put(messageField, new JSONObject().put("value", query)));
 
     JSONObject rangeObject = new JSONObject();
     rangeObject.put("range",

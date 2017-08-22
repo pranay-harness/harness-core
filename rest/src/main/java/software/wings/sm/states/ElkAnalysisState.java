@@ -57,6 +57,30 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.indices = indices;
   }
 
+  protected String hostnameField;
+
+  @Attributes(required = true, title = "Hostname Field", description = "Hostname field mapping in elastic search")
+  @DefaultValue("beat.hostname")
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
+  protected String messageField;
+
+  @Attributes(required = true, title = "Message Field", description = "Message field mapping in elastic search")
+  @DefaultValue("message")
+  public String getMessageField() {
+    return messageField;
+  }
+
+  public void setMessageField(String messageField) {
+    this.messageField = messageField;
+  }
+
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
   }
@@ -89,7 +113,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, indices,
-        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+        hostnameField, messageField, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)

@@ -23,8 +23,8 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   @Override
   public void validateConfig(LogzConfig logzConfig) {
     try {
-      final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest("Exception", null, Collections.EMPTY_SET,
-          System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1), System.currentTimeMillis());
+      final ElkLogFetchRequest logFetchRequest = new ElkLogFetchRequest("Exception", null, "beat.hostname", "message",
+          Collections.EMPTY_SET, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1), System.currentTimeMillis());
       final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
       final Response<Object> response = request.execute();
       if (response.isSuccessful()) {
@@ -38,7 +38,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
 
   @Override
   public Object search(LogzConfig logzConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
+    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toLogzJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
