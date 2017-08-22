@@ -349,7 +349,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           command.add("--log_analysis_get_url");
           command.add(logAnalysisGetUrl);
 
-          for (int attempt = 0; attempt < PYTHON_JOB_RETRIES; attempt++) {
+          int attempt = 0;
+          for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
             final ProcessResult result = new ProcessExecutor(command)
                                              .redirectOutput(Slf4jStream
                                                                  .of(LoggerFactory.getLogger(getClass().getName() + "."
@@ -369,10 +370,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                 attempt += PYTHON_JOB_RETRIES;
                 break;
               default:
-                getLogger().error("Log analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
+                getLogger().warn("Log analysis failed for " + context.getStateExecutionInstanceId() + "for minute "
                     + logAnalysisMinute + " trial: " + (attempt + 1));
                 Thread.sleep(2000);
             }
+          }
+
+          if (attempt == PYTHON_JOB_RETRIES) {
+            getLogger().error("Finished all retries. Log analysis failed for " + context.getStateExecutionInstanceId()
+                + "for minute " + logAnalysisMinute);
           }
 
         } catch (Exception e) {
