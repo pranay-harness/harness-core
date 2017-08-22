@@ -158,6 +158,7 @@ public class AppYamlResource {
 
     if (yaml.equals(beforeYaml)) {
       // no change
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
       return rr;
     }
 
@@ -176,10 +177,12 @@ public class AppYamlResource {
         // bad before Yaml
         e.printStackTrace();
         YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+        return rr;
       }
     } else {
       // missing before Yaml
       YamlHelper.addMissingBeforeYamlMessage(rr);
+      return rr;
     }
 
     AppYaml appYaml = null;
@@ -233,6 +236,7 @@ public class AppYamlResource {
           } else {
             YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
                 "serviceMap does not contain the key: " + servName + "!");
+            return rr;
           }
         }
 
