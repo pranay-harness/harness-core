@@ -22,13 +22,17 @@ import java.util.Set;
 public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private LogzConfig logzConfig;
   private String indices;
+  private String hostnameField;
+  private String messageField;
 
   public LogzDataCollectionInfo(LogzConfig logzConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
-      long startTime, int collectionTime, Set<String> hosts) {
+      String hostnameField, String messageField, long startTime, int collectionTime, Set<String> hosts) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
         collectionTime, hosts, StateType.LOGZ);
     this.logzConfig = logzConfig;
     this.indices = indices;
+    this.hostnameField = hostnameField;
+    this.messageField = messageField;
   }
 }

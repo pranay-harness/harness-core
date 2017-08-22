@@ -48,7 +48,8 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = getElkRestClient(elkConfig).search(logFetchRequest.toElasticSearchJsonObject());
+    final Call<Object> request =
+        getElkRestClient(elkConfig, logFetchRequest.getIndices()).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -58,6 +59,9 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig) {
+    return getElkRestClient(elkConfig, "");
+  }
+  private ElkRestClient getElkRestClient(final ElkConfig elkConfig, String indices) {
     OkHttpClient.Builder httpClient =
         elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
     httpClient
@@ -76,8 +80,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS);
 
+    String baseUrl = elkConfig.getElkUrl();
+    if (baseUrl.charAt(baseUrl.length() - 1) != '/') {
+      baseUrl = baseUrl + "/";
+    }
+    baseUrl = !indices.isEmpty() ? baseUrl + indices + "/" : baseUrl;
+
     final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(elkConfig.getElkUrl())
+                                  .baseUrl(baseUrl)
                                   .addConverterFactory(JacksonConverterFactory.create())
                                   .client(httpClient.build())
                                   .build();
