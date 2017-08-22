@@ -425,7 +425,11 @@ public enum ErrorCode {
   /**
    * General Yaml related error
    */
-  GENERAL_YAML_ERROR("GENERAL_YAML_ERROR");
+  GENERAL_YAML_ERROR("GENERAL_YAML_ERROR"),
+  /**
+   * General Yaml related error
+   */
+  GENERAL_YAML_INFO("GENERAL_YAML_INFO");
 
   /**
    * The constant ARGS_NAME.

@@ -1,5 +1,8 @@
 package software.wings.resources;
 
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -11,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Graph;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
@@ -77,7 +82,7 @@ public class ServiceYamlResource {
     List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
     ServiceYaml serviceYaml = new ServiceYaml(service);
-    serviceYaml.setServiceCommands(serviceCommands);
+    serviceYaml.setServiceCommandNamesFromServiceCommands(serviceCommands);
 
     return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
   }
@@ -149,8 +154,11 @@ public class ServiceYamlResource {
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
+    logger.info("**************** beforeYaml: " + beforeYaml);
+
     if (yaml.equals(beforeYaml)) {
       // no change
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
       return rr;
     }
 
@@ -169,10 +177,12 @@ public class ServiceYamlResource {
         // bad before Yaml
         e.printStackTrace();
         YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+        return rr;
       }
     } else {
       // missing before Yaml
       YamlHelper.addMissingBeforeYamlMessage(rr);
+      return rr;
     }
 
     ServiceYaml serviceYaml = null;
@@ -214,7 +224,7 @@ public class ServiceYamlResource {
           serviceCommandMap.put(serviceCommand.getName(), serviceCommand);
         }
 
-        // If we have deletions do a check - we CANNOT delete services with workflows!
+        // If we have deletions do a check - we CANNOT delete service commands without deleteEnabled true
         if (serviceCommandsToDelete.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
           return rr;
@@ -227,16 +237,34 @@ public class ServiceYamlResource {
           } else {
             YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
                 "serviceCommandMap does not contain the key: " + servCommandName + "!");
+            return rr;
           }
         }
 
         // do additions
         for (String s : serviceCommandsToAdd) {
+          String commandTypeStr = s.toUpperCase();
+
+          try {
+            CommandType ct = CommandType.valueOf(commandTypeStr);
+          } catch (Exception e) {
+            e.printStackTrace();
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                "The CommandType: '" + commandTypeStr + "' is not found in the CommandType Enum!");
+            return rr;
+          }
+
           // create the new Service Command
           ServiceCommand newServiceCommand = new ServiceCommand();
           newServiceCommand.setAppId(appId);
           newServiceCommand.setName(s);
-          serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+          // serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+          Graph commandGraph = aGraph().withGraphName(s).build();
+          serviceResourceService.addCommand(appId, serviceId,
+              aServiceCommand()
+                  .withTargetToAllEnv(true)
+                  .withCommand(aCommand().withGraph(commandGraph).build())
+                  .build());
         }
 
         // save the changes
@@ -251,6 +279,7 @@ public class ServiceYamlResource {
           e.printStackTrace();
           YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
               "The ArtifactType: '" + artifactTypeStr + "' is not found in the ArtifactType Enum!");
+          return rr;
         }
 
         service = serviceResourceService.update(service);
