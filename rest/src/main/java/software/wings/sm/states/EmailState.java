@@ -76,6 +76,7 @@ public class EmailState extends State {
                                         .withSubject(evaluatedSubject)
                                         .withBody(evaluatedBody)
                                         .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                        .withSystem(true)
                                         .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
