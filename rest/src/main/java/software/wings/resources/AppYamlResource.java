@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -208,12 +209,20 @@ public class AppYamlResource {
         logger.info("************* deletedServices = " + deletedServices);
 
         Application app = appService.get(appId);
-        List<Service> services = app.getServices();
+
+        logger.info("************* app.getName() = " + app.getName());
+
+        // List<Service> services = app.getServices();
+        List<Service> services = serviceResourceService.findServicesByApp(appId);
+
+        logger.info("************* services.size() = " + services.size());
 
         Map<String, Service> serviceMap = new HashMap<String, Service>();
 
         // populate the map
         for (Service service : services) {
+          logger.info("    ------------- adding to serviceMap: |" + service.getName() + "|");
+
           serviceMap.put(service.getName(), service);
         }
 
@@ -228,24 +237,30 @@ public class AppYamlResource {
           serviceResourceService.save(newService);
 
           // add new service to serviceMap
-          serviceMap.put(newService.getName(), newService);
+          // serviceMap.put(newService.getName(), newService);
         }
 
         if (deletedServices.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
         } else {
-          // do deletions
+          // do deletions - NOTE: CANNOT delete services with workflows!
           for (String servName : deletedServices) {
-            logger.info("    ------------- delete Service: " + servName);
+            logger.info("    ------------- delete Service: |" + servName + "|");
+
+            if (serviceMap.containsKey(servName)) {
+              logger.info("    ------------- HAS IT --------------");
+            } else {
+              logger.info("    ------------- DOES NOT HAVE IT --------------");
+            }
 
             serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
-            serviceMap.remove(servName);
+            // serviceMap.remove(servName);
           }
 
           // save the changes
           app.setName(appYaml.getName());
           app.setDescription(appYaml.getDescription());
-          app.setServices(new ArrayList(serviceMap.values()));
+          // app.setServices(new ArrayList(serviceMap.values()));
 
           app = appService.update(app);
 
@@ -255,6 +270,8 @@ public class AppYamlResource {
           }
         }
 
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         e.printStackTrace();
         YamlHelper.addUnrecognizedFieldsMessage(rr);
