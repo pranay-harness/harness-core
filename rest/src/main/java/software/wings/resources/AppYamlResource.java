@@ -157,6 +157,7 @@ public class AppYamlResource {
     String beforeYaml = beforeYP.getYaml();
 
     if (yaml.equals(beforeYaml)) {
+      // no change
       return rr;
     }
 
@@ -189,7 +190,7 @@ public class AppYamlResource {
 
         List<String> serviceNames = appYaml.getServiceNames();
 
-        // initial the services to add from the after
+        // initialize the services to add from the after
         for (String s : serviceNames) {
           servicesToAdd.add(s);
         }
@@ -219,29 +220,19 @@ public class AppYamlResource {
           serviceMap.put(service.getName(), service);
         }
 
-        // do deletions - NOTE: CANNOT delete services with workflows!
+        // If we have deletions do a check - we CANNOT delete services with workflows!
         if (servicesToDelete.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
           return rr;
-        } else {
-          for (String servName : servicesToDelete) {
-            if (serviceMap.containsKey(servName)) {
-              serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
-            } else {
-              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                  "serviceMap does not contain the key: " + servName + "!");
-            }
-          }
+        }
 
-          // save the changes
-          app.setName(appYaml.getName());
-          app.setDescription(appYaml.getDescription());
-
-          app = appService.update(app);
-
-          // return the new resource
-          if (app != null) {
-            rr.setResource(app);
+        // do deletions
+        for (String servName : servicesToDelete) {
+          if (serviceMap.containsKey(servName)) {
+            serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
+          } else {
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                "serviceMap does not contain the key: " + servName + "!");
           }
         }
 
@@ -257,6 +248,18 @@ public class AppYamlResource {
           newService.setArtifactType(ArtifactType.DOCKER);
           serviceResourceService.save(newService);
         }
+
+        // save the changes
+        app.setName(appYaml.getName());
+        app.setDescription(appYaml.getDescription());
+
+        app = appService.update(app);
+
+        // return the new resource
+        if (app != null) {
+          rr.setResource(app);
+        }
+
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
