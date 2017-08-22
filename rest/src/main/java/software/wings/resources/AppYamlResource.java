@@ -18,6 +18,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.ArtifactType;
 import software.wings.yaml.AppYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
@@ -208,9 +209,6 @@ public class AppYamlResource {
           servicesToDelete.remove(s);
         }
 
-        logger.info("************* servicesToAdd = " + servicesToAdd);
-        logger.info("************* servicesToDelete = " + servicesToDelete);
-
         Application app = appService.get(appId);
 
         List<Service> services = serviceResourceService.findServicesByApp(appId);
@@ -221,22 +219,11 @@ public class AppYamlResource {
           serviceMap.put(service.getName(), service);
         }
 
-        // do additions
-        for (String s : servicesToAdd) {
-          // create the new Service
-          Service newService = new Service();
-          newService.setAppId(appId);
-          newService.setName(s);
-          serviceResourceService.save(newService);
-
-          // add new service to serviceMap
-          // serviceMap.put(newService.getName(), newService);
-        }
-
+        // do deletions - NOTE: CANNOT delete services with workflows!
         if (servicesToDelete.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+          return rr;
         } else {
-          // do deletions - NOTE: CANNOT delete services with workflows!
           for (String servName : servicesToDelete) {
             if (serviceMap.containsKey(servName)) {
               serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
@@ -249,7 +236,6 @@ public class AppYamlResource {
           // save the changes
           app.setName(appYaml.getName());
           app.setDescription(appYaml.getDescription());
-          // app.setServices(new ArrayList(serviceMap.values()));
 
           app = appService.update(app);
 
@@ -259,6 +245,18 @@ public class AppYamlResource {
           }
         }
 
+        // do additions
+        for (String s : servicesToAdd) {
+          // create the new Service
+          Service newService = new Service();
+          newService.setAppId(appId);
+          newService.setName(s);
+          newService.setDescription("");
+          // TODO - it needs this for now, but it should use the default for the account and if that is empty/null, use
+          // the Harness (level) default
+          newService.setArtifactType(ArtifactType.DOCKER);
+          serviceResourceService.save(newService);
+        }
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
