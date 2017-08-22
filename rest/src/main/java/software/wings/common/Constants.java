@@ -326,6 +326,7 @@ public interface Constants {
   String ENTITY_TYPE = "entityType";
   String ARTIFACT_TYPE = "artifactType";
   String RELATED_FIELD = "relatedField";
+  String STATE_TYPE = "stateType";
 
   /**
    * The constant S3.

@@ -12,6 +12,8 @@ public class TemplateExpression {
   private String expression;
   private boolean expressionAllowed; // Can this template expression can contain other expression
 
+  private EntityType entityType;
+
   private Map<String, Object> metadata = Maps.newHashMap();
 
   public String getFieldName() {
@@ -43,5 +45,13 @@ public class TemplateExpression {
 
   public void setExpressionAllowed(boolean expressionAllowed) {
     this.expressionAllowed = expressionAllowed;
+  }
+
+  public EntityType getEntityType() {
+    return entityType;
+  }
+
+  public void setEntityType(EntityType entityType) {
+    this.entityType = entityType;
   }
 }

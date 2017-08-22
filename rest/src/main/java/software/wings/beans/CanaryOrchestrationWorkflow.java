@@ -230,10 +230,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       Map<String, Object> metadata = templateExpression.getMetadata();
       if (metadata != null) {
         if (metadata.get(ENTITY_TYPE) != null) {
-          entityType = (EntityType) metadata.get(ENTITY_TYPE);
+          entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
         }
         if (metadata.get(ARTIFACT_TYPE) != null) {
-          artifactType = (ArtifactType) metadata.get(ARTIFACT_TYPE);
+          artifactType = ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE));
         }
         if (metadata.get(RELATED_FIELD) != null) {
           relatedField = (String) metadata.get(RELATED_FIELD);
