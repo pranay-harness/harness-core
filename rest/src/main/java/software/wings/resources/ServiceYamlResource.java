@@ -10,18 +10,23 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.ArtifactType;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -139,28 +144,25 @@ public class ServiceYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    //-------------
+    // get the before Yaml
     RestResponse beforeResponse = get(appId, serviceId);
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
-    logger.info("************* BEFORE Yaml = " + beforeYaml);
-    //-------------
+    if (yaml.equals(beforeYaml)) {
+      // no change
+      return rr;
+    }
 
-    logger.info("************* AFTER Yaml = " + yaml);
+    // what are the serviceCommand changes? Which are additions and which are deletions?
+    List<String> serviceCommandsToAdd = new ArrayList<String>();
+    List<String> serviceCommandsToDelete = new ArrayList<String>();
 
-    // TODO - what are the serviceCommand changes? Which are additions and which are deletions?
-
-    List<String> addedServiceCommands = new ArrayList<String>();
-    List<String> deletedServiceCommands = new ArrayList<String>();
-
-    Service beforeService = null;
+    ServiceYaml beforeServiceYaml = null;
 
     if (beforeYaml != null && !beforeYaml.isEmpty()) {
       try {
-        beforeService = mapper.readValue(beforeYaml, Service.class);
-        beforeService.setUuid(serviceId);
-        beforeService.setAppId(appId);
+        beforeServiceYaml = mapper.readValue(beforeYaml, ServiceYaml.class);
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
@@ -173,54 +175,89 @@ public class ServiceYamlResource {
       YamlHelper.addMissingBeforeYamlMessage(rr);
     }
 
-    Service service = null;
+    ServiceYaml serviceYaml = null;
 
     if (yaml != null && !yaml.isEmpty()) {
       try {
-        service = mapper.readValue(yaml, Service.class);
-        service.setUuid(serviceId);
-        service.setAppId(appId);
+        serviceYaml = mapper.readValue(yaml, ServiceYaml.class);
 
-        List<ServiceCommand> serviceCommands = service.getServiceCommands();
+        List<String> serviceCommandNames = serviceYaml.getServiceCommandNames();
 
-        // initial the service commands to add from the after
-        for (ServiceCommand sc : serviceCommands) {
-          addedServiceCommands.add(sc.getName());
+        // initialize the service commands to add from the after
+        for (String sc : serviceCommandNames) {
+          serviceCommandsToAdd.add(sc);
         }
 
-        if (beforeService != null) {
-          List<ServiceCommand> beforeServiceCommands = beforeService.getServiceCommands();
+        if (beforeServiceYaml != null) {
+          List<String> beforeServiceCommands = beforeServiceYaml.getServiceCommandNames();
 
           // initial the service commands to delete from the before, and remove the befores from the service commands to
           // add list
-          for (ServiceCommand sc : beforeServiceCommands) {
-            deletedServiceCommands.add(sc.getName());
-            addedServiceCommands.remove(sc.getName());
+          for (String sc : beforeServiceCommands) {
+            serviceCommandsToDelete.add(sc);
+            serviceCommandsToAdd.remove(sc);
           }
         }
 
         // remove the afters from the service commands to delete list
-        for (ServiceCommand sc : serviceCommands) {
-          deletedServiceCommands.remove(sc.getName());
+        for (String sc : serviceCommandNames) {
+          serviceCommandsToDelete.remove(sc);
         }
 
-        if (deletedServiceCommands.size() > 0 && !deleteEnabled) {
+        Service service = serviceResourceService.get(appId, serviceId);
+
+        List<ServiceCommand> serviceCommands = service.getServiceCommands();
+        Map<String, ServiceCommand> serviceCommandMap = new HashMap<String, ServiceCommand>();
+
+        // populate the map
+        for (ServiceCommand serviceCommand : serviceCommands) {
+          serviceCommandMap.put(serviceCommand.getName(), serviceCommand);
+        }
+
+        // If we have deletions do a check - we CANNOT delete services with workflows!
+        if (serviceCommandsToDelete.size() > 0 && !deleteEnabled) {
           YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
-        } else {
-          // TODO - do the service command creations and deletions
+          return rr;
+        }
 
-          logger.info("************* addedServiceCommands = " + addedServiceCommands);
-          logger.info("************* deletedServiceCommands = " + deletedServiceCommands);
-
-          /*
-          // save the changes
-          service = serviceResourceService.update(service);
-
-          // return the new resource
-          if (service != null) {
-            rr.setResource(service);
+        // do deletions
+        for (String servCommandName : serviceCommandsToDelete) {
+          if (serviceCommandMap.containsKey(servCommandName)) {
+            serviceResourceService.deleteCommand(appId, serviceId, servCommandName);
+          } else {
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                "serviceCommandMap does not contain the key: " + servCommandName + "!");
           }
-          */
+        }
+
+        // do additions
+        for (String s : serviceCommandsToAdd) {
+          // create the new Service Command
+          ServiceCommand newServiceCommand = new ServiceCommand();
+          newServiceCommand.setAppId(appId);
+          newServiceCommand.setName(s);
+          serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+        }
+
+        // save the changes
+        service.setName(serviceYaml.getName());
+        service.setDescription(serviceYaml.getDescription());
+        String artifactTypeStr = serviceYaml.getArtifactType().toUpperCase();
+
+        try {
+          ArtifactType at = ArtifactType.valueOf(artifactTypeStr);
+          service.setArtifactType(at);
+        } catch (Exception e) {
+          e.printStackTrace();
+          YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+              "The ArtifactType: '" + artifactTypeStr + "' is not found in the ArtifactType Enum!");
+        }
+
+        service = serviceResourceService.update(service);
+
+        // return the new resource
+        if (service != null) {
+          rr.setResource(service);
         }
 
       } catch (WingsException e) {
