@@ -28,7 +28,7 @@ public class ElkLogFetchRequestTest {
     long endTime = startTime + TimeUnit.HOURS.toMillis(34);
 
     ElkLogFetchRequest elkLogFetchRequest =
-        new ElkLogFetchRequest(query, null, "beat.hostaname", "message", hosts, startTime, endTime);
+        new ElkLogFetchRequest(query, null, "beat.hostaname", "message", "", hosts, startTime, endTime);
 
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
@@ -67,7 +67,7 @@ public class ElkLogFetchRequestTest {
     long endTime = startTime + TimeUnit.HOURS.toMillis(34);
 
     ElkLogFetchRequest elkLogFetchRequest =
-        new ElkLogFetchRequest(query, indices, "beat.hostname", "message", hosts, startTime, endTime);
+        new ElkLogFetchRequest(query, indices, "beat.hostname", "message", "", hosts, startTime, endTime);
 
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
