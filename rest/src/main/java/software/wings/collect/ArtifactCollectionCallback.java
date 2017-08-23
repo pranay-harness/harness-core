@@ -1,11 +1,11 @@
 package software.wings.collect;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ApprovalNotification;
 import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -63,9 +63,9 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       if (artifactStream.isAutoApproveForProduction()) {
         artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
       }
-      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
+      // artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
       notificationService.sendNotificationAsync(
-          ApprovalNotification.Builder.anApprovalNotification()
+          anApprovalNotification()
               .withAppId(artifact.getAppId())
               .withStage(artifactStream.isAutoApproveForProduction() ? ApprovalStage.APPROVED : ApprovalStage.PENDING)
               .withEntityId(artifact.getUuid())

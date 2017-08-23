@@ -50,7 +50,6 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
@@ -73,7 +72,6 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -420,7 +418,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .stream()
         .filter(streamAction -> !streamAction.isCustomAction())
         .forEach(artifactStreamAction -> {
-          logger.info("Triggering Post Artifact Collection action triggered");
+          logger.info("Triggering Post Artifact Collection action for app Id {} and stream Id {}", artifact.getAppId(),
+              artifact.getArtifactStreamId());
           triggerStreamAction(artifact, artifactStreamAction);
           logger.info("Post Artifact Collection action triggered");
         });
@@ -434,18 +433,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
       executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
       if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
-        logger.info("Triggering Workflow execution of appId {} of  {} type with workflow id {}", artifact.getAppId(),
-            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        logger.info("Triggering Workflow execution of appId {}  with workflow id {}", artifact.getAppId(),
+            artifactStreamAction.getWorkflowId());
         workflowExecutionService.triggerEnvExecution(
             artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
-        logger.info("Workflow execution of appId {} of {} type with workflow id {} triggered", artifact.getAppId(),
-            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        logger.info("Workflow execution of appId {} with workflow id {} triggered", artifact.getAppId(),
+            artifactStreamAction.getWorkflowId());
       } else {
-        logger.info("Triggering Pipeline execution of appId {} with stream action id {}", artifact.getAppId(),
-            artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", artifact.getAppId(),
+            artifactStreamAction.getWorkflowId());
         pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
-        logger.info("Pipeline execution of appId {} of  {} type with stream action id {} triggered",
-            artifact.getAppId(), artifactStreamAction.getWorkflowType(), artifactStreamAction.getWorkflowId());
+        logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered",
+            artifact.getAppId(), artifactStreamAction.getWorkflowId());
       }
     }
   }
