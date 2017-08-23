@@ -137,7 +137,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
     if (user != null) {
-      logger.info("User: {}", user);
       requestContext.setProperty("USER", user);
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
