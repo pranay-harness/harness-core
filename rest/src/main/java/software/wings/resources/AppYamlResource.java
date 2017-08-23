@@ -76,9 +76,6 @@ public class AppYamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId) {
     List<Service> services = serviceResourceService.findServicesByApp(appId);
-
-    logger.info("***************** services: " + services);
-
     Application app = appService.get(appId);
 
     AppYaml appYaml = new AppYaml();
@@ -89,7 +86,7 @@ public class AppYamlResource {
     return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
   }
 
-  // TODO - NOTE: we probably don't need a PUT and a POST endpoint - there is really only one method - save
+  // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
 
   /**
    * Save the changes reflected in appYaml (in a JSON "wrapper")
@@ -110,24 +107,7 @@ public class AppYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /* TODO
-    Application app = null;
-
-    if (yaml != null && !yaml.isEmpty()) {
-      try {
-        app = mapper.readValue(yaml, Application.class);
-        app.setAccountId(accountId);
-
-        app = setupYamlService.save(app);
-
-        if (app != null) {
-          rr.setResource(app);
-        }
-      } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
-      }
-    }
-    */
+    // DOES NOTHING
 
     return rr;
   }
@@ -201,7 +181,7 @@ public class AppYamlResource {
         if (beforeAppYaml != null) {
           List<String> beforeServices = beforeAppYaml.getServiceNames();
 
-          // initial the services to delete from the before, and remove the befores from the services to add list
+          // initialize the services to delete from the before, and remove the befores from the services to add list
           for (String s : beforeServices) {
             servicesToDelete.add(s);
             servicesToAdd.remove(s);
