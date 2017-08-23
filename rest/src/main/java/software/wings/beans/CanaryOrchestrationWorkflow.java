@@ -250,7 +250,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         String templateVariable = matcher.group(0);
         templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
         templateVariable = getTemplateExpressionName(templateExpression, templateVariable);
-        if (!userVariables.contains(templateVariable)) {
+        if (!contains(userVariables, templateVariable)) {
           userVariables.add(aVariable()
                                 .withName(templateVariable)
                                 .withEntityType(entityType)
@@ -262,7 +262,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       } else {
         expression = getTemplateExpressionName(templateExpression, expression);
-        if (!userVariables.contains(expression)) {
+        if (!contains(userVariables, expression)) {
           userVariables.add(aVariable()
                                 .withName(expression)
                                 .withEntityType(entityType)
@@ -275,6 +275,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
+  private boolean contains(List<Variable> userVariables, String name) {
+    return userVariables.stream().anyMatch(variable -> variable.getName().equals(name));
+  }
   private String getTemplateExpressionName(TemplateExpression templateExpression, String templateVariable) {
     if (templateVariable != null) {
       if (templateVariable.contains(".")) {
@@ -289,6 +292,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     return templateVariable;
   }
+
   /**
    * Invoked after loading document from mongo by morphia.
    */
