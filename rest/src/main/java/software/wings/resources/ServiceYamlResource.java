@@ -9,15 +9,18 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
-import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
@@ -242,46 +245,36 @@ public class ServiceYamlResource {
 
         // do additions
         for (String s : serviceCommandsToAdd) {
-          /*
-          String commandTypeStr = s.toUpperCase();
-
-          try {
-            CommandType ct = CommandType.valueOf(commandTypeStr);
-          } catch (Exception e) {
-            e.printStackTrace();
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "The CommandType: '"
-          + commandTypeStr + "' is not found in the CommandType Enum!"); return rr;
-          }
-          */
-
           // create the new Service Command
           ServiceCommand newServiceCommand = new ServiceCommand();
           newServiceCommand.setAppId(appId);
           newServiceCommand.setName(s);
+          newServiceCommand.setTargetToAllEnv(true);
+
           Command command = new Command();
-          command.setArtifactType(ArtifactType.OTHER);
+          command.setName(s);
+          command.setCommandUnitType(CommandUnitType.COMMAND);
+          command.setCommandExecutionStatus(CommandExecutionStatus.QUEUED);
+          command.setCommandType(CommandType.OTHER);
+          command.setDeploymentType(DeploymentType.ECS.getDisplayName());
+
+          // create graph
           Graph graph = new Graph();
-          Link link = new Link();
-          List<Link> links = new ArrayList<Link>();
-          links.add(link);
-          graph.setLinks(links);
+          graph.setGraphName(s);
+
+          // create node
           Node node = new Node();
+          node.setType(CommandUnitType.RESIZE.getType());
+          node.setName(CommandUnitType.RESIZE.getName() + "-0");
           node.setOrigin(true);
+
           List<Node> nodes = new ArrayList<Node>();
           nodes.add(node);
           graph.setNodes(nodes);
           command.setGraph(graph);
           newServiceCommand.setCommand(command);
 
-          newServiceCommand.setTargetToAllEnv(true);
-          newServiceCommand.setSetAsDefault(true);
-
           serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
-          /*
-          Graph commandGraph = aGraph().withGraphName(s).build();
-          serviceResourceService.addCommand(appId, serviceId,
-          aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build());
-          */
         }
 
         // save the changes

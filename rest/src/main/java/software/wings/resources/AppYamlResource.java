@@ -247,8 +247,8 @@ public class AppYamlResource {
           newService.setAppId(appId);
           newService.setName(s);
           newService.setDescription("");
-          // TODO - it needs this for now, but it should use the default for the account and if that is empty/null, use
-          // the Harness (level) default
+          // TODO - ideally it should use the default for the account and if that is empty/null, use the Harness (level)
+          // default
           newService.setArtifactType(ArtifactType.DOCKER);
           serviceResourceService.save(newService);
         }
