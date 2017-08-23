@@ -137,6 +137,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
     if (user != null) {
+      logger.info("User: {}", user);
       requestContext.setProperty("USER", user);
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
@@ -173,7 +174,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     } else {
       // TODO:
+      logger.info("User {} is neither account admin nor all app admin", user.getName());
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
+      if (userAccountRole == null) {
+        logger.info("No account role exist for user {}", user.getName());
+      }
+      logger.info("User account role {}", userAccountRole);
       ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
                                                 .stream()
                                                 .map(ApplicationRole::getAppId)
