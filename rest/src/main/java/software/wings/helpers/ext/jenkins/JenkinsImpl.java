@@ -205,9 +205,9 @@ public class JenkinsImpl implements Jenkins {
     // collected so far.
     lock.lock();
     try {
-      allJobsDoneCondition.await(25, TimeUnit.SECONDS);
+      allJobsDoneCondition.await(20, TimeUnit.SECONDS);
     } catch (InterruptedException ex) {
-      logger.warn("Failed to retrieve all jobs within 25 secs");
+      logger.warn("Failed to retrieve all jobs within 20 secs");
     } finally {
       lock.unlock();
     }
@@ -336,7 +336,7 @@ public class JenkinsImpl implements Jenkins {
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
-    logger.info("Last successful build for job {}");
+    logger.info("Last successful build for job {}", buildWithDetails.getNumber());
     return getBuildDetails(buildWithDetails);
   }
 

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -38,6 +39,17 @@ public class AccountRole {
 
   void setAllApps(boolean allApps) {
     this.allApps = allApps;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
+        .add("accountName", accountName)
+        .add("allApps", allApps)
+        .add("applicationRoles", applicationRoles)
+        .add("resourceAccess", resourceAccess)
+        .toString();
   }
 
   public ImmutableList<ApplicationRole> getApplicationRoles() {
