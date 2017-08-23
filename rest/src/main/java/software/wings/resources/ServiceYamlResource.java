@@ -1,8 +1,5 @@
 package software.wings.resources;
 
-import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -15,10 +12,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.beans.command.CommandType;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
@@ -243,28 +242,46 @@ public class ServiceYamlResource {
 
         // do additions
         for (String s : serviceCommandsToAdd) {
+          /*
           String commandTypeStr = s.toUpperCase();
 
           try {
             CommandType ct = CommandType.valueOf(commandTypeStr);
           } catch (Exception e) {
             e.printStackTrace();
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                "The CommandType: '" + commandTypeStr + "' is not found in the CommandType Enum!");
-            return rr;
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "The CommandType: '"
+          + commandTypeStr + "' is not found in the CommandType Enum!"); return rr;
           }
+          */
 
           // create the new Service Command
           ServiceCommand newServiceCommand = new ServiceCommand();
           newServiceCommand.setAppId(appId);
           newServiceCommand.setName(s);
-          // serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+          Command command = new Command();
+          command.setArtifactType(ArtifactType.OTHER);
+          Graph graph = new Graph();
+          Link link = new Link();
+          List<Link> links = new ArrayList<Link>();
+          links.add(link);
+          graph.setLinks(links);
+          Node node = new Node();
+          node.setOrigin(true);
+          List<Node> nodes = new ArrayList<Node>();
+          nodes.add(node);
+          graph.setNodes(nodes);
+          command.setGraph(graph);
+          newServiceCommand.setCommand(command);
+
+          newServiceCommand.setTargetToAllEnv(true);
+          newServiceCommand.setSetAsDefault(true);
+
+          serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+          /*
           Graph commandGraph = aGraph().withGraphName(s).build();
           serviceResourceService.addCommand(appId, serviceId,
-              aServiceCommand()
-                  .withTargetToAllEnv(true)
-                  .withCommand(aCommand().withGraph(commandGraph).build())
-                  .build());
+          aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build());
+          */
         }
 
         // save the changes
