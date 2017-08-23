@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.LogzConfig;
@@ -21,13 +20,13 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.logz.LogzSettingProvider;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
@@ -59,8 +58,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
     final LogzDataCollectionInfo dataCollectionInfo =
         new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-            timestampFieldFormat, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+            getPhaseServiceId(context), queries, hostnameField, messageField, timestampField, timestampFieldFormat,
+            logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
@@ -83,11 +82,58 @@ public class LogzAnalysisState extends ElkAnalysisState {
 
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
     if (StringUtils.isBlank(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
+  }
+
+  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @DefaultValue(".*exception.*")
+  public String getQuery() {
+    return query;
+  }
+
+  @SchemaIgnore
+  public String getIndices() {
+    return indices;
+  }
+
+  @Attributes(required = true, title = "Hostname Field", description = "Hostname field mapping in elastic search")
+  @DefaultValue("beat.hostname")
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  @Attributes(required = true, title = "Message Field", description = "Message field mapping in elastic search")
+  @DefaultValue("message")
+  public String getMessageField() {
+    return messageField;
+  }
+
+  @Attributes(required = true, title = "Timestamp Field", description = "Timestamp field mapping in elastic search")
+  @DefaultValue("@timestamp")
+  public String getTimestampField() {
+    return timestampField;
+  }
+
+  @Attributes(
+      required = true, title = "Timestamp Field Format", description = "Timestamp field format in elastic search")
+  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  public String
+  getTimestampFieldFormat() {
+    return timestampFieldFormat;
   }
 
   @Override

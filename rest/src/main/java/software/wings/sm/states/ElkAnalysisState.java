@@ -43,69 +43,27 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Attributes(required = true, title = "Elastic Search Server") protected String analysisServerConfigId;
 
-  protected String indices;
-
   @Attributes(
       title = "Elastic search indices to search", description = "Comma separated list of indices : _index1,_index2")
   @DefaultValue("_all")
-  public String
-  getIndices() {
-    return indices;
-  }
-
-  public void setIndices(String indices) {
-    this.indices = indices;
-  }
-
-  protected String hostnameField;
+  protected String indices;
 
   @Attributes(required = true, title = "Hostname Field", description = "Hostname field mapping in elastic search")
   @DefaultValue("beat.hostname")
-  public String getHostnameField() {
-    return hostnameField;
-  }
-
-  public void setHostnameField(String hostnameField) {
-    this.hostnameField = hostnameField;
-  }
-
-  protected String messageField;
+  protected String hostnameField;
 
   @Attributes(required = true, title = "Message Field", description = "Message field mapping in elastic search")
   @DefaultValue("message")
-  public String getMessageField() {
-    return messageField;
-  }
-
-  public void setMessageField(String messageField) {
-    this.messageField = messageField;
-  }
-
-  protected String timestampField;
+  protected String messageField;
 
   @Attributes(required = true, title = "Timestamp Field", description = "Timestamp field mapping in elastic search")
   @DefaultValue("@timestamp")
-  public String getTimestampField() {
-    return timestampField;
-  }
-
-  public void setTimestampField(String timestampField) {
-    this.timestampField = timestampField;
-  }
-
-  protected String timestampFieldFormat;
+  protected String timestampField;
 
   @Attributes(
       required = true, title = "Timestamp Field Format", description = "Timestamp field format in elastic search")
   @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-  public String
-  getTimestampFieldFormat() {
-    return timestampFieldFormat;
-  }
-
-  public void setTimestampFieldFormat(String timestampFieldFormat) {
-    this.timestampFieldFormat = timestampFieldFormat;
-  }
+  protected String timestampFieldFormat;
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
@@ -115,13 +73,69 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     super(name, type);
   }
 
+  public String getIndices() {
+    return indices;
+  }
+
+  public void setIndices(String indices) {
+    this.indices = indices;
+  }
+
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
+  public String getMessageField() {
+    return messageField;
+  }
+
+  public void setMessageField(String messageField) {
+    this.messageField = messageField;
+  }
+
+  public String getTimestampField() {
+    return timestampField;
+  }
+
+  public void setTimestampField(String timestampField) {
+    this.timestampField = timestampField;
+  }
+
+  public String getTimestampFieldFormat() {
+    return timestampFieldFormat;
+  }
+
+  public void setTimestampFieldFormat(String timestampFieldFormat) {
+    this.timestampFieldFormat = timestampFieldFormat;
+  }
+
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
     if (StringUtils.isBlank(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
+  }
+
+  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @DefaultValue(".*exception.*")
+  public String getQuery() {
+    return query;
   }
 
   @Override

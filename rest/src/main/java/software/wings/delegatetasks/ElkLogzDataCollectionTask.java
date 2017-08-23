@@ -129,13 +129,12 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                 timestampFieldFormat = ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampFieldFormat();
                 break;
               case LOGZ:
-                final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query,
-                    ((LogzDataCollectionInfo) dataCollectionInfo).getIndices(),
+                final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query, "",
                     ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField(),
                     ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(),
                     ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField(), Collections.singleton(hostName),
                     collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
-                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toLogzJsonObject()));
+                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                 searchResponse = logzDelegateService.search(
                     ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
                 hostnameField = ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField();
