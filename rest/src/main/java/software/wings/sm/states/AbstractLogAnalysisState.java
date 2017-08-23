@@ -52,6 +52,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
 
+  public AbstractLogAnalysisState(String name, String stateType) {
+    super(name, stateType);
+  }
+
   @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
   @DefaultValue("*exception*")
   public String getQuery() {
@@ -60,10 +64,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   public void setQuery(String query) {
     this.query = query;
-  }
-
-  public AbstractLogAnalysisState(String name, String stateType) {
-    super(name, stateType);
   }
 
   @Override

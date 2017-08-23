@@ -27,6 +27,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
@@ -50,11 +51,27 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
     if (StringUtils.isBlank(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
+  }
+
+  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @DefaultValue("*exception*")
+  public String getQuery() {
+    return query;
   }
 
   @Override
