@@ -89,7 +89,7 @@ public class ServiceYamlResource {
     return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
   }
 
-  // TODO - NOTE: we probably don't need a PUT and a POST endpoint - there is really only one method - save
+  // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
 
   /**
    * Save the changes reflected in serviceYaml (in a JSON "wrapper")
@@ -110,24 +110,7 @@ public class ServiceYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /* TODO
-    Application app = null;
-
-    if (yaml != null && !yaml.isEmpty()) {
-      try {
-        app = mapper.readValue(yaml, Application.class);
-        app.setAccountId(accountId);
-
-        app = setupYamlService.save(app);
-
-        if (app != null) {
-          rr.setResource(app);
-        }
-      } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
-      }
-    }
-    */
+    // DOES NOTHING
 
     return rr;
   }
@@ -155,8 +138,6 @@ public class ServiceYamlResource {
     RestResponse beforeResponse = get(appId, serviceId);
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
-
-    logger.info("**************** beforeYaml: " + beforeYaml);
 
     if (yaml.equals(beforeYaml)) {
       // no change
@@ -203,8 +184,8 @@ public class ServiceYamlResource {
         if (beforeServiceYaml != null) {
           List<String> beforeServiceCommands = beforeServiceYaml.getServiceCommandNames();
 
-          // initial the service commands to delete from the before, and remove the befores from the service commands to
-          // add list
+          // initialize the service commands to delete from the before, and remove the befores from the service commands
+          // to add list
           for (String sc : beforeServiceCommands) {
             serviceCommandsToDelete.add(sc);
             serviceCommandsToAdd.remove(sc);
@@ -244,36 +225,8 @@ public class ServiceYamlResource {
         }
 
         // do additions
-        for (String s : serviceCommandsToAdd) {
-          // create the new Service Command
-          ServiceCommand newServiceCommand = new ServiceCommand();
-          newServiceCommand.setAppId(appId);
-          newServiceCommand.setName(s);
-          newServiceCommand.setTargetToAllEnv(true);
-
-          Command command = new Command();
-          command.setName(s);
-          command.setCommandUnitType(CommandUnitType.COMMAND);
-          command.setCommandExecutionStatus(CommandExecutionStatus.QUEUED);
-          command.setCommandType(CommandType.OTHER);
-          command.setDeploymentType(DeploymentType.ECS.getDisplayName());
-
-          // create graph
-          Graph graph = new Graph();
-          graph.setGraphName(s);
-
-          // create node
-          Node node = new Node();
-          node.setType(CommandUnitType.RESIZE.getType());
-          node.setName(CommandUnitType.RESIZE.getName() + "-0");
-          node.setOrigin(true);
-
-          List<Node> nodes = new ArrayList<Node>();
-          nodes.add(node);
-          graph.setNodes(nodes);
-          command.setGraph(graph);
-          newServiceCommand.setCommand(command);
-
+        for (String scName : serviceCommandsToAdd) {
+          ServiceCommand newServiceCommand = createNewServiceCommand(appId, scName);
           serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
         }
 
@@ -311,5 +264,37 @@ public class ServiceYamlResource {
     }
 
     return rr;
+  }
+
+  private ServiceCommand createNewServiceCommand(String appId, String scName) {
+    ServiceCommand newServiceCommand = new ServiceCommand();
+    newServiceCommand.setAppId(appId);
+    newServiceCommand.setName(scName);
+    newServiceCommand.setTargetToAllEnv(true);
+
+    Command command = new Command();
+    command.setName(scName);
+    command.setCommandUnitType(CommandUnitType.COMMAND);
+    command.setCommandExecutionStatus(CommandExecutionStatus.QUEUED);
+    command.setCommandType(CommandType.OTHER);
+    command.setDeploymentType(DeploymentType.ECS.getDisplayName());
+
+    // create graph
+    Graph graph = new Graph();
+    graph.setGraphName(scName);
+
+    // create node
+    Node node = new Node();
+    node.setType(CommandUnitType.RESIZE.getType());
+    node.setName(CommandUnitType.RESIZE.getName() + "-0");
+    node.setOrigin(true);
+
+    List<Node> nodes = new ArrayList<Node>();
+    nodes.add(node);
+    graph.setNodes(nodes);
+    command.setGraph(graph);
+    newServiceCommand.setCommand(command);
+
+    return newServiceCommand;
   }
 }

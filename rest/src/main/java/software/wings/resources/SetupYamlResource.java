@@ -77,7 +77,7 @@ public class SetupYamlResource {
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
   }
 
-  // TODO - NOTE: we probably don't need a PUT and a POST endpoint - there is really only one method - save
+  // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
 
   /**
    * Save the changes reflected in setupYaml (in a JSON "wrapper")
@@ -98,24 +98,7 @@ public class SetupYamlResource {
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
-    /* TODO
-    Application app = null;
-
-    if (yaml != null && !yaml.isEmpty()) {
-      try {
-        app = mapper.readValue(yaml, Application.class);
-        app.setAccountId(accountId);
-
-        app = setupYamlService.save(app);
-
-        if (app != null) {
-          rr.setResource(app);
-        }
-      } catch (Exception e) {
-        addUnrecognizedFieldsMessage(rr);
-      }
-    }
-    */
+    // DOES NOTHING
 
     return rr;
   }
@@ -189,7 +172,7 @@ public class SetupYamlResource {
         if (beforeSetupYaml != null) {
           List<String> beforeApplicationss = beforeSetupYaml.getAppNames();
 
-          // initial the applications to delete from the before, and remove the befores from the applications to add
+          // initialize the applications to delete from the before, and remove the befores from the applications to add
           // list
           for (String s : beforeApplicationss) {
             applicationsToDelete.add(s);
@@ -201,9 +184,6 @@ public class SetupYamlResource {
         for (String s : applicationNames) {
           applicationsToDelete.remove(s);
         }
-
-        // TODO ********** DO WE NEED THIS *************
-        // Application app = appService.get(appId);
 
         List<Application> applications = appService.getAppsByAccountId(accountId);
         Map<String, Application> applicationMap = new HashMap<String, Application>();
@@ -239,20 +219,6 @@ public class SetupYamlResource {
           newApplication.setDescription("");
           appService.save(newApplication);
         }
-
-        // TODO ********** DO WE NEED THIS *************
-        /*
-        // save the changes
-        app.setName(appYaml.getName());
-        app.setDescription(appYaml.getDescription());
-
-        app = appService.update(app);
-
-        // return the new resource
-        if (app != null) {
-          rr.setResource(app);
-        }
-        */
 
         rr.setResource(setupYaml);
 
