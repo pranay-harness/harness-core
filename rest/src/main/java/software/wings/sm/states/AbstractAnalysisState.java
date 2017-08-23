@@ -9,6 +9,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.jcraft.jsch.HASH;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -113,8 +114,8 @@ public abstract class AbstractAnalysisState extends State {
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false);
     if (workflowExecutions.isEmpty()) {
-      getLogger().error("Could not get a successful workflow to find control nodes");
-      return null;
+      getLogger().warn("Could not get a successful workflow to find control nodes");
+      return new HashSet<>();
     }
 
     Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
@@ -165,7 +166,8 @@ public abstract class AbstractAnalysisState extends State {
 
   abstract public void setAnalysisServerConfigId(String analysisServerConfigId);
 
-  protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
+  protected abstract String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Set<String> hosts);
 
   protected String generateAuthToken() throws UnsupportedEncodingException {
     return generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret());

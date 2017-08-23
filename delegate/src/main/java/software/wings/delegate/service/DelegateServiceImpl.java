@@ -139,7 +139,7 @@ public class DelegateServiceImpl implements DelegateService {
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
       Client client = ClientFactory.getDefault().newClient();
-      ExecutorService fixedThreadPool = Executors.newWorkStealingPool(5);
+      ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
       // Stream the request body
       request =
@@ -422,7 +422,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
-    System.out.println("Aborting task " + delegateTaskEvent);
+    logger.info("Aborting task " + delegateTaskEvent);
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
   }
