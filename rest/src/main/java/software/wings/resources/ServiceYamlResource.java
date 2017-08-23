@@ -1,5 +1,9 @@
 package software.wings.resources;
 
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,7 +13,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
@@ -267,33 +270,23 @@ public class ServiceYamlResource {
   }
 
   private ServiceCommand createNewServiceCommand(String appId, String scName) {
-    ServiceCommand newServiceCommand = new ServiceCommand();
-    newServiceCommand.setAppId(appId);
-    newServiceCommand.setName(scName);
-    newServiceCommand.setTargetToAllEnv(true);
+    Node node = aNode()
+                    .withType(CommandUnitType.RESIZE.getType())
+                    .withName(CommandUnitType.RESIZE.getName() + "-0")
+                    .withOrigin(true)
+                    .build();
 
-    Command command = new Command();
-    command.setName(scName);
-    command.setCommandUnitType(CommandUnitType.COMMAND);
-    command.setCommandExecutionStatus(CommandExecutionStatus.QUEUED);
-    command.setCommandType(CommandType.OTHER);
-    command.setDeploymentType(DeploymentType.ECS.getDisplayName());
+    Graph graph = aGraph().withGraphName(scName).addNodes(node).build();
 
-    // create graph
-    Graph graph = new Graph();
-    graph.setGraphName(scName);
+    Command command = aCommand()
+                          .withName(scName)
+                          .withCommandType(CommandType.OTHER)
+                          .withExecutionResult(CommandExecutionStatus.QUEUED)
+                          .withGraph(graph)
+                          .build();
 
-    // create node
-    Node node = new Node();
-    node.setType(CommandUnitType.RESIZE.getType());
-    node.setName(CommandUnitType.RESIZE.getName() + "-0");
-    node.setOrigin(true);
-
-    List<Node> nodes = new ArrayList<Node>();
-    nodes.add(node);
-    graph.setNodes(nodes);
-    command.setGraph(graph);
-    newServiceCommand.setCommand(command);
+    ServiceCommand newServiceCommand =
+        aServiceCommand().withAppId(appId).withName(scName).withTargetToAllEnv(true).withCommand(command).build();
 
     return newServiceCommand;
   }
