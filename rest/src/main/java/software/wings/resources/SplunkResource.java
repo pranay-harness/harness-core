@@ -49,9 +49,9 @@ public class SplunkResource implements LogAnalysisResource {
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
-      List<LogElement> logData) throws IOException {
+      @QueryParam("delegateTaskId") String delegateTaskId, List<LogElement> logData) throws IOException {
     return new RestResponse<>(analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId,
-        workflowId, workflowExecutionId, serviceId, clusterLevel, logData));
+        workflowId, workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
   }
 
   @POST
@@ -72,9 +72,11 @@ public class SplunkResource implements LogAnalysisResource {
   @ExternalServiceAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
+      @QueryParam("logCollectionMinute") Integer logCollectionMinute, LogMLAnalysisRecord mlAnalysisResponse)
+      throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
+    mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SPLUNKV2));
   }
 
@@ -86,7 +88,8 @@ public class SplunkResource implements LogAnalysisResource {
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
       @QueryParam("accountId") String accountId, LogMLAnalysisRequest mlAnalysisRequest) throws IOException {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),
-        mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery(), StateType.SPLUNKV2));
+        mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery(), StateType.SPLUNKV2,
+        mlAnalysisRequest.getLogCollectionMinute()));
   }
 
   @GET
