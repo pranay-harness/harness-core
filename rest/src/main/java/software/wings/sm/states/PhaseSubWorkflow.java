@@ -71,19 +71,22 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
 
-    Service service;
+    Service service = null;
     InfrastructureMapping infrastructureMapping = null;
     String serviceIdExpression = null;
     String infraMappingIdExpression = null;
 
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (templateExpressions != null && templateExpressions.isEmpty()) {
+    if (templateExpressions != null) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null && fieldName.equals("serviceId")) {
           serviceIdExpression = templateExpression.getExpression();
+          service = templateExpressionProcessor.resolveService(context, app, templateExpression);
         } else if (fieldName != null && fieldName.equals("infraMappingId")) {
           infraMappingIdExpression = templateExpression.getExpression();
+          infrastructureMapping =
+              templateExpressionProcessor.resolveInfraMapping(context, app, service.getUuid(), templateExpression);
         }
       }
     }
@@ -91,14 +94,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       if (infraMappingIdExpression == null) {
         throw new WingsException("Service templatized so service infrastructure should be templatized");
       }
-      service = templateExpressionProcessor.resolveService(context, app, serviceIdExpression);
     } else {
       service = serviceResourceService.get(app.getAppId(), serviceId, false);
     }
-    if (infraMappingIdExpression != null) {
-      infrastructureMapping =
-          templateExpressionProcessor.resolveInfraMapping(context, app, service.getUuid(), infraMappingIdExpression);
-    } else {
+    if (infraMappingIdExpression == null) {
       infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
     }
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);

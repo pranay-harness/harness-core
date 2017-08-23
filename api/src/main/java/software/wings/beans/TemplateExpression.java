@@ -1,8 +1,10 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by sgurubelli on 8/11/17.
@@ -18,6 +20,33 @@ public class TemplateExpression {
 
   public String getFieldName() {
     return fieldName;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("fieldName", fieldName)
+        .add("expression", expression)
+        .add("entityType", entityType)
+        .add("metadata", metadata)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    TemplateExpression that = (TemplateExpression) o;
+    return expressionAllowed == that.expressionAllowed && Objects.equals(fieldName, that.fieldName)
+        && Objects.equals(expression, that.expression) && entityType == that.entityType
+        && Objects.equals(metadata, that.metadata);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fieldName, expression, expressionAllowed, entityType, metadata);
   }
 
   public void setFieldName(String fieldName) {
