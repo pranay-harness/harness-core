@@ -8,15 +8,18 @@ import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.dl.PageRequest;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
+import software.wings.utils.ExpressionEvaluator;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -34,13 +37,20 @@ public class TemplateExpressionProcessor {
    * @param context
    * @param app
    * @param serviceId
-   * @param expression
+   * @param templateExpression
    * @return  InfraStructureMapping
    */
   public InfrastructureMapping resolveInfraMapping(
-      ExecutionContext context, Application app, String serviceId, String expression) {
+      ExecutionContext context, Application app, String serviceId, TemplateExpression templateExpression) {
     try {
-      String displayName = context.renderExpression(expression);
+      String expression = changeToWorkflowVariable(templateExpression);
+      String displayNameOrId = context.renderExpression(expression);
+      if (templateExpression.getMetadata() != null) {
+        if (templateExpression.getMetadata().get(Constants.ENTITY_TYPE) != null) {
+          // Then variable contains inframapping id
+          return infrastructureMappingService.get(app.getAppId(), displayNameOrId);
+        }
+      }
       PageRequest<InfrastructureMapping> pageRequest =
           aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("serviceId", EQ, serviceId).build();
       List<InfrastructureMapping> infraMappings = infrastructureMappingService.list(pageRequest);
@@ -48,14 +58,17 @@ public class TemplateExpressionProcessor {
         return null;
       }
       Optional<InfrastructureMapping> infraMapping =
-          infraMappings.stream().filter(infrastructureMapping -> infrastructureMapping.equals(displayName)).findFirst();
+          infraMappings.stream()
+              .filter(infrastructureMapping -> infrastructureMapping.equals(displayNameOrId))
+              .findFirst();
       if (infraMapping.isPresent()) {
         return infraMapping.get();
       }
-      throw new WingsException("Service Infrastructure " + expression + " resolved as" + displayName
-          + ". However, no Service Infrastructure found with name: " + displayName);
+      throw new WingsException("Service Infrastructure expression  " + templateExpression + " resolved as"
+          + displayNameOrId + ". However, no Service Infrastructure found with name: " + displayNameOrId);
     } catch (Exception ex) {
-      throw new WingsException("Failed to resolve the Service Infrastructure expression: " + expression);
+      throw new WingsException("Failed to resolve the Service Infrastructure expression:" + templateExpression
+          + "Reason: " + ex.getMessage());
     }
   }
 
@@ -63,22 +76,30 @@ public class TemplateExpressionProcessor {
    * Resolve service template expression
    * @param context
    * @param app
-   * @param expression
+   * @param templateExpression
    * @return Service
    */
-  public Service resolveService(ExecutionContext context, Application app, String expression) {
+  public Service resolveService(ExecutionContext context, Application app, TemplateExpression templateExpression) {
     try {
-      String serviceName = context.renderExpression(expression);
+      String expression = changeToWorkflowVariable(templateExpression);
+      String serviceNameOrId = context.renderExpression(expression);
+      if (templateExpression.getMetadata() != null) {
+        if (templateExpression.getMetadata().get(Constants.ENTITY_TYPE) != null) {
+          // Then variable contains serviceId
+          return serviceResourceService.get(app.getAppId(), serviceNameOrId, false);
+        }
+      }
       PageRequest<Service> pageRequest =
-          aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("name", EQ, serviceName).build();
+          aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("name", EQ, serviceNameOrId).build();
       List<Service> services = serviceResourceService.list(pageRequest, false, false);
       if (services != null && !services.isEmpty()) {
         return services.get(0);
       }
-      throw new WingsException("Service expression " + expression + " resolved as" + serviceName
-          + ". However, no service found with service name: " + serviceName);
+      throw new WingsException("Service expression " + templateExpression.getExpression() + " resolved as"
+          + serviceNameOrId + ". However, no service found with service name: " + serviceNameOrId);
     } catch (Exception ex) {
-      throw new WingsException("Failed to resolve the service expression: " + expression);
+      throw new WingsException(
+          "Failed to resolve the service expression:" + templateExpression + "Reason: " + ex.getMessage());
     }
   }
 
@@ -91,6 +112,7 @@ public class TemplateExpressionProcessor {
    */
   public SettingAttribute resolveSettingAttribute(
       ExecutionContext context, String accountId, String expression, Category category) {
+    // expression = changeToWorkflowVariable(expression);
     String displayName = context.renderExpression(expression);
     PageRequest<SettingAttribute> pageRequest = aPageRequest()
                                                     .addFilter("accountId", EQ, accountId)
@@ -107,5 +129,20 @@ public class TemplateExpressionProcessor {
       return settingAttribute.get();
     }
     return null;
+  }
+
+  public String changeToWorkflowVariable(TemplateExpression templateExpression) {
+    String templateVariable = templateExpression.getExpression();
+    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(templateVariable);
+    if (matcher.matches()) {
+      templateVariable = matcher.group(0);
+      templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
+      if (!templateVariable.startsWith("workflow.variables.")) {
+        templateVariable = "${workflow.variables." + templateVariable + "}";
+      }
+    } else {
+      throw new WingsException("Invalid service expression: " + templateExpression);
+    }
+    return templateVariable;
   }
 }
