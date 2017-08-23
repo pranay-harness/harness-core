@@ -41,7 +41,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
 
   @Override
   public Object search(LogzConfig logzConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toLogzJsonObject());
+    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
