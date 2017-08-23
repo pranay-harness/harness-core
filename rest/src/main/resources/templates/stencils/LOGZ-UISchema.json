@@ -1,5 +1,5 @@
 {
-  "ui:order": ["analysisServerConfigId", "query", "indices", "hostnameField", "messageField", "timeDuration", "comparisonStrategy"],
+  "ui:order": ["analysisServerConfigId", "query", "indices", "hostnameField", "messageField", "timestampField", "timestampFieldFormat", "timeDuration", "comparisonStrategy"],
   "query": {
     "ui:widget": "textarea"
   }

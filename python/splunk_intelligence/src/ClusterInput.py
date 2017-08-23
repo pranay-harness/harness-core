@@ -324,6 +324,9 @@ def main(args):
         run_debug(options)
     else:
         raw_events, texts = load_from_wings_server(options)
+        if raw_events is None or len(raw_events) == 0:
+            logger.warn("No inputs to cluster")
+            sys.exit(2)
         cluster_input = ClusterInput(options, texts)
         clusters, counts = cluster_input.run()
         results = create_response(raw_events, clusters, counts, options.cluster_level)

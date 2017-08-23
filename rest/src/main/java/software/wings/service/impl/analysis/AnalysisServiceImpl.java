@@ -525,6 +525,9 @@ public class AnalysisServiceImpl implements AnalysisService {
           case 0:
             logger.info("First level clustering done for " + logRequest);
             break;
+          case 2:
+            logger.warn("First level clustering failed for " + logRequest);
+            break;
           default:
             logger.error("First level clustering failed for " + logRequest);
         }
