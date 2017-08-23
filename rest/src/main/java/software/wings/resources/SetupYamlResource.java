@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -212,11 +213,9 @@ public class SetupYamlResource {
 
         // do additions
         for (String s : applicationsToAdd) {
-          // create the new Service
-          Application newApplication = new Application();
-          newApplication.setAccountId(accountId);
-          newApplication.setName(s);
-          newApplication.setDescription("");
+          // create the new Application
+          Application newApplication = anApplication().withAccountId(accountId).withName(s).withDescription("").build();
+
           appService.save(newApplication);
         }
 
