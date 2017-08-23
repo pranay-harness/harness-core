@@ -20,6 +20,7 @@ import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,7 +135,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                     ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(),
                     ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField(), Collections.singleton(hostName),
                     collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
-                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
+                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toLogzJsonObject()));
                 searchResponse = logzDelegateService.search(
                     ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
                 hostnameField = ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField();
@@ -152,6 +153,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
               continue;
             }
 
+            DateFormat df = new SimpleDateFormat(timestampFieldFormat);
             JSONArray logHits = hits.getJSONArray("hits");
             final List<LogElement> logElements = new ArrayList<>();
             for (int i = 0; i < logHits.length(); i++) {
@@ -185,7 +187,13 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
               final String timeStamp = timeStampObject == null
                   ? source.getString("@timestamp")
                   : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
-              final long timeStampValue = new SimpleDateFormat(timestampFieldFormat).parse(timeStamp).getTime();
+              long timeStampValue = 0;
+              try {
+                timeStampValue = df.parse(timeStamp).getTime();
+              } catch (java.text.ParseException pe) {
+                logger.warn("Failed to parse time stamp : " + timeStamp + ", " + timestampFieldFormat, pe);
+                continue;
+              }
 
               final LogElement elkLogElement = new LogElement();
               elkLogElement.setQuery(query);
