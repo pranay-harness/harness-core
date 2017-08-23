@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -223,13 +224,11 @@ public class AppYamlResource {
         // do additions
         for (String s : servicesToAdd) {
           // create the new Service
-          Service newService = new Service();
-          newService.setAppId(appId);
-          newService.setName(s);
-          newService.setDescription("");
-          // TODO - ideally it should use the default for the account and if that is empty/null, use the Harness (level)
-          // default
-          newService.setArtifactType(ArtifactType.DOCKER);
+          // TODO - ideally it should use the default ArtifactType for the account and if that is empty/null, use the
+          // Harness (level) default
+          Service newService =
+              aService().withAppId(appId).withName(s).withDescription("").withArtifactType(ArtifactType.DOCKER).build();
+
           serviceResourceService.save(newService);
         }
 
