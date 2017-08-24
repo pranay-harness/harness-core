@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
@@ -65,6 +67,9 @@ public class SetupYamlResourceTest {
                                            .withName(TEST_APP_NAME3)
                                            .build();
 
+  private final List<String> testApps =
+      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3));
+
   /**
    * Tear down.
    */
@@ -77,32 +82,16 @@ public class SetupYamlResourceTest {
 
   @Test
   public void testGetYaml() {
-    List<String> testApps = new ArrayList<String>();
-    when(appService.getAppIdsByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApps);
-
+    when(appService.getAppNamesByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApps);
     RestResponse<YamlPayload> actual = resources.client()
                                            .target("/setupYaml/" + TEST_ACCOUNT_ID)
                                            .request()
                                            .get(new GenericType<RestResponse<YamlPayload>>() {});
 
-    logger.info("************ actual: " + actual);
-
-    /*
     YamlPayload yp = actual.getResource();
     String yaml = yp.getYaml();
 
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-    try {
-      Application app = mapper.readValue(yaml, Application.class);
-
-      assertThat(app.getName()).isEqualTo(TEST_NAME);
-      assertThat(app.getDescription()).isEqualTo(TEST_DESCRIPTION);
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    */
+    assertThat(yaml).isEqualTo(TEST_YAML);
   }
 
   /*
