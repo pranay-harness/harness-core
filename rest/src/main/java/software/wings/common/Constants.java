@@ -289,7 +289,7 @@ public interface Constants {
   /**
    * The constant DEFAULT_SYNC_CALL_TIMEOUT.
    */
-  int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
+  int DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 25 seconds
   /**
    * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
    */
