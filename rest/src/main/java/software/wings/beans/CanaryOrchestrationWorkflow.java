@@ -191,7 +191,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
         List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
         if (templateExpressions != null) {
-          templateExpressions.stream().forEach(templateExpression -> templateExpression.setExpressionAllowed(false));
+          templateExpressions.stream().forEach(templateExpression -> {
+            templateExpression.setExpressionAllowed(false);
+            templateExpression.setMandatory(true);
+          });
           addToUserVariables(templateExpressions);
         }
         populatePhaseStepIds(workflowPhase);
@@ -199,6 +202,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
         rollbackPhase.setName(ROLLBACK_PREFIX + workflowPhase.getName());
         rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
+        rollbackPhase.setTemplateExpressions(workflowPhase.getTemplateExpressions());
         populatePhaseStepIds(rollbackPhase);
       }
     }
