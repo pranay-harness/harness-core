@@ -4,15 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Variable.VariableBuilder.aVariable;
-import static software.wings.beans.VariableType.ENTITY;
-import static software.wings.beans.VariableType.TEXT;
-import static software.wings.common.Constants.ARTIFACT_TYPE;
-import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
-import static software.wings.common.Constants.RELATED_FIELD;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -25,16 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
-import software.wings.exception.WingsException;
 import software.wings.sm.TransitionType;
-import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 /**
@@ -120,6 +111,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     this.systemVariables = systemVariables;
   }
 
+  @Override
   public List<Variable> getUserVariables() {
     return userVariables;
   }
@@ -212,85 +204,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     populatePhaseStepIds(postDeploymentSteps);
     setGraph(generateGraph());
-  }
-
-  /**
-   * Adds template expression as workflow variables
-   * @param templateExpressions
-   */
-  public void addToUserVariables(List<TemplateExpression> templateExpressions) {
-    if (templateExpressions == null || templateExpressions.isEmpty()) {
-      return;
-    }
-    for (TemplateExpression templateExpression : templateExpressions) {
-      EntityType entityType = null;
-      String artifactType = null;
-      String relatedField = null;
-      Map<String, Object> metadata = templateExpression.getMetadata();
-      if (metadata != null) {
-        if (metadata.get(ENTITY_TYPE) != null) {
-          entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
-        }
-        if (metadata.get(ARTIFACT_TYPE) != null) {
-          artifactType = (String) metadata.get(ARTIFACT_TYPE);
-        }
-        if (metadata.get(RELATED_FIELD) != null) {
-          relatedField = (String) metadata.get(RELATED_FIELD);
-        }
-      }
-      String expression = templateExpression.getExpression();
-      Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
-      if (relatedField != null) {
-        Matcher relatedFieldMatcher = ExpressionEvaluator.wingsVariablePattern.matcher(relatedField);
-        if (relatedFieldMatcher.matches()) {
-          relatedField = relatedField.substring(2, relatedField.length() - 1);
-        }
-      }
-      if (matcher.matches()) {
-        String templateVariable = matcher.group(0);
-        templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-        templateVariable = getTemplateExpressionName(templateExpression, templateVariable);
-        if (!contains(userVariables, templateVariable)) {
-          userVariables.add(aVariable()
-                                .withName(templateVariable)
-                                .withEntityType(entityType)
-                                .withArtifactType(artifactType)
-                                .withRelatedField(relatedField)
-                                .withType(entityType != null ? ENTITY : TEXT)
-                                .withMandatory(true)
-                                .build());
-        }
-      } else {
-        expression = getTemplateExpressionName(templateExpression, expression);
-        if (!contains(userVariables, expression)) {
-          userVariables.add(aVariable()
-                                .withName(expression)
-                                .withEntityType(entityType)
-                                .withArtifactType(artifactType)
-                                .withRelatedField(relatedField)
-                                .withType(entityType != null ? ENTITY : TEXT)
-                                .build());
-        }
-      }
-    }
-  }
-
-  private boolean contains(List<Variable> userVariables, String name) {
-    return userVariables.stream().anyMatch(variable -> variable.getName().equals(name));
-  }
-  private String getTemplateExpressionName(TemplateExpression templateExpression, String templateVariable) {
-    if (templateVariable != null) {
-      if (templateVariable.contains(".")) {
-        if (templateVariable.startsWith("workflow.variables.")) {
-          return templateVariable.replace("workflow.variables.", "");
-        } else if (!templateExpression.isExpressionAllowed()) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Invalid template expression :" + templateExpression.getExpression()
-                  + " for fieldName:" + templateExpression.getFieldName());
-        }
-      } // Check for proper variable regex
-    }
-    return templateVariable;
   }
 
   /**

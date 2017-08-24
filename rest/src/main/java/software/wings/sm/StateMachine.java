@@ -234,6 +234,9 @@ public class StateMachine extends Base {
       properties.put("id", node.getId());
       state.setRollback(node.getRollback());
 
+      if (orchestrationWorkflow != null) {
+        orchestrationWorkflow.addToUserVariables(node.getTemplateExpressions());
+      }
       state.setTemplateExpressions(node.getTemplateExpressions());
 
       // populate properties

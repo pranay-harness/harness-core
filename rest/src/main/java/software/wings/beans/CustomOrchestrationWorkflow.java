@@ -66,6 +66,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
+  public List<Variable> getUserVariables() {
+    return null;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
