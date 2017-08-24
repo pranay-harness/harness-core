@@ -252,7 +252,8 @@ public interface Constants {
    */
   Integer DEFAULT_STATE_TIMEOUT_MILLIS = 30 * 60 * 1000; // 30 minutes
 
-  /**O
+  /**
+   * O
    * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
    */
   Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
@@ -262,12 +263,27 @@ public interface Constants {
    */
   Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+  /**
+   * The constant RUNTIME.
+   */
   String RUNTIME = "RUNTIME";
+  /**
+   * The constant NOT_REGISTERED.
+   */
   String NOT_REGISTERED = "<Not registered yet>";
+  /**
+   * The constant MAINTENANCE.
+   */
   String MAINTENANCE = "maintenance";
 
+  /**
+   * The constant DELEGATE_DIR.
+   */
   String DELEGATE_DIR = "harness-delegate";
 
+  /**
+   * The constant DELEGATE_NAME.
+   */
   String DELEGATE_NAME = "Harness delegate";
 
   /**
@@ -279,12 +295,38 @@ public interface Constants {
    */
   int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
+  /**
+   * The constant BUILD_NO.
+   */
   String BUILD_NO = "buildNo";
+  /**
+   * The constant URL.
+   */
   String URL = "url";
+  /**
+   * The constant REVISION.
+   */
   String REVISION = "revision";
+  /**
+   * The constant BUILD_PARAMS.
+   */
   String BUILD_PARAMS = "buildParameters";
+  /**
+   * The constant ARTIFACT_PATH.
+   */
   String ARTIFACT_PATH = "artifactPath";
+  /**
+   * The constant ARTIFACT_FILE_NAME.
+   */
   String ARTIFACT_FILE_NAME = "artifactFileName";
 
+  /**
+   * The constant S3.
+   */
   String S3 = "S3";
+
+  /**
+   * The constant FILE_CONTENT_NOT_STORED.
+   */
+  String FILE_CONTENT_NOT_STORED = "__FILE_CONTENT_NOT_STORED__";
 }
