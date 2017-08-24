@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by sgurubelli on 8/11/17.
@@ -12,7 +11,9 @@ import java.util.Objects;
 public class TemplateExpression {
   private String fieldName;
   private String expression;
-  private boolean expressionAllowed; // Can this template expression can contain other expression
+  private boolean expressionAllowed = true; // Can this template expression can contain other expression
+
+  private boolean mandatory;
 
   private EntityType entityType;
 
@@ -30,23 +31,6 @@ public class TemplateExpression {
         .add("entityType", entityType)
         .add("metadata", metadata)
         .toString();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    TemplateExpression that = (TemplateExpression) o;
-    return expressionAllowed == that.expressionAllowed && Objects.equals(fieldName, that.fieldName)
-        && Objects.equals(expression, that.expression) && entityType == that.entityType
-        && Objects.equals(metadata, that.metadata);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(fieldName, expression, expressionAllowed, entityType, metadata);
   }
 
   public void setFieldName(String fieldName) {
@@ -82,5 +66,13 @@ public class TemplateExpression {
 
   public void setEntityType(EntityType entityType) {
     this.entityType = entityType;
+  }
+
+  public boolean isMandatory() {
+    return mandatory;
+  }
+
+  public void setMandatory(boolean mandatory) {
+    this.mandatory = mandatory;
   }
 }

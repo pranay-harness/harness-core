@@ -117,7 +117,7 @@ public abstract class OrchestrationWorkflow {
                                      .withArtifactType(artifactType)
                                      .withRelatedField(relatedField)
                                      .withType(entityType != null ? ENTITY : TEXT)
-                                     .withMandatory(true)
+                                     .withMandatory(templateExpression.isMandatory())
                                      .build());
         }
       } else {
