@@ -98,4 +98,13 @@ public class LogzResource {
       throws IOException {
     return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.LOGZ));
   }
+
+  @GET
+  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String analysisServerConfigId) throws IOException {
+    return new RestResponse<>(analysisService.getLogSample(accountId, analysisServerConfigId, null, StateType.LOGZ));
+  }
 }

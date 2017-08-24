@@ -52,9 +52,20 @@ public class ElkLogFetchRequest {
     mustArrayObjects.get("must").add(rangeObject);
 
     String jsonOut = null;
-    JSONObject queryObject = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects));
+    JSONObject queryObject =
+        new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
     jsonOut = queryObject.toString();
 
     return JsonUtils.asObject(jsonOut, Object.class);
+  }
+
+  public static Object lastInsertedRecordObject() {
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("size", 1);
+
+    jsonObject.put("query", new JSONObject().put("match_all", new HashMap<>()));
+    jsonObject.put("sort", new JSONObject().put("@timestamp", "desc"));
+
+    return JsonUtils.asObject(jsonObject.toString(), Object.class);
   }
 }
