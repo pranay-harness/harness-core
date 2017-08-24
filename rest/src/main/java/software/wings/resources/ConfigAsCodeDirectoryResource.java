@@ -71,39 +71,44 @@ public class ConfigAsCodeDirectoryResource {
 
     List<Application> apps = appService.getAppsByAccountId(accountId);
 
-    logger.info("***************** apps: " + apps);
+    // logger.info("***************** apps: " + apps);
 
     // example of getting a sample object hierarchy for testing/debugging:
     // rr.setResource(YamlHelper.sampleConfigAsCodeDirectory());
 
-    FolderNode configFolder = new FolderNode("config", Setup.class);
+    FolderNode configFolder = new FolderNode("Setup", Setup.class);
     configFolder.addChild(new YamlNode("setup.yaml", SetupYaml.class));
-    FolderNode applicationsFolder = new FolderNode("applications", Application.class);
+    FolderNode applicationsFolder = new FolderNode("Applications", Application.class);
     configFolder.addChild(applicationsFolder);
 
     // iterate over applications
     for (Application app : apps) {
       FolderNode appFolder = new FolderNode(app.getName(), Application.class);
       applicationsFolder.addChild(appFolder);
-      appFolder.addChild(new YamlNode(app.getName() + ".yaml", AppYaml.class));
-      FolderNode servicesFolder = new FolderNode("services", Service.class);
+      appFolder.addChild(new YamlNode(app.getUuid(), app.getName() + ".yaml", AppYaml.class));
+      FolderNode servicesFolder = new FolderNode("Services", Service.class);
       appFolder.addChild(servicesFolder);
 
-      List<Service> services = app.getServices();
+      List<Service> services = serviceResourceService.findServicesByApp(app.getAppId());
+
+      // logger.info("***************** services: " + services);
 
       // iterate over services
       for (Service service : services) {
         FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
         servicesFolder.addChild(serviceFolder);
-        serviceFolder.addChild(new YamlNode(service.getName() + ".yaml", ServiceYaml.class));
-        FolderNode serviceCommandsFolder = new FolderNode("service-commands", ServiceCommand.class);
+        serviceFolder.addChild(new YamlNode(service.getUuid(), service.getName() + ".yaml", ServiceYaml.class));
+        FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
         serviceFolder.addChild(serviceCommandsFolder);
 
         List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
+        // logger.info("***************** serviceCommands: " + serviceCommands);
+
         // iterate over service commands
         for (ServiceCommand serviceCommand : serviceCommands) {
-          serviceCommandsFolder.addChild(new YamlNode(serviceCommand.getName() + ".yaml", ServiceCommand.class));
+          serviceCommandsFolder.addChild(
+              new YamlNode(serviceCommand.getUuid(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
         }
       }
     }
