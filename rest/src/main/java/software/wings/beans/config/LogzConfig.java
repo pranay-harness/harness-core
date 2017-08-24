@@ -19,7 +19,7 @@ import software.wings.settings.SettingValue;
 @Data
 @ToString(exclude = "token")
 public class LogzConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Log.io Url", required = true) @NotEmpty private String logzUrl;
+  @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Token", required = true)
