@@ -2,11 +2,14 @@ package software.wings.sm.states;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +24,9 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkSettingProvider;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -29,41 +34,36 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
+import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Created by raghu on 8/4/17.
  */
 public class ElkAnalysisState extends AbstractLogAnalysisState {
+  @SchemaIgnore @Transient protected final static String DEFAULT_TIME_FIELD = "@timestamp";
+
+  @SchemaIgnore @Transient protected final static String DEFAULT_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(ElkAnalysisState.class);
+
+  @Transient @Inject protected ElkAnalysisService elkAnalysisService;
 
   @Attributes(required = true, title = "Elastic Search Server") protected String analysisServerConfigId;
 
-  @Attributes(
-      title = "Elastic search indices to search", description = "Comma separated list of indices : _index1,_index2")
+  @Attributes(title = "Elastic search indices to search", required = true)
   @DefaultValue("_all")
   protected String indices;
 
-  @Attributes(required = true, title = "Hostname Field", description = "Hostname field mapping in elastic search")
-  @DefaultValue("beat.hostname")
-  protected String hostnameField;
+  @Attributes(required = true, title = "Hostname Field") @DefaultValue("beat.hostname") protected String hostnameField;
 
-  @Attributes(required = true, title = "Message Field", description = "Message field mapping in elastic search")
-  @DefaultValue("message")
-  protected String messageField;
-
-  @Attributes(required = true, title = "Timestamp Field", description = "Timestamp field mapping in elastic search")
-  @DefaultValue("@timestamp")
-  protected String timestampField;
-
-  @Attributes(
-      required = true, title = "Timestamp Field Format", description = "Timestamp field format in elastic search")
-  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-  protected String timestampFieldFormat;
+  @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
@@ -97,22 +97,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.messageField = messageField;
   }
 
-  public String getTimestampField() {
-    return timestampField;
-  }
-
-  public void setTimestampField(String timestampField) {
-    this.timestampField = timestampField;
-  }
-
-  public String getTimestampFieldFormat() {
-    return timestampFieldFormat;
-  }
-
-  public void setTimestampFieldFormat(String timestampFieldFormat) {
-    this.timestampFieldFormat = timestampFieldFormat;
-  }
-
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
@@ -132,7 +116,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
-  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @Attributes(required = true, title = "Search Keywords")
   @DefaultValue(".*exception.*")
   public String getQuery() {
     return query;
@@ -140,6 +124,9 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Override
   protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+    final String timestampField = DEFAULT_TIME_FIELD;
+    final String accountId = appService.get(context.getAppId()).getAccountId();
+    final String timestampFieldFormat = getTimestmpFieldFormat(accountId, timestampField);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -204,5 +191,25 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), serviceId, allNodes, logAnalysisMinute);
     analysisService.finalizeLogCollection(accountId, StateType.ELK, context.getWorkflowExecutionId(), logRequest);
+  }
+
+  private String getTimestmpFieldFormat(String accountId, String timestampField) {
+    try {
+      Map<String, ElkIndexTemplate> indexTemplateMap = elkAnalysisService.getIndices(accountId, analysisServerConfigId);
+      final ElkIndexTemplate indexTemplate = indexTemplateMap.get(indices);
+      Preconditions.checkNotNull(indexTemplate, "No index template mapping found for " + indices);
+
+      final Object timeStampObject = indexTemplate.getProperties().get(timestampField);
+      Preconditions.checkNotNull(
+          timeStampObject, timestampField + " is not configured in the index mapping " + indices);
+      JSONObject timeStampJsonObject = new JSONObject(JsonUtils.asJson(timeStampObject));
+
+      if (!timeStampJsonObject.has("format")) {
+        return DEFAULT_TIME_FORMAT;
+      }
+      return timeStampJsonObject.getString("format");
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
   }
 }
