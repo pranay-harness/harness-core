@@ -87,7 +87,7 @@ public class ConfigAsCodeDirectoryResource {
       applicationsFolder.addChild(appFolder);
       appFolder.addChild(new YamlNode(app.getName() + ".yaml", AppYaml.class));
       FolderNode servicesFolder = new FolderNode("services", Service.class);
-      applicationsFolder.addChild(servicesFolder);
+      appFolder.addChild(servicesFolder);
 
       List<Service> services = app.getServices();
 
