@@ -30,6 +30,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -72,6 +73,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
+  @Inject protected SettingsService settingsService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected MainConfiguration configuration;
 
@@ -384,6 +386,35 @@ public class AnalysisServiceImpl implements AnalysisService {
           delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
               .validateConfig((LogzConfig) settingAttribute.getValue());
           break;
+        default:
+          errorCode = ErrorCode.DEFAULT_ERROR_CODE;
+          throw new IllegalStateException("Invalid state type: " + stateType);
+      }
+    } catch (Exception e) {
+      throw new WingsException(errorCode, "reason", e.getMessage());
+    }
+  }
+
+  @Override
+  public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    if (settingAttribute == null) {
+      throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
+    }
+    ErrorCode errorCode = null;
+    try {
+      switch (stateType) {
+        case ELK:
+          errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
+          SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+              .getLogSample((ElkConfig) settingAttribute.getValue(), index);
+        case LOGZ:
+          errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
+          SyncTaskContext logzTaskContext =
+              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          return delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
+              .getLogSample((LogzConfig) settingAttribute.getValue());
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);

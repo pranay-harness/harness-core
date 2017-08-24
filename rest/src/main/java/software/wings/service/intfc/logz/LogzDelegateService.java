@@ -16,4 +16,6 @@ public interface LogzDelegateService {
 
   @DelegateTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
   Object search(@NotNull LogzConfig logzConfig, ElkLogFetchRequest logFetchRequest) throws IOException;
+
+  @DelegateTaskType(TaskType.LOGZ_GET_LOG_SAMPLE) Object getLogSample(LogzConfig logzConfig) throws IOException;
 }

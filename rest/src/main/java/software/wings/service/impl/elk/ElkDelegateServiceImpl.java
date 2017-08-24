@@ -3,6 +3,7 @@ package software.wings.service.impl.elk;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -17,10 +18,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -58,9 +62,54 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     throw new WingsException(response.errorBody().string());
   }
 
+  @Override
+  public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig) throws IOException {
+    final Call<Map<String, Map<String, Object>>> request = getElkRestClient(elkConfig).template();
+    final Response<Map<String, Map<String, Object>>> response = request.execute();
+
+    if (!response.isSuccessful()) {
+      throw new WingsException(response.errorBody().string());
+    }
+
+    final Map<String, ElkIndexTemplate> rv = new HashMap<>();
+    for (Entry<String, Map<String, Object>> indexEntry : response.body().entrySet()) {
+      if (!indexEntry.getKey().startsWith(".")) {
+        JSONObject jsonObject = new JSONObject((Map) indexEntry.getValue().get("mappings"));
+
+        for (String key : jsonObject.keySet()) {
+          JSONObject outerObject = jsonObject.getJSONObject(key);
+          if (outerObject.get("properties") != null) {
+            ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
+            indexTemplate.setName((String) indexEntry.getValue().get("template"));
+            JSONObject propertiesObject = outerObject.getJSONObject("properties");
+            final Map<String, Object> propertiesMap = new HashMap<>();
+            for (String property : propertiesObject.keySet()) {
+              propertiesMap.put(property, propertiesObject.getJSONObject(property).toMap());
+            }
+            indexTemplate.setProperties(propertiesMap);
+            rv.put(indexTemplate.getName(), indexTemplate);
+          }
+        }
+      }
+    }
+    return rv;
+  }
+
+  @Override
+  public Object getLogSample(ElkConfig elkConfig, String index) throws IOException {
+    final Call<Object> request =
+        getElkRestClient(elkConfig, index).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
+    final Response<Object> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    }
+    throw new WingsException(response.errorBody().string());
+  }
+
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig) {
     return getElkRestClient(elkConfig, "");
   }
+
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig, String indices) {
     OkHttpClient.Builder httpClient =
         elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();

@@ -48,6 +48,16 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
 
+  /**
+   * url for UI to get lits of indices
+   */
+  String ELK_GET_INDICES_URL = "/get-indices";
+
+  /**
+   * url for UI to get sample record
+   */
+  String ANALYSIS_STATE_GET_SAMPLE_RECORD_URL = "/get-sample-record";
+
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,

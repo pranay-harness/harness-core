@@ -48,5 +48,7 @@ public interface AnalysisService {
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String applicationId,
       String workflowId, String workflowExecutionId, String serviceId, String query);
 
+  Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
+
   boolean purgeLogs();
 }
