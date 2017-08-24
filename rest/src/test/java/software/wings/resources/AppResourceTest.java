@@ -17,7 +17,6 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.RestRequest;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.ResourceTestRule;
