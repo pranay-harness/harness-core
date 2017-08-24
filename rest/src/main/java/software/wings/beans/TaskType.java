@@ -92,7 +92,8 @@ public enum TaskType {
   ARTIFACTORY_LAST_SUCCSSFUL_BUILD(ServiceImplDelegateTask.class),
   ARTIFACTORY_COLLECTION(ArtifactoryCollectionTask.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
-  ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class);
+  ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),
+  HOST_VALIDATION(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

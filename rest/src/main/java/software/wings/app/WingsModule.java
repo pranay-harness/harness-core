@@ -143,8 +143,8 @@ import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
-import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EcrBuildService;
+import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -181,6 +181,8 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
+import software.wings.utils.HostValidationService;
+import software.wings.utils.HostValidationServiceImpl;
 
 /**
  * Guice Module for initializing all beans.
@@ -282,6 +284,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsHelperResourceService.class).to(AwsHelperResourceServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
+    bind(HostValidationService.class).to(HostValidationServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
