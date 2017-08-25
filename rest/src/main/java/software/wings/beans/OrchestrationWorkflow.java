@@ -74,11 +74,12 @@ public abstract class OrchestrationWorkflow {
   public abstract OrchestrationWorkflow clone();
 
   public abstract List<Variable> getUserVariables();
-  /**
-   * Adds template expression as workflow variables
-   * @param templateExpressions
+
+  /***
+   * Add template expressions to workflow variables
    */
-  public void addToUserVariables(List<TemplateExpression> templateExpressions) {
+
+  public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType) {
     if (templateExpressions == null || templateExpressions.isEmpty()) {
       return;
     }
@@ -109,7 +110,7 @@ public abstract class OrchestrationWorkflow {
       if (matcher.matches()) {
         String templateVariable = matcher.group(0);
         templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-        templateVariable = getTemplateExpressionName(templateExpression, templateVariable);
+        templateVariable = getTemplateExpressionName(templateExpression, templateVariable, entityType, stateType);
         if (!contains(getUserVariables(), templateVariable)) {
           getUserVariables().add(aVariable()
                                      .withName(templateVariable)
@@ -121,7 +122,7 @@ public abstract class OrchestrationWorkflow {
                                      .build());
         }
       } else {
-        expression = getTemplateExpressionName(templateExpression, expression);
+        expression = getTemplateExpressionName(templateExpression, expression, entityType, stateType);
         if (!contains(getUserVariables(), expression)) {
           getUserVariables().add(aVariable()
                                      .withName(expression)
@@ -134,22 +135,35 @@ public abstract class OrchestrationWorkflow {
       }
     }
   }
+  /**
+   * Adds template expression as workflow variables
+   * @param templateExpressions
+   */
+  public void addToUserVariables(List<TemplateExpression> templateExpressions) {
+    addToUserVariables(templateExpressions, null);
+  }
 
   private boolean contains(List<Variable> userVariables, String name) {
     return userVariables.stream().anyMatch(variable -> variable.getName().equals(name));
   }
 
-  private String getTemplateExpressionName(TemplateExpression templateExpression, String templateVariable) {
+  private String getTemplateExpressionName(
+      TemplateExpression templateExpression, String templateVariable, EntityType entityType, String stateType) {
     if (templateVariable != null) {
-      if (templateVariable.contains(".")) {
-        if (templateVariable.startsWith("workflow.variables.")) {
-          return templateVariable.replace("workflow.variables.", "");
-        } else if (!templateExpression.isExpressionAllowed()) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Invalid template expression :" + templateExpression.getExpression()
-                  + " for fieldName:" + templateExpression.getFieldName());
-        }
-      } // Check for proper variable regex
+      if (templateVariable.startsWith("workflow.variables.")) {
+        templateVariable = templateVariable.replace("workflow.variables.", "");
+      }
+    }
+    Matcher matcher = ExpressionEvaluator.specialCharPattern.matcher(templateVariable);
+    // check if template variable contains special character
+    if (entityType != null) {
+      if (matcher.matches()) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+            "Invalid expression :" + templateExpression.getExpression()
+                + " for fieldName:" + templateExpression.getFieldName());
+      }
+    } else if (entityType == null && stateType != null) {
+      // TODO: Check if it can contain other expressions
     }
     return templateVariable;
   }
