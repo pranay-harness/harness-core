@@ -91,7 +91,7 @@ public class SetupYamlResource {
   @Path("/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> save(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
+  public RestResponse<SetupYaml> save(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
