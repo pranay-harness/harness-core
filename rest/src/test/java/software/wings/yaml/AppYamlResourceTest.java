@@ -146,7 +146,7 @@ public class AppYamlResourceTest {
   public void testUpdateFromYamlAddOnly() {
     RestResponse<AppYaml> actual =
         resources.client()
-            .target("/setupYaml/" + TEST_ACCOUNT_ID)
+            .target("/appYaml/" + TEST_ACCOUNT_ID + "/" + TEST_APP_ID1)
             .request()
             .put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new GenericType<RestResponse<AppYaml>>() {});
 
@@ -161,8 +161,8 @@ public class AppYamlResourceTest {
   @Test
   public void testUpdateFromYamlAddAndDeleteNotEnabled() {
     /*
-    RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" +
-    TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new
+    RestResponse<SetupYaml> actual = resources.client().target("/appYaml/" + TEST_ACCOUNT_ID + "/" +
+    TEST_APP_ID1).request().put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new
     GenericType<RestResponse<SetupYaml>>() {});
 
     assertThat(actual.getResponseMessages().size()).isEqualTo(1);
@@ -178,7 +178,7 @@ public class AppYamlResourceTest {
   @Test
   public void testUpdateFromYamlAddAndDeleteEnabled() {
     /*
-    RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" + TEST_ACCOUNT_ID +
+    RestResponse<SetupYaml> actual = resources.client().target("/appYaml/" + TEST_ACCOUNT_ID + "/" + TEST_APP_ID1 +
     "?deleteEnabled=true").request().put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new
     GenericType<RestResponse<SetupYaml>>() {});
 
