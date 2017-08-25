@@ -65,6 +65,10 @@ public class AppYamlResourceTest {
       + "\nservices:\n- " + TEST_SERVICE1 + "\n- " + TEST_SERVICE2 + "\n";
   private final String TEST_YAML2 = TEST_YAML1 + "- " + TEST_SERVICE3 + "\n";
   private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML2);
+  // adds TEST_APP_NAME4 to TEST_YAML2
+  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "- " + TEST_SERVICE4 + "\n");
+  // adds TEST_APP_NAME4 to, and removes TEST_APP_NAME3 from TEST_YAML2
+  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "- " + TEST_SERVICE4 + "\n");
 
   private final Application testApp1 = anApplication()
                                            .withUuid(TEST_APP_ID1)
@@ -76,9 +80,12 @@ public class AppYamlResourceTest {
   private final Service testService1 = aService().withName(TEST_SERVICE1).build();
   private final Service testService2 = aService().withName(TEST_SERVICE2).build();
   private final Service testService3 = aService().withName(TEST_SERVICE3).build();
+  private final Service testService4 = aService().withName(TEST_SERVICE4).build();
 
   private final List<Service> testServices1 =
       new ArrayList<Service>(Arrays.asList(testService1, testService2, testService3));
+  private final List<Service> testServices2 =
+      new ArrayList<Service>(Arrays.asList(testService1, testService2, testService3, testService4));
 
   @Before
   public void init() {
@@ -137,18 +144,18 @@ public class AppYamlResourceTest {
 
   @Test
   public void testUpdateFromYamlAddOnly() {
-    /*
-    RestResponse<SetupYaml> actual = resources.client().target("/setupYaml/" +
-    TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new
-    GenericType<RestResponse<SetupYaml>>() {});
+    RestResponse<AppYaml> actual =
+        resources.client()
+            .target("/setupYaml/" + TEST_ACCOUNT_ID)
+            .request()
+            .put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new GenericType<RestResponse<AppYaml>>() {});
 
     assertThat(actual.getResponseMessages().size()).isEqualTo(0);
 
-    SetupYaml setupYaml = actual.getResource();
-    List<String> appNames = setupYaml.getAppNames();
+    AppYaml appYaml = actual.getResource();
+    List<String> serviceNames = appYaml.getServiceNames();
 
-    assertThat(appNames).isEqualTo(testApps2);
-    */
+    assertThat(serviceNames).isEqualTo(testServices2);
   }
 
   @Test
