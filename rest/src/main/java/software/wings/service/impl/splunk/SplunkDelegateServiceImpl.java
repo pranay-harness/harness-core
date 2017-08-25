@@ -7,6 +7,7 @@ import com.splunk.ServiceArgs;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
+import java.net.URI;
 import java.net.UnknownHostException;
 
 /**
@@ -19,14 +20,18 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       final ServiceArgs loginArgs = new ServiceArgs();
       loginArgs.setUsername(splunkConfig.getUsername());
       loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
-      loginArgs.setHost(splunkConfig.getHost());
-      loginArgs.setPort(splunkConfig.getPort());
 
-      HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+      final URI uri = new URI(splunkConfig.getUrl());
+      loginArgs.setHost(uri.getHost());
+      loginArgs.setPort(uri.getPort());
+
+      if (uri.getScheme().equals("https")) {
+        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+      }
       Service.connect(loginArgs);
     } catch (Throwable t) {
       if (t.getCause() instanceof UnknownHostException) {
-        throw new RuntimeException("host " + splunkConfig.getHost() + " is unreachable");
+        throw new RuntimeException(splunkConfig.getUrl() + " is unreachable");
       }
       throw new RuntimeException(t.getMessage());
     }
