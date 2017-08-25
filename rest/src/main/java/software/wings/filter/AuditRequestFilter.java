@@ -1,7 +1,10 @@
 package software.wings.filter;
 
+import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
+
 import com.google.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -80,10 +83,15 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     header = auditHelper.create(header);
 
     try {
-      BoundedInputStream inputStream = new BoundedInputStream(
-          requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit());
-      String fileId = auditHelper.create(header, RequestType.REQUEST, inputStream);
-      requestContext.setEntityStream(fileService.openDownloadStream(fileId, FileBucket.AUDITS));
+      if (headerString.contains("multipart/form-data")) {
+        // don't store file content in audit logs
+        auditHelper.create(header, RequestType.REQUEST, IOUtils.toInputStream(FILE_CONTENT_NOT_STORED));
+      } else {
+        BoundedInputStream inputStream = new BoundedInputStream(
+            requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit());
+        String fileId = auditHelper.create(header, RequestType.REQUEST, inputStream);
+        requestContext.setEntityStream(fileService.openDownloadStream(fileId, FileBucket.AUDITS));
+      }
     } catch (Exception exception) {
       throw new WingsException(exception);
     }

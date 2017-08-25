@@ -4,12 +4,33 @@
 
 package software.wings.sm;
 
+import static software.wings.beans.ErrorCode.ABORT_ALL_ALREADY;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
+import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
+import static software.wings.beans.ErrorCode.ROLLBACK_ALREADY;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_ABORT;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_PAUSE;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RESUME;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RETRY;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionInterruptType.ABORT;
+import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
+import static software.wings.sm.ExecutionInterruptType.IGNORE;
+import static software.wings.sm.ExecutionInterruptType.PAUSE;
+import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
+import static software.wings.sm.ExecutionInterruptType.RESUME;
+import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
+import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.RUNNING;
+import static software.wings.sm.ExecutionStatus.STARTING;
+import static software.wings.sm.ExecutionStatus.WAITING;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.inject.Injector;
 
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
@@ -19,6 +40,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -44,64 +66,60 @@ public class ExecutionInterruptManager {
    */
   public ExecutionInterrupt registerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
     ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
-    if (executionInterruptType == ExecutionInterruptType.PAUSE
-        || executionInterruptType == ExecutionInterruptType.IGNORE
-        || executionInterruptType == ExecutionInterruptType.RETRY
-        || executionInterruptType == ExecutionInterruptType.ABORT
-        || executionInterruptType == ExecutionInterruptType.RESUME) {
+    if (executionInterruptType == PAUSE || executionInterruptType == IGNORE
+        || executionInterruptType == ExecutionInterruptType.RETRY || executionInterruptType == ABORT
+        || executionInterruptType == RESUME) {
       if (executionInterrupt.getStateExecutionInstanceId() == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
+        throw new WingsException(INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
       }
 
       StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
           executionInterrupt.getAppId(), executionInterrupt.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+        throw new WingsException(INVALID_ARGUMENT, "args",
             "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
       }
 
-      if (executionInterruptType == ExecutionInterruptType.RESUME
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
-        throw new WingsException(ErrorCode.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+      if (executionInterruptType == RESUME && stateExecutionInstance.getStatus() != PAUSED) {
+        throw new WingsException(STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
       }
 
-      if (executionInterruptType == ExecutionInterruptType.IGNORE
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
-          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
-        throw new WingsException(ErrorCode.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+      if (executionInterruptType == IGNORE && stateExecutionInstance.getStatus() != PAUSED
+          && stateExecutionInstance.getStatus() != WAITING) {
+        throw new WingsException(STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
       }
 
-      if (executionInterruptType == ExecutionInterruptType.RETRY
-          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING
+      if (executionInterruptType == ExecutionInterruptType.RETRY && stateExecutionInstance.getStatus() != WAITING
           && stateExecutionInstance.getStatus() != ExecutionStatus.ERROR) {
-        throw new WingsException(ErrorCode.STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
+        throw new WingsException(STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
       }
 
-      if (executionInterruptType == ExecutionInterruptType.ABORT
-          && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
-          && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
-          && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
-          && stateExecutionInstance.getStatus() != ExecutionStatus.WAITING) {
-        throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
+      if (executionInterruptType == ABORT && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
+          && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING
+          && stateExecutionInstance.getStatus() != PAUSED && stateExecutionInstance.getStatus() != WAITING) {
+        throw new WingsException(STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
       }
-      if (executionInterruptType == ExecutionInterruptType.PAUSE
-          && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
-          && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
-          && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING) {
-        throw new WingsException(ErrorCode.STATE_NOT_FOR_PAUSE, "stateName", stateExecutionInstance.getStateName());
+      if (executionInterruptType == PAUSE && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
+          && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING) {
+        throw new WingsException(STATE_NOT_FOR_PAUSE, "stateName", stateExecutionInstance.getStateName());
       }
     }
 
     PageResponse<ExecutionInterrupt> res = listExecutionInterrupts(executionInterrupt);
 
-    if (isPresent(res, ExecutionInterruptType.ABORT_ALL)) {
-      throw new WingsException(ErrorCode.ABORT_ALL_ALREADY);
+    if (isPresent(res, ABORT_ALL)) {
+      throw new WingsException(ABORT_ALL_ALREADY);
     }
 
-    if (executionInterruptType == ExecutionInterruptType.PAUSE_ALL) {
-      if (isPresent(res, ExecutionInterruptType.PAUSE_ALL)) {
-        throw new WingsException(ErrorCode.PAUSE_ALL_ALREADY);
+    if (executionInterruptType == ROLLBACK) {
+      if (isPresent(res, ROLLBACK)) {
+        throw new WingsException(ROLLBACK_ALREADY);
+      }
+    }
+
+    if (executionInterruptType == PAUSE_ALL) {
+      if (isPresent(res, PAUSE_ALL)) {
+        throw new WingsException(PAUSE_ALL_ALREADY);
       }
       ExecutionInterrupt resumeAll = getExecutionInterrupt(res, ExecutionInterruptType.RESUME_ALL);
       if (resumeAll != null) {
@@ -110,13 +128,13 @@ public class ExecutionInterruptManager {
     }
 
     if (executionInterruptType == ExecutionInterruptType.RESUME_ALL) {
-      ExecutionInterrupt pauseAll = getExecutionInterrupt(res, ExecutionInterruptType.PAUSE_ALL);
+      ExecutionInterrupt pauseAll = getExecutionInterrupt(res, PAUSE_ALL);
       if (pauseAll == null || isPresent(res, ExecutionInterruptType.RESUME_ALL)) {
-        throw new WingsException(ErrorCode.RESUME_ALL_ALREADY);
+        throw new WingsException(RESUME_ALL_ALREADY);
       }
       makeInactive(pauseAll);
-      waitNotifyEngine.notify(pauseAll.getUuid(),
-          ExecutionStatusData.Builder.anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+      waitNotifyEngine.notify(
+          pauseAll.getUuid(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
     }
 
     executionInterrupt = wingsPersistence.saveAndGet(ExecutionInterrupt.class, executionInterrupt);
@@ -130,7 +148,7 @@ public class ExecutionInterruptManager {
   private void sendNotificationIfRequired(ExecutionInterrupt executionInterrupt) {
     switch (executionInterrupt.getExecutionInterruptType()) {
       case PAUSE_ALL: {
-        sendNotification(executionInterrupt, ExecutionStatus.PAUSED);
+        sendNotification(executionInterrupt, PAUSED);
         break;
       }
       case RESUME_ALL: {
@@ -148,8 +166,8 @@ public class ExecutionInterruptManager {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
             .withLimit("1")
-            .addFilter("appId", Operator.EQ, executionInterrupt.getAppId())
-            .addFilter("executionUuid", Operator.EQ, executionInterrupt.getExecutionUuid())
+            .addFilter("appId", EQ, executionInterrupt.getAppId())
+            .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
             .addOrder("createdAt", OrderType.DESC)
             .build();
 
@@ -188,13 +206,12 @@ public class ExecutionInterruptManager {
   }
 
   private PageResponse<ExecutionInterrupt> listExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
-    PageRequest<ExecutionInterrupt> req =
-        PageRequest.Builder.aPageRequest()
-            .addFilter("appId", Operator.EQ, executionInterrupt.getAppId())
-            .addFilter("envId", Operator.EQ, executionInterrupt.getEnvId())
-            .addFilter("executionUuid", Operator.EQ, executionInterrupt.getExecutionUuid())
-            .addOrder("createdAt", OrderType.DESC)
-            .build();
+    PageRequest<ExecutionInterrupt> req = PageRequest.Builder.aPageRequest()
+                                              .addFilter("appId", EQ, executionInterrupt.getAppId())
+                                              .addFilter("envId", EQ, executionInterrupt.getEnvId())
+                                              .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
+                                              .addOrder("createdAt", OrderType.DESC)
+                                              .build();
     return wingsPersistence.query(ExecutionInterrupt.class, req);
   }
 
@@ -205,14 +222,18 @@ public class ExecutionInterruptManager {
    * @param executionUuid the execution uuid
    * @return the workflow execution event
    */
-  public ExecutionInterrupt checkForExecutionInterrupt(String appId, String executionUuid) {
-    PageRequest<ExecutionInterrupt> req = PageRequest.Builder.aPageRequest()
-                                              .addFilter("appId", Operator.EQ, appId)
-                                              .addFilter("executionUuid", Operator.EQ, executionUuid)
-                                              .addFilter("executionInterruptType", Operator.IN,
-                                                  ExecutionInterruptType.ABORT_ALL, ExecutionInterruptType.PAUSE_ALL)
-                                              .addOrder("createdAt", OrderType.DESC)
-                                              .build();
-    return wingsPersistence.get(ExecutionInterrupt.class, req);
+  public List<ExecutionInterrupt> checkForExecutionInterrupt(String appId, String executionUuid) {
+    PageRequest<ExecutionInterrupt> req =
+        PageRequest.Builder.aPageRequest()
+            .addFilter("appId", EQ, appId)
+            .addFilter("executionUuid", EQ, executionUuid)
+            .addFilter("executionInterruptType", Operator.IN, ABORT_ALL, PAUSE_ALL, ROLLBACK)
+            .addOrder("createdAt", OrderType.DESC)
+            .build();
+    PageResponse<ExecutionInterrupt> res = wingsPersistence.query(ExecutionInterrupt.class, req);
+    if (res == null) {
+      return null;
+    }
+    return res.getResponse();
   }
 }
