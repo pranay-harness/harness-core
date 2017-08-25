@@ -171,11 +171,11 @@ public class SetupYamlResource {
         }
 
         if (beforeSetupYaml != null) {
-          List<String> beforeApplicationss = beforeSetupYaml.getAppNames();
+          List<String> beforeApplications = beforeSetupYaml.getAppNames();
 
           // initialize the applications to delete from the before, and remove the befores from the applications to add
           // list
-          for (String s : beforeApplicationss) {
+          for (String s : beforeApplications) {
             applicationsToDelete.add(s);
             applicationsToAdd.remove(s);
           }
@@ -218,6 +218,12 @@ public class SetupYamlResource {
 
           appService.save(newApplication);
         }
+
+        // get the after Yaml to confirm addition/deletion changes
+        RestResponse afterResponse = get(accountId);
+        YamlPayload afterYP = (YamlPayload) afterResponse.getResource();
+        String afterYaml = afterYP.getYaml();
+        setupYaml = mapper.readValue(yaml, SetupYaml.class);
 
         rr.setResource(setupYaml);
 
