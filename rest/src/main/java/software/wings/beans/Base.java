@@ -3,9 +3,9 @@ package software.wings.beans;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 
-import com.google.common.base.MoreObjects;
-
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -13,7 +13,6 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -23,6 +22,8 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
+@Data
+@EqualsAndHashCode(of = {"uuid", "appId"})
 public class Base implements UuidAware {
   /**
    * The constant GLOBAL_APP_ID.
@@ -42,137 +43,6 @@ public class Base implements UuidAware {
   @SchemaIgnore @Indexed private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore private long lastUpdatedAt;
-
-  /**
-   * Gets uuid.
-   *
-   * @return the uuid
-   */
-  public String getUuid() {
-    return uuid;
-  }
-
-  /**
-   * Sets uuid.
-   *
-   * @param uuid the uuid
-   */
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
-  /**
-   * Gets created by.
-   *
-   * @return the created by
-   */
-  public EmbeddedUser getCreatedBy() {
-    return createdBy;
-  }
-
-  /**
-   * Sets created by.
-   *
-   * @param createdBy the created by
-   */
-  public void setCreatedBy(EmbeddedUser createdBy) {
-    this.createdBy = createdBy;
-  }
-
-  /**
-   * Gets created at.
-   *
-   * @return the created at
-   */
-  public long getCreatedAt() {
-    return createdAt;
-  }
-
-  /**
-   * Sets created at.
-   *
-   * @param createdAt the created at
-   */
-  public void setCreatedAt(long createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  /**
-   * Gets last updated by.
-   *
-   * @return the last updated by
-   */
-  public EmbeddedUser getLastUpdatedBy() {
-    return lastUpdatedBy;
-  }
-
-  /**
-   * Sets last updated by.
-   *
-   * @param lastUpdatedBy the last updated by
-   */
-  public void setLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-    this.lastUpdatedBy = lastUpdatedBy;
-  }
-
-  /**
-   * Gets last updated at.
-   *
-   * @return the last updated at
-   */
-  public long getLastUpdatedAt() {
-    return lastUpdatedAt;
-  }
-
-  /**
-   * Sets last updated at.
-   *
-   * @param lastUpdatedAt the last updated at
-   */
-  public void setLastUpdatedAt(long lastUpdatedAt) {
-    this.lastUpdatedAt = lastUpdatedAt;
-  }
-
-  /**
-   * Gets app id.
-   *
-   * @return the app id
-   */
-  public String getAppId() {
-    return appId;
-  }
-
-  /**
-   * Sets app id.
-   *
-   * @param appId the app id
-   */
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hash(uuid, appId);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final Base other = (Base) obj;
-    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.appId, other.appId);
-  }
 
   /**
    * Invoked before inserting document in mongo by morphia.
@@ -207,19 +77,5 @@ public class Base implements UuidAware {
 
     lastUpdatedAt = currentTimeMillis();
     lastUpdatedBy = embeddedUser;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("uuid", uuid)
-        .add("createdBy", createdBy)
-        .add("createdAt", createdAt)
-        .add("lastUpdatedBy", lastUpdatedBy)
-        .add("lastUpdatedAt", lastUpdatedAt)
-        .toString();
   }
 }
