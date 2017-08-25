@@ -173,17 +173,20 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     } else {
       // TODO:
-      logger.info("User {} is neither account admin nor all app admin", user.getName());
+      logger.info("User [{}] is neither account admin nor all app admin", user.getUuid());
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
+      ImmutableList<String> appIds = ImmutableList.<String>builder().build();
+
       if (userAccountRole == null) {
-        logger.info("No account role exist for user {}", user.getName());
+        logger.info("No account role exist for user [{}]", user.getUuid());
+      } else {
+        logger.info("User account role [{}]", userAccountRole);
+        appIds = copyOf(userAccountRole.getApplicationRoles()
+                            .stream()
+                            .map(ApplicationRole::getAppId)
+                            .distinct()
+                            .collect(Collectors.toList()));
       }
-      logger.info("User account role {}", userAccountRole);
-      ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
-                                                .stream()
-                                                .map(ApplicationRole::getAppId)
-                                                .distinct()
-                                                .collect(Collectors.toList()));
 
       if (appId != null) {
         if (user.isAppAdmin(accountId, appId)) {
@@ -198,7 +201,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
         }
       }
-
       userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(appIds);
     }
 

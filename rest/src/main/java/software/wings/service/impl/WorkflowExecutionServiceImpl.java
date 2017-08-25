@@ -265,10 +265,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
         workflowExecution.setStatus(ExecutionStatus.WAITING);
       } else {
-        ExecutionInterrupt executionInterrupt = executionInterruptManager.checkForExecutionInterrupt(
+        List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
             workflowExecution.getAppId(), workflowExecution.getUuid());
-        if (executionInterrupt != null
-            && executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL) {
+        if (executionInterrupts != null
+            && executionInterrupts.stream().anyMatch(
+                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
           workflowExecution.setStatus(ExecutionStatus.PAUSING);
         }
       }

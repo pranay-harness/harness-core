@@ -40,6 +40,8 @@ public enum ExecutionInterruptType {
 
   ROLLBACK("Rollback"),
 
+  END_EXECUTION("End Execution"),
+
   ROLLBACK_DONE("Rollback Done");
 
   private String description;
