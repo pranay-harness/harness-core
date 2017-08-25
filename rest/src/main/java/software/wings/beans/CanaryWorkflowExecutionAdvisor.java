@@ -2,6 +2,11 @@ package software.wings.beans;
 
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
+import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
+import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
+import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -17,8 +22,9 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionEventAdvice;
 import software.wings.sm.ExecutionEventAdvisor;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
@@ -41,9 +47,18 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   @Inject @Transient private transient WorkflowNotificationHelper workflowNotificationHelper;
 
+  @Inject @Transient private transient ExecutionInterruptManager executionInterruptManager;
+
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     ExecutionContext context = executionEvent.getContext();
+    List<ExecutionInterrupt> executionInterrupts =
+        executionInterruptManager.checkForExecutionInterrupt(context.getAppId(), context.getWorkflowExecutionId());
+    if (executionInterrupts != null
+        && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ABORT_ALL)) {
+      return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
+    }
+
     State state = executionEvent.getState();
     PhaseSubWorkflow phaseSubWorkflow = null;
     if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
@@ -51,17 +66,24 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
           context, executionEvent.getExecutionStatus(), phaseSubWorkflow);
 
-      if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != ExecutionStatus.FAILED) {
+      // nothing to do for regular phase with non-error
+      if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
+          && executionEvent.getExecutionStatus() != ERROR) {
         return null;
       }
 
-      if (phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != ExecutionStatus.FAILED
-          && executionEvent.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      // nothing to do for rollback phase that got some error
+      if (phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != SUCCESS) {
         return null;
       }
-    } else if (!(executionEvent.getExecutionStatus() == ExecutionStatus.FAILED
-                   || executionEvent.getExecutionStatus() == ExecutionStatus.ERROR)) {
+
+    } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
       return null;
+    }
+
+    if (phaseSubWorkflow == null && executionInterrupts != null
+        && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
+      return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
     }
 
     WorkflowExecution workflowExecution =
@@ -80,6 +102,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow == null || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null) {
       return null;
+    }
+
+    if (phaseSubWorkflow != null && executionInterrupts != null
+        && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
+      return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow);
     }
 
     if (state.getParentId() != null) {
@@ -138,7 +165,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return anExecutionEventAdvice()
             .withNextStateName(
                 orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
-            .withExecutionInterruptType(ExecutionInterruptType.ROLLBACK)
+            .withExecutionInterruptType(ROLLBACK)
             .build();
       }
 
@@ -147,36 +174,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return null;
         }
 
-        if (!phaseSubWorkflow.isRollback()) {
-          return anExecutionEventAdvice()
-              .withNextStateName(
-                  orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
-              .withExecutionInterruptType(ExecutionInterruptType.ROLLBACK)
-              .build();
-        }
-
-        // Rollback phase
-        if (executionEvent.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-          return null;
-        }
-
-        List<String> phaseNames =
-            orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(Collectors.toList());
-        int index = phaseNames.indexOf(phaseSubWorkflow.getPhaseNameForRollback());
-        if (index == 0) {
-          // All Done
-          return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
-        }
-
-        String phaseId = orchestrationWorkflow.getWorkflowPhases().get(index - 1).getUuid();
-        WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
-        if (rollbackPhase == null) {
-          return null;
-        }
-        return anExecutionEventAdvice()
-            .withExecutionInterruptType(ExecutionInterruptType.ROLLBACK)
-            .withNextStateName(rollbackPhase.getName())
-            .build();
+        return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow);
       }
       case RETRY: {
         String stateType = executionEvent.getState().getStateType();
@@ -219,6 +217,35 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       default:
         return null;
     }
+  }
+
+  private ExecutionEventAdvice phaseSubWorkflowAdvice(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, PhaseSubWorkflow phaseSubWorkflow) {
+    if (!phaseSubWorkflow.isRollback()) {
+      return anExecutionEventAdvice()
+          .withNextStateName(
+              orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
+          .withExecutionInterruptType(ROLLBACK)
+          .build();
+    }
+
+    List<String> phaseNames =
+        orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(Collectors.toList());
+    int index = phaseNames.indexOf(phaseSubWorkflow.getPhaseNameForRollback());
+    if (index == 0) {
+      // All Done
+      return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
+    }
+
+    String phaseId = orchestrationWorkflow.getWorkflowPhases().get(index - 1).getUuid();
+    WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
+    if (rollbackPhase == null) {
+      return null;
+    }
+    return anExecutionEventAdvice()
+        .withExecutionInterruptType(ROLLBACK)
+        .withNextStateName(rollbackPhase.getName())
+        .build();
   }
 
   private FailureStrategy rollbackStrategy(List<FailureStrategy> failureStrategies, State state) {
