@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateScope.DelegateScopeBuilder.aDelegateScope;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -22,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.service.intfc.AssignDelegateService;
@@ -61,13 +61,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldAssignDelegateWithMatchingIncludeScopes() {
     DelegateTask delegateTask = aDelegateTask().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withEnvId(ENV_ID).build();
-    Delegate delegate =
-        aDelegate()
-            .withAccountId(ACCOUNT_ID)
-            .withUuid(DELEGATE_ID)
-            .withIncludeScopes(ImmutableList.of(aDelegateScope().withEnvironmentTypes(ImmutableList.of(PROD)).build()))
-            .withExcludeScopes(emptyList())
-            .build();
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withIncludeScopes(ImmutableList.of(
+                                DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                            .withExcludeScopes(emptyList())
+                            .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isTrue();
   }
@@ -79,7 +79,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withAccountId(ACCOUNT_ID)
                             .withUuid(DELEGATE_ID)
                             .withIncludeScopes(ImmutableList.of(
-                                aDelegateScope().withEnvironmentTypes(ImmutableList.of(NON_PROD)).build()))
+                                DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .withExcludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
@@ -94,7 +94,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withUuid(DELEGATE_ID)
                             .withIncludeScopes(emptyList())
                             .withExcludeScopes(ImmutableList.of(
-                                aDelegateScope().withEnvironmentTypes(ImmutableList.of(NON_PROD)).build()))
+                                DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isTrue();
@@ -103,13 +103,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldNotAssignDelegateWithMatchingExcludeScopes() {
     DelegateTask delegateTask = aDelegateTask().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withEnvId(ENV_ID).build();
-    Delegate delegate =
-        aDelegate()
-            .withAccountId(ACCOUNT_ID)
-            .withUuid(DELEGATE_ID)
-            .withIncludeScopes(emptyList())
-            .withExcludeScopes(ImmutableList.of(aDelegateScope().withEnvironmentTypes(ImmutableList.of(PROD)).build()))
-            .build();
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withIncludeScopes(emptyList())
+                            .withExcludeScopes(ImmutableList.of(
+                                DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+                            .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(delegateTask, DELEGATE_ID)).isFalse();
   }
