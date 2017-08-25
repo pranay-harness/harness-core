@@ -14,7 +14,6 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -45,6 +44,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SplunkConfig;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -224,18 +224,18 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                 .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, smtpSettingAttribute);
 
-    SettingAttribute splunkSettingAttribute = aSettingAttribute()
-                                                  .withCategory(Category.CONNECTOR)
-                                                  .withName("Splunk")
-                                                  .withAccountId(accountId)
-                                                  .withValue(aSplunkConfig()
-                                                                 .withAccountId(accountId)
-                                                                 .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
-                                                                 .withPort(8089)
-                                                                 .withPassword("W!ngs@Splunk".toCharArray())
-                                                                 .withUsername("admin")
-                                                                 .build())
-                                                  .build();
+    SettingAttribute splunkSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("Splunk")
+            .withAccountId(accountId)
+            .withValue(SplunkConfig.builder()
+                           .accountId(accountId)
+                           .url("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
+                           .password("W!ngs@Splunk".toCharArray())
+                           .username("admin")
+                           .build())
+            .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, splunkSettingAttribute);
 
     SettingAttribute appdSettingAttribute =
