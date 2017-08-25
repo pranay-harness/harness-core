@@ -87,7 +87,7 @@ public class Variable {
   @Transient
   @JsonIgnore
   public EntityType getEntityType() {
-    return (EntityType) metadata.get(ENTITY_TYPE);
+    return EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
   }
 
   @Transient

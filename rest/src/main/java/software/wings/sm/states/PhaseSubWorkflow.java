@@ -2,8 +2,6 @@ package software.wings.sm.states;
 
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -17,7 +15,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.dl.PageRequest;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -40,7 +37,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -140,34 +136,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     executionResponse.setAsync(true);
     executionResponse.setCorrelationIds(correlationIds);
     return executionResponse;
-  }
-
-  private InfrastructureMapping resolveInfraMapping(
-      ExecutionContext context, Application app, String serviceId, String expression) {
-    String displayName = context.renderExpression(expression);
-    PageRequest<InfrastructureMapping> pageRequest =
-        aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("serviceId", EQ, serviceId).build();
-    List<InfrastructureMapping> infraMappings = infrastructureMappingService.list(pageRequest);
-    if (infraMappings == null || infraMappings.isEmpty()) {
-      return null;
-    }
-    Optional<InfrastructureMapping> infraMapping =
-        infraMappings.stream().filter(infrastructureMapping -> infrastructureMapping.equals(displayName)).findFirst();
-    if (infraMapping.isPresent()) {
-      return infraMapping.get();
-    }
-    return null;
-  }
-
-  private Service resolveService(ExecutionContext context, Application app, String expression) {
-    String serviceName = context.renderExpression(expression);
-    PageRequest<Service> pageRequest =
-        aPageRequest().addFilter("appId", EQ, app.getUuid()).addFilter("name", EQ, serviceName).build();
-    List<Service> services = serviceResourceService.list(pageRequest, false, false);
-    if (services != null && !services.isEmpty()) {
-      return services.get(0);
-    }
-    return null;
   }
 
   private StateExecutionInstance getSpawningInstance(
