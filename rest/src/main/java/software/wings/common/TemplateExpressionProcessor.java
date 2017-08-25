@@ -131,7 +131,7 @@ public class TemplateExpressionProcessor {
     return null;
   }
 
-  public String changeToWorkflowVariable(TemplateExpression templateExpression) {
+  public static String changeToWorkflowVariable(TemplateExpression templateExpression) {
     String templateVariable = templateExpression.getExpression();
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(templateVariable);
     if (matcher.matches()) {

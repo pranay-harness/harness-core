@@ -31,6 +31,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -261,15 +262,15 @@ public class HttpState extends State {
         String fieldName = templateExpression.getFieldName();
         if (fieldName != null) {
           if (fieldName.equals("url")) {
-            finalUrl = templateExpression.getExpression();
+            finalUrl = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
           } else if (fieldName.equals("header")) {
-            headerExpression = templateExpression.getExpression();
+            headerExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
           } else if (fieldName.equals("body")) {
-            bodyExpression = templateExpression.getExpression();
+            bodyExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
           } else if (fieldName.equals("method")) {
-            methodExpression = templateExpression.getExpression();
+            methodExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
           } else if (fieldName.equals("assertion")) {
-            assertionExpression = templateExpression.getExpression();
+            assertionExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
           }
         }
       }
