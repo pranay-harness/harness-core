@@ -14,6 +14,7 @@ import java.util.Objects;
 @Entity(value = "delegateScopes")
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
+  private String name;
 
   @JsonIgnore
   private String empty; // TODO(brett): Not sure why, but this is needed when delegate has include/exclude scopes and
@@ -31,6 +32,14 @@ public class DelegateScope extends Base {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public List<TaskType> getTaskTypes() {
@@ -88,28 +97,29 @@ public class DelegateScope extends Base {
     if (!super.equals(o))
       return false;
     DelegateScope that = (DelegateScope) o;
-    return Objects.equals(accountId, that.accountId) && Objects.equals(taskTypes, that.taskTypes)
-        && Objects.equals(environmentTypes, that.environmentTypes) && Objects.equals(applications, that.applications)
-        && Objects.equals(environments, that.environments)
+    return Objects.equals(accountId, that.accountId) && Objects.equals(name, that.name)
+        && Objects.equals(taskTypes, that.taskTypes) && Objects.equals(environmentTypes, that.environmentTypes)
+        && Objects.equals(applications, that.applications) && Objects.equals(environments, that.environments)
         && Objects.equals(serviceInfrastructures, that.serviceInfrastructures);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        super.hashCode(), accountId, taskTypes, environmentTypes, applications, environments, serviceInfrastructures);
+    return Objects.hash(super.hashCode(), accountId, name, taskTypes, environmentTypes, applications, environments,
+        serviceInfrastructures);
   }
 
   @Override
   public String toString() {
     return "DelegateScope{"
-        + "accountId='" + accountId + '\'' + ", taskTypes=" + taskTypes + ", environmentTypes=" + environmentTypes
-        + ", applications=" + applications + ", environments=" + environments
+        + "accountId='" + accountId + '\'' + ", name='" + name + '\'' + ", taskTypes=" + taskTypes
+        + ", environmentTypes=" + environmentTypes + ", applications=" + applications + ", environments=" + environments
         + ", serviceInfrastructures=" + serviceInfrastructures + '}';
   }
 
   public static final class DelegateScopeBuilder {
     private String accountId;
+    private String name;
     private List<TaskType> taskTypes;
     private List<EnvironmentType> environmentTypes;
     private List<String> applications;
@@ -130,6 +140,11 @@ public class DelegateScope extends Base {
 
     public DelegateScopeBuilder withAccountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public DelegateScopeBuilder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -191,6 +206,7 @@ public class DelegateScope extends Base {
     public DelegateScopeBuilder but() {
       return aDelegateScope()
           .withAccountId(accountId)
+          .withName(name)
           .withTaskTypes(taskTypes)
           .withEnvironmentTypes(environmentTypes)
           .withApplications(applications)
@@ -207,6 +223,7 @@ public class DelegateScope extends Base {
     public DelegateScope build() {
       DelegateScope delegateScope = new DelegateScope();
       delegateScope.setAccountId(accountId);
+      delegateScope.setName(name);
       delegateScope.setTaskTypes(taskTypes);
       delegateScope.setEnvironmentTypes(environmentTypes);
       delegateScope.setApplications(applications);
