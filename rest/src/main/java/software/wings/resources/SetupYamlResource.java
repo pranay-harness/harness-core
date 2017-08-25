@@ -115,7 +115,7 @@ public class SetupYamlResource {
   @Path("/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> update(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
+  public RestResponse<SetupYaml> update(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -128,7 +128,7 @@ public class SetupYamlResource {
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
-    if (yaml.equals(beforeYaml)) {
+    if (yaml.trim().equals(beforeYaml.trim())) {
       // no change
       YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
       return rr;

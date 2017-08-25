@@ -7,11 +7,14 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.resources.SetupYamlResource;
 import software.wings.service.intfc.AppService;
@@ -20,7 +23,9 @@ import software.wings.utils.ResourceTestRule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 
 /**
  * The SetupYamlResourceTest class.
@@ -29,7 +34,10 @@ import javax.ws.rs.core.GenericType;
  */
 public class SetupYamlResourceTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  // create mocks
   private static final AppService appService = mock(AppService.class);
+  private static final SetupYamlResource syr = mock(SetupYamlResource.class);
 
   /**
    * The constant resources.
@@ -45,8 +53,11 @@ public class SetupYamlResourceTest {
   private final String TEST_APP_NAME1 = "TestApp_" + TIME_IN_MS;
   private final String TEST_APP_NAME2 = "TestApp_" + TIME_IN_MS + 10;
   private final String TEST_APP_NAME3 = "TestApp_" + TIME_IN_MS + 20;
+  private final String TEST_APP_NAME4 = "TestApp_" + TIME_IN_MS + 30;
   private final String TEST_YAML =
       "applications:\n- " + TEST_APP_NAME1 + "\n- " + TEST_APP_NAME2 + "\n- " + TEST_APP_NAME3 + "\n";
+  private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML);
+  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML + "- " + TEST_APP_NAME4 + "\n");
 
   private final Application testApp1 = anApplication()
                                            .withUuid(TEST_APP1)
@@ -70,6 +81,16 @@ public class SetupYamlResourceTest {
   private final List<String> testApps =
       new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3));
 
+  @Before
+  public void init() {
+    when(appService.getAppNamesByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApps);
+
+    List<String> appNames = appService.getAppNamesByAccountId(TEST_ACCOUNT_ID);
+    SetupYaml setup = new SetupYaml();
+    setup.setAppNames(appNames);
+    when(syr.get(TEST_ACCOUNT_ID)).thenReturn(YamlHelper.getYamlRestResponse(setup, "setup.yaml"));
+  }
+
   /**
    * Tear down.
    */
@@ -82,7 +103,6 @@ public class SetupYamlResourceTest {
 
   @Test
   public void testGetYaml() {
-    when(appService.getAppNamesByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApps);
     RestResponse<YamlPayload> actual = resources.client()
                                            .target("/setupYaml/" + TEST_ACCOUNT_ID)
                                            .request()
@@ -94,19 +114,42 @@ public class SetupYamlResourceTest {
     assertThat(yaml).isEqualTo(TEST_YAML);
   }
 
-  /*
   @Test
-  public void testUpdateFromYaml() {
-    YamlPayload yp = new YamlPayload(TEST_YAML);
+  public void testUpdateFromYamlNoChange() {
+    RestResponse<SetupYaml> actual =
+        resources.client()
+            .target("/setupYaml/" + TEST_ACCOUNT_ID)
+            .request()
+            .put(Entity.entity(TEST_YP, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
 
-    // when we save ANY instance of Application, we want to return testApp2
-    when(appService.save(Mockito.any(Application.class))).thenReturn(testApp2);
-    RestResponse<Application> actual = resources.client().target("/apps/yaml?accountId=" +
-  TEST_ACCOUNT_ID).request().post(Entity.entity(yp, MediaType.APPLICATION_JSON), new
-  GenericType<RestResponse<Application>>() {}); Application app = actual.getResource();
+    assertThat(actual.getResponseMessages().size()).isEqualTo(1);
 
-    assertThat(app.getName()).isEqualTo(TEST_NAME);
-    assertThat(app.getDescription()).isEqualTo(TEST_DESCRIPTION);
+    ResponseMessage rm = actual.getResponseMessages().get(0);
+
+    assertThat(rm.getCode()).isEqualTo(ErrorCode.GENERAL_YAML_INFO);
+    assertThat(rm.getMessage()).isEqualTo("No change to the Yaml.");
   }
-  */
+
+  @Test
+  public void testUpdateFromYamlAddOnly() {
+    RestResponse<SetupYaml> actual =
+        resources.client()
+            .target("/setupYaml/" + TEST_ACCOUNT_ID)
+            .request()
+            .put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
+    assertThat(actual.getResponseMessages().size()).isEqualTo(0);
+
+    // TODO - LEFT OFF HERE
+
+    /*
+    assertThat(rm.getCode()).isEqualTo(ErrorCode.GENERAL_YAML_INFO);
+    assertThat(rm.getMessage()).isEqualTo("No change to the Yaml.");
+    */
+  }
+
+  @Test
+  public void testUpdateFromYamlAddAndDeleteNotEnabled() {}
+
+  @Test
+  public void testUpdateFromYamlAddAndDeleteEnabled() {}
 }
