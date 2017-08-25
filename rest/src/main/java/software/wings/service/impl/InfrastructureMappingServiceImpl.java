@@ -6,6 +6,7 @@ import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -32,6 +33,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -50,6 +52,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -67,6 +70,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.HostValidationService;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
@@ -105,6 +109,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private WorkflowService workflowService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -561,13 +566,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       throw new WingsException(INVALID_REQUEST, "message", "Invalid infrastructure provider");
     }
-    StaticInfrastructureProvider infrastructureProvider =
-        (StaticInfrastructureProvider) getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name());
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
 
-    return asList(infrastructureProvider.validateHost(
-        validationRequest.getHostNames().get(0), hostConnectionSetting, validationRequest.getExecutionCredential()));
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(hostConnectionSetting.getAccountId()).withAppId(validationRequest.getAppId()).build();
+    return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
+        .validateHost(
+            validationRequest.getHostNames(), hostConnectionSetting, validationRequest.getExecutionCredential());
   }
 
   @Override

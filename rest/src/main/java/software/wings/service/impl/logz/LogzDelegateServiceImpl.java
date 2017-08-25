@@ -2,7 +2,6 @@ package software.wings.service.impl.logz;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -15,8 +14,6 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 8/21/17.
@@ -47,6 +44,17 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
       return response.body();
     }
 
+    throw new WingsException(response.errorBody().string());
+  }
+
+  @Override
+  public Object getLogSample(LogzConfig logzConfig) throws IOException {
+    final Call<Object> request =
+        getLogzRestClient(logzConfig).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
+    final Response<Object> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    }
     throw new WingsException(response.errorBody().string());
   }
 

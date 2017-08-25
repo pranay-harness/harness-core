@@ -58,7 +58,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     final LogzDataCollectionInfo dataCollectionInfo =
         new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-            getPhaseServiceId(context), queries, hostnameField, messageField, timestampField, timestampFieldFormat,
+            getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
             logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
@@ -99,8 +99,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return timeDuration;
   }
 
-  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
-  @DefaultValue(".*exception.*")
+  @Attributes(required = true, title = "Search Keywords")
+  @DefaultValue(".*[e|E]xception.*")
   public String getQuery() {
     return query;
   }
@@ -110,30 +110,16 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return indices;
   }
 
-  @Attributes(required = true, title = "Hostname Field", description = "Hostname field mapping in elastic search")
-  @DefaultValue("beat.hostname")
+  @Attributes(required = true, title = "Hostname Field")
+  @DefaultValue("hostname")
   public String getHostnameField() {
     return hostnameField;
   }
 
-  @Attributes(required = true, title = "Message Field", description = "Message field mapping in elastic search")
+  @Attributes(required = true, title = "Message Field")
   @DefaultValue("message")
   public String getMessageField() {
     return messageField;
-  }
-
-  @Attributes(required = true, title = "Timestamp Field", description = "Timestamp field mapping in elastic search")
-  @DefaultValue("@timestamp")
-  public String getTimestampField() {
-    return timestampField;
-  }
-
-  @Attributes(
-      required = true, title = "Timestamp Field Format", description = "Timestamp field format in elastic search")
-  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-  public String
-  getTimestampFieldFormat() {
-    return timestampFieldFormat;
   }
 
   @Override

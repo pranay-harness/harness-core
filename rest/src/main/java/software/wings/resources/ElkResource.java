@@ -16,13 +16,15 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -37,7 +39,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
 public class ElkResource implements LogAnalysisResource {
-  @Inject private AnalysisService analysisService;
+  @Inject private ElkAnalysisService analysisService;
 
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
@@ -97,5 +99,24 @@ public class ElkResource implements LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
       throws IOException {
     return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.ELK));
+  }
+
+  @GET
+  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String analysisServerConfigId, @QueryParam("index") String index)
+      throws IOException {
+    return new RestResponse<>(analysisService.getLogSample(accountId, analysisServerConfigId, index, StateType.ELK));
+  }
+
+  @GET
+  @Path(LogAnalysisResource.ELK_GET_INDICES_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, ElkIndexTemplate>> getIndices(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String analysisServerConfigId) throws IOException {
+    return new RestResponse<>(analysisService.getIndices(accountId, analysisServerConfigId));
   }
 }

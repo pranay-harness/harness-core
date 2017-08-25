@@ -36,9 +36,9 @@ import software.wings.delegatetasks.AppdynamicsMetricStoreService;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.amazons3.AmazonS3ServiceImpl;
-import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
@@ -56,8 +56,8 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
-import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.EcrClassicBuildServiceImpl;
+import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
@@ -88,6 +88,8 @@ import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
+import software.wings.utils.HostValidationService;
+import software.wings.utils.HostValidationServiceImpl;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -152,6 +154,7 @@ public class DelegateModule extends AbstractModule {
     bind(EcrClassicService.class).to(EcrClassicServiceImpl.class);
     bind(GcrService.class).to(GcrServiceImpl.class);
     bind(GcrBuildService.class).to(GcrBuildServiceImpl.class);
+    bind(HostValidationService.class).to(HostValidationServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
