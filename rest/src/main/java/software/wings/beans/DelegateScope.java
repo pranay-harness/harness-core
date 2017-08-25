@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
@@ -12,14 +12,10 @@ import java.util.Objects;
  * Created by brett on 7/20/17
  */
 @Entity(value = "delegateScopes")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
   private String name;
-
-  @JsonIgnore
-  private String empty; // TODO(brett): Not sure why, but this is needed when delegate has include/exclude scopes and
-                        // delegate is restarted. Investigate.
-
   private List<TaskType> taskTypes;
   private List<EnvironmentType> environmentTypes;
   private List<String> applications;
