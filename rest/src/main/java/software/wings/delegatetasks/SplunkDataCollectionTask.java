@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SplunkConfig;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
@@ -22,6 +23,7 @@ import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
   private final Object lockObject = new Object();
   private final AtomicBoolean completed = new AtomicBoolean(false);
+  private ScheduledExecutorService collectionService;
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
@@ -53,46 +56,39 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
 
   @Override
   public LogDataCollectionTaskResult run(Object[] parameters) {
-    final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
-    logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    try {
+      final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
+      logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
 
-    final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
-    final ServiceArgs loginArgs = new ServiceArgs();
-    loginArgs.setUsername(splunkConfig.getUsername());
-    loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
-    loginArgs.setHost(splunkConfig.getHost());
-    loginArgs.setPort(splunkConfig.getPort());
+      final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
+      final ServiceArgs loginArgs = new ServiceArgs();
+      loginArgs.setUsername(splunkConfig.getUsername());
+      loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
 
-    HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-    Service splunkService = Service.connect(loginArgs);
-    final ScheduledExecutorService collectionService = scheduleMetricDataCollection(dataCollectionInfo, splunkService);
-    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    scheduledExecutorService.schedule(() -> {
-      try {
-        logger.info("log collection finished for " + dataCollectionInfo);
-        collectionService.shutdown();
-        collectionService.awaitTermination(1, TimeUnit.MINUTES);
-      } catch (InterruptedException e) {
-        collectionService.shutdown();
+      final URI uri = new URI(splunkConfig.getUrl());
+      loginArgs.setHost(uri.getHost());
+      loginArgs.setPort(uri.getPort());
+
+      if (uri.getScheme().equals("https")) {
+        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
       }
+      Service splunkService = Service.connect(loginArgs);
+      collectionService = scheduleMetricDataCollection(dataCollectionInfo, splunkService);
+      logger.info("going to collect splunk data for " + dataCollectionInfo);
 
-      completed.set(true);
       synchronized (lockObject) {
-        lockObject.notifyAll();
-      }
-    }, dataCollectionInfo.getCollectionTime() + DELAY_MINUTES + 1, TimeUnit.MINUTES);
-    logger.info("going to collect splunk data for " + dataCollectionInfo);
-
-    synchronized (lockObject) {
-      while (!completed.get()) {
-        try {
-          lockObject.wait();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+        while (!completed.get()) {
+          try {
+            lockObject.wait();
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
         }
       }
+      return aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
+    } catch (Exception e) {
+      throw new WingsException(e);
     }
-    return aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(
@@ -104,7 +100,15 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
     return scheduledExecutorService;
   }
 
-  private static class SplunkDataCollector implements Runnable {
+  private void shutDownCollection() {
+    collectionService.shutdown();
+    completed.set(true);
+    synchronized (lockObject) {
+      lockObject.notifyAll();
+    }
+  }
+
+  private class SplunkDataCollector implements Runnable {
     private final SplunkDataCollectionInfo dataCollectionInfo;
     private final Service splunkService;
     private final LogAnalysisStoreService logAnalysisStoreService;
@@ -122,6 +126,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
     @Override
     public void run() {
       if (dataCollectionInfo.getCollectionTime() <= 0) {
+        shutDownCollection();
         return;
       }
 
