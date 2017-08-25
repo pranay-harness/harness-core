@@ -54,10 +54,13 @@ public class SetupYamlResourceTest {
   private final String TEST_APP_NAME2 = "TestApp_" + TIME_IN_MS + 10;
   private final String TEST_APP_NAME3 = "TestApp_" + TIME_IN_MS + 20;
   private final String TEST_APP_NAME4 = "TestApp_" + TIME_IN_MS + 30;
-  private final String TEST_YAML =
-      "applications:\n- " + TEST_APP_NAME1 + "\n- " + TEST_APP_NAME2 + "\n- " + TEST_APP_NAME3 + "\n";
-  private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML);
-  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML + "- " + TEST_APP_NAME4 + "\n");
+  private final String TEST_YAML = "applications:\n- " + TEST_APP_NAME1 + "\n- " + TEST_APP_NAME2 + "\n";
+  private final String TEST_YAML2 = TEST_YAML + "- " + TEST_APP_NAME3 + "\n";
+  private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML2);
+  // adds TEST_APP_NAME4 to TEST_YAML2
+  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "- " + TEST_APP_NAME4 + "\n");
+  // adds TEST_APP_NAME4 to, and removes TEST_APP_NAME3 from TEST_YAML2
+  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML + "- " + TEST_APP_NAME4 + "\n");
 
   private final Application testApp1 = anApplication()
                                            .withUuid(TEST_APP1)
@@ -80,10 +83,18 @@ public class SetupYamlResourceTest {
 
   private final List<String> testApps =
       new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3));
+  private final List<String> testApps2 =
+      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME3, TEST_APP_NAME4));
+  private final List<String> testApps3 =
+      new ArrayList<String>(Arrays.asList(TEST_APP_NAME1, TEST_APP_NAME2, TEST_APP_NAME4));
+
+  private final List<Application> testApplications =
+      new ArrayList<Application>(Arrays.asList(testApp1, testApp2, testApp3));
 
   @Before
   public void init() {
     when(appService.getAppNamesByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApps);
+    when(appService.getAppsByAccountId(TEST_ACCOUNT_ID)).thenReturn(testApplications);
 
     List<String> appNames = appService.getAppNamesByAccountId(TEST_ACCOUNT_ID);
     SetupYaml setup = new SetupYaml();
@@ -111,7 +122,7 @@ public class SetupYamlResourceTest {
     YamlPayload yp = actual.getResource();
     String yaml = yp.getYaml();
 
-    assertThat(yaml).isEqualTo(TEST_YAML);
+    assertThat(yaml).isEqualTo(TEST_YAML2);
   }
 
   @Test
@@ -137,19 +148,45 @@ public class SetupYamlResourceTest {
             .target("/setupYaml/" + TEST_ACCOUNT_ID)
             .request()
             .put(Entity.entity(TEST_YP2, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
+
     assertThat(actual.getResponseMessages().size()).isEqualTo(0);
 
-    // TODO - LEFT OFF HERE
+    SetupYaml setupYaml = actual.getResource();
+    List<String> appNames = setupYaml.getAppNames();
 
-    /*
-    assertThat(rm.getCode()).isEqualTo(ErrorCode.GENERAL_YAML_INFO);
-    assertThat(rm.getMessage()).isEqualTo("No change to the Yaml.");
-    */
+    assertThat(appNames).isEqualTo(testApps2);
   }
 
   @Test
-  public void testUpdateFromYamlAddAndDeleteNotEnabled() {}
+  public void testUpdateFromYamlAddAndDeleteNotEnabled() {
+    RestResponse<SetupYaml> actual =
+        resources.client()
+            .target("/setupYaml/" + TEST_ACCOUNT_ID)
+            .request()
+            .put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
+
+    assertThat(actual.getResponseMessages().size()).isEqualTo(1);
+
+    ResponseMessage rm = actual.getResponseMessages().get(0);
+
+    assertThat(rm.getCode()).isEqualTo(ErrorCode.NON_EMPTY_DELETIONS);
+    assertThat(rm.getMessage())
+        .isEqualTo("WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
+  }
 
   @Test
-  public void testUpdateFromYamlAddAndDeleteEnabled() {}
+  public void testUpdateFromYamlAddAndDeleteEnabled() {
+    RestResponse<SetupYaml> actual =
+        resources.client()
+            .target("/setupYaml/" + TEST_ACCOUNT_ID + "?deleteEnabled=true")
+            .request()
+            .put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
+
+    assertThat(actual.getResponseMessages().size()).isEqualTo(0);
+
+    SetupYaml setupYaml = actual.getResource();
+    List<String> appNames = setupYaml.getAppNames();
+
+    assertThat(appNames).isEqualTo(testApps3);
+  }
 }
