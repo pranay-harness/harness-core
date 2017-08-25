@@ -87,19 +87,19 @@ public class Variable {
   @Transient
   @JsonIgnore
   public EntityType getEntityType() {
-    return EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
+    if (metadata == null) {
+      return null;
+    }
+    return metadata.get(ENTITY_TYPE) != null ? EntityType.valueOf((String) metadata.get(ENTITY_TYPE)) : null;
   }
 
   @Transient
   @JsonIgnore
   public ArtifactType getArtifactType() {
-    return (ArtifactType) metadata.get(ARTIFACT_TYPE);
-  }
-
-  @Transient
-  @JsonIgnore
-  public String getRelatedField() {
-    return (String) metadata.get(RELATED_FIELD);
+    if (metadata == null) {
+      return null;
+    }
+    return metadata.get(ARTIFACT_TYPE) != null ? ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE)) : null;
   }
 
   @Override
