@@ -65,7 +65,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
       loginArgs.setUsername(splunkConfig.getUsername());
       loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
 
-      final URI uri = new URI(splunkConfig.getUrl());
+      final URI uri = new URI(splunkConfig.getSplunkUrl());
       loginArgs.setHost(uri.getHost());
       loginArgs.setPort(uri.getPort());
 

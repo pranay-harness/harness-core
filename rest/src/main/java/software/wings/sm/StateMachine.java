@@ -101,7 +101,7 @@ public class StateMachine extends Base {
     this.originVersion = originVersion;
     StringBuilder sb = new StringBuilder();
     try {
-      deepTransform(graph, stencilMap);
+      deepTransform(graph, stencilMap, orchestrationWorkflow);
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in State Machine transform", wingsException);
@@ -117,8 +117,9 @@ public class StateMachine extends Base {
     }
   }
 
-  public StateMachine(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    deepTransform(graph, stencilMap);
+  public StateMachine(
+      Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
+    deepTransform(graph, stencilMap, orchestrationWorkflow);
   }
 
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
@@ -187,8 +188,9 @@ public class StateMachine extends Base {
     clearCache();
   }
 
-  public void deepTransform(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    transform(graph, stencilMap);
+  public void deepTransform(
+      Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
+    transform(graph, stencilMap, orchestrationWorkflow);
     Map<String, Graph> subworkflows = graph.getSubworkflows();
     if (subworkflows != null) {
       for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
@@ -196,12 +198,13 @@ public class StateMachine extends Base {
         if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
           continue;
         }
-        childStateMachines.put(entry.getKey(), new StateMachine(childGraph, stencilMap));
+        childStateMachines.put(entry.getKey(), new StateMachine(childGraph, stencilMap, orchestrationWorkflow));
       }
     }
   }
 
-  private void transform(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+  private void transform(
+      Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     String originStateName = null;
     for (Node node : graph.getNodes()) {
       logger.info("node : {}", node);
@@ -234,6 +237,8 @@ public class StateMachine extends Base {
       properties.put("id", node.getId());
       state.setRollback(node.getRollback());
 
+      state.setTemplateExpressions(node.getTemplateExpressions());
+
       // populate properties
       MapperUtils.mapObject(properties, state);
 
@@ -241,6 +246,11 @@ public class StateMachine extends Base {
 
       node.setInValidFieldMessages(state.validateFields());
 
+      if (orchestrationWorkflow != null) {
+        if (state.getTemplateExpressions() != null) {
+          orchestrationWorkflow.addToUserVariables(state.getTemplateExpressions(), state.getStateType());
+        }
+      }
       addState(state);
     }
 

@@ -289,7 +289,7 @@ public interface Constants {
   /**
    * The constant DEFAULT_SYNC_CALL_TIMEOUT.
    */
-  int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
+  int DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 25 seconds
   /**
    * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
    */
@@ -319,6 +319,14 @@ public interface Constants {
    * The constant ARTIFACT_FILE_NAME.
    */
   String ARTIFACT_FILE_NAME = "artifactFileName";
+
+  /**
+   * Template expression constants
+   */
+  String ENTITY_TYPE = "entityType";
+  String ARTIFACT_TYPE = "artifactType";
+  String RELATED_FIELD = "relatedField";
+  String STATE_TYPE = "stateType";
 
   /**
    * The constant S3.
