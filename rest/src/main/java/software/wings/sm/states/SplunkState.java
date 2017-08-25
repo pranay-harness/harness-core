@@ -181,7 +181,7 @@ public class SplunkState extends HttpState {
                 ((ExecutionContextImpl) context).getApp().getAccountId(), SettingVariableTypes.SPLUNK.name())
             .get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
-    return "https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs";
+    return splunkConfig.getUrl() + "/services/search/jobs";
   }
 
   private String toPostBody(Map<String, String> params) throws UnsupportedEncodingException {
