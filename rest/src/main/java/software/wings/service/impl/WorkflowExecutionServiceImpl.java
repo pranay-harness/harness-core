@@ -12,9 +12,9 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
-import static software.wings.beans.EntityType.*;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -48,7 +48,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
@@ -962,7 +961,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services;
       if (workflow.isTemplatized()) {
-        services = resolveServices(workflow, workflow.getOrchestrationWorkflow(), workflowExecution);
+        services = resolveServices(workflow, workflowExecution);
       } else {
         services = workflow.getServices();
       }
@@ -1019,11 +1018,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private List<Service> resolveServices(
-      Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, WorkflowExecution workflowExecution) {
+  private List<Service> resolveServices(Workflow workflow, WorkflowExecution workflowExecution) {
     // Lookup service
-    List<String> workflowServiceIds = orchestrationWorkflow.getServiceIds();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
     List<String> serviceNames = new ArrayList<>();
     if (userVariables != null) {

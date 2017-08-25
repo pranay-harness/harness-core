@@ -141,7 +141,7 @@ public class TemplateExpressionProcessor {
         templateVariable = "${workflow.variables." + templateVariable + "}";
       }
     } else {
-      throw new WingsException("Invalid service expression: " + templateExpression);
+      throw new WingsException("Invalid template expression: " + templateExpression);
     }
     return templateVariable;
   }
