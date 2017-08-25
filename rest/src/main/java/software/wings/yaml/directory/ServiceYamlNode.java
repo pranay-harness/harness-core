@@ -12,7 +12,7 @@ public class ServiceYamlNode extends YamlNode {
   }
 
   public ServiceYamlNode(String uuid, String appId, String name, Class theClass) {
-    super(name, theClass);
+    super(uuid, name, theClass);
     this.appId = appId;
   }
 

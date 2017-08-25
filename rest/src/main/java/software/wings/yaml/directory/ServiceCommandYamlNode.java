@@ -13,7 +13,7 @@ public class ServiceCommandYamlNode extends YamlNode {
   }
 
   public ServiceCommandYamlNode(String uuid, String appId, String serviceId, String name, Class theClass) {
-    super(name, theClass);
+    super(uuid, name, theClass);
     this.appId = appId;
     this.serviceId = serviceId;
   }
