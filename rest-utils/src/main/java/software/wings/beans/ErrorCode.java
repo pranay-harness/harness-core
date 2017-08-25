@@ -290,8 +290,11 @@ public enum ErrorCode {
                                            * Resume all already error codes.
                                            */
   RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"), /**
-                                             * Abort all already error codes.
+                                             * Rollback already error codes.
                                              */
+  ROLLBACK_ALREADY("ROLLBACK_ALREADY"), /**
+                                         * Abort all already error codes.
+                                         */
   ABORT_ALL_ALREADY("ABORT_ALL_ALREADY"),
 
   /**
@@ -316,7 +319,7 @@ public enum ErrorCode {
   NOT_LICENSED("NOT_LICENSED"), /**
                                  * Request timeout error code.
                                  */
-  REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT),
+  REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT, GATEWAY_TIMEOUT.getReasonPhrase()),
 
   /**
    * Workflow already triggered

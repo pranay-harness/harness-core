@@ -118,6 +118,7 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
@@ -143,8 +144,8 @@ import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
-import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EcrBuildService;
+import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -177,10 +178,13 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
+import software.wings.utils.HostValidationService;
+import software.wings.utils.HostValidationServiceImpl;
 
 /**
  * Guice Module for initializing all beans.
@@ -267,6 +271,7 @@ public class WingsModule extends AbstractModule {
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+    bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
@@ -282,6 +287,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsHelperResourceService.class).to(AwsHelperResourceServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
+    bind(HostValidationService.class).to(HostValidationServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
