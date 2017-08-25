@@ -72,7 +72,7 @@ public class AppYamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/{appId}")
+  @Path("/{accountId}/{appId}")
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId) {
@@ -97,7 +97,7 @@ public class AppYamlResource {
    * @return the rest response
    */
   @POST
-  @Path("/{appId}")
+  @Path("/{accountId}/{appId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Application> save(@PathParam("appId") String appId, YamlPayload yamlPayload,
@@ -121,7 +121,7 @@ public class AppYamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/{appId}")
+  @Path("/{accountId}/{appId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Application> update(@PathParam("appId") String appId, YamlPayload yamlPayload,
