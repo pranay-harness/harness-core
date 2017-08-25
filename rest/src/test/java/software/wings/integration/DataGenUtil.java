@@ -231,7 +231,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(SplunkConfig.builder()
                            .accountId(accountId)
-                           .url("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
+                           .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
                            .password("W!ngs@Splunk".toCharArray())
                            .username("admin")
                            .build())
