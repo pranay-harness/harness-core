@@ -13,6 +13,9 @@ import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.CANARY;
+import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -67,7 +70,6 @@ import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -78,6 +80,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -375,7 +378,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflow.setDefaultVersion(1);
     String key = wingsPersistence.save(workflow);
     if (orchestrationWorkflow != null) {
-      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
             && !canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
@@ -383,7 +386,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
         // Create Single Phase
         Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
         Validator.notNullCheck("serviceId", workflow.getServiceId());
@@ -392,7 +395,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                           .withServiceId(workflow.getServiceId())
                                           .build();
         attachWorkflowPhase(workflow, workflowPhase);
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
         if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
@@ -436,7 +439,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
+    List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
+    setUnset(ops, "templateExpressions", templateExpressions);
 
+    if (workflow.isTemplatized() || templateExpressions != null) {
+      if (orchestrationWorkflow == null) {
+        workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
+        orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      }
+      orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, templateExpressions);
+    }
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
@@ -462,6 +474,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
+  }
+
+  private OrchestrationWorkflow propagateTemplateExpressions(
+      OrchestrationWorkflow orchestrationWorkflow, List<TemplateExpression> templateExpressions) {
+    if (orchestrationWorkflow != null) {
+      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
+        BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
+        if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
+          for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
+            phase.setTemplateExpressions(templateExpressions);
+          }
+        }
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
+        MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
+            (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+        if (multiServiceOrchestrationWorkflow.getWorkflowPhases() != null) {
+          for (WorkflowPhase phase : multiServiceOrchestrationWorkflow.getWorkflowPhases()) {
+            phase.setTemplateExpressions(templateExpressions);
+          }
+        }
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+        canaryOrchestrationWorkflow.addToUserVariables(templateExpressions);
+      }
+    }
+    return orchestrationWorkflow;
   }
 
   @Override
@@ -695,7 +733,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       boolean serviceRepeat = false;
       if (canaryOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
@@ -714,14 +752,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false);
       basicOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       boolean serviceRepeat = false;
@@ -999,7 +1037,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if ("COMMAND".equals(step.getType())) {
           ServiceCommand command = serviceResourceService.getCommandByName(
               appId, serviceId, (String) step.getProperties().get("commandName"));
-          if (command.getCommand().isArtifactNeeded()) {
+          if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
             requiredEntityTypes.add(EntityType.ARTIFACT);
             phaseStep.setArtifactNeeded(true);
             break;
@@ -1413,13 +1451,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<NotificationRule> notificationRules = new ArrayList<>();
     notificationRules.add(notificationRule);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       canaryOrchestrationWorkflow.setNotificationRules(notificationRules);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       basicOrchestrationWorkflow.setNotificationRules(notificationRules);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       Validator.notNullCheck("multiServiceOrchestrationWorkflow", multiServiceOrchestrationWorkflow);
@@ -1435,13 +1473,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .withRepairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
                               .build());
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       canaryOrchestrationWorkflow.setFailureStrategies(failureStrategies);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       basicOrchestrationWorkflow.setFailureStrategies(failureStrategies);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       multiServiceOrchestrationWorkflow.setFailureStrategies(failureStrategies);
@@ -1450,8 +1488,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void validateBasicWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow != null
-        && orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+    if (orchestrationWorkflow != null && orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       // Create Single Phase
       Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
       Validator.notNullCheck("serviceId", workflow.getServiceId());

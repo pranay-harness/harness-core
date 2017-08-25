@@ -6,7 +6,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
@@ -22,7 +21,7 @@ import software.wings.settings.SettingValue;
 @ToString(exclude = "password")
 @Builder
 public class SplunkConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "URL", required = true) @NotEmpty private String url;
+  @Attributes(title = "URL", required = true) @NotEmpty private String splunkUrl;
 
   @NotEmpty @Attributes(title = "User Name", required = true) private String username;
 
@@ -41,9 +40,9 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.SPLUNK.name());
   }
 
-  public SplunkConfig(String url, String username, char[] password, String accountId) {
+  public SplunkConfig(String splunkUrl, String username, char[] password, String accountId) {
     super(SettingVariableTypes.SPLUNK.name());
-    this.url = url;
+    this.splunkUrl = splunkUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;

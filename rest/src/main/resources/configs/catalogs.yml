@@ -240,3 +240,12 @@ CLOUD_PROVIDERS:
       value: PHYSICAL_DATA_CENTER
     - name: Direct Kubernetes
       value: DIRECT
+
+FORM_FIELD_TO_ENTITY_TYPE:
+    - name: envId
+      value: ENVIRONMENT
+    - name: serviceId
+      value: SERVICE
+    - name: infraMappingId
+      value: INFRASTRUCTURE_MAPPING
+

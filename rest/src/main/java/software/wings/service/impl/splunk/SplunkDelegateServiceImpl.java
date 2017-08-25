@@ -7,7 +7,10 @@ import com.splunk.ServiceArgs;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.UnknownHostException;
 
 /**
@@ -21,17 +24,17 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       loginArgs.setUsername(splunkConfig.getUsername());
       loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
 
-      final URI uri = new URI(splunkConfig.getUrl());
-      loginArgs.setHost(uri.getHost());
-      loginArgs.setPort(uri.getPort());
+      final URL url = new URL(splunkConfig.getSplunkUrl());
+      loginArgs.setHost(url.getHost());
+      loginArgs.setPort(url.getPort());
 
-      if (uri.getScheme().equals("https")) {
+      if (url.toURI().getScheme().equals("https")) {
         HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
       }
       Service.connect(loginArgs);
     } catch (Throwable t) {
-      if (t.getCause() instanceof UnknownHostException) {
-        throw new RuntimeException(splunkConfig.getUrl() + " is unreachable");
+      if (t instanceof MalformedURLException) {
+        throw new RuntimeException(splunkConfig.getSplunkUrl() + " is not a valid url");
       }
       throw new RuntimeException(t.getMessage());
     }
