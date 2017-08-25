@@ -81,8 +81,11 @@ public enum TaskType {
   SPLUNK_COLLECT_LOG_DATA(SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   ELK_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
+  ELK_COLLECT_INDICES(ServiceImplDelegateTask.class),
+  ELK_GET_LOG_SAMPLE(ServiceImplDelegateTask.class),
   LOGZ_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   LOGZ_COLLECT_LOG_DATA(ElkLogzDataCollectionTask.class),
+  LOGZ_GET_LOG_SAMPLE(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_BUILDS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_JOBS(ServiceImplDelegateTask.class),
   ARTIFACTORY_GET_PLANS(ServiceImplDelegateTask.class),
@@ -92,7 +95,8 @@ public enum TaskType {
   ARTIFACTORY_LAST_SUCCSSFUL_BUILD(ServiceImplDelegateTask.class),
   ARTIFACTORY_COLLECTION(ArtifactoryCollectionTask.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
-  ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class);
+  ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),
+  HOST_VALIDATION(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
