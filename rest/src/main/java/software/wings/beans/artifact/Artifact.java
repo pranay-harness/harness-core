@@ -1,10 +1,11 @@
 package software.wings.beans.artifact;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -15,10 +16,8 @@ import software.wings.beans.Service;
 import software.wings.common.Constants;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Artifact bean class.
@@ -27,80 +26,19 @@ import java.util.Objects;
  */
 @Entity(value = "artifacts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class Artifact extends Base {
   @Indexed private String artifactStreamId;
-
   private String artifactSourceName;
-
   private Map<String, String> metadata = Maps.newHashMap();
-
   @Indexed @NotEmpty private String displayName;
-
   @Indexed private String revision;
-
   private List<String> serviceIds = new ArrayList<>();
-
   @Transient private List<Service> services;
-
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-
   @Indexed private Status status;
-
   private String description;
-
-  /**
-   * Gets metadata.
-   *
-   * @return the metadata
-   */
-  public Map<String, String> getMetadata() {
-    return metadata;
-  }
-
-  /**
-   * Sets metadata.
-   *
-   * @param metadata the metadata
-   */
-  public void setMetadata(Map<String, String> metadata) {
-    this.metadata = metadata;
-  }
-
-  /**
-   * Gets display name.
-   *
-   * @return the display name
-   */
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  /**
-   * Sets display name.
-   *
-   * @param displayName the display name
-   */
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
-
-  /**
-   * Gets revision.
-   *
-   * @return the revision
-   */
-  public String getRevision() {
-    return revision;
-  }
-
-  /**
-   * Sets revision.
-   *
-   * @param revision the revision
-   */
-  public void setRevision(String revision) {
-    this.revision = revision;
-  }
 
   /**
    * Gets buildNo.
@@ -124,157 +62,6 @@ public class Artifact extends Base {
       return getMetadata().get(Constants.ARTIFACT_PATH);
     }
     return null;
-  }
-
-  /**
-   * Gets Artifact Path
-   *
-   * @return the buildNo
-   */
-  public String getArtifactFileName() {
-    if (getMetadata() != null) {
-      return getMetadata().get(Constants.ARTIFACT_FILE_NAME);
-    }
-    return null;
-  }
-  public Map<String, String> getBuildParameters() {
-    if (getMetadata() != null) {
-      return getMetadata();
-    }
-    return new HashMap<>();
-  }
-
-  /**
-   * Sets buildNo.
-   *
-   * @param buildNo the buildNo
-   */
-  public void setBuildNo(String buildNo) {}
-
-  /**
-   * Gets status.
-   *
-   * @return the status
-   */
-  public Status getStatus() {
-    return status;
-  }
-
-  /**
-   * Sets status.
-   *
-   * @param status the status
-   */
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  /**
-   * Gets artifact files.
-   *
-   * @return the artifact files
-   */
-  public List<ArtifactFile> getArtifactFiles() {
-    return artifactFiles;
-  }
-
-  /**
-   * Sets artifact files.
-   *
-   * @param artifactFiles the artifact files
-   */
-  public void setArtifactFiles(List<ArtifactFile> artifactFiles) {
-    this.artifactFiles = artifactFiles;
-  }
-
-  /**
-   * Gets services.
-   *
-   * @return the services
-   */
-  public List<Service> getServices() {
-    return services;
-  }
-
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(List<Service> services) {
-    this.services = services;
-  }
-
-  /**
-   * Gets artifact source id.
-   *
-   * @return the artifact source id
-   */
-  public String getArtifactStreamId() {
-    return artifactStreamId;
-  }
-
-  /**
-   * Sets artifact source id.
-   *
-   * @param artifactStreamId the artifact source id
-   */
-  public void setArtifactStreamId(String artifactStreamId) {
-    this.artifactStreamId = artifactStreamId;
-  }
-
-  /**
-   * Gets artifact source name.
-   *
-   * @return the artifact source name
-   */
-  public String getArtifactSourceName() {
-    return artifactSourceName;
-  }
-
-  /**
-   * Sets artifact source name.
-   *
-   * @param artifactSourceName the artifact source name
-   */
-  public void setArtifactSourceName(String artifactSourceName) {
-    this.artifactSourceName = artifactSourceName;
-  }
-
-  /**
-   * Gets service ids.
-   *
-   * @return the service ids
-   */
-  public List<String> getServiceIds() {
-    return serviceIds;
-  }
-
-  /**
-   * Sets service ids.
-   *
-   * @param serviceIds the service ids
-   */
-  public void setServiceIds(List<String> serviceIds) {
-    this.serviceIds = serviceIds;
-  }
-
-  /**
-   * Gets description.
-   *
-   * @return the description
-   */
-  public String getDescription() {
-    return description;
-  }
-
-  /**
-   * Sets description.
-   *
-   * @param description the description
-   */
-  public void setDescription(String description) {
-    this.description = description;
   }
 
   /**
@@ -312,45 +99,6 @@ public class Artifact extends Base {
              * Error status.
              */
     ERROR
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(artifactStreamId, metadata, displayName, revision, serviceIds, services, artifactFiles, status);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Artifact other = (Artifact) obj;
-    return Objects.equals(this.artifactStreamId, other.artifactStreamId)
-        && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
-        && Objects.equals(this.revision, other.revision) && Objects.equals(this.serviceIds, other.serviceIds)
-        && Objects.equals(this.services, other.services) && Objects.equals(this.artifactFiles, other.artifactFiles)
-        && Objects.equals(this.status, other.status);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("artifactStreamId", artifactStreamId)
-        .add("metadata", metadata)
-        .add("displayName", displayName)
-        .add("revision", revision)
-        .add("serviceIds", serviceIds)
-        .add("services", services)
-        .add("artifactFiles", artifactFiles)
-        .add("status", status)
-        .toString();
   }
 
   /**
