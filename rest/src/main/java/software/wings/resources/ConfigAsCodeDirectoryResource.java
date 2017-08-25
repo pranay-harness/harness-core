@@ -20,6 +20,8 @@ import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.FolderNode;
+import software.wings.yaml.directory.ServiceCommandYamlNode;
+import software.wings.yaml.directory.ServiceYamlNode;
 import software.wings.yaml.directory.YamlNode;
 
 import java.util.List;
@@ -97,7 +99,8 @@ public class ConfigAsCodeDirectoryResource {
       for (Service service : services) {
         FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
         servicesFolder.addChild(serviceFolder);
-        serviceFolder.addChild(new YamlNode(service.getUuid(), service.getName() + ".yaml", ServiceYaml.class));
+        serviceFolder.addChild(
+            new ServiceYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
         FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
         serviceFolder.addChild(serviceCommandsFolder);
 
@@ -107,8 +110,8 @@ public class ConfigAsCodeDirectoryResource {
 
         // iterate over service commands
         for (ServiceCommand serviceCommand : serviceCommands) {
-          serviceCommandsFolder.addChild(
-              new YamlNode(serviceCommand.getUuid(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
+          serviceCommandsFolder.addChild(new ServiceCommandYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
+              serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
         }
       }
     }
