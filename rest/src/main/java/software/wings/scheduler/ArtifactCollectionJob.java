@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.Status.*;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -60,7 +61,12 @@ public class ArtifactCollectionJob implements Job {
     if (artifacts != null && artifacts.size() != 0) {
       logger.info("[{}] new artifacts collected", artifacts.size());
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
-      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifacts.get(artifacts.size() - 1));
+      Artifact latestArtifact = artifacts.get(artifacts.size() - 1);
+      if (latestArtifact.getStatus().equals(READY) || latestArtifact.getStatus().equals(APPROVED)) {
+        artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(latestArtifact);
+      } else {
+        logger.info("Artifact is not yet READY to trigger post artifact collection deployment");
+      }
     }
   }
 
