@@ -4,6 +4,11 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.common.Constants.PHASE_NAME_PREFIX;
+import static software.wings.common.Constants.POST_DEPLOYMENT;
+import static software.wings.common.Constants.PRE_DEPLOYMENT;
+import static software.wings.common.Constants.ROLLBACK_PREFIX;
+import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
-import software.wings.common.Constants;
 import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
@@ -35,8 +39,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
-  @Embedded
-  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+  @Embedded private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -46,8 +49,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  @Embedded
-  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+  @Embedded private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
 
   @Embedded private List<NotificationRule> notificationRules = new ArrayList<>();
 
@@ -109,6 +111,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     this.systemVariables = systemVariables;
   }
 
+  @Override
   public List<Variable> getUserVariables() {
     return userVariables;
   }
@@ -183,14 +186,23 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
       int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
-        workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
+        workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          templateExpressions.stream().forEach(templateExpression -> {
+            templateExpression.setExpressionAllowed(false);
+            templateExpression.setMandatory(true);
+          });
+          addToUserVariables(templateExpressions);
+        }
         populatePhaseStepIds(workflowPhase);
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
-        rollbackPhase.setName(Constants.ROLLBACK_PREFIX + workflowPhase.getName());
+        rollbackPhase.setName(ROLLBACK_PREFIX + workflowPhase.getName());
         rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
+        rollbackPhase.setTemplateExpressions(workflowPhase.getTemplateExpressions());
         populatePhaseStepIds(rollbackPhase);
       }
     }
@@ -320,7 +332,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
       if (!invalid.isEmpty()) {
-        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalid));
+        setValidationMessage(String.format(WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
     }
     return isValid();
@@ -347,12 +359,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public static final class CanaryOrchestrationWorkflowBuilder {
     private Graph graph;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
     private List<String> workflowPhaseIds = new ArrayList<>();
     private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
     private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();

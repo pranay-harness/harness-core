@@ -1,5 +1,19 @@
 package software.wings.beans;
 
+import static software.wings.common.Constants.ARTIFACT_TYPE;
+import static software.wings.common.Constants.ENTITY_TYPE;
+import static software.wings.common.Constants.RELATED_FIELD;
+import static software.wings.common.Constants.STATE_TYPE;
+
+import com.google.common.collect.Maps;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.sm.StateType;
+import software.wings.utils.ArtifactType;
+
+import java.beans.Transient;
+import java.util.Map;
+
 /**
  * Created by rishi on 12/21/16.
  */
@@ -9,6 +23,8 @@ public class Variable {
   private boolean mandatory;
   private String value;
   private boolean fixed;
+
+  private Map<String, Object> metadata = Maps.newHashMap();
 
   private VariableType type = VariableType.TEXT;
 
@@ -60,6 +76,32 @@ public class Variable {
     this.fixed = fixed;
   }
 
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, Object> metadata) {
+    this.metadata = metadata;
+  }
+
+  @Transient
+  @JsonIgnore
+  public EntityType getEntityType() {
+    if (metadata == null) {
+      return null;
+    }
+    return metadata.get(ENTITY_TYPE) != null ? EntityType.valueOf((String) metadata.get(ENTITY_TYPE)) : null;
+  }
+
+  @Transient
+  @JsonIgnore
+  public ArtifactType getArtifactType() {
+    if (metadata == null) {
+      return null;
+    }
+    return metadata.get(ARTIFACT_TYPE) != null ? ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE)) : null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -94,6 +136,7 @@ public class Variable {
     private String value;
     private boolean fixed;
     private VariableType type = VariableType.TEXT;
+    private Map<String, Object> metadata = Maps.newHashMap();
 
     private VariableBuilder() {}
 
@@ -126,8 +169,38 @@ public class Variable {
       return this;
     }
 
+    public VariableBuilder withEntityType(EntityType entityType) {
+      if (entityType != null) {
+        this.metadata.put(ENTITY_TYPE, entityType);
+      }
+      return this;
+    }
+
     public VariableBuilder withType(VariableType type) {
       this.type = type;
+      return this;
+    }
+
+    public VariableBuilder withArtifactType(String artifactType) {
+      if (artifactType != null) {
+        this.metadata.put(ARTIFACT_TYPE, artifactType);
+      }
+      return this;
+    }
+
+    public VariableBuilder withRelatedField(String relatedField) {
+      if (relatedField != null) {
+        this.metadata.put(RELATED_FIELD, relatedField);
+      }
+      return this;
+    }
+
+    public VariableBuilder withStateType(StateType stateType) {
+      this.metadata.put(STATE_TYPE, stateType);
+      return this;
+    }
+    public VariableBuilder withMetadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
       return this;
     }
 
@@ -139,6 +212,7 @@ public class Variable {
       variable.setValue(value);
       variable.setFixed(fixed);
       variable.setType(type);
+      variable.setMetadata(metadata);
       return variable;
     }
   }

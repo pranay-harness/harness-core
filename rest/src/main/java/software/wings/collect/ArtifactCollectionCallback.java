@@ -63,7 +63,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       if (artifactStream.isAutoApproveForProduction()) {
         artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
       }
-      // artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
+      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
       notificationService.sendNotificationAsync(
           anApprovalNotification()
               .withAppId(artifact.getAppId())

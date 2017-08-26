@@ -26,6 +26,7 @@ public class ExpressionEvaluator {
    * The constant wingsVariablePattern.
    */
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
+  public static final Pattern specialCharPattern = Pattern.compile("\"[^\\\\w]\"");
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
