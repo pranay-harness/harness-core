@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public class ExecutionContextImpl implements ExecutionContext {
   private static final String CURRENT_STATE = "currentState";
-  private static Pattern nameWindCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  private static Pattern nameWindCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
