@@ -6,6 +6,9 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.ContainerStateRunning;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
@@ -23,7 +26,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,23 +101,44 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       } else {
         containerInfo.setStatus(Status.FAILURE);
         hasErrors = true;
-        String message = Joiner.on("], [").join(pod.getStatus()
-                                                    .getConditions()
-                                                    .stream()
-                                                    .map(cond -> {
-                                                      String msg = cond.getType() + ": " + cond.getStatus();
-                                                      if (cond.getReason() != null) {
-                                                        msg += " - " + cond.getReason();
-                                                      }
-                                                      if (cond.getMessage() != null) {
-                                                        msg += " - " + cond.getMessage();
-                                                      }
-                                                      return msg;
-                                                    })
-                                                    .collect(Collectors.toList()));
-        logger.error("Pod {} failed to start. Current status: {}. [{}]", podName, phase, message);
+        String containerMessage =
+            Joiner.on("], [").join(pod.getStatus()
+                                       .getContainerStatuses()
+                                       .stream()
+                                       .map(status -> {
+                                         ContainerStateWaiting waiting = status.getState().getWaiting();
+                                         ContainerStateTerminated terminated = status.getState().getTerminated();
+                                         ContainerStateRunning running = status.getState().getRunning();
+                                         String msg = status.getName();
+                                         if (running != null) {
+                                           msg += ": Started at " + running.getStartedAt();
+                                         } else if (terminated != null) {
+                                           msg += ": " + terminated.getReason() + " - " + terminated.getMessage();
+                                         } else if (waiting != null) {
+                                           msg += ": " + waiting.getReason() + " - " + waiting.getMessage();
+                                         }
+                                         return msg;
+                                       })
+                                       .collect(Collectors.toList()));
+        String conditionMessage = Joiner.on("], [").join(pod.getStatus()
+                                                             .getConditions()
+                                                             .stream()
+                                                             .map(cond -> {
+                                                               String msg = cond.getType() + ": " + cond.getStatus();
+                                                               if (cond.getReason() != null) {
+                                                                 msg += " - " + cond.getReason();
+                                                               }
+                                                               if (cond.getMessage() != null) {
+                                                                 msg += " - " + cond.getMessage();
+                                                               }
+                                                               return msg;
+                                                             })
+                                                             .collect(Collectors.toList()));
+        logger.error("Pod {} failed to start. Current status: {}. Container status: [{}]. Condition: [{}].", podName,
+            phase, containerMessage, conditionMessage);
         executionLogCallback.saveExecutionLog(
-            String.format("Pod [%s] failed to start. Current status: %s. [%s]", podName, phase, message),
+            String.format("Pod [%s] failed to start. Current status: %s. Container status: [%s]. Condition: [%s].",
+                podName, phase, containerMessage, conditionMessage),
             Log.LogLevel.ERROR);
       }
       containerInfos.add(containerInfo);
