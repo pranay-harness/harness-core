@@ -50,6 +50,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
@@ -76,13 +77,13 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
@@ -238,6 +239,12 @@ public class CommandState extends State {
 
       Application application = appService.get(serviceInstance.getAppId());
 
+      Map<String, String> serviceVariables = context.getServiceVariables();
+      if (serviceVariables != null) {
+        for (Entry<String, String> entry : serviceVariables.entrySet()) {
+          entry.setValue(context.renderExpression(entry.getValue()));
+        }
+      }
       Activity.Builder activityBuilder =
           anActivity()
               .withAppId(application.getUuid())
@@ -261,7 +268,7 @@ public class CommandState extends State {
               .withHostName(host.getHostName())
               .withPublicDns(host.getPublicDns())
               .withCommandUnits(getFlattenCommandUnits(appId, envId, service, command))
-              .withServiceVariables(context.getServiceVariables());
+              .withServiceVariables(serviceVariables);
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
@@ -275,7 +282,7 @@ public class CommandState extends State {
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
-              .withServiceVariables(context.getServiceVariables())
+              .withServiceVariables(serviceVariables)
               .withHost(host)
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
@@ -317,6 +324,7 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
       expandCommand(serviceInstance, command, service.getUuid(), envId);
+      renderCommandString(command, context);
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).build();
 
@@ -348,6 +356,17 @@ public class CommandState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private void renderCommandString(Command command, ExecutionContext context) {
+    for (CommandUnit commandUnit : command.getCommandUnits()) {
+      if (commandUnit.getCommandUnitType() != CommandUnitType.EXEC || !(commandUnit instanceof ExecCommandUnit)
+          || ((ExecCommandUnit) commandUnit).getCommandString() == null) {
+        continue;
+      }
+      ((ExecCommandUnit) commandUnit)
+          .setCommandString(context.renderExpression(((ExecCommandUnit) commandUnit).getCommandString()));
+    }
   }
 
   private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, Command command) {
