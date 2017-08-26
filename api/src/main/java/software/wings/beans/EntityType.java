@@ -80,5 +80,8 @@ public enum EntityType {
   CONFIG, /**
            * Service template entity type.
            */
-  SERVICE_TEMPLATE
+  SERVICE_TEMPLATE, /**
+                     * Infrastructure Mapping type.
+                     */
+  INFRASTRUCTURE_MAPPING
 }

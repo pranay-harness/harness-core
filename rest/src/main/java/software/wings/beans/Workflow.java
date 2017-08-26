@@ -31,6 +31,8 @@ public class Workflow extends Base {
 
   private boolean templatized;
 
+  private List<TemplateExpression> templateExpressions;
+
   @Transient private String notes;
 
   @Transient private OrchestrationWorkflow orchestrationWorkflow;
@@ -157,6 +159,13 @@ public class Workflow extends Base {
     this.templatized = templatized;
   }
 
+  public List<TemplateExpression> getTemplateExpressions() {
+    return templateExpressions;
+  }
+  public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
+    this.templateExpressions = templateExpressions;
+  }
+
   public Workflow clone() {
     return aWorkflow()
         .withAppId(getAppId())
@@ -164,6 +173,7 @@ public class Workflow extends Base {
         .withWorkflowType(getWorkflowType())
         .withName(getName())
         .withTemplatized(isTemplatized())
+        .withTemplateExpressions(getTemplateExpressions())
         .build();
   }
 
@@ -186,6 +196,7 @@ public class Workflow extends Base {
     private String serviceId;
     private String infraMappingId;
     private boolean templatized;
+    private List<TemplateExpression> templateExpressions;
 
     private WorkflowBuilder() {}
 
@@ -283,6 +294,11 @@ public class Workflow extends Base {
       return this;
     }
 
+    public WorkflowBuilder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+      this.templateExpressions = templateExpressions;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -303,6 +319,7 @@ public class Workflow extends Base {
       workflow.setServiceId(serviceId);
       workflow.setInfraMappingId(infraMappingId);
       workflow.setTemplatized(templatized);
+      workflow.setTemplateExpressions(templateExpressions);
       return workflow;
     }
   }

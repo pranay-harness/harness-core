@@ -13,6 +13,9 @@ import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.TemplateExpression;
+import software.wings.common.TemplateExpressionProcessor;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -21,7 +24,9 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -55,16 +60,46 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
+  @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId, false);
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+    Service service = null;
+    InfrastructureMapping infrastructureMapping = null;
+    String serviceIdExpression = null;
+    String infraMappingIdExpression = null;
+
+    List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (templateExpressions != null) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        String fieldName = templateExpression.getFieldName();
+        if (fieldName != null && fieldName.equals("serviceId")) {
+          serviceIdExpression = templateExpression.getExpression();
+          service = templateExpressionProcessor.resolveService(context, app, templateExpression);
+        } else if (fieldName != null && fieldName.equals("infraMappingId")) {
+          infraMappingIdExpression = templateExpression.getExpression();
+          infrastructureMapping =
+              templateExpressionProcessor.resolveInfraMapping(context, app, service.getUuid(), templateExpression);
+        }
+      }
+    }
+    if (serviceIdExpression != null) {
+      if (infraMappingIdExpression == null) {
+        throw new WingsException("Service templatized so service infrastructure should be templatized");
+      }
+    } else {
+      service = serviceResourceService.get(app.getAppId(), serviceId, false);
+    }
+    if (infraMappingIdExpression == null) {
+      infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+    }
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
 
-    ExecutionResponse response = super.execute(context);
+    ExecutionResponse response = getSpawningExecutionResponse(context, service, infrastructureMapping);
+
     PhaseExecutionData phaseExecutionData =
         aPhaseExecutionData()
             .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
@@ -72,10 +107,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             .withComputeProviderType(
                 SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
                     .getDisplayName())
-            .withInfraMappingId(infraMappingId)
+            .withInfraMappingId(infrastructureMapping.getUuid())
             .withInfraMappingName(infrastructureMapping.getDisplayName())
             .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName())
-            .withServiceId(serviceId)
+            .withServiceId(service.getUuid())
             .withServiceName(service.getName())
             .build();
     if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
@@ -85,21 +120,34 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     return response;
   }
 
-  @Override
-  protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(stateExecutionInstance.getAppId(), infraMappingId);
-    Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
+  private ExecutionResponse getSpawningExecutionResponse(
+      ExecutionContext context, Service service, InfrastructureMapping infrastructureMapping) {
+    ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
+    StateExecutionInstance stateExecutionInstance = contextImpl.getStateExecutionInstance();
+    List<String> correlationIds = new ArrayList<>();
 
+    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
+    StateExecutionInstance childStateExecutionInstance =
+        getSpawningInstance(stateExecutionInstance, service, infrastructureMapping);
+    executionResponse.add(childStateExecutionInstance);
+    correlationIds.add(stateExecutionInstance.getUuid());
+
+    executionResponse.setAsync(true);
+    executionResponse.setCorrelationIds(correlationIds);
+    return executionResponse;
+  }
+
+  private StateExecutionInstance getSpawningInstance(
+      StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
     ServiceElement serviceElement = new ServiceElement();
-    Service service = serviceResourceService.get(stateExecutionInstance.getAppId(), serviceId, false);
     MapperUtils.mapObject(service, serviceElement);
     PhaseElement phaseElement = aPhaseElement()
                                     .withUuid(getId())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(infrastructureMapping.getDeploymentType())
-                                    .withInfraMappingId(infraMappingId)
+                                    .withInfraMappingId(infrastructureMapping.getUuid())
                                     .withPhaseNameForRollback(phaseNameForRollback)
                                     .build();
     spawningInstance.getContextElements().push(phaseElement);

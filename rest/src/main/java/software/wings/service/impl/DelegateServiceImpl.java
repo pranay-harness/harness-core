@@ -385,6 +385,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void ensureDelegateAvailableToExecuteTask(DelegateTask task) {
+    if (task == null) {
+      logger.warn("Delegate task is null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate task is null");
+    }
     List<Key<Delegate>> activeDelegates = wingsPersistence.createQuery(Delegate.class)
                                               .field("accountId")
                                               .equal(task.getAccountId())
@@ -439,9 +443,11 @@ public class DelegateServiceImpl implements DelegateService {
                                       .doesNotExist()
                                       .field(ID_KEY)
                                       .equal(taskId);
-      if (!assignDelegateService.canAssign(wingsPersistence.executeGetOneQuery(query), delegateId)) {
+      DelegateTask task = wingsPersistence.executeGetOneQuery(query);
+      if (task == null) {
+        logger.warn("Delegate task {} is null (async)", taskId);
+      } else if (!assignDelegateService.canAssign(task, delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
-        delegateTask = null;
       } else {
         logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
         UpdateOperations<DelegateTask> updateOperations =

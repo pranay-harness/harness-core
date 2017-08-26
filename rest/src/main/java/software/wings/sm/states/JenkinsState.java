@@ -5,6 +5,7 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -29,8 +30,11 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
@@ -46,6 +50,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.Validator;
 import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -82,6 +87,8 @@ public class JenkinsState extends State {
   @Transient @Inject private ExecutorService executorService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -181,11 +188,42 @@ public class JenkinsState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
+
+    String jenkinsConfigExpression = null;
+    String jobNameExpression = null;
+    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
+    List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (templateExpressions != null && !templateExpressions.isEmpty()) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        String fieldName = templateExpression.getFieldName();
+        if (fieldName != null) {
+          if (fieldName.equals("jenkinsConfigId")) {
+            jenkinsConfigExpression = templateExpression.getExpression();
+          } else if (fieldName.equals("jobName")) {
+            jobNameExpression = templateExpression.getExpression();
+          }
+        }
+      }
+    }
+    JenkinsConfig jenkinsConfig = null;
+    if (jenkinsConfigExpression != null) {
+      SettingAttribute settingAttribute =
+          templateExpressionProcessor.resolveSettingAttribute(context, accountId, jenkinsConfigExpression, CONNECTOR);
+      if (settingAttribute.getValue() instanceof JenkinsConfig) {
+        jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
+      }
+    } else {
+      jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
+    }
+    Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
 
     String evaluatedJobName;
     try {
-      evaluatedJobName = context.renderExpression(jobName);
+      if (jobNameExpression != null) {
+        evaluatedJobName = context.renderExpression(jobNameExpression);
+      } else {
+        evaluatedJobName = context.renderExpression(jobName);
+      }
     } catch (Exception e) {
       evaluatedJobName = jobName;
     }

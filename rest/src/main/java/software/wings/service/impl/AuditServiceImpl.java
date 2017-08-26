@@ -23,7 +23,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -175,19 +174,22 @@ public class AuditServiceImpl implements AuditService {
                   .filter(auditHeader -> auditHeader.getResponsePayloadUuid() != null)
                   .map((AuditHeader auditHeader) -> new ObjectId(auditHeader.getResponsePayloadUuid()))
                   .collect(Collectors.toList());
-
           wingsPersistence.getCollection("audits").remove(
               new BasicDBObject("_id", new BasicDBObject("$in", auditHeaderIds.toArray())));
 
-          wingsPersistence.getCollection("audits.files")
-              .remove(new BasicDBObject("_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
-          wingsPersistence.getCollection("audits.chunks")
-              .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+          if (requestPayloadIds != null) {
+            wingsPersistence.getCollection("audits.files")
+                .remove(new BasicDBObject("_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+            wingsPersistence.getCollection("audits.chunks")
+                .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+          }
 
-          wingsPersistence.getCollection("audits.files")
-              .remove(new BasicDBObject("_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
-          wingsPersistence.getCollection("audits.chunks")
-              .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+          if (responsePayloadIds != null) {
+            wingsPersistence.getCollection("audits.files")
+                .remove(new BasicDBObject("_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+            wingsPersistence.getCollection("audits.chunks")
+                .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+          }
 
         } catch (Exception ex) {
           logger.info("Failed to delete audit audit records of size: " + auditHeaders.size(), ex);
