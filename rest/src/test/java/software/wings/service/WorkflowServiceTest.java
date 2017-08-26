@@ -522,18 +522,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateBasicDeploymentWorkflow() {
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withServiceId(SERVICE_ID)
-            .withInfraMappingId(INFRA_MAPPING_ID)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
+    Workflow workflow = createBasicWorkflow();
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
@@ -600,6 +589,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
     logger.info(JsonUtils.asJson(workflow2));
+  }
+
+  private Workflow createBasicWorkflow() {
+    return aWorkflow()
+        .withName(WORKFLOW_NAME)
+        .withAppId(APP_ID)
+        .withServiceId(SERVICE_ID)
+        .withInfraMappingId(INFRA_MAPPING_ID)
+        .withOrchestrationWorkflow(
+            aBasicOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                .build())
+        .build();
   }
 
   @Test
