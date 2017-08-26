@@ -87,9 +87,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
           ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
           : commandExecutionStatus;
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (TemplateException e) {
+    } catch (IOException | TemplateException e) {
       e.printStackTrace();
     }
     try {
@@ -99,10 +97,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
             : commandExecutionStatus;
       }
-    } catch (IOException e) {
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      e.printStackTrace();
-    } catch (TemplateException e) {
+    } catch (IOException | TemplateException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       e.printStackTrace();
     }
