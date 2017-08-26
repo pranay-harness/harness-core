@@ -275,7 +275,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getWorkflowType();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
-    verify(context, times(2)).getServiceVariables();
+    verify(context, times(1)).getServiceVariables();
     verify(context).getStateExecutionData();
 
     verify(context, times(4)).renderExpression(anyString());
@@ -380,7 +380,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getWorkflowExecutionName();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
-    verify(context, times(2)).getServiceVariables();
+    verify(context, times(1)).getServiceVariables();
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
@@ -426,7 +426,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getWorkflowType();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
-    verify(context, times(2)).getServiceVariables();
+    verify(context, times(1)).getServiceVariables();
 
     verify(context, times(4)).renderExpression(anyString());
 
