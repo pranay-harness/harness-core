@@ -7,6 +7,7 @@ package software.wings.common;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -25,7 +26,7 @@ import javax.inject.Inject;
  */
 @Singleton
 public class VariableProcessor {
-  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject @Transient private ServiceTemplateService serviceTemplateService;
 
   /**
    * Gets variables.

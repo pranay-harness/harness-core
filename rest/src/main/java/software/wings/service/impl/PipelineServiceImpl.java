@@ -53,6 +53,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
@@ -62,6 +63,7 @@ import software.wings.beans.WorkflowDetails;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -546,6 +548,23 @@ public class PipelineServiceImpl implements PipelineService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public List<PipelineExecution> getPipelineExecutionHistory(String serviceId, int limit) {
+    PageRequest pageRequest =
+        Builder.aPageRequest()
+            .addFilter("pipelineStageExecutions.workflowExecutions.serviceExecutionSummaries.contextElement.className",
+                Operator.EQ, "software.wings.api.ServiceElement")
+            .addFilter("pipelineStageExecutions.workflowExecutions.serviceExecutionSummaries.contextElement.uuid",
+                Operator.EQ, serviceId)
+            .addFilter("status", Operator.IN, ExecutionStatus.SUCCESS, ExecutionStatus.ABORTED, ExecutionStatus.FAILED,
+                ExecutionStatus.ERROR)
+            .addOrder("endTs", OrderType.DESC)
+            .withLimit(String.valueOf(limit))
+            .build();
+
+    return wingsPersistence.query(PipelineExecution.class, pageRequest, true);
   }
 
   private List<Artifact> validateAndFetchArtifact(String appId, List<Artifact> artifacts) {

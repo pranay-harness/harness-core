@@ -14,7 +14,7 @@ public class InstanceStatsByService {
     return totalCount;
   }
 
-  public void setTotalCount(long totalCount) {
+  private void setTotalCount(long totalCount) {
     this.totalCount = totalCount;
   }
 
@@ -22,7 +22,7 @@ public class InstanceStatsByService {
     return serviceSummary;
   }
 
-  public void setServiceSummary(ServiceSummary serviceSummary) {
+  private void setServiceSummary(ServiceSummary serviceSummary) {
     this.serviceSummary = serviceSummary;
   }
 
@@ -30,8 +30,16 @@ public class InstanceStatsByService {
     return instanceStatsByEnvList;
   }
 
-  public void setInstanceStatsByEnvList(List<InstanceStatsByEnvironment> instanceStatsByEnvList) {
+  private void setInstanceStatsByEnvList(List<InstanceStatsByEnvironment> instanceStatsByEnvList) {
     this.instanceStatsByEnvList = instanceStatsByEnvList;
+  }
+
+  public InstanceStatsByService clone(long newCount) {
+    return Builder.anInstanceStatsByService()
+        .withTotalCount(newCount)
+        .withServiceSummary(serviceSummary)
+        .withInstanceStatsByEnvList(instanceStatsByEnvList)
+        .build();
   }
 
   public static final class Builder {
@@ -41,7 +49,7 @@ public class InstanceStatsByService {
 
     private Builder() {}
 
-    public static Builder anInstanceSummaryStats() {
+    public static Builder anInstanceStatsByService() {
       return new Builder();
     }
 
@@ -61,7 +69,7 @@ public class InstanceStatsByService {
     }
 
     public Builder but() {
-      return anInstanceSummaryStats()
+      return anInstanceStatsByService()
           .withTotalCount(totalCount)
           .withInstanceStatsByEnvList(instanceStatsByEnvList)
           .withServiceSummary(serviceSummary);

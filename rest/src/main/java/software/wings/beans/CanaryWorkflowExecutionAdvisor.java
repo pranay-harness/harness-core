@@ -8,12 +8,24 @@ import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
+import com.google.common.collect.Lists;
+
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceChangeEvent.Builder;
 import software.wings.api.PhaseElement;
+import software.wings.api.InstanceChangeEvent;
+import software.wings.api.PhaseExecutionData;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.ContainerMetadata;
+import software.wings.beans.infrastructure.Ec2InstanceMetadata;
+import software.wings.beans.infrastructure.Instance;
 import software.wings.common.Constants;
 import software.wings.service.impl.WorkflowNotificationHelper;
+import software.wings.service.impl.dashboardStats.InstanceChangeEventListener;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
@@ -25,13 +37,20 @@ import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.PipelineSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.util.List;
 import java.util.Optional;
+import software.wings.core.queue.Queue;
+import software.wings.utils.Validator;
+
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -49,6 +68,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   @Inject @Transient private transient ExecutionInterruptManager executionInterruptManager;
 
+  @Inject @Transient private transient AppService appService;
+
+  // This queue is used to asynchronously process all the instance information that the workflow touched upon.
+  @Inject @Transient private transient Queue<InstanceChangeEvent> instanceChangeEventQueue;
+
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     ExecutionContext context = executionEvent.getContext();
@@ -61,10 +85,24 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
     State state = executionEvent.getState();
     PhaseSubWorkflow phaseSubWorkflow = null;
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
     if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
       phaseSubWorkflow = (PhaseSubWorkflow) state;
+
       workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-          context, executionEvent.getExecutionStatus(), phaseSubWorkflow);
+          context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
+
+      if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+        updateInstanceInfoAsync(context, workflowExecution);
+      }
+
+      workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
+          context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
+
+      if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+        updateInstanceInfoAsync(context, workflowExecution);
+      }
 
       // nothing to do for regular phase with non-error
       if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
@@ -86,8 +124,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
     }
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
     if (workflowExecution.getWorkflowType() != WorkflowType.ORCHESTRATION) {
       return null;
     }
@@ -137,6 +173,138 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     FailureStrategy failureStrategy = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
 
     return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow);
+  }
+
+  /**
+   *   The phaseExecutionData is used to process the instance information that is used by the service and infra
+   * dashboards. The instance processing happens asynchronously.
+   *   @see InstanceChangeEventListener
+   */
+  private void updateInstanceInfoAsync(ExecutionContext executionContext, WorkflowExecution workflowExecution) {
+    try {
+      StateExecutionData stateExecutionData = executionContext.getStateExecutionData();
+      if (!(stateExecutionData instanceof PhaseExecutionData)) {
+        logger.error("stateExecutionData is not of type PhaseExecutionData");
+        return;
+      }
+
+      PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
+      Validator.notNullCheck("PhaseExecutionData", phaseExecutionData);
+      Validator.notNullCheck("ElementStatusSummary", phaseExecutionData.getElementStatusSummary());
+
+      WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+      if (workflowStandardParams == null) {
+        logger.error("workflowStandardParams can't be null");
+        return;
+      }
+
+      Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
+      if (artifact == null) {
+        logger.error("artifact can't be null");
+        return;
+      }
+
+      List<Instance> instanceList = Lists.newArrayList();
+
+      for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
+        List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
+        if (instanceStatusSummaries == null) {
+          logger.debug("No instances to process");
+          return;
+        }
+        for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
+          if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
+            Instance instance = buildInstance(workflowExecution, artifact, instanceStatusSummary, phaseExecutionData);
+            instanceList.add(instance);
+          }
+        }
+      }
+
+      InstanceChangeEvent instanceChangeEvent = Builder.anInstanceUpdateEvent().withInstanceList(instanceList).build();
+      instanceChangeEventQueue.send(instanceChangeEvent);
+    } catch (Exception ex) {
+      // we deliberately don't throw back the exception since we don't want the workflow to be affected
+      logger.error("Error while updating instance change information", ex);
+    }
+  }
+
+  private Instance buildInstance(WorkflowExecution workflowExecution, Artifact artifact,
+      InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData) {
+    HostElement host = instanceStatusSummary.getInstanceElement().getHost();
+    Validator.notNullCheck("Host", host);
+    PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
+    Application application = appService.get(workflowExecution.getAppId());
+    Validator.notNullCheck("Application", application);
+    EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
+    Validator.notNullCheck("triggeredBy", triggeredBy);
+
+    Instance.Builder builder =
+        Instance.Builder.anInstance()
+            .withAccountId(application.getAccountId())
+            .withAppId(workflowExecution.getAppId())
+            .withAppName(workflowExecution.getAppName())
+            .withLastArtifactId(artifact.getUuid())
+            .withLastArtifactName(artifact.getDisplayName())
+            .withLastArtifactStreamId(artifact.getArtifactStreamId())
+            .withLastArtifactSourceName(artifact.getArtifactSourceName())
+            .withLastArtifactBuildNum(artifact.getBuildNo())
+            .withEnvName(workflowExecution.getEnvName())
+            .withEnvId(workflowExecution.getEnvId())
+            .withEnvType(workflowExecution.getEnvType())
+            .withComputeProviderId(phaseExecutionData.getComputeProviderId())
+            .withComputeProviderName(phaseExecutionData.getComputeProviderName())
+            .withHostId(host.getUuid())
+            .withHostName(host.getHostName())
+            .withHostPublicDns(host.getPublicDns())
+            .withInfraMappingId(phaseExecutionData.getInfraMappingId())
+            .withInfraMappingType(phaseExecutionData.getInfraMappingName())
+            .withLastPipelineId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
+            .withLastPipelineName(pipelineSummary == null ? null : pipelineSummary.getPipelineName())
+            .withLastDeployedAt(phaseExecutionData.getEndTs().longValue())
+            .withLastDeployedById(triggeredBy.getUuid())
+            .withLastDeployedByName(triggeredBy.getName())
+            .withServiceId(phaseExecutionData.getServiceId())
+            .withServiceName(phaseExecutionData.getServiceName())
+            .withLastWorkflowId(workflowExecution.getUuid())
+            .withLastWorkflowName(workflowExecution.getName());
+
+    setInstanceMetadata(builder, phaseExecutionData, host);
+    return builder.build();
+  }
+
+  private void setInstanceMetadata(Instance.Builder builder, PhaseExecutionData phaseExecutionData, HostElement host) {
+    if (phaseExecutionData.getClusterName() != null) {
+      ContainerMetadata containerMetadata =
+          ContainerMetadata.Builder.aContainerMetadata().withClusterName(phaseExecutionData.getClusterName()).build();
+      builder.withMetadata(containerMetadata);
+    }
+
+    com.amazonaws.services.ec2.model.Instance ec2Instance = host.getEc2Instance();
+    if (ec2Instance != null) {
+      Ec2InstanceMetadata ec2InstanceMetadata =
+          Ec2InstanceMetadata.Builder.anEc2InstanceMetaInfo().withEc2Instance(ec2Instance).build();
+      builder.withMetadata(ec2InstanceMetadata);
+    }
+  }
+
+  /**
+   * At the end of the phase, the instance can only be in one of the following states.
+   */
+  private boolean shouldCaptureInstance(ExecutionStatus instanceExecutionStatus) {
+    // Instance would have a status but just in case.
+    if (instanceExecutionStatus == null) {
+      return false;
+    }
+
+    switch (instanceExecutionStatus) {
+      case SUCCESS:
+      case FAILED:
+      case ERROR:
+      case ABORTED:
+        return true;
+      default:
+        return false;
+    }
   }
 
   private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
