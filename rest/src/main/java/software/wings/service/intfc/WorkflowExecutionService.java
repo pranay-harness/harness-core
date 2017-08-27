@@ -124,6 +124,8 @@ public interface WorkflowExecutionService {
    */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
+  List<WorkflowExecution> getWorkflowExecutionHistory(String serviceId, String envType, int limit);
+
   /**
    * Trigger execution event
    *

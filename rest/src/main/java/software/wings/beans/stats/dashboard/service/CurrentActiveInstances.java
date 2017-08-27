@@ -19,7 +19,7 @@ public class CurrentActiveInstances {
     return environment;
   }
 
-  public void setEnvironment(EntitySummary environment) {
+  private void setEnvironment(EntitySummary environment) {
     this.environment = environment;
   }
 
@@ -27,7 +27,7 @@ public class CurrentActiveInstances {
     return instanceCount;
   }
 
-  public void setInstanceCount(long instanceCount) {
+  private void setInstanceCount(long instanceCount) {
     this.instanceCount = instanceCount;
   }
 
@@ -35,7 +35,7 @@ public class CurrentActiveInstances {
     return artifact;
   }
 
-  public void setArtifact(ArtifactSummary artifact) {
+  private void setArtifact(ArtifactSummary artifact) {
     this.artifact = artifact;
   }
 
@@ -43,7 +43,7 @@ public class CurrentActiveInstances {
     return serviceInfra;
   }
 
-  public void setServiceInfra(EntitySummary serviceInfra) {
+  private void setServiceInfra(EntitySummary serviceInfra) {
     this.serviceInfra = serviceInfra;
   }
 
@@ -51,7 +51,7 @@ public class CurrentActiveInstances {
     return deployedAt;
   }
 
-  public void setDeployedAt(Date deployedAt) {
+  private void setDeployedAt(Date deployedAt) {
     this.deployedAt = deployedAt;
   }
 

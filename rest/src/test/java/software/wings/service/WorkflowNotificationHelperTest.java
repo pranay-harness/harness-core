@@ -109,8 +109,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
 
     PhaseSubWorkflow phaseSubWorkflow = Mockito.mock(PhaseSubWorkflow.class);
     when(phaseSubWorkflow.getName()).thenReturn("Phase1");
+    WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-        executionContext, ExecutionStatus.FAILED, phaseSubWorkflow);
+        executionContext, ExecutionStatus.FAILED, phaseSubWorkflow, executionDetails);
 
     verify(workflowExecutionService).getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);

@@ -12,7 +12,7 @@ public class InstanceStatsByArtifact extends InstanceStatsByEntity {
   }
 
   @Override
-  public void setEntitySummary(EntitySummary entitySummary) {
+  protected void setEntitySummary(EntitySummary entitySummary) {
     if (!(entitySummary instanceof ArtifactSummary)) {
       throw new WingsException("EntitySummary is not instance of type ArtifactSummary");
     }

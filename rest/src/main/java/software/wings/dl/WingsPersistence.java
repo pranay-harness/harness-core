@@ -144,6 +144,8 @@ public interface WingsPersistence {
    */
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation);
+
   /**
    * Creates the update operations.
    *
@@ -246,6 +248,8 @@ public interface WingsPersistence {
    * @return the page response
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
+
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation);
 
   /**
    * Query.

@@ -1,20 +1,20 @@
 package software.wings.beans.stats.dashboard;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author rktummala on 08/13/17
  */
 public class InstanceStats {
   private long totalCount;
+  // TODO rename this to instanceSummaryList
   private List<EntitySummary> entitySummaryList;
 
   public long getTotalCount() {
     return totalCount;
   }
 
-  public void setTotalCount(long totalCount) {
+  private void setTotalCount(long totalCount) {
     this.totalCount = totalCount;
   }
 
@@ -22,7 +22,7 @@ public class InstanceStats {
     return entitySummaryList;
   }
 
-  public void setEntitySummaryList(List<EntitySummary> entitySummaryList) {
+  private void setEntitySummaryList(List<EntitySummary> entitySummaryList) {
     this.entitySummaryList = entitySummaryList;
   }
 

@@ -415,11 +415,38 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, boolean disableValidation) {
+    return query(cls, req, ReadPref.NORMAL, disableValidation);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
     }
-    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
+    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
+    for (T data : output.getResponse()) {
+      if (SettingAttribute.class.isInstance(data)) {
+        this.decryptIfNecessary(((SettingAttribute) data).getValue());
+      } else if (data instanceof Encryptable) {
+        this.decryptIfNecessary(data);
+      }
+    }
+    return output;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
+    if (!authFilters(req)) {
+      return PageResponse.Builder.aPageResponse().withTotal(0).build();
+    }
+    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
     for (T data : output.getResponse()) {
       if (SettingAttribute.class.isInstance(data)) {
         this.decryptIfNecessary(((SettingAttribute) data).getValue());
