@@ -21,7 +21,7 @@ public class PipelineExecutionHistory {
     return pipeline;
   }
 
-  private void setPipeline(EntitySummary pipeline) {
+  public void setPipeline(EntitySummary pipeline) {
     this.pipeline = pipeline;
   }
 
@@ -29,7 +29,7 @@ public class PipelineExecutionHistory {
     return artifact;
   }
 
-  private void setArtifact(ArtifactSummary artifact) {
+  public void setArtifact(ArtifactSummary artifact) {
     this.artifact = artifact;
   }
 
@@ -37,7 +37,7 @@ public class PipelineExecutionHistory {
     return status;
   }
 
-  private void setStatus(String status) {
+  public void setStatus(String status) {
     this.status = status;
   }
 
@@ -45,7 +45,7 @@ public class PipelineExecutionHistory {
     return startTime;
   }
 
-  private void setStartTime(Date startTime) {
+  public void setStartTime(Date startTime) {
     this.startTime = startTime;
   }
 
@@ -53,7 +53,7 @@ public class PipelineExecutionHistory {
     return endTime;
   }
 
-  private void setEndTime(Date endTime) {
+  public void setEndTime(Date endTime) {
     this.endTime = endTime;
   }
 
@@ -61,7 +61,7 @@ public class PipelineExecutionHistory {
     return environmentList;
   }
 
-  private void setEnvironmentList(List<EntitySummary> environmentList) {
+  public void setEnvironmentList(List<EntitySummary> environmentList) {
     this.environmentList = environmentList;
   }
 

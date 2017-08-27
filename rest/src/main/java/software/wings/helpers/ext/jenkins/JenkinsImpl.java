@@ -50,11 +50,8 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Vector;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -226,7 +223,7 @@ public class JenkinsImpl implements Jenkins {
     }
     // Each time a new parentJob needs to be fetched,
     callableCount.incrementAndGet();
-    Future<Void> submit = executorService.submit((Callable<Void>) () -> {
+    executorService.submit((Callable<Void>) () -> {
       FolderJob folderJob = null;
       String jobUrl = null;
       String jobDisplayName = null;
@@ -276,16 +273,6 @@ public class JenkinsImpl implements Jenkins {
       }
       return null;
     });
-
-    try {
-      submit.get(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    } catch (TimeoutException e) {
-      e.printStackTrace();
-    }
 
     return;
   }

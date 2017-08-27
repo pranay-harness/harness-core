@@ -11,7 +11,7 @@ public class ServiceSummary extends EntitySummary {
     return appSummary;
   }
 
-  private void setAppSummary(EntitySummary appSummary) {
+  public void setAppSummary(EntitySummary appSummary) {
     this.appSummary = appSummary;
   }
 

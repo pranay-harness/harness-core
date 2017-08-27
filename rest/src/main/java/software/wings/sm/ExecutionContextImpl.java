@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -39,7 +38,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private VariableProcessor variableProcessor;
-  @Inject @Transient private SettingsService settingsService;
+  @Inject private SettingsService settingsService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 

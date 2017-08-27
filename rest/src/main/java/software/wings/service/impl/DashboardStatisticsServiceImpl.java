@@ -1,17 +1,15 @@
-package software.wings.service.impl.dashboardStats;
+package software.wings.service.impl;
 
 import static software.wings.beans.stats.dashboard.EntitySummary.Builder.anEntitySummary;
 import static software.wings.beans.stats.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.stats.dashboard.ArtifactSummary;
 import software.wings.beans.stats.dashboard.EntitySummary;
 import software.wings.beans.stats.dashboard.EntitySummaryStats;
 import software.wings.beans.stats.dashboard.EnvironmentSummary;
-import software.wings.beans.stats.dashboard.InstanceDetails;
 import software.wings.beans.stats.dashboard.InstanceStats;
 import software.wings.beans.stats.dashboard.InstanceStatsByArtifact;
 import software.wings.beans.stats.dashboard.InstanceStatsByEnvironment;
@@ -23,8 +21,7 @@ import software.wings.beans.stats.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.stats.dashboard.service.DeploymentHistory;
 import software.wings.beans.stats.dashboard.service.PipelineExecutionHistory;
 import software.wings.beans.stats.dashboard.service.ServiceInstanceDashboard;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
+import software.wings.service.intfc.DashboardStatisticsService;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,9 +33,7 @@ import java.util.Map;
  * @author rktummala on 8/13/17
  */
 @Singleton
-public class DashboardStatisticsServiceImplStub implements DashboardStatisticsService {
-  @Inject private WingsPersistence wingsPersistence;
-
+public class DashboardStatisticsServiceImpl implements DashboardStatisticsService {
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
     Map<String, List<EntitySummaryStats>> countMap = new HashMap<>();
@@ -137,7 +132,7 @@ public class DashboardStatisticsServiceImplStub implements DashboardStatisticsSe
   }
 
   private InstanceStatsByService getInstanceStatsByService(int totalCount, String serviceName, String serviceId) {
-    return InstanceStatsByService.Builder.anInstanceStatsByService()
+    return InstanceStatsByService.Builder.anInstanceSummaryStats()
         .withInstanceStatsByEnvList(getInstanceStatsByEnvList())
         .withServiceSummary(getServiceSummary(serviceName, serviceId))
         .withTotalCount(totalCount)
@@ -225,11 +220,5 @@ public class DashboardStatisticsServiceImplStub implements DashboardStatisticsSe
     EntitySummary entitySummary =
         anEntitySummary().withType(entityType).withName(entityType + counter).withId(entityType + counter).build();
     return anEntitySummaryStats().withCount(count).withEntitySummary(entitySummary).build();
-  }
-
-  @Override
-  public InstanceDetails getInstanceDetails(String instanceId) {
-    // yet to be implemented
-    return null;
   }
 }

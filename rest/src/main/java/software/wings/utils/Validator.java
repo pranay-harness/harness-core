@@ -27,18 +27,6 @@ public class Validator {
   }
 
   /**
-   * Checks that value is null.
-   *
-   * @param name  name of parameter.
-   * @param value input value of parameter.
-   */
-  public static void nullCheck(String name, Object value) {
-    if (value != null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", name);
-    }
-  }
-
-  /**
    * Checks whether 2 values are equal or not.
    *
    * @param value1 value1

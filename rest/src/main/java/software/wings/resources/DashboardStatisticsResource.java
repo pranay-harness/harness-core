@@ -6,14 +6,12 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.stats.dashboard.InstanceDetails;
-import software.wings.beans.stats.dashboard.InstanceStats;
 import software.wings.beans.stats.dashboard.InstanceStatsByService;
 import software.wings.beans.stats.dashboard.InstanceSummaryStats;
 import software.wings.beans.stats.dashboard.service.ServiceInstanceDashboard;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
+import software.wings.service.intfc.DashboardStatisticsService;
 
 import java.util.List;
 import javax.ws.rs.GET;
@@ -70,19 +68,6 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(@QueryParam("appId") List<String> appIds) {
     return new RestResponse<>(dashboardStatsService.getAppInstanceStats(appIds));
-  }
-
-  /**
-   * Get instance details for the given instance
-   *
-   * @return the rest response
-   */
-  @GET
-  @Path("instance-details")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<InstanceDetails> getInstanceDetails(@QueryParam("instanceId") String instanceId) {
-    return new RestResponse<InstanceDetails>(dashboardStatsService.getInstanceDetails(instanceId));
   }
 
   /**

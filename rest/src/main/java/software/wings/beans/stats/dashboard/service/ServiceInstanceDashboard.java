@@ -14,7 +14,7 @@ public class ServiceInstanceDashboard {
     return currentActiveInstancesList;
   }
 
-  private void setCurrentActiveInstancesList(List<CurrentActiveInstances> currentActiveInstancesList) {
+  public void setCurrentActiveInstancesList(List<CurrentActiveInstances> currentActiveInstancesList) {
     this.currentActiveInstancesList = currentActiveInstancesList;
   }
 
@@ -22,7 +22,7 @@ public class ServiceInstanceDashboard {
     return pipelineExecutionHistoryList;
   }
 
-  private void setPipelineExecutionHistoryList(List<PipelineExecutionHistory> pipelineExecutionHistoryList) {
+  public void setPipelineExecutionHistoryList(List<PipelineExecutionHistory> pipelineExecutionHistoryList) {
     this.pipelineExecutionHistoryList = pipelineExecutionHistoryList;
   }
 
@@ -30,7 +30,7 @@ public class ServiceInstanceDashboard {
     return deploymentHistoryList;
   }
 
-  private void setDeploymentHistoryList(List<DeploymentHistory> deploymentHistoryList) {
+  public void setDeploymentHistoryList(List<DeploymentHistory> deploymentHistoryList) {
     this.deploymentHistoryList = deploymentHistoryList;
   }
 

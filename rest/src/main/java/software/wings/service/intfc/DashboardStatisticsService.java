@@ -1,7 +1,5 @@
-package software.wings.service.intfc.dashboardStats;
+package software.wings.service.intfc;
 
-import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.stats.dashboard.InstanceDetails;
 import software.wings.beans.stats.dashboard.InstanceStatsByService;
 import software.wings.beans.stats.dashboard.InstanceSummaryStats;
 import software.wings.beans.stats.dashboard.service.ServiceInstanceDashboard;
@@ -29,7 +27,7 @@ public interface DashboardStatisticsService {
    * @param groupByEntityTypes the entity types user wants to group by
    * @return instance summary statistics
    */
-  InstanceSummaryStats getServiceInstanceSummaryStats(@NotEmpty String serviceId, List<String> groupByEntityTypes);
+  InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes);
 
   /**
    * Gets the total instance stats for the given apps.
@@ -43,12 +41,5 @@ public interface DashboardStatisticsService {
    * @param serviceId service id
    * @return service dashboard with cloud instance info
    */
-  ServiceInstanceDashboard getServiceInstanceDashboard(@NotEmpty String serviceId);
-
-  /**
-   * Gets the instance detailed information including the metadata
-   * @param instanceId instance id
-   * @return instance details with the metadata
-   */
-  InstanceDetails getInstanceDetails(String instanceId);
+  ServiceInstanceDashboard getServiceInstanceDashboard(String serviceId);
 }

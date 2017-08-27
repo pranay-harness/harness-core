@@ -11,7 +11,7 @@ public class EnvironmentSummary extends EntitySummary {
     return prod;
   }
 
-  private void setProd(boolean prod) {
+  public void setProd(boolean prod) {
     this.prod = prod;
   }
 
