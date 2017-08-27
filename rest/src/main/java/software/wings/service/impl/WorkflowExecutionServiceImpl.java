@@ -44,14 +44,12 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -68,7 +66,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
@@ -224,8 +221,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     if (workflowExecution != null) {
       populateNodeHierarchyWithGraph(workflowExecution);
-      workflowExecution.setExpandedGroupIds(expandedGroupIds);
     }
+    workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
   }
 
@@ -233,8 +230,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId) {
     logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
-
-    Validator.notNullCheck("WorkflowExecution", workflowExecution);
 
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
@@ -740,22 +735,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "workflowType");
     }
-  }
-
-  @Override
-  public List<WorkflowExecution> getWorkflowExecutionHistory(String serviceId, String envType, int limit) {
-    PageRequest pageRequest = Builder.aPageRequest()
-                                  .addFilter("serviceExecutionSummaries.contextElement.className", Operator.EQ,
-                                      "software.wings.api.ServiceElement")
-                                  .addFilter("serviceExecutionSummaries.contextElement.uuid", Operator.EQ, serviceId)
-                                  .addFilter("status", Operator.IN, ExecutionStatus.SUCCESS, ExecutionStatus.ABORTED,
-                                      ExecutionStatus.FAILED, ExecutionStatus.ERROR)
-                                  .addFilter("envType", Operator.EQ, EnvironmentType.PROD)
-                                  .addOrder("endTs", OrderType.DESC)
-                                  .withLimit(String.valueOf(limit))
-                                  .build();
-
-    return wingsPersistence.query(WorkflowExecution.class, pageRequest, true);
   }
 
   /**

@@ -17,7 +17,7 @@ public class InstanceSummaryStats {
     return totalCount;
   }
 
-  private void setTotalCount(long totalCount) {
+  public void setTotalCount(long totalCount) {
     this.totalCount = totalCount;
   }
 
@@ -25,7 +25,7 @@ public class InstanceSummaryStats {
     return countMap;
   }
 
-  private void setCountMap(Map<String, List<EntitySummaryStats>> countMap) {
+  public void setCountMap(Map<String, List<EntitySummaryStats>> countMap) {
     this.countMap = countMap;
   }
 

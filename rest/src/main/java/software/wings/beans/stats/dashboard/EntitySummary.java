@@ -1,5 +1,7 @@
 package software.wings.beans.stats.dashboard;
 
+import java.util.Properties;
+
 /**
  * General construct that could be used anywhere
  * @author rktummala on 08/13/17
@@ -13,7 +15,7 @@ public class EntitySummary {
     return id;
   }
 
-  protected void setId(String id) {
+  public void setId(String id) {
     this.id = id;
   }
 
@@ -21,7 +23,7 @@ public class EntitySummary {
     return name;
   }
 
-  protected void setName(String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -29,7 +31,7 @@ public class EntitySummary {
     return type;
   }
 
-  protected void setType(String type) {
+  public void setType(String type) {
     this.type = type;
   }
 

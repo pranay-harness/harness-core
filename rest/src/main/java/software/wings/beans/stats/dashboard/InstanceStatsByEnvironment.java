@@ -1,6 +1,9 @@
 package software.wings.beans.stats.dashboard;
 
+import software.wings.exception.WingsException;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 08/13/17
@@ -13,7 +16,7 @@ public class InstanceStatsByEnvironment {
     return environmentSummary;
   }
 
-  private void setEnvironmentSummary(EnvironmentSummary environmentSummary) {
+  public void setEnvironmentSummary(EnvironmentSummary environmentSummary) {
     this.environmentSummary = environmentSummary;
   }
 
@@ -21,7 +24,7 @@ public class InstanceStatsByEnvironment {
     return instanceStatsByArtifactList;
   }
 
-  private void setInstanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
+  public void setInstanceStatsByArtifactList(List<InstanceStatsByArtifact> instanceStatsByArtifactList) {
     this.instanceStatsByArtifactList = instanceStatsByArtifactList;
   }
 

@@ -46,12 +46,8 @@ public class MongoHelper {
    * @param req       the req
    * @return the page response
    */
-  public static <T> PageResponse<T> queryPageRequest(
-      Datastore datastore, Class<T> cls, PageRequest<T> req, boolean disableValidation) {
+  public static <T> PageResponse<T> queryPageRequest(Datastore datastore, Class<T> cls, PageRequest<T> req) {
     Query q = datastore.createQuery(cls);
-    if (disableValidation) {
-      q.disableValidation();
-    }
 
     Mapper mapper = ((DatastoreImpl) datastore).getMapper();
     MappedClass mappedClass = mapper.addMappedClass(cls);

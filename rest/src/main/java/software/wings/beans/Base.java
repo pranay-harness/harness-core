@@ -38,7 +38,7 @@ public class Base implements UuidAware {
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @Indexed @NotNull @SchemaIgnore private String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;

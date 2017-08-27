@@ -12,7 +12,6 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
-import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -122,12 +121,4 @@ public interface PipelineService {
   @ValidationGroups(Update.class)
   boolean approveOrRejectExecution(
       @NotEmpty String appId, @NotEmpty String pipelineExecutionId, @Valid ApprovalDetails approvalDetails);
-
-  /**
-   * Get pipeline execution history for the given service
-   * @param serviceId service id
-   * @param limit number of rows to be returned
-   * @return list of pipeline executions with end state SUCCESS, FAILED, ABORTED and ERROR.
-   */
-  List<PipelineExecution> getPipelineExecutionHistory(String serviceId, int limit);
 }
