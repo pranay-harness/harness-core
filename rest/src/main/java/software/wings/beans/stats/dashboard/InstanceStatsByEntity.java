@@ -1,7 +1,5 @@
 package software.wings.beans.stats.dashboard;
 
-import java.util.List;
-
 /**
  * @author rktummala on 08/13/17
  */
@@ -13,7 +11,7 @@ public class InstanceStatsByEntity {
     return instanceStats;
   }
 
-  public void setInstanceStats(InstanceStats instanceStats) {
+  protected void setInstanceStats(InstanceStats instanceStats) {
     this.instanceStats = instanceStats;
   }
 
@@ -21,7 +19,7 @@ public class InstanceStatsByEntity {
     return entitySummary;
   }
 
-  public void setEntitySummary(EntitySummary entitySummary) {
+  protected void setEntitySummary(EntitySummary entitySummary) {
     this.entitySummary = entitySummary;
   }
 

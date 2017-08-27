@@ -147,8 +147,8 @@ public class WorkflowNotificationHelper {
     return date.toString(); // TODO:: format
   }
 
-  public void sendWorkflowPhaseStatusChangeNotification(
-      ExecutionContext context, ExecutionStatus status, PhaseSubWorkflow phaseSubWorkflow) {
+  public void sendWorkflowPhaseStatusChangeNotification(ExecutionContext context, ExecutionStatus status,
+      PhaseSubWorkflow phaseSubWorkflow, WorkflowExecution executionDetails) {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
     List<NotificationRule> notificationRules =
@@ -159,9 +159,6 @@ public class WorkflowNotificationHelper {
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
     Application app = ((ExecutionContextImpl) context).getApp();
-
-    WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
 
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
