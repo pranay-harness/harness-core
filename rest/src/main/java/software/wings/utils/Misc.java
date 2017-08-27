@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  */
 public class Misc {
   private static final Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  public static final Pattern commaCharPattern = Pattern.compile("\\s*,\\s*");
 
   /**
    * Normalize expression string.

@@ -13,7 +13,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
 
-import java.util.List;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -34,15 +34,14 @@ public class ExpressionBuilderResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> listExpressions(@QueryParam("appId") String appId,
+  public RestResponse<Set<String>> listExpressions(@QueryParam("appId") String appId,
       @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType,
-      @QueryParam("serviceId") String serviceId, @QueryParam("stateType") StateType stateType) {
-    if (serviceId != null && stateType != null) {
-      return new RestResponse(
-          expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType));
-    } else if (serviceId != null && stateType == null) {
-      return new RestResponse(expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId));
+      @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
+    StateType stateType = null;
+    if (strStateType != null && !strStateType.isEmpty() && !strStateType.contains("")) {
+      stateType = StateType.valueOf(strStateType);
     }
-    return new RestResponse(expressionBuilderService.listExpressions(appId, entityId, entityType));
+    return new RestResponse(
+        expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType));
   }
 }
