@@ -1,7 +1,5 @@
 package software.wings.service.impl.expression;
 
-import static java.util.Arrays.asList;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,8 +10,8 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
 import software.wings.utils.Validator;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by sgurubelli on 8/7/17.
@@ -26,22 +24,23 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
   @Inject private WorkflowExpressionBuilder workflowExpressionBuilder;
 
   @Override
-  public List<String> listExpressions(String appId, String entityId, EntityType entityType) {
+  public Set<String> listExpressions(String appId, String entityId, EntityType entityType) {
     return listExpressions(appId, entityId, entityType, null, null);
   }
 
   @Override
-  public List<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId) {
+  public Set<String> listExpressions(String appId, String entityId, EntityType entityType, String serviceId) {
     return listExpressions(appId, entityId, entityType, serviceId, null);
   }
 
   @Override
-  public List<String> listExpressions(
+  public Set<String> listExpressions(
       String appId, String entityId, EntityType entityType, String serviceId, StateType stateType) {
     Application application = appService.get(appId);
     Validator.notNullCheck("application", application);
     Validator.notNullCheck("entityId", entityId);
-    List<String> expressions = new ArrayList<>();
+    Validator.notNullCheck("entityType", entityId);
+    Set<String> expressions = new TreeSet<>();
     if (entityType.equals(EntityType.SERVICE)) {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId));
     } else if (entityType.equals(EntityType.ENVIRONMENT)) {
@@ -49,7 +48,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     } else if (entityType.equals(EntityType.WORKFLOW)) {
       expressions.addAll(workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType));
     } else {
-      return asList();
+      return new TreeSet<>();
     }
     return expressions;
   }

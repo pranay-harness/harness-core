@@ -4,8 +4,8 @@ import static java.util.Arrays.asList;
 
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by sgurubelli on 8/7/17.
@@ -71,20 +71,20 @@ public abstract class ExpressionBuilder {
   protected static final String EMAIL_SUBJECT = "subject";
   protected static final String EMAIL_BODY = "body";
 
-  public List<String> getExpressions(String appId, String entityId, String serviceId) {
+  public Set<String> getExpressions(String appId, String entityId, String serviceId) {
     return getExpressions(appId, entityId);
   }
 
-  public List<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
+  public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
     return getExpressions(appId, entityId);
   }
 
-  public abstract List<String> getExpressions(String appId, String entityId);
+  public abstract Set<String> getExpressions(String appId, String entityId);
 
-  public abstract List<String> getDynamicExpressions(String appId, String entityId);
+  public abstract Set<String> getDynamicExpressions(String appId, String entityId);
 
-  List<String> getStaticExpressions() {
-    List<String> expressions = new ArrayList<>();
+  Set<String> getStaticExpressions() {
+    Set<String> expressions = new HashSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     expressions.addAll(
         asList(ARTIFACT_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION, ARTIFACT_FILE_NAME));
@@ -102,8 +102,8 @@ public abstract class ExpressionBuilder {
     return expressions;
   }
 
-  protected List<String> getStateTypeExpressions(StateType stateType) {
-    List<String> expressions = new ArrayList<>();
+  protected Set<String> getStateTypeExpressions(StateType stateType) {
+    Set<String> expressions = new HashSet<>();
     expressions.addAll(asList(START_TS, END_TS, STATUS, ERROR_MSG));
     switch (stateType) {
       case HTTP:

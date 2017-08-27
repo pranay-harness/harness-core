@@ -14,9 +14,10 @@ import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
@@ -30,10 +31,10 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceVariableService serviceVariablesService;
 
   @Override
-  public List<String> getExpressions(String appId, String entityId, String serviceId) {
-    List<String> expressions = new ArrayList<>();
+  public Set<String> getExpressions(String appId, String entityId, String serviceId) {
+    SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getStaticExpressions());
-    if (serviceId != null) {
+    if (serviceId != null && !serviceId.isEmpty()) {
       expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
     }
     expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId, serviceId));
@@ -41,38 +42,68 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
   }
 
   @Override
-  public List<String> getExpressions(String appId, String entityId) {
-    List<String> expressions = new ArrayList<>();
+  public Set<String> getExpressions(String appId, String entityId) {
+    SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getStaticExpressions());
     return expressions;
   }
   @Override
-  public List<String> getDynamicExpressions(String appId, String entityId) {
+  public Set<String> getDynamicExpressions(String appId, String entityId) {
     return null;
   }
 
-  private List<String> getServiceTemplateVariableExpressions(String appId, String envId, String serviceId) {
-    PageRequest<ServiceTemplate> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    pageRequest.addFilter("appId", appId, EQ);
-    if (serviceId != null) {
-      pageRequest.addFilter("serviceId", serviceId, EQ);
+  public Set<String> getServiceTemplateVariableExpressions(String appId, String envId, String serviceId) {
+    List<String> serviceIds = serviceExpressionBuilder.getServiceIds(appId, serviceId);
+    if (serviceIds == null) {
+      return new TreeSet<>();
     }
-    pageRequest.addFilter("envId", envId, EQ);
-
+    PageRequest<ServiceTemplate> pageRequest = aPageRequest()
+                                                   .withLimit(UNLIMITED)
+                                                   .addFilter("appId", EQ, appId)
+                                                   .addFilter("envId", EQ, envId)
+                                                   .addFilter("serviceId", IN, serviceIds.toArray())
+                                                   .addFieldsIncluded("uuid")
+                                                   .build();
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
     if (CollectionUtils.isNotEmpty(serviceTemplates)) {
       List<String> serviceTemplateIds =
           serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList());
-      PageRequest<ServiceVariable> variablePageRequest = aPageRequest().withLimit(UNLIMITED).build();
-      pageRequest.addFilter("appId", appId, EQ);
-      pageRequest.addFilter("entityId", serviceTemplateIds, IN);
-      List<ServiceVariable> serviceVariables = serviceVariablesService.list(variablePageRequest, true);
+      PageRequest<ServiceVariable> serviceVariablePageRequest =
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter("appId", EQ, appId)
+              .addFilter("entityId", IN, serviceTemplateIds.toArray())
+              .build();
+      List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, true);
       if (CollectionUtils.isNotEmpty(serviceVariables)) {
         return serviceVariables.stream()
             .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
       }
     }
-    return Arrays.asList();
+    return new TreeSet<>();
+  }
+
+  public Set<String> getServiceTemplateVariableExpressions(String appId, String envId) {
+    PageRequest<ServiceTemplate> pageRequest =
+        aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("envId", EQ, envId).build();
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
+    if (CollectionUtils.isNotEmpty(serviceTemplates)) {
+      List<String> serviceTemplateIds =
+          serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList());
+      PageRequest<ServiceVariable> serviceVariablePageRequest =
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter("appId", EQ, appId)
+              .addFilter("entityId", IN, serviceTemplateIds.toArray())
+              .build();
+      List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, true);
+      if (CollectionUtils.isNotEmpty(serviceVariables)) {
+        return serviceVariables.stream()
+            .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
+            .collect(Collectors.toSet());
+      }
+    }
+    return new TreeSet<>();
   }
 }

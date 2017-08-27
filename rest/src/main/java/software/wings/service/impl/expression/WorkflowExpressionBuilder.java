@@ -1,90 +1,77 @@
 package software.wings.service.impl.expression;
 
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
-
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.MultiServiceOrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 8/10/17.
  */
+@Singleton
 public class WorkflowExpressionBuilder extends ExpressionBuilder {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
+  @Inject private EnvironmentExpressionBuilder environmentExpressionBuilder;
   @Inject private WorkflowService workflowService;
 
   @Override
-  public List<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
-    if (serviceId == null) {
-      return getExpressions(appId, entityId);
-    } else if (stateType == null) {
-      return getExpressions(appId, entityId, serviceId);
-    } else if (stateType != null && serviceId != null) {
-      List<String> expressions = new ArrayList<>();
+  public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
+    SortedSet<String> expressions = new TreeSet<>();
+    Workflow workflow = workflowService.readWorkflow(appId, entityId);
+    expressions.addAll(getWorkflowVariableExpressions(workflow));
+    if (serviceId != null && !serviceId.equalsIgnoreCase("All")) {
       expressions.addAll(getExpressions(appId, entityId, serviceId));
-      expressions.addAll(getStateTypeExpressions(stateType));
-      return expressions;
+    } else {
+      if (workflow != null && workflow.getEnvId() != null) {
+        expressions.addAll(
+            environmentExpressionBuilder.getServiceTemplateVariableExpressions(serviceId, workflow.getEnvId()));
+      }
     }
-    return Arrays.asList();
+    if (stateType != null) {
+      expressions.addAll(getStateTypeExpressions(stateType));
+    }
+    return expressions;
   }
 
   @Override
-  public List<String> getExpressions(String appId, String entityId) {
-    List<String> expressions = new ArrayList<>();
+  public Set<String> getExpressions(String appId, String entityId) {
+    SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getStaticExpressions());
     expressions.addAll(getDynamicExpressions(appId, entityId));
     return expressions;
   }
 
   @Override
-  public List<String> getExpressions(String appId, String entityId, String serviceId) {
-    List<String> expressions = new ArrayList<>();
+  public Set<String> getExpressions(String appId, String entityId, String serviceId) {
+    SortedSet<String> expressions = new TreeSet<>();
     expressions.addAll(getExpressions(appId, entityId));
     expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
+    expressions.addAll(serviceExpressionBuilder.getServiceTemplateVariableExpressions(appId, serviceId));
     return expressions;
   }
 
   @Override
-  public List<String> getDynamicExpressions(String appId, String entityId) {
-    List<Variable> variables = new ArrayList<>();
-    try {
-      Workflow workflow = workflowService.readWorkflow(appId, entityId);
-      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-      if (orchestrationWorkflow != null) {
-        if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-          variables = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-        } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-          variables = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-        } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-          variables = ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-        }
-      }
-    } catch (Exception ex) {
-      logger.warn("Exception occurred while reading workflow for appId {} and workflowId {}", appId, entityId);
-    }
+  public Set<String> getDynamicExpressions(String appId, String entityId) {
+    return new TreeSet<>();
+  }
 
-    List<String> expressions = variables.stream()
-                                   .filter(variable -> variable.getName() != null)
-                                   .map(variable -> "workflow.variables." + variable.getName())
-                                   .collect(Collectors.toList());
-    return expressions;
+  private Set<String> getWorkflowVariableExpressions(Workflow workflow) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null
+        || workflow.getOrchestrationWorkflow().getUserVariables() == null) {
+      return new TreeSet<>();
+    }
+    return workflow.getOrchestrationWorkflow()
+        .getUserVariables()
+        .stream()
+        .filter(variable -> variable.getName() != null)
+        .map(variable -> "workflow.variables." + variable.getName())
+        .collect(Collectors.toSet());
   }
 }
