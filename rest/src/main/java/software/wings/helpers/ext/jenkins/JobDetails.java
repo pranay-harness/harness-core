@@ -10,6 +10,7 @@ import java.util.Objects;
  */
 public class JobDetails {
   private String jobName;
+  private String url;
   private boolean isFolder;
 
   // Added for kryo serializer
@@ -17,6 +18,12 @@ public class JobDetails {
 
   public JobDetails(String jobName, boolean isFolder) {
     this.jobName = jobName;
+    this.isFolder = isFolder;
+  }
+
+  public JobDetails(String jobName, String url, boolean isFolder) {
+    this.jobName = jobName;
+    this.url = url;
     this.isFolder = isFolder;
   }
 
@@ -48,5 +55,9 @@ public class JobDetails {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("jobName", jobName).add("isFolder", isFolder).toString();
+  }
+
+  public String getUrl() {
+    return url;
   }
 }
