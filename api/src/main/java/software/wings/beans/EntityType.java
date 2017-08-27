@@ -83,5 +83,8 @@ public enum EntityType {
   SERVICE_TEMPLATE, /**
                      * Infrastructure Mapping type.
                      */
-  INFRASTRUCTURE_MAPPING
+  INFRASTRUCTURE_MAPPING, /**
+                           * User entity type
+                           */
+  USER
 }

@@ -22,7 +22,7 @@ public class DeploymentHistory {
     return artifact;
   }
 
-  public void setArtifact(ArtifactSummary artifact) {
+  private void setArtifact(ArtifactSummary artifact) {
     this.artifact = artifact;
   }
 
@@ -30,7 +30,7 @@ public class DeploymentHistory {
     return deployedAt;
   }
 
-  public void setDeployedAt(Date deployedAt) {
+  private void setDeployedAt(Date deployedAt) {
     this.deployedAt = deployedAt;
   }
 
@@ -38,7 +38,7 @@ public class DeploymentHistory {
     return status;
   }
 
-  public void setStatus(String status) {
+  private void setStatus(String status) {
     this.status = status;
   }
 
@@ -46,7 +46,7 @@ public class DeploymentHistory {
     return triggeredBy;
   }
 
-  public void setTriggeredBy(EntitySummary triggeredBy) {
+  private void setTriggeredBy(EntitySummary triggeredBy) {
     this.triggeredBy = triggeredBy;
   }
 
@@ -54,7 +54,7 @@ public class DeploymentHistory {
     return pipeline;
   }
 
-  public void setPipeline(EntitySummary pipeline) {
+  private void setPipeline(EntitySummary pipeline) {
     this.pipeline = pipeline;
   }
 
@@ -62,7 +62,7 @@ public class DeploymentHistory {
     return workflow;
   }
 
-  public void setWorkflow(EntitySummary workflow) {
+  private void setWorkflow(EntitySummary workflow) {
     this.workflow = workflow;
   }
 
@@ -70,7 +70,7 @@ public class DeploymentHistory {
     return instanceCount;
   }
 
-  public void setInstanceCount(long instanceCount) {
+  private void setInstanceCount(long instanceCount) {
     this.instanceCount = instanceCount;
   }
 
@@ -78,7 +78,7 @@ public class DeploymentHistory {
     return serviceInfra;
   }
 
-  public void setServiceInfra(EntitySummary serviceInfra) {
+  private void setServiceInfra(EntitySummary serviceInfra) {
     this.serviceInfra = serviceInfra;
   }
 
