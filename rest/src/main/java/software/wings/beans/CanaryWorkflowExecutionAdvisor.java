@@ -23,11 +23,13 @@ import software.wings.beans.infrastructure.ContainerMetadata;
 import software.wings.beans.infrastructure.Ec2InstanceMetadata;
 import software.wings.beans.infrastructure.Instance;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.impl.dashboardStats.InstanceChangeEventListener;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.dashboardStats.InstanceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -72,6 +74,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
   @Inject @Transient private transient Queue<InstanceChangeEvent> instanceChangeEventQueue;
+
+  @Inject @Transient private transient InstanceService instanceService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
@@ -220,8 +224,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
       }
 
-      InstanceChangeEvent instanceChangeEvent = Builder.anInstanceUpdateEvent().withInstanceList(instanceList).build();
-      instanceChangeEventQueue.send(instanceChangeEvent);
+      // There is an issue with the queue implementation since we are trying to pass instance information which doesn't
+      // exist in the "instance" collection. Need to try different options before making it work. For now, saving the
+      // instance information directly.
+      //      InstanceChangeEvent instanceChangeEvent =
+      //      Builder.anInstanceUpdateEvent().withInstanceList(instanceList).withId(UUIDGenerator.getUuid()).withRetries(1).build();
+      //      instanceChangeEventQueue.send(instanceChangeEvent);
+      instanceService.saveOrUpdate(instanceList);
     } catch (Exception ex) {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
       logger.error("Error while updating instance change information", ex);

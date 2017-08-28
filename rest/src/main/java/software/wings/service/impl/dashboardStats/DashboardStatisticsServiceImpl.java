@@ -407,30 +407,42 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         Lists.newArrayListWithExpectedSize(pipelineExecutionList.size());
 
     for (PipelineExecution pipelineExecution : pipelineExecutionList) {
+      boolean skip = false;
       List<EntitySummary> environmentList = Lists.newArrayList();
       EntitySummary pipelineSummary = getEntitySummary(
           pipelineExecution.getPipeline().getName(), pipelineExecution.getUuid(), EntityType.PIPELINE.name());
 
       for (PipelineStageExecution pipelineStageExecution : pipelineExecution.getPipelineStageExecutions()) {
         for (WorkflowExecution workflowExecution : pipelineStageExecution.getWorkflowExecutions()) {
-          EntitySummary environmentSummary = getEntitySummary(
-              workflowExecution.getEnvName(), workflowExecution.getEnvId(), EntityType.ENVIRONMENT.name());
-          environmentList.add(environmentSummary);
           for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
-            ArtifactSummary artifactSummary = getArtifactSummary(
-                artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
-            PipelineExecutionHistory pipelineExecutionHistory =
-                PipelineExecutionHistory.Builder.aPipelineExecutionHistory()
-                    .withPipeline(pipelineSummary)
-                    .withArtifact(artifactSummary)
-                    .withEndTime(new Date(pipelineExecution.getEndTs()))
-                    .withEnvironmentList(environmentList)
-                    .withStartTime(new Date(pipelineExecution.getStartTs()))
-                    .withStatus(pipelineExecution.getStatus().name())
-                    .build();
-            pipelineExecutionHistoryList.add(pipelineExecutionHistory);
+            if (artifact.getServiceIds() != null && artifact.getServiceIds().contains(serviceId)) {
+              EntitySummary environmentSummary = getEntitySummary(
+                  workflowExecution.getEnvName(), workflowExecution.getEnvId(), EntityType.ENVIRONMENT.name());
+              environmentList.add(environmentSummary);
+
+              ArtifactSummary artifactSummary = getArtifactSummary(artifact.getDisplayName(), artifact.getUuid(),
+                  artifact.getBuildNo(), artifact.getArtifactSourceName());
+              PipelineExecutionHistory pipelineExecutionHistory =
+                  PipelineExecutionHistory.Builder.aPipelineExecutionHistory()
+                      .withPipeline(pipelineSummary)
+                      .withArtifact(artifactSummary)
+                      .withEndTime(new Date(pipelineExecution.getEndTs()))
+                      .withEnvironmentList(environmentList)
+                      .withStartTime(new Date(pipelineExecution.getStartTs()))
+                      .withStatus(pipelineExecution.getStatus().name())
+                      .build();
+              pipelineExecutionHistoryList.add(pipelineExecutionHistory);
+              skip = true;
+              break;
+            }
+            if (skip)
+              break;
           }
+          if (skip)
+            break;
         }
+        if (skip)
+          break;
       }
     }
 
