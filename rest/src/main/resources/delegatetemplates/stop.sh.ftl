@@ -1,13 +1,17 @@
 <#include "common.sh.ftl">
-
-if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+printenv
+echo "Find delegate"
+echo `ps -ef | grep delegate`
+echo "=====Done==="
+echo `pgrep -f "\-Ddelegatesourcedir"`
+if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
 then
   i=0
   while [ "$i" -le 30 ]
   do
-    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+    if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
     then
-      pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
+      pgrep -f "\-Ddelegatesourcedir" | xargs kill
       if [ "$i" -gt 0 ]
       then
         sleep 1
