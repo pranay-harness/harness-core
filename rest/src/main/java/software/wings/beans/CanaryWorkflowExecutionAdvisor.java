@@ -101,13 +101,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         updateInstanceInfoAsync(context, workflowExecution);
       }
 
-      workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-          context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
-
-      if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-        updateInstanceInfoAsync(context, workflowExecution);
-      }
-
       // nothing to do for regular phase with non-error
       if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
           && executionEvent.getExecutionStatus() != ERROR) {
@@ -224,13 +217,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
       }
 
-      // There is an issue with the queue implementation since we are trying to pass instance information which doesn't
-      // exist in the "instance" collection. Need to try different options before making it work. For now, saving the
-      // instance information directly.
-      //      InstanceChangeEvent instanceChangeEvent =
-      //      Builder.anInstanceUpdateEvent().withInstanceList(instanceList).withId(UUIDGenerator.getUuid()).withRetries(1).build();
-      //      instanceChangeEventQueue.send(instanceChangeEvent);
-      instanceService.saveOrUpdate(instanceList);
+      InstanceChangeEvent instanceChangeEvent =
+          Builder.anInstanceChangeEvent().withInstanceList(instanceList).withRetries(1).build();
+      instanceChangeEventQueue.send(instanceChangeEvent);
     } catch (Exception ex) {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
       logger.error("Error while updating instance change information", ex);
