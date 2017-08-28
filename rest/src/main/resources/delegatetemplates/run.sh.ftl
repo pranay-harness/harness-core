@@ -21,6 +21,7 @@ then
   echo "Downloading Delegate..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
   then
     echo "Downloading Delegate..."
@@ -39,7 +40,7 @@ then
 fi
 
 
-if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   echo "Delegate already running"
 else
@@ -54,12 +55,12 @@ else
     echo "$(cat nohup.out)"
   else
     sleep 3
-    if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
+    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
     then
       echo "Delegate started"
     else
       echo "Failed to start Delegate."
-      echo "$(tail -n 50 delegate.log)"
+      echo "$(tail -n 30 delegate.log)"
     fi
   fi
 fi
