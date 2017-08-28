@@ -16,6 +16,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.List;
 
 public class YamlHelper {
@@ -90,6 +92,8 @@ public class YamlHelper {
     // remove empty arrays/lists:
     dumpedYaml = dumpedYaml.replace("[]", "");
 
+    dumpedYaml = fixIndentSpaces(dumpedYaml);
+
     YamlPayload yp = new YamlPayload(dumpedYaml);
     yp.setName(payloadName);
 
@@ -100,6 +104,43 @@ public class YamlHelper {
     }
 
     return rr;
+  }
+
+  private static String fixIndentSpaces(String content) {
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(content));
+
+    String line = null;
+
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        StringBuilder newLine = new StringBuilder();
+
+        // count number of spaces or dashes at start of line
+        int count = 0;
+
+        for (int i = 0; i < line.length(); i++) {
+          char c = line.charAt(i);
+          // Process char
+          if (c != ' ' && c != '-') {
+            count = i;
+            break;
+          }
+        }
+
+        // prepend that many spaces to the start of the line
+        for (int i = 0; i < count; i++) {
+          newLine.append(" ");
+        }
+
+        sb.append(newLine.append(line) + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return sb.toString();
   }
 
   public static FolderNode sampleConfigAsCodeDirectory() {
