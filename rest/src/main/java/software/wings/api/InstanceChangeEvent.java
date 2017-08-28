@@ -1,6 +1,8 @@
 package software.wings.api;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.infrastructure.Instance;
 import software.wings.core.queue.Queuable;
 
@@ -15,7 +17,7 @@ import java.util.List;
  */
 @Entity(value = "instanceChangeQueue", noClassnameStored = true)
 public class InstanceChangeEvent extends Queuable {
-  private List<Instance> instanceList;
+  @Reference private List<Instance> instanceList;
 
   public List<Instance> getInstanceList() {
     return instanceList;
@@ -60,7 +62,7 @@ public class InstanceChangeEvent extends Queuable {
 
     private Builder() {}
 
-    public static Builder anInstanceChangeEvent() {
+    public static Builder anInstanceUpdateEvent() {
       return new Builder();
     }
 
@@ -105,7 +107,7 @@ public class InstanceChangeEvent extends Queuable {
     }
 
     public Builder but() {
-      return anInstanceChangeEvent()
+      return anInstanceUpdateEvent()
           .withInstanceList(instanceList)
           .withId(id)
           .withRunning(running)
