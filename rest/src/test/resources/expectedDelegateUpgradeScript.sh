@@ -111,7 +111,7 @@ rm -rf "$CAPSULE_CACHE_DIR"
 echo "Delegate upgrading to version $REMOTE_DELEGATE_VERSION"
 $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml upgrade
 sleep 3
-if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   echo "Delegate started"
 else

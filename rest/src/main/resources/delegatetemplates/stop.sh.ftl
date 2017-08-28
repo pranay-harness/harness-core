@@ -1,5 +1,9 @@
 <#include "common.sh.ftl">
-
+printenv
+echo "Find delegate"
+echo `ps -ef | grep delegate`
+echo "=====Done==="
+echo `pgrep -f "\-Ddelegatesourcedir"`
 if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
 then
   i=0
