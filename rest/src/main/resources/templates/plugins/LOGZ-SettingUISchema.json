@@ -1,5 +1,5 @@
 {
-  "password": { "ui:widget": "token" },
+  "token": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "token" ],
   "ui:order": [ "type", "logzUrl", "token" ]
