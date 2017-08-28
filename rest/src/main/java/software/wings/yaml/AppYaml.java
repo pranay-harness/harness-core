@@ -8,7 +8,8 @@ import java.util.List;
 public class AppYaml extends GenericYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String description;
-  @YamlSerialize public List<String> services = new ArrayList<String>();
+  @YamlSerialize public List<String> services = new ArrayList<>();
+  //@YamlSerialize public List services = new ArrayList();
 
   public String getName() {
     return name;
