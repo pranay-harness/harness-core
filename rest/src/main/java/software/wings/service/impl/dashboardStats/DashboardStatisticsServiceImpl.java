@@ -4,7 +4,6 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
-import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.beans.stats.dashboard.EntitySummary.Builder.anEntitySummary;
 import static software.wings.beans.stats.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
 
@@ -117,7 +116,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             grouping(entityNameColumn, grouping("$first", entityNameColumn)))
         .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
             projection("entityName", entityNameColumn), projection("count"))
-        .sort(ascending(entityNameColumn))
+        .sort(ascending("_id." + entityIdColumn))
         .aggregate(FlatEntitySummaryStats.class)
         .forEachRemaining(flatEntitySummaryStats -> {
           EntitySummaryStats entitySummaryStats = getEntitySummaryStats(flatEntitySummaryStats, groupByEntityType);
@@ -148,7 +147,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             grouping(entityNameColumn, grouping("$first", entityNameColumn)))
         .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
             projection("entityName", entityNameColumn), projection("count"))
-        .sort(ascending(entityNameColumn))
+        .sort(ascending("_id." + entityIdColumn))
         .aggregate(FlatEntitySummaryStats.class)
         .forEachRemaining(flatEntitySummaryStats -> {
           EntitySummaryStats entitySummaryStats = getEntitySummaryStats(flatEntitySummaryStats, groupByEntityType);
@@ -165,7 +164,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .match(query)
         .group(Group.id(grouping("envType")), grouping("count", accumulator("$sum", 1)))
         .project(projection("_id").suppress(), projection("envType", "_id.envType"), projection("count"))
-        .sort(ascending("envType"))
+        .sort(ascending("_id.envType"))
         .aggregate(EnvironmentSummaryStats.class)
         .forEachRemaining(environmentSummaryStats -> {
           String envType = environmentSummaryStats.getEnvType();
@@ -252,7 +251,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     Projection.projection("sourceName", "lastArtifactSourceName"))),
             grouping("instanceInfoList",
                 grouping("$addToSet", Projection.projection("id", "_id"), Projection.projection("name", "hostName"))))
-        .sort(ascending("serviceName"))
+        .sort(ascending("_id.serviceId"), ascending("_id.envId"), ascending("_id.lastArtifactId"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
@@ -474,7 +473,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     Projection.projection("streamId", "lastArtifactStreamId"),
                     Projection.projection("deployedAt", "lastDeployedAt"),
                     Projection.projection("sourceName", "lastArtifactSourceName"))))
-        .sort(descending("count"))
+        .sort(ascending("_id.envId"), ascending("_id.infraMappingId"), ascending("_id.lastArtifactId"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
@@ -576,7 +575,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         continue;
       }
 
-      for (Artifact artifact : executionArgs.getArtifacts()) {
+      List<Artifact> artifacts = executionArgs.getArtifacts();
+      if (artifacts == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("artifacts is null for workflowExecution:" + workflowExecution.getName());
+        }
+        continue;
+      }
+
+      for (Artifact artifact : artifacts) {
         ArtifactSummary artifactSummary = getArtifactSummary(
             artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
 

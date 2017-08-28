@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.infrastructure.Instance;
 import software.wings.core.queue.Queuable;
