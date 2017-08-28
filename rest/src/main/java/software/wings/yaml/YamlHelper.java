@@ -4,6 +4,9 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
@@ -57,6 +60,10 @@ public class YamlHelper {
   public static YamlRepresenter getRepresenter() {
     YamlRepresenter representer = new YamlRepresenter();
 
+    PropertyUtils pu = new PropertyUtils();
+    pu.setSkipMissingProperties(false);
+    representer.setPropertyUtils(pu);
+
     return representer;
   }
 
@@ -66,6 +73,8 @@ public class YamlHelper {
     dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
     dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
 
+    dumpOpts.setIndent(4);
+
     return dumpOpts;
   }
 
@@ -74,6 +83,11 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
     String dumpedYaml = yaml.dump(theYaml);
+
+    // --------- TEMP -----------
+    Logger logger = LoggerFactory.getLogger("blah");
+    logger.info("\n" + dumpedYaml);
+    // --------------------------
 
     // remove first line of Yaml:
     dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
