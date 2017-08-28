@@ -112,7 +112,7 @@ then
 fi
 
 
-if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   echo "Delegate already running"
 else
@@ -127,12 +127,12 @@ else
     echo "$(cat nohup.out)"
   else
     sleep 3
-    if `pgrep -f "\-Ddelegatesourcedir"> /dev/null`
+    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
     then
       echo "Delegate started"
     else
       echo "Failed to start Delegate."
-      echo "$(tail -n 50 delegate.log)"
+      echo "$(tail -n 30 delegate.log)"
     fi
   fi
 fi
