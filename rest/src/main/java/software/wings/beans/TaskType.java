@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import org.omg.IOP.TAG_ALTERNATE_IIOP_ADDRESS;
 import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.AppdynamicsDataCollectionTask;
@@ -76,6 +77,8 @@ public enum TaskType {
   APPDYNAMICS_GET_METRICES_OF_BT(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_DATA(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class),
+  NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
+  NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(TaskGroup.ELK, ServiceImplDelegateTask.class),
