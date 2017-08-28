@@ -101,13 +101,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         updateInstanceInfoAsync(context, workflowExecution);
       }
 
-      workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-          context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
-
-      if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-        updateInstanceInfoAsync(context, workflowExecution);
-      }
-
       // nothing to do for regular phase with non-error
       if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
           && executionEvent.getExecutionStatus() != ERROR) {
