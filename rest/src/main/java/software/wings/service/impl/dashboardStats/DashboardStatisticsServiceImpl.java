@@ -22,6 +22,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SettingAttribute.Category;
@@ -567,7 +568,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         instanceCount = instancesCount.longValue();
       }
 
-      for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
+      ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+      if (executionArgs == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("executionArgs is null for workflowExecution:" + workflowExecution.getName());
+        }
+        continue;
+      }
+
+      for (Artifact artifact : executionArgs.getArtifacts()) {
         ArtifactSummary artifactSummary = getArtifactSummary(
             artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
 
