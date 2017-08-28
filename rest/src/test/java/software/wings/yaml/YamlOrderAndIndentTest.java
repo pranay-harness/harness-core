@@ -12,6 +12,7 @@ import java.io.FileWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 public class YamlOrderAndIndentTest {
@@ -31,6 +32,7 @@ public class YamlOrderAndIndentTest {
     */
 
     OrderIndentTestYaml oitYaml = new OrderIndentTestYaml();
+
     oitYaml.setName("OrderIndentTest");
     oitYaml.setDescription("This is the OrderIndentTest");
 
@@ -85,6 +87,8 @@ public class YamlOrderAndIndentTest {
       // with this the empty services list gets output:
       yamlConfig.writeConfig.setWriteDefaultValues(true);
 
+      // yamlConfig.writeConfig.setExplicitEndDocument(true);
+
       YamlWriter writer = new YamlWriter(stringWriter, yamlConfig);
       writer.write(oitYaml);
       writer.close();
@@ -93,14 +97,20 @@ public class YamlOrderAndIndentTest {
 
       String str = stringWriter.toString();
 
-      logger.info("BEFORE:\n" + str);
+      // logger.info("BEFORE:\n" + str);
 
       str = processYamlContent(str);
 
-      logger.info("AFTER:\n" + str);
+      // logger.info("AFTER:\n" + str);
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+
+    Field[] fields = OrderIndentTestYaml.class.getDeclaredFields();
+
+    for (Field f : fields) {
+      // logger.info(f.getName());
     }
 
     // assertThat("fish").isEqualTo("fish");
