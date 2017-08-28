@@ -33,7 +33,6 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
@@ -52,6 +51,7 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -86,7 +86,6 @@ import javax.net.ssl.SSLException;
 public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 100;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
-  private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -100,8 +99,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AsyncHttpClient asyncHttpClient;
   private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
-  private static long lastHeartbeatSentAt = System.currentTimeMillis();
-  private static long lastHeartbeatReceivedAt = System.currentTimeMillis();
 
   private Socket socket;
   private RequestBuilder request;
@@ -281,8 +278,6 @@ public class DelegateServiceImpl implements DelegateService {
         System.out.println(message);
         logger.error("Exception while decoding task", e);
       }
-    } else {
-      lastHeartbeatReceivedAt = System.currentTimeMillis();
     }
   }
 
@@ -366,26 +361,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void restartDelegate() {
     try {
-      logger.info("Restart Delegate. lastHBSentAt = [{}], lastHBReceivedAt = [{}], now = [{}]", lastHeartbeatSentAt,
-          lastHeartbeatReceivedAt, System.currentTimeMillis());
-      StartedProcess process = new ProcessExecutor()
-                                   .command("./restart.sh")
-                                   .redirectError(Slf4jStream.of("RestartScript").asError())
-                                   .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
-                                   .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
-                                   .readOutput(true)
-                                   .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                                   .start();
-      logger.info(
-          "Delegate restarted. Process: [{}], isAlive = [{}] ", process.getProcess(), process.getProcess().isAlive());
-      System.exit(0);
+      logger.info("Restarting delegate");
+      new ProcessExecutor()
+          .timeout(1, TimeUnit.MINUTES)
+          .command("./restart.sh")
+          .redirectError(Slf4jStream.of("RestartScript").asError())
+          .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
+          .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
+          .readOutput(true)
+          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+          .start();
     } catch (Exception ex) {
       ex.printStackTrace();
       logger.error("Exception while restarting", ex);
-    } finally {
-      // Reset timeout so that next attempt is made after 15 minutes
-      lastHeartbeatSentAt = System.currentTimeMillis();
-      lastHeartbeatReceivedAt = System.currentTimeMillis();
     }
   }
 
@@ -416,36 +404,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(()
-                                              -> executorService.submit(() -> {
+    heartbeatExecutor.scheduleAtFixedRate(() -> {
+      logger.debug("sending heartbeat...");
       try {
-        if (doRestartDelegate()) {
-          restartDelegate();
+        if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
+          socket.fire(JsonUtils.asJson(
+              builder.but()
+                  .withLastHeartBeat(System.currentTimeMillis())
+                  .withConnected(true)
+                  .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
+                  .build()));
         }
-        sendHeartbeat(builder, socket);
       } catch (Exception ex) {
         logger.error("Exception while sending heartbeat", ex);
       }
-    }),
-        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
-  }
-
-  private boolean doRestartDelegate() {
-    long now = System.currentTimeMillis();
-    return (now - lastHeartbeatSentAt) > MAX_HB_TIMEOUT || (now - lastHeartbeatReceivedAt) > MAX_HB_TIMEOUT;
-  }
-
-  private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
-    logger.debug("sending heartbeat...");
-    if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
-      socket.fire(JsonUtils.asJson(
-          builder.but()
-              .withLastHeartBeat(System.currentTimeMillis())
-              .withConnected(true)
-              .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
-              .build()));
-      lastHeartbeatSentAt = System.currentTimeMillis();
-    }
+    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
