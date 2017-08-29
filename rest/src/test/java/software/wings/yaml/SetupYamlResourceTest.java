@@ -55,13 +55,14 @@ public class SetupYamlResourceTest {
   private final String TEST_APP_NAME2 = "TestApp_" + TIME_IN_MS + 10;
   private final String TEST_APP_NAME3 = "TestApp_" + TIME_IN_MS + 20;
   private final String TEST_APP_NAME4 = "TestApp_" + TIME_IN_MS + 30;
-  private final String TEST_YAML1 = "applications:\n- " + TEST_APP_NAME1 + "\n- " + TEST_APP_NAME2 + "\n";
-  private final String TEST_YAML2 = TEST_YAML1 + "- " + TEST_APP_NAME3 + "\n";
+  private final String TEST_YAML1 = "applications:\n  - " + TEST_APP_NAME1 + "\n  - " + TEST_APP_NAME2 + "\n";
+  private final String TEST_YAML2 = TEST_YAML1 + "  - " + TEST_APP_NAME3 + "\n";
+
   private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML2);
   // adds TEST_APP_NAME4 to TEST_YAML2
-  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "- " + TEST_APP_NAME4 + "\n");
+  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "  - " + TEST_APP_NAME4 + "\n");
   // adds TEST_APP_NAME4 to, and removes TEST_APP_NAME3 from TEST_YAML2
-  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "- " + TEST_APP_NAME4 + "\n");
+  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "  - " + TEST_APP_NAME4 + "\n");
 
   private final Application testApp1 = anApplication()
                                            .withUuid(TEST_APP1)

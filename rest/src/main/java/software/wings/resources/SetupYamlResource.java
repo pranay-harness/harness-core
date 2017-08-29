@@ -128,6 +128,9 @@ public class SetupYamlResource {
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
+    logger.info("**** yaml.trim() = " + yaml.trim());
+    logger.info("**** beforeYaml.trim() = " + beforeYaml.trim());
+
     if (yaml.trim().equals(beforeYaml.trim())) {
       // no change
       YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
