@@ -61,14 +61,14 @@ public class AppYamlResourceTest {
   private final String TEST_SERVICE3 = "TEST-SERVICE-" + TIME_IN_MS + 20;
   private final String TEST_SERVICE4 = "TEST-SERVICE-" + TIME_IN_MS + 30;
 
-  private final String TEST_YAML1 = "description: " + TEST_APP_DESCRIPTION1 + "\nname: " + TEST_APP_NAME1
-      + "\nservices:\n- " + TEST_SERVICE1 + "\n- " + TEST_SERVICE2 + "\n";
-  private final String TEST_YAML2 = TEST_YAML1 + "- " + TEST_SERVICE3 + "\n";
+  private final String TEST_YAML1 = "name: " + TEST_APP_NAME1 + "\ndescription: " + TEST_APP_DESCRIPTION1
+      + "\nservices:\n  - " + TEST_SERVICE1 + "\n  - " + TEST_SERVICE2 + "\n";
+  private final String TEST_YAML2 = TEST_YAML1 + "  - " + TEST_SERVICE3 + "\n";
   private final YamlPayload TEST_YP = new YamlPayload(TEST_YAML2);
   // adds TEST_APP_NAME4 to TEST_YAML2
-  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "- " + TEST_SERVICE4 + "\n");
+  private final YamlPayload TEST_YP2 = new YamlPayload(TEST_YAML2 + "  - " + TEST_SERVICE4 + "\n");
   // adds TEST_APP_NAME4 to, and removes TEST_APP_NAME3 from TEST_YAML2
-  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "- " + TEST_SERVICE4 + "\n");
+  private final YamlPayload TEST_YP3 = new YamlPayload(TEST_YAML1 + "  - " + TEST_SERVICE4 + "\n");
 
   private final Application testApp1 = anApplication()
                                            .withUuid(TEST_APP_ID1)

@@ -1,16 +1,26 @@
 package software.wings.yaml;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.VariableProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceYaml extends GenericYaml {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private VariableProcessor variableProcessor = new VariableProcessor();
+
   @YamlSerialize public String name;
   @YamlSerialize public String description;
   @YamlSerialize public String artifactType;
   @YamlSerialize public List<String> serviceCommands = new ArrayList<String>();
+  //@YamlSerialize public List<String> configVariables = new ArrayList<String>();
+  @YamlSerialize public List<ConfigVarYaml> configVariables = new ArrayList<ConfigVarYaml>();
 
   public ServiceYaml() {}
 
@@ -60,5 +70,25 @@ public class ServiceYaml extends GenericYaml {
 
   public void addServiceCommand(String serviceCommandName) {
     this.serviceCommands.add(serviceCommandName);
+  }
+
+  public List<ConfigVarYaml> getConfigVariables() {
+    return configVariables;
+  }
+
+  public void setConfigVariables(List<ConfigVarYaml> configVariables) {
+    this.configVariables = configVariables;
+  }
+
+  public void setConfigVariablesFromServiceVariables(List<ServiceVariable> serviceVariables) {
+    for (ServiceVariable serviceVariable : serviceVariables) {
+      // String configVar = serviceVariable.getName() + ": " + new String(serviceVariable.getValue());
+      ConfigVarYaml configVar = new ConfigVarYaml(serviceVariable.getName(), new String(serviceVariable.getValue()));
+      this.configVariables.add(configVar);
+    }
+  }
+
+  public void addConfigVariable(ConfigVarYaml configVar) {
+    this.configVariables.add(configVar);
   }
 }

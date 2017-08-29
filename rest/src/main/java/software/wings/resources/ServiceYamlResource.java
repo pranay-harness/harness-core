@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -20,6 +21,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
@@ -29,6 +31,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+import software.wings.yaml.ConfigVarYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
@@ -83,11 +86,14 @@ public class ServiceYamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
+    Service service = serviceResourceService.get(appId, serviceId, true);
     List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
     ServiceYaml serviceYaml = new ServiceYaml(service);
     serviceYaml.setServiceCommandNamesFromServiceCommands(serviceCommands);
+
+    List<ServiceVariable> serviceVariables = service.getServiceVariables();
+    serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
 
     return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
   }
@@ -152,6 +158,10 @@ public class ServiceYamlResource {
     List<String> serviceCommandsToAdd = new ArrayList<String>();
     List<String> serviceCommandsToDelete = new ArrayList<String>();
 
+    // what are the config variable changes? Which are additions and which are deletions?
+    List<ConfigVarYaml> configVarsToAdd = new ArrayList<ConfigVarYaml>();
+    List<ConfigVarYaml> configVarsToDelete = new ArrayList<ConfigVarYaml>();
+
     ServiceYaml beforeServiceYaml = null;
 
     if (beforeYaml != null && !beforeYaml.isEmpty()) {
@@ -175,8 +185,11 @@ public class ServiceYamlResource {
 
     if (yaml != null && !yaml.isEmpty()) {
       try {
+        Service service = serviceResourceService.get(appId, serviceId);
+
         serviceYaml = mapper.readValue(yaml, ServiceYaml.class);
 
+        // ----------- START SERVICE COMMAND SECTION ---------------
         List<String> serviceCommandNames = serviceYaml.getServiceCommandNames();
 
         // initialize the service commands to add from the after
@@ -199,8 +212,6 @@ public class ServiceYamlResource {
         for (String sc : serviceCommandNames) {
           serviceCommandsToDelete.remove(sc);
         }
-
-        Service service = serviceResourceService.get(appId, serviceId);
 
         List<ServiceCommand> serviceCommands = service.getServiceCommands();
         Map<String, ServiceCommand> serviceCommandMap = new HashMap<String, ServiceCommand>();
@@ -232,6 +243,65 @@ public class ServiceYamlResource {
           ServiceCommand newServiceCommand = createNewServiceCommand(appId, scName);
           serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
         }
+        // ----------- END SERVICE COMMAND SECTION ---------------
+
+        // ----------- START CONFIG VARIABLE SECTION ---------------
+        List<ConfigVarYaml> configVars = serviceYaml.getConfigVariables();
+
+        // initialize the config vars to add from the after
+        for (ConfigVarYaml cv : configVars) {
+          configVarsToAdd.add(cv);
+        }
+
+        if (beforeServiceYaml != null) {
+          List<ConfigVarYaml> beforeConfigVars = beforeServiceYaml.getConfigVariables();
+
+          // initialize the config vars to delete from the before, and remove the befores from the config vars to add
+          // list
+          for (ConfigVarYaml cv : beforeConfigVars) {
+            configVarsToDelete.add(cv);
+            configVarsToAdd.remove(cv);
+          }
+        }
+
+        // remove the afters from the config vars to delete list
+        for (ConfigVarYaml cv : configVars) {
+          configVarsToDelete.remove(cv);
+        }
+
+        List<ServiceVariable> serviceVariables = service.getServiceVariables();
+        Map<String, ServiceVariable> serviceVariableMap = new HashMap<String, ServiceVariable>();
+
+        // populate the map
+        for (ServiceVariable serviceVariable : serviceVariables) {
+          serviceVariableMap.put(serviceVariable.getName(), serviceVariable);
+        }
+
+        // If we have deletions do a check - we CANNOT delete config vars without deleteEnabled true
+        if (configVarsToDelete.size() > 0 && !deleteEnabled) {
+          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+          return rr;
+        }
+
+        /* TODO - LEFT OFF HERE
+        // do deletions
+        for (ConfigVarYaml configVar : configVarsToDelete) {
+          if (serviceVariableMap.containsKey(configVar.getName())) {
+            // TODO - add implementation
+            serviceResourceService.deleteVariable(appId, serviceId, configVar.getName());
+          } else {
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "serviceVariableMap
+        does not contain the key: " + configVar.getName() + "!"); return rr;
+          }
+        }
+
+        // do additions
+        for (ConfigVarYaml cv : configVarsToAdd) {
+          ServiceVariable newServiceVariable = createNewServiceVariable(appId, cv);
+          serviceResourceService.addVariable(appId, serviceId, newServiceVariable);
+        }
+        */
+        // ----------- END CONFIG VARIABLE SECTION ---------------
 
         // save the changes
         service.setName(serviceYaml.getName());
@@ -289,5 +359,12 @@ public class ServiceYamlResource {
         aServiceCommand().withAppId(appId).withName(scName).withTargetToAllEnv(true).withCommand(command).build();
 
     return newServiceCommand;
+  }
+
+  private ServiceVariable createNewServiceVariable(String appId, ConfigVarYaml cv) {
+    ServiceVariable newServiceVariable =
+        aServiceVariable().withName(cv.getName()).withValue(cv.getValue().toCharArray()).build();
+
+    return newServiceVariable;
   }
 }
