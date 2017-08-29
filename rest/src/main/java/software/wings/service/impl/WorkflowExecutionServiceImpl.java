@@ -748,10 +748,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                   .addFilter("serviceExecutionSummaries.contextElement.className", Operator.EQ,
                                       "software.wings.api.ServiceElement")
                                   .addFilter("serviceExecutionSummaries.contextElement.uuid", Operator.EQ, serviceId)
-                                  .addFilter("status", Operator.IN, ExecutionStatus.SUCCESS, ExecutionStatus.ABORTED,
-                                      ExecutionStatus.FAILED, ExecutionStatus.ERROR)
                                   .addFilter("envType", Operator.EQ, EnvironmentType.PROD)
-                                  .addOrder("endTs", OrderType.DESC)
+                                  .addOrder("startTs", OrderType.DESC)
                                   .withLimit(String.valueOf(limit))
                                   .build();
 
