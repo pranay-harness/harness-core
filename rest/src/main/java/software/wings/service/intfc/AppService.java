@@ -88,12 +88,28 @@ public interface AppService {
   void delete(@NotEmpty String appId);
 
   /**
+   * Gets apps by account id.
+   *
+   * @param accountId the account id
+   * @return the apps by account id
+   */
+  List<Application> getAppsByAccountId(String accountId);
+
+  /**
    * Gets app ids by account id.
    *
    * @param accountId the account id
    * @return the app ids by account id
    */
   List<String> getAppIdsByAccountId(String accountId);
+
+  /**
+   * Gets app names by account id.
+   *
+   * @param accountId the account id
+   * @return the app names by account id
+   */
+  List<String> getAppNamesByAccountId(String accountId);
 
   /**
    * Delete by acount id.

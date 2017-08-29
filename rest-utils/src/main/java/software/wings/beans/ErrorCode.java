@@ -396,7 +396,40 @@ public enum ErrorCode {
   PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"), /**
                                                                      * Aws access denied error code.
                                                                      */
-  AWS_ACCESS_DENIED("AWS_ACCESS_DENIED");
+  AWS_ACCESS_DENIED("AWS_ACCESS_DENIED"),
+
+  /**
+   * Invalid YamlPayload
+   */
+  INVALID_YAML_PAYLOAD("INVALID_YAML_PAYLOAD"),
+  /**
+   * Unrecognized Yaml fields
+   */
+  UNRECOGNIZED_YAML_FIELDS("UNRECOGNIZED_YAML_FIELDS"),
+  /**
+   * Could not map before Yaml
+   */
+  COULD_NOT_MAP_BEFORE_YAML("COULD_NOT_MAP_BEFORE_YAML"),
+  /**
+   * Missing or empty before Yaml
+   */
+  MISSING_BEFORE_YAML("MISSING_BEFORE_YAML"),
+  /**
+   * Missing or empty Yaml
+   */
+  MISSING_YAML("MISSING_YAML"),
+  /**
+   * Non empty deletions
+   */
+  NON_EMPTY_DELETIONS("NON_EMPTY_DELETIONS"),
+  /**
+   * General Yaml related error
+   */
+  GENERAL_YAML_ERROR("GENERAL_YAML_ERROR"),
+  /**
+   * General Yaml related error
+   */
+  GENERAL_YAML_INFO("GENERAL_YAML_INFO");
 
   /**
    * The constant ARGS_NAME.
