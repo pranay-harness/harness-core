@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -11,6 +12,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.stats.AppKeyStatistics;
+import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +28,13 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Application extends Base {
-  @NotEmpty private String name;
-  private String description;
+  @NotEmpty @YamlSerialize private String name;
+  @YamlSerialize private String description;
 
   @Indexed @NotEmpty private String accountId;
 
-  @Transient private List<Service> services = new ArrayList<>();
-  @Transient private List<Environment> environments = new ArrayList<>();
+  @Transient @YamlSerialize private List<Service> services = new ArrayList<>();
+  @Transient @YamlSerialize private List<Environment> environments = new ArrayList<>();
 
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
@@ -249,6 +252,23 @@ public class Application extends Base {
         .add("notifications", notifications)
         .add("nextDeploymentOn", nextDeploymentOn)
         .toString();
+  }
+
+  public String toYaml() {
+    StringBuilder yamlSB = new StringBuilder();
+
+    yamlSB.append("--- ");
+    yamlSB.append("# app.yaml for appId: " + this.getAppId() + "\n");
+    yamlSB.append("name: " + this.getName() + "\n");
+    yamlSB.append("description: " + this.getDescription() + "\n");
+
+    boolean validYaml = YamlPayload.validateYamlString(yamlSB.toString());
+
+    if (!YamlPayload.validateYamlString(yamlSB.toString())) {
+      return "ERROR: Yaml constructed in Application.toYaml is not valid!";
+    }
+
+    return yamlSB.toString();
   }
 
   /**
