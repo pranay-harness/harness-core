@@ -86,6 +86,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
+import software.wings.rules.RealMongo;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -116,6 +117,7 @@ import javax.inject.Inject;
  * @author Rishi
  */
 @Listeners(NotifyEventListener.class)
+@RealMongo
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;

@@ -90,6 +90,7 @@ public class WingsRule implements MethodRule {
   private DistributedLockSvc distributedLockSvc;
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
+  private boolean fakeMongo;
 
   /* (non-Javadoc)
    * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
@@ -165,6 +166,7 @@ public class WingsRule implements MethodRule {
         mongoClient = new MongoClient("localhost", port);
       }
     } else {
+      fakeMongo = true;
       mongoServer = new MongoServer(new MemoryBackend());
       mongoServer.bind("localhost", port);
       InetSocketAddress serverAddress = mongoServer.getLocalAddress();
@@ -208,7 +210,13 @@ public class WingsRule implements MethodRule {
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
         new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
-        new ExecutorModule(executorService), new QueueModule(datastore));
+        new ExecutorModule(executorService));
+
+    if (fakeMongo) {
+      modules.add(new QueueModuleTest(datastore));
+    } else {
+      modules.add(new QueueModule(datastore));
+    }
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
