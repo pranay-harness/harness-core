@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.resources.ServiceYamlResource;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ResourceTestRule;
 
 /**
@@ -23,13 +24,16 @@ public class ServiceYamlResourceTest {
 
   // create mocks
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+  private static final ServiceVariableService serviceVariableService = mock(ServiceVariableService.class);
 
   /**
    * The constant resources.
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new ServiceYamlResource(serviceResourceService)).build();
+      ResourceTestRule.builder()
+          .addResource(new ServiceYamlResource(serviceResourceService, serviceVariableService))
+          .build();
 
   @Before
   public void init() {

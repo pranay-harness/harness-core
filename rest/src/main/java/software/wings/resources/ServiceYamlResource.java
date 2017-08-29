@@ -30,6 +30,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
 import software.wings.yaml.ServiceYaml;
@@ -61,6 +62,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(APPLICATION)
 public class ServiceYamlResource {
   private ServiceResourceService serviceResourceService;
+  private ServiceVariableService serviceVariableService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,10 +70,13 @@ public class ServiceYamlResource {
    * Instantiates a new app yaml resource.
    *
    * @param serviceResourceService the service (resource) service
+   * @param serviceVariableService the service (variable) service
    */
   @Inject
-  public ServiceYamlResource(ServiceResourceService serviceResourceService) {
+  public ServiceYamlResource(
+      ServiceResourceService serviceResourceService, ServiceVariableService serviceVariableService) {
     this.serviceResourceService = serviceResourceService;
+    this.serviceVariableService = serviceVariableService;
   }
 
   /**
@@ -294,11 +299,14 @@ public class ServiceYamlResource {
         does not contain the key: " + configVar.getName() + "!"); return rr;
           }
         }
+        */
 
+        /*
         // do additions
         for (ConfigVarYaml cv : configVarsToAdd) {
           ServiceVariable newServiceVariable = createNewServiceVariable(appId, cv);
-          serviceResourceService.addVariable(appId, serviceId, newServiceVariable);
+          //serviceResourceService.addVariable(appId, serviceId, newServiceVariable);
+          serviceVariableService.post();
         }
         */
         // ----------- END CONFIG VARIABLE SECTION ---------------
