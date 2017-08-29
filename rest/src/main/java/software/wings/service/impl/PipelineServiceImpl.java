@@ -558,9 +558,7 @@ public class PipelineServiceImpl implements PipelineService {
                 Operator.EQ, "software.wings.api.ServiceElement")
             .addFilter("pipelineStageExecutions.workflowExecutions.serviceExecutionSummaries.contextElement.uuid",
                 Operator.EQ, serviceId)
-            .addFilter("status", Operator.IN, ExecutionStatus.SUCCESS, ExecutionStatus.ABORTED, ExecutionStatus.FAILED,
-                ExecutionStatus.ERROR)
-            .addOrder("endTs", OrderType.DESC)
+            .addOrder("startTs", OrderType.DESC)
             .withLimit(String.valueOf(limit))
             .build();
 

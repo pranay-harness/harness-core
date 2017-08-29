@@ -4,6 +4,7 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
+import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.beans.stats.dashboard.EntitySummary.Builder.anEntitySummary;
 import static software.wings.beans.stats.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
 
@@ -51,6 +52,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
 import software.wings.service.intfc.dashboardStats.InstanceService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.utils.Validator;
@@ -251,7 +253,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     Projection.projection("sourceName", "lastArtifactSourceName"))),
             grouping("instanceInfoList",
                 grouping("$addToSet", Projection.projection("id", "_id"), Projection.projection("name", "hostName"))))
-        .sort(ascending("_id.serviceId"), ascending("_id.envId"), ascending("_id.lastArtifactId"))
+        .sort(ascending("_id.serviceId"), ascending("_id.envId"), descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
@@ -393,7 +395,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public ServiceInstanceDashboard getServiceInstanceDashboard(String serviceId) {
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(serviceId);
     List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(serviceId);
-    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistoryList(serviceId);
+    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(serviceId);
     return ServiceInstanceDashboard.Builder.aServiceInstanceDashboard()
         .withCurrentActiveInstancesList(currentActiveInstances)
         .withDeploymentHistoryList(deploymentHistoryList)
@@ -401,8 +403,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
+  // Had to add all kinds of null checks since we query the pipelines that could be in different stages.
+  // We have seen NPEs in few cases. So, added bunch of null checks
   private List<PipelineExecutionHistory> getPipelineExecutionHistory(String serviceId) {
     List<PipelineExecution> pipelineExecutionList = pipelineService.getPipelineExecutionHistory(serviceId, 10);
+    if (pipelineExecutionList == null || pipelineExecutionList.isEmpty()) {
+      return Lists.newArrayList();
+    }
+
     List<PipelineExecutionHistory> pipelineExecutionHistoryList =
         Lists.newArrayListWithExpectedSize(pipelineExecutionList.size());
 
@@ -411,14 +419,56 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       List<EntitySummary> environmentList = Lists.newArrayList();
       EntitySummary pipelineSummary = getEntitySummary(
           pipelineExecution.getPipeline().getName(), pipelineExecution.getUuid(), EntityType.PIPELINE.name());
+      List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
+      if (pipelineStageExecutions == null || pipelineStageExecutions.isEmpty()) {
+        continue;
+      }
 
-      for (PipelineStageExecution pipelineStageExecution : pipelineExecution.getPipelineStageExecutions()) {
-        for (WorkflowExecution workflowExecution : pipelineStageExecution.getWorkflowExecutions()) {
-          for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
-            if (artifact.getServiceIds() != null && artifact.getServiceIds().contains(serviceId)) {
+      for (PipelineStageExecution pipelineStageExecution : pipelineStageExecutions) {
+        List<WorkflowExecution> workflowExecutions = pipelineStageExecution.getWorkflowExecutions();
+        if (workflowExecutions == null || workflowExecutions.isEmpty()) {
+          continue;
+        }
+
+        for (WorkflowExecution workflowExecution : workflowExecutions) {
+          ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+          if (executionArgs == null) {
+            continue;
+          }
+
+          List<Artifact> artifacts = executionArgs.getArtifacts();
+          if (artifacts == null || artifacts.isEmpty()) {
+            continue;
+          }
+
+          for (Artifact artifact : artifacts) {
+            List<String> serviceIds = artifact.getServiceIds();
+            if (serviceIds == null || serviceIds.isEmpty()) {
+              continue;
+            }
+
+            if (serviceIds.contains(serviceId)) {
               EntitySummary environmentSummary = getEntitySummary(
                   workflowExecution.getEnvName(), workflowExecution.getEnvId(), EntityType.ENVIRONMENT.name());
               environmentList.add(environmentSummary);
+
+              Long startTs = pipelineExecution.getStartTs();
+              Date startTime = null;
+              if (startTs != null) {
+                startTime = new Date(startTs);
+              }
+
+              Long endTs = pipelineExecution.getEndTs();
+              Date endTime = null;
+              if (endTs != null) {
+                endTime = new Date(endTs);
+              }
+
+              ExecutionStatus status = pipelineExecution.getStatus();
+              String statusName = null;
+              if (status != null) {
+                statusName = status.name();
+              }
 
               ArtifactSummary artifactSummary = getArtifactSummary(artifact.getDisplayName(), artifact.getUuid(),
                   artifact.getBuildNo(), artifact.getArtifactSourceName());
@@ -426,10 +476,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                   PipelineExecutionHistory.Builder.aPipelineExecutionHistory()
                       .withPipeline(pipelineSummary)
                       .withArtifact(artifactSummary)
-                      .withEndTime(new Date(pipelineExecution.getEndTs()))
+                      .withEndTime(endTime)
                       .withEnvironmentList(environmentList)
-                      .withStartTime(new Date(pipelineExecution.getStartTs()))
-                      .withStatus(pipelineExecution.getStatus().name())
+                      .withStartTime(startTime)
+                      .withStatus(statusName)
                       .build();
               pipelineExecutionHistoryList.add(pipelineExecutionHistory);
               skip = true;
@@ -473,7 +523,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     Projection.projection("streamId", "lastArtifactStreamId"),
                     Projection.projection("deployedAt", "lastDeployedAt"),
                     Projection.projection("sourceName", "lastArtifactSourceName"))))
-        .sort(ascending("_id.envId"), ascending("_id.infraMappingId"), ascending("_id.lastArtifactId"))
+        .sort(descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
@@ -522,9 +572,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return null;
   }
 
-  private List<DeploymentHistory> getDeploymentHistoryList(String serviceId) {
+  private List<DeploymentHistory> getDeploymentHistory(String serviceId) {
     List<WorkflowExecution> workflowExecutionList =
         workflowExecutionService.getWorkflowExecutionHistory(serviceId, EnvironmentType.PROD.name(), 10);
+
+    if (workflowExecutionList == null || workflowExecutionList.isEmpty()) {
+      return Lists.newArrayList();
+    }
+
     List<DeploymentHistory> deploymentExecutionHistoryList =
         Lists.newArrayListWithExpectedSize(workflowExecutionList.size());
 
@@ -551,6 +606,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       Integer instancesCount = null;
       EntitySummary infraMappingEntitySummary = null;
       List<ElementExecutionSummary> serviceExecutionSummaries = workflowExecution.getServiceExecutionSummaries();
+
       if (serviceExecutionSummaries != null && !serviceExecutionSummaries.isEmpty()) {
         // we always have one execution summary per workflow
         ElementExecutionSummary elementExecutionSummary = serviceExecutionSummaries.get(0);
@@ -562,6 +618,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
               infraMappingSummary.getInfraMappingId(), EntityType.INFRASTRUCTURE_MAPPING.name());
         }
       }
+
       long instanceCount = 0L;
       if (instancesCount != null) {
         instanceCount = instancesCount.longValue();
@@ -583,17 +640,28 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         continue;
       }
 
+      Long startTs = workflowExecution.getStartTs();
+      Date startDate = null;
+      if (startTs != null) {
+        startDate = new Date(startTs.longValue());
+      }
+
+      ExecutionStatus status = workflowExecution.getStatus();
+      String executionStatus = null;
+      if (status != null) {
+        executionStatus = status.name();
+      }
+
       for (Artifact artifact : artifacts) {
         ArtifactSummary artifactSummary = getArtifactSummary(
             artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
-
         DeploymentHistory deploymentHistory = DeploymentHistory.Builder.aDeploymentHistory()
                                                   .withArtifact(artifactSummary)
-                                                  .withDeployedAt(new Date(workflowExecution.getEndTs()))
+                                                  .withDeployedAt(startDate)
                                                   .withInstanceCount(instanceCount)
                                                   .withPipeline(pipelineEntitySummary)
                                                   .withServiceInfra(infraMappingEntitySummary)
-                                                  .withStatus(workflowExecution.getStatus().name())
+                                                  .withStatus(executionStatus)
                                                   .withTriggeredBy(triggeredBySummary)
                                                   .withWorkflow(workflowExecutionSummary)
                                                   .build();
