@@ -35,6 +35,13 @@ public abstract class OrchestrationWorkflow {
 
   private String validationMessage;
 
+  public boolean isTemplatized() {
+    if (getUserVariables() != null) {
+      return getUserVariables().stream().anyMatch(variable -> !variable.isFixed());
+    }
+    return false;
+  }
+
   public OrchestrationWorkflowType getOrchestrationWorkflowType() {
     return orchestrationWorkflowType;
   }
