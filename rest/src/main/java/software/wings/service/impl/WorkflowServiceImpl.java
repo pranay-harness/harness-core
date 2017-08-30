@@ -346,10 +346,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (stateMachine != null) {
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
     }
-    if (workflow.getOrchestrationWorkflow() != null) {
-      workflow.getOrchestrationWorkflow().onLoad();
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow != null) {
+      orchestrationWorkflow.onLoad();
+      workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
     }
-
     populateServices(workflow);
   }
 
@@ -448,6 +449,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       }
       orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, templateExpressions);
+      workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
     }
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
