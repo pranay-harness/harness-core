@@ -14,6 +14,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.name.Named;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -36,7 +37,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
@@ -89,7 +90,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
   @Inject private RoleService roleService;
-  @Inject private JobScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
 
   /* (non-Javadoc)

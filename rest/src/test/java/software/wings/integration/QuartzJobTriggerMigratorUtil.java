@@ -4,6 +4,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Ignore;
@@ -19,7 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 
 /**
@@ -32,7 +33,7 @@ public class QuartzJobTriggerMigratorUtil extends WingsBaseTest {
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private JobScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
    * Run this test by specifying VM argument -DsetupScheduler="true"

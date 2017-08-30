@@ -50,8 +50,8 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.NotifyJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.utils.KryoUtils;
@@ -85,7 +85,7 @@ public class StateMachineExecutor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
   @Inject private ExecutionInterruptManager executionInterruptManager;
-  @Inject private JobScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private DelegateService delegateService;
 
   @Inject @Named("waitStateResumer") private ScheduledExecutorService scheduledExecutorService;
