@@ -19,8 +19,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 import software.wings.api.InstanceElement;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.api.PhaseElement;
@@ -51,17 +49,14 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Validator;
-import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.
@@ -310,7 +305,7 @@ public class JenkinsState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  @Attributes(title = "Timeout (Milli-seconds)")
+  @Attributes(title = "Timeout (ms)")
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
@@ -525,173 +520,5 @@ public class JenkinsState extends State {
         return jenkinsExecutionResponse;
       }
     }
-  }
-
-  public static class ParameterEntry {
-    @Attributes(title = "Parameter Name") String key;
-    @Attributes(title = "Parameter Value") String value;
-
-    /**
-     * Getter for property 'filePath'.
-     *
-     * @return Value for property 'filePath'.
-     */
-    public String getKey() {
-      return key;
-    }
-
-    /**
-     * Setter for property 'filePath'.
-     *
-     * @param key Value to set for property 'filePath'.
-     */
-    public void setKey(String key) {
-      this.key = key;
-    }
-
-    /**
-     * Getter for property 'assertion'.
-     *
-     * @return Value for property 'assertion'.
-     */
-    public String getValue() {
-      return value;
-    }
-
-    /**
-     * Setter for property 'assertion'.
-     *
-     * @param value Value to set for property 'assertion'.
-     */
-    public void setValue(String value) {
-      this.value = value;
-    }
-  }
-
-  public static class FilePathAssertionEntry {
-    @Attributes(title = "File/Artifact Path") String filePath;
-    @Attributes(title = "Assertion") String assertion;
-    @SchemaIgnore Status status;
-    @SchemaIgnore String fileData;
-
-    public FilePathAssertionEntry() {}
-
-    public FilePathAssertionEntry(String filePath, String assertion, String fileData) {
-      this.filePath = filePath;
-      this.assertion = assertion;
-      this.fileData = fileData;
-    }
-
-    public FilePathAssertionEntry(String filePath, String assertion, Status status) {
-      this.filePath = filePath;
-      this.assertion = assertion;
-      this.status = status;
-    }
-
-    /**
-     * Getter for property 'fileData'.
-     *
-     * @return Value for property 'fileData'.
-     */
-    public String getFileData() {
-      return fileData;
-    }
-
-    /**
-     * Setter for property 'fileData'.
-     *
-     * @param fileData Value to set for property 'fileData'.
-     */
-    public void setFileData(String fileData) {
-      this.fileData = fileData;
-    }
-
-    /**
-     * Getter for property 'filePath'.
-     *
-     * @return Value for property 'filePath'.
-     */
-    public String getFilePath() {
-      return filePath;
-    }
-
-    /**
-     * Setter for property 'filePath'.
-     *
-     * @param filePath Value to set for property 'filePath'.
-     */
-    public void setFilePath(String filePath) {
-      this.filePath = filePath;
-    }
-
-    /**
-     * Getter for property 'assertion'.
-     *
-     * @return Value for property 'assertion'.
-     */
-    public String getAssertion() {
-      return assertion;
-    }
-
-    /**
-     * Setter for property 'assertion'.
-     *
-     * @param assertion Value to set for property 'assertion'.
-     */
-    public void setAssertion(String assertion) {
-      this.assertion = assertion;
-    }
-
-    /**
-     * Getter for property 'status'.
-     *
-     * @return Value for property 'status'.
-     */
-    public Status getStatus() {
-      return status;
-    }
-
-    /**
-     * Setter for property 'status'.
-     *
-     * @param status Value to set for property 'status'.
-     */
-    public void setStatus(Status status) {
-      this.status = status;
-    }
-
-    /**
-     * Xml format.
-     *
-     * @return true, if successful
-     */
-    public boolean xmlFormat() {
-      try {
-        document();
-        return true;
-      } catch (Exception e) {
-        return false;
-      }
-    }
-
-    /**
-     * Xpath.
-     *
-     * @param path the path
-     * @return the string
-     */
-    public String xpath(String path) {
-      try {
-        return XmlUtils.xpath(document(), path);
-      } catch (Exception e) {
-        return null;
-      }
-    }
-
-    private Document document() throws ParserConfigurationException, SAXException, IOException {
-      return XmlUtils.parse(fileData);
-    }
-
-    public enum Status { NOT_FOUND, SUCCESS, FAILED }
   }
 }

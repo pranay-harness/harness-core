@@ -21,7 +21,13 @@ import java.util.List;
 public class BambooArtifactStream extends ArtifactStream {
   @UIOrder(4) @NotEmpty @Attributes(title = "Plan Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
+  @UIOrder(5)
+  @Attributes(title = "Meta-data Only (Artifact download not required)")
+  public boolean getMetadataOnly() {
+    return super.isMetadataOnly();
+  }
+
+  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new Bamboo artifact stream.
@@ -126,6 +132,7 @@ public class BambooArtifactStream extends ArtifactStream {
     private long lastUpdatedAt;
     private boolean autoApproveForProduction = false;
     private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+    private boolean metadataOnly = false;
 
     private Builder() {}
 
@@ -282,6 +289,14 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With MetadataOnly builder.
+     */
+    public Builder withMetadataOnly(boolean metadataOnly) {
+      this.metadataOnly = metadataOnly;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -300,7 +315,8 @@ public class BambooArtifactStream extends ArtifactStream {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoApproveForProduction(autoApproveForProduction)
-          .withStreamActions(streamActions);
+          .withStreamActions(streamActions)
+          .withMetadataOnly(metadataOnly);
     }
 
     /**
@@ -323,6 +339,7 @@ public class BambooArtifactStream extends ArtifactStream {
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       bambooArtifactStream.setStreamActions(streamActions);
+      bambooArtifactStream.setMetadataOnly(metadataOnly);
       return bambooArtifactStream;
     }
   }

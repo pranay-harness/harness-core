@@ -1,15 +1,20 @@
 package software.wings.helpers.ext.bamboo;
 
+import static org.awaitility.Awaitility.with;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -34,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -56,6 +62,7 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public List<String> getJobKeys(BambooConfig bambooConfig, String planKey) {
+    logger.info("Retrieving job keys for plan key {}", planKey);
     Call<JsonNode> request =
         getBambooClient(bambooConfig)
             .listPlanWithJobDetails(
@@ -63,13 +70,14 @@ public class BambooServiceImpl implements BambooService {
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
+      logger.info("Reading job keys for plan key {} success", planKey);
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (Exception ex) {
       logger.error("Job keys fetch failed with exception", ex);
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      return new ArrayList<>();
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ex.getMessage());
     }
   }
 
@@ -92,7 +100,8 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("BambooService job keys fetch failed with exception", ex);
+      logger.error("Failed to get the last successful build for plan key {}", ex);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ex.getMessage());
     }
     return null;
   }
@@ -109,79 +118,208 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public Map<String, String> getPlanKeys(BambooConfig bambooConfig) {
-    Call<JsonNode> request =
-        getBambooClient(bambooConfig)
-            .listProjectPlans(Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())));
-    Map<String, String> planNameMap = new HashMap<>();
-    Response<JsonNode> response = null;
+    return getPlanKeys(bambooConfig, 10000);
+  }
 
+  public Map<String, String> getPlanKeys(BambooConfig bambooConfig, int maxResults) {
     try {
-      response = getHttpRequestExecutionResponse(request);
-      JsonNode planJsonNode = response.body().at("/plans/plan");
-      planJsonNode.elements().forEachRemaining(jsonNode -> {
-        String planKey = jsonNode.get("key").asText();
-        String planName = jsonNode.get("shortName").asText();
-        planNameMap.put(planKey, planName);
-      });
-    } catch (IOException ex) {
-      if (response != null && !response.isSuccessful()) {
-        IOUtils.closeQuietly(response.errorBody());
-      }
-      logger.error("Job keys fetch failed with exception", ex);
-      throw new WingsException(
-          ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching project plans from bamboo server", ex);
+      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+        logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
+        Call<JsonNode> request =
+            getBambooClient(bambooConfig)
+                .listProjectPlans(
+                    Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
+        Map<String, String> planNameMap = new HashMap<>();
+        Response<JsonNode> response = null;
+        try {
+          response = getHttpRequestExecutionResponse(request);
+          if (response.body() != null) {
+            JsonNode planJsonNode = response.body().at("/plans/plan");
+            planJsonNode.elements().forEachRemaining(jsonNode -> {
+              String planKey = jsonNode.get("key").asText();
+              String planName = jsonNode.get("shortName").asText();
+              planNameMap.put(planKey, planName);
+            });
+          }
+        } catch (IOException ex) {
+          if (response != null && !response.isSuccessful()) {
+            IOUtils.closeQuietly(response.errorBody());
+          }
+          logger.error("Failed to fetch project plans from bamboo server {}", bambooConfig.getBambooUrl(), ex);
+          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ex.getMessage());
+        }
+        logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
+        return planNameMap;
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Bamboo server took too long to respond");
     }
-    return planNameMap;
   }
 
   private Response<JsonNode> getHttpRequestExecutionResponse(Call<JsonNode> request) throws IOException {
     Response<JsonNode> response = request.execute();
+    handleResponse(response);
+    return response;
+  }
 
-    if (response.code() != 200) {
+  private void handleResponse(Response<?> response) throws IOException {
+    if (response.isSuccessful()) {
+      return;
+    }
+    if (response.code() == 401) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Bamboo credentials");
     }
-
-    return response;
+    if (response.errorBody() == null) {
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", response.message());
+    }
+    throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", response.errorBody().string());
   }
 
   @Override
   public List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
-    List<BuildDetails> buildDetailsList = new ArrayList<>();
-
-    Call<JsonNode> request = getBambooClient(bambooConfig)
-                                 .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
-    Response<JsonNode> response = null;
     try {
-      response = getHttpRequestExecutionResponse(request);
-      JsonNode resultNode = response.body().at("/results/result");
-      if (resultNode != null) {
-        resultNode.elements().forEachRemaining(jsonNode -> {
-          buildDetailsList.add(aBuildDetails()
-                                   .withNumber(jsonNode.get("buildNumber").asText())
-                                   .withRevision(jsonNode.get("vcsRevisionKey").asText())
-                                   .build());
-        });
-      }
-    } catch (IOException ex) {
-      if (response != null && !response.isSuccessful()) {
-        IOUtils.closeQuietly(response.errorBody());
-      }
-      logger.error("BambooService job keys fetch failed with exception", ex);
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from bamboo server", ex);
+      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+        List<BuildDetails> buildDetailsList = new ArrayList<>();
+        Call<JsonNode> request =
+            getBambooClient(bambooConfig)
+                .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
+        Response<JsonNode> response = null;
+        try {
+          response = getHttpRequestExecutionResponse(request);
+          if (response.body() != null) {
+            JsonNode resultNode = response.body().at("/results/result");
+            if (resultNode != null) {
+              resultNode.elements().forEachRemaining(jsonNode -> {
+                buildDetailsList.add(aBuildDetails()
+                                         .withNumber(jsonNode.get("buildNumber").asText())
+                                         .withRevision(jsonNode.get("vcsRevisionKey").asText())
+                                         .build());
+              });
+            }
+          }
+          return buildDetailsList;
+        } catch (Exception ex) {
+          if (response != null && !response.isSuccessful()) {
+            IOUtils.closeQuietly(response.errorBody());
+          }
+          logger.error("BambooService job keys fetch failed with exception", ex);
+          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message",
+              "Error in fetching builds from bamboo server. Reason:" + ex.getMessage());
+        }
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Bamboo server took too long to respond");
     }
-    return buildDetailsList;
   }
 
   @Override
   public List<String> getArtifactPath(BambooConfig bambooConfig, String planKey) {
-    List<String> artifactPaths = new ArrayList<>();
-    BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
-    if (lastSuccessfulBuild != null) {
-      Map<String, String> buildArtifactsUrlMap =
-          getBuildArtifactsUrlMap(bambooConfig, planKey, lastSuccessfulBuild.getNumber());
-      artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
+    try {
+      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+        List<String> artifactPaths = new ArrayList<>();
+        BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
+        if (lastSuccessfulBuild != null) {
+          Map<String, String> buildArtifactsUrlMap =
+              getBuildArtifactsUrlMap(bambooConfig, planKey, lastSuccessfulBuild.getNumber());
+          artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
+        }
+        return artifactPaths;
+
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Bamboo server request did not succeed within 20 secs", e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Bamboo server took too long to respond");
     }
-    return artifactPaths;
+  }
+
+  @Override
+  public String triggerPlan(BambooConfig bambooConfig, String planKey, Map<String, String> parameters) {
+    logger.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    Response<JsonNode> response = null;
+    String buildResultKey = null;
+    try {
+      if (parameters == null) {
+        parameters = new HashMap<>();
+      }
+      // Replace all the parameters with
+      Call<JsonNode> request =
+          getBambooClient(bambooConfig).triggerPlan(getBasicAuthCredentials(bambooConfig), planKey, parameters);
+      response = getHttpRequestExecutionResponse(request);
+      if (response.body() != null) {
+        if (response.body().findValue("buildResultKey") != null) {
+          buildResultKey = response.body().findValue("buildResultKey").asText();
+        }
+      }
+      if (buildResultKey == null) {
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+            "Failed to trigger bamboo plan [" + planKey + "]. Reason: buildResultKey does not exist in response");
+      }
+    } catch (Exception e) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
+      logger.error("Failed to trigger bamboo plan [" + planKey + "]", e);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + e.getMessage());
+    }
+    logger.info(
+        "Bamboo plan execution success for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    return buildResultKey;
+  }
+
+  @Override
+  public Result getBuildResult(BambooConfig bambooConfig, String buildResultKey) {
+    Response<Result> response = null;
+    try {
+      Call<Result> request =
+          getBambooClient(bambooConfig).getBuildResult(getBasicAuthCredentials(bambooConfig), buildResultKey);
+      response = request.execute();
+      handleResponse(response);
+      if (response.isSuccessful()) {
+        Result result = response.body();
+        if (result != null) {
+          if (bambooConfig.getBambooUrl().endsWith("/")) {
+            result.setBuildUrl(bambooConfig.getBambooUrl() + "browse/" + buildResultKey);
+          } else {
+            result.setBuildUrl(bambooConfig.getBambooUrl() + "/browse/" + buildResultKey);
+          }
+        }
+        return response.body();
+      }
+    } catch (Exception e) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
+      logger.error("BambooService job keys fetch failed with exception", e);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message",
+          "Failed to retrieve build status for [ " + buildResultKey + "]. Reason:" + e.getMessage());
+    }
+    return Result.builder().build();
+  }
+
+  @Override
+  public Status getBuildResultStatus(BambooConfig bambooConfig, String buildResultKey) {
+    Response<Status> response = null;
+    try {
+      Call<Status> request =
+          getBambooClient(bambooConfig).getBuildResultStatus(getBasicAuthCredentials(bambooConfig), buildResultKey);
+      response = request.execute();
+      if (!response.isSuccessful()) {
+        if (response.code() == 404) {
+          return Status.builder().finished(true).build();
+        }
+      }
+      return response.body();
+    } catch (Exception e) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
+      logger.error("BambooService job keys fetch failed with exception", e);
+      throw new WingsException(
+          ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Failed to trigger bamboo plan " + buildResultKey, e);
+    }
   }
 
   private List<String> getArtifactRelativePaths(Collection<String> paths) {
@@ -244,12 +382,21 @@ public class BambooServiceImpl implements BambooService {
       uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
       return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
+      throw new WingsException(
+          ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Invalid artifact path " + ex.getStackTrace());
     }
   }
+
   @Override
   public boolean isRunning(BambooConfig bambooConfig) {
-    return getPlanKeys(bambooConfig) != null; // TODO:: use status API
+    try {
+      return getPlanKeys(bambooConfig, 1) != null; // TODO:: First check use status API
+    } catch (Exception e) {
+      if (e instanceof JsonParseException) {
+        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Bamboo server may not be running");
+      }
+      throw e;
+    }
   }
 
   /**
@@ -306,5 +453,31 @@ public class BambooServiceImpl implements BambooService {
       });
     }
     return jobKeys;
+  }
+
+  public static void main(String... args) throws Exception {
+    String url = "http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/"; //"https://127.0.0.1:8000"; //;
+
+    url = "https://localhost:8000";
+
+    BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
+                                    .withBambooUrl(url)
+                                    .withUsername("wingsbuild")
+                                    .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
+                                    .build();
+    BambooServiceImpl bambooService = new BambooServiceImpl();
+
+    bambooService.isRunning(bambooConfig);
+    // Get all Plan Keys
+    // Map<String, String> planKeys = bambooService.getPlanKeys(bambooConfig);
+
+    // planKeys.forEach((s, s2) -> System.out.println("s = " + s));
+
+    // Trigger Plan
+    // bambooService.triggerPlan(bambooConfig, "TOD-TOD", new HashMap<>());
+    // Get the build status result
+    // System.out.println("bambooService status = " + bambooService.getBuildResultStatus(bambooConfig, "TOD-TOD-49"));
+
+    // System.out.println("bambooService result = " + bambooService.getBuildResult(bambooConfig, "TOD-TOD-49"));
   }
 }

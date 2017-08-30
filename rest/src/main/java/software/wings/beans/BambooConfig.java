@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.hibernate.validator.constraints.URL;
 import software.wings.jersey.JsonViews;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
@@ -119,7 +118,7 @@ public class BambooConfig extends SettingValue implements Encryptable {
       return false;
     if (!Arrays.equals(password, that.password))
       return false;
-    return accountId.equals(that.accountId);
+    return java.util.Objects.equals(this.accountId, that.accountId);
   }
 
   @Override

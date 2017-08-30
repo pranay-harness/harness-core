@@ -52,10 +52,13 @@ public class ArtifactCollectionJob implements Job {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
     List<Artifact> artifacts = null;
+
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    Validator.notNullCheck("Artifact Stream", artifactStream);
     try {
-      artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
-    } catch (Exception ex) {
-      logger.warn("Artifact collection cron failed with error", ex);
+      artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
+    } catch (Exception e) {
+      logger.warn("Failed to collect artifact for appId {} , artifact stream {}", appId, artifactStream, e);
     }
 
     if (artifacts != null && artifacts.size() != 0) {
@@ -71,11 +74,9 @@ public class ArtifactCollectionJob implements Job {
   }
 
   // TODO:: Simplify
-  private List<Artifact> collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    Validator.notNullCheck("Artifact Stream", artifactStream);
+  private List<Artifact> collectNewArtifactsFromArtifactStream(String appId, ArtifactStream artifactStream) {
     List<Artifact> newArtifacts = new ArrayList<>();
-
+    String artifactStreamId = artifactStream.getUuid();
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
         || artifactStream.getArtifactStreamType().equals(ECR.name())
         || artifactStream.getArtifactStreamType().equals(GCR.name())) {

@@ -261,7 +261,7 @@ public class NexusServiceImpl implements NexusService {
               + " for Repository " + repoId,
           e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(ErrorCode.ARTIFACT_SERVER_ERROR, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     logger.info("Retrieving groupId paths success");
