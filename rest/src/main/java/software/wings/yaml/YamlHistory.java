@@ -15,4 +15,8 @@ public class YamlHistory {
   public void setVersions(List<YamlVersion> versions) {
     this.versions = versions;
   }
+
+  public void addVersion(YamlVersion version) {
+    this.versions.add(version);
+  }
 }

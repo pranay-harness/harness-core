@@ -26,11 +26,11 @@ import javax.ws.rs.QueryParam;
  *
  * @author bsollish
  */
-@Api("/yamlHistory")
-@Path("/yamlHistory")
+@Api("/yamlVersion")
+@Path("/yamlVersion")
 @Produces("application/json")
 @AuthRule(APPLICATION)
-public class YamlHistoryResource {
+public class YamlVersionResource {
   // private AppService appService;
   // private ServiceResourceService serviceResourceService;
 
@@ -43,60 +43,49 @@ public class YamlHistoryResource {
    * @param serviceResourceService the service (resource) service
    */
   @Inject
-  public YamlHistoryResource() {}
+  public YamlVersionResource() {}
 
   /**
-   * Gets the Yaml history by entityId
+   * Gets the Yaml version by entityId and versionId
    *
    * @param accountId
-   * @param entityId
-   * @param yamlType
+   * @param versionId
    * @return the rest response
    */
   @GET
   @Path("/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlHistory> get(@PathParam("accountId") String accountId,
-      @QueryParam("entityId") String entityId, @QueryParam("type") String yamlType) {
+  public RestResponse<YamlVersionDetails> get(
+      @PathParam("accountId") String accountId, @QueryParam("versionId") String versionId) {
     RestResponse rr = new RestResponse<>();
 
-    YamlHistory yh = new YamlHistory();
+    YamlVersionDetails yvd = new YamlVersionDetails();
 
     //------- ADD DUMMY DATA -------------
-
-    YamlVersion yv1 = new YamlVersion();
-    YamlVersion yv2 = new YamlVersion();
-    YamlVersion yv3 = new YamlVersion();
-
-    yv1.setVersion(1);
-    yv1.setInEffectStart(String.valueOf(System.currentTimeMillis()));
-    yv1.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
-    yv1.setType(YamlType.SERVICE);
-    yv1.setEntityId("serv6789");
-    yv1.setYamlVersionId("yv12345");
-    yh.addVersion(yv1);
-
-    yv2.setVersion(2);
-    yv2.setInEffectStart(String.valueOf(System.currentTimeMillis() + 1000001));
-    yv2.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 2000000));
-    yv2.setType(YamlType.SERVICE);
-    yv2.setEntityId("serv6789");
-    yv2.setYamlVersionId("yv23456");
-    yh.addVersion(yv2);
-
-    yv3.setVersion(3);
-    yv3.setInEffectStart(String.valueOf(System.currentTimeMillis() + 2000001));
-    yv3.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 3000000));
-    yv3.setType(YamlType.SERVICE);
-    yv3.setEntityId("serv6789");
-    yv3.setYamlVersionId("yv34567");
-    yh.addVersion(yv3);
-
+    yvd.setVersion(1);
+    yvd.setInEffectStart(String.valueOf(System.currentTimeMillis()));
+    yvd.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
+    yvd.setType(YamlType.SERVICE);
+    yvd.setEntityId("serv6789");
+    yvd.setYamlVersionId("yv12345");
+    yvd.setYaml("name: Login\n"
+        + "artifactType: WAR\n"
+        + "description: \"The Login service\"\n"
+        + "service-commands: \n"
+        + "  - start\n"
+        + "  - install\n"
+        + "  - stop");
     //------------------------------------
 
-    rr.setResource(yh);
+    rr.setResource(yvd);
 
     return rr;
   }
 }
+
+// yv1.setYaml("name: Login\n" + "artifactType: WAR\n" + "description: \"The Login service\"\n" + "service-commands: \n"
+// + "  - start\n" + "  - install\n" + "  - stop"); yv2.setYaml("name: Login\n" + "artifactType: WAR\n" + "description:
+// \"The NEW description\"\n" + "service-commands: \n" + "  - start\n" + "  - install\n" + "  - stop");
+// yv3.setYaml("name: LoginXXX\n" + "artifactType: WAR\n" + "description: \"The NEW description\"\n" +
+// "service-commands: \n" + "  - start\n" + "  - install\n" + "  - stop\n" + "  - newCommand");
