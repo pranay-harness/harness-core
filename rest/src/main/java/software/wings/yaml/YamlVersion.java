@@ -1,6 +1,6 @@
 package software.wings.yaml;
 
-public class YamlVersion {
+public class YamlVersion extends YamlHistory {
   public String yamlVersionId;
   public int version;
   public YamlType type;
