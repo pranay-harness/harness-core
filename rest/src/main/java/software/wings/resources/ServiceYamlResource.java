@@ -15,6 +15,7 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
@@ -22,6 +23,7 @@ import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
@@ -288,27 +290,24 @@ public class ServiceYamlResource {
           return rr;
         }
 
-        /* TODO - LEFT OFF HERE
+        // ServiceVariableResource svr = new ServiceVariableResource(serviceVariableService);
+
         // do deletions
-        for (ConfigVarYaml configVar : configVarsToDelete) {
-          if (serviceVariableMap.containsKey(configVar.getName())) {
-            // TODO - add implementation
-            serviceResourceService.deleteVariable(appId, serviceId, configVar.getName());
+        for (ConfigVarYaml cv : configVarsToDelete) {
+          if (serviceVariableMap.containsKey(cv.getName())) {
+            serviceVariableService.delete(appId, serviceVariableMap.get(cv.getName()).getUuid());
           } else {
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "serviceVariableMap
-        does not contain the key: " + configVar.getName() + "!"); return rr;
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                "serviceVariableMap does not contain the key: " + cv.getName() + "!");
+            return rr;
           }
         }
-        */
 
-        /*
         // do additions
         for (ConfigVarYaml cv : configVarsToAdd) {
-          ServiceVariable newServiceVariable = createNewServiceVariable(appId, cv);
-          //serviceResourceService.addVariable(appId, serviceId, newServiceVariable);
-          serviceVariableService.post();
+          ServiceVariable savedServiceVariable =
+              serviceVariableService.save(createNewServiceVariable(appId, service.getUuid(), cv));
         }
-        */
         // ----------- END CONFIG VARIABLE SECTION ---------------
 
         // save the changes
@@ -369,9 +368,16 @@ public class ServiceYamlResource {
     return newServiceCommand;
   }
 
-  private ServiceVariable createNewServiceVariable(String appId, ConfigVarYaml cv) {
-    ServiceVariable newServiceVariable =
-        aServiceVariable().withName(cv.getName()).withValue(cv.getValue().toCharArray()).build();
+  private ServiceVariable createNewServiceVariable(String appId, String serviceId, ConfigVarYaml cv) {
+    ServiceVariable newServiceVariable = aServiceVariable()
+                                             .withName(cv.getName())
+                                             .withValue(cv.getValue().toCharArray())
+                                             .withEntityType(EntityType.SERVICE)
+                                             .withEntityId(serviceId)
+                                             .withTemplateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
+                                             .withType(Type.TEXT)
+                                             .withAppId(appId)
+                                             .build();
 
     return newServiceVariable;
   }
