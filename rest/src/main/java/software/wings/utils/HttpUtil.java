@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -62,15 +63,15 @@ public class HttpUtil {
 
       HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
       connection.setRequestMethod("HEAD");
-      connection.setConnectTimeout(20000); // 20ms otherwise delegate times out
-      connection.setReadTimeout(20000);
+      connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
+      connection.setReadTimeout(15000);
       int responseCode = connection.getResponseCode();
       if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
         logger.info("Url {} is connectable", url);
         return true;
       }
     } catch (Exception e) {
-      logger.warn("Error occurred while testing url {} connectivity.", url, e);
+      logger.warn("Error occurred while validating url {} connectivity.", url, e);
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
     }
     return false;
@@ -103,6 +104,8 @@ public static OkHttpClient getUnsafeOkHttpClient() {
     builder.sslSocketFactory(HttpUtil.getSslContext().getSocketFactory());
     HostnameVerifier allHostsValid = (s, sslSession) -> true;
     builder.hostnameVerifier(allHostsValid);
+    builder.connectTimeout(15000, TimeUnit.SECONDS);
+    builder.readTimeout(15000, TimeUnit.SECONDS);
     OkHttpClient okHttpClient = builder.build();
     return okHttpClient;
   } catch (Exception e) {

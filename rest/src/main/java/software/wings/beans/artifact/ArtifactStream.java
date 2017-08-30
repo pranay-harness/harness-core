@@ -237,9 +237,6 @@ public abstract class ArtifactStream extends Base {
         .add("sourceName", sourceName)
         .add("artifactStreamType", artifactStreamType)
         .add("settingId", settingId)
-        .add("autoDownload", autoDownload)
-        .add("autoApproveForProduction", autoApproveForProduction)
-        .add("streamActions", streamActions)
         .toString();
   }
 

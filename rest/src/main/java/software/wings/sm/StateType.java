@@ -45,6 +45,7 @@ import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsNodeSelectState;
+import software.wings.sm.states.BambooState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.DcNodeSelectState;
@@ -182,6 +183,11 @@ public enum StateType implements StateTypeDescriptor {
    * Jenkins state type.
    */
   JENKINS(JenkinsState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
+   * Bamboo state type.
+   */
+  BAMBOO(BambooState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Select state.

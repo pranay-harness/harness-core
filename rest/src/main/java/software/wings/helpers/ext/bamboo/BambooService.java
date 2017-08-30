@@ -75,4 +75,29 @@ public interface BambooService {
    * @return the boolean
    */
   boolean isRunning(BambooConfig bambooConfig);
+
+  /**
+   * Triggers Project Plan
+   *
+   * @param planKey    the plankey
+   * @param parameters the parameters
+   * @return Build Result Key {projectKey}-{buildKey}-{buildNumber}
+   */
+  String triggerPlan(BambooConfig bambooConfig, String planKey, Map<String, String> parameters);
+
+  /**
+   * Retrieves the bamboo build result
+   * @param bambooConfig BambooConfig
+   * @param buildResultKey Build result key {projectKey}-{buildKey}-{buildNumber}
+   * @return
+   */
+  Result getBuildResult(BambooConfig bambooConfig, String buildResultKey);
+
+  /**
+   * Retrieves the bamboo build running result status
+   * @param bambooConfig BambooConfig
+   * @param buildResultKey  Build result key {projectKey}-{buildKey}-{buildNumber}
+   * @return
+   */
+  Status getBuildResultStatus(BambooConfig bambooConfig, String buildResultKey);
 }

@@ -396,6 +396,7 @@ public enum ErrorCode {
   PIPELINE_EXECUTION_IN_PROGRESS("PIPELINE_EXECUTION_IN_PROGRESS"), /**
                                                                      * Aws access denied error code.
                                                                      */
+
   AWS_ACCESS_DENIED("AWS_ACCESS_DENIED"),
 
   /**
@@ -429,7 +430,10 @@ public enum ErrorCode {
   /**
    * General Yaml related error
    */
-  GENERAL_YAML_INFO("GENERAL_YAML_INFO");
+  GENERAL_YAML_INFO("GENERAL_YAML_INFO"), /**
+                                           * Artifact server
+                                           */
+  ARTIFACT_SERVER_ERROR("ARTIFACT_SERVER_ERROR");
 
   /**
    * The constant ARGS_NAME.

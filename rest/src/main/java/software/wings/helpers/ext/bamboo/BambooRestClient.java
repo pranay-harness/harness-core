@@ -5,9 +5,14 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
+
+import java.util.Map;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -29,8 +34,8 @@ public interface BambooRestClient {
    * @param authorization the authorization
    * @return the call
    */
-  @GET("rest/api/latest/plan.json?authType=basic&max-results=10000")
-  Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization);
+  @GET("rest/api/latest/plan.json?authType=basic")
+  Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization, @Query("max-results") int maxResults);
 
   /**
    * Last successful build call.
@@ -80,4 +85,33 @@ public interface BambooRestClient {
    * @return the call
    */
   @GET Call<ResponseBody> downloadArtifact(@Header("Authorization") String authorization, @Url String fileUrl);
+
+  /**
+   * Gets the running build status
+   * @param authorization
+   * @return
+   */
+  @GET("rest/api/latest/result/status/{buildResultKey}.json?authType=basic")
+  Call<Status> getBuildResultStatus(
+      @Header("Authorization") String authorization, @Path("buildResultKey") String buildResultKey);
+
+  /**
+   * Gets the completed build status
+   * @param authorization
+   * @return
+   */
+  @GET("rest/api/latest/result/{buildResultKey}.json?authType=basic")
+  Call<Result> getBuildResult(
+      @Header("Authorization") String authorization, @Path("buildResultKey") String buildResultKey);
+
+  /***
+   * Triggers Plan
+   * @param authorization
+   * @param planKey
+   * @return
+   */
+  @Headers("Accept: application/json")
+  @POST("rest/api/latest/queue/{planKey}?authtype=basic&stage&executeAllStages")
+  Call<JsonNode> triggerPlan(@Header("Authorization") String authorization, @Path("planKey") String planKey,
+      @QueryMap Map<String, String> parameters);
 }

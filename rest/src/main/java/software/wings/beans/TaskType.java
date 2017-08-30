@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -27,6 +28,7 @@ public enum TaskType {
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class),
   BAMBOO_COLLECTION(TaskGroup.BAMBOO, BambooCollectionTask.class),
+  BAMBOO(TaskGroup.BAMBOO, BambooTask.class),
   COMMAND(TaskGroup.COMMAND, CommandTask.class),
   JENKINS_GET_BUILDS(TaskGroup.JENKINS, ServiceImplDelegateTask.class),
   JENKINS_GET_JOBS(TaskGroup.JENKINS, ServiceImplDelegateTask.class),

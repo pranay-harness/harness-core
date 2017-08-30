@@ -4,7 +4,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
-import software.wings.sm.states.JenkinsState.FilePathAssertionEntry;
+import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
