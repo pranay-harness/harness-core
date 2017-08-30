@@ -15,6 +15,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import net.redhogs.cronparser.CronExpressionDescriptor;
 import net.redhogs.cronparser.DescriptionTypeEnum;
@@ -58,7 +59,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.ArtifactStreamActionJob;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
@@ -98,7 +99,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject private JobScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;

@@ -1,17 +1,11 @@
 package software.wings.scheduler;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import software.wings.app.MainConfiguration;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-/**
- * Created by anubhaw on 10/21/16.
- */
-@Singleton
-public class JobScheduler extends AbstractQuartzScheduler {
+public class VerificationJobScheduler extends AbstractQuartzScheduler {
   /**
    * Instantiates a new Cron scheduler.
    *
@@ -19,7 +13,7 @@ public class JobScheduler extends AbstractQuartzScheduler {
    * @param configuration the configuration
    */
   @Inject
-  public JobScheduler(Injector injector, MainConfiguration configuration) {
+  public VerificationJobScheduler(Injector injector, MainConfiguration configuration) {
     super(injector, configuration);
   }
 }

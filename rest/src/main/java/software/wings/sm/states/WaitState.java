@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.common.UUIDGenerator;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -31,7 +31,7 @@ public class WaitState extends State {
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  @Transient @Inject private JobScheduler jobScheduler;
+  @Transient @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Attributes(title = "Wait Duration") private long duration;
 

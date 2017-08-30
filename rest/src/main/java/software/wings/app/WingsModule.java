@@ -7,6 +7,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
@@ -57,6 +58,8 @@ import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.QuartzScheduler;
+import software.wings.scheduler.VerificationJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
@@ -77,7 +80,6 @@ import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
-import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.DirectInfrastructureProvider;
@@ -118,8 +120,9 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
-import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
+import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.dashboardStats.InstanceServiceImpl;
+import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
@@ -178,9 +181,9 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
 import software.wings.service.intfc.dashboardStats.InstanceService;
+import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -249,7 +252,6 @@ public class WingsModule extends AbstractModule {
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
-    bind(JobScheduler.class);
     bind(ServiceLocator.class);
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
@@ -319,5 +321,10 @@ public class WingsModule extends AbstractModule {
     Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
     loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+
+    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class);
+    bind(QuartzScheduler.class)
+        .annotatedWith(Names.named("VerificationJobScheduler"))
+        .to(VerificationJobScheduler.class);
   }
 }
