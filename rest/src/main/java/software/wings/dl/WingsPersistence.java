@@ -314,8 +314,9 @@ public interface WingsPersistence {
    * This api is preferred over createQuery() api.
    * @param collectionClass
    * @return
+   * @throws Exception if the authorization fails for any reason
    */
-  Query createAuthorizedQuery(Class collectionClass);
+  Query createAuthorizedQuery(Class collectionClass) throws Exception;
 
   /**
    * Only to be used in testing encryption.
