@@ -77,7 +77,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(List<String> groupByEntityTypes) {
-    long instanceCount = getInstanceCount(getQuery());
+    long instanceCount = 0;
+    try {
+      instanceCount = getInstanceCount(getQuery());
+    } catch (Exception e) {
+      logger.error("Unable to get app instance summary stats", e.getMessage());
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats()
+          .withCountMap(null)
+          .withTotalCount(instanceCount)
+          .build();
+    }
+
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
     for (String groupByEntityType : groupByEntityTypes) {
       String entityIdColumn;
@@ -110,7 +120,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<EntitySummaryStats> getEntitySummaryStats(
       String entityIdColumn, String entityNameColumn, String groupByEntityType) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    Query<Instance> query = getQuery();
+    Query<Instance> query;
+    try {
+      query = getQuery();
+    } catch (Exception e) {
+      logger.error("Unable to get entity summary stats ", e.getMessage());
+      return Lists.newArrayList();
+    }
+
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -141,7 +158,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<EntitySummaryStats> getServiceSummaryStats(
       String serviceId, String entityIdColumn, String entityNameColumn, String groupByEntityType) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    Query<Instance> query = getQuery().field("serviceId").equal(serviceId);
+    Query<Instance> query = null;
+    try {
+      query = getQuery().field("serviceId").equal(serviceId);
+    } catch (Exception e) {
+      logger.error("Unable to get service summary stats", e.getMessage());
+      return Lists.newArrayList();
+    }
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -160,7 +183,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<EntitySummaryStats> getEnvironmentTypeSummaryStats() {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
-    Query<Instance> query = getQuery();
+    Query<Instance> query = null;
+    try {
+      query = getQuery();
+    } catch (Exception e) {
+      logger.error("Unable to get environment type summary stats", e.getMessage());
+      return Lists.newArrayList();
+    }
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -196,7 +225,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes) {
-    Query<Instance> query = getQuery().field("serviceId").equal(serviceId);
+    Query<Instance> query;
+    try {
+      query = getQuery().field("serviceId").equal(serviceId);
+    } catch (Exception e) {
+      logger.error("Unable to get current active instances", e.getMessage());
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
+    }
+
     long instanceCount = getInstanceCount(query);
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
     for (String groupByEntityType : groupByEntityTypes) {
@@ -228,7 +264,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public List<InstanceStatsByService> getAppInstanceStats() {
-    Query<Instance> query = getQuery();
+    Query<Instance> query = null;
+    try {
+      query = getQuery();
+    } catch (Exception e) {
+      logger.error("Unable to get current active instances", e.getMessage());
+      return Lists.newArrayList();
+    }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
     wingsPersistence.getDatastore()
@@ -500,7 +542,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private List<CurrentActiveInstances> getCurrentActiveInstances(String serviceId) {
-    Query<Instance> query = getQuery().field("serviceId").equal(serviceId);
+    Query<Instance> query;
+    try {
+      query = getQuery().field("serviceId").equal(serviceId);
+    } catch (Exception e) {
+      logger.error("Unable to get current active instances", e.getMessage());
+      return Lists.newArrayList();
+    }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
     wingsPersistence.getDatastore()
@@ -683,7 +731,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return builder.build();
   }
 
-  private Query<Instance> getQuery() {
+  private Query<Instance> getQuery() throws Exception {
     return wingsPersistence.createAuthorizedQuery(Instance.class);
   }
 

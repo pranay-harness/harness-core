@@ -574,10 +574,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public Query createAuthorizedQuery(Class collectionClass) {
+  public Query createAuthorizedQuery(Class collectionClass) throws Exception {
     Query query = createQuery(collectionClass);
-    applyAuthFilters(query);
-    return query;
+    if (applyAuthFilters(query)) {
+      return query;
+    } else {
+      throw new Exception(
+          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+    }
   }
 
   /**
