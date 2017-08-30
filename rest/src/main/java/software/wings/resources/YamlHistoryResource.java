@@ -13,7 +13,9 @@ import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlType;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersionDetails;
+import software.wings.yaml.YamlVersionList;
 
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -51,6 +53,7 @@ public class YamlHistoryResource {
    * @param accountId
    * @param entityId
    * @param yamlType
+   * @param versionId - optional, if present than we return (a single) YamlVersion, otherwise YamlHistory
    * @return the rest response
    */
   @GET
@@ -58,10 +61,46 @@ public class YamlHistoryResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlHistory> get(@PathParam("accountId") String accountId,
-      @QueryParam("entityId") String entityId, @QueryParam("type") String yamlType) {
+      @QueryParam("entityId") String entityId, @QueryParam("type") YamlType yamlType,
+      @QueryParam("versionId") Optional<String> versionId) {
+    if (versionId.isPresent()) {
+      return getYamlVersion(accountId, entityId, yamlType, versionId.get());
+    }
+
+    return getYamlVersionList(accountId, entityId, yamlType);
+  }
+
+  private RestResponse<YamlHistory> getYamlVersion(
+      String accountId, String entityId, YamlType yamlType, String versionId) {
     RestResponse rr = new RestResponse<>();
 
-    YamlHistory yh = new YamlHistory();
+    YamlVersionDetails yvd = new YamlVersionDetails();
+
+    //------- ADD DUMMY DATA -------------
+    yvd.setVersion(1);
+    yvd.setInEffectStart(String.valueOf(System.currentTimeMillis()));
+    yvd.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
+    yvd.setType(YamlType.SERVICE);
+    yvd.setEntityId("serv6789");
+    yvd.setYamlVersionId("yv12345");
+    yvd.setYaml("name: Login\n"
+        + "artifactType: WAR\n"
+        + "description: \"The Login service\"\n"
+        + "service-commands: \n"
+        + "  - start\n"
+        + "  - install\n"
+        + "  - stop");
+    //------------------------------------
+
+    rr.setResource(yvd);
+
+    return rr;
+  }
+
+  private RestResponse<YamlHistory> getYamlVersionList(String accountId, String entityId, YamlType yamlType) {
+    RestResponse rr = new RestResponse<>();
+
+    YamlVersionList yvList = new YamlVersionList();
 
     //------- ADD DUMMY DATA -------------
 
@@ -75,7 +114,7 @@ public class YamlHistoryResource {
     yv1.setType(YamlType.SERVICE);
     yv1.setEntityId("serv6789");
     yv1.setYamlVersionId("yv12345");
-    yh.addVersion(yv1);
+    yvList.addVersion(yv1);
 
     yv2.setVersion(2);
     yv2.setInEffectStart(String.valueOf(System.currentTimeMillis() + 1000001));
@@ -83,7 +122,7 @@ public class YamlHistoryResource {
     yv2.setType(YamlType.SERVICE);
     yv2.setEntityId("serv6789");
     yv2.setYamlVersionId("yv23456");
-    yh.addVersion(yv2);
+    yvList.addVersion(yv2);
 
     yv3.setVersion(3);
     yv3.setInEffectStart(String.valueOf(System.currentTimeMillis() + 2000001));
@@ -91,11 +130,11 @@ public class YamlHistoryResource {
     yv3.setType(YamlType.SERVICE);
     yv3.setEntityId("serv6789");
     yv3.setYamlVersionId("yv34567");
-    yh.addVersion(yv3);
+    yvList.addVersion(yv3);
 
     //------------------------------------
 
-    rr.setResource(yh);
+    rr.setResource(yvList);
 
     return rr;
   }
