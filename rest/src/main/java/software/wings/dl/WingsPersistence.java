@@ -310,6 +310,14 @@ public interface WingsPersistence {
   void close();
 
   /**
+   * Creates a query and runs the authFilter to it.
+   * This api is preferred over createQuery() api.
+   * @param collectionClass
+   * @return
+   */
+  Query createAuthorizedQuery(Class collectionClass);
+
+  /**
    * Only to be used in testing encryption.
    *
    * @param <T> the generic type

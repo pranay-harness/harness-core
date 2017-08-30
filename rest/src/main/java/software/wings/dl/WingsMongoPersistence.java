@@ -552,6 +552,34 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return true;
   }
 
+  private boolean applyAuthFilters(Query query) {
+    if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
+      return true;
+    }
+    UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
+    if (userRequestInfo.isAppIdFilterRequired()) {
+      // TODO: field name should be dynamic
+      if (userRequestInfo.getAppId() == null
+          && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
+        return false;
+      } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
+        query.field("appId").in(userRequestInfo.getAllowedAppIds());
+      } else {
+        query.field("appId").equal(userRequestInfo.getAppId());
+      }
+    } else if (userRequestInfo.isEnvIdFilterRequired()) {
+      // TODO:
+    }
+    return true;
+  }
+
+  @Override
+  public Query createAuthorizedQuery(Class collectionClass) {
+    Query query = createQuery(collectionClass);
+    applyAuthFilters(query);
+    return query;
+  }
+
   /**
    * Encrypt an Encryptable object. Currently assumes SimpleEncryption.
    *
