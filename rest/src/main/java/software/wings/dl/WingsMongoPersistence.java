@@ -552,6 +552,38 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return true;
   }
 
+  private boolean applyAuthFilters(Query query) {
+    if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
+      return true;
+    }
+    UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
+    if (userRequestInfo.isAppIdFilterRequired()) {
+      // TODO: field name should be dynamic
+      if (userRequestInfo.getAppId() == null
+          && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
+        return false;
+      } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
+        query.field("appId").in(userRequestInfo.getAllowedAppIds());
+      } else {
+        query.field("appId").equal(userRequestInfo.getAppId());
+      }
+    } else if (userRequestInfo.isEnvIdFilterRequired()) {
+      // TODO:
+    }
+    return true;
+  }
+
+  @Override
+  public Query createAuthorizedQuery(Class collectionClass) throws Exception {
+    Query query = createQuery(collectionClass);
+    if (applyAuthFilters(query)) {
+      return query;
+    } else {
+      throw new Exception(
+          "AuthFilter could not be applied since the user is not assigned to any apps / no app exists in the account");
+    }
+  }
+
   /**
    * Encrypt an Encryptable object. Currently assumes SimpleEncryption.
    *

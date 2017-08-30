@@ -13,9 +13,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.dashboardStats.InstanceService;
 import software.wings.utils.Validator;
 
@@ -31,11 +28,8 @@ public class InstanceServiceImpl implements InstanceService {
   private static final Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
 
   @Override
@@ -47,21 +41,6 @@ public class InstanceServiceImpl implements InstanceService {
     if (!appService.exist(instance.getAppId())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
-
-    // TODO check with Anubhaw if its is a overkill to validate all these entities since each of them would result in a
-    // db call.
-
-    //    ArtifactStream artifactStream = artifactStreamService.get(instance.getAppId(),
-    //    instance.getLastArtifactStreamId()); Validator.notNullCheck("Artifact Stream", artifactStream);
-    //
-    //    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(instance.getAppId(),
-    //    instance.getInfraMappingId()); Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    //
-    //    Artifact artifact = artifactService.get(instance.getAppId(), instance.getLastArtifactId());
-    //    Validator.notNullCheck("Artifact", artifact);
-    //
-    //    Service service = serviceResourceService.get(instance.getAppId(), instance.getServiceId());
-    //    Validator.notNullCheck("Service", service);
 
     Instance currentInstance = get(instance.getAppId(), instance.getUuid());
     Validator.nullCheck("Instance", currentInstance);

@@ -7,7 +7,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.stats.dashboard.InstanceDetails;
-import software.wings.beans.stats.dashboard.InstanceStats;
 import software.wings.beans.stats.dashboard.InstanceStatsByService;
 import software.wings.beans.stats.dashboard.InstanceSummaryStats;
 import software.wings.beans.stats.dashboard.service.ServiceInstanceDashboard;
@@ -40,9 +39,9 @@ public class DashboardStatisticsResource {
   @Path("app-instance-summary-stats")
   @Timed
   @ExceptionMetered
-  public RestResponse<InstanceSummaryStats> getAppInstanceSummaryStats(
+  public RestResponse<InstanceSummaryStats> getAppInstanceSummaryStats(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("groupBy") List<String> groupByEntityTypes) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(appIds, groupByEntityTypes));
+    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(groupByEntityTypes));
   }
 
   /**
@@ -54,7 +53,7 @@ public class DashboardStatisticsResource {
   @Path("service-instance-summary-stats")
   @Timed
   @ExceptionMetered
-  public RestResponse<InstanceSummaryStats> getServiceInstanceSummaryStats(
+  public RestResponse<InstanceSummaryStats> getServiceInstanceSummaryStats(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupBy") List<String> groupByEntityTypes) {
     return new RestResponse<>(dashboardStatsService.getServiceInstanceSummaryStats(serviceId, groupByEntityTypes));
   }
@@ -68,8 +67,9 @@ public class DashboardStatisticsResource {
   @Path("app-instance-stats")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(@QueryParam("appId") List<String> appIds) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceStats(appIds));
+  public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
+    return new RestResponse<>(dashboardStatsService.getAppInstanceStats());
   }
 
   /**
@@ -81,7 +81,8 @@ public class DashboardStatisticsResource {
   @Path("instance-details")
   @Timed
   @ExceptionMetered
-  public RestResponse<InstanceDetails> getInstanceDetails(@QueryParam("instanceId") String instanceId) {
+  public RestResponse<InstanceDetails> getInstanceDetails(
+      @QueryParam("accountId") String accountId, @QueryParam("instanceId") String instanceId) {
     return new RestResponse<InstanceDetails>(dashboardStatsService.getInstanceDetails(instanceId));
   }
 
@@ -94,7 +95,8 @@ public class DashboardStatisticsResource {
   @Path("service-instance-dash")
   @Timed
   @ExceptionMetered
-  public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(@QueryParam("serviceId") String serviceId) {
+  public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(serviceId));
   }
 }
