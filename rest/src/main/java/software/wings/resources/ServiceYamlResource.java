@@ -6,6 +6,7 @@ import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -31,13 +32,16 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlVersion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,22 +67,28 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(APPLICATION)
 public class ServiceYamlResource {
+  private AppService appService;
   private ServiceResourceService serviceResourceService;
   private ServiceVariableService serviceVariableService;
+  private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Instantiates a new app yaml resource.
    *
+   * @param appService the app service
    * @param serviceResourceService the service (resource) service
    * @param serviceVariableService the service (variable) service
+   * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public ServiceYamlResource(
-      ServiceResourceService serviceResourceService, ServiceVariableService serviceVariableService) {
+  public ServiceYamlResource(AppService appService, ServiceResourceService serviceResourceService,
+      ServiceVariableService serviceVariableService, YamlHistoryService yamlHistoryService) {
+    this.appService = appService;
     this.serviceResourceService = serviceResourceService;
     this.serviceVariableService = serviceVariableService;
+    this.yamlHistoryService = yamlHistoryService;
   }
 
   /**
@@ -329,6 +339,16 @@ public class ServiceYamlResource {
 
         // return the new resource
         if (service != null) {
+          // save the before yaml version
+          String accountId = appService.get(appId).getAccountId();
+          YamlVersion beforeYamLVersion = aYamlVersion()
+                                              .withAccountId(accountId)
+                                              .withEntityId(accountId)
+                                              .withType(YamlVersion.Type.SERVICE)
+                                              .withYaml(beforeYaml)
+                                              .build();
+          yamlHistoryService.save(beforeYamLVersion);
+
           rr.setResource(service);
         }
 

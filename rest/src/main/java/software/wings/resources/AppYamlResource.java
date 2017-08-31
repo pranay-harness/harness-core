@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -19,10 +20,13 @@ import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.AppYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlVersion;
+import software.wings.yaml.YamlVersion.Type;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +54,7 @@ import javax.ws.rs.QueryParam;
 public class AppYamlResource {
   private AppService appService;
   private ServiceResourceService serviceResourceService;
+  private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -58,11 +63,14 @@ public class AppYamlResource {
    *
    * @param appService the app service
    * @param serviceResourceService the service (resource) service
+   * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public AppYamlResource(AppService appService, ServiceResourceService serviceResourceService) {
+  public AppYamlResource(
+      AppService appService, ServiceResourceService serviceResourceService, YamlHistoryService yamlHistoryService) {
     this.appService = appService;
     this.serviceResourceService = serviceResourceService;
+    this.yamlHistoryService = yamlHistoryService;
   }
 
   /**
@@ -240,6 +248,16 @@ public class AppYamlResource {
 
         // return the new resource
         if (app != null) {
+          // save the before yaml version
+          String accountId = app.getAccountId();
+          YamlVersion beforeYamLVersion = aYamlVersion()
+                                              .withAccountId(accountId)
+                                              .withEntityId(accountId)
+                                              .withType(Type.APP)
+                                              .withYaml(beforeYaml)
+                                              .build();
+          yamlHistoryService.save(beforeYamLVersion);
+
           rr.setResource(app);
         }
 
