@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -104,8 +105,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate get(String accountId, String delegateId) {
-    return wingsPersistence.get(
-        Delegate.class, aPageRequest().addFilter("accountId", EQ, accountId).addFilter(ID_KEY, EQ, delegateId).build());
+    return wingsPersistence.createQuery(Delegate.class)
+        .field("accountId")
+        .equal(accountId)
+        .field(Mapper.ID_KEY)
+        .equal(delegateId)
+        .get();
   }
 
   @Override
