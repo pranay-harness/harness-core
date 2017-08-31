@@ -249,3 +249,35 @@ FORM_FIELD_TO_ENTITY_TYPE:
     - name: infraMappingId
       value: INFRASTRUCTURE_MAPPING
 
+
+TASK_TYPES:
+    - name: Command Execution
+      value: COMMAND
+    - name: HTTP Verification
+      value: HTTP
+    - name: Host Validation
+      value: HOST_VALIDATION
+    - name: Jenkins
+      value: JENKINS
+    - name: Bamboo
+      value: BAMBOO
+    - name: Nexus
+      value: NEXUS
+    - name: Artifactory
+      value: ARTIFACTORY
+    - name: Amazon S3
+      value: S3
+    - name: Docker Hub
+      value: DOCKER
+    - name: Amazon EC2 Container Registry
+      value: ECR
+    - name: Google Container Registry
+      value: GCR
+    - name: AppDynamics
+      value: APPDYNAMICS
+    - name: Splunk
+      value: SPLUNK
+    - name: Elk
+      value: ELK
+    - name: Logz
+      value: LOGZ
