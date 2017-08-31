@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -17,9 +18,12 @@ import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlVersion;
+import software.wings.yaml.YamlVersion.Type;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +50,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(APPLICATION)
 public class SetupYamlResource {
   private AppService appService;
+  private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -53,10 +58,12 @@ public class SetupYamlResource {
    * Instantiates a new app resource.
    *
    * @param appService the app service
+   * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public SetupYamlResource(AppService appService) {
+  public SetupYamlResource(AppService appService, YamlHistoryService yamlHistoryService) {
     this.appService = appService;
+    this.yamlHistoryService = yamlHistoryService;
   }
 
   /**
@@ -127,9 +134,6 @@ public class SetupYamlResource {
     RestResponse beforeResponse = get(accountId);
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
-
-    logger.info("**** yaml.trim() = " + yaml.trim());
-    logger.info("**** beforeYaml.trim() = " + beforeYaml.trim());
 
     if (yaml.trim().equals(beforeYaml.trim())) {
       // no change
@@ -227,6 +231,15 @@ public class SetupYamlResource {
         YamlPayload afterYP = (YamlPayload) afterResponse.getResource();
         String afterYaml = afterYP.getYaml();
         setupYaml = mapper.readValue(yaml, SetupYaml.class);
+
+        // save the before yaml version
+        YamlVersion beforeYamLVersion = aYamlVersion()
+                                            .withAccountId(accountId)
+                                            .withEntityId(accountId)
+                                            .withType(Type.SETUP)
+                                            .withYaml(beforeYaml)
+                                            .build();
+        yamlHistoryService.save(beforeYamLVersion);
 
         rr.setResource(setupYaml);
 
