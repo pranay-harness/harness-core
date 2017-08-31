@@ -2,6 +2,9 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.YamlVersion;
+import software.wings.yaml.YamlVersion.Type;
+
+import java.util.List;
 
 /**
  * Yaml History Service.
@@ -24,4 +27,12 @@ public interface YamlHistoryService {
    * @return the yaml version
    */
   YamlVersion get(@NotEmpty String uuid);
+
+  /**
+   * Find by entityId.
+   *
+   * @param entityId the entityId
+   * @return the yaml version
+   */
+  List<YamlVersion> getList(String entityId, Type type);
 }

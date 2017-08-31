@@ -2,12 +2,17 @@ package software.wings.service.impl;
 
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlVersion;
+import software.wings.yaml.YamlVersion.Type;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -20,6 +25,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class YamlHistoryServiceImpl implements YamlHistoryService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
@@ -47,5 +54,23 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
       throw new WingsException(INVALID_ARGUMENT, "args", "YamlVersion -" + uuid + " doesn't exist");
     }
     return yamlVersion;
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.YamlHistoryService#get(java.lang.String)
+   */
+  @Override
+  public List<YamlVersion> getList(String entityId, Type type) {
+    List<YamlVersion> versions = new ArrayList<>();
+    versions = wingsPersistence.createQuery(YamlVersion.class)
+                   .field("entityId")
+                   .equal(entityId)
+                   .field("type")
+                   .equal(type)
+                   .asList();
+
+    logger.info("****** versions: " + versions);
+
+    return versions;
   }
 }
