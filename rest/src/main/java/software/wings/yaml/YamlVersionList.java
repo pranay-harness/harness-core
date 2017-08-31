@@ -3,7 +3,7 @@ package software.wings.yaml;
 import java.util.ArrayList;
 import java.util.List;
 
-public class YamlVersionList extends YamlHistory {
+public class YamlVersionList implements YamlHistory {
   List<YamlVersion> versions = new ArrayList<YamlVersion>();
 
   public YamlVersionList() {}
