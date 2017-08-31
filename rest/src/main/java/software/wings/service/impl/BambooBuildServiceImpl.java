@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.BambooConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;

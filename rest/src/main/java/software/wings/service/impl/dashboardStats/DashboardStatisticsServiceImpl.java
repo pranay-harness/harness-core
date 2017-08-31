@@ -25,6 +25,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -49,6 +50,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
 import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
 import software.wings.service.intfc.dashboardStats.InstanceService;
@@ -74,6 +76,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private InstanceService instanceService;
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
@@ -434,11 +437,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public ServiceInstanceDashboard getServiceInstanceDashboard(String serviceId) {
+  public ServiceInstanceDashboard getServiceInstanceDashboard(String appId, String serviceId) {
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(serviceId);
     List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(serviceId);
+    Service service = serviceResourceService.get(appId, serviceId);
+    Validator.notNullCheck("Service", service);
+    EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
     return ServiceInstanceDashboard.Builder.aServiceInstanceDashboard()
+        .withServiceSummary(serviceSummary)
         .withCurrentActiveInstancesList(currentActiveInstances)
         .withDeploymentHistoryList(deploymentHistoryList)
         .withPipelineExecutionHistoryList(pipelineExecutionHistory)
@@ -557,7 +564,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .group(Group.id(grouping("envId"), grouping("infraMappingId"), grouping("lastArtifactId")),
             grouping("count", accumulator("$sum", 1)),
             grouping("appInfo",
-                grouping("$first", Projection.projection("id", "appId"), Projection.projection("name", "envName"))),
+                grouping("$first", Projection.projection("id", "appId"), Projection.projection("name", "appName"))),
             grouping("infraMappingInfo",
                 grouping("$first", Projection.projection("id", "infraMappingId"),
                     Projection.projection("name", "infraMappingType"))),
@@ -584,6 +591,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<CurrentActiveInstances> currentActiveInstancesList = Lists.newArrayList();
     for (AggregationInfo aggregationInfo : aggregationInfoList) {
       long count = aggregationInfo.getCount();
+
       EntitySummary infraMappingInfo = aggregationInfo.getInfraMappingInfo();
       Validator.notNullCheck("InfraMappingInfo", infraMappingInfo);
       EntitySummary serviceInfraSummary = getEntitySummary(

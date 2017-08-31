@@ -95,8 +95,8 @@ public class DashboardStatisticsResource {
   @Path("service-instance-dash")
   @Timed
   @ExceptionMetered
-  public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(
-      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
-    return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(serviceId));
+  public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(appId, serviceId));
   }
 }
