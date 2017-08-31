@@ -21,6 +21,7 @@ import software.wings.beans.Service;
 import software.wings.resources.AppYamlResource;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.ArrayList;
@@ -41,13 +42,16 @@ public class AppYamlResourceTest {
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+  private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
 
   /**
    * The constant resources.
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new AppYamlResource(appService, serviceResourceService)).build();
+      ResourceTestRule.builder()
+          .addResource(new AppYamlResource(appService, serviceResourceService, yamlHistoryService))
+          .build();
 
   private final long TIME_IN_MS = System.currentTimeMillis();
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID" + TIME_IN_MS;

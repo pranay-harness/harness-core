@@ -10,8 +10,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.resources.ServiceYamlResource;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ResourceTestRule;
 
 /**
@@ -23,8 +25,10 @@ public class ServiceYamlResourceTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   // create mocks
+  private static final AppService appService = mock(AppService.class);
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
   private static final ServiceVariableService serviceVariableService = mock(ServiceVariableService.class);
+  private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
 
   /**
    * The constant resources.
@@ -32,7 +36,8 @@ public class ServiceYamlResourceTest {
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
-          .addResource(new ServiceYamlResource(serviceResourceService, serviceVariableService))
+          .addResource(
+              new ServiceYamlResource(appService, serviceResourceService, serviceVariableService, yamlHistoryService))
           .build();
 
   @Before
