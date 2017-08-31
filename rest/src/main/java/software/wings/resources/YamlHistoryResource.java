@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.yaml.YamlHistory;
-import software.wings.yaml.YamlType;
 import software.wings.yaml.YamlVersion;
-import software.wings.yaml.YamlVersionDetails;
+import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.YamlVersionList;
 
 import java.util.Optional;
@@ -52,7 +51,7 @@ public class YamlHistoryResource {
    *
    * @param accountId
    * @param entityId
-   * @param yamlType
+   * @param type
    * @param versionId - optional, if present than we return (a single) YamlVersion, otherwise YamlHistory
    * @return the rest response
    */
@@ -61,29 +60,28 @@ public class YamlHistoryResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlHistory> get(@PathParam("accountId") String accountId,
-      @QueryParam("entityId") String entityId, @QueryParam("type") YamlType yamlType,
+      @QueryParam("entityId") String entityId, @QueryParam("type") Type type,
       @QueryParam("versionId") Optional<String> versionId) {
     if (versionId.isPresent()) {
-      return getYamlVersion(accountId, entityId, yamlType, versionId.get());
+      return getYamlVersion(accountId, entityId, type, versionId.get());
     }
 
-    return getYamlVersionList(accountId, entityId, yamlType);
+    return getYamlVersionList(accountId, entityId, type);
   }
 
-  private RestResponse<YamlHistory> getYamlVersion(
-      String accountId, String entityId, YamlType yamlType, String versionId) {
+  private RestResponse<YamlHistory> getYamlVersion(String accountId, String entityId, Type type, String versionId) {
     RestResponse rr = new RestResponse<>();
 
-    YamlVersionDetails yvd = new YamlVersionDetails();
+    YamlVersion yv = new YamlVersion();
 
     //------- ADD DUMMY DATA -------------
-    yvd.setVersion(1);
-    yvd.setInEffectStart(String.valueOf(System.currentTimeMillis()));
-    yvd.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
-    yvd.setType(YamlType.SERVICE);
-    yvd.setEntityId("serv6789");
-    yvd.setYamlVersionId("yv12345");
-    yvd.setYaml("name: Login\n"
+    yv.setVersion(1);
+    yv.setInEffectStart(String.valueOf(System.currentTimeMillis()));
+    yv.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
+    yv.setType(Type.SERVICE);
+    yv.setEntityId("serv6789");
+    yv.setYamlVersionId("yv12345");
+    yv.setYaml("name: Login\n"
         + "artifactType: WAR\n"
         + "description: \"The Login service\"\n"
         + "service-commands: \n"
@@ -92,12 +90,12 @@ public class YamlHistoryResource {
         + "  - stop");
     //------------------------------------
 
-    rr.setResource(yvd);
+    rr.setResource(yv);
 
     return rr;
   }
 
-  private RestResponse<YamlHistory> getYamlVersionList(String accountId, String entityId, YamlType yamlType) {
+  private RestResponse<YamlHistory> getYamlVersionList(String accountId, String entityId, Type type) {
     RestResponse rr = new RestResponse<>();
 
     YamlVersionList yvList = new YamlVersionList();
@@ -111,7 +109,7 @@ public class YamlHistoryResource {
     yv1.setVersion(1);
     yv1.setInEffectStart(String.valueOf(System.currentTimeMillis()));
     yv1.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
-    yv1.setType(YamlType.SERVICE);
+    yv1.setType(Type.SERVICE);
     yv1.setEntityId("serv6789");
     yv1.setYamlVersionId("yv12345");
     yvList.addVersion(yv1);
@@ -119,7 +117,7 @@ public class YamlHistoryResource {
     yv2.setVersion(2);
     yv2.setInEffectStart(String.valueOf(System.currentTimeMillis() + 1000001));
     yv2.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 2000000));
-    yv2.setType(YamlType.SERVICE);
+    yv2.setType(Type.SERVICE);
     yv2.setEntityId("serv6789");
     yv2.setYamlVersionId("yv23456");
     yvList.addVersion(yv2);
@@ -127,7 +125,7 @@ public class YamlHistoryResource {
     yv3.setVersion(3);
     yv3.setInEffectStart(String.valueOf(System.currentTimeMillis() + 2000001));
     yv3.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 3000000));
-    yv3.setType(YamlType.SERVICE);
+    yv3.setType(Type.SERVICE);
     yv3.setEntityId("serv6789");
     yv3.setYamlVersionId("yv34567");
     yvList.addVersion(yv3);
