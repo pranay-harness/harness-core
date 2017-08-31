@@ -14,7 +14,7 @@ public abstract class ExpressionBuilder {
   protected static final String APP_NAME = "app.name";
   protected static final String APP_DESCRIPTION = "app.description";
 
-  protected static final String ARTIFACT_NAME = "artifact.name";
+  protected static final String ARTIFACT_NAME = "artifact.displayName";
   protected static final String ARTIFACT_DESCRIPTION = "artifact.description";
   protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
   protected static final String ARTIFACT_REVISION = "artifact.revision";
