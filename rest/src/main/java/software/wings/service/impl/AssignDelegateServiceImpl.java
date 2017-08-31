@@ -27,6 +27,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean canAssign(DelegateTask task, String delegateId) {
     Delegate delegate = delegateService.get(task.getAccountId(), delegateId);
+    if (delegate == null) {
+      return false;
+    }
     boolean assign = delegate.getIncludeScopes() == null || delegate.getIncludeScopes().isEmpty();
     if (delegate.getIncludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
