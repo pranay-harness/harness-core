@@ -21,7 +21,7 @@ import java.util.List;
 public class DelegateScope extends Base {
   @NotEmpty private String accountId;
   private String name;
-  private List<TaskType> taskTypes;
+  private List<TaskGroup> taskTypes;
   private List<EnvironmentType> environmentTypes;
   private List<String> applications;
   private List<String> environments;

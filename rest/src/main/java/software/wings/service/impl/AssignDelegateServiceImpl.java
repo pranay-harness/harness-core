@@ -63,7 +63,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                  environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType());
     }
     if (match && delegateScope.getTaskTypes() != null && !delegateScope.getTaskTypes().isEmpty()) {
-      match = delegateScope.getTaskTypes().contains(task.getTaskType());
+      match = delegateScope.getTaskTypes().contains(task.getTaskType().getTaskGroup());
     }
     if (match && delegateScope.getApplications() != null && !delegateScope.getApplications().isEmpty()) {
       match = delegateScope.getApplications().contains(task.getAppId());
