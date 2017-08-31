@@ -19,7 +19,7 @@ import java.util.Objects;
  * Created by bsollish on 8/30/17
  */
 @Entity(value = "yamlVersion", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("entityId") }, options = @IndexOptions(unique = true, name = "yamlVersionIdx")))
+@Indexes(@Index(fields = { @Field("entityId") }, options = @IndexOptions(name = "yamlVersionIdx")))
 public class YamlVersion extends Base implements YamlHistory {
   private String yamlVersionId;
   private int version;

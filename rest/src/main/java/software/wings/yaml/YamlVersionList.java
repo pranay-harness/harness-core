@@ -4,9 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class YamlVersionList implements YamlHistory {
+  private final String NO_YAML_IN_VERSION_LIST = "Call with yamlVersionId (Uuid) to get Yaml.";
+
   List<YamlVersion> versions = new ArrayList<YamlVersion>();
 
   public YamlVersionList() {}
+
+  public YamlVersionList(List<YamlVersion> versions) {
+    for (YamlVersion yv : versions) {
+      yv.setYaml(NO_YAML_IN_VERSION_LIST);
+      this.versions.add(yv);
+    }
+  }
 
   public List<YamlVersion> getVersions() {
     return versions;

@@ -64,77 +64,15 @@ public class YamlHistoryResource {
   public RestResponse<YamlHistory> get(@PathParam("accountId") String accountId,
       @QueryParam("entityId") String entityId, @QueryParam("type") Type type,
       @QueryParam("versionId") Optional<String> versionId) {
+    RestResponse rr = new RestResponse<>();
+
     if (versionId.isPresent()) {
-      return getYamlVersion(accountId, entityId, type, versionId.get());
+      YamlVersion yv = yamlHistoryService.get(versionId.get());
+      rr.setResource(yv);
+    } else {
+      YamlVersionList yvList = new YamlVersionList(yamlHistoryService.getList(entityId, type));
+      rr.setResource(yvList);
     }
-
-    return getYamlVersionList(accountId, entityId, type);
-  }
-
-  private RestResponse<YamlHistory> getYamlVersion(String accountId, String entityId, Type type, String versionId) {
-    RestResponse rr = new RestResponse<>();
-
-    YamlVersion yv = new YamlVersion();
-
-    //------- ADD DUMMY DATA -------------
-    yv.setVersion(1);
-    yv.setInEffectStart(System.currentTimeMillis());
-    yv.setInEffectEnd(System.currentTimeMillis() + 1000000);
-    yv.setType(Type.SERVICE);
-    yv.setEntityId("serv6789");
-    yv.setYamlVersionId("yv12345");
-    yv.setYaml("name: Login\n"
-        + "artifactType: WAR\n"
-        + "description: \"The Login service\"\n"
-        + "service-commands: \n"
-        + "  - start\n"
-        + "  - install\n"
-        + "  - stop");
-    //------------------------------------
-
-    rr.setResource(yv);
-
-    return rr;
-  }
-
-  private RestResponse<YamlHistory> getYamlVersionList(String accountId, String entityId, Type type) {
-    RestResponse rr = new RestResponse<>();
-
-    YamlVersionList yvList = new YamlVersionList();
-
-    //------- ADD DUMMY DATA -------------
-
-    YamlVersion yv1 = new YamlVersion();
-    YamlVersion yv2 = new YamlVersion();
-    YamlVersion yv3 = new YamlVersion();
-
-    yv1.setVersion(1);
-    yv1.setInEffectStart(System.currentTimeMillis());
-    yv1.setInEffectEnd(System.currentTimeMillis() + 1000000);
-    yv1.setType(Type.SERVICE);
-    yv1.setEntityId("serv6789");
-    yv1.setYamlVersionId("yv12345");
-    yvList.addVersion(yv1);
-
-    yv2.setVersion(2);
-    yv2.setInEffectStart(System.currentTimeMillis() + 1000001);
-    yv2.setInEffectEnd(System.currentTimeMillis() + 2000000);
-    yv2.setType(Type.SERVICE);
-    yv2.setEntityId("serv6789");
-    yv2.setYamlVersionId("yv23456");
-    yvList.addVersion(yv2);
-
-    yv3.setVersion(3);
-    yv3.setInEffectStart(System.currentTimeMillis() + 2000001);
-    yv3.setInEffectEnd(System.currentTimeMillis() + 3000000);
-    yv3.setType(Type.SERVICE);
-    yv3.setEntityId("serv6789");
-    yv3.setYamlVersionId("yv34567");
-    yvList.addVersion(yv3);
-
-    //------------------------------------
-
-    rr.setResource(yvList);
 
     return rr;
   }
@@ -143,14 +81,19 @@ public class YamlHistoryResource {
    * Save.
    *
    * @param accountId
+   * @param entityId
+   * @param type
    * @return the rest response
    */
   @POST
   @Path("/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlVersion> save(@PathParam("accountId") String accountId, YamlVersion yv) {
+  public RestResponse<YamlVersion> save(@PathParam("accountId") String accountId,
+      @QueryParam("entityId") String entityId, @QueryParam("type") Type type, YamlVersion yv) {
     yv.setAccountId(accountId);
+    yv.setEntityId(entityId);
+    yv.setType(type);
     return new RestResponse<YamlVersion>(yamlHistoryService.save(yv));
   }
 }
