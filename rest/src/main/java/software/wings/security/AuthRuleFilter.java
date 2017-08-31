@@ -195,9 +195,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
 
         if (!invalidAppIdList.isEmpty()) {
-          String msg = "The appIdsFromRequest %s do not belong to the given account / don't exist.";
+          String msg = "The appIds from request %s do not belong to the given account :" + accountId;
           String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", formattedMsg);
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", formattedMsg);
         }
       }
     }
