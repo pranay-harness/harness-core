@@ -32,8 +32,9 @@ public class InstanceChangeEventListener extends AbstractQueueListener<InstanceC
     try {
       Validator.notNullCheck("InstanceChangeEvent", instanceChangeEvent);
       List<Instance> instanceList = instanceChangeEvent.getInstanceList();
-      Validator.notNullCheck("InstanceList", instanceList);
-      instanceService.saveOrUpdate(instanceList);
+      if (instanceList != null) {
+        instanceService.saveOrUpdate(instanceList);
+      }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception

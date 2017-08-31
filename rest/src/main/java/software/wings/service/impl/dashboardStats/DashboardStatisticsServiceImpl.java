@@ -701,6 +701,21 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
 
       for (Artifact artifact : artifacts) {
+        if (artifact == null) {
+          continue;
+        }
+
+        List<String> serviceIds = artifact.getServiceIds();
+        if (serviceIds == null || serviceIds.isEmpty()) {
+          continue;
+        }
+
+        // The executionArgs contain all the artifacts involved in multiple stages of the pipeline.
+        // We need to filter them down to only the ones that are mapped to the current service.
+        if (!serviceIds.contains(serviceId)) {
+          continue;
+        }
+
         ArtifactSummary artifactSummary = getArtifactSummary(
             artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
         DeploymentHistory deploymentHistory = DeploymentHistory.Builder.aDeploymentHistory()

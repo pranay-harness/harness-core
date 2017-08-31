@@ -11,9 +11,11 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
@@ -147,67 +149,113 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-    String appId = getRequestParamFromContext("appId", pathParameters, queryParameters);
+    List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
+    boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
-    if (appId != null && accountId == null) {
-      accountId = appService.get(appId).getAccountId();
+    if (!emptyAppIdsInReq && accountId == null) {
+      // Ideally, we should force all the apis to have accountId as a mandatory field and not have this code.
+      // But, since there might be some paths hitting this condition already, pulling up account from the first appId.
+      accountId = appService.get(appIdsFromRequest.get(0)).getAccountId();
     }
 
     if (accountId == null) {
-      if (appId == null) {
+      if (emptyAppIdsInReq) {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "appId not specified");
       }
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "accountId not specified");
     }
 
+    List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
     UserRequestInfoBuilder userRequestInfoBuilder =
-        anUserRequestInfo().withAccountId(accountId).withAppId(appId).withEnvId(envId).withPermissionAttributes(
-            ImmutableList.copyOf(requiredPermissionAttributes));
+        anUserRequestInfo()
+            .withAccountId(accountId)
+            .withAppIds(appIdsFromRequest)
+            .withEnvId(envId)
+            .withPermissionAttributes(ImmutableList.copyOf(requiredPermissionAttributes));
 
+    setUserRequestInfoBasedOnRole(requiredPermissionAttributes, appIdsOfAccount, userRequestInfoBuilder, user,
+        accountId, appIdsFromRequest, emptyAppIdsInReq);
+
+    UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
+    user.setUserRequestInfo(userRequestInfo);
+
+    authService.authorize(accountId, appIdsFromRequest, envId, user, requiredPermissionAttributes, userRequestInfo);
+  }
+
+  private List<String> getValidAppsFromAccount(
+      String accountId, List<String> appIdsFromRequest, boolean emptyAppIdsInReq) {
+    List<String> appIdsOfAccount = appService.getAppIdsByAccountId(accountId);
+    if (!isEmpty(appIdsOfAccount)) {
+      if (!emptyAppIdsInReq) {
+        List<String> invalidAppIdList = Lists.newArrayList();
+        for (String appId : appIdsFromRequest) {
+          if (!appIdsOfAccount.contains(appId)) {
+            invalidAppIdList.add(appId);
+          }
+        }
+
+        if (!invalidAppIdList.isEmpty()) {
+          String msg = "The appIdsFromRequest %s do not belong to the given account / don't exist.";
+          String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", formattedMsg);
+        }
+      }
+    }
+    return appIdsOfAccount;
+  }
+
+  private void setUserRequestInfoBasedOnRole(List<PermissionAttribute> requiredPermissionAttributes,
+      List<String> appIdsOfAccount, UserRequestInfoBuilder userRequestInfoBuilder, User user, String accountId,
+      List<String> appIds, boolean emptyAppIdsInReq) {
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
       userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
-      if (appId == null && isPresent(requiredPermissionAttributes, PermissionScope.APP)) {
-        userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(
-            ImmutableList.copyOf(appService.getAppIdsByAccountId(accountId)));
+      if ((emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP)) || !emptyAppIdsInReq) {
+        userRequestInfoBuilder.withAppIdFilterRequired(true);
+        if (!isEmpty(appIdsOfAccount)) {
+          ImmutableList<String> appIdsOfAccountImmutableList = ImmutableList.copyOf(appIdsOfAccount);
+          userRequestInfoBuilder.withAllowedAppIds(appIdsOfAccountImmutableList);
+        }
       }
     } else {
       // TODO:
       logger.info("User [{}] is neither account admin nor all app admin", user.getUuid());
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
-      ImmutableList<String> appIds = ImmutableList.<String>builder().build();
+      ImmutableList<String> allowedAppIds = ImmutableList.<String>builder().build();
 
       if (userAccountRole == null) {
         logger.info("No account role exist for user [{}]", user.getUuid());
       } else {
         logger.info("User account role [{}]", userAccountRole);
-        appIds = copyOf(userAccountRole.getApplicationRoles()
-                            .stream()
-                            .map(ApplicationRole::getAppId)
-                            .distinct()
-                            .collect(Collectors.toList()));
+        allowedAppIds = copyOf(userAccountRole.getApplicationRoles()
+                                   .stream()
+                                   .map(ApplicationRole::getAppId)
+                                   .distinct()
+                                   .collect(Collectors.toList()));
       }
 
-      if (appId != null) {
-        if (user.isAppAdmin(accountId, appId)) {
-          userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
-        } else {
-          ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
-          ImmutableList<String> envIds = copyOf(applicationRole.getEnvironmentRoles()
-                                                    .stream()
-                                                    .map(EnvironmentRole::getEnvId)
-                                                    .distinct()
-                                                    .collect(Collectors.toList()));
-          userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+      if (!emptyAppIdsInReq) {
+        for (String appId : appIds) {
+          if (user.isAppAdmin(accountId, appId)) {
+            userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
+          } else {
+            ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
+            ImmutableList<String> envIds = copyOf(applicationRole.getEnvironmentRoles()
+                                                      .stream()
+                                                      .map(EnvironmentRole::getEnvId)
+                                                      .distinct()
+                                                      .collect(Collectors.toList()));
+            userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+          }
         }
       }
-      userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(appIds);
+
+      userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(allowedAppIds);
     }
+  }
 
-    UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
-    user.setUserRequestInfo(userRequestInfo);
-
-    authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes, userRequestInfo);
+  private boolean isEmpty(List list) {
+    return (list == null || list.isEmpty());
   }
 
   private boolean isPresent(List<PermissionAttribute> requiredPermissionAttributes, PermissionScope permissionScope) {
@@ -245,6 +293,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
+  }
+
+  private List<String> getRequestParamsFromContext(
+      String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
+    return queryParameters.get(key) != null ? queryParameters.get(key) : pathParameters.get(key);
   }
 
   private boolean publicAPI() {

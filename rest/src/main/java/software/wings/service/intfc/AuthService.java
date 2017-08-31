@@ -31,6 +31,18 @@ public interface AuthService {
   void authorize(String accountId, String appId, String envId, User user,
       List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo);
 
+  /**
+   * Authorize.
+   * @param accountId
+   * @param appIds               list of app ids
+   * @param envId                the env id
+   * @param user                 the user
+   * @param permissionAttributes the permission attributes
+   * @param userRequestInfo
+   */
+  void authorize(String accountId, List<String> appIds, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo);
+
   void validateDelegateToken(String accountId, String tokenString);
 
   void invalidateAllTokensForUser(String userId);

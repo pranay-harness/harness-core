@@ -1,7 +1,6 @@
 package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -537,14 +536,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      if (userRequestInfo.getAppId() == null
-          && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
-        return false;
-      } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
-        pageRequest.addFilter(
-            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray()).build());
+      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+      if (emptyAppIdsInUserReq) {
+        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+          return false;
+        } else {
+          pageRequest.addFilter(
+              aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray()).build());
+        }
       } else {
-        pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppId()).build());
+        pageRequest.addFilter(
+            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppIds().toArray()).build());
       }
     } else if (userRequestInfo.isEnvIdFilterRequired()) {
       // TODO:
@@ -552,31 +554,37 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return true;
   }
 
-  private boolean applyAuthFilters(Query query) {
+  private boolean isEmpty(List list) {
+    return list == null || list.isEmpty();
+  }
+
+  private boolean authFilters(Query query) {
     if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
       return true;
     }
     UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
     if (userRequestInfo.isAppIdFilterRequired()) {
       // TODO: field name should be dynamic
-      if (userRequestInfo.getAppId() == null
-          && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
-        return false;
-      } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
-        query.field("appId").in(userRequestInfo.getAllowedAppIds());
+      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+
+      if (emptyAppIdsInUserReq) {
+        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+          return false;
+        } else {
+          query.field("appId").in(userRequestInfo.getAllowedAppIds());
+        }
       } else {
-        query.field("appId").equal(userRequestInfo.getAppId());
+        query.field("appId").in(userRequestInfo.getAppIds());
       }
-    } else if (userRequestInfo.isEnvIdFilterRequired()) {
-      // TODO:
     }
+
     return true;
   }
 
   @Override
   public Query createAuthorizedQuery(Class collectionClass) throws Exception {
     Query query = createQuery(collectionClass);
-    if (applyAuthFilters(query)) {
+    if (authFilters(query)) {
       return query;
     } else {
       throw new Exception(

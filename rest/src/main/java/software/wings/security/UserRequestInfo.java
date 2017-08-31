@@ -2,12 +2,14 @@ package software.wings.security;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.List;
+
 /**
  * Created by rishi on 3/24/17.
  */
 public class UserRequestInfo {
   private String accountId;
-  private String appId;
+  private List<String> appIds;
   private String envId;
 
   private boolean allAppsAllowed;
@@ -29,12 +31,12 @@ public class UserRequestInfo {
     this.accountId = accountId;
   }
 
-  public String getAppId() {
-    return appId;
+  public List<String> getAppIds() {
+    return appIds;
   }
 
-  void setAppId(String appId) {
-    this.appId = appId;
+  void setAppIds(List<String> appIds) {
+    this.appIds = appIds;
   }
 
   public String getEnvId() {
@@ -103,7 +105,7 @@ public class UserRequestInfo {
 
   public static final class UserRequestInfoBuilder {
     private String accountId;
-    private String appId;
+    private List<String> appIds;
     private String envId;
     private boolean allAppsAllowed;
     private boolean allEnvironmentsAllowed;
@@ -123,8 +125,8 @@ public class UserRequestInfo {
       return this;
     }
 
-    public UserRequestInfoBuilder withAppId(String appId) {
-      this.appId = appId;
+    public UserRequestInfoBuilder withAppIds(List<String> appIds) {
+      this.appIds = appIds;
       return this;
     }
 
@@ -166,7 +168,7 @@ public class UserRequestInfo {
     public UserRequestInfo build() {
       UserRequestInfo userRequestInfo = new UserRequestInfo();
       userRequestInfo.setAccountId(accountId);
-      userRequestInfo.setAppId(appId);
+      userRequestInfo.setAppIds(appIds);
       userRequestInfo.setEnvId(envId);
       userRequestInfo.setAllAppsAllowed(allAppsAllowed);
       userRequestInfo.setAllEnvironmentsAllowed(allEnvironmentsAllowed);

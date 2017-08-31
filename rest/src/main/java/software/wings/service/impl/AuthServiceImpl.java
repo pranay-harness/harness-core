@@ -125,12 +125,13 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  @Override
-  public void authorize(String accountId, String appId, String envId, User user,
-      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo) {
-    if (accountId == null || dbCache.get(Account.class, accountId) == null) {
-      logger.error("Auth Failure: non-existing accountId: {}", accountId);
-      throw new WingsException(ACCESS_DENIED);
+  private void authorize(String accountId, String appId, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo, boolean accountNullCheck) {
+    if (!accountNullCheck) {
+      if (accountId == null || dbCache.get(Account.class, accountId) == null) {
+        logger.error("Auth Failure: non-existing accountId: {}", accountId);
+        throw new WingsException(ACCESS_DENIED);
+      }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
@@ -157,9 +158,30 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public void authorize(String accountId, String appId, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo) {
+    authorize(accountId, appId, envId, user, permissionAttributes, userRequestInfo, true);
+  }
+
+  @Override
+  public void authorize(String accountId, List<String> appIds, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo) {
+    if (accountId == null || dbCache.get(Account.class, accountId) == null) {
+      logger.error("Auth Failure: non-existing accountId: {}", accountId);
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    if (appIds != null) {
+      for (String appId : appIds) {
+        authorize(accountId, appId, envId, user, permissionAttributes, userRequestInfo, false);
+      }
+    }
+  }
+
+  @Override
   public void validateDelegateToken(String accountId, String tokenString) {
     logger.info("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
-    Account account = accountService.get(accountId);
+    Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
       throw new WingsException(ACCESS_DENIED);
