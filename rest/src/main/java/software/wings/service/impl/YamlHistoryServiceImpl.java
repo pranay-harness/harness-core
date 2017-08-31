@@ -36,6 +36,11 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   public YamlVersion save(YamlVersion yv) {
     Validator.notNullCheck("accountId", yv.getAccountId());
 
+    // get highest version in use
+    int highestVersion = getHighestVersion(yv.getEntityId(), yv.getType());
+
+    yv.setVersion(highestVersion + 1);
+
     // TODO - not sure how we might want to check for duplicates (?)
     // YamlVersion yamlVersion = Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(YamlVersion.class, yv),
     // "entityId", yv.getEntityId());
@@ -69,8 +74,27 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                    .equal(type)
                    .asList();
 
-    logger.info("****** versions: " + versions);
-
     return versions;
+  }
+
+  @Override
+  public int getHighestVersion(String entityId, Type type) {
+    List<YamlVersion> versions = wingsPersistence.createQuery(YamlVersion.class)
+                                     .field("entityId")
+                                     .equal(entityId)
+                                     .field("type")
+                                     .equal(type)
+                                     .order("version")
+                                     .limit(1)
+                                     .asList();
+
+    int version = 0;
+
+    if (versions.size() > 0) {
+      YamlVersion yv = versions.get(0);
+      version = yv.getVersion();
+    }
+
+    return version;
   }
 }

@@ -32,7 +32,17 @@ public interface YamlHistoryService {
    * Find by entityId.
    *
    * @param entityId the entityId
+   * @param type the yaml type
    * @return the yaml version
    */
   List<YamlVersion> getList(String entityId, Type type);
+
+  /**
+   * get back the highest version
+   *
+   * @param entityId the entityId
+   * @param type the yaml type
+   * @return the yaml version
+   */
+  int getHighestVersion(String entityId, Type type);
 }
