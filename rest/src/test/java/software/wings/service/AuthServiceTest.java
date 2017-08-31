@@ -135,8 +135,9 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldAuthorizeWithAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
     User user = userBuilder.but().withRoles(asList(role)).build();
+    String appId = null;
     authService.authorize(
-        ACCOUNT_ID, null, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
+        ACCOUNT_ID, appId, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
   }
 
   @Test
@@ -144,8 +145,9 @@ public class AuthServiceTest extends WingsBaseTest {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).build();
     role.onLoad();
     User user = userBuilder.but().withRoles(asList(role)).build();
+    String appId = null;
     assertThatThrownBy(()
-                           -> authService.authorize(ACCOUNT_ID, null, null, user,
+                           -> authService.authorize(ACCOUNT_ID, appId, null, user,
                                asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
