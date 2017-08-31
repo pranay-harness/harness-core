@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
@@ -17,6 +18,7 @@ import software.wings.yaml.YamlVersionList;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -32,19 +34,19 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(APPLICATION)
 public class YamlHistoryResource {
-  // private AppService appService;
-  // private ServiceResourceService serviceResourceService;
+  private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Instantiates a new app yaml resource.
    *
-   * @param appService             the app service
-   * @param serviceResourceService the service (resource) service
+   * @param yamlHistoryService  the yaml history service
    */
   @Inject
-  public YamlHistoryResource() {}
+  public YamlHistoryResource(YamlHistoryService yamlHistoryService) {
+    this.yamlHistoryService = yamlHistoryService;
+  }
 
   /**
    * Gets the Yaml history by entityId
@@ -76,8 +78,8 @@ public class YamlHistoryResource {
 
     //------- ADD DUMMY DATA -------------
     yv.setVersion(1);
-    yv.setInEffectStart(String.valueOf(System.currentTimeMillis()));
-    yv.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
+    yv.setInEffectStart(System.currentTimeMillis());
+    yv.setInEffectEnd(System.currentTimeMillis() + 1000000);
     yv.setType(Type.SERVICE);
     yv.setEntityId("serv6789");
     yv.setYamlVersionId("yv12345");
@@ -107,24 +109,24 @@ public class YamlHistoryResource {
     YamlVersion yv3 = new YamlVersion();
 
     yv1.setVersion(1);
-    yv1.setInEffectStart(String.valueOf(System.currentTimeMillis()));
-    yv1.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 1000000));
+    yv1.setInEffectStart(System.currentTimeMillis());
+    yv1.setInEffectEnd(System.currentTimeMillis() + 1000000);
     yv1.setType(Type.SERVICE);
     yv1.setEntityId("serv6789");
     yv1.setYamlVersionId("yv12345");
     yvList.addVersion(yv1);
 
     yv2.setVersion(2);
-    yv2.setInEffectStart(String.valueOf(System.currentTimeMillis() + 1000001));
-    yv2.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 2000000));
+    yv2.setInEffectStart(System.currentTimeMillis() + 1000001);
+    yv2.setInEffectEnd(System.currentTimeMillis() + 2000000);
     yv2.setType(Type.SERVICE);
     yv2.setEntityId("serv6789");
     yv2.setYamlVersionId("yv23456");
     yvList.addVersion(yv2);
 
     yv3.setVersion(3);
-    yv3.setInEffectStart(String.valueOf(System.currentTimeMillis() + 2000001));
-    yv3.setInEffectEnd(String.valueOf(System.currentTimeMillis() + 3000000));
+    yv3.setInEffectStart(System.currentTimeMillis() + 2000001);
+    yv3.setInEffectEnd(System.currentTimeMillis() + 3000000);
     yv3.setType(Type.SERVICE);
     yv3.setEntityId("serv6789");
     yv3.setYamlVersionId("yv34567");
@@ -135,5 +137,20 @@ public class YamlHistoryResource {
     rr.setResource(yvList);
 
     return rr;
+  }
+
+  /**
+   * Save.
+   *
+   * @param accountId
+   * @return the rest response
+   */
+  @POST
+  @Path("/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlVersion> save(@PathParam("accountId") String accountId, YamlVersion yv) {
+    yv.setAccountId(accountId);
+    return new RestResponse<YamlVersion>(yamlHistoryService.save(yv));
   }
 }
