@@ -19,7 +19,6 @@ public class ServiceYaml extends GenericYaml {
   @YamlSerialize public String description;
   @YamlSerialize public String artifactType;
   @YamlSerialize public List<String> serviceCommands = new ArrayList<String>();
-  //@YamlSerialize public List<String> configVariables = new ArrayList<String>();
   @YamlSerialize public List<ConfigVarYaml> configVariables = new ArrayList<ConfigVarYaml>();
 
   public ServiceYaml() {}

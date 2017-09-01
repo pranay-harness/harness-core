@@ -75,7 +75,7 @@ public class ServiceYamlResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
-   * Instantiates a new app yaml resource.
+   * Instantiates new resources
    *
    * @param appService the app service
    * @param serviceResourceService the service (resource) service
@@ -152,7 +152,7 @@ public class ServiceYamlResource {
   @Path("/{accountId}/{appId}/{serviceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> update(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
+  public RestResponse<Service> update(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
       YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
