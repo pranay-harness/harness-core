@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
@@ -12,6 +13,8 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
@@ -19,6 +22,7 @@ import software.wings.beans.Service;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ArtifactType;
@@ -54,6 +58,7 @@ import javax.ws.rs.QueryParam;
 public class AppYamlResource {
   private AppService appService;
   private ServiceResourceService serviceResourceService;
+  private EnvironmentService environmentService;
   private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -63,13 +68,15 @@ public class AppYamlResource {
    *
    * @param appService the app service
    * @param serviceResourceService the service (resource) service
+   * @param environmentService the environment service
    * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public AppYamlResource(
-      AppService appService, ServiceResourceService serviceResourceService, YamlHistoryService yamlHistoryService) {
+  public AppYamlResource(AppService appService, ServiceResourceService serviceResourceService,
+      EnvironmentService environmentService, YamlHistoryService yamlHistoryService) {
     this.appService = appService;
     this.serviceResourceService = serviceResourceService;
+    this.environmentService = environmentService;
     this.yamlHistoryService = yamlHistoryService;
   }
 
@@ -85,12 +92,14 @@ public class AppYamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId) {
     List<Service> services = serviceResourceService.findServicesByApp(appId);
+    List<Environment> environments = environmentService.getEnvByApp(appId);
     Application app = appService.get(appId);
 
     AppYaml appYaml = new AppYaml();
     appYaml.setName(app.getName());
     appYaml.setDescription(app.getDescription());
     appYaml.setServiceNamesFromServices(services);
+    appYaml.setEnvironmentNamesFromEnvironments(environments);
 
     return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
   }
@@ -155,6 +164,10 @@ public class AppYamlResource {
     List<String> servicesToAdd = new ArrayList<String>();
     List<String> servicesToDelete = new ArrayList<String>();
 
+    // what are the environment changes? Which are additions and which are deletions?
+    List<String> environmentsToAdd = new ArrayList<String>();
+    List<String> environmentsToDelete = new ArrayList<String>();
+
     AppYaml beforeAppYaml = null;
 
     if (beforeYaml != null && !beforeYaml.isEmpty()) {
@@ -180,6 +193,9 @@ public class AppYamlResource {
       try {
         appYaml = mapper.readValue(yaml, AppYaml.class);
 
+        Application app = appService.get(appId);
+
+        // ----------- START SERVICES SECTION ---------------
         List<String> serviceNames = appYaml.getServiceNames();
 
         if (serviceNames != null) {
@@ -207,8 +223,6 @@ public class AppYamlResource {
             servicesToDelete.remove(s);
           }
         }
-
-        Application app = appService.get(appId);
 
         List<Service> services = serviceResourceService.findServicesByApp(appId);
         Map<String, Service> serviceMap = new HashMap<String, Service>();
@@ -255,6 +269,84 @@ public class AppYamlResource {
             serviceResourceService.save(newService);
           }
         }
+        // ----------- END SERVICES SECTION ---------------
+
+        // ----------- START ENVIRONMENTS SECTION ---------------
+        List<String> environmentNames = appYaml.getEnvironmentNames();
+
+        if (environmentNames != null) {
+          // initialize the environments to add from the after
+          for (String s : environmentNames) {
+            environmentsToAdd.add(s);
+          }
+        }
+
+        if (beforeAppYaml != null) {
+          List<String> beforeEnvironments = beforeAppYaml.getEnvironmentNames();
+
+          if (beforeEnvironments != null) {
+            // initialize the environments to delete from the before, and remove the befores from the environments to
+            // add list
+            for (String s : beforeEnvironments) {
+              environmentsToDelete.add(s);
+              environmentsToAdd.remove(s);
+            }
+          }
+        }
+
+        if (environmentNames != null) {
+          // remove the afters from the environments to delete list
+          for (String s : environmentNames) {
+            environmentsToDelete.remove(s);
+          }
+        }
+
+        List<Environment> environments = environmentService.getEnvByApp(appId);
+        Map<String, Environment> environmentMap = new HashMap<String, Environment>();
+
+        if (environments != null) {
+          // populate the map
+          for (Environment environment : environments) {
+            environmentMap.put(environment.getName(), environment);
+          }
+        }
+
+        // If we have deletions do a check - we CANNOT delete environments with workflows!
+        if (environmentsToDelete.size() > 0 && !deleteEnabled) {
+          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+          return rr;
+        }
+
+        if (environmentsToDelete != null) {
+          // do deletions
+          for (String envName : environmentsToDelete) {
+            if (environmentMap.containsKey(envName)) {
+              environmentService.delete(appId, environmentMap.get(envName).getUuid());
+            } else {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "environmentMap does not contain the key: " + envName + "!");
+              return rr;
+            }
+          }
+        }
+
+        if (environmentsToAdd != null) {
+          // do additions
+          for (String s : environmentsToAdd) {
+            // create the new Environment
+            // TODO - ideally it should use the default ArtifactType for the account and if that is empty/null, use the
+            // Harness (level) default
+            Environment newEnvironment = anEnvironment()
+                                             .withAppId(appId)
+                                             .withName(s)
+                                             .withDescription("")
+                                             .withEnvironmentType(EnvironmentType.NON_PROD)
+                                             .build();
+
+            environmentService.save(newEnvironment);
+          }
+        }
+        // ----------- END ENVIRONMENTS SECTION ---------------
 
         // save the changes
         app.setName(appYaml.getName());

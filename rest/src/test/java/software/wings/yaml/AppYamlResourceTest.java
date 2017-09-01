@@ -20,6 +20,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.resources.AppYamlResource;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.YamlHistoryService;
 import software.wings.utils.ResourceTestRule;
@@ -42,6 +43,7 @@ public class AppYamlResourceTest {
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+  private static final EnvironmentService environmentService = mock(EnvironmentService.class);
   private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
 
   /**
@@ -50,7 +52,7 @@ public class AppYamlResourceTest {
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
-          .addResource(new AppYamlResource(appService, serviceResourceService, yamlHistoryService))
+          .addResource(new AppYamlResource(appService, serviceResourceService, environmentService, yamlHistoryService))
           .build();
 
   private final long TIME_IN_MS = System.currentTimeMillis();
