@@ -132,7 +132,6 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
   private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {
     Build jenkinsBuild = null;
     do {
-      logger.info("Waiting for Job  {} to start execution", queueItem.getQueueItemUrlPart());
       Misc.sleepWithRuntimeException(1000);
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
@@ -140,8 +139,6 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
         logger.warn("Jenkins server unreachable {}", ex.getMessage());
       }
     } while (jenkinsBuild == null);
-    logger.info("Job  execution for job {} started. Url  is {} and build number is {} ",
-        queueItem.getQueueItemUrlPart(), jenkinsBuild.getUrl(), jenkinsBuild.getNumber());
     return jenkinsBuild;
   }
 }
