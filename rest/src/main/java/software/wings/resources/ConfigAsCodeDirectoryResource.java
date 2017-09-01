@@ -8,17 +8,21 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.AppYaml;
+import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.directory.EnvironmentYamlNode;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.ServiceCommandYamlNode;
 import software.wings.yaml.directory.ServiceYamlNode;
@@ -43,6 +47,7 @@ import javax.ws.rs.Produces;
 public class ConfigAsCodeDirectoryResource {
   private AppService appService;
   private ServiceResourceService serviceResourceService;
+  private EnvironmentService environmentService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -53,9 +58,11 @@ public class ConfigAsCodeDirectoryResource {
    * @param serviceResourceService the service (resource) service
    */
   @Inject
-  public ConfigAsCodeDirectoryResource(AppService appService, ServiceResourceService serviceResourceService) {
+  public ConfigAsCodeDirectoryResource(
+      AppService appService, ServiceResourceService serviceResourceService, EnvironmentService environmentService) {
     this.appService = appService;
     this.serviceResourceService = serviceResourceService;
+    this.environmentService = environmentService;
   }
 
   /**
@@ -88,12 +95,12 @@ public class ConfigAsCodeDirectoryResource {
       FolderNode appFolder = new FolderNode(app.getName(), Application.class);
       applicationsFolder.addChild(appFolder);
       appFolder.addChild(new YamlNode(app.getUuid(), app.getName() + ".yaml", AppYaml.class));
+
+      // ------------------- SERVICES SECTION -----------------------
       FolderNode servicesFolder = new FolderNode("Services", Service.class);
       appFolder.addChild(servicesFolder);
 
       List<Service> services = serviceResourceService.findServicesByApp(app.getAppId());
-
-      // logger.info("***************** services: " + services);
 
       // iterate over services
       for (Service service : services) {
@@ -114,6 +121,22 @@ public class ConfigAsCodeDirectoryResource {
               serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
         }
       }
+      // ----------------- END SERVICES SECTION ---------------------
+
+      // ------------------- ENVIRONMENTS SECTION -----------------------
+      FolderNode environmentsFolder = new FolderNode("Environments", Environment.class);
+      appFolder.addChild(environmentsFolder);
+
+      List<Environment> environments = environmentService.getEnvByApp(app.getAppId());
+
+      // iterate over environments
+      for (Environment environment : environments) {
+        FolderNode envFolder = new FolderNode(environment.getName(), Environment.class);
+        environmentsFolder.addChild(envFolder);
+        envFolder.addChild(new EnvironmentYamlNode(
+            environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
+      }
+      // ----------------- END ENVIRONMENTS SECTION ---------------------
     }
 
     rr.setResource(configFolder);
