@@ -209,33 +209,41 @@ public class ServiceYamlResource {
         // ----------- START SERVICE COMMAND SECTION ---------------
         List<String> serviceCommandNames = serviceYaml.getServiceCommandNames();
 
-        // initialize the service commands to add from the after
-        for (String sc : serviceCommandNames) {
-          serviceCommandsToAdd.add(sc);
+        if (serviceCommandNames != null) {
+          // initialize the service commands to add from the after
+          for (String sc : serviceCommandNames) {
+            serviceCommandsToAdd.add(sc);
+          }
         }
 
         if (beforeServiceYaml != null) {
           List<String> beforeServiceCommands = beforeServiceYaml.getServiceCommandNames();
 
-          // initialize the service commands to delete from the before, and remove the befores from the service commands
-          // to add list
-          for (String sc : beforeServiceCommands) {
-            serviceCommandsToDelete.add(sc);
-            serviceCommandsToAdd.remove(sc);
+          if (beforeServiceCommands != null) {
+            // initialize the service commands to delete from the before, and remove the befores from the service
+            // commands to add list
+            for (String sc : beforeServiceCommands) {
+              serviceCommandsToDelete.add(sc);
+              serviceCommandsToAdd.remove(sc);
+            }
           }
         }
 
-        // remove the afters from the service commands to delete list
-        for (String sc : serviceCommandNames) {
-          serviceCommandsToDelete.remove(sc);
+        if (serviceCommandNames != null) {
+          // remove the afters from the service commands to delete list
+          for (String sc : serviceCommandNames) {
+            serviceCommandsToDelete.remove(sc);
+          }
         }
 
         List<ServiceCommand> serviceCommands = service.getServiceCommands();
         Map<String, ServiceCommand> serviceCommandMap = new HashMap<String, ServiceCommand>();
 
-        // populate the map
-        for (ServiceCommand serviceCommand : serviceCommands) {
-          serviceCommandMap.put(serviceCommand.getName(), serviceCommand);
+        if (serviceCommands != null) {
+          // populate the map
+          for (ServiceCommand serviceCommand : serviceCommands) {
+            serviceCommandMap.put(serviceCommand.getName(), serviceCommand);
+          }
         }
 
         // If we have deletions do a check - we CANNOT delete service commands without deleteEnabled true
@@ -244,54 +252,66 @@ public class ServiceYamlResource {
           return rr;
         }
 
-        // do deletions
-        for (String servCommandName : serviceCommandsToDelete) {
-          if (serviceCommandMap.containsKey(servCommandName)) {
-            serviceResourceService.deleteCommand(appId, serviceId, servCommandName);
-          } else {
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                "serviceCommandMap does not contain the key: " + servCommandName + "!");
-            return rr;
+        if (serviceCommandsToDelete != null) {
+          // do deletions
+          for (String servCommandName : serviceCommandsToDelete) {
+            if (serviceCommandMap.containsKey(servCommandName)) {
+              serviceResourceService.deleteCommand(appId, serviceId, servCommandName);
+            } else {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "serviceCommandMap does not contain the key: " + servCommandName + "!");
+              return rr;
+            }
           }
         }
 
-        // do additions
-        for (String scName : serviceCommandsToAdd) {
-          ServiceCommand newServiceCommand = createNewServiceCommand(appId, scName);
-          serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+        if (serviceCommandsToAdd != null) {
+          // do additions
+          for (String scName : serviceCommandsToAdd) {
+            ServiceCommand newServiceCommand = createNewServiceCommand(appId, scName);
+            serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
+          }
         }
         // ----------- END SERVICE COMMAND SECTION ---------------
 
         // ----------- START CONFIG VARIABLE SECTION ---------------
         List<ConfigVarYaml> configVars = serviceYaml.getConfigVariables();
 
-        // initialize the config vars to add from the after
-        for (ConfigVarYaml cv : configVars) {
-          configVarsToAdd.add(cv);
+        if (configVars != null) {
+          // initialize the config vars to add from the after
+          for (ConfigVarYaml cv : configVars) {
+            configVarsToAdd.add(cv);
+          }
         }
 
         if (beforeServiceYaml != null) {
           List<ConfigVarYaml> beforeConfigVars = beforeServiceYaml.getConfigVariables();
 
-          // initialize the config vars to delete from the before, and remove the befores from the config vars to add
-          // list
-          for (ConfigVarYaml cv : beforeConfigVars) {
-            configVarsToDelete.add(cv);
-            configVarsToAdd.remove(cv);
+          if (beforeConfigVars != null) {
+            // initialize the config vars to delete from the before, and remove the befores from the config vars to add
+            // list
+            for (ConfigVarYaml cv : beforeConfigVars) {
+              configVarsToDelete.add(cv);
+              configVarsToAdd.remove(cv);
+            }
           }
         }
 
-        // remove the afters from the config vars to delete list
-        for (ConfigVarYaml cv : configVars) {
-          configVarsToDelete.remove(cv);
+        if (configVars != null) {
+          // remove the afters from the config vars to delete list
+          for (ConfigVarYaml cv : configVars) {
+            configVarsToDelete.remove(cv);
+          }
         }
 
         List<ServiceVariable> serviceVariables = service.getServiceVariables();
         Map<String, ServiceVariable> serviceVariableMap = new HashMap<String, ServiceVariable>();
 
-        // populate the map
-        for (ServiceVariable serviceVariable : serviceVariables) {
-          serviceVariableMap.put(serviceVariable.getName(), serviceVariable);
+        if (serviceVariables != null) {
+          // populate the map
+          for (ServiceVariable serviceVariable : serviceVariables) {
+            serviceVariableMap.put(serviceVariable.getName(), serviceVariable);
+          }
         }
 
         // If we have deletions do a check - we CANNOT delete config vars without deleteEnabled true
@@ -302,21 +322,25 @@ public class ServiceYamlResource {
 
         // ServiceVariableResource svr = new ServiceVariableResource(serviceVariableService);
 
-        // do deletions
-        for (ConfigVarYaml cv : configVarsToDelete) {
-          if (serviceVariableMap.containsKey(cv.getName())) {
-            serviceVariableService.delete(appId, serviceVariableMap.get(cv.getName()).getUuid());
-          } else {
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                "serviceVariableMap does not contain the key: " + cv.getName() + "!");
-            return rr;
+        if (configVarsToDelete != null) {
+          // do deletions
+          for (ConfigVarYaml cv : configVarsToDelete) {
+            if (serviceVariableMap.containsKey(cv.getName())) {
+              serviceVariableService.delete(appId, serviceVariableMap.get(cv.getName()).getUuid());
+            } else {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "serviceVariableMap does not contain the key: " + cv.getName() + "!");
+              return rr;
+            }
           }
         }
 
-        // do additions
-        for (ConfigVarYaml cv : configVarsToAdd) {
-          ServiceVariable savedServiceVariable =
-              serviceVariableService.save(createNewServiceVariable(appId, service.getUuid(), cv));
+        if (configVarsToAdd != null) {
+          // do additions
+          for (ConfigVarYaml cv : configVarsToAdd) {
+            ServiceVariable savedServiceVariable =
+                serviceVariableService.save(createNewServiceVariable(appId, service.getUuid(), cv));
+          }
         }
         // ----------- END CONFIG VARIABLE SECTION ---------------
 
