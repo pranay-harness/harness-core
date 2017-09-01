@@ -182,24 +182,30 @@ public class AppYamlResource {
 
         List<String> serviceNames = appYaml.getServiceNames();
 
-        // initialize the services to add from the after
-        for (String s : serviceNames) {
-          servicesToAdd.add(s);
+        if (serviceNames != null) {
+          // initialize the services to add from the after
+          for (String s : serviceNames) {
+            servicesToAdd.add(s);
+          }
         }
 
         if (beforeAppYaml != null) {
           List<String> beforeServices = beforeAppYaml.getServiceNames();
 
-          // initialize the services to delete from the before, and remove the befores from the services to add list
-          for (String s : beforeServices) {
-            servicesToDelete.add(s);
-            servicesToAdd.remove(s);
+          if (beforeServices != null) {
+            // initialize the services to delete from the before, and remove the befores from the services to add list
+            for (String s : beforeServices) {
+              servicesToDelete.add(s);
+              servicesToAdd.remove(s);
+            }
           }
         }
 
-        // remove the afters from the services to delete list
-        for (String s : serviceNames) {
-          servicesToDelete.remove(s);
+        if (serviceNames != null) {
+          // remove the afters from the services to delete list
+          for (String s : serviceNames) {
+            servicesToDelete.remove(s);
+          }
         }
 
         Application app = appService.get(appId);
@@ -207,9 +213,11 @@ public class AppYamlResource {
         List<Service> services = serviceResourceService.findServicesByApp(appId);
         Map<String, Service> serviceMap = new HashMap<String, Service>();
 
-        // populate the map
-        for (Service service : services) {
-          serviceMap.put(service.getName(), service);
+        if (services != null) {
+          // populate the map
+          for (Service service : services) {
+            serviceMap.put(service.getName(), service);
+          }
         }
 
         // If we have deletions do a check - we CANNOT delete services with workflows!
@@ -218,26 +226,34 @@ public class AppYamlResource {
           return rr;
         }
 
-        // do deletions
-        for (String servName : servicesToDelete) {
-          if (serviceMap.containsKey(servName)) {
-            serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
-          } else {
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                "serviceMap does not contain the key: " + servName + "!");
-            return rr;
+        if (servicesToDelete != null) {
+          // do deletions
+          for (String servName : servicesToDelete) {
+            if (serviceMap.containsKey(servName)) {
+              serviceResourceService.delete(appId, serviceMap.get(servName).getUuid());
+            } else {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "serviceMap does not contain the key: " + servName + "!");
+              return rr;
+            }
           }
         }
 
-        // do additions
-        for (String s : servicesToAdd) {
-          // create the new Service
-          // TODO - ideally it should use the default ArtifactType for the account and if that is empty/null, use the
-          // Harness (level) default
-          Service newService =
-              aService().withAppId(appId).withName(s).withDescription("").withArtifactType(ArtifactType.DOCKER).build();
+        if (servicesToAdd != null) {
+          // do additions
+          for (String s : servicesToAdd) {
+            // create the new Service
+            // TODO - ideally it should use the default ArtifactType for the account and if that is empty/null, use the
+            // Harness (level) default
+            Service newService = aService()
+                                     .withAppId(appId)
+                                     .withName(s)
+                                     .withDescription("")
+                                     .withArtifactType(ArtifactType.DOCKER)
+                                     .build();
 
-          serviceResourceService.save(newService);
+            serviceResourceService.save(newService);
+          }
         }
 
         // save the changes

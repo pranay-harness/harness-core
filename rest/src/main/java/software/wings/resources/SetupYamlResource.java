@@ -172,33 +172,41 @@ public class SetupYamlResource {
 
         List<String> applicationNames = setupYaml.getAppNames();
 
-        // initialize the services to add from the after
-        for (String s : applicationNames) {
-          applicationsToAdd.add(s);
+        if (applicationNames != null) {
+          // initialize the services to add from the after
+          for (String s : applicationNames) {
+            applicationsToAdd.add(s);
+          }
         }
 
         if (beforeSetupYaml != null) {
           List<String> beforeApplications = beforeSetupYaml.getAppNames();
 
-          // initialize the applications to delete from the before, and remove the befores from the applications to add
-          // list
-          for (String s : beforeApplications) {
-            applicationsToDelete.add(s);
-            applicationsToAdd.remove(s);
+          if (beforeApplications != null) {
+            // initialize the applications to delete from the before, and remove the befores from the applications to
+            // add list
+            for (String s : beforeApplications) {
+              applicationsToDelete.add(s);
+              applicationsToAdd.remove(s);
+            }
           }
         }
 
-        // remove the afters from the applications to delete list
-        for (String s : applicationNames) {
-          applicationsToDelete.remove(s);
+        if (applicationNames != null) {
+          // remove the afters from the applications to delete list
+          for (String s : applicationNames) {
+            applicationsToDelete.remove(s);
+          }
         }
 
         List<Application> applications = appService.getAppsByAccountId(accountId);
         Map<String, Application> applicationMap = new HashMap<String, Application>();
 
-        // populate the map
-        for (Application application : applications) {
-          applicationMap.put(application.getName(), application);
+        if (applications != null) {
+          // populate the map
+          for (Application application : applications) {
+            applicationMap.put(application.getName(), application);
+          }
         }
 
         // If we have deletions do a check - we CANNOT delete applications without deleteEnabled true
@@ -207,23 +215,28 @@ public class SetupYamlResource {
           return rr;
         }
 
-        // do deletions
-        for (String appName : applicationsToDelete) {
-          if (applicationMap.containsKey(appName)) {
-            appService.delete(applicationMap.get(appName).getAppId());
-          } else {
-            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                "applicationMap does not contain the key: " + appName + "!");
-            return rr;
+        if (applicationsToDelete != null) {
+          // do deletions
+          for (String appName : applicationsToDelete) {
+            if (applicationMap.containsKey(appName)) {
+              appService.delete(applicationMap.get(appName).getAppId());
+            } else {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                  "applicationMap does not contain the key: " + appName + "!");
+              return rr;
+            }
           }
         }
 
-        // do additions
-        for (String s : applicationsToAdd) {
-          // create the new Application
-          Application newApplication = anApplication().withAccountId(accountId).withName(s).withDescription("").build();
+        if (applicationsToAdd != null) {
+          // do additions
+          for (String s : applicationsToAdd) {
+            // create the new Application
+            Application newApplication =
+                anApplication().withAccountId(accountId).withName(s).withDescription("").build();
 
-          appService.save(newApplication);
+            appService.save(newApplication);
+          }
         }
 
         // get the after Yaml to confirm addition/deletion changes
