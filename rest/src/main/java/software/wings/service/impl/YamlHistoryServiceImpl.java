@@ -36,10 +36,26 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   public YamlVersion save(YamlVersion yv) {
     Validator.notNullCheck("accountId", yv.getAccountId());
 
-    // get highest version in use
-    int highestVersion = getHighestVersion(yv.getEntityId(), yv.getType());
+    //------- handle inEffectStart and End --------
+    long currentTimeMs = System.currentTimeMillis();
 
-    yv.setVersion(highestVersion + 1);
+    // get highest version in use
+    YamlVersion highestVersion = getHighestVersion(yv.getEntityId(), yv.getType());
+
+    if (highestVersion != null) {
+      yv.setVersion(highestVersion.getVersion() + 1);
+
+      // set the inEffectStart to the inEffectEnd of the previous version
+      if (highestVersion.getInEffectEnd() != 0) {
+        yv.setInEffectStart(highestVersion.getInEffectEnd());
+      }
+    } else { // if no previous version - assume this is the first
+      yv.setVersion(1);
+    }
+
+    // set the inEffectStart of the new one
+    yv.setInEffectEnd(currentTimeMs);
+    //---------------------------------------------
 
     // TODO - not sure how we might want to check for duplicates (?)
     // YamlVersion yamlVersion = Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(YamlVersion.class, yv),
@@ -55,9 +71,11 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   @Override
   public YamlVersion get(String uuid) {
     YamlVersion yamlVersion = wingsPersistence.get(YamlVersion.class, uuid);
+
     if (yamlVersion == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "YamlVersion -" + uuid + " doesn't exist");
     }
+
     return yamlVersion;
   }
 
@@ -72,29 +90,28 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                    .equal(entityId)
                    .field("type")
                    .equal(type)
+                   .order("version")
                    .asList();
 
     return versions;
   }
 
   @Override
-  public int getHighestVersion(String entityId, Type type) {
+  public YamlVersion getHighestVersion(String entityId, Type type) {
     List<YamlVersion> versions = wingsPersistence.createQuery(YamlVersion.class)
                                      .field("entityId")
                                      .equal(entityId)
                                      .field("type")
                                      .equal(type)
-                                     .order("version")
+                                     .order("-version")
                                      .limit(1)
                                      .asList();
 
-    int version = 0;
-
     if (versions.size() > 0) {
       YamlVersion yv = versions.get(0);
-      version = yv.getVersion();
+      return yv;
     }
 
-    return version;
+    return null;
   }
 }
