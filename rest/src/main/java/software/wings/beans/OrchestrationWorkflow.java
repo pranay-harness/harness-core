@@ -7,6 +7,7 @@ import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.RELATED_FIELD;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
@@ -35,6 +36,7 @@ public abstract class OrchestrationWorkflow {
 
   private String validationMessage;
 
+  @JsonIgnore
   public boolean isTemplatized() {
     List<Variable> userVariables = getUserVariables();
     if (userVariables == null || userVariables.size() == 0) {
