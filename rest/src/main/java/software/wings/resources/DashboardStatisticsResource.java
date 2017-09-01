@@ -41,7 +41,7 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<InstanceSummaryStats> getAppInstanceSummaryStats(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("groupBy") List<String> groupByEntityTypes) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(groupByEntityTypes));
+    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(appIds, groupByEntityTypes));
   }
 
   /**
@@ -69,7 +69,7 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(
       @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceStats());
+    return new RestResponse<>(dashboardStatsService.getAppInstanceStats(appIds));
   }
 
   /**

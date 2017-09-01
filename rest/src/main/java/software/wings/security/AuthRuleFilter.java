@@ -15,7 +15,6 @@ import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
@@ -210,12 +209,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       List<String> appIds, boolean emptyAppIdsInReq) {
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
       userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
-      if ((emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP)) || !emptyAppIdsInReq) {
-        userRequestInfoBuilder.withAppIdFilterRequired(true);
-        if (!isEmpty(appIdsOfAccount)) {
-          ImmutableList<String> appIdsOfAccountImmutableList = ImmutableList.copyOf(appIdsOfAccount);
-          userRequestInfoBuilder.withAllowedAppIds(appIdsOfAccountImmutableList);
-        }
+      if ((emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP))) {
+        userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(ImmutableList.copyOf(appIdsOfAccount));
       }
     } else {
       // TODO:

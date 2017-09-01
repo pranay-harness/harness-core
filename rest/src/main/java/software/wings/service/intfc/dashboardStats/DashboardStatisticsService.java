@@ -16,10 +16,11 @@ public interface DashboardStatisticsService {
   /**
    * Gets the total instance summary stats for the given apps.
    * The results are grouped by the given entity types.
+   * @param appIds application ids
    * @param groupByEntityTypes the entity types user wants to group by
    * @return instance summary statistics
    */
-  InstanceSummaryStats getAppInstanceSummaryStats(List<String> groupByEntityTypes);
+  InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes);
 
   /**
    * Gets the total instance summary stats for the given service.
@@ -32,9 +33,10 @@ public interface DashboardStatisticsService {
 
   /**
    * Gets the total instance stats for the given apps.
+   * @param appIds application ids
    * @return instance summary statistics
    */
-  List<InstanceStatsByService> getAppInstanceStats();
+  List<InstanceStatsByService> getAppInstanceStats(List<String> appIds);
 
   /**
    * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.

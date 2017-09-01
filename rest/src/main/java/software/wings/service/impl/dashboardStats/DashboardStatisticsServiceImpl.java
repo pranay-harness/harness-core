@@ -76,10 +76,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public InstanceSummaryStats getAppInstanceSummaryStats(List<String> groupByEntityTypes) {
+  public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
     long instanceCount = 0;
     try {
-      instanceCount = getInstanceCount(getQuery());
+      instanceCount = getInstanceCount(getQuery(appIds));
     } catch (Exception e) {
       logger.error("Unable to get app instance summary stats", e.getMessage());
       return InstanceSummaryStats.Builder.anInstanceSummaryStats()
@@ -96,14 +96,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       if (EntityType.SERVICE.name().equals(groupByEntityType)) {
         entityIdColumn = "serviceId";
         entityNameColumn = "serviceName";
-        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType);
+        entitySummaryStatsList = getEntitySummaryStats(appIds, entityIdColumn, entityNameColumn, groupByEntityType);
       } else if (EntityType.ENVIRONMENT.name().equals(groupByEntityType)) {
         // TODO: Make UI pass ENVIRONMENT_TYPE instead of ENVIRONMENT since that's what are we are really displaying
-        entitySummaryStatsList = getEnvironmentTypeSummaryStats();
+        entitySummaryStatsList = getEnvironmentTypeSummaryStats(appIds);
       } else if (Category.CLOUD_PROVIDER.name().equals(groupByEntityType)) {
         entityIdColumn = "computeProviderId";
         entityNameColumn = "computeProviderName";
-        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType);
+        entitySummaryStatsList = getEntitySummaryStats(appIds, entityIdColumn, entityNameColumn, groupByEntityType);
       } else {
         throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
       }
@@ -118,11 +118,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private List<EntitySummaryStats> getEntitySummaryStats(
-      String entityIdColumn, String entityNameColumn, String groupByEntityType) {
+      List<String> appIds, String entityIdColumn, String entityNameColumn, String groupByEntityType) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
     Query<Instance> query;
     try {
-      query = getQuery();
+      query = getQuery(appIds);
     } catch (Exception e) {
       logger.error("Unable to get entity summary stats ", e.getMessage());
       return Lists.newArrayList();
@@ -160,7 +160,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
     Query<Instance> query = null;
     try {
-      query = getQuery().field("serviceId").equal(serviceId);
+      query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
       logger.error("Unable to get service summary stats", e.getMessage());
       return Lists.newArrayList();
@@ -181,11 +181,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return entitySummaryStatsList;
   }
 
-  private List<EntitySummaryStats> getEnvironmentTypeSummaryStats() {
+  private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(List<String> appIds) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
     Query<Instance> query = null;
     try {
-      query = getQuery();
+      query = getQuery(appIds);
     } catch (Exception e) {
       logger.error("Unable to get environment type summary stats", e.getMessage());
       return Lists.newArrayList();
@@ -227,7 +227,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes) {
     Query<Instance> query;
     try {
-      query = getQuery().field("serviceId").equal(serviceId);
+      query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e.getMessage());
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
@@ -263,10 +263,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public List<InstanceStatsByService> getAppInstanceStats() {
+  public List<InstanceStatsByService> getAppInstanceStats(List<String> appIds) {
     Query<Instance> query = null;
     try {
-      query = getQuery();
+      query = getQuery(appIds);
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e.getMessage());
       return Lists.newArrayList();
@@ -544,7 +544,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<CurrentActiveInstances> getCurrentActiveInstances(String serviceId) {
     Query<Instance> query;
     try {
-      query = getQuery().field("serviceId").equal(serviceId);
+      query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e.getMessage());
       return Lists.newArrayList();
@@ -746,8 +746,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return builder.build();
   }
 
-  private Query<Instance> getQuery() throws Exception {
-    return wingsPersistence.createAuthorizedQuery(Instance.class);
+  private Query<Instance> getQuery(List<String> appIds) throws Exception {
+    Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    if (appIds != null && !appIds.isEmpty()) {
+      query.field("appId").in(appIds);
+    }
+
+    return query;
   }
 
   public static final class AggregationInfo {
