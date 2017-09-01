@@ -51,7 +51,6 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -973,7 +972,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getServiceExecutionSummaries() != null) {
       return;
     }
-
     List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
     // TODO : version should also be captured as part of the WorkflowExecution
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
