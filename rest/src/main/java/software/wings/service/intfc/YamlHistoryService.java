@@ -44,5 +44,5 @@ public interface YamlHistoryService {
    * @param type the yaml type
    * @return the yaml version
    */
-  int getHighestVersion(String entityId, Type type);
+  YamlVersion getHighestVersion(String entityId, Type type);
 }
