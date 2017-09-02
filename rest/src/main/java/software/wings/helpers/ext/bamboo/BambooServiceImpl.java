@@ -380,10 +380,11 @@ public class BambooServiceImpl implements BambooService {
       URL url = new URL(artifactPath.getValue());
       URLConnection uc = url.openConnection();
       uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+      logger.info("Artifact Path {}", artifactPath.getKey());
       return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
     } catch (IOException ex) {
-      throw new WingsException(
-          ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Invalid artifact path " + ex.getStackTrace());
+      logger.error("Download artifact failed with exception", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to download artifact", ex);
     }
   }
 
@@ -415,28 +416,31 @@ public class BambooServiceImpl implements BambooService {
     try {
       // stages.stage.results.result.artifacts.artifact
       response = getHttpRequestExecutionResponse(request);
-      JsonNode stageNodes = response.body().at("/stages/stage");
-      if (stageNodes != null) {
-        stageNodes.elements().forEachRemaining(stageNode -> {
-          JsonNode resultNodes = stageNode.at("/results/result");
-          if (resultNodes != null) {
-            resultNodes.elements().forEachRemaining(resultNode -> {
-              JsonNode artifactNodes = resultNode.at("/artifacts/artifact");
-              if (artifactNodes != null) {
-                artifactNodes.elements().forEachRemaining(artifactNode -> {
-                  JsonNode hrefNode = artifactNode.at("/link/href");
-                  JsonNode nameNode = artifactNode.get("name");
-                  if (hrefNode != null) {
-                    artifactPathMap.put(nameNode.asText(), hrefNode.textValue());
-                  }
-                });
-              }
-            });
-          }
-        });
+      if (response.body() != null) {
+        JsonNode stageNodes = response.body().at("/stages/stage");
+        if (stageNodes != null) {
+          stageNodes.elements().forEachRemaining(stageNode -> {
+            JsonNode resultNodes = stageNode.at("/results/result");
+            if (resultNodes != null) {
+              resultNodes.elements().forEachRemaining(resultNode -> {
+                JsonNode artifactNodes = resultNode.at("/artifacts/artifact");
+                if (artifactNodes != null) {
+                  artifactNodes.elements().forEachRemaining(artifactNode -> {
+                    JsonNode hrefNode = artifactNode.at("/link/href");
+                    JsonNode nameNode = artifactNode.get("name");
+                    if (hrefNode != null) {
+                      artifactPathMap.put(nameNode.asText(), hrefNode.textValue());
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
       }
     } catch (IOException ex) {
       logger.error("Download artifact failed with exception", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to download artifact", ex);
     }
     return artifactPathMap;
   }
