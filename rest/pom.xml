@@ -608,20 +608,10 @@
                             <value>-Dcom.sun.management.jmxremote.port=7091 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$HOSTNAME</value>
                         </entry>
                         <entry>
-                            <key>Environment-Variables</key>
-                            <value>NEW_RELIC_LICENSE_KEY=a8e43a608ff51733b30e0acda98b89d16c6c5b11</value>
-                        </entry>
-                        <entry>
                             <key>Args</key>
                             <value>server $*</value>
                         </entry>
                     </manifest>
-                    <fileSets>
-                        <fileSet>
-                            <directory>${project.basedir}</directory>
-                            <includes>newrelic.yml</includes>
-                        </fileSet>
-                    </fileSets>
                     <execPluginConfig>root</execPluginConfig>
                 </configuration>
                 <executions>
