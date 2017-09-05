@@ -25,15 +25,10 @@ public class ArtifactCollectionTaskHelper {
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,
       String delegateId, String taskId, String accountId) throws FileNotFoundException {
     if (fileInfo == null) {
-      throw new FileNotFoundException("Unable to get artifact from S3 for path " + artifactPath);
-    }
-
-    InputStream in;
-
-    if (fileInfo == null) {
       throw new FileNotFoundException("Unable to get artifact for path " + artifactPath);
     }
-    in = fileInfo.getValue();
+
+    InputStream in = fileInfo.getValue();
     logger.info("Uploading the file {} ", fileInfo.getKey());
     DelegateFile delegateFile = aDelegateFile()
                                     .withFileName(fileInfo.getKey())
