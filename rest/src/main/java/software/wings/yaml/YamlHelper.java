@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
@@ -13,6 +14,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.exception.WingsException;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
@@ -20,7 +22,7 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Optional;
 
 public class YamlHelper {
   public static void addResponseMessage(
@@ -193,84 +195,18 @@ public class YamlHelper {
     return diffList;
   }
 
-  // TODO - LEFT OFF HERE
-
-  // generic method
-  public static <E> RestResponse doSection(RestResponse rr, GenericYaml theYaml, GenericYaml theBeforeYaml,
-      boolean deleteEnabled, Function<GenericYaml, List<E>> func) {
-    // what are the changes? Which are additions and which are deletions?
-    List<E> itemsToAdd = new ArrayList<E>();
-    List<E> itemsToDelete = new ArrayList<E>();
-
-    List<E> items = func.apply(theYaml);
-
-    if (items != null) {
-      // initialize the items to add from the after
-      for (E item : items) {
-        itemsToAdd.add(item);
-      }
+  public static <T> Optional<T> doMapperReadValue(
+      RestResponse rr, ObjectMapper mapper, String yamlStr, Class<T> theClass) {
+    try {
+      T thing = mapper.readValue(yamlStr, theClass);
+      return Optional.of(thing);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      // bad before Yaml
+      e.printStackTrace();
+      YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+      return Optional.empty();
     }
-
-    if (theBeforeYaml != null) {
-      List<E> beforeItems = func.apply(theBeforeYaml);
-
-      if (beforeItems != null) {
-        // initialize the items to delete from the before, and remove the befores from the items to add list
-        for (E item : beforeItems) {
-          itemsToDelete.add(item);
-          itemsToAdd.remove(item);
-        }
-      }
-    }
-
-    if (items != null) {
-      // remove the afters from the items to delete list
-      for (E item : items) {
-        itemsToDelete.remove(item);
-      }
-    }
-
-    /*
-    List<ServiceCommand> serviceCommands = service.getServiceCommands();
-    Map<String, ServiceCommand> serviceCommandMap = new HashMap<String, ServiceCommand>();
-
-    if (serviceCommands != null) {
-      // populate the map
-      for (ServiceCommand serviceCommand : serviceCommands) {
-        serviceCommandMap.put(serviceCommand.getName(), serviceCommand);
-      }
-    }
-    */
-
-    // If we have deletions do a check - we CANNOT delete service commands without deleteEnabled true
-    if (itemsToDelete.size() > 0 && !deleteEnabled) {
-      addNonEmptyDeletionsWarningMessage(rr);
-      return rr;
-    }
-
-    /*
-    if (serviceCommandsToDelete != null) {
-      // do deletions
-      for (String servCommandName : serviceCommandsToDelete) {
-        if (serviceCommandMap.containsKey(servCommandName)) {
-          serviceResourceService.deleteCommand(appId, serviceId, servCommandName);
-        } else {
-          YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-              "serviceCommandMap does not contain the key: " + servCommandName + "!");
-          return rr;
-        }
-      }
-    }
-
-    if (serviceCommandsToAdd != null) {
-      // do additions
-      for (String scName : serviceCommandsToAdd) {
-        ServiceCommand newServiceCommand = createNewServiceCommand(appId, scName);
-        serviceResourceService.addCommand(appId, serviceId, newServiceCommand);
-      }
-    }
-    */
-
-    return rr;
   }
 }
