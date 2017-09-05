@@ -250,13 +250,13 @@ public interface Constants {
   /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
-  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 30 * 60 * 1000; // 30 minutes
+  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
 
   /**
    * O
    * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
    */
-  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
+  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 90 * 60 * 1000; // 90 minutes
 
   /**
    * The constant DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS.
