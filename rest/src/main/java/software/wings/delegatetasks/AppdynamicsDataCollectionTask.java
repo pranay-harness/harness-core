@@ -1,21 +1,16 @@
-package software.wings.delegatetasks.collect;
-
-import static software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult.Builder.aAppdynamicsDataCollectionTaskResult;
+package software.wings.delegatetasks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.delegatetasks.AppdynamicsMetricStoreService;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
-import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult;
-import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionTaskResult.AppdynamicsDataCollectionTaskStatus;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,41 +25,27 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<AppdynamicsDataCollectionTaskResult> {
+public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 5;
   private final Object lockObject = new Object();
   private final AtomicBoolean completed = new AtomicBoolean(false);
+  private ScheduledExecutorService collectionService;
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
 
-  @Inject private AppdynamicsMetricStoreService metricStoreService;
+  @Inject private MetricDataStoreService metricStoreService;
 
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<AppdynamicsDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
   @Override
-  public AppdynamicsDataCollectionTaskResult run(Object[] parameters) {
+  public DataCollectionTaskResult run(Object[] parameters) {
     final AppdynamicsDataCollectionInfo dataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters[0];
     logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
-    final ScheduledExecutorService collectionService = scheduleMetricDataCollection(dataCollectionInfo);
-    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    scheduledExecutorService.schedule(() -> {
-      try {
-        logger.info("metric collection finished for " + dataCollectionInfo);
-        collectionService.shutdown();
-        collectionService.awaitTermination(1, TimeUnit.MINUTES);
-      } catch (InterruptedException e) {
-        collectionService.shutdown();
-      }
-
-      completed.set(true);
-      synchronized (lockObject) {
-        lockObject.notifyAll();
-      }
-    }, dataCollectionInfo.getCollectionTime() + 1, TimeUnit.MINUTES);
+    collectionService = scheduleMetricDataCollection(dataCollectionInfo);
     logger.info("going to collect appdynamics data for " + dataCollectionInfo);
 
     synchronized (lockObject) {
@@ -76,43 +57,47 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
         }
       }
     }
-    return aAppdynamicsDataCollectionTaskResult().withStatus(AppdynamicsDataCollectionTaskStatus.SUCCESS).build();
+    return DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(AppdynamicsDataCollectionInfo dataCollectionInfo) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
-        new AppdynamicsMetricCollector(appdynamicsDelegateService, dataCollectionInfo, metricStoreService), 0, 1,
-        TimeUnit.MINUTES);
+        new AppdynamicsMetricCollector(dataCollectionInfo), 0, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
-  private static class AppdynamicsMetricCollector implements Runnable {
-    private final AppdynamicsDelegateService delegateService;
-    private final AppdynamicsDataCollectionInfo dataCollectionInfo;
-    private final AppdynamicsMetricStoreService metricStoreService;
+  private void shutDownCollection() {
+    collectionService.shutdown();
+    completed.set(true);
+    synchronized (lockObject) {
+      lockObject.notifyAll();
+    }
+  }
 
-    private AppdynamicsMetricCollector(AppdynamicsDelegateService delegateService,
-        AppdynamicsDataCollectionInfo dataCollectionInfo, AppdynamicsMetricStoreService metricStoreService) {
-      this.delegateService = delegateService;
+  private class AppdynamicsMetricCollector implements Runnable {
+    private final AppdynamicsDataCollectionInfo dataCollectionInfo;
+
+    private AppdynamicsMetricCollector(AppdynamicsDataCollectionInfo dataCollectionInfo) {
       this.dataCollectionInfo = dataCollectionInfo;
-      this.metricStoreService = metricStoreService;
     }
 
     @Override
     public void run() {
       if (dataCollectionInfo.getCollectionTime() <= 0) {
+        shutDownCollection();
         return;
       }
       try {
         final AppDynamicsConfig appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
         final long appId = dataCollectionInfo.getAppId();
         final long tierId = dataCollectionInfo.getTierId();
-        final List<AppdynamicsMetric> tierMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId);
+        final List<AppdynamicsMetric> tierMetrics =
+            appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId);
 
         final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
         for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
-          metricsData.addAll(delegateService.getTierBTMetricData(
+          metricsData.addAll(appdynamicsDelegateService.getTierBTMetricData(
               appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
         }
         for (int i = metricsData.size() - 1; i >= 0; i--) {
@@ -129,7 +114,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         logger.debug("Result: " + metricsData);
-        metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
+        metricStoreService.saveAppDynamicsMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
             dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
