@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.yaml.YamlHelper.doMapperReadValue;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -15,7 +16,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.YamlHistoryService;
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -53,6 +54,8 @@ public class SetupYamlResource {
   private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   /**
    * Instantiates a new app resource.
@@ -101,7 +104,6 @@ public class SetupYamlResource {
   public RestResponse<SetupYaml> save(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
@@ -124,7 +126,7 @@ public class SetupYamlResource {
   @ExceptionMetered
   public RestResponse<SetupYaml> update(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    String yaml = yamlPayload.getYaml();
+    String afterYaml = yamlPayload.getYaml();
 
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
@@ -134,25 +136,19 @@ public class SetupYamlResource {
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 
-    if (yaml.trim().equals(beforeYaml.trim())) {
+    if (afterYaml.trim().equals(beforeYaml.trim())) {
       // no change
       YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
       return rr;
     }
 
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
     SetupYaml beforeSetupYaml = null;
 
     if (beforeYaml != null && !beforeYaml.isEmpty()) {
-      try {
-        beforeSetupYaml = mapper.readValue(beforeYaml, SetupYaml.class);
-      } catch (WingsException e) {
-        throw e;
-      } catch (Exception e) {
-        // bad before Yaml
-        e.printStackTrace();
-        YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+      Optional<SetupYaml> beforeSetupYamlOpt = doMapperReadValue(rr, mapper, beforeYaml, SetupYaml.class);
+      if (beforeSetupYamlOpt.isPresent()) {
+        beforeSetupYaml = beforeSetupYamlOpt.get();
+      } else {
         return rr;
       }
     } else {
@@ -161,90 +157,95 @@ public class SetupYamlResource {
       return rr;
     }
 
-    SetupYaml setupYaml = null;
+    SetupYaml afterSetupYaml = null;
 
-    if (yaml != null && !yaml.isEmpty()) {
-      try {
-        List<String> applicationNames = new ArrayList<>();
-        List<String> beforeApplications = new ArrayList<>();
+    if (afterYaml != null && !afterYaml.isEmpty()) {
+      List<String> afterList = new ArrayList<>();
+      List<String> beforeList = new ArrayList<>();
 
-        setupYaml = mapper.readValue(yaml, SetupYaml.class);
-
-        if (setupYaml != null) {
-          applicationNames = setupYaml.getAppNames();
-        }
-
-        if (beforeSetupYaml != null) {
-          beforeApplications = beforeSetupYaml.getAppNames();
-        }
-
-        // what are the changes? Determine additions and deletions
-        List<String> applicationsToAdd = YamlHelper.findDifferenceBetweenLists(applicationNames, beforeApplications);
-        List<String> applicationsToDelete = YamlHelper.findDifferenceBetweenLists(beforeApplications, applicationNames);
-
-        // If we have deletions do a check - we CANNOT delete applications without deleteEnabled true
-        if (applicationsToDelete.size() > 0 && !deleteEnabled) {
-          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
-          return rr;
-        }
-
-        List<Application> applications = appService.getAppsByAccountId(accountId);
-        Map<String, Application> applicationMap = new HashMap<String, Application>();
-
-        if (applications != null) {
-          // populate the map
-          for (Application application : applications) {
-            applicationMap.put(application.getName(), application);
-          }
-        }
-
-        if (applicationsToDelete != null) {
-          // do deletions
-          for (String appName : applicationsToDelete) {
-            if (applicationMap.containsKey(appName)) {
-              appService.delete(applicationMap.get(appName).getAppId());
-            } else {
-              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-                  "applicationMap does not contain the key: " + appName + "!");
-              return rr;
-            }
-          }
-        }
-
-        if (applicationsToAdd != null) {
-          // do additions
-          for (String s : applicationsToAdd) {
-            // create the new Application
-            Application newApplication =
-                anApplication().withAccountId(accountId).withName(s).withDescription("").build();
-
-            appService.save(newApplication);
-          }
-        }
-
-        // get the after Yaml to confirm addition/deletion changes
-        RestResponse afterResponse = get(accountId);
-        YamlPayload afterYP = (YamlPayload) afterResponse.getResource();
-        String afterYaml = afterYP.getYaml();
-        setupYaml = mapper.readValue(yaml, SetupYaml.class);
-
-        // save the before yaml version
-        YamlVersion beforeYamLVersion = aYamlVersion()
-                                            .withAccountId(accountId)
-                                            .withEntityId(accountId)
-                                            .withType(Type.SETUP)
-                                            .withYaml(beforeYaml)
-                                            .build();
-        yamlHistoryService.save(beforeYamLVersion);
-
-        rr.setResource(setupYaml);
-
-      } catch (WingsException e) {
-        throw e;
-      } catch (Exception e) {
-        e.printStackTrace();
-        YamlHelper.addUnrecognizedFieldsMessage(rr);
+      Optional<SetupYaml> setupYamlOpt = doMapperReadValue(rr, mapper, afterYaml, SetupYaml.class);
+      if (setupYamlOpt.isPresent()) {
+        afterSetupYaml = setupYamlOpt.get();
+      } else {
+        return rr;
       }
+
+      if (afterSetupYaml != null) {
+        afterList = afterSetupYaml.getAppNames();
+      }
+
+      if (beforeSetupYaml != null) {
+        beforeList = beforeSetupYaml.getAppNames();
+      }
+
+      // what are the changes? Determine additions and deletions
+      List<String> addList = YamlHelper.findDifferenceBetweenLists(afterList, beforeList);
+      List<String> deleteList = YamlHelper.findDifferenceBetweenLists(beforeList, afterList);
+
+      // If we have deletions do a check - we CANNOT delete applications without deleteEnabled true
+      if (deleteList.size() > 0 && !deleteEnabled) {
+        YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+        return rr;
+      }
+
+      List<Application> applications = appService.getAppsByAccountId(accountId);
+      Map<String, Application> applicationMap = new HashMap<String, Application>();
+
+      if (applications != null) {
+        // populate the map
+        for (Application application : applications) {
+          applicationMap.put(application.getName(), application);
+        }
+      }
+
+      if (deleteList != null) {
+        // do deletions
+        for (String appName : deleteList) {
+          if (applicationMap.containsKey(appName)) {
+            appService.delete(applicationMap.get(appName).getAppId());
+          } else {
+            YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+                "applicationMap does not contain the key: " + appName + "!");
+            return rr;
+          }
+        }
+      }
+
+      if (addList != null) {
+        // do additions
+        for (String s : addList) {
+          // create the new Application
+          Application newApplication = anApplication().withAccountId(accountId).withName(s).withDescription("").build();
+
+          appService.save(newApplication);
+        }
+      }
+
+      // get the after Yaml to confirm addition/deletion changes
+      RestResponse afterResponse = get(accountId);
+      YamlPayload afterYP = (YamlPayload) afterResponse.getResource();
+      String roundtripYaml = afterYP.getYaml();
+
+      SetupYaml roundtripSetupYaml = null;
+
+      setupYamlOpt = doMapperReadValue(rr, mapper, roundtripYaml, SetupYaml.class);
+      if (setupYamlOpt.isPresent()) {
+        roundtripSetupYaml = setupYamlOpt.get();
+      } else {
+        return rr;
+      }
+
+      // save the before yaml version
+      YamlVersion beforeYamLVersion = aYamlVersion()
+                                          .withAccountId(accountId)
+                                          .withEntityId(accountId)
+                                          .withType(Type.SETUP)
+                                          .withYaml(beforeYaml)
+                                          .build();
+      yamlHistoryService.save(beforeYamLVersion);
+
+      rr.setResource(roundtripSetupYaml);
+
     } else {
       // missing Yaml
       YamlHelper.addMissingYamlMessage(rr);
