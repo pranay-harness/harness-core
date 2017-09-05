@@ -21,7 +21,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.LogCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkIndexTemplate;
@@ -37,9 +37,7 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -151,7 +149,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .build();
-    waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId()), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
   }
 
