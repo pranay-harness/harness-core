@@ -16,7 +16,6 @@ import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -111,10 +110,5 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                   .client(httpClient.build())
                                   .build();
     return retrofit.create(NewRelicRestClient.class);
-  }
-
-  public static void main(String[] args) throws ParseException {
-    //    2017-08-29T22:48:00-0700
-    System.out.println(new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ssZ").parse("2017-08-29T22:48:00-0700"));
   }
 }

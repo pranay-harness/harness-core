@@ -60,7 +60,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
     } catch (IOException e) {
       throw new WingsException(e);
     }
-    logger.info("going to collect appdynamics data for " + dataCollectionInfo);
+    logger.info("going to collect new relic data for " + dataCollectionInfo);
 
     synchronized (lockObject) {
       while (!completed.get()) {
@@ -167,7 +167,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {
-        logger.error("error fetching appdynamics metrics", e);
+        logger.error("error fetching new relic metrics", e);
       }
     }
   }
