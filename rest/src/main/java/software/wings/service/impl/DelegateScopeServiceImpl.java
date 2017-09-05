@@ -43,8 +43,12 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public DelegateScope update(DelegateScope delegateScope) {
     UpdateOperations<DelegateScope> updateOperations = wingsPersistence.createUpdateOperations(DelegateScope.class);
+    setUnset(updateOperations, "name", delegateScope.getName());
+    setUnset(updateOperations, "taskTypes", delegateScope.getTaskTypes());
     setUnset(updateOperations, "environmentTypes", delegateScope.getEnvironmentTypes());
+    setUnset(updateOperations, "applications", delegateScope.getApplications());
     setUnset(updateOperations, "environments", delegateScope.getEnvironments());
+    setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
 
     logger.info("Updating delegate scope : {}", delegateScope.getUuid());
     wingsPersistence.update(wingsPersistence.createQuery(DelegateScope.class)
