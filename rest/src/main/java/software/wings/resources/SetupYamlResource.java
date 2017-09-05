@@ -125,7 +125,6 @@ public class SetupYamlResource {
   public RestResponse<SetupYaml> update(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     RestResponse rr = new RestResponse<>();
     rr.setResponseMessages(yamlPayload.getResponseMessages());
@@ -141,9 +140,7 @@ public class SetupYamlResource {
       return rr;
     }
 
-    // what are the application changes? Which are additions and which are deletions?
-    List<String> applicationsToAdd = new ArrayList<String>();
-    List<String> applicationsToDelete = new ArrayList<String>();
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     SetupYaml beforeSetupYaml = null;
 
@@ -168,35 +165,27 @@ public class SetupYamlResource {
 
     if (yaml != null && !yaml.isEmpty()) {
       try {
+        List<String> applicationNames = new ArrayList<>();
+        List<String> beforeApplications = new ArrayList<>();
+
         setupYaml = mapper.readValue(yaml, SetupYaml.class);
 
-        List<String> applicationNames = setupYaml.getAppNames();
-
-        if (applicationNames != null) {
-          // initialize the services to add from the after
-          for (String s : applicationNames) {
-            applicationsToAdd.add(s);
-          }
+        if (setupYaml != null) {
+          applicationNames = setupYaml.getAppNames();
         }
 
         if (beforeSetupYaml != null) {
-          List<String> beforeApplications = beforeSetupYaml.getAppNames();
-
-          if (beforeApplications != null) {
-            // initialize the applications to delete from the before, and remove the befores from the applications to
-            // add list
-            for (String s : beforeApplications) {
-              applicationsToDelete.add(s);
-              applicationsToAdd.remove(s);
-            }
-          }
+          beforeApplications = beforeSetupYaml.getAppNames();
         }
 
-        if (applicationNames != null) {
-          // remove the afters from the applications to delete list
-          for (String s : applicationNames) {
-            applicationsToDelete.remove(s);
-          }
+        // what are the changes? Determine additions and deletions
+        List<String> applicationsToAdd = YamlHelper.findDifferenceBetweenLists(applicationNames, beforeApplications);
+        List<String> applicationsToDelete = YamlHelper.findDifferenceBetweenLists(beforeApplications, applicationNames);
+
+        // If we have deletions do a check - we CANNOT delete applications without deleteEnabled true
+        if (applicationsToDelete.size() > 0 && !deleteEnabled) {
+          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
+          return rr;
         }
 
         List<Application> applications = appService.getAppsByAccountId(accountId);
@@ -207,12 +196,6 @@ public class SetupYamlResource {
           for (Application application : applications) {
             applicationMap.put(application.getName(), application);
           }
-        }
-
-        // If we have deletions do a check - we CANNOT delete applications without deleteEnabled true
-        if (applicationsToDelete.size() > 0 && !deleteEnabled) {
-          YamlHelper.addNonEmptyDeletionsWarningMessage(rr);
-          return rr;
         }
 
         if (applicationsToDelete != null) {

@@ -181,6 +181,18 @@ public class YamlHelper {
     return config;
   }
 
+  public static <E> List<E> findDifferenceBetweenLists(List<E> itemsA, List<E> itemsB) {
+    // we need to make a copy of itemsA, because we don't want to modify itemsA!
+    List<E> diffList = new ArrayList<>();
+    diffList.addAll(itemsA);
+
+    if (diffList != null && itemsB != null) {
+      diffList.removeAll(itemsB);
+    }
+
+    return diffList;
+  }
+
   // TODO - LEFT OFF HERE
 
   // generic method
