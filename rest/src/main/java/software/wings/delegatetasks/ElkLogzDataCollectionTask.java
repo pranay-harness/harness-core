@@ -1,22 +1,19 @@
 package software.wings.delegatetasks;
 
-import static software.wings.service.impl.analysis.LogDataCollectionTaskResult.Builder.aLogDataCollectionTaskResult;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
+import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
-import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
@@ -36,7 +33,7 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
+public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   private static final SimpleDateFormat ELK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private static final Logger logger = LoggerFactory.getLogger(ElkLogzDataCollectionTask.class);
   private final Object lockObject = new Object();
@@ -48,12 +45,12 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<LogDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
   @Override
-  public LogDataCollectionTaskResult run(Object[] parameters) {
+  public DataCollectionTaskResult run(Object[] parameters) {
     final LogDataCollectionInfo dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
 
@@ -69,7 +66,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
         }
       }
     }
-    return aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
+    return DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(LogDataCollectionInfo dataCollectionInfo) {
