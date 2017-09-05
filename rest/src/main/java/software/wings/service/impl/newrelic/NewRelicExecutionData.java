@@ -40,12 +40,9 @@ public class NewRelicExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "errorMsg",
         anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
-    final int total = timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1;
+    final int total = timeDuration + 1;
     putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
-    if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
-      elapsedMinutes = 0;
-    }
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case FAILED:
