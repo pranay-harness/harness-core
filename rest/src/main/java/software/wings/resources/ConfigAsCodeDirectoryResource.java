@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -47,7 +47,7 @@ import javax.ws.rs.Produces;
 @Api("/configAsCode")
 @Path("/configAsCode")
 @Produces("application/json")
-@AuthRule(APPLICATION)
+@AuthRule(SETTING)
 public class ConfigAsCodeDirectoryResource {
   private AppService appService;
   private ServiceResourceService serviceResourceService;
@@ -184,21 +184,24 @@ public class ConfigAsCodeDirectoryResource {
     FolderNode pdcFolder = new FolderNode("Physical Data Center", Application.class);
     cloudProvidersFolder.addChild(pdcFolder);
 
-    // These should work - but don't due to a bug
+    // TODO - These should work - but don't due to a bug
     // List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(GLOBAL_APP_ID,
-    // SettingVariableTypes.PHYSICAL_DATA_CENTER.name());  List<SettingAttribute> settingAttributes =
-    // settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+    // SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+    List<SettingAttribute> settingAttributes =
+        settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+
+    logger.info("********** settingAttributes: " + settingAttributes);
 
     // TODO - this direct query call is temporary until bug is fixed
     String type = SettingVariableTypes.PHYSICAL_DATA_CENTER.name();
-    List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                   .field("accountId")
-                                                   .equal(accountId)
-                                                   .field("value.type")
-                                                   .equal(type)
-                                                   .asList();
+    List<SettingAttribute> settingAttributes2 = wingsPersistence.createQuery(SettingAttribute.class)
+                                                    .field("accountId")
+                                                    .equal(accountId)
+                                                    .field("value.type")
+                                                    .equal(type)
+                                                    .asList();
 
-    logger.info("********** settingAttributes: " + settingAttributes);
+    logger.info("********** settingAttributes2: " + settingAttributes2);
   }
 
   private void doArtifactServers(FolderNode theFolder) {
