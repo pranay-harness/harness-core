@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 import static software.wings.yaml.YamlHelper.doMapperReadValue;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam;
 @Api("/setupYaml")
 @Path("/setupYaml")
 @Produces("application/json")
-@AuthRule(APPLICATION)
+@AuthRule(SETTING)
 public class SetupYamlResource {
   private AppService appService;
   private YamlHistoryService yamlHistoryService;
