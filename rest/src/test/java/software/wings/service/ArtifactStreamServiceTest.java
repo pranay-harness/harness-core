@@ -207,18 +207,21 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteStreamAction() {
-    ArtifactStreamAction artifactStreamAction =
-        anArtifactStreamAction().withWorkflowType(WorkflowType.ORCHESTRATION).withWorkflowId(WORKFLOW_ID).build();
+    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
+                                                    .withUuid("ACTION_ID")
+                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                                    .withWorkflowId(WORKFLOW_ID)
+                                                    .build();
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
     when(query.get()).thenReturn(jenkinsArtifactStream);
-    artifactStreamService.deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+    artifactStreamService.deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
     verify(wingsPersistence).createQuery(any());
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(query).field("streamActions.workflowId");
-    verify(end).equal(WORKFLOW_ID);
+    verify(query).field("streamActions.uuid");
+    verify(end).equal("ACTION_ID");
     verify(updateOperations).removeAll("streamActions", artifactStreamAction);
     verify(wingsPersistence).update(query, updateOperations);
     verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
@@ -226,20 +229,23 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateStreamAction() {
-    ArtifactStreamAction artifactStreamAction =
-        anArtifactStreamAction().withWorkflowType(WorkflowType.ORCHESTRATION).withWorkflowId(WORKFLOW_ID).build();
+    ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
+                                                    .withUuid("ACTION_ID")
+                                                    .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                                    .withWorkflowId(WORKFLOW_ID)
+                                                    .build();
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
 
     doReturn(jenkinsArtifactStream)
         .when(spyArtifactStreamService)
-        .deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+        .deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
     doReturn(jenkinsArtifactStream)
         .when(spyArtifactStreamService)
         .addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
 
     spyArtifactStreamService.updateStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
 
-    verify(spyArtifactStreamService).deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+    verify(spyArtifactStreamService).deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
     verify(spyArtifactStreamService).addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
   }
 
