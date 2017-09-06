@@ -568,10 +568,36 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#delete(java.lang.String)
    */
   @Override
-  public void delete(String userId) {
-    if (wingsPersistence.delete(User.class, userId)) {
-      evictUserFromCache(userId);
+  public void delete(String accountId, String userId) {
+    User user = get(userId);
+    if (user.getAccounts() == null) {
+      return;
     }
+
+    for (Account account : user.getAccounts()) {
+      if (account.getUuid().equals(accountId)) {
+        user.getAccounts().remove(account);
+        break;
+      }
+    }
+
+    if (user.getAccounts().isEmpty() && wingsPersistence.delete(User.class, userId)) {
+      evictUserFromCache(userId);
+      return;
+    }
+
+    List<Role> accountRoles = roleService.getAccountRoles(accountId);
+    if (accountRoles != null) {
+      for (Role role : accountRoles) {
+        user.getRoles().remove(role);
+      }
+    }
+    UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
+                                          .set("roles", user.getRoles())
+                                          .set("accounts", user.getAccounts());
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    wingsPersistence.update(updateQuery, updateOp);
+    evictUserFromCache(userId);
   }
 
   /* (non-Javadoc)
