@@ -881,10 +881,9 @@ public class StateMachineExecutor {
     }
     if (stateExecutionInstance.getStatus() != RUNNING && stateExecutionInstance.getStatus() != PAUSED
         && stateExecutionInstance.getStatus() != ABORTING) {
-      WingsException ex = new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid()
+      logger.warn("stateExecutionInstance: " + stateExecutionInstance.getUuid()
           + " status is no longer in RUNNING/PAUSED/ABORTING state");
-      logger.warn(ex.getMessage(), ex);
-      throw ex;
+      return;
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
