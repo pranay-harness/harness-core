@@ -17,10 +17,10 @@ public class NewRelicMetricData {
   private List<String> metrics_not_found;
   private List<String> metrics_found;
 
-  private List<NewRelicMetric> metrics;
+  private List<NewRelicMetricSlice> metrics;
 
   @Data
-  public static class NewRelicMetric {
+  public static class NewRelicMetricSlice {
     private String name;
     private List<NewRelicMetricTimeSlice> timeslices;
   }

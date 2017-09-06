@@ -61,23 +61,35 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      String metricName, List<String> valuesToCollect, long fromTime, long toTime) throws IOException {
-    String valuesToCollectString = "";
-    for (String valueToCollect : valuesToCollect) {
-      valuesToCollectString += "values[]=" + valueToCollect + "&";
+  public List<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
+      throws IOException {
+    final Call<NewRelicMetricResponse> request = getNewRelicRestClient(newRelicConfig).listMetricNames(newRelicAppId);
+    final Response<NewRelicMetricResponse> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body().getMetrics();
     }
 
-    valuesToCollectString = StringUtils.removeEnd(valuesToCollectString, "&");
+    JSONObject errorObject = new JSONObject(response.errorBody().string());
+    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+  }
+
+  @Override
+  public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
+      List<String> metricNames, long fromTime, long toTime) throws IOException {
+    String metricsToCollectString = "";
+    for (String metricName : metricNames) {
+      metricsToCollectString += "names[]=" + metricName + "&";
+    }
+
+    metricsToCollectString = StringUtils.removeEnd(metricsToCollectString, "&");
 
     final String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
                                                                          : newRelicConfig.getNewRelicUrl() + "/";
     final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId
-        + "/metrics/data.json?" + valuesToCollectString;
+        + "/metrics/data.json?" + metricsToCollectString;
     final Call<NewRelicMetricDataResponse> request =
         getNewRelicRestClient(newRelicConfig)
-            .getRawMetricData(
-                url, metricName, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
+            .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
     final Response<NewRelicMetricDataResponse> response = request.execute();
     if (response.isSuccessful()) {
       return response.body().getMetric_data();

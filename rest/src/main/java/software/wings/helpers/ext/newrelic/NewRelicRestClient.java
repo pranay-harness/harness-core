@@ -8,6 +8,7 @@ import retrofit2.http.Url;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstancesResponse;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
+import software.wings.service.impl.newrelic.NewRelicMetricResponse;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -25,5 +26,8 @@ public interface NewRelicRestClient {
 
   @GET()
   Call<NewRelicMetricDataResponse> getRawMetricData(
-      @Url String url, @Query("names[]") String metricName, @Query("from") String fromTime, @Query("to") String toTime);
+      @Url String url, @Query("from") String fromTime, @Query("to") String toTime);
+
+  @GET("v2/applications/{applicationId}/metrics.json?name=WebTransaction/")
+  Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId);
 }
