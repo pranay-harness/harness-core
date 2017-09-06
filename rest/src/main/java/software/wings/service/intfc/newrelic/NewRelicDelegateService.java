@@ -5,6 +5,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 
 import java.io.IOException;
@@ -27,5 +28,7 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_METRICES_DATA)
   NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      String metricName, List<String> valuesToCollect, long fromTime, long toTime) throws IOException;
+      List<String> metricNames, long fromTime, long toTime) throws IOException;
+
+  List<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId) throws IOException;
 }

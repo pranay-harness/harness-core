@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -17,13 +18,14 @@ import software.wings.beans.Base;
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("metricType"), @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId")
+    @Field("name"), @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = {"apdexValue", "errors", "webTransactions"})
 public class NewRelicMetricDataRecord extends Base {
-  @NotEmpty @Indexed private NewRelicMetricType metricType;
+  @NotEmpty @Indexed private String name;
 
   @NotEmpty @Indexed private String workflowId;
 
