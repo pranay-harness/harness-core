@@ -472,7 +472,7 @@ public class JenkinsImpl implements Jenkins {
     BuildWithDetails buildWithDetails = build.details();
     Optional<Artifact> artifactOpt = buildWithDetails.getArtifacts()
                                          .stream()
-                                         .filter(artifact -> pattern.matcher(artifact.getRelativePath()).matches())
+                                         .filter(artifact -> pattern.matcher(artifact.getRelativePath()).find())
                                          .findFirst();
     if (artifactOpt.isPresent()) {
       return ImmutablePair.of(artifactOpt.get().getFileName(), buildWithDetails.downloadArtifact(artifactOpt.get()));
