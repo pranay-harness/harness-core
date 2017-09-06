@@ -305,8 +305,9 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteUser() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
     when(wingsPersistence.delete(User.class, USER_ID)).thenReturn(true);
-    userService.delete(USER_ID);
+    userService.delete(ACCOUNT_ID, USER_ID);
     verify(wingsPersistence).delete(User.class, USER_ID);
     verify(cache).remove(USER_ID);
   }

@@ -4,6 +4,8 @@ import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 3/28/16.
  */
@@ -53,6 +55,13 @@ public interface RoleService {
    * @return the account admin role
    */
   Role getAccountAdminRole(String accountId);
+
+  /**
+   * Gets account roles.
+   *
+   * @return the account roles
+   */
+  List<Role> getAccountRoles(String accountId);
 
   /**
    * Gets app admin role.

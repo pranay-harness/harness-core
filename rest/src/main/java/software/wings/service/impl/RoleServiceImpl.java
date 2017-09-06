@@ -109,6 +109,11 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
+  public List<Role> getAccountRoles(String accountId) {
+    return wingsPersistence.createQuery(Role.class).field("accountId").equal(accountId).asList();
+  }
+
+  @Override
   public Role getAppAdminRole(String accountId, String appId) {
     return wingsPersistence.createQuery(Role.class)
         .field("roleType")
