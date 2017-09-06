@@ -3,6 +3,8 @@ package software.wings.sm.states;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
@@ -21,9 +23,13 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicExecutionData;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSettingProvider;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -36,6 +42,7 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -48,6 +55,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class NewRelicState extends AbstractAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicState.class);
+
+  @Transient @SchemaIgnore private ScheduledExecutorService analysisExecutorService;
+
+  @Transient @Inject private NewRelicService newRelicService;
 
   @EnumData(enumDataProvider = NewRelicSettingProvider.class)
   @Attributes(required = true, title = "New Relic Server")
@@ -143,10 +154,34 @@ public class NewRelicState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    logger.debug("Executing AppDynamics state");
+    logger.debug("Executing new relic state");
+    Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
+    if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
+      getLogger().error("Could not find test nodes to compare the data");
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
+    }
+
+    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
+    if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
+      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
+        return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+            "Skipping analysis due to lack of baseline data (First time deployment).");
+      }
+
+      getLogger().warn(
+          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
+    }
+
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+        && lastExecutionNodes.equals(canaryNewHostNames)) {
+      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
+      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
+          "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
+    }
+
     triggerAnalysisDataCollection(context, null);
-    final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
-    final NewRelicExecutionData executionData = NewRelicExecutionData.Builder.anLogAnanlysisExecutionData()
+    final NewRelicExecutionData executionData = NewRelicExecutionData.Builder.anAnanlysisExecutionData()
                                                     .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                                     .withServerConfigID(getAnalysisServerConfigId())
                                                     .withAnalysisDuration(Integer.parseInt(timeDuration))
@@ -157,10 +192,7 @@ public class NewRelicState extends AbstractAnalysisState {
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
     response.setExecutionStatus(ExecutionStatus.SUCCESS);
-    final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.schedule(() -> {
-      waitNotifyEngine.notify(executionData.getCorrelationId(), response);
-    }, Long.parseLong(timeDuration), TimeUnit.MINUTES);
+    analysisExecutorService = createExecutorService(context, response, lastExecutionNodes, canaryNewHostNames);
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
@@ -182,4 +214,78 @@ public class NewRelicState extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  private void shutDownGenerator(MetricDataAnalysisResponse response) {
+    waitNotifyEngine.notify(((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId(), response);
+    analysisExecutorService.shutdown();
+  }
+
+  private ScheduledExecutorService createExecutorService(
+      ExecutionContext context, MetricDataAnalysisResponse response, Set<String> controlNodes, Set<String> testNodes) {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    scheduledExecutorService.scheduleAtFixedRate(
+        new NewRelicAnalysisGenerator(context, response, controlNodes, testNodes), 1, 1, TimeUnit.MINUTES);
+    return scheduledExecutorService;
+  }
+
+  protected ExecutionResponse generateAnalysisResponse(
+      ExecutionContext context, ExecutionStatus status, String message) {
+    final NewRelicExecutionData executionData = NewRelicExecutionData.Builder.anAnanlysisExecutionData()
+                                                    .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                                    .withServerConfigID(getAnalysisServerConfigId())
+                                                    .withAnalysisDuration(Integer.parseInt(timeDuration))
+                                                    .withStatus(ExecutionStatus.RUNNING)
+                                                    .withCorrelationId(UUID.randomUUID().toString())
+                                                    .build();
+    NewRelicMetricAnalysisRecord metricAnalysisRecord = new NewRelicMetricAnalysisRecord();
+    metricAnalysisRecord.setMessage(message);
+    metricAnalysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
+    metricAnalysisRecord.setWorkflowExecutionId(context.getWorkflowExecutionId());
+    metricAnalysisRecord.setWorkflowId(getWorkflowId(context));
+    newRelicService.saveAnalysisRecords(metricAnalysisRecord);
+
+    return anExecutionResponse()
+        .withAsync(false)
+        .withExecutionStatus(status)
+        .withStateExecutionData(executionData)
+        .withErrorMessage(message)
+        .build();
+  }
+
+  private class NewRelicAnalysisGenerator implements Runnable {
+    private final ExecutionContext context;
+    private final MetricDataAnalysisResponse response;
+    private final Set<String> controlNodes;
+    private final Set<String> testNodes;
+    private final String serviceId;
+    private int analysisMinute = 0;
+
+    private NewRelicAnalysisGenerator(ExecutionContext context, MetricDataAnalysisResponse response,
+        Set<String> controlNodes, Set<String> testNodes) {
+      this.context = context;
+      this.response = response;
+      this.controlNodes = controlNodes;
+      this.testNodes = testNodes;
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      this.serviceId = phaseElement.getServiceElement().getUuid();
+    }
+
+    @Override
+    public void run() {
+      if (analysisMinute > Integer.parseInt(timeDuration)) {
+        shutDownGenerator(response);
+        return;
+      }
+
+      final List<NewRelicMetricDataRecord> controlRecords =
+          getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+          ? newRelicService.getPreviousSuccessfulRecords(getWorkflowId(context), serviceId, analysisMinute)
+          : newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionInstanceId(),
+                getWorkflowId(context), serviceId, controlNodes, analysisMinute);
+
+      final List<NewRelicMetricDataRecord> testRecords = newRelicService.getRecords(context.getWorkflowExecutionId(),
+          context.getStateExecutionInstanceId(), getWorkflowId(context), serviceId, testNodes, analysisMinute);
+      analysisMinute++;
+    }
+  }
 }

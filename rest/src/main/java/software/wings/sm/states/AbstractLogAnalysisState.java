@@ -5,6 +5,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -21,6 +22,7 @@ import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionContext;
@@ -51,6 +53,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   protected String query;
 
   @Transient @SchemaIgnore protected ScheduledExecutorService pythonExecutorService;
+
+  @Transient @Inject @SchemaIgnore protected AnalysisService analysisService;
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);
