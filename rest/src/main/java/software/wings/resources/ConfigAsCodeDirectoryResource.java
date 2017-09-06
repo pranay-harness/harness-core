@@ -78,17 +78,19 @@ public class ConfigAsCodeDirectoryResource {
   public RestResponse<DirectoryNode> get(@PathParam("accountId") String accountId) {
     RestResponse rr = new RestResponse<>();
 
-    List<Application> apps = appService.getAppsByAccountId(accountId);
-
-    // logger.info("***************** apps: " + apps);
-
     // example of getting a sample object hierarchy for testing/debugging:
     // rr.setResource(YamlHelper.sampleConfigAsCodeDirectory());
 
+    // ------------------- SETUP SECTION -----------------------
     FolderNode configFolder = new FolderNode("Setup", Setup.class);
     configFolder.addChild(new YamlNode("setup.yaml", SetupYaml.class));
+    // ------------------- END SETUP SECTION -----------------------
+
+    // ------------------- APPLICATIONS SECTION -----------------------
     FolderNode applicationsFolder = new FolderNode("Applications", Application.class);
     configFolder.addChild(applicationsFolder);
+
+    List<Application> apps = appService.getAppsByAccountId(accountId);
 
     // iterate over applications
     for (Application app : apps) {
@@ -138,6 +140,62 @@ public class ConfigAsCodeDirectoryResource {
       }
       // ----------------- END ENVIRONMENTS SECTION ---------------------
     }
+    // ----------------- END APPLICATIONS SECTION ---------------------
+
+    // ------------------- CLOUD PROVIDERS SECTION -----------------------
+    // create cloud providers (and physical data centers)
+    // TODO - Application.class is WRONG for this!
+    FolderNode cloudProvidersFolder = new FolderNode("Cloud Providers", Application.class);
+    configFolder.addChild(cloudProvidersFolder);
+
+    // AWS
+    // TODO - Application.class is WRONG for this!
+    FolderNode awsFolder = new FolderNode("Amazon Web Services", Application.class);
+    cloudProvidersFolder.addChild(awsFolder);
+
+    // GCP
+    // TODO - Application.class is WRONG for this!
+    FolderNode gcpFolder = new FolderNode("Google Cloud Platform", Application.class);
+    cloudProvidersFolder.addChild(gcpFolder);
+
+    // Physical Data Center
+    // TODO - Application.class is WRONG for this!
+    FolderNode pdcFolder = new FolderNode("Physical Data Center", Application.class);
+    cloudProvidersFolder.addChild(pdcFolder);
+    // ----------------- END CLOUD PROVIDERS SECTION ---------------------
+
+    // ------------------- ARTIFACT SERVERS SECTION -----------------------
+    // create artifact servers
+    // TODO - Application.class is WRONG for this!
+    FolderNode artifactServersFolder = new FolderNode("Artifact Servers", Application.class);
+    configFolder.addChild(artifactServersFolder);
+    // ----------------- END ARTIFACT SERVERS SECTION ---------------------
+
+    // ------------------- COLLABORATION PROVIDERS SECTION -----------------------
+    // create collaboration providers
+    // TODO - Application.class is WRONG for this!
+    FolderNode collaborationProvidersFolder = new FolderNode("Collaboration Providers", Application.class);
+    configFolder.addChild(collaborationProvidersFolder);
+    // ----------------- END COLLABORATION PROVIDERS SECTION ---------------------
+
+    // ------------------- LOAD BALANCERS SECTION -----------------------
+    // create load balancers
+    // TODO - Application.class is WRONG for this!
+    FolderNode loadBalancersFolder = new FolderNode("Load Balancers", Application.class);
+    configFolder.addChild(loadBalancersFolder);
+
+    // Elastic Classic Load Balancer
+    // TODO - Application.class is WRONG for this!
+    FolderNode elbFolder = new FolderNode("Elastic Classic Load Balancers", Application.class);
+    loadBalancersFolder.addChild(elbFolder);
+    // ----------------- END LOAD BALANCERS SECTION ---------------------
+
+    // ------------------- VERIFICATION PROVIDERS SECTION -----------------------
+    // create verification providers
+    // TODO - Application.class is WRONG for this!
+    FolderNode verificationProvidersFolder = new FolderNode("Verification Providers", Application.class);
+    configFolder.addChild(verificationProvidersFolder);
+    // ----------------- END VERIFICATION PROVIDERS SECTION ---------------------
 
     rr.setResource(configFolder);
 
