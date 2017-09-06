@@ -458,18 +458,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       Pattern pattern = Pattern.compile(
           artifactStreamAction.getArtifactFilter().replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
       if (CollectionUtils.isEmpty(artifact.getArtifactFiles())) {
-        if (pattern.matcher(artifact.getBuildNo()).matches()) {
+        if (pattern.matcher(artifact.getBuildNo()).find()) {
           logger.info("Artifact filter {} matching with artifact name/ tag / buildNo {}",
               artifactStreamAction.getArtifactFilter(), artifact.getBuildNo());
           return true;
         }
       } else {
         logger.info("Comparing artifact file name matches with the given artifact filter");
-        List<ArtifactFile> artifactFiles =
-            artifact.getArtifactFiles()
-                .stream()
-                .filter(artifactFile -> pattern.matcher(artifactFile.getName()).matches())
-                .collect(Collectors.toList());
+        List<ArtifactFile> artifactFiles = artifact.getArtifactFiles()
+                                               .stream()
+                                               .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
+                                               .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(artifactFiles)) {
           logger.info("Artifact file names matches with the given artifact filter");
           artifact.setArtifactFiles(artifactFiles);
