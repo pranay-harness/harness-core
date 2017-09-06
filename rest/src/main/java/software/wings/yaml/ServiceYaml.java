@@ -5,15 +5,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.common.VariableProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceYaml extends GenericYaml {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  private VariableProcessor variableProcessor = new VariableProcessor();
 
   @YamlSerialize public String name;
   @YamlSerialize public String description;

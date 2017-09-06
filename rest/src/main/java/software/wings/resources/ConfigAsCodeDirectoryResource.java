@@ -14,17 +14,20 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
 import software.wings.yaml.EnvironmentYaml;
+import software.wings.yaml.GoogleCloudPlatformYaml;
+import software.wings.yaml.PhysicalDataCenterYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.SetupYaml;
+import software.wings.yaml.directory.CloudProviderYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.EnvironmentYamlNode;
 import software.wings.yaml.directory.FolderNode;
@@ -53,8 +56,6 @@ public class ConfigAsCodeDirectoryResource {
   private ServiceResourceService serviceResourceService;
   private EnvironmentService environmentService;
   private SettingsService settingsService;
-
-  @com.google.inject.Inject private WingsPersistence wingsPersistence;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -165,43 +166,78 @@ public class ConfigAsCodeDirectoryResource {
 
   private void doCloudProviders(FolderNode theFolder, String accountId) {
     // create cloud providers (and physical data centers)
-    // TODO - Application.class is WRONG for this!
-    FolderNode cloudProvidersFolder = new FolderNode("Cloud Providers", Application.class);
+    FolderNode cloudProvidersFolder = new FolderNode("Cloud Providers", SettingAttribute.class);
     theFolder.addChild(cloudProvidersFolder);
 
+    doCloudProviderType(
+        accountId, cloudProvidersFolder, "Amazon Web Services", SettingVariableTypes.AWS, AmazonWebServicesYaml.class);
+    doCloudProviderType(accountId, cloudProvidersFolder, "Google Cloud Platform", SettingVariableTypes.GCP,
+        GoogleCloudPlatformYaml.class);
+    doCloudProviderType(accountId, cloudProvidersFolder, "Physical Data Centers",
+        SettingVariableTypes.PHYSICAL_DATA_CENTER, PhysicalDataCenterYaml.class);
+
+    /*
     // AWS
-    // TODO - Application.class is WRONG for this!
-    FolderNode awsFolder = new FolderNode("Amazon Web Services", Application.class);
-    cloudProvidersFolder.addChild(awsFolder);
+    FolderNode amazonWebServicesFolder = new FolderNode("Amazon Web Services", SettingAttribute.class);
+    cloudProvidersFolder.addChild(amazonWebServicesFolder);
+
+    List<SettingAttribute> settingAttributesAWS = settingsService.getGlobalSettingAttributesByType(accountId,
+    SettingVariableTypes.AWS.name());
+
+    // iterate over amazon web service providers
+    for (SettingAttribute settingAttribute : settingAttributesAWS) {
+      FolderNode awsFolder = new FolderNode(settingAttribute.getName(), SettingAttribute.class);
+      amazonWebServicesFolder.addChild(awsFolder);
+      awsFolder.addChild(new YamlNode(settingAttribute.getUuid(), settingAttribute.getName() + ".yaml",
+    PhysicalDataCenterYaml.class));
+    }
 
     // GCP
-    // TODO - Application.class is WRONG for this!
-    FolderNode gcpFolder = new FolderNode("Google Cloud Platform", Application.class);
-    cloudProvidersFolder.addChild(gcpFolder);
+    FolderNode googleCloudPlatformFolder = new FolderNode("Google Cloud Platform", SettingAttribute.class);
+    cloudProvidersFolder.addChild(googleCloudPlatformFolder);
+
+    List<SettingAttribute> settingAttributesGCP = settingsService.getGlobalSettingAttributesByType(accountId,
+    SettingVariableTypes.GCP.name());
+
+    // iterate over google cloud platform providers
+    for (SettingAttribute settingAttribute : settingAttributesGCP) {
+      FolderNode gcpFolder = new FolderNode(settingAttribute.getName(), SettingAttribute.class);
+      googleCloudPlatformFolder.addChild(gcpFolder);
+      gcpFolder.addChild(new YamlNode(settingAttribute.getUuid(), settingAttribute.getName() + ".yaml",
+    PhysicalDataCenterYaml.class));
+    }
 
     // Physical Data Center
-    // TODO - Application.class is WRONG for this!
-    FolderNode pdcFolder = new FolderNode("Physical Data Center", Application.class);
-    cloudProvidersFolder.addChild(pdcFolder);
+    FolderNode physicalDataCentersFolder = new FolderNode("Physical Data Center", SettingAttribute.class);
+    cloudProvidersFolder.addChild(physicalDataCentersFolder);
 
-    // TODO - These should work - but don't due to a bug
-    // List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(GLOBAL_APP_ID,
-    // SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
-    List<SettingAttribute> settingAttributes =
-        settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+    List<SettingAttribute> settingAttributesPDC = settingsService.getGlobalSettingAttributesByType(accountId,
+    SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
 
-    logger.info("********** settingAttributes: " + settingAttributes);
+    // iterate over physical data centers
+    for (SettingAttribute settingAttribute : settingAttributesPDC) {
+      FolderNode pdcFolder = new FolderNode(settingAttribute.getName(), SettingAttribute.class);
+      physicalDataCentersFolder.addChild(pdcFolder);
+      pdcFolder.addChild(new YamlNode(settingAttribute.getUuid(), settingAttribute.getName() + ".yaml",
+    PhysicalDataCenterYaml.class));
+    }
+    */
+  }
 
-    // TODO - this direct query call is temporary until bug is fixed
-    String type = SettingVariableTypes.PHYSICAL_DATA_CENTER.name();
-    List<SettingAttribute> settingAttributes2 = wingsPersistence.createQuery(SettingAttribute.class)
-                                                    .field("accountId")
-                                                    .equal(accountId)
-                                                    .field("value.type")
-                                                    .equal(type)
-                                                    .asList();
+  private void doCloudProviderType(
+      String accountId, FolderNode parentFolder, String nodeName, SettingVariableTypes type, Class theClass) {
+    FolderNode typeFolder = new FolderNode(nodeName, SettingAttribute.class);
+    parentFolder.addChild(typeFolder);
 
-    logger.info("********** settingAttributes2: " + settingAttributes2);
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    // iterate over providers
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      FolderNode cloudProviderFolder = new FolderNode(settingAttribute.getName(), SettingAttribute.class);
+      typeFolder.addChild(cloudProviderFolder);
+      cloudProviderFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    }
   }
 
   private void doArtifactServers(FolderNode theFolder) {

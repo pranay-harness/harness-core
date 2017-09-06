@@ -3,12 +3,9 @@ package software.wings.yaml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Environment;
-import software.wings.common.VariableProcessor;
 
 public class EnvironmentYaml extends GenericYaml {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  private VariableProcessor variableProcessor = new VariableProcessor();
 
   @YamlSerialize public String name;
   @YamlSerialize public String description;
