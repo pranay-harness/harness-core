@@ -14,6 +14,7 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -78,6 +79,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   public static final String HARNESS_NEXUS = "Harness Nexus";
+  public static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
   public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
 
@@ -181,6 +183,20 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                                 .build())
                                                  .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
+
+    SettingAttribute artifactorySettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_ARTIFACTORY)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(anArtifactoryConfig()
+                           .withAccountId(accountId)
+                           .withArtifactoryUrl("https://harness.jfrog.io/harness")
+                           .withUsername("admin")
+                           .withPassword("harness123!".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, artifactorySettingAttribute);
 
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
