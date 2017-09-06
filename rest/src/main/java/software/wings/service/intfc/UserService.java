@@ -64,9 +64,10 @@ public interface UserService {
   /**
    * Delete.
    *
+   * @param accountId the account id
    * @param userId the user id
    */
-  void delete(@NotEmpty String userId);
+  void delete(@NotEmpty String accountId, @NotEmpty String userId);
 
   /**
    * Gets the.

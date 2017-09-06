@@ -170,7 +170,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
-    userService.delete(userId);
+    userService.delete(accountId, userId);
     return new RestResponse();
   }
 
