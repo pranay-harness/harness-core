@@ -195,36 +195,36 @@ public class ArtifactStreamResource {
    *
    * @param appId                the app id
    * @param streamId             the stream id
-   * @param workflowId           the workflow id
+   * @param actionId     the artifactStreamId
    * @param artifactStreamAction the artifact stream action
    * @return the rest response
    */
   @PUT
-  @Path("{streamId}/actions/{workflowId}")
+  @Path("{streamId}/actions/{actionId}")
   @Timed
   @ExceptionMetered
   public RestResponse<ArtifactStream> updateAction(@QueryParam("appId") String appId,
-      @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId,
+      @PathParam("streamId") String streamId, @PathParam("actionId") String actionId,
       ArtifactStreamAction artifactStreamAction) {
-    artifactStreamAction.setWorkflowId(workflowId);
+    artifactStreamAction.setUuid(actionId);
     return new RestResponse<>(artifactStreamService.updateStreamAction(appId, streamId, artifactStreamAction));
   }
 
   /**
    * Add action rest response.
    *
-   * @param appId      the app id
-   * @param streamId   the stream id
-   * @param workflowId the action id
+   * @param appId            the app id
+   * @param streamId         the stream id
+   * @param actionId the action id
    * @return the rest response
    */
   @DELETE
-  @Path("{streamId}/actions/{workflowId}")
+  @Path("{streamId}/actions/{actionId}")
   @Timed
   @ExceptionMetered
   public RestResponse<ArtifactStream> deleteAction(@QueryParam("appId") String appId,
-      @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId) {
-    return new RestResponse<>(artifactStreamService.deleteStreamAction(appId, streamId, workflowId));
+      @PathParam("streamId") String streamId, @PathParam("actionId") String actionId) {
+    return new RestResponse<>(artifactStreamService.deleteStreamAction(appId, streamId, actionId));
   }
 
   /**
@@ -246,6 +246,13 @@ public class ArtifactStreamResource {
     }
   }
 
+  /**
+   * Installed plugin setting schema rest response.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
   @GET
   @Path("stencils")
   @Timed
@@ -255,6 +262,13 @@ public class ArtifactStreamResource {
     return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();
   }
 
+  /**
+   * Gets build source types.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the build source types
+   */
   @GET
   @Path("buildsource-types")
   @Timed

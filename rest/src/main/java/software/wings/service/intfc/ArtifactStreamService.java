@@ -82,10 +82,10 @@ public interface ArtifactStreamService {
    *
    * @param appId      the app id
    * @param streamId   the stream id
-   * @param workflowId the action id
+   * @param actionId the action id
    * @return the artifact stream
    */
-  ArtifactStream deleteStreamAction(String appId, String streamId, String workflowId);
+  ArtifactStream deleteStreamAction(String appId, String streamId, String actionId);
 
   /**
    * Update stream action artifact stream.

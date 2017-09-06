@@ -23,7 +23,6 @@ import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -52,6 +51,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -203,6 +203,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    artifactStreamAction.setUuid(UUIDGenerator.getUuid());
     String cronExpression = CRON_PREFIX + artifactStreamAction.getCronExpression();
 
     if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(cronExpression)) {
@@ -263,13 +264,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void addCronForScheduledJobExecution(
       String appId, String streamId, ArtifactStreamAction artifactStreamAction, String cronExpression) {
-    // Use ArtifactStream uuid as job group name and workflowId as job name
-
     JobDetail job = JobBuilder.newJob(ArtifactStreamActionJob.class)
                         .withIdentity(artifactStreamAction.getWorkflowId(), streamId)
                         .usingJobData("artifactStreamId", streamId)
                         .usingJobData("appId", appId)
                         .usingJobData("workflowId", artifactStreamAction.getWorkflowId())
+                        .usingJobData("actionId", artifactStreamAction.getUuid())
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
@@ -281,14 +281,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public ArtifactStream deleteStreamAction(String appId, String streamId, String workflowId) {
+  public ArtifactStream deleteStreamAction(String appId, String streamId, String actionId) {
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .field("appId")
                                       .equal(appId)
                                       .field(ID_KEY)
                                       .equal(streamId)
-                                      .field("streamActions.workflowId")
-                                      .equal(workflowId);
+                                      .field("streamActions.uuid")
+                                      .equal(actionId);
 
     ArtifactStream artifactStream = query.get();
     Validator.notNullCheck("Artifact Stream", artifactStream);
@@ -296,7 +296,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     ArtifactStreamAction streamAction =
         artifactStream.getStreamActions()
             .stream()
-            .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
+            .filter(artifactStreamAction -> actionId.equals(artifactStreamAction.getUuid()))
             .findFirst()
             .orElseGet(null);
     Validator.notNullCheck("Stream Action", streamAction);
@@ -306,26 +306,31 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     UpdateResults update = wingsPersistence.update(query, operations);
 
-    jobScheduler.deleteJob(workflowId, streamId);
+    jobScheduler.deleteJob(actionId, streamId);
 
     return get(appId, streamId);
   }
 
   @Override
   public void deleteStreamActionForWorkflow(String appId, String workflowId) {
-    List<Key<ArtifactStream>> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                                    .field("appId")
-                                                    .equal(appId)
-                                                    .field("streamActions.workflowId")
-                                                    .equal(workflowId)
-                                                    .asKeyList();
-    artifactStreams.forEach(
-        artifactStreamKey -> deleteStreamAction(appId, artifactStreamKey.getId().toString(), workflowId));
+    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
+                                               .field("appId")
+                                               .equal(appId)
+                                               .field("streamActions.workflowId")
+                                               .equal(workflowId)
+                                               .asList();
+    artifactStreams.forEach(artifactStream
+        -> artifactStream.getStreamActions()
+               .stream()
+               .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
+               .forEach(artifactStreamAction -> {
+                 deleteStreamAction(appId, artifactStream.getUuid(), artifactStreamAction.getUuid());
+               }));
   }
 
   @Override
   public ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
-    deleteStreamAction(appId, streamId, artifactStreamAction.getWorkflowId());
+    deleteStreamAction(appId, streamId, artifactStreamAction.getUuid());
     return addStreamAction(appId, streamId, artifactStreamAction);
   }
 
@@ -449,6 +454,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
   }
+
   private boolean artifactFilterMatches(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
     if (StringUtils.isEmpty(artifactStreamAction.getArtifactFilter())) {
       return true;
