@@ -7,10 +7,10 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Duration;
@@ -51,13 +51,23 @@ public class BambooServiceImpl implements BambooService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig) {
-    Retrofit retrofit = new Retrofit.Builder()
-                            .baseUrl(bambooConfig.getBambooUrl())
-                            .addConverterFactory(JacksonConverterFactory.create())
-                            .client(HttpUtil.getUnsafeOkHttpClient())
-                            .build();
-    BambooRestClient bambooRestClient = retrofit.create(BambooRestClient.class);
-    return bambooRestClient;
+    try {
+      String bambooUrl = bambooConfig.getBambooUrl();
+      if (bambooUrl != null && !bambooUrl.endsWith("/")) {
+        bambooUrl = bambooUrl + "/";
+      }
+      Retrofit retrofit = new Retrofit.Builder()
+                              .baseUrl(bambooUrl)
+                              .addConverterFactory(JacksonConverterFactory.create())
+                              .client(HttpUtil.getUnsafeOkHttpClient())
+                              .build();
+      BambooRestClient bambooRestClient = retrofit.create(BambooRestClient.class);
+      return bambooRestClient;
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Bamboo Server at :" + bambooConfig.getBambooUrl()
+              + "Reason: " + ExceptionUtils.getRootCauseMessage(e));
+    }
   }
 
   @Override
@@ -96,12 +106,12 @@ public class BambooServiceImpl implements BambooService {
             .withRevision(next.get("vcsRevisionKey").asText())
             .build();
       }
-    } catch (Exception ex) {
+    } catch (Exception e) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Failed to get the last successful build for plan key {}", ex);
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ex.getMessage());
+      logger.error("Failed to get the last successful build for plan key {}", e);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ExceptionUtils.getRootCauseMessage(e));
     }
     return null;
   }
@@ -141,12 +151,15 @@ public class BambooServiceImpl implements BambooService {
               planNameMap.put(planKey, planName);
             });
           }
-        } catch (IOException ex) {
+        } catch (WingsException e) {
+          throw e;
+        } catch (IOException e) {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
-          logger.error("Failed to fetch project plans from bamboo server {}", bambooConfig.getBambooUrl(), ex);
-          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", ex.getMessage());
+          logger.error("Failed to fetch project plans from bamboo server {}", bambooConfig.getBambooUrl(), e);
+          throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message",
+              "Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e));
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
@@ -199,13 +212,13 @@ public class BambooServiceImpl implements BambooService {
             }
           }
           return buildDetailsList;
-        } catch (Exception ex) {
+        } catch (Exception e) {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
-          logger.error("BambooService job keys fetch failed with exception", ex);
+          logger.error("BambooService job keys fetch failed with exception", e);
           throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message",
-              "Error in fetching builds from bamboo server. Reason:" + ex.getMessage());
+              "Error in fetching builds from bamboo server. Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
@@ -262,7 +275,7 @@ public class BambooServiceImpl implements BambooService {
       }
       logger.error("Failed to trigger bamboo plan [" + planKey + "]", e);
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
-          "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + e.getMessage());
+          "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     logger.info(
         "Bamboo plan execution success for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
@@ -294,7 +307,8 @@ public class BambooServiceImpl implements BambooService {
       }
       logger.error("BambooService job keys fetch failed with exception", e);
       throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message",
-          "Failed to retrieve build status for [ " + buildResultKey + "]. Reason:" + e.getMessage());
+          "Failed to retrieve build status for [ " + buildResultKey
+              + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     return Result.builder().build();
   }
@@ -357,14 +371,13 @@ public class BambooServiceImpl implements BambooService {
       BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
     Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-    Entry<String, String> artifactPath =
-        artifactPathMap.entrySet()
-            .stream()
-            .filter(entry
-                -> extractRelativePath(entry.getValue()) != null
-                    && pattern.matcher(extractRelativePath(entry.getValue())).matches())
-            .findFirst()
-            .orElse(null);
+    Entry<String, String> artifactPath = artifactPathMap.entrySet()
+                                             .stream()
+                                             .filter(entry
+                                                 -> extractRelativePath(entry.getValue()) != null
+                                                     && pattern.matcher(extractRelativePath(entry.getValue())).find())
+                                             .findFirst()
+                                             .orElse(null);
     //    artifactPath.setValue("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/browse/TOD-TOD-39/artifact/JOB1/artifacts/todolist.war");
     try {
       //      try {
@@ -377,11 +390,19 @@ public class BambooServiceImpl implements BambooService {
       //        ex.printStackTrace();
       //      }
 
-      URL url = new URL(artifactPath.getValue());
-      URLConnection uc = url.openConnection();
-      uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
-      logger.info("Artifact Path {}", artifactPath.getKey());
-      return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
+      if (artifactPath != null) {
+        URL url = new URL(artifactPath.getValue());
+        URLConnection uc = url.openConnection();
+        uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+        logger.info("Artifact Path {}", artifactPath.getKey());
+        return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
+      } else {
+        String msg = "Artifact Path Regex" + artifactPathRegex + " not matching with any values"
+            + String.valueOf(artifactPathMap.values());
+        logger.info(msg);
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", msg);
+      }
+
     } catch (IOException ex) {
       logger.error("Download artifact failed with exception", ex);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to download artifact", ex);
@@ -390,14 +411,7 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public boolean isRunning(BambooConfig bambooConfig) {
-    try {
-      return getPlanKeys(bambooConfig, 1) != null; // TODO:: First check use status API
-    } catch (Exception e) {
-      if (e instanceof JsonParseException) {
-        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Bamboo server may not be running");
-      }
-      throw e;
-    }
+    return getPlanKeys(bambooConfig, 1) != null; // TODO:: First check use status API
   }
 
   /**
@@ -460,9 +474,9 @@ public class BambooServiceImpl implements BambooService {
   }
 
   public static void main(String... args) throws Exception {
-    String url = "http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/"; //"https://127.0.0.1:8000"; //;
+    String url = "http:/dv0127d.chicago.cme.com:8085/"; //"https://127.0.0.1:8000"; //;
 
-    url = "https://localhost:8000";
+    //  url = "https://localhost:8000";
 
     BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
                                     .withBambooUrl(url)
