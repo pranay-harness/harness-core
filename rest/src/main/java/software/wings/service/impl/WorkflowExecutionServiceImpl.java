@@ -49,6 +49,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
@@ -977,7 +978,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services;
-      if (workflow.isTemplatized()) {
+      if (isServiceTemplatized(workflow)) {
         services = resolveServices(workflow, workflowExecution);
       } else {
         services = workflow.getServices();
@@ -1088,6 +1089,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                            .addFilter("uuid", IN, serviceIds.toArray())
                                            .build();
     return serviceResourceService.list(pageRequest, false, false);
+  }
+
+  private boolean isServiceTemplatized(Workflow workflow) {
+    if (!workflow.isTemplatized()) {
+      return false;
+    }
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+      return false;
+    }
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          if (templateExpressions.stream().anyMatch(
+                  templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private void populateServiceSummary(
