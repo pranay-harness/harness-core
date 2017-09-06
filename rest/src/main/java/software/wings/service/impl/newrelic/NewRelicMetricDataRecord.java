@@ -37,6 +37,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   @NotEmpty @Indexed private long timeStamp;
 
+  private int dataCollectionMinute;
+
   @NotEmpty private String host;
 
   private NewRelicApdex apdexValue;

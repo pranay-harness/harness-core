@@ -99,7 +99,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
     private final List<NewRelicApplicationInstance> instances;
     private long collectionStartTime;
     private final List<NewRelicMetric> metrics;
-    private int logCollectionMinute = 0;
+    private int dataCollectionMinute = 0;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo) throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
@@ -138,6 +138,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                   metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
                   metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
+                  metricDataRecord.setDataCollectionMinute(dataCollectionMinute);
 
                   // set from time to the timestamp
                   long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -202,6 +203,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                 dataCollectionInfo.getApplicationId(), getAllMetricRecords(records));
           }
         }
+        dataCollectionMinute++;
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 

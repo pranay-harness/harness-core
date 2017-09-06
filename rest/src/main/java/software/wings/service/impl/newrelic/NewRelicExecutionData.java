@@ -5,7 +5,6 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import lombok.Data;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -80,7 +79,7 @@ public class NewRelicExecutionData extends StateExecutionData {
 
     private Builder() {}
 
-    public static Builder anLogAnanlysisExecutionData() {
+    public static Builder anAnanlysisExecutionData() {
       return new Builder();
     }
 
@@ -175,7 +174,7 @@ public class NewRelicExecutionData extends StateExecutionData {
      * @return the builder
      */
     public Builder but() {
-      return anLogAnanlysisExecutionData()
+      return anAnanlysisExecutionData()
           .withCorrelationId(correlationId)
           .withServerConfigID(serverConfigId)
           .withAnalysisDuration(timeDuration)
@@ -192,19 +191,19 @@ public class NewRelicExecutionData extends StateExecutionData {
      * @return the app dynamics execution data
      */
     public NewRelicExecutionData build() {
-      NewRelicExecutionData logAnalysisExecutionData = new NewRelicExecutionData();
-      logAnalysisExecutionData.setCorrelationId(correlationId);
-      logAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
-      logAnalysisExecutionData.setServerConfigId(serverConfigId);
-      logAnalysisExecutionData.setTimeDuration(timeDuration);
-      logAnalysisExecutionData.setStateName(stateName);
-      logAnalysisExecutionData.setStartTs(startTs);
-      logAnalysisExecutionData.setEndTs(endTs);
-      logAnalysisExecutionData.setStatus(status);
-      logAnalysisExecutionData.setErrorMsg(errorMsg);
-      logAnalysisExecutionData.setCanaryNewHostNames(canaryNewHostNames);
-      logAnalysisExecutionData.setLastExecutionNodes(lastExecutionNodes);
-      return logAnalysisExecutionData;
+      NewRelicExecutionData newRelicExecutionData = new NewRelicExecutionData();
+      newRelicExecutionData.setCorrelationId(correlationId);
+      newRelicExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
+      newRelicExecutionData.setServerConfigId(serverConfigId);
+      newRelicExecutionData.setTimeDuration(timeDuration);
+      newRelicExecutionData.setStateName(stateName);
+      newRelicExecutionData.setStartTs(startTs);
+      newRelicExecutionData.setEndTs(endTs);
+      newRelicExecutionData.setStatus(status);
+      newRelicExecutionData.setErrorMsg(errorMsg);
+      newRelicExecutionData.setCanaryNewHostNames(canaryNewHostNames);
+      newRelicExecutionData.setLastExecutionNodes(lastExecutionNodes);
+      return newRelicExecutionData;
     }
   }
 }
