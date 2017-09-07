@@ -34,7 +34,7 @@ public class HostValidationServiceImpl implements HostValidationService {
     List<HostValidationResponse> hostValidationResponses = new ArrayList<>();
 
     try {
-      with().pollInterval(3L, TimeUnit.SECONDS).atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+      with().pollInterval(3L, TimeUnit.SECONDS).atMost(new Duration(60L, TimeUnit.SECONDS)).until(() -> {
         hostNames.forEach(hostName -> {
           CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                                 .withHostConnectionAttributes(connectionSetting)
@@ -42,6 +42,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                                                                 .build();
           SshSessionConfig sshSessionConfig =
               SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext);
+
           HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
                                                 .withHostName(hostName)
                                                 .withStatus(ExecutionStatus.SUCCESS.name())

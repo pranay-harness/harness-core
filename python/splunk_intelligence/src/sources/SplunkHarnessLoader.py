@@ -60,9 +60,9 @@ class SplunkHarnessLoader(object):
             sys.exit(-1)
 
     @staticmethod
-    def load_prev_output_from_harness(url, auth_token, app_id, state_execution_id, query):
+    def load_prev_output_from_harness(url, auth_token, app_id, state_execution_id, query, log_collection_minute):
         headers = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "ExternalService " + auth_token}
-        payload = dict(applicationId=app_id, stateExecutionId=state_execution_id, query=query)
+        payload = dict(applicationId=app_id, stateExecutionId=state_execution_id, query=query, logCollectionMinute=log_collection_minute)
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
         if status_code != 200:

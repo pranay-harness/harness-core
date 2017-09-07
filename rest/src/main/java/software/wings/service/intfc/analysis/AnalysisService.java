@@ -13,6 +13,8 @@ import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -23,15 +25,11 @@ public interface AnalysisService {
   @ValidationGroups(Create.class)
   Boolean saveLogData(@NotNull StateType stateType, String accountId, @NotNull String appId,
       @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
-      ClusterLevel clusterLevel, @Valid List<LogElement> logData) throws IOException;
+      ClusterLevel clusterLevel, String delegateTaskId, @Valid List<LogElement> logData) throws IOException;
 
   @ValidationGroups(Create.class)
   List<LogDataRecord> getLogData(
       @Valid LogRequest logRequest, boolean compareCurrent, ClusterLevel clusterLevel, StateType splunkv2);
-
-  void finalizeLogCollection(String accountId, StateType stateType, String workflowExecutionId, LogRequest logRequest);
-
-  boolean deleteProcessed(LogRequest logRequest, StateType stateType, ClusterLevel clusterLevel);
 
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
@@ -39,7 +37,7 @@ public interface AnalysisService {
   Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
-      String applicationId, String stateExecutionId, String query, StateType stateType);
+      String applicationId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
 
@@ -51,4 +49,26 @@ public interface AnalysisService {
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
 
   boolean purgeLogs();
+
+  void createAndSaveSummary(String stateType, String appId, String stateExecutionId, String query, String message);
+
+  void bumpClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery, Set<String> host,
+      int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel);
+
+  void deleteClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery, Set<String> host,
+      int logCollectionMinute, ClusterLevel... clusterLevels);
+
+  int getLastAnalysisMinute(String stateExecutionId, String applicationId, StateType stateType);
+
+  boolean isStateValid(String appdId, String stateExecutionID);
+
+  int getCollectionMinuteForL1(
+      String query, String appdId, String stateExecutionId, String type, Set<String> testNodes);
+
+  Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, String type);
+
+  boolean isProcessingComplete(String query, String appId, String stateExecutionId, String type, int timeDurationMins);
+
+  boolean hasDataRecords(String query, String appdId, String stateExecutionId, String type, Set<String> nodes,
+      ClusterLevel level, int logCollectionMinute);
 }

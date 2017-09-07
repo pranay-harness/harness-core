@@ -21,22 +21,21 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
   @Inject private ManagerClient managerClient;
 
   @Override
-  public void save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, List<LogElement> logs) throws IOException {
+  public boolean save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
+      String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> logs) throws IOException {
     switch (stateType) {
       case SPLUNKV2:
-        execute(managerClient.saveSplunkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, ClusterLevel.L2, logs));
-        break;
+        return execute(managerClient.saveSplunkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L1, delegateTaskId, logs))
+            .getResource();
       case ELK:
-        execute(managerClient.saveElkLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, ClusterLevel.L0, logs));
-        break;
+        return execute(managerClient.saveElkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+            .getResource();
       case LOGZ:
-        execute(managerClient.saveLogzLogs(
-            accountId, appId, stateExecutionId, workflowId, workflowExecutionId, serviceId, ClusterLevel.L0, logs));
-        break;
-
+        return execute(managerClient.saveLogzLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+            .getResource();
       default:
         throw new IllegalStateException("Invalid state: " + stateType);
     }

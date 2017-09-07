@@ -19,7 +19,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.logz.LogzSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -30,7 +29,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -44,7 +42,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -59,7 +57,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
         new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
             getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
-            logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+            logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
@@ -69,8 +67,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   @Override
@@ -120,27 +118,6 @@ public class LogzAnalysisState extends ElkAnalysisState {
   @DefaultValue("message")
   public String getMessageField() {
     return messageField;
-  }
-
-  @Override
-  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {
-    Set<String> testNodes = getCanaryNewHostNames(context);
-    Set<String> controlNodes = getLastExecutionNodes(context);
-    Set<String> allNodes = new HashSet<>();
-
-    if (controlNodes != null) {
-      allNodes.addAll(controlNodes);
-    }
-
-    if (testNodes != null) {
-      allNodes.addAll(testNodes);
-    }
-
-    final String accountId = appService.get(context.getAppId()).getAccountId();
-    String serviceId = getPhaseServiceId(context);
-    LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), serviceId, allNodes, logAnalysisMinute);
-    analysisService.finalizeLogCollection(accountId, StateType.LOGZ, context.getWorkflowExecutionId(), logRequest);
   }
 
   @Override

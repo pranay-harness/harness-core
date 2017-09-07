@@ -73,7 +73,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationID, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -87,7 +87,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+        logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -100,8 +100,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationID), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   @Override
@@ -119,7 +119,4 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public Logger getLogger() {
     return logger;
   }
-
-  @Override
-  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {}
 }

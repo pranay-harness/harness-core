@@ -98,7 +98,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
-  public int fetchDesiredCount(Integer integer) {
+  public int fetchDesiredCount(int lastDeploymentDesiredCount) {
     return getInstanceCount();
   }
 
