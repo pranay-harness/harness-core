@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Sets;
@@ -14,17 +13,16 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.scheduler.JobScheduler;
+import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.LogAnalysisManagerJob;
 import software.wings.scheduler.LogClusterManagerJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.LogAnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -32,10 +30,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -55,6 +51,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
   protected String query;
+
+  @Transient @Inject @SchemaIgnore protected AnalysisService analysisService;
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);

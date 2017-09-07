@@ -1,7 +1,5 @@
 package software.wings.delegatetasks;
 
-import static software.wings.service.impl.analysis.LogDataCollectionTaskResult.Builder.aLogDataCollectionTaskResult;
-
 import com.splunk.HttpService;
 import com.splunk.Job;
 import com.splunk.JobArgs;
@@ -14,17 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SplunkConfig;
-import software.wings.exception.WingsException;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +36,7 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
+public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   public static final int DELAY_MINUTES = 2;
   private static final int RETRIES = 3;
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
@@ -52,14 +48,14 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public SplunkDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<LogDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
   @Override
-  public LogDataCollectionTaskResult run(Object[] parameters) {
-    LogDataCollectionTaskResult taskResult =
-        aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
+  public DataCollectionTaskResult run(Object[] parameters) {
+    DataCollectionTaskResult taskResult =
+        DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
     try {
       final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
       logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
@@ -73,7 +69,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
       try {
         uri = new URI(splunkConfig.getSplunkUrl().trim());
       } catch (Exception ex) {
-        taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage("Invalid server URL " + splunkConfig.getSplunkUrl());
         return taskResult;
       }
@@ -89,7 +85,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
       try {
         splunkService = Service.connect(loginArgs);
       } catch (Exception ex) {
-        taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage("Unable to connect to server : " + ex.getMessage());
         return taskResult;
       }
@@ -107,7 +103,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
       }
       return taskResult;
     } catch (Exception e) {
-      taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+      taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
       taskResult.setErrorMessage(e.getMessage());
     }
 
@@ -126,7 +122,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(
-      SplunkDataCollectionInfo dataCollectionInfo, Service splunkService, LogDataCollectionTaskResult taskResult) {
+      SplunkDataCollectionInfo dataCollectionInfo, Service splunkService, DataCollectionTaskResult taskResult) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(
         new SplunkDataCollector(getTaskId(), dataCollectionInfo, splunkService, logAnalysisStoreService, taskResult),
@@ -141,11 +137,10 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
     private final LogAnalysisStoreService logAnalysisStoreService;
     private long collectionStartTime;
     private int logCollectionMinute = 0;
-    private LogDataCollectionTaskResult taskResult;
+    private DataCollectionTaskResult taskResult;
 
     private SplunkDataCollector(String delegateTaskId, SplunkDataCollectionInfo dataCollectionInfo,
-        Service splunkService, LogAnalysisStoreService logAnalysisStoreService,
-        LogDataCollectionTaskResult taskResult) {
+        Service splunkService, LogAnalysisStoreService logAnalysisStoreService, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
       this.splunkService = splunkService;
@@ -237,7 +232,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
                   dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
               if (!response) {
                 if (++retry == RETRIES) {
-                  taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   taskResult.setErrorMessage("Cannot save log records. Server returned error");
                   completed.set(true);
                   break;
@@ -250,7 +245,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<LogDa
               break;
             } catch (Exception e) {
               if (++retry == RETRIES) {
-                taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+                taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 taskResult.setErrorMessage(e.getMessage());
                 completed.set(true);
                 throw(e);

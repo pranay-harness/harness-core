@@ -20,7 +20,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.LogCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -31,8 +31,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -102,7 +100,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId(), correlationID), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationID), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

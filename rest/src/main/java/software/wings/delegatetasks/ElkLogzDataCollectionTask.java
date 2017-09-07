@@ -1,15 +1,13 @@
 package software.wings.delegatetasks;
 
-import static software.wings.service.impl.analysis.LogDataCollectionTaskResult.Builder.aLogDataCollectionTaskResult;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult;
-import software.wings.service.impl.analysis.LogDataCollectionTaskResult.LogDataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
@@ -35,7 +33,8 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogDataCollectionTaskResult> {
+
+public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   private static final Logger logger = LoggerFactory.getLogger(ElkLogzDataCollectionTask.class);
   private static final int RETRIES = 3;
   private final Object lockObject = new Object();
@@ -47,16 +46,16 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<LogDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
   @Override
-  public LogDataCollectionTaskResult run(Object[] parameters) {
+  public DataCollectionTaskResult run(Object[] parameters) {
     final LogDataCollectionInfo dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
-    LogDataCollectionTaskResult taskResult =
-        aLogDataCollectionTaskResult().withStatus(LogDataCollectionTaskStatus.SUCCESS).build();
+    DataCollectionTaskResult taskResult =
+        DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
     collectionService = scheduleMetricDataCollection(dataCollectionInfo, taskResult);
     logger.info("going to collect data for " + dataCollectionInfo);
 
@@ -74,7 +73,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(
-      LogDataCollectionInfo dataCollectionInfo, LogDataCollectionTaskResult taskResult) {
+      LogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(new ElkDataCollector(getTaskId(), dataCollectionInfo, taskResult),
         SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
@@ -96,11 +95,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
     private final LogDataCollectionInfo dataCollectionInfo;
     private long collectionStartTime;
     private int logCollectionMinute = 0;
-    private LogDataCollectionTaskResult taskResult;
+    private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
 
     private ElkDataCollector(
-        String delegateTaskId, LogDataCollectionInfo dataCollectionInfo, LogDataCollectionTaskResult taskResult) {
+        String delegateTaskId, LogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
       this.logCollectionMinute = dataCollectionInfo.getStartMinute();
@@ -240,7 +239,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                         dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
                 if (!response) {
                   if (++retry == RETRIES) {
-                    taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+                    taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                     taskResult.setErrorMessage("Cannot save log records. Server returned error");
                     completed.set(true);
                     break;
@@ -254,7 +253,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<LogD
                 break;
               } catch (Exception e) {
                 if (++retry == RETRIES) {
-                  taskResult.setStatus(LogDataCollectionTaskStatus.FAILURE);
+                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   taskResult.setErrorMessage(e.getMessage());
                   completed.set(true);
                   throw(e);
