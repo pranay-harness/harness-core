@@ -2,6 +2,8 @@ package software.wings.delegate.service;
 
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
@@ -17,25 +19,31 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class MetricDataStoreServiceImpl implements MetricDataStoreService {
+  private static final Logger logger = LoggerFactory.getLogger(MetricDataStoreServiceImpl.class);
+
   @Inject private ManagerClient managerClient;
 
   @Override
-  public void saveAppDynamicsMetrics(String accountId, String applicationId, String stateExecutionId, long appId,
+  public boolean saveAppDynamicsMetrics(String accountId, String applicationId, String stateExecutionId, long appId,
       long tierId, List<AppdynamicsMetricData> metricData) {
     try {
-      execute(
-          managerClient.saveAppdynamicsMetrics(accountId, applicationId, stateExecutionId, appId, tierId, metricData));
+      return execute(
+          managerClient.saveAppdynamicsMetrics(accountId, applicationId, stateExecutionId, appId, tierId, metricData))
+          .getResource();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("error saving appdynamics metrics", e);
+      return false;
     }
   }
 
   @Override
-  public void saveNewRelicMetrics(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData) {
+  public boolean saveNewRelicMetrics(
+      String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData) {
     try {
-      execute(managerClient.saveNewRelicMetrics(accountId, applicationId, metricData));
+      return execute(managerClient.saveNewRelicMetrics(accountId, applicationId, metricData)).getResource();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("error saving new relic metrics", e);
+      return false;
     }
   }
 }

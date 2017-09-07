@@ -18,6 +18,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -166,5 +167,49 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
     }
     return workflowExecutionIds;
+  }
+
+  @Override
+  public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
+    Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+            .field("stateExecutionId")
+            .equal(stateExecutionId)
+            .field("workflowExecutionId")
+            .equal(workflowExecutionId);
+    NewRelicMetricAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
+    if (analysisRecord == null) {
+      return null;
+    }
+
+    int highRisk = 0;
+    int mediumRisk = 0;
+    for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
+      switch (metricAnalysis.getRiskLevel()) {
+        case HIGH:
+          highRisk++;
+          break;
+        case MEDIUM:
+          mediumRisk++;
+          break;
+      }
+    }
+
+    if (highRisk == 0 && mediumRisk == 0) {
+      analysisRecord.setMessage("No problems found");
+    } else {
+      String message = "";
+      if (highRisk > 0) {
+        message = highRisk + " high risk transactions found. ";
+      }
+
+      if (mediumRisk > 0) {
+        message = highRisk + " medium risk transactions found.";
+      }
+
+      analysisRecord.setMessage(message);
+    }
+
+    return analysisRecord;
   }
 }
