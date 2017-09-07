@@ -5,6 +5,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
@@ -14,11 +15,13 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.Workflow;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
@@ -26,8 +29,10 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
@@ -44,6 +49,7 @@ import software.wings.yaml.directory.ServiceCommandYamlNode;
 import software.wings.yaml.directory.ServiceYamlNode;
 import software.wings.yaml.directory.YamlNode;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -64,6 +70,10 @@ public class ConfigAsCodeDirectoryResource {
   private AppService appService;
   private ServiceResourceService serviceResourceService;
   private EnvironmentService environmentService;
+  private WorkflowService workflowService;
+  private PipelineService pipelineService;
+  // TODO - not sure what to use for this
+  // private TriggerService triggerService;
   private SettingsService settingsService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -78,10 +88,14 @@ public class ConfigAsCodeDirectoryResource {
    */
   @Inject
   public ConfigAsCodeDirectoryResource(AppService appService, ServiceResourceService serviceResourceService,
-      EnvironmentService environmentService, SettingsService settingsService) {
+      EnvironmentService environmentService, SettingsService settingsService, WorkflowService workflowService,
+      PipelineService pipelineService) {
     this.appService = appService;
     this.serviceResourceService = serviceResourceService;
     this.environmentService = environmentService;
+    this.workflowService = workflowService;
+    this.pipelineService = pipelineService;
+    // this.triggerService = triggerService;
     this.settingsService = settingsService;
   }
 
@@ -130,6 +144,9 @@ public class ConfigAsCodeDirectoryResource {
 
       doServices(appFolder, app);
       doEnvironments(appFolder, app);
+      doWorkflows(appFolder, app);
+      doPipelines(appFolder, app);
+      doTriggers(appFolder, app);
     }
   }
 
@@ -173,6 +190,59 @@ public class ConfigAsCodeDirectoryResource {
       envFolder.addChild(new EnvironmentYamlNode(
           environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
     }
+  }
+
+  private void doWorkflows(FolderNode theFolder, Application app) {
+    FolderNode workflowsFolder = new FolderNode("Workflows", Workflow.class);
+    theFolder.addChild(workflowsFolder);
+
+    // TODO - need equivalent of this
+    // List<Workflow> workflows = workflowService.getWorkflowsByApp(app.getAppId());
+    List<Workflow> workflows = new ArrayList<>();
+
+    // iterate over workflows
+    for (Workflow workflow : workflows) {
+      FolderNode wflwFolder = new FolderNode(workflow.getName(), Workflow.class);
+      workflowsFolder.addChild(wflwFolder);
+      wflwFolder.addChild(new WorkflowYamlNode(
+          workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
+    }
+  }
+
+  private void doPipelines(FolderNode theFolder, Application app) {
+    FolderNode pipelinesFolder = new FolderNode("Pipelines", Pipeline.class);
+    theFolder.addChild(pipelinesFolder);
+
+    // TODO - need equivalent of this
+    // List<Pipeline> pipelines = pipelineService.getPipelinesByApp(app.getAppId());
+    List<Pipeline> pipelines = new ArrayList<>();
+
+    // iterate over pipelines
+    for (Pipeline pipeline : pipelines) {
+      FolderNode pplnFolder = new FolderNode(pipeline.getName(), Pipeline.class);
+      pipelinesFolder.addChild(pplnFolder);
+      pplnFolder.addChild(new PipelineYamlNode(
+          pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
+    }
+  }
+
+  private void doTriggers(FolderNode theFolder, Application app) {
+    FolderNode triggersFolder = new FolderNode("Triggers", Trigger.class);
+    theFolder.addChild(triggersFolder);
+
+    // TODO - need solution for triggerService and/or equivalent of this
+    // List<Trigger> triggers = triggerService.getTriggersByApp(app.getAppId());
+    List<Trigger> triggers = new ArrayList<>();
+
+    /*
+    // iterate over triggers
+    for (Trigger trigger : triggers) {
+      FolderNode trgrFolder = new FolderNode(trigger.getName(), Trigger.class);
+      triggersFolder.addChild(trgrFolder);
+      trgrFolder.addChild(new TriggerYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
+    TriggerYaml.class));
+    }
+    */
   }
 
   private void doCloudProviders(FolderNode theFolder, String accountId) {
