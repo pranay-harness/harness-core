@@ -16,12 +16,16 @@ import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.YamlHistoryService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.YamlSubList;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 
@@ -51,6 +55,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(SETTING)
 public class SetupYamlResource {
   private AppService appService;
+  private SettingsService settingsService;
   private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -64,8 +69,10 @@ public class SetupYamlResource {
    * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public SetupYamlResource(AppService appService, YamlHistoryService yamlHistoryService) {
+  public SetupYamlResource(
+      AppService appService, SettingsService settingsService, YamlHistoryService yamlHistoryService) {
     this.appService = appService;
+    this.settingsService = settingsService;
     this.yamlHistoryService = yamlHistoryService;
   }
 
@@ -80,12 +87,63 @@ public class SetupYamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("accountId") String accountId) {
-    List<String> appNames = appService.getAppNamesByAccountId(accountId);
-
     SetupYaml setup = new SetupYaml();
+
+    List<String> appNames = appService.getAppNamesByAccountId(accountId);
     setup.setAppNames(appNames);
 
+    // types of cloud providers
+    doCloudProviders(setup, accountId, "AWS", SettingVariableTypes.AWS);
+    doCloudProviders(setup, accountId, "google_cloud_platform", SettingVariableTypes.GCP);
+    doCloudProviders(setup, accountId, "physical_data_centers", SettingVariableTypes.PHYSICAL_DATA_CENTER);
+
+    // types of artifact servers
+    doArtifactServers(setup, accountId, SettingVariableTypes.JENKINS);
+    doArtifactServers(setup, accountId, SettingVariableTypes.BAMBOO);
+    doArtifactServers(setup, accountId, SettingVariableTypes.DOCKER);
+    doArtifactServers(setup, accountId, SettingVariableTypes.NEXUS);
+    doArtifactServers(setup, accountId, SettingVariableTypes.ARTIFACTORY);
+
+    // TODO - LEFT OFF HERE
+
+    /*
+    List<String> collaborationProviderNames = settingsService.getAppNamesByAccountId(accountId);
+    setup.setCollaborationProviderNames(collaborationProviderNames);
+
+    List<String> loadBalancerNames = settingsService.getAppNamesByAccountId(accountId);
+    setup.setLoadBalancerNames(loadBalancerNames);
+
+    List<String> verificationProviderNames = settingsService.getAppNamesByAccountId(accountId);
+    setup.setVerificationProviderNames(verificationProviderNames);
+    */
+
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
+  }
+
+  private void doCloudProviders(SetupYaml setup, String accountId, String subListName, SettingVariableTypes type) {
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    YamlSubList yamlSubList = new YamlSubList(subListName);
+
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        yamlSubList.getSubList().add(settingAttribute.getName());
+      }
+    }
+
+    setup.getCloudProviders().add(yamlSubList);
+  }
+
+  private void doArtifactServers(SetupYaml setup, String accountId, SettingVariableTypes type) {
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        setup.addArtifactServerName(settingAttribute.getName());
+      }
+    }
   }
 
   // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
