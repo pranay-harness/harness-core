@@ -95,38 +95,57 @@ public class NewRelicMetricValueDefinition {
 
   public NewRelicMetricAnalysisValue analyze(
       List<NewRelicMetricDataRecord> testRecords, List<NewRelicMetricDataRecord> controlRecords) {
-    if (testRecords == null || testRecords.isEmpty() || controlRecords == null || controlRecords.isEmpty()) {
-      return NewRelicMetricAnalysisValue.builder().name(metricValueName).riskLevel(RiskLevel.LOW).build();
+    double testValue = 0.0;
+    double controlValue = 0.0;
+    if (testRecords == null || testRecords.isEmpty()) {
+      testValue = -1;
+    } else {
+      Set<String> testHosts = new HashSet<>();
+      List<Double> testValues = new ArrayList<>();
+      try {
+        parseValuesForAnalysis(testRecords, testHosts, testValues);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+
+      if (testValues.isEmpty()) {
+        testValue = -1;
+      } else {
+        testValue = Stats.of(testValues).sum() / testValues.size();
+      }
     }
 
-    Set<String> testHosts = new HashSet<>();
-    List<Double> testValues = new ArrayList<>();
-    try {
-      parseValuesForAnalysis(testRecords, testHosts, testValues);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    if (controlRecords == null || controlRecords.isEmpty()) {
+      controlValue = -1;
+    } else {
+      Set<String> controlHosts = new HashSet<>();
+      List<Double> controlValues = new ArrayList<>();
+      try {
+        parseValuesForAnalysis(controlRecords, controlHosts, controlValues);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+      if (controlValues.isEmpty()) {
+        controlValue = -1;
+      } else {
+        controlValue = Stats.of(controlValues).sum() / controlValues.size();
+      }
     }
 
-    Set<String> controlHosts = new HashSet<>();
-    List<Double> controlValues = new ArrayList<>();
-    try {
-      parseValuesForAnalysis(controlRecords, controlHosts, controlValues);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    if (controlValue < 0.0 || testValue < 0.0) {
+      return NewRelicMetricAnalysisValue.builder()
+          .name(metricValueName)
+          .riskLevel(RiskLevel.LOW)
+          .controlValue(controlValue)
+          .testValue(testValue)
+          .build();
     }
-
-    if (testValues.isEmpty() || controlValues.isEmpty()) {
-      return NewRelicMetricAnalysisValue.builder().name(metricValueName).riskLevel(RiskLevel.LOW).build();
-    }
-
-    double testValue = Stats.of(testValues).sum() / testHosts.size();
-    double controlValue = Stats.of(controlValues).sum() / controlHosts.size();
 
     RiskLevel riskLevel = RiskLevel.HIGH;
 
     for (Threshold threshold : thresholds) {
       RiskLevel currentRiskLevel = threshold.getRiskLevel(testValue, controlValue);
-      if (currentRiskLevel.compareTo(riskLevel) < 0) {
+      if (currentRiskLevel.compareTo(riskLevel) > 0) {
         riskLevel = currentRiskLevel;
       }
     }
@@ -149,7 +168,7 @@ public class NewRelicMetricValueDefinition {
       Double value = (Double) getValueMethod.invoke(metricDataRecord);
       if (value.doubleValue() >= 0.0) {
         hosts.add(metricDataRecord.getHost());
-        values.add((Double) getValueMethod.invoke(metricDataRecord));
+        values.add(value);
       }
     }
   }

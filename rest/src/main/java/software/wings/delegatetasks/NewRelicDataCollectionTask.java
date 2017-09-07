@@ -205,6 +205,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
             logger.debug(records.toString());
             metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
                 dataCollectionInfo.getApplicationId(), getAllMetricRecords(records));
+            logger.info("Sending " + records.cellSet().size() + " new relic metric records to the server for minute "
+                + dataCollectionMinute);
+            records.clear();
           }
         }
         dataCollectionMinute++;
