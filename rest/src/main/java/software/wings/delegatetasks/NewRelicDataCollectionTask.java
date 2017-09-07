@@ -40,7 +40,7 @@ import javax.inject.Inject;
  */
 public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
-  private static final int DURATION_TO_ASK_MINUTES = 5;
+  private static final int DURATION_TO_ASK_MINUTES = 3;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
   private final Object lockObject = new Object();
   private final AtomicBoolean completed = new AtomicBoolean(false);
@@ -146,8 +146,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                   metricDataRecord.setHost(node.getHost());
 
                   final String webTxnJson = JsonUtils.asJson(timeslice.getValues());
-                  metricDataRecord.setWebTransactions(JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class));
-
+                  NewRelicWebTransactions webTransactions =
+                      JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
+                  metricDataRecord.setThroughput(webTransactions.getThroughput());
+                  metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
                   records.put(metric.getName(), timeStamp, metricDataRecord);
                 }
               }
@@ -168,7 +170,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                   NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
                   if (metricDataRecord != null) {
                     final String errorsJson = JsonUtils.asJson(timeslice.getValues());
-                    metricDataRecord.setErrors(JsonUtils.asObject(errorsJson, NewRelicErrors.class));
+                    NewRelicErrors errors = JsonUtils.asObject(errorsJson, NewRelicErrors.class);
+                    metricDataRecord.setError(errors.getError_count());
                   }
                 }
               }
@@ -190,7 +193,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                   NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
                   if (metricDataRecord != null) {
                     final String apdexJson = JsonUtils.asJson(timeslice.getValues());
-                    metricDataRecord.setApdexValue(JsonUtils.asObject(apdexJson, NewRelicApdex.class));
+                    NewRelicApdex apdex = JsonUtils.asObject(apdexJson, NewRelicApdex.class);
+                    metricDataRecord.setApdexScore(apdex.getScore());
                   }
                 }
               }
