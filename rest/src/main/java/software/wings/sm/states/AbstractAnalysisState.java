@@ -9,6 +9,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.jcraft.jsch.HASH;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -26,22 +27,18 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashSet;
@@ -70,8 +67,6 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected DelegateService delegateService;
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
-
-  @Transient @Inject protected AnalysisService analysisService;
 
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
@@ -113,8 +108,8 @@ public abstract class AbstractAnalysisState extends State {
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false);
     if (workflowExecutions.isEmpty()) {
-      getLogger().error("Could not get a successful workflow to find control nodes");
-      return null;
+      getLogger().warn("Could not get a successful workflow to find control nodes");
+      return new HashSet<>();
     }
 
     Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
@@ -165,7 +160,8 @@ public abstract class AbstractAnalysisState extends State {
 
   abstract public void setAnalysisServerConfigId(String analysisServerConfigId);
 
-  protected abstract void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts);
+  protected abstract String triggerAnalysisDataCollection(
+      ExecutionContext context, String correlationId, Set<String> hosts);
 
   protected String generateAuthToken() throws UnsupportedEncodingException {
     return generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret());

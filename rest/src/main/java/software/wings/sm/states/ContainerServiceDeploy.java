@@ -171,7 +171,9 @@ public abstract class ContainerServiceDeploy extends State {
             ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + serviceName);
       }
       executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
-      desiredCount = previousDesiredCount.get() + fetchDesiredCount(previousDesiredCount.get());
+      int lastDeploymentDesiredCount =
+          getServiceDesiredCount(settingAttribute, region, clusterName, serviceElement.getOldName()).orElse(0);
+      desiredCount = previousDesiredCount.get() + fetchDesiredCount(lastDeploymentDesiredCount);
     }
 
     logger.info("Desired count for service {} is {}", serviceName, desiredCount);
@@ -424,7 +426,7 @@ public abstract class ContainerServiceDeploy extends State {
     return commandExecutionContext;
   }
 
-  public abstract int fetchDesiredCount(Integer integer);
+  public abstract int fetchDesiredCount(int lastDeploymentDesiredCount);
 
   public abstract String getCommandName();
 

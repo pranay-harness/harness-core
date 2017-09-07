@@ -24,8 +24,8 @@ import java.util.List;
 @Indexes({
   @Index(fields = {
     @Field("stateType")
-    , @Field("applicationId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("processed"),
-        @Field("clusterLevel")
+    , @Field("stateExecutionId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("clusterLevel"),
+        @Field("clusterLevel"), @Field("logCollectionMinute")
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
@@ -52,12 +52,12 @@ public class LogDataRecord extends Base {
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
   @NotEmpty private String logMD5Hash;
-  @Indexed private ClusterLevel clusterLevel;
-  @Indexed private int logCollectionMinute;
+  @NotEmpty @Indexed private ClusterLevel clusterLevel;
+  @NotEmpty @Indexed private int logCollectionMinute;
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
-      ClusterLevel clusterLevel, List<LogElement> logElements) {
+      ClusterLevel clusterLevel, ClusterLevel heartbeat, List<LogElement> logElements) {
     final List<LogDataRecord> records = new ArrayList<>();
     for (LogElement logElement : logElements) {
       final LogDataRecord record = new LogDataRecord();
@@ -73,7 +73,7 @@ public class LogDataRecord extends Base {
       record.setCount(logElement.getCount());
       record.setLogMessage(logElement.getLogMessage());
       record.setLogMD5Hash(DigestUtils.md5Hex(logElement.getLogMessage()));
-      record.setClusterLevel(clusterLevel);
+      record.setClusterLevel(Integer.parseInt(logElement.getClusterLabel()) < 0 ? heartbeat : clusterLevel);
       record.setServiceId(serviceId);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
 

@@ -448,11 +448,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       }
       orchestrationWorkflow = propagateTemplateExpressions(orchestrationWorkflow, templateExpressions);
-      workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
     }
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
+        workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
+        setUnset(ops, "templatized", workflow.isTemplatized());
         updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
 

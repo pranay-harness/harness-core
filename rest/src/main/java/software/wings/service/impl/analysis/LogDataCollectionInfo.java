@@ -14,7 +14,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LogDataCollectionInfo {
+public abstract class LogDataCollectionInfo {
   private String accountId;
   private String applicationId;
   private String stateExecutionId;
@@ -23,6 +23,7 @@ public class LogDataCollectionInfo {
   private String serviceId;
   private Set<String> queries = new HashSet<>();
   private long startTime;
+  private int startMinute = 0;
   private int collectionTime;
   private Set<String> hosts;
   private StateType stateType;

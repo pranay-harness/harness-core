@@ -20,7 +20,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.LogCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -31,8 +31,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -75,7 +73,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationID, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -89,7 +87,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-        logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+        logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -102,8 +100,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationID), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   @Override
@@ -121,7 +119,4 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public Logger getLogger() {
     return logger;
   }
-
-  @Override
-  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {}
 }

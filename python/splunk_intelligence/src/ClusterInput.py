@@ -42,7 +42,7 @@ def create_feature_matrix_worker(job_id, chunk, queue):
     queue.put(dict(job_id=job_id, data=feature_matrix.data, indices=feature_matrix.indices,
                    indptr=feature_matrix.indptr,
                    shape=feature_matrix.shape))
-    logger.info('finished processing chunk ' + str(job_id))
+    logger.debug('finished processing chunk ' + str(job_id))
 
 
 class ClusterInput(object):
@@ -115,7 +115,7 @@ class ClusterInput(object):
             job_id = job_id + 1
             jobs.append(p)
             p.start()
-            logger.info('processing chunk ' + str(job_id))
+            logger.debug('processing chunk ' + str(job_id))
 
         result = [0] * len(jobs)
         processed = 0

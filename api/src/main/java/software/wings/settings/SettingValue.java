@@ -93,6 +93,11 @@ public abstract class SettingValue implements ExtensionPoint {
     APP_DYNAMICS("AppDynamics"),
 
     /**
+     * New relic setting variable types.
+     */
+    NEW_RELIC("NewRelic"),
+
+    /**
      * Elastic Load Balancer Settings
      */
     ELB("Elastic Classic Load Balancer"),
