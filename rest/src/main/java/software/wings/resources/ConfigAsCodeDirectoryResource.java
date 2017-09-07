@@ -39,14 +39,15 @@ import software.wings.yaml.AppYaml;
 import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
 import software.wings.yaml.PhysicalDataCenterYaml;
+import software.wings.yaml.PipelineYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.SetupYaml;
-import software.wings.yaml.directory.CloudProviderYamlNode;
+import software.wings.yaml.WorkflowYaml;
+import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
-import software.wings.yaml.directory.EnvironmentYamlNode;
 import software.wings.yaml.directory.FolderNode;
-import software.wings.yaml.directory.ServiceCommandYamlNode;
-import software.wings.yaml.directory.ServiceYamlNode;
+import software.wings.yaml.directory.ServiceLevelYamlNode;
+import software.wings.yaml.directory.SettingAttributeYamlNode;
 import software.wings.yaml.directory.YamlNode;
 
 import java.util.ArrayList;
@@ -161,7 +162,7 @@ public class ConfigAsCodeDirectoryResource {
       FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
       servicesFolder.addChild(serviceFolder);
       serviceFolder.addChild(
-          new ServiceYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
+          new AppLevelYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
       FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
       serviceFolder.addChild(serviceCommandsFolder);
 
@@ -170,7 +171,7 @@ public class ConfigAsCodeDirectoryResource {
 
       // iterate over service commands
       for (ServiceCommand serviceCommand : serviceCommands) {
-        serviceCommandsFolder.addChild(new ServiceCommandYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
+        serviceCommandsFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
             serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
       }
       // ------------------- END SERVICE COMMANDS SECTION -----------------------
@@ -187,7 +188,7 @@ public class ConfigAsCodeDirectoryResource {
     for (Environment environment : environments) {
       FolderNode envFolder = new FolderNode(environment.getName(), Environment.class);
       environmentsFolder.addChild(envFolder);
-      envFolder.addChild(new EnvironmentYamlNode(
+      envFolder.addChild(new AppLevelYamlNode(
           environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
     }
   }
@@ -204,7 +205,7 @@ public class ConfigAsCodeDirectoryResource {
     for (Workflow workflow : workflows) {
       FolderNode wflwFolder = new FolderNode(workflow.getName(), Workflow.class);
       workflowsFolder.addChild(wflwFolder);
-      wflwFolder.addChild(new WorkflowYamlNode(
+      wflwFolder.addChild(new AppLevelYamlNode(
           workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
     }
   }
@@ -221,7 +222,7 @@ public class ConfigAsCodeDirectoryResource {
     for (Pipeline pipeline : pipelines) {
       FolderNode pplnFolder = new FolderNode(pipeline.getName(), Pipeline.class);
       pipelinesFolder.addChild(pplnFolder);
-      pplnFolder.addChild(new PipelineYamlNode(
+      pplnFolder.addChild(new AppLevelYamlNode(
           pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
     }
   }
@@ -239,7 +240,7 @@ public class ConfigAsCodeDirectoryResource {
     for (Trigger trigger : triggers) {
       FolderNode trgrFolder = new FolderNode(trigger.getName(), Trigger.class);
       triggersFolder.addChild(trgrFolder);
-      trgrFolder.addChild(new TriggerYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
+      trgrFolder.addChild(new AppLevelYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
     TriggerYaml.class));
     }
     */
@@ -268,8 +269,8 @@ public class ConfigAsCodeDirectoryResource {
 
     // iterate over providers
     for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-          settingAttribute.getName() + ".yaml", theClass));
+      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
     }
   }
 
@@ -291,8 +292,8 @@ public class ConfigAsCodeDirectoryResource {
 
     // iterate over providers
     for (SettingAttribute settingAttribute : settingAttributes) {
-      parentFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-          settingAttribute.getName() + ".yaml", theClass));
+      parentFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
     }
   }
 
@@ -318,8 +319,8 @@ public class ConfigAsCodeDirectoryResource {
 
     // iterate over providers
     for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-          settingAttribute.getName() + ".yaml", theClass));
+      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
     }
   }
 
@@ -343,8 +344,8 @@ public class ConfigAsCodeDirectoryResource {
 
     // iterate over providers
     for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-          settingAttribute.getName() + ".yaml", theClass));
+      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
     }
   }
 
@@ -374,8 +375,8 @@ public class ConfigAsCodeDirectoryResource {
 
     // iterate over providers
     for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-          settingAttribute.getName() + ".yaml", theClass));
+      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
     }
   }
 }
