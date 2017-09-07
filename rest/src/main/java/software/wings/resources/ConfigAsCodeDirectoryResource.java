@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -17,6 +19,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
@@ -26,6 +29,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.dl.PageRequest;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -157,24 +161,26 @@ public class ConfigAsCodeDirectoryResource {
 
     List<Service> services = serviceResourceService.findServicesByApp(app.getAppId());
 
-    // iterate over services
-    for (Service service : services) {
-      FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
-      servicesFolder.addChild(serviceFolder);
-      serviceFolder.addChild(
-          new AppLevelYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
-      FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
-      serviceFolder.addChild(serviceCommandsFolder);
+    if (services != null) {
+      // iterate over services
+      for (Service service : services) {
+        FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
+        servicesFolder.addChild(serviceFolder);
+        serviceFolder.addChild(new AppLevelYamlNode(
+            service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
+        FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
+        serviceFolder.addChild(serviceCommandsFolder);
 
-      // ------------------- SERVICE COMMANDS SECTION -----------------------
-      List<ServiceCommand> serviceCommands = service.getServiceCommands();
+        // ------------------- SERVICE COMMANDS SECTION -----------------------
+        List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
-      // iterate over service commands
-      for (ServiceCommand serviceCommand : serviceCommands) {
-        serviceCommandsFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
-            serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
+        // iterate over service commands
+        for (ServiceCommand serviceCommand : serviceCommands) {
+          serviceCommandsFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
+              serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
+        }
+        // ------------------- END SERVICE COMMANDS SECTION -----------------------
       }
-      // ------------------- END SERVICE COMMANDS SECTION -----------------------
     }
   }
 
@@ -184,12 +190,14 @@ public class ConfigAsCodeDirectoryResource {
 
     List<Environment> environments = environmentService.getEnvByApp(app.getAppId());
 
-    // iterate over environments
-    for (Environment environment : environments) {
-      FolderNode envFolder = new FolderNode(environment.getName(), Environment.class);
-      environmentsFolder.addChild(envFolder);
-      envFolder.addChild(new AppLevelYamlNode(
-          environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
+    if (environments != null) {
+      // iterate over environments
+      for (Environment environment : environments) {
+        FolderNode envFolder = new FolderNode(environment.getName(), Environment.class);
+        environmentsFolder.addChild(envFolder);
+        envFolder.addChild(new AppLevelYamlNode(
+            environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
+      }
     }
   }
 
@@ -197,16 +205,18 @@ public class ConfigAsCodeDirectoryResource {
     FolderNode workflowsFolder = new FolderNode("Workflows", Workflow.class);
     theFolder.addChild(workflowsFolder);
 
-    // TODO - need equivalent of this
-    // List<Workflow> workflows = workflowService.getWorkflowsByApp(app.getAppId());
-    List<Workflow> workflows = new ArrayList<>();
+    PageRequest<Workflow> pageRequest =
+        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getAppId()).build()).build();
+    List<Workflow> workflows = workflowService.listWorkflows(pageRequest).getResponse();
 
-    // iterate over workflows
-    for (Workflow workflow : workflows) {
-      FolderNode wflwFolder = new FolderNode(workflow.getName(), Workflow.class);
-      workflowsFolder.addChild(wflwFolder);
-      wflwFolder.addChild(new AppLevelYamlNode(
-          workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
+    if (workflows != null) {
+      // iterate over workflows
+      for (Workflow workflow : workflows) {
+        FolderNode wflwFolder = new FolderNode(workflow.getName(), Workflow.class);
+        workflowsFolder.addChild(wflwFolder);
+        wflwFolder.addChild(new AppLevelYamlNode(
+            workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
+      }
     }
   }
 
@@ -214,16 +224,18 @@ public class ConfigAsCodeDirectoryResource {
     FolderNode pipelinesFolder = new FolderNode("Pipelines", Pipeline.class);
     theFolder.addChild(pipelinesFolder);
 
-    // TODO - need equivalent of this
-    // List<Pipeline> pipelines = pipelineService.getPipelinesByApp(app.getAppId());
-    List<Pipeline> pipelines = new ArrayList<>();
+    PageRequest<Pipeline> pageRequest =
+        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getAppId()).build()).build();
+    List<Pipeline> pipelines = pipelineService.listPipelines(pageRequest).getResponse();
 
-    // iterate over pipelines
-    for (Pipeline pipeline : pipelines) {
-      FolderNode pplnFolder = new FolderNode(pipeline.getName(), Pipeline.class);
-      pipelinesFolder.addChild(pplnFolder);
-      pplnFolder.addChild(new AppLevelYamlNode(
-          pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
+    if (pipelines != null) {
+      // iterate over pipelines
+      for (Pipeline pipeline : pipelines) {
+        FolderNode pplnFolder = new FolderNode(pipeline.getName(), Pipeline.class);
+        pipelinesFolder.addChild(pplnFolder);
+        pplnFolder.addChild(new AppLevelYamlNode(
+            pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
+      }
     }
   }
 
@@ -236,12 +248,14 @@ public class ConfigAsCodeDirectoryResource {
     List<Trigger> triggers = new ArrayList<>();
 
     /*
-    // iterate over triggers
-    for (Trigger trigger : triggers) {
-      FolderNode trgrFolder = new FolderNode(trigger.getName(), Trigger.class);
-      triggersFolder.addChild(trgrFolder);
-      trgrFolder.addChild(new AppLevelYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
+    if (triggers != null) {
+      // iterate over triggers
+      for (Trigger trigger : triggers) {
+        FolderNode trgrFolder = new FolderNode(trigger.getName(), Trigger.class);
+        triggersFolder.addChild(trgrFolder);
+        trgrFolder.addChild(new AppLevelYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
     TriggerYaml.class));
+      }
     }
     */
   }
@@ -267,10 +281,12 @@ public class ConfigAsCodeDirectoryResource {
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    // iterate over providers
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+      }
     }
   }
 
@@ -290,10 +306,12 @@ public class ConfigAsCodeDirectoryResource {
       String accountId, FolderNode parentFolder, SettingVariableTypes type, Class theClass) {
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    // iterate over providers
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      parentFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        parentFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+      }
     }
   }
 
@@ -317,10 +335,12 @@ public class ConfigAsCodeDirectoryResource {
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    // iterate over providers
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+      }
     }
   }
 
@@ -342,10 +362,12 @@ public class ConfigAsCodeDirectoryResource {
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    // iterate over providers
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+      }
     }
   }
 
@@ -373,10 +395,12 @@ public class ConfigAsCodeDirectoryResource {
 
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
 
-    // iterate over providers
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-          settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+      }
     }
   }
 }
