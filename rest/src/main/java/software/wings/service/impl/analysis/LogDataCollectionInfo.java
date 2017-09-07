@@ -23,6 +23,7 @@ public class LogDataCollectionInfo {
   private String serviceId;
   private Set<String> queries = new HashSet<>();
   private long startTime;
+  private int startMinute = 0;
   private int collectionTime;
   private Set<String> hosts;
   private StateType stateType;
