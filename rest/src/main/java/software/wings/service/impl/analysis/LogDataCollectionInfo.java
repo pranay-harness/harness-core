@@ -14,7 +14,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class LogDataCollectionInfo {
+public class LogDataCollectionInfo {
   private String accountId;
   private String applicationId;
   private String stateExecutionId;

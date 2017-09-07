@@ -64,7 +64,6 @@ import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
 import software.wings.sm.states.LogzAnalysisState;
-import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
@@ -127,29 +126,24 @@ public enum StateType implements StateTypeDescriptor {
   APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(), ORCHESTRATION_STENCILS),
 
   /**
-   * New relic state type.
-   */
-  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
-
-  /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 6, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 5, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 7, "LOGZ", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 6, "LOGZ", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

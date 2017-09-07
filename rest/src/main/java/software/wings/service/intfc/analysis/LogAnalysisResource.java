@@ -10,6 +10,7 @@ import software.wings.service.impl.analysis.LogRequest;
 
 import java.io.IOException;
 import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 
 /**

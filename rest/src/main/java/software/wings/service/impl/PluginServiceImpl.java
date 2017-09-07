@@ -26,7 +26,6 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -107,15 +106,6 @@ public class PluginServiceImpl implements PluginService {
             .withType("APP_DYNAMICS")
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema("APP_DYNAMICS"))
-            .build(),
-        anAccountPlugin()
-            .withSettingClass(NewRelicConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("NewRelic")
-            .withType(SettingVariableTypes.NEW_RELIC.name())
-            .withPluginCategories(asList(Verification))
-            .withUiSchema(readUiSchema(SettingVariableTypes.NEW_RELIC.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SplunkConfig.class)
