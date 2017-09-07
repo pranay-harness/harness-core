@@ -124,7 +124,6 @@ import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl
 import software.wings.service.impl.dashboardStats.InstanceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
-import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -186,7 +185,6 @@ import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
 import software.wings.service.intfc.dashboardStats.InstanceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
-import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
@@ -277,7 +275,6 @@ public class WingsModule extends AbstractModule {
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
-    bind(NewRelicService.class).to(NewRelicServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
     bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);

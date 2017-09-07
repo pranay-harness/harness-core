@@ -18,7 +18,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
-import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.LogCollectionCallback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.logz.LogzSettingProvider;
@@ -69,7 +69,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
+    waitNotifyEngine.waitForAll(new LogCollectionCallback(context.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
   }
 

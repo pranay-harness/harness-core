@@ -160,16 +160,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
     final CountsByStatuses breakdown = new CountsByStatuses();
-    switch (getStatus()) {
-      case FAILED:
-        breakdown.setFailed(total);
-        break;
-      case SUCCESS:
-        breakdown.setSuccess(total);
-        break;
-      default:
-        breakdown.setSuccess(Math.min(elapsedMinutes, total));
-        break;
+    if (getStatus() == ExecutionStatus.FAILED) {
+      breakdown.setFailed(Math.min(elapsedMinutes, total));
+    } else {
+      breakdown.setSuccess(Math.min(elapsedMinutes, total));
     }
     putNotNull(executionDetails, "breakdown",
         anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());

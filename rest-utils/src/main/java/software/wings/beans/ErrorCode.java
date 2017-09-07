@@ -382,16 +382,6 @@ public enum ErrorCode {
   APPDYNAMICS_ERROR("APPDYNAMICS_ERROR"),
 
   /**
-   * New relic error error code.
-   */
-  NEWRELIC_CONFIGURATION_ERROR("NEWRELIC_CONFIGURATION_ERROR"),
-
-  /**
-   * New relic error error code.
-   */
-  NEWRELIC_ERROR("NEWRELIC_ERROR"),
-
-  /**
    * Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
    */
   ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"), /**
