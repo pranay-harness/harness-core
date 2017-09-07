@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
  */
 @Embedded
 public class ArtifactStreamAction {
+  @NotNull private String uuid;
   @NotNull private WorkflowType workflowType;
   @NotEmpty private String workflowId;
   private String workflowName;
@@ -191,7 +192,7 @@ public class ArtifactStreamAction {
   /**
    * Get artifact Path Regex
    *
-   * @return
+   * @return artifact filter
    */
   public String getArtifactFilter() {
     return artifactFilter;
@@ -199,7 +200,8 @@ public class ArtifactStreamAction {
 
   /**
    * Set artifact filter
-   * @param artifactFilter
+   *
+   * @param artifactFilter the artifact filter
    */
   public void setArtifactFilter(String artifactFilter) {
     this.artifactFilter = artifactFilter;
@@ -246,9 +248,28 @@ public class ArtifactStreamAction {
   }
 
   /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
+  public String getUuid() {
+    return uuid;
+  }
+
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
+    private String uuid;
     private WorkflowType workflowType;
     private String workflowId;
     private String workflowName;
@@ -269,6 +290,17 @@ public class ArtifactStreamAction {
      */
     public static Builder anArtifactStreamAction() {
       return new Builder();
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
     }
 
     /**
@@ -371,12 +403,16 @@ public class ArtifactStreamAction {
     }
 
     /**
-     * With Artifact Path Regex
+     * With artifact filter builder.
+     *
+     * @param artifactFilter the artifact filter
+     * @return the builder
      */
     public Builder withArtifactFilter(String artifactFilter) {
       this.artifactFilter = artifactFilter;
       return this;
     }
+
     /**
      * But builder.
      *
@@ -384,6 +420,7 @@ public class ArtifactStreamAction {
      */
     public Builder but() {
       return anArtifactStreamAction()
+          .withUuid(uuid)
           .withWorkflowType(workflowType)
           .withWorkflowId(workflowId)
           .withWorkflowName(workflowName)
@@ -403,6 +440,7 @@ public class ArtifactStreamAction {
      */
     public ArtifactStreamAction build() {
       ArtifactStreamAction artifactStreamAction = new ArtifactStreamAction();
+      artifactStreamAction.setUuid(uuid);
       artifactStreamAction.setWorkflowType(workflowType);
       artifactStreamAction.setWorkflowId(workflowId);
       artifactStreamAction.setWorkflowName(workflowName);

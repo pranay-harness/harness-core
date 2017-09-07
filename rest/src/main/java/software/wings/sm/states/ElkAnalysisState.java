@@ -22,7 +22,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkSettingProvider;
@@ -37,7 +36,6 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -121,7 +119,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;
     final String accountId = appService.get(context.getAppId()).getAccountId();
     final String timestampFieldFormat = getTimestmpFieldFormat(accountId, timestampField);
@@ -139,7 +137,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
         new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
             getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-            timestampFieldFormat, logCollectionStartTimeStamp, Integer.parseInt(timeDuration), hosts);
+            timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts);
     String waitId = UUIDGenerator.getUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
@@ -149,8 +147,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   @Override
@@ -168,27 +166,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
-  }
-
-  @Override
-  protected void preProcess(ExecutionContext context, int logAnalysisMinute) {
-    Set<String> testNodes = getCanaryNewHostNames(context);
-    Set<String> controlNodes = getLastExecutionNodes(context);
-    Set<String> allNodes = new HashSet<>();
-
-    if (controlNodes != null) {
-      allNodes.addAll(controlNodes);
-    }
-
-    if (testNodes != null) {
-      allNodes.addAll(testNodes);
-    }
-
-    final String accountId = appService.get(context.getAppId()).getAccountId();
-    String serviceId = getPhaseServiceId(context);
-    LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
-        getWorkflowId(context), serviceId, allNodes, logAnalysisMinute);
-    analysisService.finalizeLogCollection(accountId, StateType.ELK, context.getWorkflowExecutionId(), logRequest);
   }
 
   private String getTimestmpFieldFormat(String accountId, String timestampField) {

@@ -114,7 +114,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -1331,6 +1333,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                         .build());
       }
 
+      instanceStatusSummaries = instanceStatusSummaries.stream()
+                                    .filter(instanceStatusSummary -> instanceStatusSummary.getInstanceElement() != null)
+                                    .collect(Collectors.toList());
+      instanceStatusSummaries =
+          instanceStatusSummaries.stream()
+              .filter(distinctByKey(instanceStatusSummary -> instanceStatusSummary.getInstanceElement().getUuid()))
+              .collect(Collectors.toList());
+
       elementExecutionSummary.setStatus(last.getStatus());
       elementExecutionSummary.setInstanceStatusSummaries(instanceStatusSummaries);
       elementExecutionSummaries.add(elementExecutionSummary);
@@ -1415,5 +1425,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return phaseStepExecutionSummary;
+  }
+
+  public <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+    return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
   }
 }

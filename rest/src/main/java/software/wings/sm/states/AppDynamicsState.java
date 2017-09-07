@@ -124,7 +124,8 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
-    triggerAnalysisDataCollection(context, null);
+    String correlationId = UUID.randomUUID().toString();
+    triggerAnalysisDataCollection(context, correlationId, null);
     final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -137,7 +138,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .withAppdynamicsTierId(Long.parseLong(tierId))
             .withAnalysisDuration(Integer.parseInt(timeDuration))
             .withStatus(ExecutionStatus.RUNNING)
-            .withCorrelationId(UUID.randomUUID().toString())
+            .withCorrelationId(correlationId)
             .build();
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
@@ -191,7 +192,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
     String analysisServerConfigIdExpression = null;
     String applicationIdExpression = null;
@@ -271,8 +272,8 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   private List<String> getBtNames() {

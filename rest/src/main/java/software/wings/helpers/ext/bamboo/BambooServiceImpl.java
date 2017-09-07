@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -234,9 +235,10 @@ public class BambooServiceImpl implements BambooService {
         List<String> artifactPaths = new ArrayList<>();
         BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
         if (lastSuccessfulBuild != null) {
-          Map<String, String> buildArtifactsUrlMap =
+          Map<String, Artifact> buildArtifactsUrlMap =
               getBuildArtifactsUrlMap(bambooConfig, planKey, lastSuccessfulBuild.getNumber());
-          artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
+          artifactPaths.addAll(getArtifactRelativePaths(
+              buildArtifactsUrlMap.values().stream().map(Artifact::getLink).collect(Collectors.toList())));
         }
         return artifactPaths;
 
@@ -369,43 +371,76 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public Pair<String, InputStream> downloadArtifact(
       BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
-    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
+    logger.info("Downloading artifact for plan {} and build number {} and artifact path {}", planKey, buildNumber,
+        artifactPathRegex);
+    Map<String, Artifact> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
+    String artifactSourcePath = artifactPathRegex;
     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-    Entry<String, String> artifactPath = artifactPathMap.entrySet()
-                                             .stream()
-                                             .filter(entry
-                                                 -> extractRelativePath(entry.getValue()) != null
-                                                     && pattern.matcher(extractRelativePath(entry.getValue())).find())
-                                             .findFirst()
-                                             .orElse(null);
-    //    artifactPath.setValue("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/browse/TOD-TOD-39/artifact/JOB1/artifacts/todolist.war");
-    try {
-      //      try {
-      //        Response<ResponseBody> response =
-      //        getBambooClient(bambooConfig).downloadArtifact(getBasicAuthCredentials(bambooConfig),
-      //        artifactPath.getValue()).execute(); File file = new File("/tmp/todolist.war"); FileOutputStream
-      //        fileOutputStream = new FileOutputStream(file); IOUtils.write(response.body().bytes(), fileOutputStream);
-      //      }
-      //      catch (Exception ex){
-      //        ex.printStackTrace();
-      //      }
-
-      if (artifactPath != null) {
-        URL url = new URL(artifactPath.getValue());
+    Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
+    Entry<String, Artifact> artifactPath =
+        artifactPathSet.stream()
+            .filter(entry
+                -> extractRelativePath(entry.getValue().getLink()) != null
+                    && pattern.matcher(extractRelativePath(entry.getValue().getLink())).find())
+            .findFirst()
+            .orElse(null);
+    if (artifactPath != null) {
+      Artifact value = artifactPath.getValue();
+      logger.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
+      String link = value.getLink();
+      try {
+        URL url = new URL(link);
         URLConnection uc = url.openConnection();
         uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
-        logger.info("Artifact Path {}", artifactPath.getKey());
-        return ImmutablePair.of(artifactPath.getKey(), uc.getInputStream());
-      } else {
-        String msg = "Artifact Path Regex" + artifactPathRegex + " not matching with any values"
-            + String.valueOf(artifactPathMap.values());
-        logger.info(msg);
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", msg);
+        logger.info("Artifact url {}", link);
+        return ImmutablePair.of(link.substring(link.lastIndexOf("/") + 1), uc.getInputStream());
+      } catch (IOException e) {
+        String msg = "Failed to download the artifact from url [" + link + "]";
+        logger.error(msg, e);
+        throw new WingsException(
+            ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
       }
-
-    } catch (IOException ex) {
-      logger.error("Download artifact failed with exception", ex);
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to download artifact", ex);
+    } else {
+      // It is not matching  direct url, so just prepare the url
+      String msg = "Artifact path  [" + artifactPathRegex
+          + "] not matching with any values: " + String.valueOf(artifactPathMap.values());
+      logger.info(msg);
+      logger.info("Constructing url path to download");
+      Artifact artifactJob = artifactPathMap.values()
+                                 .stream()
+                                 .filter(artifact -> artifact.getProducerJobKey() != null)
+                                 .findFirst()
+                                 .orElse(null);
+      if (artifactJob != null) {
+        String jobName = artifactJob.getProducerJobKey()
+                             .replace(planKey, "")
+                             .replace(buildNumber, "")
+                             .replace("-", ""); // TOD-TOD-JOB1-80;
+        String buildKey = planKey + "-" + buildNumber;
+        String artifactUrl;
+        if (bambooConfig.getBambooUrl().endsWith("/")) {
+          artifactUrl = bambooConfig.getBambooUrl() + "browse/" + buildKey + "/artifact";
+        } else {
+          artifactUrl = bambooConfig.getBambooUrl() + "/browse/" + buildKey + "/artifact";
+        }
+        artifactUrl = artifactUrl + "/" + jobName + "/" + artifactSourcePath;
+        logger.info("Constructed url {]", artifactUrl);
+        try {
+          URL url = new URL(artifactUrl);
+          URLConnection uc = url.openConnection();
+          uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+          if (artifactSourcePath.contains("/")) {
+            artifactSourcePath = artifactSourcePath.substring(artifactSourcePath.lastIndexOf("/") + 1);
+          }
+          return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
+        } catch (IOException e) {
+          logger.error("Failed to download the artifact from url {}", artifactUrl, e);
+          throw new WingsException(
+              ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
+        }
+      } else {
+        throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg);
+      }
     }
   }
 
@@ -422,11 +457,12 @@ public class BambooServiceImpl implements BambooService {
    * @param buildNumber  the build number
    * @return the build artifacts url map
    */
-  public Map<String, String> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String planKey, String buildNumber) {
+  private Map<String, Artifact> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String planKey, String buildNumber) {
+    logger.info("Retrieving artifacts from plan {} and build number {}", planKey, buildNumber);
     Call<JsonNode> request =
         getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), planKey, buildNumber);
-    Map<String, String> artifactPathMap = new HashMap<>();
-    Response<JsonNode> response = null;
+    Map<String, Artifact> artifactPathMap = new HashMap<>();
+    Response<JsonNode> response;
     try {
       // stages.stage.results.result.artifacts.artifact
       response = getHttpRequestExecutionResponse(request);
@@ -442,8 +478,13 @@ public class BambooServiceImpl implements BambooService {
                   artifactNodes.elements().forEachRemaining(artifactNode -> {
                     JsonNode hrefNode = artifactNode.at("/link/href");
                     JsonNode nameNode = artifactNode.get("name");
+                    JsonNode producerJobKeyNode = artifactNode.get("producerJobKey");
                     if (hrefNode != null) {
-                      artifactPathMap.put(nameNode.asText(), hrefNode.textValue());
+                      Artifact artifact = Artifact.builder().name(nameNode.asText()).link(hrefNode.textValue()).build();
+                      if (producerJobKeyNode != null) {
+                        artifact.setProducerJobKey(producerJobKeyNode.asText());
+                      }
+                      artifactPathMap.put(nameNode.asText(), artifact);
                     }
                   });
                 }
@@ -452,11 +493,12 @@ public class BambooServiceImpl implements BambooService {
           });
         }
       }
-    } catch (IOException ex) {
-      logger.error("Download artifact failed with exception", ex);
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Failed to download artifact", ex);
+      logger.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
+      return artifactPathMap;
+    } catch (IOException e) {
+      logger.info("Retrieving artifacts from plan {} and build number {} failed", planKey, buildNumber, e);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "Failed to download artifact", e);
     }
-    return artifactPathMap;
   }
 
   private List<String> extractJobKeyFromNestedProjectResponseJson(Response<JsonNode> response) {
