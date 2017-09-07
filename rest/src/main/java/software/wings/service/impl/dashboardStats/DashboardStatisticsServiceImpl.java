@@ -84,7 +84,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       instanceCount = getInstanceCount(getQuery(appIds));
     } catch (Exception e) {
-      logger.error("Unable to get app instance summary stats", e.getMessage());
+      logger.error("Unable to get app instance summary stats", e);
       return InstanceSummaryStats.Builder.anInstanceSummaryStats()
           .withCountMap(null)
           .withTotalCount(instanceCount)
@@ -127,7 +127,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (Exception e) {
-      logger.error("Unable to get entity summary stats ", e.getMessage());
+      logger.error("Unable to get entity summary stats ", e);
       return Lists.newArrayList();
     }
 
@@ -165,7 +165,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
-      logger.error("Unable to get service summary stats", e.getMessage());
+      logger.error("Unable to get service summary stats", e);
       return Lists.newArrayList();
     }
     wingsPersistence.getDatastore()
@@ -190,7 +190,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (Exception e) {
-      logger.error("Unable to get environment type summary stats", e.getMessage());
+      logger.error("Unable to get environment type summary stats", e);
       return Lists.newArrayList();
     }
     wingsPersistence.getDatastore()
@@ -232,7 +232,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
-      logger.error("Unable to get current active instances", e.getMessage());
+      logger.error("Unable to get current active instances", e);
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
     }
 
@@ -271,7 +271,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (Exception e) {
-      logger.error("Unable to get current active instances", e.getMessage());
+      logger.error("Unable to get current active instances", e);
       return Lists.newArrayList();
     }
 
@@ -553,7 +553,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
     } catch (Exception e) {
-      logger.error("Unable to get current active instances", e.getMessage());
+      logger.error("Unable to get current active instances", e);
       return Lists.newArrayList();
     }
 
