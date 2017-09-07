@@ -1,13 +1,13 @@
 package software.wings.yaml.directory;
 
-public class CloudProviderYamlNode extends YamlNode {
+public class SettingAttributeYamlNode extends YamlNode {
   private String settingVariableType;
 
-  public CloudProviderYamlNode() {
+  public SettingAttributeYamlNode() {
     super();
   }
 
-  public CloudProviderYamlNode(String uuid, String settingVariableType, String name, Class theClass) {
+  public SettingAttributeYamlNode(String uuid, String settingVariableType, String name, Class theClass) {
     super(uuid, name, theClass);
     this.settingVariableType = settingVariableType;
   }
