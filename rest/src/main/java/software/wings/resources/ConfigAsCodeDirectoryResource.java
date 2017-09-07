@@ -7,13 +7,22 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
+import software.wings.beans.SplunkConfig;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.LogzConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -22,7 +31,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
-import software.wings.yaml.ArtifactServerYaml;
 import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
 import software.wings.yaml.PhysicalDataCenterYaml;
@@ -65,6 +73,8 @@ public class ConfigAsCodeDirectoryResource {
    *
    * @param appService             the app service
    * @param serviceResourceService the service (resource) service
+   * @param environmentService     the environment service
+   * @param settingsService        the settings service
    */
   @Inject
   public ConfigAsCodeDirectoryResource(AppService appService, ServiceResourceService serviceResourceService,
@@ -97,9 +107,9 @@ public class ConfigAsCodeDirectoryResource {
     doApplications(configFolder, accountId);
     doCloudProviders(configFolder, accountId);
     doArtifactServers(configFolder, accountId);
-    doCollaborationProviders(configFolder);
-    doLoadBalancers(configFolder);
-    doVerificationProviders(configFolder);
+    doCollaborationProviders(configFolder, accountId);
+    doLoadBalancers(configFolder, accountId);
+    doVerificationProviders(configFolder, accountId);
 
     rr.setResource(configFolder);
 
@@ -170,6 +180,7 @@ public class ConfigAsCodeDirectoryResource {
     FolderNode cloudProvidersFolder = new FolderNode("Cloud Providers", SettingAttribute.class);
     theFolder.addChild(cloudProvidersFolder);
 
+    // TODO - should these use AwsConfig GcpConfig, etc. instead?
     doCloudProviderType(
         accountId, cloudProvidersFolder, "Amazon Web Services", SettingVariableTypes.AWS, AmazonWebServicesYaml.class);
     doCloudProviderType(accountId, cloudProvidersFolder, "Google Cloud Platform", SettingVariableTypes.GCP,
@@ -197,11 +208,11 @@ public class ConfigAsCodeDirectoryResource {
     FolderNode artifactServersFolder = new FolderNode("Artifact Servers", SettingAttribute.class);
     theFolder.addChild(artifactServersFolder);
 
-    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.JENKINS, ArtifactServerYaml.class);
-    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.BAMBOO, ArtifactServerYaml.class);
-    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.DOCKER, ArtifactServerYaml.class);
-    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.NEXUS, ArtifactServerYaml.class);
-    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.ARTIFACTORY, ArtifactServerYaml.class);
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.JENKINS, JenkinsConfig.class);
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.BAMBOO, BambooConfig.class);
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.DOCKER, DockerConfig.class);
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.NEXUS, NexusConfig.class);
+    doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.ARTIFACTORY, ArtifactoryConfig.class);
   }
 
   private void doArtifactServerType(
@@ -215,29 +226,86 @@ public class ConfigAsCodeDirectoryResource {
     }
   }
 
-  private void doCollaborationProviders(FolderNode theFolder) {
+  private void doCollaborationProviders(FolderNode theFolder, String accountId) {
     // create collaboration providers
     // TODO - Application.class is WRONG for this!
     FolderNode collaborationProvidersFolder = new FolderNode("Collaboration Providers", Application.class);
     theFolder.addChild(collaborationProvidersFolder);
+
+    // TODO - SettingAttribute.class may be WRONG for these!
+    doCollaborationProviderType(
+        accountId, collaborationProvidersFolder, "SMTP", SettingVariableTypes.SMTP, SettingAttribute.class);
+    doCollaborationProviderType(
+        accountId, collaborationProvidersFolder, "Slack", SettingVariableTypes.SLACK, SettingAttribute.class);
   }
 
-  private void doLoadBalancers(FolderNode theFolder) {
+  private void doCollaborationProviderType(
+      String accountId, FolderNode parentFolder, String nodeName, SettingVariableTypes type, Class theClass) {
+    FolderNode typeFolder = new FolderNode(nodeName, SettingAttribute.class);
+    parentFolder.addChild(typeFolder);
+
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    // iterate over providers
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+          settingAttribute.getName() + ".yaml", theClass));
+    }
+  }
+
+  private void doLoadBalancers(FolderNode theFolder, String accountId) {
     // create load balancers
     // TODO - Application.class is WRONG for this!
     FolderNode loadBalancersFolder = new FolderNode("Load Balancers", Application.class);
     theFolder.addChild(loadBalancersFolder);
 
-    // Elastic Classic Load Balancer
-    // TODO - Application.class is WRONG for this!
-    FolderNode elbFolder = new FolderNode("Elastic Classic Load Balancers", Application.class);
-    loadBalancersFolder.addChild(elbFolder);
+    // TODO - SettingAttribute.class may be WRONG for these!
+    doLoadBalancerType(accountId, loadBalancersFolder, "Elastic Classic Load Balancers", SettingVariableTypes.ELB,
+        SettingAttribute.class);
   }
 
-  private void doVerificationProviders(FolderNode theFolder) {
+  private void doLoadBalancerType(
+      String accountId, FolderNode parentFolder, String nodeName, SettingVariableTypes type, Class theClass) {
+    FolderNode typeFolder = new FolderNode(nodeName, SettingAttribute.class);
+    parentFolder.addChild(typeFolder);
+
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    // iterate over providers
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+          settingAttribute.getName() + ".yaml", theClass));
+    }
+  }
+
+  private void doVerificationProviders(FolderNode theFolder, String accountId) {
     // create verification providers
-    // TODO - Application.class is WRONG for this!
-    FolderNode verificationProvidersFolder = new FolderNode("Verification Providers", Application.class);
+    FolderNode verificationProvidersFolder = new FolderNode("Verification Providers", SettingAttribute.class);
     theFolder.addChild(verificationProvidersFolder);
+
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, "Jenkins", SettingVariableTypes.JENKINS, JenkinsConfig.class);
+    doVerificationProviderType(accountId, verificationProvidersFolder, "AppDynamics", SettingVariableTypes.APP_DYNAMICS,
+        AppDynamicsConfig.class);
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, "Splunk", SettingVariableTypes.SPLUNK, SplunkConfig.class);
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, "ELK", SettingVariableTypes.ELK, ElkConfig.class);
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, "LOGZ", SettingVariableTypes.LOGZ, LogzConfig.class);
+  }
+
+  private void doVerificationProviderType(
+      String accountId, FolderNode parentFolder, String nodeName, SettingVariableTypes type, Class theClass) {
+    FolderNode typeFolder = new FolderNode(nodeName, SettingAttribute.class);
+    parentFolder.addChild(typeFolder);
+
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    // iterate over providers
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      typeFolder.addChild(new CloudProviderYamlNode(settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+          settingAttribute.getName() + ".yaml", theClass));
+    }
   }
 }
