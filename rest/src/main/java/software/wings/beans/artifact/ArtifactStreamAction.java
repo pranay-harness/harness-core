@@ -20,12 +20,16 @@ public class ArtifactStreamAction {
   private String workflowName;
   private String envId;
   private String envName;
-  @NotNull private boolean customAction = false;
+  private boolean customAction;
+
   private String cronExpression;
   private String cronDescription;
   private String actionSummary; // TODO:: remove once UI stops using it.
 
   private String artifactFilter;
+  private boolean webHook;
+  private String webHookToken;
+  private String requestBody; // curl ??
 
   /**
    * Gets workflow type.
@@ -263,6 +267,50 @@ public class ArtifactStreamAction {
    */
   public void setUuid(String uuid) {
     this.uuid = uuid;
+  }
+
+  /**
+   * Gets webHook token.
+   *
+   * @return the webHook token
+   */
+  public String getWebHookToken() {
+    return webHookToken;
+  }
+
+  /**
+   * Sets webHook token.
+   *
+   * @param webHookToken the webHook token
+   */
+  public void setWebHookToken(String webHookToken) {
+    this.webHookToken = webHookToken;
+  }
+
+  /**
+   * Gets request body template.
+   *
+   * @return the request body template
+   */
+  public String getRequestBody() {
+    return requestBody;
+  }
+
+  /**
+   * Sets request body template.
+   *
+   * @param requestBody the request body template
+   */
+  public void setRequestBody(String requestBody) {
+    this.requestBody = requestBody;
+  }
+
+  public boolean isWebHook() {
+    return webHook;
+  }
+
+  public void setWebHook(boolean webHook) {
+    this.webHook = webHook;
   }
 
   /**
