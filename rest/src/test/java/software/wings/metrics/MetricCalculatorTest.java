@@ -264,9 +264,9 @@ public class MetricCalculatorTest {
             .withMetricName(RESPONSE_TIME_95)
             .withMetricType(MetricType.TIME_MS)
             .withThreshold(ThresholdComparisonType.RATIO,
-                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 1.3))
+                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1.3, 1.0))
             .withThreshold(ThresholdComparisonType.DELTA,
-                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.DELTA, 0.01, 20))
+                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.DELTA, 20, 0.01))
             .build();
     List<List<AppdynamicsMetricDataRecord>> records = Arrays.asList(Arrays.asList(RECORD_1), Arrays.asList(RECORD_2));
     BucketData bucketData = MetricCalculator.parse(RESP_METRIC_DEFINITION, records);
