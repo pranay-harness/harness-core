@@ -59,7 +59,7 @@ public interface KubernetesContainerService {
    * @param executionLogCallback      the execution log callback
    * @return the controller pod count
    */
-  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
+  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
       String replicationControllerName, int number, ExecutionLogCallback executionLogCallback);
 
   /**

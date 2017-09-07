@@ -251,7 +251,7 @@ FORM_FIELD_TO_ENTITY_TYPE:
 
 
 TASK_TYPES:
-    - name: Command Execution
+    - name: Command
       value: COMMAND
     - name: HTTP Verification
       value: HTTP

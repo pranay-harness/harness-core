@@ -87,10 +87,10 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  public int fetchDesiredCount(Integer previousDesiredCount) {
+  public int fetchDesiredCount(int lastDeploymentDesiredCount) {
     if (instanceUnitType != null && instanceUnitType == InstanceUnitType.PERCENTAGE) {
       // TODO: take care of previous occurrence and ensure total does not exceed previousDesiredCount
-      int realCount = (getInstanceCount() * previousDesiredCount) / 100;
+      int realCount = (getInstanceCount() * lastDeploymentDesiredCount) / 100;
       if (realCount < 1) {
         realCount = 1;
       }

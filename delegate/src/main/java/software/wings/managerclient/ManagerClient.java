@@ -22,13 +22,12 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.dl.PageResponse;
-import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.StateType;
 
 import java.util.List;
 
@@ -84,23 +83,30 @@ public interface ManagerClient {
       @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
       @Body List<AppdynamicsMetricData> metricData);
 
+  @POST("newrelic/save-metrics")
+  Call<RestResponse<Boolean>> saveNewRelicMetrics(@Query("accountId") String accountId,
+      @Query("applicationId") String applicationId, @Body List<NewRelicMetricDataRecord> metricData);
+
   @POST(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
-      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
+      @Body List<LogElement> metricData);
 
   @POST(LogAnalysisResource.ELK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveElkLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
-      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
+      @Body List<LogElement> metricData);
 
   @POST(LogAnalysisResource.LOGZ_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveLogzLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("stateExecutionId") String stateExecutionId, @Query("workflowId") String workflowId,
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
-      @Query("clusterLevel") ClusterLevel clusterLevel, @Body List<LogElement> metricData);
+      @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
+      @Body List<LogElement> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
