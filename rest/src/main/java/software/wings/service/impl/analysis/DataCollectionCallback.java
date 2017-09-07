@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.waitnotify.NotifyCallback;
@@ -10,20 +11,14 @@ import java.util.Map;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class LogCollectionCallback implements NotifyCallback {
-  private static final Logger logger = LoggerFactory.getLogger(LogCollectionCallback.class);
+@AllArgsConstructor
+public class DataCollectionCallback implements NotifyCallback {
+  private static final Logger logger = LoggerFactory.getLogger(DataCollectionCallback.class);
 
   private String appId;
-
-  public LogCollectionCallback() {}
-
-  public LogCollectionCallback(String appId) {
-    this.appId = appId;
-  }
-
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    final LogDataCollectionTaskResult result = (LogDataCollectionTaskResult) response.values().iterator().next();
+    final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
   }
 

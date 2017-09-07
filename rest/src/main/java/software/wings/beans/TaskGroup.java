@@ -8,6 +8,7 @@ public enum TaskGroup {
   HTTP,
   SPLUNK,
   APPDYNAMICS,
+  NEWRELIC,
   JENKINS,
   COMMAND,
   BAMBOO,

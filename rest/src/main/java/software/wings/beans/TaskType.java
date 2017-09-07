@@ -3,8 +3,9 @@ package software.wings.beans;
 import static org.joor.Reflect.on;
 
 import software.wings.delegatetasks.BambooTask;
+import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
-import software.wings.delegatetasks.collect.AppdynamicsDataCollectionTask;
+import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
@@ -76,6 +77,11 @@ public enum TaskType {
   APPDYNAMICS_GET_METRICES_OF_BT(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_DATA(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class),
+  NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
+  NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
+  NEWRELIC_GET_APP_INSTANCES_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
+  NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class),
+  NEWRELIC_GET_METRICES_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class),
   SPLUNK_COLLECT_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class),
   ELK_CONFIGURATION_VALIDATE_TASK(TaskGroup.ELK, ServiceImplDelegateTask.class),
