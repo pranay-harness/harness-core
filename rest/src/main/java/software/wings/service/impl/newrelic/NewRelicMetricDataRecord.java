@@ -18,12 +18,13 @@ import software.wings.beans.Base;
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("name"), @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId")
+    @Field("name")
+    , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
+        @Field("serviceId"), @Field("workflowId")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"apdexValue", "errors", "webTransactions"})
 public class NewRelicMetricDataRecord extends Base {
   @NotEmpty @Indexed private String name;
 
@@ -41,9 +42,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   @NotEmpty private String host;
 
-  private NewRelicApdex apdexValue;
-
-  private NewRelicErrors errors;
-
-  private NewRelicWebTransactions webTransactions;
+  private double throughput = -1;
+  private double averageResponseTime = -1;
+  private double error = -1;
+  private double apdexScore = -1;
 }

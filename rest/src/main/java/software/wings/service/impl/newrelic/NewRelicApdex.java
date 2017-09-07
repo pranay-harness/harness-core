@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicApdex {
-  private float score;
+  private double score;
   private long count;
   private float value;
   private float threshold;

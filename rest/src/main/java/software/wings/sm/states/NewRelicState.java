@@ -20,14 +20,18 @@ import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
+import software.wings.metrics.MetricDefinition.Threshold;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
-import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.newrelic.NewRelicSettingProvider;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ContextElementType;
@@ -41,9 +45,14 @@ import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -155,13 +164,14 @@ public class NewRelicState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing new relic state");
-    Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
+    Set<String> canaryNewHostNames = new HashSet<>(Arrays.asList("ip-172-31-13-153")); // getCanaryNewHostNames(context);
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
-    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
+    Set<String> lastExecutionNodes =
+        new HashSet<>(Arrays.asList("ip-172-31-8-144", "ip-172-31-12-79")); // getLastExecutionNodes(context);
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
@@ -237,11 +247,12 @@ public class NewRelicState extends AbstractAnalysisState {
                                                     .withStatus(ExecutionStatus.RUNNING)
                                                     .withCorrelationId(UUID.randomUUID().toString())
                                                     .build();
-    NewRelicMetricAnalysisRecord metricAnalysisRecord = new NewRelicMetricAnalysisRecord();
-    metricAnalysisRecord.setMessage(message);
-    metricAnalysisRecord.setStateExecutionId(context.getStateExecutionInstanceId());
-    metricAnalysisRecord.setWorkflowExecutionId(context.getWorkflowExecutionId());
-    metricAnalysisRecord.setWorkflowId(getWorkflowId(context));
+    NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                            .message(message)
+                                                            .stateExecutionId(context.getStateExecutionInstanceId())
+                                                            .workflowExecutionId(context.getWorkflowExecutionId())
+                                                            .workflowId(getWorkflowId(context))
+                                                            .build();
     newRelicService.saveAnalysisRecords(metricAnalysisRecord);
 
     return anExecutionResponse()
@@ -266,8 +277,7 @@ public class NewRelicState extends AbstractAnalysisState {
       this.response = response;
       this.controlNodes = controlNodes;
       this.testNodes = testNodes;
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      this.serviceId = phaseElement.getServiceElement().getUuid();
+      this.serviceId = getPhaseServiceId(context);
     }
 
     @Override
@@ -285,7 +295,59 @@ public class NewRelicState extends AbstractAnalysisState {
 
       final List<NewRelicMetricDataRecord> testRecords = newRelicService.getRecords(context.getWorkflowExecutionId(),
           context.getStateExecutionInstanceId(), getWorkflowId(context), serviceId, testNodes, analysisMinute);
+
+      Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
+      Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
+
+      NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                        .stateExecutionId(context.getStateExecutionInstanceId())
+                                                        .workflowExecutionId(context.getWorkflowExecutionId())
+                                                        .workflowId(getWorkflowId(context))
+                                                        .metricAnalyses(new ArrayList<>())
+                                                        .build();
+
+      for (Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
+        final String metricName = metric.getKey();
+        NewRelicMetricAnalysis metricAnalysis = NewRelicMetricAnalysis.builder()
+                                                    .metricName(metricName)
+                                                    .riskLevel(RiskLevel.LOW)
+                                                    .metricValues(new ArrayList<>())
+                                                    .build();
+
+        for (Entry<String, List<Threshold>> valuesToAnalyze :
+            NewRelicMetricValueDefinition.VALUES_TO_ANALYZE.entrySet()) {
+          NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
+                                                                    .metricName(metricName)
+                                                                    .metricValueName(valuesToAnalyze.getKey())
+                                                                    .thresholds(valuesToAnalyze.getValue())
+                                                                    .build();
+
+          NewRelicMetricAnalysisValue metricAnalysisValue =
+              metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
+          metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
+
+          if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) > 0) {
+            metricAnalysis.setRiskLevel(metricAnalysisValue.getRiskLevel());
+          }
+        }
+        analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);
+      }
+
+      newRelicService.saveAnalysisRecords(analysisRecord);
       analysisMinute++;
+    }
+
+    private Map<String, List<NewRelicMetricDataRecord>> splitMetricsByName(List<NewRelicMetricDataRecord> records) {
+      final Map<String, List<NewRelicMetricDataRecord>> rv = new HashMap<>();
+      for (NewRelicMetricDataRecord record : records) {
+        if (!rv.containsKey(record.getName())) {
+          rv.put(record.getName(), new ArrayList<>());
+        }
+
+        rv.get(record.getName()).add(record);
+      }
+
+      return rv;
     }
   }
 }
