@@ -10,4 +10,5 @@ public class LogMLAnalysisRequest {
   private final String query;
   private final String applicationId;
   private final String stateExecutionId;
+  private final Integer logCollectionMinute;
 }
