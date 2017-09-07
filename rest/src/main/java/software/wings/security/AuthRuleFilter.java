@@ -240,6 +240,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
               ImmutableList<String> envIds = copyOf(
                   environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(Collectors.toList()));
               userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+            } else {
+              userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(
+                  ImmutableList.<String>builder().build());
             }
           }
         }
