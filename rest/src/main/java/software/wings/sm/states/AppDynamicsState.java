@@ -1,19 +1,18 @@
 package software.wings.sm.states;
 
-import static software.wings.api.AppdynamicsAnalysisResponse.Builder.anAppdynamicsAnalysisResponse;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.SettingAttribute.Category.*;
+import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.api.AppDynamicsExecutionData;
-import software.wings.api.AppdynamicsAnalysisResponse;
+import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -21,20 +20,20 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
-import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -42,6 +41,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -56,7 +56,6 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 import javax.inject.Inject;
 
 /**
@@ -125,7 +124,8 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
-    triggerAnalysisDataCollection(context, null, null);
+    String correlationId = UUID.randomUUID().toString();
+    triggerAnalysisDataCollection(context, correlationId, null);
     final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -138,12 +138,11 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .withAppdynamicsTierId(Long.parseLong(tierId))
             .withAnalysisDuration(Integer.parseInt(timeDuration))
             .withStatus(ExecutionStatus.RUNNING)
-            .withCorrelationId(UUID.randomUUID().toString())
+            .withCorrelationId(correlationId)
             .build();
-    final AppdynamicsAnalysisResponse response = anAppdynamicsAnalysisResponse()
-                                                     .withAppDynamicsExecutionData(executionData)
-                                                     .withExecutionStatus(ExecutionStatus.SUCCESS)
-                                                     .build();
+    final MetricDataAnalysisResponse response =
+        MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+    response.setExecutionStatus(ExecutionStatus.SUCCESS);
     final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.schedule(() -> {
       waitNotifyEngine.notify(executionData.getCorrelationId(), response);
@@ -161,7 +160,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    AppdynamicsAnalysisResponse executionResponse = (AppdynamicsAnalysisResponse) response.values().iterator().next();
+    MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
     MetricSummary finalMetrics =
@@ -178,18 +177,17 @@ public class AppDynamicsState extends AbstractAnalysisState {
       } catch (Exception e) {
         logger.error("Could not save analysis report", e);
         executionStatus = ExecutionStatus.FAILED;
-        executionResponse.getAppDynamicsExecutionData().setErrorMsg(
-            "Could not save analysis report, Please contact support");
+        executionResponse.getStateExecutionData().setErrorMsg("Could not save analysis report, Please contact support");
       }
     }
 
     if (!ignoreVerificationFailure && finalMetrics != null && finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
       executionStatus = ExecutionStatus.FAILED;
     }
-    executionResponse.getAppDynamicsExecutionData().setStatus(executionStatus);
+    executionResponse.getStateExecutionData().setStatus(executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
-        .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
+        .withStateExecutionData(executionResponse.getStateExecutionData())
         .build();
   }
 
@@ -274,7 +272,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
     return delegateService.queueTask(delegateTask);
   }
 
@@ -318,6 +316,15 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @SchemaIgnore
   public AnalysisComparisonStrategy getComparisonStrategy() {
     throw new NotImplementedException();
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
   }
 
   private String resolveAppDynamicsAppId(String analysisServerConfigId, String appDAppName) {

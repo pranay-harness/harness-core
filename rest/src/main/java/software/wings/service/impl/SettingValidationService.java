@@ -9,6 +9,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -17,6 +18,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
@@ -32,6 +34,7 @@ public class SettingValidationService {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppdynamicsService appdynamicsService;
+  @Inject private NewRelicService newRelicService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private AnalysisService analysisService;
 
@@ -57,6 +60,8 @@ public class SettingValidationService {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
     } else if (settingValue instanceof LogzConfig) {
       analysisService.validateConfig(settingAttribute, StateType.LOGZ);
+    } else if (settingValue instanceof NewRelicConfig) {
+      newRelicService.validateConfig(settingAttribute);
     }
     return true;
   }

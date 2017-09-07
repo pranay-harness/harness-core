@@ -27,22 +27,18 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashSet;
@@ -71,8 +67,6 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected DelegateService delegateService;
 
   @Transient @Inject @SchemaIgnore protected MainConfiguration configuration;
-
-  @Transient @Inject protected AnalysisService analysisService;
 
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")

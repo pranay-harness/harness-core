@@ -37,7 +37,8 @@ public class MetricCalculatorTest {
           .withMetricId("0")
           .withMetricName(CALLS_PER_MINUTE)
           .withMetricType(MetricType.RATE)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDefinition SLOW_CALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
@@ -46,7 +47,8 @@ public class MetricCalculatorTest {
           .withMetricId("1")
           .withMetricName(NUMBER_OF_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDefinition VERY_SLOW_CALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
@@ -55,7 +57,8 @@ public class MetricCalculatorTest {
           .withMetricId("2")
           .withMetricName(NUMBER_OF_VERY_SLOW_CALLS)
           .withMetricType(MetricType.COUNT)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDefinition ERRORS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
@@ -64,7 +67,8 @@ public class MetricCalculatorTest {
           .withMetricId("3")
           .withMetricName(ERRORS_PER_MINUTE)
           .withMetricType(MetricType.COUNT)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDefinition STALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
@@ -73,7 +77,8 @@ public class MetricCalculatorTest {
           .withMetricId("4")
           .withMetricName(STALL_COUNT)
           .withMetricType(MetricType.COUNT)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDefinition ART_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
@@ -82,7 +87,8 @@ public class MetricCalculatorTest {
           .withMetricId("5")
           .withMetricName(RESPONSE_TIME_95)
           .withMetricType(MetricType.TIME_MS)
-          .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 2))
+          .withThreshold(ThresholdComparisonType.RATIO,
+              new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 2))
           .build();
   private AppdynamicsMetricDataRecord BT2_CALL_RECORD_1 = createAppdynamicsMetricDataRecord(
       6, CALLS_PER_MINUTE, MetricType.RATE, 1, "tier1", 2, "todolist", "node1", 60000, 5);
@@ -257,8 +263,10 @@ public class MetricCalculatorTest {
             .withMetricId("5")
             .withMetricName(RESPONSE_TIME_95)
             .withMetricType(MetricType.TIME_MS)
-            .withThreshold(ThresholdComparisonType.RATIO, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 1, 1.3))
-            .withThreshold(ThresholdComparisonType.DELTA, new Threshold(ThresholdType.ALERT_WHEN_HIGHER, 0.01, 20))
+            .withThreshold(ThresholdComparisonType.RATIO,
+                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.RATIO, 1, 1.3))
+            .withThreshold(ThresholdComparisonType.DELTA,
+                new Threshold(ThresholdType.ALERT_WHEN_HIGHER, ThresholdComparisonType.DELTA, 0.01, 20))
             .build();
     List<List<AppdynamicsMetricDataRecord>> records = Arrays.asList(Arrays.asList(RECORD_1), Arrays.asList(RECORD_2));
     BucketData bucketData = MetricCalculator.parse(RESP_METRIC_DEFINITION, records);
