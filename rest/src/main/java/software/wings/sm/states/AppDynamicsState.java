@@ -125,7 +125,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing AppDynamics state");
-    triggerAnalysisDataCollection(context, null);
+    triggerAnalysisDataCollection(context, null, null);
     final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -194,7 +194,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     List<TemplateExpression> templateExpressions = getTemplateExpressions();
     String analysisServerConfigIdExpression = null;
     String applicationIdExpression = null;
@@ -275,7 +275,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    return delegateService.queueTask(delegateTask);
   }
 
   private List<String> getBtNames() {
