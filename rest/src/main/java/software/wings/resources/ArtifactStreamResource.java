@@ -12,6 +12,7 @@ import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
+import software.wings.beans.WebHookToken;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
@@ -22,6 +23,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.Stencil;
+import software.wings.utils.CryptoUtil;
 
 import java.text.ParseException;
 import java.util.List;
@@ -208,6 +210,19 @@ public class ArtifactStreamResource {
       ArtifactStreamAction artifactStreamAction) {
     artifactStreamAction.setUuid(actionId);
     return new RestResponse<>(artifactStreamService.updateStreamAction(appId, streamId, artifactStreamAction));
+  }
+
+  @GET
+  @Path("{streamId}/webhook_token")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WebHookToken> updateAction(
+      @QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
+    WebHookToken webHookToken = new WebHookToken();
+    webHookToken.setHttpMethod("POST");
+    webHookToken.setWebHookToken(CryptoUtil.secureRandAlphaNumString(40));
+    webHookToken.setPayload("{\"buildNumber\":\"BUILD_NUMBER_PLACEHOLDER\"}");
+    return new RestResponse<>(webHookToken);
   }
 
   /**

@@ -203,7 +203,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
-    artifactStreamAction.setUuid(UUIDGenerator.getUuid());
+    if (artifactStreamAction.getUuid() == null || artifactStreamAction.getUuid().isEmpty()) {
+      artifactStreamAction.setUuid(UUIDGenerator.getUuid());
+    }
+
+    if (artifactStreamAction.isWebHook()) {
+      if (artifactStreamAction.getWebHookToken() == null || artifactStreamAction.getWebHookToken().isEmpty()) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST);
+      }
+    }
+
     String cronExpression = CRON_PREFIX + artifactStreamAction.getCronExpression();
 
     if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(cronExpression)) {
@@ -280,8 +289,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  @Override
-  public ArtifactStream deleteStreamAction(String appId, String streamId, String actionId) {
+  @Override public ArtifactStream deleteStreamAction(String appId, String streamId, String actionId) { // TODO::simplify
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .field("appId")
                                       .equal(appId)
@@ -330,8 +338,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
-    deleteStreamAction(appId, streamId, artifactStreamAction.getUuid());
-    return addStreamAction(appId, streamId, artifactStreamAction);
+    ArtifactStream artifactStream = get(appId, streamId);
+    if (artifactStream != null) {
+      ArtifactStreamAction existingStreamAction =
+          artifactStream.getStreamActions()
+              .stream()
+              .filter(streamAction -> streamAction.getUuid().equals(artifactStreamAction.getUuid()))
+              .findFirst()
+              .orElse(null);
+
+      deleteStreamAction(appId, streamId, artifactStreamAction.getUuid());
+      if (existingStreamAction.getWebHookToken() != null) {
+        artifactStreamAction.setWebHookToken(existingStreamAction.getWebHookToken());
+      }
+      return addStreamAction(appId, streamId, artifactStreamAction);
+    }
+    return null;
   }
 
   @Override
