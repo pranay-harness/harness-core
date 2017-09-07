@@ -125,7 +125,8 @@ class SplunkDatasetNew(object):
                                                                        options.auth_token,
                                                                        options.application_id,
                                                                        options.state_execution_id,
-                                                                       options.query)
+                                                                       options.query,
+                                                                       options.log_collection_minute)
         if prev_state is not None:
 
             if prev_state.get('control_events') is not None:

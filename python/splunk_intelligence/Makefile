@@ -18,7 +18,7 @@ compile_clean:
 	find . -name "*.pyc" -type f -delete
 
 compile:
-	source .pyenv/bin/activate; python -m compileall src
+	source .pyenv/bin/activate; python -m compileall -q src
 
 dist: compile
 	pwd

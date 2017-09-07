@@ -62,7 +62,7 @@ public interface LogAnalysisResource {
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
-      List<LogElement> logData) throws IOException;
+      @QueryParam("delegateTaskId") String delegateTaskId, List<LogElement> logData) throws IOException;
 
   RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("compareCurrent") boolean compareCurrent, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
@@ -70,7 +70,8 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      LogMLAnalysisRecord mlAnalysisResponse) throws IOException;
+      @QueryParam("logCollectionMinute") Integer logCollectionMinute, LogMLAnalysisRecord mlAnalysisResponse)
+      throws IOException;
 
   RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
       @QueryParam("accountId") String accountId, LogMLAnalysisRequest mlAnalysisRequest) throws IOException;
