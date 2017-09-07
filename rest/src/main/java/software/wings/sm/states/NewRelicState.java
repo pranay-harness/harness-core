@@ -122,7 +122,7 @@ public class NewRelicState extends AbstractAnalysisState {
   }
 
   @Override
-  protected void triggerAnalysisDataCollection(ExecutionContext context, Set<String> hosts) {
+  protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -157,8 +157,8 @@ public class NewRelicState extends AbstractAnalysisState {
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
+    waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
+    return delegateService.queueTask(delegateTask);
   }
 
   @Override
@@ -189,7 +189,6 @@ public class NewRelicState extends AbstractAnalysisState {
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
-    triggerAnalysisDataCollection(context, null);
     final NewRelicExecutionData executionData = NewRelicExecutionData.Builder.anAnanlysisExecutionData()
                                                     .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                                     .withServerConfigID(getAnalysisServerConfigId())
@@ -198,6 +197,7 @@ public class NewRelicState extends AbstractAnalysisState {
                                                     .withCanaryNewHostNames(canaryNewHostNames)
                                                     .withCorrelationId(UUID.randomUUID().toString())
                                                     .build();
+    triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
     response.setExecutionStatus(ExecutionStatus.SUCCESS);
@@ -215,6 +215,25 @@ public class NewRelicState extends AbstractAnalysisState {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
+    if (executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+      return anExecutionResponse()
+          .withExecutionStatus(executionResponse.getExecutionStatus())
+          .withStateExecutionData(executionResponse.getStateExecutionData())
+          .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
+          .build();
+    }
+
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        newRelicService.getMetricsAnalysis(context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
+    if (metricsAnalysis == null) {
+      return generateAnalysisResponse(
+          context, ExecutionStatus.SUCCESS, "No data found for comparison. Skipping analysis.");
+    }
+    if (metricsAnalysis.getRiskLevel() == RiskLevel.HIGH) {
+      executionStatus = ExecutionStatus.FAILED;
+    }
+
+    executionResponse.getStateExecutionData().setStatus(executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -302,6 +321,7 @@ public class NewRelicState extends AbstractAnalysisState {
                                                         .stateExecutionId(context.getStateExecutionInstanceId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
                                                         .workflowId(getWorkflowId(context))
+                                                        .riskLevel(RiskLevel.LOW)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
 
@@ -327,6 +347,10 @@ public class NewRelicState extends AbstractAnalysisState {
 
           if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) < 0) {
             metricAnalysis.setRiskLevel(metricAnalysisValue.getRiskLevel());
+          }
+
+          if (metricAnalysisValue.getRiskLevel().compareTo(analysisRecord.getRiskLevel()) < 0) {
+            analysisRecord.setRiskLevel(metricAnalysisValue.getRiskLevel());
           }
         }
         analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);

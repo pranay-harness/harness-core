@@ -9,8 +9,8 @@ import java.util.List;
  * Created by rsingh on 5/18/17.
  */
 public interface MetricDataStoreService {
-  void saveAppDynamicsMetrics(String accountId, String applicationId, String stateExecutionId, long appId, long tierId,
-      List<AppdynamicsMetricData> metricData);
+  boolean saveAppDynamicsMetrics(String accountId, String applicationId, String stateExecutionId, long appId,
+      long tierId, List<AppdynamicsMetricData> metricData);
 
-  void saveNewRelicMetrics(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData);
+  boolean saveNewRelicMetrics(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData);
 }

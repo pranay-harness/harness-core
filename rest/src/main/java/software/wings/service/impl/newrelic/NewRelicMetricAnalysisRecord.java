@@ -27,7 +27,9 @@ import java.util.List;
 @Data
 @Builder
 public class NewRelicMetricAnalysisRecord extends Base {
-  @NotEmpty @Indexed private String message;
+  @NotEmpty private String message;
+
+  @NotEmpty private RiskLevel riskLevel;
 
   @NotEmpty @Indexed private String workflowId;
 

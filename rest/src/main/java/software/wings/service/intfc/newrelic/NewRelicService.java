@@ -31,4 +31,6 @@ public interface NewRelicService {
       String serviceId, Set<String> nodes, int analysisMinute);
 
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String workflowId, String serviceId, int analysisMinute);
+
+  NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
 }
