@@ -164,14 +164,13 @@ public class NewRelicState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.debug("Executing new relic state");
-    Set<String> canaryNewHostNames = new HashSet<>(Arrays.asList("ip-172-31-13-153")); // getCanaryNewHostNames(context);
+    Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
-    Set<String> lastExecutionNodes =
-        new HashSet<>(Arrays.asList("ip-172-31-8-144", "ip-172-31-12-79")); // getLastExecutionNodes(context);
+    Set<String> lastExecutionNodes = getLastExecutionNodes(context);
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
@@ -326,7 +325,7 @@ public class NewRelicState extends AbstractAnalysisState {
               metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
           metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
 
-          if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) > 0) {
+          if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) < 0) {
             metricAnalysis.setRiskLevel(metricAnalysisValue.getRiskLevel());
           }
         }
