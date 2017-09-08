@@ -304,24 +304,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount) {
     PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, pageRequest);
     if (workflows != null && workflows.getResponse() != null) {
-      workflows.getResponse().forEach(
-          workflow -> { loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion()); });
-    }
-
-    if (previousExecutionsCount != null && previousExecutionsCount > 0) {
-      for (Workflow workflow : workflows) {
-        PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-            aPageRequest()
-                .withLimit(previousExecutionsCount.toString())
-                .addFilter("workflowId", EQ, workflow.getUuid())
-                .build();
-
-        workflow.setWorkflowExecutions(
-            workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
-                .getResponse());
+      for (Workflow workflow : workflows.getResponse()) {
+        try {
+          loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
+        } catch (Exception e) {
+          logger.error("Failed to load Orchestration workflow {} ", workflow, e);
+        }
       }
     }
+    if (previousExecutionsCount != null && previousExecutionsCount > 0) {
+      for (Workflow workflow : workflows) {
+        try {
+          PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+              aPageRequest()
+                  .withLimit(previousExecutionsCount.toString())
+                  .addFilter("workflowId", EQ, workflow.getUuid())
+                  .build();
 
+          workflow.setWorkflowExecutions(
+              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+                  .getResponse());
+        } catch (Exception e) {
+          logger.error("Failed to fetch recent executions for workflow {}", workflow, e);
+        }
+      }
+    }
     return workflows;
   }
 

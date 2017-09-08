@@ -77,8 +77,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     if (withDetails) {
       serviceTemplates.forEach(serviceTemplate -> {
-        populateServiceAndOverrideConfigFiles(serviceTemplate);
-        populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+        try {
+          populateServiceAndOverrideConfigFiles(serviceTemplate);
+        } catch (Exception e) {
+          logger.error(
+              "Failed to populate the service and override config files for service template {} ", serviceTemplate, e);
+        }
+        try {
+          populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+        } catch (Exception e) {
+          logger.error("Failed to populate the service and service variable overrides for service template {} ",
+              serviceTemplate, e);
+        }
       });
     }
 
