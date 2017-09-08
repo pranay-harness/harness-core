@@ -54,8 +54,10 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<DataC
 
   @Override
   public DataCollectionTaskResult run(Object[] parameters) {
-    DataCollectionTaskResult taskResult =
-        DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
+    DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
+                                              .status(DataCollectionTaskStatus.SUCCESS)
+                                              .stateType(StateType.SPLUNKV2)
+                                              .build();
     try {
       final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
       logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 /**
@@ -16,6 +17,7 @@ import software.wings.waitnotify.NotifyResponseData;
 public class DataCollectionTaskResult implements NotifyResponseData {
   private DataCollectionTaskStatus status;
   private String errorMessage;
+  private StateType stateType;
 
   public enum DataCollectionTaskStatus {
     /**
