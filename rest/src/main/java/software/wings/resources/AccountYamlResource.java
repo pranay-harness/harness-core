@@ -15,7 +15,23 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.SetupYaml;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.settingAttribute.AppDynamicsYaml;
+import software.wings.yaml.settingAttribute.ArtifactoryYaml;
+import software.wings.yaml.settingAttribute.AwsYaml;
+import software.wings.yaml.settingAttribute.BambooYaml;
+import software.wings.yaml.settingAttribute.DockerYaml;
+import software.wings.yaml.settingAttribute.ElkYaml;
+import software.wings.yaml.settingAttribute.GcpYaml;
+import software.wings.yaml.settingAttribute.JenkinsYaml;
+import software.wings.yaml.settingAttribute.LogzYaml;
+import software.wings.yaml.settingAttribute.NexusYaml;
+import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
+import software.wings.yaml.settingAttribute.SettingAttributeYaml;
+import software.wings.yaml.settingAttribute.SlackYaml;
+import software.wings.yaml.settingAttribute.SmtpYaml;
+import software.wings.yaml.settingAttribute.SplunkYaml;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -52,6 +68,8 @@ public class AccountYamlResource {
   public AccountYamlResource(SettingsService settingsService) {
     this.settingsService = settingsService;
   }
+
+  // TODO - not 100% sure we need this endpoint - but it fills a logical role
 
   /**
    * Gets all the setting attributes of a given type by accountId
@@ -108,6 +126,7 @@ public class AccountYamlResource {
         break;
 
       // collaboration providers
+      // also a repeat of JENKINS logically goes here
       case APP_DYNAMICS:
         break;
       case SPLUNK:
@@ -134,46 +153,57 @@ public class AccountYamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("accountId") String accountId, @PathParam("uuid") String uuid) {
-    /*
-    List<String> appNames = appService.getAppNamesByAccountId(accountId);
-
-    SetupYaml setup = new SetupYaml();
-    setup.setAppNames(appNames);
-
-    return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
-    */
-
     SettingAttribute settingAttribute = settingsService.get(uuid);
+
+    if (settingAttribute == null) {
+      RestResponse rr = new RestResponse<>();
+      YamlHelper.addSettingAttributeNotFoundMessage(rr, uuid);
+      return rr;
+    }
 
     logger.info("******* settingAttribute.getName() = " + settingAttribute.getName());
 
-    SettingVariableTypes settingsVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
+    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
 
-    switch (settingsVariableType) {
+    logger.info("******* settingVariableType = " + settingVariableType);
+
+    SettingAttributeYaml settingAttributeYaml = null;
+
+    switch (settingVariableType) {
       // cloud providers
       case AWS:
+        settingAttributeYaml = new AwsYaml(settingAttribute);
         break;
       case GCP:
+        settingAttributeYaml = new GcpYaml(settingAttribute);
         break;
       case PHYSICAL_DATA_CENTER:
+        settingAttributeYaml = new PhysicalDataCenterYaml(settingAttribute);
         break;
 
       // artifact servers
       case JENKINS:
+        settingAttributeYaml = new JenkinsYaml(settingAttribute);
         break;
       case BAMBOO:
+        settingAttributeYaml = new BambooYaml(settingAttribute);
         break;
       case DOCKER:
+        settingAttributeYaml = new DockerYaml(settingAttribute);
         break;
       case NEXUS:
+        settingAttributeYaml = new NexusYaml(settingAttribute);
         break;
       case ARTIFACTORY:
+        settingAttributeYaml = new ArtifactoryYaml(settingAttribute);
         break;
 
       // collaboration providers
       case SMTP:
+        settingAttributeYaml = new SmtpYaml(settingAttribute);
         break;
       case SLACK:
+        settingAttributeYaml = new SlackYaml(settingAttribute);
         break;
 
       // load balancers
@@ -181,17 +211,30 @@ public class AccountYamlResource {
         break;
 
       // collaboration providers
+      // JENKINS is also a (logical) part of this group
       case APP_DYNAMICS:
+        settingAttributeYaml = new AppDynamicsYaml(settingAttribute);
         break;
       case SPLUNK:
+        settingAttributeYaml = new SplunkYaml(settingAttribute);
         break;
       case ELK:
+        settingAttributeYaml = new ElkYaml(settingAttribute);
         break;
       case LOGZ:
+        settingAttributeYaml = new LogzYaml(settingAttribute);
         break;
+      default:
+        // handle not found
+        RestResponse rr = new RestResponse<>();
+        YamlHelper.addUnknownSettingVariableTypeMessage(rr, settingVariableType);
+        return rr;
     }
 
-    // TODO - TEMP
+    if (settingAttributeYaml != null) {
+      return YamlHelper.getYamlRestResponse(settingAttributeYaml, settingAttribute.getName() + ".yaml");
+    }
+
     return null;
   }
 

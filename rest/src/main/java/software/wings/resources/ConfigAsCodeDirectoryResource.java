@@ -42,7 +42,7 @@ import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
 import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
-import software.wings.yaml.PhysicalDataCenterYaml;
+import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
 import software.wings.yaml.PipelineYaml;
 import software.wings.yaml.ServiceYaml;
 import software.wings.yaml.SetupYaml;

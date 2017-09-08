@@ -104,15 +104,24 @@ public class ServiceYamlResource {
   @ExceptionMetered
   public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId, true);
-    List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
-    ServiceYaml serviceYaml = new ServiceYaml(service);
-    serviceYaml.setServiceCommandNamesFromServiceCommands(serviceCommands);
+    if (service != null) {
+      List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
-    List<ServiceVariable> serviceVariables = service.getServiceVariables();
-    serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
+      ServiceYaml serviceYaml = new ServiceYaml(service);
+      serviceYaml.setServiceCommandNamesFromServiceCommands(serviceCommands);
 
-    return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
+      List<ServiceVariable> serviceVariables = service.getServiceVariables();
+      serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
+
+      return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
+    }
+
+    RestResponse rr = new RestResponse<>();
+    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "Service with this serviceId: '" + serviceId + "' was not found!");
+
+    return rr;
   }
 
   // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
