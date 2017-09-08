@@ -70,7 +70,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary) {
     PageResponse<Environment> pageResponse = wingsPersistence.query(Environment.class, request);
     if (withSummary) {
-      pageResponse.getResponse().forEach(environment -> { addServiceTemplates(environment); });
+      pageResponse.getResponse().forEach(environment -> {
+        try {
+          addServiceTemplates(environment);
+        } catch (Exception e) {
+          logger.error("Failed to add service templates to environment {} ", environment, e);
+        }
+      });
     }
     return pageResponse;
   }

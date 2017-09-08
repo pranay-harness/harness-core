@@ -105,11 +105,18 @@ public class ArtifactServiceImpl implements ArtifactService {
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices) {
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
     if (withServices) {
-      pageResponse.getResponse().forEach(artifact
-          -> artifact.setServices(artifact.getServiceIds()
-                                      .stream()
-                                      .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
-                                      .collect(Collectors.toList())));
+      if (pageResponse != null && pageResponse.getResponse() != null) {
+        for (Artifact artifact : pageResponse.getResponse()) {
+          try {
+            artifact.setServices(artifact.getServiceIds()
+                                     .stream()
+                                     .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
+                                     .collect(Collectors.toList()));
+          } catch (Exception e) {
+            logger.error("Failed to set services for artifact {} ", artifact, e);
+          }
+        }
+      }
     }
     return pageResponse;
   }

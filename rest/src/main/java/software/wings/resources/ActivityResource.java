@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -11,10 +10,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
-import software.wings.beans.Application;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
