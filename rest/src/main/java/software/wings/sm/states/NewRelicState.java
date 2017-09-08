@@ -200,7 +200,7 @@ public class NewRelicState extends AbstractAnalysisState {
     triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.SUCCESS);
+    response.setExecutionStatus(ExecutionStatus.RUNNING);
     analysisExecutorService = createExecutorService(context, response, lastExecutionNodes, canaryNewHostNames);
     return anExecutionResponse()
         .withAsync(true)
@@ -234,6 +234,7 @@ public class NewRelicState extends AbstractAnalysisState {
     }
 
     executionResponse.getStateExecutionData().setStatus(executionStatus);
+    logger.info("State done with status {}", executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -244,7 +245,9 @@ public class NewRelicState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private void shutDownGenerator(MetricDataAnalysisResponse response) {
-    waitNotifyEngine.notify(((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId(), response);
+    final String coorelationId = ((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId();
+    logger.info("Shutting down generator for new relic state. Noftiy coorelation id {}", coorelationId);
+    waitNotifyEngine.notify(coorelationId, response);
     analysisExecutorService.shutdown();
   }
 
@@ -300,7 +303,7 @@ public class NewRelicState extends AbstractAnalysisState {
 
     @Override
     public void run() {
-      if (analysisMinute > Integer.parseInt(timeDuration)) {
+      if (analysisMinute >= Integer.parseInt(timeDuration)) {
         shutDownGenerator(response);
         return;
       }
