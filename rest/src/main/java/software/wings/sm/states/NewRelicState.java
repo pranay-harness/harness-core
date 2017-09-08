@@ -127,7 +127,7 @@ public class NewRelicState extends AbstractAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
+      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
@@ -179,7 +179,7 @@ public class NewRelicState extends AbstractAnalysisState {
       }
 
       getLogger().warn(
-          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
+          "It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run");
     }
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
@@ -245,9 +245,9 @@ public class NewRelicState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private void shutDownGenerator(MetricDataAnalysisResponse response) {
-    final String coorelationId = ((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId();
-    logger.info("Shutting down generator for new relic state. Noftiy coorelation id {}", coorelationId);
-    waitNotifyEngine.notify(coorelationId, response);
+    final String correlationId = ((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId();
+    logger.info("Shutting down generator for new relic state. Notify correlation id {}", correlationId);
+    waitNotifyEngine.notify(correlationId, response);
     analysisExecutorService.shutdown();
   }
 
@@ -308,6 +308,7 @@ public class NewRelicState extends AbstractAnalysisState {
         return;
       }
 
+      logger.info("running new relic analysis for minute " + analysisMinute);
       final List<NewRelicMetricDataRecord> controlRecords =
           getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? newRelicService.getPreviousSuccessfulRecords(getWorkflowId(context), serviceId, analysisMinute)
@@ -359,6 +360,7 @@ public class NewRelicState extends AbstractAnalysisState {
         analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);
       }
 
+      analysisRecord.setAnalysisMinute(analysisMinute);
       newRelicService.saveAnalysisRecords(analysisRecord);
       analysisMinute++;
     }

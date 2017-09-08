@@ -11,6 +11,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -18,9 +19,7 @@ import java.util.Map;
 public class DataCollectionCallback implements NotifyCallback {
   private static final Logger logger = LoggerFactory.getLogger(DataCollectionCallback.class);
 
-  //  @Inject
-  //  private ExecutionInterruptManager executionInterruptManager;
-  @com.google.inject.Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   private String appId;
   private String correlationId;

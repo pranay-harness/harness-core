@@ -39,6 +39,8 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   private List<NewRelicMetricAnalysis> metricAnalyses;
 
+  private int analysisMinute;
+
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {
     metricAnalyses.add(analysis);
   }
