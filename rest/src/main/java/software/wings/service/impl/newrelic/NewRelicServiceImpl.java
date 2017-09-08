@@ -27,6 +27,7 @@ import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
@@ -210,6 +211,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       analysisRecord.setMessage(message);
     }
 
+    Collections.sort(analysisRecord.getMetricAnalyses());
     return analysisRecord;
   }
 }
