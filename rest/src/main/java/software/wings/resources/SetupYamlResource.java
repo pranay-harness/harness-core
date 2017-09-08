@@ -22,10 +22,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.yaml.CloudProvidersYaml;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
-import software.wings.yaml.YamlSubList;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 
@@ -92,17 +92,26 @@ public class SetupYamlResource {
     List<String> appNames = appService.getAppNamesByAccountId(accountId);
     setup.setAppNames(appNames);
 
-    // types of cloud providers
-    doCloudProviders(setup, accountId, "AWS", SettingVariableTypes.AWS);
-    doCloudProviders(setup, accountId, "google_cloud_platform", SettingVariableTypes.GCP);
-    doCloudProviders(setup, accountId, "physical_data_centers", SettingVariableTypes.PHYSICAL_DATA_CENTER);
+    //------------- CLOUD PROVIDERS SECTION ------------------
+    CloudProvidersYaml cloudProvidersYaml = new CloudProvidersYaml();
 
+    // types of cloud providers
+    doCloudProviders(cloudProvidersYaml, setup, accountId, "AWS", SettingVariableTypes.AWS);
+    doCloudProviders(cloudProvidersYaml, setup, accountId, "google_cloud_platform", SettingVariableTypes.GCP);
+    doCloudProviders(
+        cloudProvidersYaml, setup, accountId, "physical_data_centers", SettingVariableTypes.PHYSICAL_DATA_CENTER);
+
+    setup.setCloudProviders(cloudProvidersYaml);
+    //------------- END CLOUD PROVIDERS SECTION ------------------
+
+    //------------- ARTIFACT SERVERS SECTION ------------------
     // types of artifact servers
     doArtifactServers(setup, accountId, SettingVariableTypes.JENKINS);
     doArtifactServers(setup, accountId, SettingVariableTypes.BAMBOO);
     doArtifactServers(setup, accountId, SettingVariableTypes.DOCKER);
     doArtifactServers(setup, accountId, SettingVariableTypes.NEXUS);
     doArtifactServers(setup, accountId, SettingVariableTypes.ARTIFACTORY);
+    //------------- END ARTIFACT SERVERS SECTION ------------------
 
     // TODO - LEFT OFF HERE
 
@@ -120,19 +129,26 @@ public class SetupYamlResource {
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
   }
 
-  private void doCloudProviders(SetupYaml setup, String accountId, String subListName, SettingVariableTypes type) {
+  private void doCloudProviders(CloudProvidersYaml cloudProvidersYaml, SetupYaml setup, String accountId,
+      String subListName, SettingVariableTypes type) {
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-
-    YamlSubList yamlSubList = new YamlSubList(subListName);
 
     if (settingAttributes != null) {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
-        yamlSubList.getSubList().add(settingAttribute.getName());
+        switch (type) {
+          case AWS:
+            cloudProvidersYaml.getAWS().add(settingAttribute.getName());
+            break;
+          case GCP:
+            cloudProvidersYaml.getGoogleCloudPlatform().add(settingAttribute.getName());
+            break;
+          case PHYSICAL_DATA_CENTER:
+            cloudProvidersYaml.getPhysicalDataCenters().add(settingAttribute.getName());
+            break;
+        }
       }
     }
-
-    setup.getCloudProviders().add(yamlSubList);
   }
 
   private void doArtifactServers(SetupYaml setup, String accountId, SettingVariableTypes type) {

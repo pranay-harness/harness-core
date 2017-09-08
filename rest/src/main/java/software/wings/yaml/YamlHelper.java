@@ -97,6 +97,7 @@ public class YamlHelper {
     dumpedYaml = dumpedYaml.replace("[]", "");
 
     dumpedYaml = fixIndentSpaces(dumpedYaml);
+    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
 
     YamlPayload yp = new YamlPayload(dumpedYaml);
     yp.setName(payloadName);
@@ -121,6 +122,8 @@ public class YamlHelper {
       while ((line = bufReader.readLine()) != null) {
         StringBuilder newLine = new StringBuilder();
 
+        System.out.println("    ********* line.trim().length(): " + line.trim().length());
+
         // count number of spaces or dashes at start of line
         int count = 0;
 
@@ -143,6 +146,46 @@ public class YamlHelper {
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+    return sb.toString();
+  }
+
+  // TODO - newer version attempts to thr over-indenting of "sub folders" like AWS, GCP, etc. in Cloud Providers section
+  // of setup.yaml
+  private static String fixIndentSpaces2(String content) {
+    System.out.println("********* BEFORE: \n" + content);
+
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(content));
+
+    String line = null;
+
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        StringBuilder newLine = new StringBuilder();
+
+        String lineTrimmed = line.trim();
+
+        // if the line starts with a dash - prepend two spaces
+        if (lineTrimmed.charAt(0) == '-') {
+          newLine.append("  ");
+        } else {
+          System.out.println("    ********* lineTrimmed: |" + lineTrimmed + "|");
+
+          // check that the line doesn't end in a colon
+          if (lineTrimmed.length() > 0 && !lineTrimmed.substring(lineTrimmed.length() - 1).equals(":")) {
+            newLine.append("  ");
+          }
+        }
+
+        sb.append(newLine.append(line) + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    System.out.println("********* AFTER: \n" + sb.toString());
 
     return sb.toString();
   }

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class SetupYaml extends GenericYaml {
   @YamlSerialize public List<String> applications = new ArrayList<>();
-  @YamlSerialize public List<YamlSubList> cloudProviders = new ArrayList<>();
+  @YamlSerialize public CloudProvidersYaml cloudProviders;
   @YamlSerialize public List<String> artifactServers = new ArrayList<>();
   @YamlSerialize public List<String> collaborationProviders = new ArrayList<>();
   @YamlSerialize public List<String> loadBalancers = new ArrayList<>();
@@ -23,11 +23,11 @@ public class SetupYaml extends GenericYaml {
   }
 
   @JsonIgnore
-  public List<YamlSubList> getCloudProviders() {
+  public CloudProvidersYaml getCloudProviders() {
     return cloudProviders;
   }
 
-  public void setCloudProviders(List<YamlSubList> cloudProviders) {
+  public void setCloudProviders(CloudProvidersYaml cloudProviders) {
     this.cloudProviders = cloudProviders;
   }
 
