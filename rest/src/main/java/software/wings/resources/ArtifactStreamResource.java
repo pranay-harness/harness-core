@@ -23,7 +23,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.Stencil;
-import software.wings.utils.CryptoUtil;
 
 import java.text.ParseException;
 import java.util.List;
@@ -218,11 +217,7 @@ public class ArtifactStreamResource {
   @ExceptionMetered
   public RestResponse<WebHookToken> updateAction(
       @QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
-    WebHookToken webHookToken = new WebHookToken();
-    webHookToken.setHttpMethod("POST");
-    webHookToken.setWebHookToken(CryptoUtil.secureRandAlphaNumString(40));
-    webHookToken.setPayload("{\"buildNumber\":\"BUILD_NUMBER_PLACEHOLDER\"}");
-    return new RestResponse<>(webHookToken);
+    return new RestResponse<>(artifactStreamService.generateWebHookToken(appId, streamId));
   }
 
   /**

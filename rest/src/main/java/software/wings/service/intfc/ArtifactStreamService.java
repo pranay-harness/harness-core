@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.WebHookToken;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -80,8 +82,8 @@ public interface ArtifactStreamService {
   /**
    * Delete stream action artifact stream.
    *
-   * @param appId      the app id
-   * @param streamId   the stream id
+   * @param appId    the app id
+   * @param streamId the stream id
    * @param actionId the action id
    * @return the artifact stream
    */
@@ -96,6 +98,15 @@ public interface ArtifactStreamService {
    * @return the artifact stream
    */
   ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction);
+
+  /**
+   * Trigger stream action.
+   *
+   * @param artifact             the artifact
+   * @param artifactStreamAction the artifact stream action
+   * @return the workflow execution
+   */
+  WorkflowExecution triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction);
 
   /**
    * Trigger stream action.
@@ -146,4 +157,13 @@ public interface ArtifactStreamService {
    * @param workflowId the workflow id
    */
   void deleteStreamActionForWorkflow(String appId, String workflowId);
+
+  /**
+   * Generate web hook token web hook token.
+   *
+   * @param appId    the app id
+   * @param streamId the stream id
+   * @return the web hook token
+   */
+  WebHookToken generateWebHookToken(String appId, String streamId);
 }
