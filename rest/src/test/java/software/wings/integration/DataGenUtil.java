@@ -40,6 +40,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -252,6 +253,18 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
+    SettingAttribute newRelicSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("NewRelic")
+            .withAccountId(accountId)
+            .withValue(NewRelicConfig.builder()
+                           .accountId(accountId)
+                           .newRelicUrl("https://api.newrelic.com")
+                           .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute);
 
     /*
     getRequestBuilderWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
