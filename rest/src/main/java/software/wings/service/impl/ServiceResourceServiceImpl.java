@@ -70,7 +70,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.io.File;
@@ -121,20 +120,28 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (withServiceCommands) {
       pageResponse.getResponse().forEach(service -> {
-        service.getServiceCommands().forEach(serviceCommand
-            -> serviceCommand.setCommand(commandService.getCommand(
-                serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+        try {
+          service.getServiceCommands().forEach(serviceCommand
+              -> serviceCommand.setCommand(commandService.getCommand(
+                  serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+        } catch (Exception e) {
+          logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
+              service.getAppId(), e);
+        }
       });
     }
-
     SearchFilter appIdSearchFilter = request.getFilters()
                                          .stream()
                                          .filter(searchFilter -> searchFilter.getFieldName().equals("appId"))
                                          .findFirst()
                                          .orElse(null);
     if (withBuildSource && appIdSearchFilter != null) {
-      List<ArtifactStream> artifactStreams =
-          artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+      List<ArtifactStream> artifactStreams = new ArrayList<>();
+      try {
+        artifactStreams = artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+      } catch (Exception e) {
+        logger.error("Failed to retrieve artifact streams", e);
+      }
       Map<String, List<ArtifactStream>> serviceToBuildSourceMap =
           artifactStreams.stream().collect(Collectors.groupingBy(ArtifactStream::getServiceId));
       if (serviceToBuildSourceMap != null) {

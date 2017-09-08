@@ -191,15 +191,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return res;
     }
     if (withBreakdownAndSummary) {
-      res.forEach(this ::refreshBreakdown);
-
-      res.forEach(this ::refreshSummaries);
+      for (WorkflowExecution re : res) {
+        try {
+          refreshBreakdown(re);
+        } catch (Exception e) {
+          logger.error("Failed to  prepare breakdown summary for the workflow execution {} ", re, e);
+        }
+      }
+      for (WorkflowExecution re : res) {
+        try {
+          refreshSummaries(re);
+        } catch (Exception e) {
+          logger.error("Failed to refresh service summaries for the workflow execution {} ", re, e);
+        }
+      }
     }
 
     for (WorkflowExecution workflowExecution : res) {
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         // populateGraph(workflowExecution, null, null, null, false);
-        populateNodeHierarchy(workflowExecution, includeGraph, includeStatus);
+        try {
+          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus);
+        } catch (Exception e) {
+          logger.error("Failed to populate node hierarchy for the workflow execution {} ", res, e);
+        }
       }
     }
     return res;
@@ -1085,14 +1100,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    PageRequest<Service> pageRequest = aPageRequest()
-                                           .withLimit(PageRequest.UNLIMITED)
-                                           .addFilter("appId", EQ, workflow.getAppId())
-                                           .addFilter("uuid", IN, serviceIds.toArray())
-                                           .build();
-    return serviceResourceService.list(pageRequest, false, false);
+    if (serviceIds.size() != 0) {
+      PageRequest<Service> pageRequest = aPageRequest()
+                                             .withLimit(PageRequest.UNLIMITED)
+                                             .addFilter("appId", EQ, workflow.getAppId())
+                                             .addFilter("uuid", IN, serviceIds.toArray())
+                                             .build();
+      return serviceResourceService.list(pageRequest, false, false);
+    } else {
+      logger.info("No services resolved for templatized workflow id {} and workflow execution {]", workflow.getUuid(),
+          workflowExecution);
+      return null;
+    }
   }
 
+  /**
+   * Checks if service templatized or not
+   * @param workflow
+   * @return
+   */
   private boolean isServiceTemplatized(Workflow workflow) {
     if (!workflow.isTemplatized()) {
       return false;
@@ -1252,7 +1278,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         UpdateResults updated = wingsPersistence.update(query, updateOps);
         logger.info("Updated : {} row", updated.getWriteResult().getN());
       } catch (java.lang.Exception e) {
-        logger.error("Error in breakdown retrieval", e);
+        logger.error(
+            "Error occurred while updating workflow execution {} with breakdown summary", workflowExecution, e);
       }
     }
   }
