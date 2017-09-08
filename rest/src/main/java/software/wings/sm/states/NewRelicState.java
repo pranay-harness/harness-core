@@ -325,6 +325,7 @@ public class NewRelicState extends AbstractAnalysisState {
                                                         .stateExecutionId(context.getStateExecutionInstanceId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
                                                         .workflowId(getWorkflowId(context))
+                                                        .applicationId(context.getAppId())
                                                         .riskLevel(RiskLevel.LOW)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();

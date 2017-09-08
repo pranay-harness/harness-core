@@ -31,6 +31,8 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   @NotEmpty private RiskLevel riskLevel;
 
+  @NotEmpty @Indexed private String applicationId;
+
   @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
