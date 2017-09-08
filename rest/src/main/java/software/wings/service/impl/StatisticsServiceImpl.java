@@ -606,18 +606,18 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
-    return LocalDate.now(ZoneId.systemDefault())
+    return LocalDate.now(ZoneId.of("America/Los_Angeles"))
         .minus(days - 1, ChronoUnit.DAYS)
-        .atStartOfDay(ZoneId.systemDefault())
+        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
         .toInstant()
         .toEpochMilli();
   }
 
   private long getStartOfTheDayEpoch(long epoch) {
     return Instant.ofEpochMilli(epoch)
-        .atZone(ZoneId.systemDefault())
+        .atZone(ZoneId.of("America/Los_Angeles"))
         .toLocalDate()
-        .atStartOfDay(ZoneId.systemDefault())
+        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
         .toInstant()
         .toEpochMilli();
   }

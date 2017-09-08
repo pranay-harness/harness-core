@@ -9,6 +9,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -30,6 +31,15 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class NewRelicResource {
   @Inject private NewRelicService newRelicService;
+
+  @GET
+  @Path("/applications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NewRelicApplication>> getAllApplications(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
+    return new RestResponse<>(newRelicService.getApplications(settingId));
+  }
 
   @POST
   @Path("/save-metrics")

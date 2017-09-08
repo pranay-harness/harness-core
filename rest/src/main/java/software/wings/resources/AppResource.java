@@ -5,29 +5,15 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
-import software.wings.yaml.Config;
-import software.wings.yaml.YamlHelper;
-import software.wings.yaml.YamlPayload;
-import software.wings.yaml.YamlRepresenter;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -53,7 +39,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(APPLICATION)
 public class AppResource {
   private AppService appService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Instantiates a new app resource.
