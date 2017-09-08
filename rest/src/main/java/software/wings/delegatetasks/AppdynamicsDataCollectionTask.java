@@ -11,6 +11,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
         }
       }
     }
-    return DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
+    return DataCollectionTaskResult.builder()
+        .status(DataCollectionTaskStatus.SUCCESS)
+        .stateType(StateType.APP_DYNAMICS)
+        .build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(AppdynamicsDataCollectionInfo dataCollectionInfo) {

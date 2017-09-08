@@ -38,10 +38,10 @@ public class NewRelicMetricValueDefinition {
                  .build());
     VALUES_TO_ANALYZE.get("throughput")
         .add(Threshold.builder()
-                 .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                  .comparisonType(ThresholdComparisonType.DELTA)
-                 .high(5)
-                 .medium(10)
+                 .high(100)
+                 .medium(50)
                  .build());
 
     // averageResponseTime
