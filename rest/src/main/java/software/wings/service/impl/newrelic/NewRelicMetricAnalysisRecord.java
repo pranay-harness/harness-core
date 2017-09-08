@@ -49,13 +49,24 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   @Data
   @Builder
-  public static class NewRelicMetricAnalysis {
+  public static class NewRelicMetricAnalysis implements Comparable<NewRelicMetricAnalysis> {
     private String metricName;
     private RiskLevel riskLevel;
     private List<NewRelicMetricAnalysisValue> metricValues;
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {
       metricValues.add(metricAnalysisValue);
+    }
+
+    @Override
+    public int compareTo(NewRelicMetricAnalysis other) {
+      int riskDiff = this.riskLevel.compareTo(other.riskLevel);
+
+      if (riskDiff != 0) {
+        return riskDiff;
+      }
+
+      return this.metricName.compareTo(other.metricName);
     }
   }
 
