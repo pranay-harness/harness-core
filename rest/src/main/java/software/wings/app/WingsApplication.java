@@ -241,7 +241,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     startArchival(injector);
-    startAnalysisLogPurger(injector);
+    // TODO purge behavior is buggy.
+    // TODO it needs to be revisited
+    // startAnalysisLogPurger(injector);
 
     logger.info("Starting app done");
   }

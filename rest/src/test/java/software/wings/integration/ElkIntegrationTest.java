@@ -147,7 +147,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     return gson.fromJson(br, type);
   }
 
-  @Test
+  // TODO Disabled test. Enable when purge is revisited
   public void testPurge() throws Exception {
     final String applicationId = "some-application";
     final String serviceId = "some-service";
