@@ -29,7 +29,7 @@ public class ArtifactStreamAction {
   private String artifactFilter;
   private boolean webHook;
   private String webHookToken;
-  private String requestBody; // curl ??
+  private String requestBody;
 
   /**
    * Gets workflow type.

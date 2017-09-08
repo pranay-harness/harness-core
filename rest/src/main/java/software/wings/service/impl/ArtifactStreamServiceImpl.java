@@ -14,6 +14,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
@@ -43,6 +44,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -73,12 +75,14 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -119,8 +123,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream get(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
-    return artifactStream;
+    return wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
   }
 
   @Override
@@ -337,6 +340,30 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public WebHookToken generateWebHookToken(String appId, String streamId) {
+    ArtifactStream artifactStream = get(appId, streamId);
+    Validator.notNullCheck("Artifact Source", artifactStream);
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+    Validator.notNullCheck("Service", service);
+
+    WebHookToken webHookToken =
+        WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
+
+    Map<String, String> payload = new HashMap<>();
+    payload.put("application", appId);
+    payload.put("artifactSource", streamId);
+
+    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+      payload.put("dockerImageTag", "__OPTIONAL__IMAGE_TAG__");
+    } else {
+      payload.put("buildNumber", "__OPTIONAL__BUILD_NUMBER__");
+    }
+
+    webHookToken.setPayload(new Gson().toJson(payload));
+    return webHookToken;
+  }
+
+  @Override
   public ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
     ArtifactStream artifactStream = get(appId, streamId);
     if (artifactStream != null) {
@@ -453,7 +480,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         });
   }
 
-  private void triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+  @Override
+  public WorkflowExecution triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    WorkflowExecution workflowExecution = null;
     if (artifactFilterMatches(artifact, artifactStreamAction)) {
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setArtifacts(asList(artifact));
@@ -463,18 +492,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
         logger.info("Triggering Workflow execution of appId {}  with workflow id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
-        workflowExecutionService.triggerEnvExecution(
+        workflowExecution = workflowExecutionService.triggerEnvExecution(
             artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
         logger.info("Workflow execution of appId {} with workflow id {} triggered", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
       } else {
         logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
-        pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+        workflowExecution =
+            pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
         logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered",
             artifact.getAppId(), artifactStreamAction.getWorkflowId());
       }
     }
+    return workflowExecution;
   }
 
   private boolean artifactFilterMatches(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
