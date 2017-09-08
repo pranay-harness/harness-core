@@ -713,7 +713,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
+                                            <minimum>0.25</minimum>
                                            <!-- <minimum>0.46</minimum> -->
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
@@ -721,7 +721,7 @@
                                             <value>COVEREDRATIO</value>
                                             <!--Srinivas - temporarily reducing it for AppDynamics Unit test-->
                                             <!-- <minimum>0.30</minimum> -->
-                                            <minimum>0.30</minimum>
+                                            <minimum>0.25</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
