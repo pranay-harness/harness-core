@@ -54,10 +54,24 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
     deleteAllDocuments(Arrays.asList(NewRelicMetricDataRecord.class));
     deleteAllDocuments(Arrays.asList(NewRelicMetricAnalysisRecord.class));
+    deleteAllDocuments(Arrays.asList(SettingAttribute.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");
     hosts.add("ip-172-31-12-51");
+
+    SettingAttribute newRelicSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("NewRelic")
+            .withAccountId(accountId)
+            .withValue(NewRelicConfig.builder()
+                           .accountId(accountId)
+                           .newRelicUrl("https://api.newrelic.com")
+                           .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute);
   }
 
   @Test
