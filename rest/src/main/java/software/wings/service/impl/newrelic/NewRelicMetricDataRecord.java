@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,8 +27,12 @@ import software.wings.beans.Base;
 })
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class NewRelicMetricDataRecord extends Base {
   @NotEmpty @Indexed private String name;
+
+  @NotEmpty @Indexed private String applicationId;
 
   @NotEmpty @Indexed private String workflowId;
 

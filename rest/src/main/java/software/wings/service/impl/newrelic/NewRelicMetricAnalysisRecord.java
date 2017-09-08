@@ -31,6 +31,8 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   @NotEmpty private RiskLevel riskLevel;
 
+  @NotEmpty @Indexed private String applicationId;
+
   @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
@@ -39,19 +41,32 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
   private List<NewRelicMetricAnalysis> metricAnalyses;
 
+  private int analysisMinute;
+
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {
     metricAnalyses.add(analysis);
   }
 
   @Data
   @Builder
-  public static class NewRelicMetricAnalysis {
+  public static class NewRelicMetricAnalysis implements Comparable<NewRelicMetricAnalysis> {
     private String metricName;
     private RiskLevel riskLevel;
     private List<NewRelicMetricAnalysisValue> metricValues;
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {
       metricValues.add(metricAnalysisValue);
+    }
+
+    @Override
+    public int compareTo(NewRelicMetricAnalysis other) {
+      int riskDiff = this.riskLevel.compareTo(other.riskLevel);
+
+      if (riskDiff != 0) {
+        return riskDiff;
+      }
+
+      return this.metricName.compareTo(other.metricName);
     }
   }
 

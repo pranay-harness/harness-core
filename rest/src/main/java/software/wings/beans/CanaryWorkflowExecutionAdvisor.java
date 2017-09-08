@@ -14,16 +14,17 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HostElement;
+import software.wings.api.InstanceChangeEvent;
 import software.wings.api.InstanceChangeEvent.Builder;
 import software.wings.api.PhaseElement;
-import software.wings.api.InstanceChangeEvent;
 import software.wings.api.PhaseExecutionData;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.ContainerMetadata;
 import software.wings.beans.infrastructure.Ec2InstanceMetadata;
 import software.wings.beans.infrastructure.Instance;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
+import software.wings.core.queue.Queue;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.impl.dashboardStats.InstanceChangeEventListener;
 import software.wings.service.intfc.AppService;
@@ -47,12 +48,11 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseSubWorkflow;
-
-import java.util.List;
-import java.util.Optional;
-import software.wings.core.queue.Queue;
 import software.wings.utils.Validator;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -164,12 +164,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (phaseStep != null && phaseStep.getFailureStrategies() != null
           && !phaseStep.getFailureStrategies().isEmpty()) {
         FailureStrategy failureStrategy = rollbackStrategy(phaseStep.getFailureStrategies(), state);
-        return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, null);
+        return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, null, state);
       }
     }
     FailureStrategy failureStrategy = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
 
-    return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow);
+    return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, state);
   }
 
   /**
@@ -306,7 +306,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
-      FailureStrategy failureStrategy, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow) {
+      FailureStrategy failureStrategy, ExecutionEvent executionEvent, PhaseSubWorkflow phaseSubWorkflow, State state) {
     if (failureStrategy == null) {
       return null;
     }
@@ -317,8 +317,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
       }
 
-      case MANUAL_INTERVENTION:
-        return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.PAUSE).build();
+      case MANUAL_INTERVENTION: {
+        Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state);
+        return anExecutionEventAdvice()
+            .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
+            .withStateParams(stateParams)
+            .build();
+      }
 
       case ROLLBACK_PHASE: {
         if (phaseSubWorkflow == null) {
@@ -351,7 +356,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           FailureStrategy failureStrategyAfterRetry =
               aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
           return getExecutionEventAdvice(
-              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow);
+              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow, state);
         }
 
         List<StateExecutionData> stateExecutionDataHistory = ((ExecutionContextImpl) executionEvent.getContext())
@@ -377,12 +382,30 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           FailureStrategy failureStrategyAfterRetry =
               aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
           return getExecutionEventAdvice(
-              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow);
+              orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow, state);
         }
       }
       default:
         return null;
     }
+  }
+
+  private Map<String, Object> fetchStateParams(CanaryOrchestrationWorkflow orchestrationWorkflow, State state) {
+    if (orchestrationWorkflow == null || orchestrationWorkflow.getGraph() == null || state == null
+        || state.getId() == null) {
+      return null;
+    }
+    if (state.getParentId() != null && orchestrationWorkflow.getGraph().getSubworkflows() == null
+        || orchestrationWorkflow.getGraph().getSubworkflows().get(state.getParentId()) == null) {
+      return null;
+    }
+    Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(state.getParentId());
+    Optional<Node> node1 = graph.getNodes().stream().filter(node -> node.getId().equals(state.getId())).findFirst();
+    if (!node1.isPresent()) {
+      return null;
+    }
+
+    return node1.get().getProperties();
   }
 
   private ExecutionEventAdvice phaseSubWorkflowAdvice(

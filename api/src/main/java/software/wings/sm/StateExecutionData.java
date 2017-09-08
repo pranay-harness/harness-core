@@ -25,6 +25,7 @@ public class StateExecutionData {
   private String errorMsg;
   private Integer waitInterval;
   private ContextElement element;
+  private Map<String, Object> stateParams;
 
   /**
    * Gets state name.
@@ -148,6 +149,14 @@ public class StateExecutionData {
 
   public void setElement(ContextElement element) {
     this.element = element;
+  }
+
+  public Map<String, Object> getStateParams() {
+    return stateParams;
+  }
+
+  public void setStateParams(Map<String, Object> stateParams) {
+    this.stateParams = stateParams;
   }
 
   /**

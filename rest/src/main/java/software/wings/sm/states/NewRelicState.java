@@ -127,7 +127,7 @@ public class NewRelicState extends AbstractAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
+      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
@@ -179,7 +179,7 @@ public class NewRelicState extends AbstractAnalysisState {
       }
 
       getLogger().warn(
-          "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
+          "It seems that there is no successful run for this workflow yet. Metric data will be collected to be analyzed for next deployment run");
     }
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
@@ -200,7 +200,7 @@ public class NewRelicState extends AbstractAnalysisState {
     triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.SUCCESS);
+    response.setExecutionStatus(ExecutionStatus.RUNNING);
     analysisExecutorService = createExecutorService(context, response, lastExecutionNodes, canaryNewHostNames);
     return anExecutionResponse()
         .withAsync(true)
@@ -234,6 +234,7 @@ public class NewRelicState extends AbstractAnalysisState {
     }
 
     executionResponse.getStateExecutionData().setStatus(executionStatus);
+    logger.info("State done with status {}", executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -244,7 +245,9 @@ public class NewRelicState extends AbstractAnalysisState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private void shutDownGenerator(MetricDataAnalysisResponse response) {
-    waitNotifyEngine.notify(((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId(), response);
+    final String correlationId = ((NewRelicExecutionData) response.getStateExecutionData()).getCorrelationId();
+    logger.info("Shutting down generator for new relic state. Notify correlation id {}", correlationId);
+    waitNotifyEngine.notify(correlationId, response);
     analysisExecutorService.shutdown();
   }
 
@@ -300,11 +303,12 @@ public class NewRelicState extends AbstractAnalysisState {
 
     @Override
     public void run() {
-      if (analysisMinute > Integer.parseInt(timeDuration)) {
+      if (analysisMinute >= Integer.parseInt(timeDuration)) {
         shutDownGenerator(response);
         return;
       }
 
+      logger.info("running new relic analysis for minute " + analysisMinute);
       final List<NewRelicMetricDataRecord> controlRecords =
           getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? newRelicService.getPreviousSuccessfulRecords(getWorkflowId(context), serviceId, analysisMinute)
@@ -321,6 +325,7 @@ public class NewRelicState extends AbstractAnalysisState {
                                                         .stateExecutionId(context.getStateExecutionInstanceId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
                                                         .workflowId(getWorkflowId(context))
+                                                        .applicationId(context.getAppId())
                                                         .riskLevel(RiskLevel.LOW)
                                                         .metricAnalyses(new ArrayList<>())
                                                         .build();
@@ -356,6 +361,7 @@ public class NewRelicState extends AbstractAnalysisState {
         analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);
       }
 
+      analysisRecord.setAnalysisMinute(analysisMinute);
       newRelicService.saveAnalysisRecords(analysisRecord);
       analysisMinute++;
     }
