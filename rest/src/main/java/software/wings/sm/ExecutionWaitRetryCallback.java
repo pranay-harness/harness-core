@@ -75,7 +75,7 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.retryStateExecutionInstance(appId, stateExecutionInstanceId);
+    stateMachineExecutor.retryStateExecutionInstance(appId, stateExecutionInstanceId, null);
   }
 
   @Override

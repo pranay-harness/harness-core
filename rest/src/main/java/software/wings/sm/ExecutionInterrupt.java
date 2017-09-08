@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -22,6 +23,7 @@ public class ExecutionInterrupt extends Base {
   @NotNull private String envId;
   @NotNull private String executionUuid;
   private String stateExecutionInstanceId;
+  private Map<String, Object> properties;
 
   /**
    * Gets execution event type.
@@ -93,6 +95,14 @@ public class ExecutionInterrupt extends Base {
    */
   public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
   }
 
   /**

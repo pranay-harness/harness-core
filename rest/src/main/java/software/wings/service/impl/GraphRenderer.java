@@ -187,6 +187,9 @@ public class GraphRenderer {
         && StateType.COMMAND.name().equals(instance.getStateType())) {
       node.setName(((CommandStateExecutionData) instance.getStateExecutionData()).getCommandName());
     }
+    if (instance.getStateParams() != null) {
+      node.setProperties(instance.getStateParams());
+    }
     return node;
   }
 

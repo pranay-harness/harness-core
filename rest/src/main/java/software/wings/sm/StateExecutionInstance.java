@@ -58,6 +58,8 @@ public class StateExecutionInstance extends Base {
   private String notifyId;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
 
+  private Map<String, Object> stateParams;
+
   private Long startTs;
   private Long endTs;
   @Indexed private Long expiryTs;
@@ -487,6 +489,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setDelegateTaskId(String delegateTaskId) {
     this.delegateTaskId = delegateTaskId;
+  }
+
+  public Map<String, Object> getStateParams() {
+    return stateParams;
+  }
+
+  public void setStateParams(Map<String, Object> stateParams) {
+    this.stateParams = stateParams;
   }
 
   @Override

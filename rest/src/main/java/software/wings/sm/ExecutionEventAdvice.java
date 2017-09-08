@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import java.util.Map;
+
 /**
  * Created by rishi on 1/26/17.
  */
@@ -8,6 +10,7 @@ public class ExecutionEventAdvice {
   private String nextStateName;
   private String nextChildStateMachineId;
   private Integer waitInterval;
+  private Map<String, Object> stateParams;
 
   public ExecutionInterruptType getExecutionInterruptType() {
     return executionInterruptType;
@@ -41,11 +44,20 @@ public class ExecutionEventAdvice {
     this.waitInterval = waitInterval;
   }
 
+  public Map<String, Object> getStateParams() {
+    return stateParams;
+  }
+
+  public void setStateParams(Map<String, Object> stateParams) {
+    this.stateParams = stateParams;
+  }
+
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
     private String nextStateName;
     private String nextChildStateMachineId;
     private Integer waitInterval;
+    private Map<String, Object> stateParams;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -73,12 +85,18 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withStateParams(Map<String, Object> stateParams) {
+      this.stateParams = stateParams;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
       executionEventAdvice.setNextStateName(nextStateName);
       executionEventAdvice.setNextChildStateMachineId(nextChildStateMachineId);
       executionEventAdvice.setWaitInterval(waitInterval);
+      executionEventAdvice.setStateParams(stateParams);
       return executionEventAdvice;
     }
   }
