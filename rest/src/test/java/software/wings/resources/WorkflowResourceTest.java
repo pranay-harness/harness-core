@@ -21,6 +21,7 @@ import org.mockito.Captor;
 import software.wings.WingsBaseTest;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -78,6 +79,29 @@ public class WorkflowResourceTest extends WingsBaseTest {
 
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
     verify(WORKFLOW_SERVICE).createWorkflow(WORKFLOW);
+  }
+
+  /**
+   * Should create workflow.
+   */
+  @Test
+  public void shouldCloneWorkflow() {
+    Workflow workflow2 = aWorkflow()
+                             .withAppId(APP_ID)
+                             .withUuid(UUIDGenerator.getUuid())
+                             .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                             .build();
+    when(WORKFLOW_SERVICE.cloneWorkflow(APP_ID, WORKFLOW_ID, WORKFLOW)).thenReturn(workflow2);
+    CloneMetadata cloneMetadata = CloneMetadata.builder().workflow(WORKFLOW).build();
+
+    RestResponse<Workflow> restResponse = RESOURCES.client()
+                                              .target(format("/workflows/%s/clone?appId=%s", WORKFLOW_ID, APP_ID))
+                                              .request()
+                                              .post(Entity.entity(cloneMetadata, MediaType.APPLICATION_JSON),
+                                                  new GenericType<RestResponse<Workflow>>() {});
+
+    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
+    verify(WORKFLOW_SERVICE).cloneWorkflow(APP_ID, WORKFLOW_ID, WORKFLOW);
   }
 
   /**
