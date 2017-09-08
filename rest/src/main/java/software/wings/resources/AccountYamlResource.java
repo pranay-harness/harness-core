@@ -22,6 +22,7 @@ import software.wings.yaml.settingAttribute.ArtifactoryYaml;
 import software.wings.yaml.settingAttribute.AwsYaml;
 import software.wings.yaml.settingAttribute.BambooYaml;
 import software.wings.yaml.settingAttribute.DockerYaml;
+import software.wings.yaml.settingAttribute.ElbYaml;
 import software.wings.yaml.settingAttribute.ElkYaml;
 import software.wings.yaml.settingAttribute.GcpYaml;
 import software.wings.yaml.settingAttribute.JenkinsYaml;
@@ -164,6 +165,7 @@ public class AccountYamlResource {
 
       // load balancers
       case ELB:
+        settingAttributeYaml = new ElbYaml(settingAttribute);
         break;
 
       // verification providers
