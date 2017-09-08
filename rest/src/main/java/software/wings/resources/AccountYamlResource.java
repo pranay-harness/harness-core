@@ -92,52 +92,8 @@ public class AccountYamlResource {
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
     */
 
-    SettingVariableTypes settingsVariableType = SettingVariableTypes.valueOf(type);
+    // SettingVariableTypes settingsVariableType = SettingVariableTypes.valueOf(type);
 
-    switch (settingsVariableType) {
-      // cloud providers
-      case AWS:
-        break;
-      case GCP:
-        break;
-      case PHYSICAL_DATA_CENTER:
-        break;
-
-      // artifact servers
-      case JENKINS:
-        break;
-      case BAMBOO:
-        break;
-      case DOCKER:
-        break;
-      case NEXUS:
-        break;
-      case ARTIFACTORY:
-        break;
-
-      // collaboration providers
-      case SMTP:
-        break;
-      case SLACK:
-        break;
-
-      // load balancers
-      case ELB:
-        break;
-
-      // collaboration providers
-      // also a repeat of JENKINS logically goes here
-      case APP_DYNAMICS:
-        break;
-      case SPLUNK:
-        break;
-      case ELK:
-        break;
-      case LOGZ:
-        break;
-    }
-
-    // TODO - TEMP
     return null;
   }
 
@@ -210,7 +166,7 @@ public class AccountYamlResource {
       case ELB:
         break;
 
-      // collaboration providers
+      // verification providers
       // JENKINS is also a (logical) part of this group
       case APP_DYNAMICS:
         settingAttributeYaml = new AppDynamicsYaml(settingAttribute);
