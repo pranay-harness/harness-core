@@ -142,7 +142,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
             .build();
     final MetricDataAnalysisResponse response =
         MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.SUCCESS);
+    response.setExecutionStatus(ExecutionStatus.RUNNING);
     final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.schedule(() -> {
       waitNotifyEngine.notify(executionData.getCorrelationId(), response);
