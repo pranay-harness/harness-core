@@ -14,6 +14,7 @@ import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
+import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
@@ -54,8 +55,10 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<Data
   public DataCollectionTaskResult run(Object[] parameters) {
     final LogDataCollectionInfo dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
-    DataCollectionTaskResult taskResult =
-        DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
+    DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
+                                              .status(DataCollectionTaskStatus.SUCCESS)
+                                              .stateType(dataCollectionInfo.getStateType())
+                                              .build();
     collectionService = scheduleMetricDataCollection(dataCollectionInfo, taskResult);
     logger.info("going to collect data for " + dataCollectionInfo);
 

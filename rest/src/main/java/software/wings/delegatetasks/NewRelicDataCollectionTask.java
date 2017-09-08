@@ -20,6 +20,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricTim
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicWebTransactions;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
@@ -75,7 +76,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
         }
       }
     }
-    return DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).build();
+    return DataCollectionTaskResult.builder()
+        .status(DataCollectionTaskStatus.SUCCESS)
+        .stateType(StateType.NEW_RELIC)
+        .build();
   }
 
   private ScheduledExecutorService scheduleMetricDataCollection(NewRelicDataCollectionInfo dataCollectionInfo)
