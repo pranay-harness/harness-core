@@ -15,6 +15,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
@@ -59,6 +60,16 @@ public class YamlHelper {
   public static void addNonEmptyDeletionsWarningMessage(RestResponse rr) {
     addResponseMessage(rr, ErrorCode.NON_EMPTY_DELETIONS, ResponseTypeEnum.WARN,
         "WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
+  }
+
+  public static void addSettingAttributeNotFoundMessage(RestResponse rr, String uuid) {
+    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "ERROR: No Setting Attribute found for uuid: '" + uuid + "'!");
+  }
+
+  public static void addUnknownSettingVariableTypeMessage(RestResponse rr, SettingVariableTypes settingVariableType) {
+    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "ERROR: Unrecognized SettingVariableType: '" + settingVariableType + "'!");
   }
 
   public static YamlRepresenter getRepresenter() {
@@ -121,8 +132,6 @@ public class YamlHelper {
     try {
       while ((line = bufReader.readLine()) != null) {
         StringBuilder newLine = new StringBuilder();
-
-        System.out.println("    ********* line.trim().length(): " + line.trim().length());
 
         // count number of spaces or dashes at start of line
         int count = 0;
