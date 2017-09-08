@@ -10,8 +10,10 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlPayload;
 
@@ -52,7 +54,7 @@ public class AccountYamlResource {
   }
 
   /**
-   * Gets the setup yaml by accountId
+   * Gets all the setting attributes of a given type by accountId
    *
    * @param accountId   the account id
    * @param type        the SettingVariableTypes
@@ -62,7 +64,7 @@ public class AccountYamlResource {
   @Path("/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@PathParam("accountId") String accountId, @QueryParam("type") String type) {
+  public RestResponse<YamlPayload> getList(@PathParam("accountId") String accountId, @QueryParam("type") String type) {
     /*
     List<String> appNames = appService.getAppNamesByAccountId(accountId);
 
@@ -71,6 +73,123 @@ public class AccountYamlResource {
 
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
     */
+
+    SettingVariableTypes settingsVariableType = SettingVariableTypes.valueOf(type);
+
+    switch (settingsVariableType) {
+      // cloud providers
+      case AWS:
+        break;
+      case GCP:
+        break;
+      case PHYSICAL_DATA_CENTER:
+        break;
+
+      // artifact servers
+      case JENKINS:
+        break;
+      case BAMBOO:
+        break;
+      case DOCKER:
+        break;
+      case NEXUS:
+        break;
+      case ARTIFACTORY:
+        break;
+
+      // collaboration providers
+      case SMTP:
+        break;
+      case SLACK:
+        break;
+
+      // load balancers
+      case ELB:
+        break;
+
+      // collaboration providers
+      case APP_DYNAMICS:
+        break;
+      case SPLUNK:
+        break;
+      case ELK:
+        break;
+      case LOGZ:
+        break;
+    }
+
+    // TODO - TEMP
+    return null;
+  }
+
+  /**
+   * Gets the yaml for a setting attribute by accountId and uuid
+   *
+   * @param accountId   the account id
+   * @param uuid        the uid of the setting attribute
+   * @return the rest response
+   */
+  @GET
+  @Path("/{accountId}/{uuid}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> get(@PathParam("accountId") String accountId, @PathParam("uuid") String uuid) {
+    /*
+    List<String> appNames = appService.getAppNamesByAccountId(accountId);
+
+    SetupYaml setup = new SetupYaml();
+    setup.setAppNames(appNames);
+
+    return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
+    */
+
+    SettingAttribute settingAttribute = settingsService.get(uuid);
+
+    logger.info("******* settingAttribute.getName() = " + settingAttribute.getName());
+
+    SettingVariableTypes settingsVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
+
+    switch (settingsVariableType) {
+      // cloud providers
+      case AWS:
+        break;
+      case GCP:
+        break;
+      case PHYSICAL_DATA_CENTER:
+        break;
+
+      // artifact servers
+      case JENKINS:
+        break;
+      case BAMBOO:
+        break;
+      case DOCKER:
+        break;
+      case NEXUS:
+        break;
+      case ARTIFACTORY:
+        break;
+
+      // collaboration providers
+      case SMTP:
+        break;
+      case SLACK:
+        break;
+
+      // load balancers
+      case ELB:
+        break;
+
+      // collaboration providers
+      case APP_DYNAMICS:
+        break;
+      case SPLUNK:
+        break;
+      case ELK:
+        break;
+      case LOGZ:
+        break;
+    }
 
     // TODO - TEMP
     return null;
