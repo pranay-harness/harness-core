@@ -4,6 +4,8 @@
 
 package software.wings.service.impl;
 
+import static software.wings.beans.Graph.Node.Builder.*;
+
 import com.google.inject.Injector;
 
 import org.slf4j.Logger;
@@ -176,11 +178,27 @@ public class GraphRenderer {
     if (instance.getStateExecutionData() != null) {
       StateExecutionData executionData = instance.getStateExecutionData();
       injector.injectMembers(executionData);
-      node.setExecutionSummary(executionData.getExecutionSummary());
-      node.setExecutionDetails(executionData.getExecutionDetails());
+      try {
+        node.setExecutionSummary(executionData.getExecutionSummary());
+      } catch (Exception e) {
+        logger.error("Failed to get state execution summary for state instance id {} and state name {}",
+            instance.getUuid(), instance.getStateName(), e);
+      }
+      try {
+        node.setExecutionDetails(executionData.getExecutionDetails());
+      } catch (Exception e) {
+        logger.error("Failed to get state execution details for state instance id {} and state name {}",
+            instance.getUuid(), instance.getStateName(), e);
+      }
+
       if (executionData instanceof ElementStateExecutionData) {
         ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
-        node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
+        try {
+          node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
+        } catch (Exception e) {
+          logger.error("Failed to get state element status summary for state instance id {} and state name {}",
+              instance.getUuid(), instance.getStateName(), e);
+        }
       }
     }
     if (instance.getExecutionType() == WorkflowType.SIMPLE
@@ -269,8 +287,7 @@ public class GraphRenderer {
       return;
     }
 
-    Node elementNode =
-        Node.Builder.aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
+    Node elementNode = aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
 
     group.getElements().add(elementNode);
     logger.debug("generateNodeTree elementNode added - node: {}", elementNode);

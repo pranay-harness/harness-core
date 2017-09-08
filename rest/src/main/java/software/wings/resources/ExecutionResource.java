@@ -87,7 +87,7 @@ public class ExecutionResource {
           aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
       if (res == null || res.isEmpty()) {
-        return new RestResponse<PageResponse<WorkflowExecution>>(new PageResponse<WorkflowExecution>());
+        return new RestResponse<>(new PageResponse<>());
       }
       authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
     }

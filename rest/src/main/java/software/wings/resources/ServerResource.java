@@ -24,7 +24,7 @@ public class ServerResource {
   @ExceptionMetered
   public RestResponse<ServerInfo> getServerInfo() {
     ServerInfo serverInfo = new ServerInfo();
-    serverInfo.setZoneId(ZoneId.systemDefault());
+    serverInfo.setZoneId(ZoneId.of("America/Los_Angeles"));
     return new RestResponse<>(serverInfo);
   }
 }
