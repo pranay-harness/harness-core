@@ -39,7 +39,7 @@ public abstract class MetricDefinition extends Base {
     private double medium;
 
     public RiskLevel getRiskLevel(double testValue, double controlValue) {
-      if (testValue == 0.0) {
+      if (testValue == 0.0 & controlValue == 0.0) {
         return RiskLevel.LOW;
       }
 
@@ -57,9 +57,6 @@ public abstract class MetricDefinition extends Base {
 
         default:
           throw new RuntimeException("Invalid comparison type: " + comparisonType);
-      }
-      if (compareValue == 0.0) {
-        return RiskLevel.LOW;
       }
 
       switch (thresholdType) {
