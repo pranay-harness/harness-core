@@ -138,6 +138,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                 for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
                   final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
                   metricDataRecord.setName(metric.getName());
+                  metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
                   metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
                   metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
