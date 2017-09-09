@@ -20,6 +20,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -27,6 +28,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -201,7 +203,7 @@ public class WorkflowResource {
    *
    * @param appId      the app id
    * @param workflowId the workflow id
-   * @param workflow   the workflow
+   * @param cloneMetadata   the workflow
    * @return the rest response
    */
   @POST
@@ -209,10 +211,13 @@ public class WorkflowResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Workflow> cloneWorkflow(
-      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, CloneMetadata cloneMetadata) {
+    Workflow workflow = cloneMetadata.getWorkflow();
+    Validator.notNullCheck("workflow", workflow);
     workflow.setAppId(appId);
     return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, workflow));
   }
+
   /**
    * Update.
    *

@@ -1,21 +1,33 @@
 package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.AppDynamicsConfig.Builder;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 
 import java.util.ArrayList;
@@ -35,16 +47,55 @@ import javax.ws.rs.core.GenericType;
 public class NewRelicIntegrationTest extends BaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private NewRelicService newRelicService;
+  @Inject private SettingsService settingsService;
 
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
     deleteAllDocuments(Arrays.asList(NewRelicMetricDataRecord.class));
     deleteAllDocuments(Arrays.asList(NewRelicMetricAnalysisRecord.class));
+    deleteAllDocuments(Arrays.asList(SettingAttribute.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");
     hosts.add("ip-172-31-12-51");
+
+    SettingAttribute newRelicSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("NewRelic")
+            .withAccountId(accountId)
+            .withValue(NewRelicConfig.builder()
+                           .accountId(accountId)
+                           .newRelicUrl("https://api.newrelic.com")
+                           .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute);
+  }
+
+  @Test
+  public void getNewRelicApplications() throws Exception {
+    // find new relic setting id
+
+    PageRequest<SettingAttribute> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, "NewRelic").build();
+    PageResponse<SettingAttribute> settings = settingsService.list(pageRequest);
+
+    Assert.assertEquals(1, settings.size());
+
+    WebTarget target = client.target(
+        API_BASE + "/newrelic/applications?settingId=" + settings.get(0).getUuid() + "&accountId=" + accountId);
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
+
+    Assert.assertEquals(0, restResponse.getResponseMessages().size());
+    Assert.assertTrue(restResponse.getResource().size() > 0);
+
+    for (NewRelicApplication app : restResponse.getResource()) {
+      Assert.assertTrue(app.getId() > 0);
+      Assert.assertFalse(StringUtils.isBlank(app.getName()));
+    }
   }
 
   @Test

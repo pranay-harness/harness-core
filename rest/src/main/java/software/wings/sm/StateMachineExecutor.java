@@ -1062,6 +1062,8 @@ public class StateMachineExecutor {
   private void retryStateExecutionInstance(
       StateExecutionInstance stateExecutionInstance, Map<String, Object> stateParams) {
     clearStateExecutionData(stateExecutionInstance, stateParams);
+    stateExecutionInstance = wingsPersistence.get(
+        StateExecutionInstance.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid());
     StateMachine sm = wingsPersistence.get(
         StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId());
 

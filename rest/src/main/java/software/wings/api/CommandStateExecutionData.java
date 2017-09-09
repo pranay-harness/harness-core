@@ -6,6 +6,8 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
 import software.wings.beans.command.CommandUnit;
@@ -23,6 +25,7 @@ import java.util.Map;
  * Created by peeyushaggarwal on 6/17/16.
  */
 public class CommandStateExecutionData extends StateExecutionData {
+  @Transient private static final Logger logger = LoggerFactory.getLogger(CommandStateExecutionData.class);
   private String appId;
   private String hostName;
   private String publicDns;
@@ -342,32 +345,38 @@ public class CommandStateExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
     if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
       if (countsByStatuses == null) {
-        List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
-        countsByStatuses = new CountsByStatuses();
-        commandUnits.stream().forEach(commandUnit -> {
-          switch (commandUnit.getCommandExecutionStatus()) {
-            case SUCCESS:
-              countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
-              break;
-            case FAILURE:
-              countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
-              break;
-            case RUNNING:
-              countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
-              break;
-            case QUEUED:
-              countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
-              break;
-          }
-        });
+        try {
+          List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
+          countsByStatuses = new CountsByStatuses();
+          commandUnits.stream().forEach(commandUnit -> {
+            switch (commandUnit.getCommandExecutionStatus()) {
+              case SUCCESS:
+                countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
+                break;
+              case FAILURE:
+                countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
+                break;
+              case RUNNING:
+                countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
+                break;
+              case QUEUED:
+                countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
+                break;
+            }
+          });
+        } catch (Exception e) {
+          logger.error("Failed to retrieve command units for appId {} and activityId {} ", appId, activityId, e);
+        }
       }
-      data.put("total",
-          anExecutionDataValue()
-              .withDisplayName("Total")
-              .withValue(countsByStatuses.getFailed() + countsByStatuses.getInprogress() + countsByStatuses.getSuccess()
-                  + countsByStatuses.getQueued())
-              .build());
-      data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
+      if (countsByStatuses != null) {
+        data.put("total",
+            anExecutionDataValue()
+                .withDisplayName("Total")
+                .withValue(countsByStatuses.getFailed() + countsByStatuses.getInprogress()
+                    + countsByStatuses.getSuccess() + countsByStatuses.getQueued())
+                .build());
+        data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
+      }
     }
     putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
     putNotNull(data, "templateName", anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
