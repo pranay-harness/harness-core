@@ -126,8 +126,16 @@ public interface ArtifactService {
 
   /**
    * Delete by artifact stream.
-   *
-   *
    */
   void deleteArtifactFiles();
+
+  /**
+   * Gets artifact by build number.
+   *
+   * @param appId            the app id
+   * @param artifactStreamId the artifact stream id
+   * @param buildNumber      the build number
+   * @return the artifact by build number
+   */
+  Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String buildNumber);
 }

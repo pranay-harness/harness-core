@@ -70,7 +70,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.io.File;

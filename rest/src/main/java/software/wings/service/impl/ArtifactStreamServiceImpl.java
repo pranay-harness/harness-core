@@ -223,6 +223,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStreamAction.setCronDescription(getCronDescription(cronExpression));
     }
 
+    ArtifactStream artifactStream = get(appId, streamId);
     if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
       Workflow workflow = workflowService.readWorkflow(appId, artifactStreamAction.getWorkflowId(), null);
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
@@ -231,10 +232,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
             String.format("Workflow [%s] can not be added to Env [%s]", workflow.getName(), environment.getName()));
       }
+      if (workflow.getServices().stream().noneMatch(
+              service -> artifactStream.getServiceId().equals(service.getUuid()))) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+            String.format("Service in workflow [%s] and Artifact Source [%s] do not match", workflow.getName(),
+                artifactStream.getSourceName()));
+      }
+
       artifactStreamAction.setWorkflowName(workflow.getName());
       artifactStreamAction.setEnvName(environment.getName());
     } else {
       Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), false);
+      if (pipeline.getServices().stream().noneMatch(
+              service -> artifactStream.getServiceId().equals(service.getUuid()))) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+            String.format("Service in pipeline [%s] and Artifact Source [%s] do not match", pipeline.getName(),
+                artifactStream.getSourceName()));
+      }
       artifactStreamAction.setWorkflowName(pipeline.getName());
     }
 
