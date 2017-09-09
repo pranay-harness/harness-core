@@ -17,6 +17,7 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -66,7 +67,18 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final Call<NewRelicMetricResponse> request = getNewRelicRestClient(newRelicConfig).listMetricNames(newRelicAppId);
     final Response<NewRelicMetricResponse> response = request.execute();
     if (response.isSuccessful()) {
-      return response.body().getMetrics();
+      List<NewRelicMetric> metrics = response.body().getMetrics();
+      List<NewRelicMetric> webTransactionMetrics = new ArrayList<>();
+
+      if (metrics == null) {
+        return webTransactionMetrics;
+      }
+      for (NewRelicMetric metric : metrics) {
+        if (metric.getName().startsWith("WebTransaction/")) {
+          webTransactionMetrics.add(metric);
+        }
+      }
+      return webTransactionMetrics;
     }
 
     JSONObject errorObject = new JSONObject(response.errorBody().string());
