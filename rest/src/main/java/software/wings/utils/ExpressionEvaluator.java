@@ -4,6 +4,8 @@
 
 package software.wings.utils;
 
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
@@ -11,6 +13,7 @@ import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.exception.WingsException;
 
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -26,7 +29,8 @@ public class ExpressionEvaluator {
    * The constant wingsVariablePattern.
    */
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
-  public static final Pattern specialCharPattern = Pattern.compile("\"[^\\\\w]\"");
+  public static final Pattern variableNamePattern = Pattern.compile("^[_a-zA-Z][_\\w]*$");
+
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -196,5 +200,13 @@ public class ExpressionEvaluator {
     matcher.appendTail(sb);
 
     return sb.toString();
+  }
+
+  public static void isValidVariableName(String name) {
+    // Verify Service variable name should not contain any special character
+    Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
+    if (!matcher.matches()) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Special characters are not allowed in variable name");
+    }
   }
 }

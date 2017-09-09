@@ -27,6 +27,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
@@ -63,6 +64,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
+
+    ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
+
     // TODO:: revisit. for environment envId can be specific
     String envId =
         serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
@@ -94,10 +98,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
     Validator.notNullCheck("Service variable", savedServiceVariable);
 
-    if (savedServiceVariable.getEntityType().equals(SERVICE)
-        && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
-      updateVariableNameForServiceAndOverrides(savedServiceVariable, serviceVariable.getName());
-    }
+    ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
         ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()),
