@@ -33,6 +33,7 @@ import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -141,6 +142,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(wingsPersistence).save(any(ArtifactStream.class));
     verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
   }
+
   @Test
   public void shouldDockerArtifactStreamUpdate() {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
@@ -153,6 +155,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).save(any(ArtifactStream.class));
   }
+
   @Test
   public void shouldUpdate() {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
@@ -162,6 +165,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).save(any(ArtifactStream.class));
   }
+
   @Test
   public void shouldDelete() {
     jenkinsArtifactStream.setStreamActions(
@@ -189,9 +193,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .withEnvId(ENV_ID)
                                                     .build();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID, null))
-        .thenReturn(aWorkflow().withName("NAME").withEnvId(ENV_ID).build());
+        .thenReturn(aWorkflow()
+                        .withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build()))
+                        .withName("NAME")
+                        .withEnvId(ENV_ID)
+                        .build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).build());
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     artifactStreamService.addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
     verify(wingsPersistence).createQuery(any());
     verify(query).field("appId");
@@ -202,7 +211,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).notEqual(WORKFLOW_ID);
     verify(updateOperations).add("streamActions", artifactStreamAction);
     verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
+    verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
   }
 
   @Test
