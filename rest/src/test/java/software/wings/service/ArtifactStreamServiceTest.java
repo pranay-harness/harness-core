@@ -245,6 +245,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .build();
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
 
+    doReturn(jenkinsArtifactStream).when(spyArtifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     doReturn(jenkinsArtifactStream)
         .when(spyArtifactStreamService)
         .deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
