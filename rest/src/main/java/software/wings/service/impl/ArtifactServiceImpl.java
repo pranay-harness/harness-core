@@ -356,6 +356,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
   }
+
   private void deleteArtifacts(String appId, String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
     try {
       List<String> artifactUuids = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toList());
@@ -397,5 +398,17 @@ public class ArtifactServiceImpl implements ArtifactService {
     } catch (Exception ex) {
       logger.warn("Failed to purge (delete) the artifact files", ex);
     }
+  }
+
+  @Override
+  public Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String buildNumber) {
+    return wingsPersistence.createQuery(Artifact.class)
+        .field("appId")
+        .equal(appId)
+        .field("artifactStreamId")
+        .equal(artifactStreamId)
+        .field("metadata.buildNo")
+        .equal(buildNumber)
+        .get();
   }
 }

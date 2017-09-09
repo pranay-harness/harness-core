@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.utils.Misc.isNullOrEmpty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WebHookRequest;
@@ -42,16 +45,25 @@ public class WebHookServiceImpl implements WebHookService {
         return WebHookResponse.builder().error("Invalid WebHook token").build();
       }
 
-      Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-
-      if (webHookRequest.getBuildNumber() == null || webHookRequest.getBuildNumber().isEmpty()) {
-        WorkflowExecution workflowExecution = artifactStreamService.triggerStreamAction(latestArtifact, streamAction);
-        return WebHookResponse.builder().requestId(workflowExecution.getUuid()).status("QUEUED").build();
+      Artifact artifact = null;
+      if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getImageTag())) {
+        artifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
       } else {
-        // Collect artifact and then execute
-        return WebHookResponse.builder().error("Artifact collection not supported").build();
+        String requestBuildNumber = isNullOrEmpty(webHookRequest.getBuildNumber()) ? webHookRequest.getImageTag()
+                                                                                   : webHookRequest.getBuildNumber();
+        artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
+        if (artifact == null) {
+          // do collection and then run
+          logger.error("Artifact not found for webhook request " + webHookRequest);
+          return WebHookResponse.builder().status(ERROR.name()).error("Artifact collection not supported").build();
+        }
       }
-
+      WorkflowExecution workflowExecution = artifactStreamService.triggerStreamAction(artifact, streamAction);
+      return WebHookResponse.builder()
+          .requestId(workflowExecution.getUuid())
+          .status(workflowExecution.getStatus().name())
+          .build();
+      // Collect artifact and then execute
     } catch (Exception ex) {
       logger.error("Webhook call failed [%s]", token, ex);
       return WebHookResponse.builder().error(ex.getMessage().toLowerCase()).build();
