@@ -201,11 +201,11 @@ public class NewRelicServiceImpl implements NewRelicService {
     } else {
       String message = "";
       if (highRisk > 0) {
-        message = highRisk + " high risk transactions found. ";
+        message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
       }
 
       if (mediumRisk > 0) {
-        message = highRisk + " medium risk transactions found.";
+        message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
       }
 
       analysisRecord.setMessage(message);
