@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import org.assertj.core.util.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,15 +16,21 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.LogClusterManagerJob.LogClusterTask;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.sm.states.AbstractLogAnalysisState;
 
 import java.io.BufferedReader;
@@ -75,43 +82,45 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
       List<LogDataRecord> logDataRecords = readLogDataRecordsFromFile(file);
       Map<Integer, List<LogElement>> recordsByMinute = splitRecordsByMinute(logDataRecords);
 
-      final String stateExecutionId = "some-state-execution";
-      final String workflowId = "some-workflow";
-      final String workflowExecutionId = "some-workflow-execution";
-      final String applicationId = "some-application";
-      final String serviceId = "some-service";
+      final String stateExecutionId = logDataRecords.get(0).getStateExecutionId();
+      final String workflowId = logDataRecords.get(0).getWorkflowId();
+      final String workflowExecutionId = logDataRecords.get(0).getWorkflowExecutionId();
+      final String applicationId = logDataRecords.get(0).getApplicationId();
+      final String serviceId = logDataRecords.get(0).getServiceId();
       final String query = ".*exception.*";
 
-      WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-          + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
-          + ClusterLevel.L0.name() + "&stateExecutionId=" + stateExecutionId + "&workflowId=" + workflowId
-          + "&workflowExecutionId=" + workflowExecutionId + "&appId=" + applicationId + "&serviceId=" + serviceId);
+      StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+      stateExecutionInstance.setUuid(stateExecutionId);
+      stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+      stateExecutionInstance.setAppId(applicationId);
+      wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
-      for (Entry<Integer, List<LogElement>> entry : recordsByMinute.entrySet()) {
-        RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
-            Entity.entity(entry.getValue(), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-        Assert.assertTrue(restResponse.getResource());
+      wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
+
+      for (int logCollectionMinute : recordsByMinute.keySet()) {
+        new LogMLClusterGenerator(
+            new LogClusterContext(applicationId, workflowId, workflowExecutionId, stateExecutionId, serviceId,
+                Sets.newHashSet(Collections.singletonList(host)), Sets.newHashSet(Collections.singletonList(host)),
+                Sets.newHashSet(Collections.singletonList(query)), true, 9090, accountId, StateType.ELK.getName(),
+                LogAnalysisResource.ELK_RESOURCE_BASE_URL,
+                AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ")),
+            ClusterLevel.L0, ClusterLevel.L1,
+            new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
+                Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute))
+            .run();
       }
 
-      Thread.sleep(TimeUnit.SECONDS.toMillis(40));
-      for (int collectionMinute = 0; collectionMinute < recordsByMinute.size(); collectionMinute++) {
+      for (int logCollectionMinute : recordsByMinute.keySet()) {
+        final LogRequest logRequest = new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
+            Collections.singleton(host), logCollectionMinute);
+
         WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=true");
-        final LogRequest logRequest = new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
-            Collections.singleton(host), collectionMinute);
+            + "&clusterLevel=" + ClusterLevel.L1.name() + "&compareCurrent=true");
         RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
             Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
-        // no L0 level data should be present
-        Assert.assertEquals(0, restResponse.getResource().size());
-
-        getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L1.name() + "&compareCurrent=true");
-        restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
-            Entity.entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
         Assert.assertEquals(
-            "failed for " + host + " for minute " + collectionMinute, 15, restResponse.getResource().size());
+            "failed for " + host + " for minute " + logCollectionMinute, 15, restResponse.getResource().size());
       }
     }
   }
@@ -138,7 +147,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     return gson.fromJson(br, type);
   }
 
-  @Test
+  // TODO Disabled test. Enable when purge is revisited
   public void testPurge() throws Exception {
     final String applicationId = "some-application";
     final String serviceId = "some-service";

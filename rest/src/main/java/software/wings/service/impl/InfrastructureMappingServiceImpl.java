@@ -114,7 +114,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
     PageResponse<InfrastructureMapping> pageResponse = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
-    pageResponse.getResponse().forEach(this ::setLoadBalancerName);
+    if (pageResponse != null && pageResponse.getResponse() != null) {
+      for (InfrastructureMapping infrastructureMapping : pageResponse.getResponse()) {
+        try {
+          setLoadBalancerName(infrastructureMapping);
+        } catch (Exception e) {
+          logger.error("Failed to set load balancer for InfrastructureMapping {} ", infrastructureMapping, e);
+        }
+      }
+    }
     return pageResponse;
   }
 

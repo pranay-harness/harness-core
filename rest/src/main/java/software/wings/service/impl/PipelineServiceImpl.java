@@ -115,7 +115,13 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public PageResponse<PipelineExecution> listPipelineExecutions(PageRequest<PipelineExecution> pageRequest) {
     PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
-    pageResponse.getResponse().forEach(this ::refreshPipelineExecution);
+    for (PipelineExecution pipelineExecution : pageResponse.getResponse()) {
+      try {
+        refreshPipelineExecution(pipelineExecution);
+      } catch (Exception e) {
+        logger.error("Failed to refresh pipeline execution {} ", pipelineExecution, e);
+      }
+    }
     return pageResponse;
   }
 
@@ -178,7 +184,7 @@ public class PipelineServiceImpl implements PipelineService {
         stageExecutionDataList.add(stageExecution);
       } else {
         throw new WingsException(
-            ErrorCode.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
+            ErrorCode.INVALID_REQUEST, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
       }
       List<State> nextStates = stateMachine.getNextStates(currState.getName());
       currState = nextStates != null ? nextStates.get(0) : null;

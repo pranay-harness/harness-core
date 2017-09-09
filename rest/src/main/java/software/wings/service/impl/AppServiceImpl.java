@@ -23,6 +23,8 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -75,6 +77,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class AppServiceImpl implements AppService {
   private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
+
+  private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
@@ -181,25 +185,42 @@ public class AppServiceImpl implements AppService {
     if (overview) { // TODO: merge both overview block make service/env population part of overview option
       Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(
           response.stream().map(Application::getUuid).collect(Collectors.toList()), overviewDays);
-      response.forEach(application
-          -> application.setAppKeyStatistics(
-              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics())));
+      response.forEach(application -> {
+        application.setAppKeyStatistics(
+            applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics()));
+      });
     }
     response.getResponse().parallelStream().forEach(application -> {
-      application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
-      application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
+      try {
+        application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
+      } catch (Exception e) {
+        logger.error("Failed to fetch environments for app {} ", application, e);
+      }
+      try {
+        application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
+      } catch (Exception e) {
+        logger.error("Failed to fetch services for app {} ", application, e);
+      }
       if (overview) {
-        application.setRecentExecutions(
-            workflowExecutionService
-                .listExecutions(
-                    aPageRequest()
-                        .withLimit(Integer.toString(numberOfExecutions))
-                        .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
-                        .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-                        .build(),
-                    false)
-                .getResponse());
-        application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
+        try {
+          application.setRecentExecutions(
+              workflowExecutionService
+                  .listExecutions(
+                      aPageRequest()
+                          .withLimit(Integer.toString(numberOfExecutions))
+                          .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
+                          .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+                          .build(),
+                      false)
+                  .getResponse());
+        } catch (Exception e) {
+          logger.error("Failed to fetch recent executions for app {} ", application, e);
+        }
+        try {
+          application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
+        } catch (Exception e) {
+          logger.error("Failed to fetch notifications for app {} ", application, e);
+        }
       }
     });
     return response;

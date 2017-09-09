@@ -220,6 +220,30 @@ public class NewRelicMetricValueDefinitionTest {
         Assert.assertEquals(0.0, analysisValue.getControlValue(), 0.01);
       }
     }
+
+    // test for zero throughput
+    testRecord.setThroughput(0);
+    controlRecord.setThroughput(150);
+    for (Entry<String, List<Threshold>> valuesToAnalyze : NewRelicMetricValueDefinition.VALUES_TO_ANALYZE.entrySet()) {
+      NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
+                                                                .metricName("metric")
+                                                                .metricValueName(valuesToAnalyze.getKey())
+                                                                .thresholds(valuesToAnalyze.getValue())
+                                                                .build();
+
+      NewRelicMetricAnalysisValue analysisValue = metricValueDefinition.analyze(
+          Collections.singletonList(testRecord), Collections.singletonList(controlRecord));
+
+      if (analysisValue.getName().equals("throughput")) {
+        Assert.assertEquals(RiskLevel.HIGH, analysisValue.getRiskLevel());
+        Assert.assertEquals(testRecord.getThroughput(), analysisValue.getTestValue(), 0.01);
+        Assert.assertEquals(controlRecord.getThroughput(), analysisValue.getControlValue(), 0.01);
+      } else {
+        Assert.assertEquals(RiskLevel.LOW, analysisValue.getRiskLevel());
+        Assert.assertEquals(0.0, analysisValue.getTestValue(), 0.01);
+        Assert.assertEquals(0.0, analysisValue.getControlValue(), 0.01);
+      }
+    }
   }
 
   @Test

@@ -162,14 +162,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetTopConsumerServices() {
-    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+    long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                         .minus(0, ChronoUnit.DAYS)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                         .toInstant()
                         .toEpochMilli();
-    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+    long startEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                           .minus(29, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
+                          .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                           .toInstant()
                           .toEpochMilli();
 
@@ -267,14 +267,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetTopConsumerServicesNotCountSameHost() {
-    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+    long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                         .minus(0, ChronoUnit.DAYS)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                         .toInstant()
                         .toEpochMilli();
-    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+    long startEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                           .minus(29, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
+                          .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                           .toInstant()
                           .toEpochMilli();
 
@@ -387,14 +387,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceInstanceStatistics() {
-    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+    long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                         .minus(0, ChronoUnit.DAYS)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                         .toInstant()
                         .toEpochMilli();
-    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+    long startEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                           .minus(29, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
+                          .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                           .toInstant()
                           .toEpochMilli();
 
@@ -508,14 +508,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
   @Test
   public void shouldGetApplicationKeyStats() {
-    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+    long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                         .minus(0, ChronoUnit.DAYS)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                         .toInstant()
                         .toEpochMilli();
-    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+    long startEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                           .minus(29, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
+                          .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                           .toInstant()
                           .toEpochMilli();
 
@@ -570,9 +570,9 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetUserStats() {
-    long statusFetchedOn = LocalDate.now(ZoneId.systemDefault())
+    long statusFetchedOn = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                                .minus(0, ChronoUnit.DAYS)
-                               .atStartOfDay(ZoneId.systemDefault())
+                               .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                                .toInstant()
                                .toEpochMilli();
 
@@ -605,9 +605,9 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetUserStatsAppIds() {
-    long statusFetchedOn = LocalDate.now(ZoneId.systemDefault())
+    long statusFetchedOn = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                                .minus(0, ChronoUnit.DAYS)
-                               .atStartOfDay(ZoneId.systemDefault())
+                               .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                                .toInstant()
                                .toEpochMilli();
 
@@ -639,14 +639,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
   @Test
   public void shouldGetDeploymentStatistics() {
-    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+    long endEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                         .minus(0, ChronoUnit.DAYS)
-                        .atStartOfDay(ZoneId.systemDefault())
+                        .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                         .toInstant()
                         .toEpochMilli();
-    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+    long startEpoch = LocalDate.now(ZoneId.of("America/Los_Angeles"))
                           .minus(29, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
+                          .atStartOfDay(ZoneId.of("America/Los_Angeles"))
                           .toInstant()
                           .toEpochMilli();
 
