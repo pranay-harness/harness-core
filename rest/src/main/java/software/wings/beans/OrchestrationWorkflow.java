@@ -164,13 +164,12 @@ public abstract class OrchestrationWorkflow {
         templateVariable = templateVariable.replace("workflow.variables.", "");
       }
     }
-    Matcher matcher = ExpressionEvaluator.specialCharPattern.matcher(templateVariable);
+    Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(templateVariable);
     // check if template variable contains special character
     if (entityType != null) {
-      if (matcher.matches()) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-            "Invalid expression :" + templateExpression.getExpression()
-                + " for fieldName:" + templateExpression.getFieldName());
+      if (!matcher.matches()) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }
     } else if (entityType == null && stateType != null) {
       // TODO: Check if it can contain other expressions

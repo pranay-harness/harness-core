@@ -116,6 +116,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -957,6 +958,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
+    if (userVariables != null) {
+      userVariables.stream().forEach(variable -> ExpressionEvaluator.isValidVariableName(variable.getName()));
+    }
     Workflow workflow = readWorkflow(appId, workflowId);
     Validator.notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
