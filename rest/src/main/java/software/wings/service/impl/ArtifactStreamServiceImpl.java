@@ -368,9 +368,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     payload.put("artifactSource", streamId);
 
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      payload.put("dockerImageTag", "__OPTIONAL__IMAGE_TAG__");
+      payload.put("dockerImageTag", "${DOCKER_IMAGE_TAG}");
     } else {
-      payload.put("buildNumber", "__OPTIONAL__BUILD_NUMBER__");
+      payload.put("buildNumber", "${BUILD_NUMBER}");
     }
 
     webHookToken.setPayload(new Gson().toJson(payload));

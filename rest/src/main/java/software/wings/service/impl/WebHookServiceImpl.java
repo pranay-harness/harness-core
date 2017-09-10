@@ -55,7 +55,7 @@ public class WebHookServiceImpl implements WebHookService {
         if (artifact == null) {
           // do collection and then run
           logger.error("Artifact not found for webhook request " + webHookRequest);
-          return WebHookResponse.builder().status(ERROR.name()).error("Artifact collection not supported").build();
+          return WebHookResponse.builder().status(ERROR.name()).error("Artifact doesn't exist").build();
         }
       }
       WorkflowExecution workflowExecution = artifactStreamService.triggerStreamAction(artifact, streamAction);
