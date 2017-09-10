@@ -242,7 +242,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStreamAction.setWorkflowName(workflow.getName());
       artifactStreamAction.setEnvName(environment.getName());
     } else {
-      Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), false);
+      Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), true);
       if (pipeline.getServices().stream().noneMatch(
               service -> artifactStream.getServiceId().equals(service.getUuid()))) {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
