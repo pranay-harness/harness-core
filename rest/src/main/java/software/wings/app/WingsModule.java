@@ -121,11 +121,15 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
-import software.wings.service.impl.dashboardStats.DashboardStatisticsServiceImpl;
-import software.wings.service.impl.dashboardStats.InstanceServiceImpl;
+import software.wings.service.impl.instance.ContainerInstanceHelper;
+import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
+import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
+import software.wings.service.impl.instance.sync.EcsInstanceSyncServiceImpl;
+import software.wings.service.impl.instance.sync.InstanceSyncService;
+import software.wings.service.impl.instance.sync.KubernetesInstanceSyncServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -184,8 +188,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.dashboardStats.DashboardStatisticsService;
-import software.wings.service.intfc.dashboardStats.InstanceService;
+import software.wings.service.intfc.instance.DashboardStatisticsService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -332,5 +336,10 @@ public class WingsModule extends AbstractModule {
     bind(QuartzScheduler.class)
         .annotatedWith(Names.named("VerificationJobScheduler"))
         .to(VerificationJobScheduler.class);
+
+    bind(InstanceSyncService.class)
+        .annotatedWith(Names.named("KubernetesInstanceSync"))
+        .to(KubernetesInstanceSyncServiceImpl.class);
+    bind(InstanceSyncService.class).annotatedWith(Names.named("EcsInstanceSync")).to(EcsInstanceSyncServiceImpl.class);
   }
 }

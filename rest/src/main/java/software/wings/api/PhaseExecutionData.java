@@ -26,6 +26,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   private String infraMappingId;
   private String infraMappingName;
   private String clusterName;
+  private String containerServiceName;
   private List<String> instanceIds;
 
   private PhaseExecutionSummary phaseExecutionSummary;
@@ -118,6 +119,14 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     this.clusterName = clusterName;
   }
 
+  public String getContainerServiceName() {
+    return containerServiceName;
+  }
+
+  public void setContainerServiceName(String containerServiceName) {
+    this.containerServiceName = containerServiceName;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
@@ -165,6 +174,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     private String infraMappingName;
     private Long endTs;
     private String clusterName;
+    private String containerServiceName;
     private ExecutionStatus status;
     private List<String> instanceIds;
     private String errorMsg;
@@ -248,6 +258,11 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       return this;
     }
 
+    public PhaseExecutionDataBuilder withContainerServiceName(String containerServiceName) {
+      this.containerServiceName = containerServiceName;
+      return this;
+    }
+
     public PhaseExecutionDataBuilder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
@@ -294,6 +309,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       phaseExecutionData.setInfraMappingName(infraMappingName);
       phaseExecutionData.setEndTs(endTs);
       phaseExecutionData.setClusterName(clusterName);
+      phaseExecutionData.setContainerServiceName(containerServiceName);
       phaseExecutionData.setStatus(status);
       phaseExecutionData.setInstanceIds(instanceIds);
       phaseExecutionData.setErrorMsg(errorMsg);
