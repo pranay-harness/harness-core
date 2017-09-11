@@ -25,7 +25,7 @@ public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String childStateMachineId;
   private String stateName;
-  private String stateType;
+  @Indexed private String stateType;
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;

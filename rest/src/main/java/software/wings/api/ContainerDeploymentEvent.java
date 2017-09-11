@@ -1,6 +1,9 @@
 package software.wings.api;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.core.queue.Queuable;
 
@@ -8,48 +11,25 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This is a wrapper class of Instance to make it extend queuable.
+ * This is a wrapper class of ContainerDeploymentInfo to make it extend queuable.
  * This is used as request for capturing instance information.
  * @author rktummala on 08/24/17
  *
  */
-@Entity(value = "instanceChangeQueue", noClassnameStored = true)
-public class InstanceChangeEvent extends Queuable {
-  private List<Instance> instanceList;
+@Entity(value = "containerDeploymentQueue", noClassnameStored = true)
+public class ContainerDeploymentEvent extends Queuable {
+  private ContainerDeploymentInfo containerDeploymentInfo;
 
-  public List<Instance> getInstanceList() {
-    return instanceList;
+  public ContainerDeploymentInfo getContainerDeploymentInfo() {
+    return containerDeploymentInfo;
   }
 
-  public void setInstanceList(List<Instance> instanceList) {
-    this.instanceList = instanceList;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-
-    InstanceChangeEvent that = (InstanceChangeEvent) o;
-
-    return instanceList != null ? instanceList.equals(that.instanceList) : that.instanceList == null;
-  }
-
-  @Override
-  public int hashCode() {
-    return instanceList != null ? instanceList.hashCode() : 0;
-  }
-
-  @Override
-  public String toString() {
-    return "InstanceUpdateEvent{"
-        + "instanceList=" + instanceList + '}';
+  public void setContainerDeploymentInfo(ContainerDeploymentInfo containerDeploymentInfo) {
+    this.containerDeploymentInfo = containerDeploymentInfo;
   }
 
   public static final class Builder {
-    private List<Instance> instanceList;
+    private ContainerDeploymentInfo containerDeploymentInfo;
     private String id;
     private boolean running = false;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
@@ -60,12 +40,12 @@ public class InstanceChangeEvent extends Queuable {
 
     private Builder() {}
 
-    public static Builder anInstanceChangeEvent() {
+    public static Builder aContainerDeploymentEvent() {
       return new Builder();
     }
 
-    public Builder withInstanceList(List<Instance> instanceList) {
-      this.instanceList = instanceList;
+    public Builder withContainerDeploymentInfo(ContainerDeploymentInfo containerDeploymentInfo) {
+      this.containerDeploymentInfo = containerDeploymentInfo;
       return this;
     }
 
@@ -105,8 +85,8 @@ public class InstanceChangeEvent extends Queuable {
     }
 
     public Builder but() {
-      return anInstanceChangeEvent()
-          .withInstanceList(instanceList)
+      return aContainerDeploymentEvent()
+          .withContainerDeploymentInfo(containerDeploymentInfo)
           .withId(id)
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
@@ -116,17 +96,17 @@ public class InstanceChangeEvent extends Queuable {
           .withRetries(retries);
     }
 
-    public InstanceChangeEvent build() {
-      InstanceChangeEvent instanceUpdateEvent = new InstanceChangeEvent();
-      instanceUpdateEvent.setInstanceList(instanceList);
-      instanceUpdateEvent.setId(id);
-      instanceUpdateEvent.setRunning(running);
-      instanceUpdateEvent.setResetTimestamp(resetTimestamp);
-      instanceUpdateEvent.setEarliestGet(earliestGet);
-      instanceUpdateEvent.setPriority(priority);
-      instanceUpdateEvent.setCreated(created);
-      instanceUpdateEvent.setRetries(retries);
-      return instanceUpdateEvent;
+    public ContainerDeploymentEvent build() {
+      ContainerDeploymentEvent containerDeploymentEvent = new ContainerDeploymentEvent();
+      containerDeploymentEvent.setContainerDeploymentInfo(containerDeploymentInfo);
+      containerDeploymentEvent.setId(id);
+      containerDeploymentEvent.setRunning(running);
+      containerDeploymentEvent.setResetTimestamp(resetTimestamp);
+      containerDeploymentEvent.setEarliestGet(earliestGet);
+      containerDeploymentEvent.setPriority(priority);
+      containerDeploymentEvent.setCreated(created);
+      containerDeploymentEvent.setRetries(retries);
+      return containerDeploymentEvent;
     }
   }
 }

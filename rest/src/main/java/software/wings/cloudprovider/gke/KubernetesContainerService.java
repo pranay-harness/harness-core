@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -10,6 +11,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 2/10/17.
@@ -33,6 +35,7 @@ public interface KubernetesContainerService {
    */
   ReplicationController getController(KubernetesConfig kubernetesConfig, String name);
 
+  ReplicationControllerList getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
   /**
    * Lists replication controllers.
    *
@@ -89,6 +92,8 @@ public interface KubernetesContainerService {
    */
   Service getService(KubernetesConfig kubernetesConfig, String name);
 
+  ServiceList getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels);
+
   /**
    * Lists services.
    *
@@ -122,4 +127,6 @@ public interface KubernetesContainerService {
    * @return the secret
    */
   Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret);
+
+  PodList getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 }
