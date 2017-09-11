@@ -183,6 +183,13 @@ public class NewRelicServiceImpl implements NewRelicService {
       return null;
     }
 
+    if (analysisRecord.getMetricAnalyses() == null) {
+      return NewRelicMetricAnalysisRecord.builder()
+          .message(
+              "Could not get metric data from new relic. Please make sure that the new relic account is a paid account and metrics can be pulled using rest API")
+          .build();
+    }
+
     int highRisk = 0;
     int mediumRisk = 0;
     for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
