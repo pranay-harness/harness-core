@@ -61,6 +61,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.VerificationJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
+import software.wings.service.YamlDirectoryServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
@@ -187,6 +188,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.YamlDirectoryService;
 import software.wings.service.intfc.YamlHistoryService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -306,6 +308,7 @@ public class WingsModule extends AbstractModule {
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(WebHookService.class).to(WebHookServiceImpl.class);
     bind(YamlHistoryService.class).to(YamlHistoryServiceImpl.class);
+    bind(YamlDirectoryService.class).to(YamlDirectoryServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
