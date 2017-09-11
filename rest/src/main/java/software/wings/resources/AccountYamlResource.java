@@ -13,6 +13,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlHelper;
@@ -55,6 +56,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(SETTING)
 public class AccountYamlResource {
   private SettingsService settingsService;
+  private YamlHistoryService yamlHistoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -66,8 +68,9 @@ public class AccountYamlResource {
    * @param settingsService        the settings service
    */
   @Inject
-  public AccountYamlResource(SettingsService settingsService) {
+  public AccountYamlResource(SettingsService settingsService, YamlHistoryService yamlHistoryService) {
     this.settingsService = settingsService;
+    this.yamlHistoryService = yamlHistoryService;
   }
 
   // TODO - not 100% sure we need this endpoint - but it fills a logical role
@@ -236,6 +239,8 @@ public class AccountYamlResource {
   @ExceptionMetered
   public RestResponse<SetupYaml> update(@PathParam("accountId") String accountId, @QueryParam("type") String type,
       YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    // TODO - needs implementation
+
     /*
     String afterYaml = yamlPayload.getYaml();
 
