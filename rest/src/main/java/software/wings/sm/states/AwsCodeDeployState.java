@@ -79,6 +79,15 @@ public class AwsCodeDeployState extends State {
   @Attributes(title = "Key", required = true) private String key;
   @Attributes(title = "Bundle Type", required = true) private String bundleType;
 
+  @Attributes(title = "Ignore Application Stop Failures") private boolean ignoreApplicationStopFailures;
+  private boolean enableAutoRollback;
+  @Attributes(title = "Auto Rollback Configuration",
+      enums = {"DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM", "DEPLOYMENT_STOP_ON_REQUEST"})
+  private List<String> autoRollbackConfigurations;
+
+  @Attributes(title = "File Exists Behavior", required = true, enums = {"DISALLOW", "OVERWRITE", "RETAIN"})
+  private String fileExistsBehavior;
+
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Amazon Code Deploy")
@@ -343,5 +352,37 @@ public class AwsCodeDeployState extends State {
 
   public void setBundleType(String bundleType) {
     this.bundleType = bundleType;
+  }
+
+  public boolean isIgnoreApplicationStopFailures() {
+    return ignoreApplicationStopFailures;
+  }
+
+  public void setIgnoreApplicationStopFailures(boolean ignoreApplicationStopFailures) {
+    this.ignoreApplicationStopFailures = ignoreApplicationStopFailures;
+  }
+
+  public String getFileExistsBehavior() {
+    return fileExistsBehavior;
+  }
+
+  public void setFileExistsBehavior(String fileExistsBehavior) {
+    this.fileExistsBehavior = fileExistsBehavior;
+  }
+
+  public boolean isEnableAutoRollback() {
+    return enableAutoRollback;
+  }
+
+  public void setEnableAutoRollback(boolean enableAutoRollback) {
+    this.enableAutoRollback = enableAutoRollback;
+  }
+
+  public List<String> getAutoRollbackConfigurations() {
+    return autoRollbackConfigurations;
+  }
+
+  public void setAutoRollbackConfigurations(List<String> autoRollbackConfigurations) {
+    this.autoRollbackConfigurations = autoRollbackConfigurations;
   }
 }

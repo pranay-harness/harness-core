@@ -69,6 +69,23 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
               revision.getS3Location().getKey()),
           LogLevel.INFO);
 
+      /*
+        create-deployment
+                                    [--application-name <value>]
+                                    [--deployment-group-name <value>]
+                                    [--revision <value>]
+                                    [--deployment-config-name <value>]
+                                    [--description <value>]**
+[--ignore-application-stop-failures | --no-ignore-application-stop-failures]
+                                    [--target-instances <value>]**
+[--auto-rollback-configuration <value>]
+[--update-outdated-instances-only | --no-update-outdated-instances-only]
+[--file-exists-behavior <value>]
+                                    [--s3-location <value>]**
+[--github-location <value>]
+
+       */
+
       CreateDeploymentRequest createDeploymentRequest = new CreateDeploymentRequest()
                                                             .withApplicationName(applicationName)
                                                             .withDeploymentGroupName(deploymentGroupName)
