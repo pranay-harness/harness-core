@@ -23,12 +23,12 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Created by sgurubelli on 6/27/17.
@@ -154,14 +154,14 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       String aclQuery = "api/search/aql";
       String requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"depth\": 1})";
       if (!StringUtils.isBlank(artifactPath)) {
-        artifactPath = artifactPath + "*";
-        if (artifactPath.contains("/")) {
-          int index = artifactPath.lastIndexOf('/');
-          String subPath = artifactPath.substring(0, index);
-          String name = artifactPath.substring(index + 1);
-          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"path\": \"" + subPath
-              + "\"}, {\"name\": {\"$match\": \"" + name + "\"}})";
+        if (artifactPath.startsWith("/")) {
+          String subPath = artifactPath.substring(1, artifactPath.length());
+          // String name = artifactPath.substring(index + 1);
+          // requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"path\": \"" + subPath + "\"}, {\"name\":
+          // {\"$match\": \"" + name + "\"}})";  items.find({"repo":"harness-rpm"},{"path": {"$match\" \":" +  subPath}})
+          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"path\": {\"$match\":\"" + subPath + "\"}})";
         } else {
+          artifactPath = artifactPath + "*";
           requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"depth\": 1}, {\"name\": {\"$match\": \""
               + artifactPath + "\"}})";
         }
@@ -355,7 +355,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   public static void main(String... args) {
-    String url = "https://artifactory.harness.io/artifactory";
+    String url = "https://harness.jfrog.io/harness";
     // url = "https://127.0.0.1:8000/";
 
     ArtifactoryServiceImpl artifactoryService = new ArtifactoryServiceImpl();
@@ -393,24 +393,24 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     // artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "", ArtifactType.RPM, 50);
 
-    /*List<BuildDetails> buildDetails =  artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null,
-     "todolist*", ArtifactType.RPM, 50);
+    List<BuildDetails> buildDetails =
+        artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "/tod?list*", ArtifactType.RPM, 50);
+    // buildDetails =  artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", null, "/todolist*",
+    // ArtifactType.RPM, 50);
 
-     Comparator<BuildDetails> byFirst = Comparator.comparing(buildDetails1 -> buildDetails1.getNumber(),
-     Comparator.reverseOrder()); List<BuildDetails> sortedList = buildDetails.stream()
-         .sorted(byFirst).collect(toList());
-     sortedList.forEach(buildDetails1 ->
-     System.out.println("Build" +  buildDetails1.getNumber()));
-     System.out.println("Comparison: " + "10".compareTo("1"));*/
+    Comparator<BuildDetails> byFirst =
+        Comparator.comparing(buildDetails1 -> buildDetails1.getNumber(), Comparator.reverseOrder());
+    List<BuildDetails> sortedList = buildDetails.stream().sorted(byFirst).collect(toList());
+    sortedList.forEach(buildDetails1 -> System.out.println("Artifact Path:" + buildDetails1.getNumber()));
 
-    String artifactPathRegex = "a?todolist*";
-    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    /* String artifactPathRegex = "a?todolist*";
+     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
-    String path = "abtodolist";
-    if (pattern.matcher(path).matches()) {
-      System.out.println("path = " + path);
-    } else {
-      System.out.println("Pattern not found");
-    }
+     String path = "abtodolist";
+     if (pattern.matcher(path).matches()) {
+       System.out.println("path = " + path);
+     } else {
+       System.out.println("Pattern not found");
+     }*/
   }
 }
