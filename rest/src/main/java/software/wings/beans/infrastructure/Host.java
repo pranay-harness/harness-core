@@ -1,9 +1,9 @@
 package software.wings.beans.infrastructure;
 
-import com.google.common.base.MoreObjects;
-
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -13,7 +13,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -23,6 +22,8 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(fields = { @Field("serviceTemplateId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class Host extends Base {
   @NotEmpty private String envId;
   private String serviceTemplateId;
@@ -35,78 +36,6 @@ public class Host extends Base {
 
   private Instance ec2Instance;
 
-  /**
-   * Gets env id.
-   *
-   * @return the env id
-   */
-  public String getEnvId() {
-    return envId;
-  }
-
-  /**
-   * Sets env id.
-   *
-   * @param envId the env id
-   */
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
-  /**
-   * Gets infra mapping id.
-   *
-   * @return the infra mapping id
-   */
-  public String getInfraMappingId() {
-    return infraMappingId;
-  }
-
-  /**
-   * Sets infra mapping id.
-   *
-   * @param infraMappingId the infra mapping id
-   */
-  public void setInfraMappingId(String infraMappingId) {
-    this.infraMappingId = infraMappingId;
-  }
-
-  /**
-   * Gets compute provider id.
-   *
-   * @return the compute provider id
-   */
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  /**
-   * Sets compute provider id.
-   *
-   * @param computeProviderId the compute provider id
-   */
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
-
-  /**
-   * Gets host name.
-   *
-   * @return the host name
-   */
-  public String getHostName() {
-    return hostName;
-  }
-
-  /**
-   * Sets host name.
-   *
-   * @param hostName the host name
-   */
-  public void setHostName(String hostName) {
-    this.hostName = hostName;
-  }
-
   public String getPublicDns() {
     if (publicDns == null) {
       return hostName;
@@ -116,108 +45,6 @@ public class Host extends Base {
 
   public void setPublicDns(String publicDns) {
     this.publicDns = publicDns;
-  }
-
-  /**
-   * Gets host conn attr.
-   *
-   * @return the host conn attr
-   */
-  public String getHostConnAttr() {
-    return hostConnAttr;
-  }
-
-  /**
-   * Sets host conn attr.
-   *
-   * @param hostConnAttr the host conn attr
-   */
-  public void setHostConnAttr(String hostConnAttr) {
-    this.hostConnAttr = hostConnAttr;
-  }
-
-  /**
-   * Gets bastion conn attr.
-   *
-   * @return the bastion conn attr
-   */
-  public String getBastionConnAttr() {
-    return bastionConnAttr;
-  }
-
-  /**
-   * Sets bastion conn attr.
-   *
-   * @param bastionConnAttr the bastion conn attr
-   */
-  public void setBastionConnAttr(String bastionConnAttr) {
-    this.bastionConnAttr = bastionConnAttr;
-  }
-
-  /**
-   * Gets service template id.
-   *
-   * @return the service template id
-   */
-  public String getServiceTemplateId() {
-    return serviceTemplateId;
-  }
-
-  /**
-   * Sets service template id.
-   *
-   * @param serviceTemplateId the service template id
-   */
-  public void setServiceTemplateId(String serviceTemplateId) {
-    this.serviceTemplateId = serviceTemplateId;
-  }
-
-  public Instance getEc2Instance() {
-    return ec2Instance;
-  }
-
-  public void setEc2Instance(Instance ec2Instance) {
-    this.ec2Instance = ec2Instance;
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(
-              envId, serviceTemplateId, infraMappingId, computeProviderId, hostName, hostConnAttr, bastionConnAttr);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Host other = (Host) obj;
-    return Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
-        && Objects.equals(this.infraMappingId, other.infraMappingId)
-        && Objects.equals(this.computeProviderId, other.computeProviderId)
-        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
-        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("envId", envId)
-        .add("serviceTemplateId", serviceTemplateId)
-        .add("infraMappingId", infraMappingId)
-        .add("computeProviderId", computeProviderId)
-        .add("hostName", hostName)
-        .add("publicDns", publicDns)
-        .add("hostConnAttr", hostConnAttr)
-        .add("bastionConnAttr", bastionConnAttr)
-        .toString();
   }
 
   /**
