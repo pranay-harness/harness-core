@@ -23,10 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -35,16 +32,13 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 
-public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
+public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(ElkLogzDataCollectionTask.class);
-  private static final int RETRIES = 3;
-  private final Object lockObject = new Object();
-  private final AtomicBoolean completed = new AtomicBoolean(false);
-  private ScheduledExecutorService collectionService;
 
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private LogzDelegateService logzDelegateService;
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
+  private LogDataCollectionInfo dataCollectionInfo;
 
   public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
@@ -52,46 +46,28 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<Data
   }
 
   @Override
-  public DataCollectionTaskResult run(Object[] parameters) {
-    final LogDataCollectionInfo dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult beginDataCollection(Object[] parameters) {
+    this.dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
-    DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
-                                              .status(DataCollectionTaskStatus.SUCCESS)
-                                              .stateType(dataCollectionInfo.getStateType())
-                                              .build();
-    collectionService = scheduleMetricDataCollection(dataCollectionInfo, taskResult);
-    logger.info("going to collect data for " + dataCollectionInfo);
-
-    synchronized (lockObject) {
-      while (!completed.get()) {
-        try {
-          lockObject.wait();
-        } catch (InterruptedException e) {
-          completed.set(true);
-          logger.info("ELK/LOGZ data collection interrupted");
-        }
-      }
-    }
-    return taskResult;
+    return DataCollectionTaskResult.builder()
+        .status(DataCollectionTaskStatus.SUCCESS)
+        .stateType(dataCollectionInfo.getStateType())
+        .build();
   }
 
-  private ScheduledExecutorService scheduleMetricDataCollection(
-      LogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
-    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(new ElkDataCollector(getTaskId(), dataCollectionInfo, taskResult),
-        SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
-    return scheduledExecutorService;
+  @Override
+  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
+    return new ElkDataCollector(getTaskId(), dataCollectionInfo, taskResult);
   }
 
-  private void shutDownCollection() {
-    /* Redundant now, but useful if calling shutDownCollection
-     * from the worker threads before the job is aborted
-     */
-    completed.set(true);
-    collectionService.shutdownNow();
-    synchronized (lockObject) {
-      lockObject.notifyAll();
-    }
+  @Override
+  protected Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  protected StateType getStateType() {
+    return dataCollectionInfo.getStateType();
   }
 
   private class ElkDataCollector implements Runnable {
@@ -126,36 +102,34 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateRunnableTask<Data
                 String timestampFieldFormat;
                 switch (dataCollectionInfo.getStateType()) {
                   case ELK:
+                    final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
                     final ElkLogFetchRequest elkFetchRequest =
-                        new ElkLogFetchRequest(query, ((ElkDataCollectionInfo) dataCollectionInfo).getIndices(),
-                            ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField(),
-                            ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField(),
+                        new ElkLogFetchRequest(query, elkDataCollectionInfo.getIndices(),
+                            elkDataCollectionInfo.getHostnameField(), elkDataCollectionInfo.getMessageField(),
                             ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampField(),
                             Collections.singleton(hostName), collectionStartTime,
                             collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                     logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse = elkDelegateService.search(
-                        ((ElkDataCollectionInfo) dataCollectionInfo).getElkConfig(), elkFetchRequest);
-                    hostnameField = ((ElkDataCollectionInfo) dataCollectionInfo).getHostnameField();
-                    messageField = ((ElkDataCollectionInfo) dataCollectionInfo).getMessageField();
-                    timestampField = ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampField();
-                    timestampFieldFormat = ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampFieldFormat();
+                    searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(), elkFetchRequest);
+                    hostnameField = elkDataCollectionInfo.getHostnameField();
+                    messageField = elkDataCollectionInfo.getMessageField();
+                    timestampField = elkDataCollectionInfo.getTimestampField();
+                    timestampFieldFormat = elkDataCollectionInfo.getTimestampFieldFormat();
                     break;
                   case LOGZ:
+                    final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
                     final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query, "",
-                        ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField(),
-                        ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField(),
-                        ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField(),
-                        Collections.singleton(hostName), collectionStartTime,
-                        collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                        logzDataCollectionInfo.getHostnameField(), logzDataCollectionInfo.getMessageField(),
+                        logzDataCollectionInfo.getTimestampField(), Collections.singleton(hostName),
+                        collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                     logger.info(
                         "running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse = logzDelegateService.search(
-                        ((LogzDataCollectionInfo) dataCollectionInfo).getLogzConfig(), logzFetchRequest);
-                    hostnameField = ((LogzDataCollectionInfo) dataCollectionInfo).getHostnameField();
-                    messageField = ((LogzDataCollectionInfo) dataCollectionInfo).getMessageField();
-                    timestampField = ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampField();
-                    timestampFieldFormat = ((LogzDataCollectionInfo) dataCollectionInfo).getTimestampFieldFormat();
+                    searchResponse =
+                        logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(), logzFetchRequest);
+                    hostnameField = logzDataCollectionInfo.getHostnameField();
+                    messageField = logzDataCollectionInfo.getMessageField();
+                    timestampField = logzDataCollectionInfo.getTimestampField();
+                    timestampFieldFormat = logzDataCollectionInfo.getTimestampFieldFormat();
                     break;
                   default:
                     throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);

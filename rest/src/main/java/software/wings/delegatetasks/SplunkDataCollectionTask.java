@@ -25,10 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -36,14 +33,13 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
+public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
   public static final int DELAY_MINUTES = 2;
-  private static final int RETRIES = 3;
+
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
-  private final Object lockObject = new Object();
-  private final AtomicBoolean completed = new AtomicBoolean(false);
-  private ScheduledExecutorService collectionService;
+  private Service splunkService;
+  private SplunkDataCollectionInfo dataCollectionInfo;
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
@@ -52,84 +48,58 @@ public class SplunkDataCollectionTask extends AbstractDelegateRunnableTask<DataC
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
-  @Override
-  public DataCollectionTaskResult run(Object[] parameters) {
+  protected DataCollectionTaskResult beginDataCollection(Object[] parameters) {
     DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
                                               .status(DataCollectionTaskStatus.SUCCESS)
                                               .stateType(StateType.SPLUNKV2)
                                               .build();
+    this.dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
+    logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
+
+    final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
+    final ServiceArgs loginArgs = new ServiceArgs();
+    loginArgs.setUsername(splunkConfig.getUsername());
+    loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
+
+    URI uri;
     try {
-      final SplunkDataCollectionInfo dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
-      logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
-
-      final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
-      final ServiceArgs loginArgs = new ServiceArgs();
-      loginArgs.setUsername(splunkConfig.getUsername());
-      loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
-
-      URI uri;
-      try {
-        uri = new URI(splunkConfig.getSplunkUrl().trim());
-      } catch (Exception ex) {
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("Invalid server URL " + splunkConfig.getSplunkUrl());
-        return taskResult;
-      }
-
-      loginArgs.setHost(uri.getHost());
-      loginArgs.setPort(uri.getPort());
-
-      if (uri.getScheme().equals("https")) {
-        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-      }
-
-      Service splunkService;
-      try {
-        splunkService = Service.connect(loginArgs);
-      } catch (Exception ex) {
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage("Unable to connect to server : " + ex.getMessage());
-        return taskResult;
-      }
-
-      collectionService = scheduleMetricDataCollection(dataCollectionInfo, splunkService, taskResult);
-      logger.info("going to collect splunk data for " + dataCollectionInfo);
-
-      synchronized (lockObject) {
-        try {
-          lockObject.wait();
-        } catch (InterruptedException e) {
-          completed.set(true);
-          logger.info("Splunk data collection interrupted");
-        }
-      }
-      return taskResult;
-    } catch (Exception e) {
+      uri = new URI(splunkConfig.getSplunkUrl().trim());
+    } catch (Exception ex) {
       taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-      taskResult.setErrorMessage(e.getMessage());
+      taskResult.setErrorMessage("Invalid server URL " + splunkConfig.getSplunkUrl());
+      return taskResult;
     }
 
+    loginArgs.setHost(uri.getHost());
+    loginArgs.setPort(uri.getPort());
+
+    if (uri.getScheme().equals("https")) {
+      HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+    }
+
+    try {
+      splunkService = Service.connect(loginArgs);
+    } catch (Exception ex) {
+      taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+      taskResult.setErrorMessage("Unable to connect to server : " + ex.getMessage());
+      return taskResult;
+    }
     return taskResult;
   }
 
-  private void shutDownCollection() {
-    /* Redundant now, but useful if calling shutDownCollection
-     * from the worker threads before the job is aborted
-     */
-    completed.set(true);
-    collectionService.shutdownNow();
-    synchronized (lockObject) {
-      lockObject.notifyAll();
-    }
+  @Override
+  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
+    return new SplunkDataCollector(getTaskId(), dataCollectionInfo, splunkService, logAnalysisStoreService, taskResult);
   }
 
-  private ScheduledExecutorService scheduleMetricDataCollection(
-      SplunkDataCollectionInfo dataCollectionInfo, Service splunkService, DataCollectionTaskResult taskResult) {
-    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(
-        new SplunkDataCollector(getTaskId(), dataCollectionInfo, splunkService, logAnalysisStoreService, taskResult),
-        DELAY_MINUTES, 1, TimeUnit.MINUTES);
-    return scheduledExecutorService;
+  @Override
+  protected Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  protected StateType getStateType() {
+    return StateType.SPLUNKV2;
   }
 
   private class SplunkDataCollector implements Runnable {
