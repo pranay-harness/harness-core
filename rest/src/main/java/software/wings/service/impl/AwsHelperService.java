@@ -89,16 +89,12 @@ import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
-import com.amazonaws.services.ecs.model.DescribeTaskDefinitionRequest;
-import com.amazonaws.services.ecs.model.DescribeTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionsRequest;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionsResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
@@ -729,18 +725,6 @@ public class AwsHelperService {
     }
     return new ListTasksResult();
   }
-
-  public ListTaskDefinitionsResult listTaskDefinitions(
-      String region, AwsConfig awsConfig, ListTaskDefinitionsRequest listTaskDefinitionsRequest) {
-    try {
-      return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-          .listTaskDefinitions(listTaskDefinitionsRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new ListTaskDefinitionsResult();
-  }
-
   public DescribeTasksResult describeTasks(
       String region, AwsConfig awsConfig, DescribeTasksRequest describeTasksRequest) {
     try {
@@ -751,18 +735,6 @@ public class AwsHelperService {
     }
     return new DescribeTasksResult();
   }
-
-  public DescribeTaskDefinitionResult describeTaskDefinitions(
-      String region, AwsConfig awsConfig, DescribeTaskDefinitionRequest describeTaskDefinitionRequest) {
-    try {
-      return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-          .describeTaskDefinition(describeTaskDefinitionRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new DescribeTaskDefinitionResult();
-  }
-
   public DescribeContainerInstancesResult describeContainerInstances(
       String region, AwsConfig awsConfig, DescribeContainerInstancesRequest describeContainerInstancesRequest) {
     try {

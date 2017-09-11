@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -57,14 +56,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return name != null
         ? kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get()
         : null;
-  }
-
-  @Override
-  public ReplicationControllerList getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-        .replicationControllers()
-        .withLabels(labels)
-        .list();
   }
 
   @Override
@@ -182,11 +173,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ServiceList getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withLabels(labels).list();
-  }
-
-  @Override
   public ServiceList listServices(KubernetesConfig kubernetesConfig) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().list();
   }
@@ -205,11 +191,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).secrets().createOrReplace(secret);
-  }
-
-  @Override
-  public PodList getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list();
   }
 
   private List<Pod> waitForPodsToBeRunning(

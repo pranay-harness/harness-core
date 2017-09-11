@@ -1,15 +1,15 @@
 package software.wings.api;
 
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.Instance;
 import software.wings.core.queue.Queuable;
 
 import java.util.Date;
 import java.util.List;
 
 /**
- * This is a wrapper class of Instance to make it extend queuable.
- * This is used as request for capturing instance information.
+ * This is a wrapper class of ExecutionContext to make it extend queuable.
+ * This is used as input for capturing instance information.
  * @author rktummala on 08/24/17
  *
  */
