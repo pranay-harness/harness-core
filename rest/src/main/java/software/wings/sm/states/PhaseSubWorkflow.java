@@ -5,7 +5,6 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
@@ -28,10 +27,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.SpawningExecutionResponse;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
@@ -118,19 +115,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             .build();
     if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
       phaseExecutionData.setClusterName(((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
-
-      StateExecutionData stateExecutionData = context.getStateExecutionData();
-      if (stateExecutionData != null) {
-        ContextElement element = stateExecutionData.getElement();
-        if (element != null) {
-          if (ContextElementType.CONTAINER_SERVICE.name().equals(element.getElementType())) {
-            ContainerServiceElement containerElement = (ContainerServiceElement) element;
-            phaseExecutionData.setContainerServiceName(containerElement.getName());
-          }
-        }
-      }
     }
-
     response.setStateExecutionData(phaseExecutionData);
     return response;
   }

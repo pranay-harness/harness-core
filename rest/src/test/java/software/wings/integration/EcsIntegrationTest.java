@@ -19,24 +19,15 @@ import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
-import com.amazonaws.services.ecs.model.DescribeServicesResult;
-import com.amazonaws.services.ecs.model.DescribeTaskDefinitionRequest;
-import com.amazonaws.services.ecs.model.DescribeTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
-import com.amazonaws.services.ecs.model.ListServicesResult;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionFamiliesRequest;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionFamiliesResult;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionsRequest;
-import com.amazonaws.services.ecs.model.ListTaskDefinitionsResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -228,37 +219,5 @@ public class EcsIntegrationTest {
     List<Service> test2 =
         amazonECSClient.describeServices(new DescribeServicesRequest().withCluster("test2").withServices(serviceArns))
             .getServices();
-
-    ListTaskDefinitionsResult listTaskDefinitionsResult = amazonECSClient.listTaskDefinitions(
-        new ListTaskDefinitionsRequest().withFamilyPrefix("Abaris__dockerFromECR__Development"));
-    System.out.println(listTaskDefinitionsResult);
-
-    DescribeTaskDefinitionResult describeTaskDefinitionResult =
-        amazonECSClient.describeTaskDefinition(new DescribeTaskDefinitionRequest().withTaskDefinition(
-            listTaskDefinitionsResult.getTaskDefinitionArns().get(0)));
-    System.out.println(describeTaskDefinitionResult);
-
-    ListTasksRequest listTasksRequest = new ListTasksRequest()
-                                            .withCluster("test2")
-                                            .withServiceName("Abaris__dockerFromECR__Development__16")
-                                            .withMaxResults(100)
-                                            .withDesiredStatus("RUNNING");
-    ListTasksResult listTasksResult = amazonECSClient.listTasks(listTasksRequest);
-
-    DescribeTasksRequest describeTasksRequest =
-        new DescribeTasksRequest().withCluster("test2").withTasks(listTasksResult.getTaskArns());
-    DescribeTasksResult describeTasksResult = amazonECSClient.describeTasks(describeTasksRequest);
-    List<Task> tasks = describeTasksResult.getTasks();
-    System.out.println(tasks);
-
-    ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster("test2");
-    ListServicesResult listServicesResult = amazonECSClient.listServices(listServicesRequest);
-    DescribeServicesRequest describeServicesRequest =
-        new DescribeServicesRequest().withCluster("test2").withServices(listServicesResult.getServiceArns());
-    DescribeServicesResult describeServicesResult = amazonECSClient.describeServices(describeServicesRequest);
-    List<Service> services = describeServicesResult.getServices();
-    System.out.println(services);
   }
-
-  // ecs-svc/9223370531960017834
 }

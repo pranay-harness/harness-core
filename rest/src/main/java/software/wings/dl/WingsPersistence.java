@@ -316,22 +316,7 @@ public interface WingsPersistence {
    * @return
    * @throws Exception if the authorization fails for any reason
    */
-  Query createAuthorizedQuery(Class collectionClass);
-
-  /**
-   * Creates a query and runs the authFilter to it.
-   * This api is preferred over createQuery() api.
-   * This overloaded api is used in the case where the validation needs to be disabled.
-   * This is needed for the following case:
-   * 1) If the query looks up a field which is part of an embedded object,
-   * but that embedded object is a base class and if we are referring to a field from the derived class, validation
-   * fails right now. This is a stop gap solution until that is fixed.
-   * @param collectionClass
-   * @param disableValidation
-   * @return
-   * @throws Exception if the authorization fails for any reason
-   */
-  Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);
+  Query createAuthorizedQuery(Class collectionClass) throws Exception;
 
   /**
    * Only to be used in testing encryption.
