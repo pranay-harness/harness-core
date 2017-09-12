@@ -74,6 +74,7 @@ import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
+import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -90,6 +91,7 @@ import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
+import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
@@ -147,6 +149,7 @@ public class DelegateModule extends AbstractModule {
     bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
     bind(ElkDelegateService.class).to(ElkDelegateServiceImpl.class);
     bind(LogzDelegateService.class).to(LogzDelegateServiceImpl.class);
+    bind(SumoDelegateService.class).to(SumoDelegateServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
