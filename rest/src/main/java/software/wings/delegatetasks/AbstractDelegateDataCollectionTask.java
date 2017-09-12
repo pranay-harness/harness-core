@@ -59,7 +59,7 @@ public abstract class AbstractDelegateDataCollectionTask
 
   public DataCollectionTaskResult run(Object[] parameters) {
     try {
-      DataCollectionTaskResult taskResult = beginDataCollection(parameters);
+      DataCollectionTaskResult taskResult = initDataCollection(parameters);
       if (taskResult.getStatus() == DataCollectionTaskStatus.FAILURE) {
         return taskResult;
       }
@@ -79,7 +79,7 @@ public abstract class AbstractDelegateDataCollectionTask
 
   protected abstract StateType getStateType();
 
-  protected abstract DataCollectionTaskResult beginDataCollection(Object[] parameters);
+  protected abstract DataCollectionTaskResult initDataCollection(Object[] parameters);
 
   protected abstract Logger getLogger();
 

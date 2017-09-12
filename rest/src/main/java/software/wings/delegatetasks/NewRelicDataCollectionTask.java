@@ -57,7 +57,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   }
 
   @Override
-  protected DataCollectionTaskResult beginDataCollection(Object[] parameters) {
+  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
     logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
     return DataCollectionTaskResult.builder()

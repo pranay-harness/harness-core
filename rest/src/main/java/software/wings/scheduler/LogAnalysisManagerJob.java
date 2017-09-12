@@ -152,7 +152,7 @@ public class LogAnalysisManagerJob implements Job {
 
             if (hasRecords) {
               preProcess(logAnalysisMinute, context.getQueries().iterator().next());
-              new LogMLAnalysisGenerator(wingsPersistence, context, logAnalysisMinute, analysisService, null).run();
+              new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService).run();
             }
             analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
                 context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
