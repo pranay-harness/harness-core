@@ -53,7 +53,7 @@ public class LogMLClusterGenerator implements Runnable {
           + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
       String clusteredLogSaveUrl = this.serverUrl + "/api/" + context.getStateBaseUrl()
           + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + context.getAccountId()
-          + "&stateExecutionId=" + context.getStateExecutionInstanceId() + "&workflowId=" + context.getWorkflowId()
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&workflowId=" + context.getWorkflowId()
           + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&serviceId=" + context.getServiceId()
           + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name();
 
@@ -66,7 +66,7 @@ public class LogMLClusterGenerator implements Runnable {
       command.add("--auth_token=" + context.getAuthToken());
       command.add("--application_id=" + context.getAppId());
       command.add("--workflow_id=" + context.getWorkflowId());
-      command.add("--state_execution_id=" + context.getStateExecutionInstanceId());
+      command.add("--state_execution_id=" + context.getStateExecutionId());
       command.add("--service_id=" + context.getServiceId());
       command.add("--nodes");
       command.addAll(logRequest.getNodes());
@@ -81,8 +81,7 @@ public class LogMLClusterGenerator implements Runnable {
       final ProcessResult result =
           new ProcessExecutor(command)
               .redirectOutput(
-                  Slf4jStream
-                      .of(LoggerFactory.getLogger(getClass().getName() + "." + context.getStateExecutionInstanceId()))
+                  Slf4jStream.of(LoggerFactory.getLogger(getClass().getName() + "." + context.getStateExecutionId()))
                       .asInfo())
               .execute();
 

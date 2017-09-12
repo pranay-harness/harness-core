@@ -40,10 +40,7 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.sm.states.AbstractAnalysisState;
-import software.wings.sm.states.AbstractLogAnalysisState;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,11 +83,11 @@ public class AnalysisServiceImpl implements AnalysisService {
       Executors.newFixedThreadPool(NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS, r -> new Thread(r, "clustering_thread"));
 
   @Override
-  public void bumpClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery,
+  public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
                                      .field("stateType")
-                                     .equal(StateType.valueOf(stateType))
+                                     .equal(stateType)
                                      .field("stateExecutionId")
                                      .equal(stateExecutionId)
                                      .field(("applicationId"))
@@ -108,11 +105,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public void deleteClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery,
+  public void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels) {
     Query<LogDataRecord> records = wingsPersistence.createQuery(LogDataRecord.class)
                                        .field("stateType")
-                                       .equal(StateType.valueOf(stateType))
+                                       .equal(stateType)
                                        .field("stateExecutionId")
                                        .equal(stateExecutionId)
                                        .field(("applicationId"))
@@ -600,17 +597,17 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public void createAndSaveSummary(
-      String stateType, String appId, String stateExecutionId, String query, String message) {
+      StateType stateType, String appId, String stateExecutionId, String query, String message) {
     final LogMLAnalysisRecord analysisRecord = new LogMLAnalysisRecord();
     analysisRecord.setLogCollectionMinute(-1);
-    analysisRecord.setStateType(StateType.valueOf(stateType));
+    analysisRecord.setStateType(stateType);
     analysisRecord.setApplicationId(appId);
     analysisRecord.setStateExecutionId(stateExecutionId);
     analysisRecord.setQuery(query);
     analysisRecord.setAnalysisSummaryMessage(message);
     analysisRecord.setControl_events(Collections.emptyMap());
     analysisRecord.setTest_events(Collections.emptyMap());
-    saveLogAnalysisRecords(analysisRecord, StateType.valueOf(stateType));
+    saveLogAnalysisRecords(analysisRecord, stateType);
   }
 
   @Override
@@ -622,7 +619,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public int getCollectionMinuteForL1(
-      String query, String appdId, String stateExecutionId, String type, Set<String> testNodes) {
+      String query, String appdId, String stateExecutionId, StateType type, Set<String> testNodes) {
     ClusterLevel heartBeat = ClusterLevel.getHeartBeatLevel(ClusterLevel.L1);
 
     while (true) {
@@ -635,7 +632,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                                 .field("stateExecutionId")
                                                                 .equal(stateExecutionId)
                                                                 .field("stateType")
-                                                                .equal(StateType.valueOf(type))
+                                                                .equal(type)
                                                                 .field("clusterLevel")
                                                                 .equal(heartBeat)
                                                                 .field("query")
@@ -706,7 +703,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public boolean hasDataRecords(String query, String appdId, String stateExecutionId, String type, Set<String> nodes,
+  public boolean hasDataRecords(String query, String appdId, String stateExecutionId, StateType type, Set<String> nodes,
       ClusterLevel level, int logCollectionMinute) {
     /**
      * Get the data records for the found heartbeat.
@@ -717,7 +714,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                          .field("stateExecutionId")
                                                          .equal(stateExecutionId)
                                                          .field("stateType")
-                                                         .equal(StateType.valueOf(type))
+                                                         .equal(type)
                                                          .field("clusterLevel")
                                                          .equal(level)
                                                          .field("logCollectionMinute")
@@ -732,40 +729,38 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, String type) {
-    while (true) {
-      /**
-       * Find heartbeat for L0 records. L0 heartbeat is H0.
-       */
-      Iterator<LogDataRecord> logDataRecordsIterator = wingsPersistence.createQuery(LogDataRecord.class)
-                                                           .field("applicationId")
-                                                           .equal(appId)
-                                                           .field("stateExecutionId")
-                                                           .equal(stateExecutionId)
-                                                           .field("stateType")
-                                                           .equal(StateType.valueOf(type))
-                                                           .field("clusterLevel")
-                                                           .equal(ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
-                                                           .order("logCollectionMinute")
-                                                           .fetch(new FindOptions().limit(1));
-
-      // Nothing more to process. break.
-      if (!logDataRecordsIterator.hasNext()) {
-        return Optional.empty();
-      }
-
-      return Optional.of(logDataRecordsIterator.next());
-    }
-  }
-
-  private int getLastProcessedMinute(String query, String appId, String stateExecutionId, String type) {
+  public Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, StateType type) {
+    /**
+     * Find heartbeat for L0 records. L0 heartbeat is H0.
+     */
     Iterator<LogDataRecord> logDataRecordsIterator = wingsPersistence.createQuery(LogDataRecord.class)
                                                          .field("applicationId")
                                                          .equal(appId)
                                                          .field("stateExecutionId")
                                                          .equal(stateExecutionId)
                                                          .field("stateType")
-                                                         .equal(StateType.valueOf(type))
+                                                         .equal(type)
+                                                         .field("clusterLevel")
+                                                         .equal(ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
+                                                         .order("logCollectionMinute")
+                                                         .fetch(new FindOptions().limit(1));
+
+    // Nothing more to process. break.
+    if (!logDataRecordsIterator.hasNext()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(logDataRecordsIterator.next());
+  }
+
+  private int getLastProcessedMinute(String query, String appId, String stateExecutionId, StateType type) {
+    Iterator<LogDataRecord> logDataRecordsIterator = wingsPersistence.createQuery(LogDataRecord.class)
+                                                         .field("applicationId")
+                                                         .equal(appId)
+                                                         .field("stateExecutionId")
+                                                         .equal(stateExecutionId)
+                                                         .field("stateType")
+                                                         .equal(type)
                                                          .field("clusterLevel")
                                                          .equal(ClusterLevel.getFinal())
                                                          .field("query")
@@ -778,11 +773,11 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean isProcessingComplete(
-      String query, String appId, String stateExecutionId, String type, int timeDurationMins) {
+      String query, String appId, String stateExecutionId, StateType type, int timeDurationMins) {
     return getLastProcessedMinute(query, appId, stateExecutionId, type) >= timeDurationMins - 1;
   }
 
-  private boolean deleteIfStale(String query, String appId, String stateExecutionId, String type, Set<String> hosts,
+  private boolean deleteIfStale(String query, String appId, String stateExecutionId, StateType type, Set<String> hosts,
       int logCollectionMinute, ClusterLevel clusterLevel, ClusterLevel heartBeat) {
     int lastProcessedMinute = getLastProcessedMinute(query, appId, stateExecutionId, type);
     if (logCollectionMinute <= lastProcessedMinute) {

@@ -19,6 +19,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricSli
 import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricTimeSlice;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicWebTransactions;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.time.WingsTimeUtils;
@@ -39,13 +40,12 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 5/18/17.
  */
-public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
+public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
+  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 3;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
-  private final Object lockObject = new Object();
-  private final AtomicBoolean completed = new AtomicBoolean(false);
-  private ScheduledExecutorService collectionService;
+  private NewRelicDataCollectionInfo dataCollectionInfo;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
 
@@ -57,45 +57,28 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
   }
 
   @Override
-  public DataCollectionTaskResult run(Object[] parameters) {
-    final NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
+  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
+    dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
     logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
-    try {
-      collectionService = scheduleMetricDataCollection(dataCollectionInfo);
-    } catch (IOException e) {
-      throw new WingsException(e);
-    }
-    logger.info("going to collect new relic data for " + dataCollectionInfo);
-
-    synchronized (lockObject) {
-      while (!completed.get()) {
-        try {
-          lockObject.wait();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-    }
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.NEW_RELIC)
         .build();
   }
 
-  private ScheduledExecutorService scheduleMetricDataCollection(NewRelicDataCollectionInfo dataCollectionInfo)
-      throws IOException {
-    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(
-        new NewRelicMetricCollector(dataCollectionInfo), 0, 1, TimeUnit.MINUTES);
-    return scheduledExecutorService;
+  @Override
+  protected StateType getStateType() {
+    return StateType.NEW_RELIC;
   }
 
-  private void shutDownCollection() {
-    collectionService.shutdown();
-    completed.set(true);
-    synchronized (lockObject) {
-      lockObject.notifyAll();
-    }
+  @Override
+  protected Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
+    return new NewRelicMetricCollector(dataCollectionInfo);
   }
 
   private class NewRelicMetricCollector implements Runnable {
@@ -103,7 +86,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
     private final List<NewRelicApplicationInstance> instances;
     private long collectionStartTime;
     private final List<NewRelicMetric> metrics;
-    private int dataCollectionMinute = 0;
+    private int dataCollectionMinute;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo) throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
@@ -113,21 +96,31 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
           dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
       this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
+      this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
     @Override
     public void run() {
-      if (dataCollectionInfo.getCollectionTime() <= 0) {
-        shutDownCollection();
-        return;
-      }
       try {
         final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
         for (NewRelicApplicationInstance node : instances) {
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-          List<List<String>> metricBatches = batchMetricsToCollect();
+          // HeartBeat
+          records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
+              NewRelicMetricDataRecord.builder()
+                  .name(HARNESS_HEARTEAT_METRIC_NAME)
+                  .applicationId(dataCollectionInfo.getApplicationId())
+                  .workflowId(dataCollectionInfo.getWorkflowId())
+                  .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                  .serviceId(dataCollectionInfo.getServiceId())
+                  .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                  .dataCollectionMinute(dataCollectionMinute)
+                  .host(node.getHost())
+                  .level(ClusterLevel.H0)
+                  .build());
 
+          List<List<String>> metricBatches = batchMetricsToCollect();
           for (List<String> metricNames : metricBatches) {
             try {
               NewRelicMetricData metricData =
@@ -135,7 +128,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                       dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, collectionStartTime, endTime);
 
               for (NewRelicMetricSlice metric : metricData.getMetrics()) {
-                for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
+                for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
                   final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
                   metricDataRecord.setName(metric.getName());
                   metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
@@ -146,11 +139,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
                   metricDataRecord.setDataCollectionMinute(dataCollectionMinute);
 
                   // set from time to the timestamp
-                  long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
+                  long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
                   metricDataRecord.setTimeStamp(timeStamp);
                   metricDataRecord.setHost(node.getHost());
 
-                  final String webTxnJson = JsonUtils.asJson(timeslice.getValues());
+                  final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
                   NewRelicWebTransactions webTransactions =
                       JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
                   metricDataRecord.setThroughput(webTransactions.getThroughput());
@@ -220,7 +213,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateRunnableTask<Dat
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {
-        logger.error("error fetching new relic metrics", e);
+        logger.error("error fetching new relic metrics for minute " + dataCollectionMinute, e);
+      }
+
+      if (completed.get()) {
+        logger.info("Shutting down new relic data collection");
+        shutDownCollection();
+        return;
       }
     }
 
