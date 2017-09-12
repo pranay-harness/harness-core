@@ -117,6 +117,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                   .dataCollectionMinute(dataCollectionMinute)
                   .host(node.getHost())
+                  .timeStamp(collectionStartTime)
                   .level(ClusterLevel.H0)
                   .build());
 
