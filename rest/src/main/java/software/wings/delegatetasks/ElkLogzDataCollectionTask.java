@@ -46,7 +46,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   }
 
   @Override
-  protected DataCollectionTaskResult beginDataCollection(Object[] parameters) {
+  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     this.dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
     return DataCollectionTaskResult.builder()
@@ -57,7 +57,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
-    return new ElkDataCollector(getTaskId(), dataCollectionInfo, taskResult);
+    return new ElkLogzDataCollector(getTaskId(), dataCollectionInfo, taskResult);
   }
 
   @Override
@@ -70,14 +70,14 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
     return dataCollectionInfo.getStateType();
   }
 
-  private class ElkDataCollector implements Runnable {
+  private class ElkLogzDataCollector implements Runnable {
     private final LogDataCollectionInfo dataCollectionInfo;
     private long collectionStartTime;
     private int logCollectionMinute = 0;
     private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
 
-    private ElkDataCollector(
+    private ElkLogzDataCollector(
         String delegateTaskId, LogDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;

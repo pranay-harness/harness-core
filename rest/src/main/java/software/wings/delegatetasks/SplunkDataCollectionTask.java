@@ -48,7 +48,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     super(delegateId, delegateTask, consumer, preExecute);
   }
 
-  protected DataCollectionTaskResult beginDataCollection(Object[] parameters) {
+  protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
                                               .status(DataCollectionTaskStatus.SUCCESS)
                                               .stateType(StateType.SPLUNKV2)

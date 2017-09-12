@@ -10,11 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +30,6 @@ public class LogMLAnalysisGenerator implements Runnable {
   protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
 
   private final AnalysisContext context;
-  private final LogAnalysisResponse logAnalysisResponse;
   private final String pythonScriptRoot;
   private final String serverUrl;
   private final String accountId;
@@ -44,14 +41,10 @@ public class LogMLAnalysisGenerator implements Runnable {
   private final Set<String> queries;
   private int logAnalysisMinute;
   private AnalysisService analysisService;
-  private WingsPersistence wingsPersistence;
 
-  public LogMLAnalysisGenerator(WingsPersistence wingsPersistence, AnalysisContext context, int logAnalysisMinute,
-      AnalysisService analysisService, LogAnalysisResponse logAnalysisResponse) {
-    this.wingsPersistence = wingsPersistence;
+  public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, AnalysisService analysisService) {
     this.context = context;
     this.analysisService = analysisService;
-    this.logAnalysisResponse = logAnalysisResponse;
     this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
     Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
 
