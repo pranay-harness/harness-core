@@ -7,6 +7,7 @@ import static software.wings.beans.command.ResizeCommandUnitExecutionData.Resize
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ContainerServiceData;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -14,6 +15,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,8 +38,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     String clusterName = context.getClusterName();
-    String serviceName = context.getServiceName();
-    Integer desiredCount = context.getDesiredCount();
+    List<ContainerServiceData> desiredCounts = context.getDesiredCounts();
     String region = context.getRegion();
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
@@ -45,14 +46,15 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      List<ContainerInfo> containerInfos =
-          executeInternal(region, cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
+      List<ContainerInfo> containerInfos = new ArrayList<>();
+      desiredCounts.forEach(dc
+          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, clusterName, dc.getName(),
+              dc.getPreviousCount(), dc.getDesiredCount(), executionLogCallback)));
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
-      boolean allContainersSuccess = true;
-      for (ContainerInfo info : containerInfos) {
-        allContainersSuccess = allContainersSuccess && info.getStatus() == ContainerInfo.Status.SUCCESS;
-      }
-      if (containerInfos.size() == desiredCount && allContainersSuccess) {
+      boolean allContainersSuccess =
+          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+      int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
+      if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
         commandExecutionStatus = SUCCESS;
       }
     } catch (Exception ex) {
@@ -62,5 +64,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   }
 
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback);
+      String clusterName, String serviceName, int previousCount, int desiredCount,
+      ExecutionLogCallback executionLogCallback);
 }

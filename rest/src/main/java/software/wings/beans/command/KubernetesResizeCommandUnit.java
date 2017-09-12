@@ -27,7 +27,8 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
+      String clusterName, String serviceName, int previousCount, int desiredCount,
+      ExecutionLogCallback executionLogCallback) {
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
@@ -35,6 +36,6 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
       kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
     }
     return kubernetesContainerService.setControllerPodCount(
-        kubernetesConfig, clusterName, serviceName, desiredCount, executionLogCallback);
+        kubernetesConfig, clusterName, serviceName, previousCount, desiredCount, executionLogCallback);
   }
 }

@@ -6,11 +6,11 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -36,6 +36,12 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   }
 
   @Override
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
+      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    return new LinkedHashMap<>();
+  }
+
+  @Override
   public String getCommandName() {
     return commandName;
   }
@@ -52,56 +58,5 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   @Override
   public int fetchDesiredCount(int lastDeploymentDesiredCount) {
     return 0;
-  }
-
-  public static final class EcsServiceRollbackBuilder {
-    private String id;
-    private String name;
-    private ContextElementType requiredContextElementType;
-    private String stateType;
-    private String commandName;
-
-    private EcsServiceRollbackBuilder(String name) {
-      this.name = name;
-    }
-
-    public static EcsServiceRollbackBuilder anEcsServiceRollback(String name) {
-      return new EcsServiceRollbackBuilder(name);
-    }
-
-    public EcsServiceRollbackBuilder withId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public EcsServiceRollbackBuilder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public EcsServiceRollbackBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
-      this.requiredContextElementType = requiredContextElementType;
-      return this;
-    }
-
-    public EcsServiceRollbackBuilder withStateType(String stateType) {
-      this.stateType = stateType;
-      return this;
-    }
-
-    public EcsServiceRollbackBuilder withCommandName(String commandName) {
-      this.commandName = commandName;
-      return this;
-    }
-
-    public EcsServiceRollback build() {
-      EcsServiceRollback ecsServiceRollback = new EcsServiceRollback(name);
-      ecsServiceRollback.setId(id);
-      ecsServiceRollback.setRequiredContextElementType(requiredContextElementType);
-      ecsServiceRollback.setStateType(stateType);
-      ecsServiceRollback.setRollback(true);
-      ecsServiceRollback.setCommandName(commandName);
-      return ecsServiceRollback;
-    }
   }
 }
