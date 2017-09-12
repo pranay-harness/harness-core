@@ -204,9 +204,6 @@ public class ExpressionEvaluator {
 
   public static void isValidVariableName(String name) {
     // Verify Service variable name should not contain any special character
-    if (name == null || name.isEmpty()) {
-      return;
-    }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
     if (!matcher.matches()) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Special characters are not allowed in variable name");
