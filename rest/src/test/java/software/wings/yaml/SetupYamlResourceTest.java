@@ -16,7 +16,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
-import software.wings.resources.SetupYamlResource;
+import software.wings.resources.yaml.SetupYamlResource;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.YamlHistoryService;
