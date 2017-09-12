@@ -14,7 +14,7 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.analysis.LogAnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisGenerator;
@@ -25,7 +25,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashSet;
@@ -59,10 +59,10 @@ public class LogAnalysisManagerJob implements Job {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
-      LogAnalysisContext context = LogAnalysisContext.fromJson(params);
-      if (!LogAnalysisTask.stateExecutionLocks.contains(context.getStateExecutionInstanceId())) {
+      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      if (!LogAnalysisTask.stateExecutionLocks.contains(context.getStateExecutionId())) {
         UUID id = UUID.randomUUID();
-        if (LogAnalysisTask.stateExecutionLocks.putIfAbsent(context.getStateExecutionInstanceId(), id) == null) {
+        if (LogAnalysisTask.stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
           // TODO unbounded task queue
           executorService.submit(new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine,
               delegateService, context, jobExecutionContext, delegateTaskId, id));
@@ -82,41 +82,40 @@ public class LogAnalysisManagerJob implements Job {
   public static class LogAnalysisTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
     // TODO create apis around this
-    public static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
 
     private WingsPersistence wingsPersistence;
     private AnalysisService analysisService;
     private WaitNotifyEngine waitNotifyEngine;
     private DelegateService delegateService;
 
-    private LogAnalysisContext context;
+    private AnalysisContext context;
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
     private UUID uuid;
 
     protected void preProcess(int logAnalysisMinute, String query) {
       if (context.getTestNodes() == null) {
-        throw new RuntimeException("Test nodes empty! " + context.toJson());
+        throw new RuntimeException("Test nodes empty! " + JsonUtils.asJson(context));
       }
 
-      LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionInstanceId(),
+      LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionId(),
           context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), logAnalysisMinute);
 
-      switch (StateType.valueOf(context.getType())) {
+      switch (context.getStateType()) {
         case ELK:
         case LOGZ:
           new LogMLClusterGenerator(context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest).run();
-          analysisService.deleteClusterLevel(context.getType(), context.getStateExecutionInstanceId(),
-              context.getAppId(), logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(),
-              ClusterLevel.L1);
+          analysisService.deleteClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
+              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(), ClusterLevel.L1);
           break;
         case SPLUNKV2:
-          analysisService.bumpClusterLevel(context.getType(), context.getStateExecutionInstanceId(), context.getAppId(),
+          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
               logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(), ClusterLevel.L1,
               ClusterLevel.L2);
           break;
         default:
-          throw new RuntimeException("Unknown verification state " + context.getType());
+          throw new RuntimeException("Unknown verification state " + context.getStateType());
       }
     }
 
@@ -125,49 +124,48 @@ public class LogAnalysisManagerJob implements Job {
       boolean completeCron = false;
 
       try {
-        UUID uuid = stateExecutionLocks.get(context.getStateExecutionInstanceId());
+        UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
         if (!uuid.equals(this.uuid)) {
-          logger.error(" UUIDs dont match " + context.toJson());
+          logger.error(" UUIDs dont match " + JsonUtils.asJson(context));
           return;
         }
         /*
          * Work flow is invalid
          * exit immediately
          */
-        if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionInstanceId())) {
+        if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           return;
         }
 
         // TODO support multiple queries
         if (analysisService.isProcessingComplete(context.getQueries().iterator().next(), context.getAppId(),
-                context.getStateExecutionInstanceId(), context.getType(),
-                Integer.parseInt(context.getTimeDuration()))) {
+                context.getStateExecutionId(), context.getStateType(), context.getTimeDuration())) {
           completeCron = true;
         } else {
           // TODO support multiple queries
           int logAnalysisMinute = analysisService.getCollectionMinuteForL1(context.getQueries().iterator().next(),
-              context.getAppId(), context.getStateExecutionInstanceId(), context.getType(), context.getTestNodes());
+              context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes());
           if (logAnalysisMinute != -1) {
             boolean hasRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
-                context.getAppId(), context.getStateExecutionInstanceId(), context.getType(), context.getTestNodes(),
+                context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes(),
                 ClusterLevel.L1, logAnalysisMinute);
 
             if (hasRecords) {
               preProcess(logAnalysisMinute, context.getQueries().iterator().next());
-              new LogMLAnalysisGenerator(wingsPersistence, context, logAnalysisMinute, analysisService, null).run();
+              new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService).run();
             }
-            analysisService.bumpClusterLevel(context.getType(), context.getStateExecutionInstanceId(),
-                context.getAppId(), context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
+            analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
+                context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
                 ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getFinal());
           }
         }
 
         // if no data generated till this time, create a dummy summary so UI can get a response
         final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-            context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(context.getType()));
+            context.getStateExecutionId(), context.getAppId(), context.getStateType());
         if (analysisSummary == null) {
-          analysisService.createAndSaveSummary(context.getType(), context.getAppId(),
-              context.getStateExecutionInstanceId(), StringUtils.join(context.getQueries(), ","),
+          analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(),
+              context.getStateExecutionId(), StringUtils.join(context.getQueries(), ","),
               "No data found for the given queries yet. Check if the load is running");
         }
 
@@ -176,10 +174,9 @@ public class LogAnalysisManagerJob implements Job {
         logger.warn("analysis failed", ex);
       } finally {
         try {
-          stateExecutionLocks.remove(context.getStateExecutionInstanceId());
+          stateExecutionLocks.remove(context.getStateExecutionId());
           // send notification to state manager and delete cron.
-          if (completeCron
-              || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionInstanceId())) {
+          if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               delegateService.abortTask(context.getAccountId(), delegateTaskId);
               sendStateNotification(context);
@@ -199,13 +196,13 @@ public class LogAnalysisManagerJob implements Job {
       }
     }
 
-    private void sendStateNotification(LogAnalysisContext context) {
+    private void sendStateNotification(AnalysisContext context) {
       final LogAnalysisExecutionData executionData =
           LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-              .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .withStateExecutionInstanceId(context.getStateExecutionId())
               .withServerConfigID(context.getAnalysisServerConfigId())
               .withQueries(context.getQueries())
-              .withAnalysisDuration(Integer.parseInt(context.getTimeDuration()))
+              .withAnalysisDuration(context.getTimeDuration())
               .withStatus(ExecutionStatus.SUCCESS)
               .withCanaryNewHostNames(context.getTestNodes())
               .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())

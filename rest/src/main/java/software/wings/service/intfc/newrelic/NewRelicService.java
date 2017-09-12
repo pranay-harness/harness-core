@@ -5,6 +5,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.utils.validation.Create;
 
 import java.io.IOException;
@@ -33,4 +34,11 @@ public interface NewRelicService {
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String workflowId, String serviceId, int analysisMinute);
 
   NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
+
+  boolean isStateValid(String appdId, String stateExecutionID);
+
+  int getCollectionMinuteToProcess(String stateExecutionId, String workflowExecutionId, String serviceId);
+
+  void bumpCollectionMinuteToProcess(
+      String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute);
 }

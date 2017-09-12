@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
@@ -13,12 +14,13 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.LogAnalysisManagerJob;
 import software.wings.scheduler.LogClusterManagerJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.LogAnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -29,6 +31,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
@@ -38,6 +41,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -72,15 +76,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public ExecutionResponse execute(ExecutionContext executionContext) {
     getLogger().debug("Executing analysis state");
 
-    LogAnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
-    Set<String> canaryNewHostNames = getCanaryNewHostNames(executionContext);
+    Set<String> canaryNewHostNames = context.getTestNodes();
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
       getLogger().error("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
-    Set<String> lastExecutionNodes = getLastExecutionNodes(executionContext);
+    Set<String> lastExecutionNodes = context.getControlNodes();
     if (lastExecutionNodes == null || lastExecutionNodes.isEmpty()) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
@@ -101,7 +105,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .withStateExecutionInstanceId(context.getStateExecutionId())
             .withServerConfigID(getAnalysisServerConfigId())
             .withQueries(Sets.newHashSet(query.split(",")))
             .withAnalysisDuration(Integer.parseInt(timeDuration))
@@ -142,10 +146,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withErrorMessage(executionResponse.getLogAnalysisExecutionData().getErrorMsg())
           .build();
     } else {
-      LogAnalysisContext context =
+      AnalysisContext context =
           getLogAnalysisContext(executionContext, executionResponse.getLogAnalysisExecutionData().getCorrelationId());
       final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-          context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(getStateType()));
+          context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
       if (analysisSummary == null) {
         getLogger().warn("No analysis summary. This can happen if there is no data with the given queries");
         return generateAnalysisResponse(
@@ -168,29 +172,30 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext executionContext) {
-    LogAnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
     final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
-        context.getStateExecutionInstanceId(), context.getAppId(), StateType.valueOf(getStateType()));
+        context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
 
     if (analysisSummary == null) {
       generateAnalysisResponse(context, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
     }
   }
 
-  private void scheduleAnalysisCronJob(LogAnalysisContext context, String delegateTaskId) {
-    Date startDate = new Date(new Date().getTime() + 3 * 60000);
+  private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
+    Date startDate =
+        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(LogAnalysisManagerJob.class)
-                        .withIdentity(context.getStateExecutionInstanceId(), "LOG_VERIFY_CRON_GROUP")
-                        .usingJobData("jobParams", context.toJson())
+                        .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
+                        .usingJobData("jobParams", JsonUtils.asJson(context))
                         .usingJobData("timestamp", System.currentTimeMillis())
                         .usingJobData("delegateTaskId", delegateTaskId)
-                        .withDescription(context.getType() + "-" + context.getStateExecutionInstanceId())
+                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(context.getStateExecutionInstanceId(), "LOG_VERIFY_CRON_GROUP")
+            .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).repeatForever())
             .startAt(startDate)
             .build();
@@ -198,20 +203,20 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  private void scheduleClusterCronJob(LogAnalysisContext context, String delegateTaskId) {
+  private void scheduleClusterCronJob(AnalysisContext context, String delegateTaskId) {
     Date startDate = new Date(new Date().getTime() + 3 * 60000);
 
     JobDetail job = JobBuilder.newJob(LogClusterManagerJob.class)
-                        .withIdentity(context.getStateExecutionInstanceId(), "LOG_CLUSTER_CRON_GROUP")
-                        .usingJobData("jobParams", context.toJson())
+                        .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
+                        .usingJobData("jobParams", JsonUtils.asJson(context))
                         .usingJobData("timestamp", System.currentTimeMillis())
                         .usingJobData("delegateTaskId", delegateTaskId)
-                        .withDescription(context.getType() + "-" + context.getStateExecutionInstanceId())
+                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(context.getStateExecutionInstanceId(), "LOG_CLUSTER_CRON_GROUP")
+            .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).repeatForever())
             .startAt(startDate)
             .build();
@@ -220,15 +225,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   protected ExecutionResponse generateAnalysisResponse(
-      LogAnalysisContext context, ExecutionStatus status, String message) {
-    analysisService.createAndSaveSummary(context.getType(), context.getAppId(), context.getStateExecutionInstanceId(),
+      AnalysisContext context, ExecutionStatus status, String message) {
+    analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
         StringUtils.join(context.getQueries(), ","), message);
 
     LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                                                 .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                                 .withStateExecutionInstanceId(context.getStateExecutionId())
                                                  .withServerConfigID(context.getAnalysisServerConfigId())
                                                  .withQueries(context.getQueries())
-                                                 .withAnalysisDuration(Integer.parseInt(context.getTimeDuration()))
+                                                 .withAnalysisDuration(context.getTimeDuration())
                                                  .withStatus(status)
                                                  .withCorrelationId(context.getCorrelationId())
                                                  .build();
@@ -255,16 +260,28 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private LogAnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
+  private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
     try {
-      return new LogAnalysisContext(context.getAppId(), AbstractLogAnalysisState.this.getWorkflowId(context),
-          context.getWorkflowExecutionId(), context.getStateExecutionInstanceId(), getPhaseServiceId(context),
-          getLastExecutionNodes(context), getCanaryNewHostNames(context), Sets.newHashSet(query.split(",")),
-          AbstractLogAnalysisState.this.configuration.isSslEnabled(),
-          AbstractLogAnalysisState.this.configuration.getApplicationPort(),
-          AbstractLogAnalysisState.this.appService.get(context.getAppId()).getAccountId(), getComparisonStrategy(),
-          timeDuration, getStateType(), getStateBaseUrl(StateType.valueOf(getStateType())), generateAuthToken(),
-          getAnalysisServerConfigId(), correlationId);
+      return AnalysisContext.builder()
+          .accountId(this.appService.get(context.getAppId()).getAccountId())
+          .appId(context.getAppId())
+          .workflowId(getWorkflowId(context))
+          .workflowExecutionId(context.getWorkflowExecutionId())
+          .stateExecutionId(context.getStateExecutionInstanceId())
+          .serviceId(getPhaseServiceId(context))
+          .controlNodes(getLastExecutionNodes(context))
+          .testNodes(getCanaryNewHostNames(context))
+          .queries(Sets.newHashSet(query.split(",")))
+          .isSSL(this.configuration.isSslEnabled())
+          .appPort(this.configuration.getApplicationPort())
+          .comparisonStrategy(getComparisonStrategy())
+          .timeDuration(Integer.parseInt(timeDuration))
+          .stateType(StateType.valueOf(getStateType()))
+          .stateBaseUrl(getStateBaseUrl(StateType.valueOf(getStateType())))
+          .authToken(generateAuthToken())
+          .analysisServerConfigId(getAnalysisServerConfigId())
+          .correlationId(correlationId)
+          .build();
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
