@@ -23,7 +23,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
   @Index(fields = {
     @Field("name")
     , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
-        @Field("serviceId"), @Field("workflowId"), @Field("level"), @Field("dataCollectionMinute")
+        @Field("serviceId"), @Field("workflowId"), @Field("level")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
