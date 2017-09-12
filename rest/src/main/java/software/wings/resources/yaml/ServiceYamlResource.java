@@ -35,7 +35,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.YamlHistoryService;
+import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
 import software.wings.yaml.ServiceYaml;

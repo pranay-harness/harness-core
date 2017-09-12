@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.impl.yaml;
 
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.YamlHistoryService;
+import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
@@ -30,7 +30,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.YamlHistoryService#save(software.wings.beans.YamlVersion)
+   * @see software.wings.service.intfc.yaml.YamlHistoryService#save(software.wings.beans.YamlVersion)
    */
   @Override
   public YamlVersion save(YamlVersion yv) {
@@ -66,7 +66,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.YamlHistoryService#get(java.lang.String)
+   * @see software.wings.service.intfc.yaml.YamlHistoryService#get(java.lang.String)
    */
   @Override
   public YamlVersion get(String uuid) {
@@ -80,7 +80,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.YamlHistoryService#get(java.lang.String)
+   * @see software.wings.service.intfc.yaml.YamlHistoryService#get(java.lang.String)
    */
   @Override
   public List<YamlVersion> getList(String entityId, Type type) {

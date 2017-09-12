@@ -20,7 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.YamlHistoryService;
+import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.CloudProvidersYaml;
 import software.wings.yaml.SetupYaml;
