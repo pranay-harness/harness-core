@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.impl.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.YamlResourceService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.PipelineStageElementYaml;
 import software.wings.yaml.PipelineStageYaml;
 import software.wings.yaml.PipelineYaml;

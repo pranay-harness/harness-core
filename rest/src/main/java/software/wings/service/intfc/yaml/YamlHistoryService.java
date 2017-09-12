@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.YamlVersion;

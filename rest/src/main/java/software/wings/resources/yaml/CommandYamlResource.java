@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.YamlResourceService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlPayload;
 
 import javax.inject.Inject;

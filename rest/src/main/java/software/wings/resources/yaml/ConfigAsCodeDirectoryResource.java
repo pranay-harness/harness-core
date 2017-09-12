@@ -7,7 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.yaml.directory.DirectoryNode;
 
 import javax.inject.Inject;

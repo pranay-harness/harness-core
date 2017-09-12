@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.YamlHistoryService;
+import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
