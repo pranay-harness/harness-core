@@ -121,6 +121,7 @@ import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.YamlHistoryServiceImpl;
+import software.wings.service.impl.YamlResourceServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
@@ -190,6 +191,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.YamlDirectoryService;
 import software.wings.service.intfc.YamlHistoryService;
+import software.wings.service.intfc.YamlResourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
@@ -309,6 +311,7 @@ public class WingsModule extends AbstractModule {
     bind(WebHookService.class).to(WebHookServiceImpl.class);
     bind(YamlHistoryService.class).to(YamlHistoryServiceImpl.class);
     bind(YamlDirectoryService.class).to(YamlDirectoryServiceImpl.class);
+    bind(YamlResourceService.class).to(YamlResourceServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
