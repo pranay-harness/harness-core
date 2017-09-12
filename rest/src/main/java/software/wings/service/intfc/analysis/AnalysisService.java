@@ -50,25 +50,26 @@ public interface AnalysisService {
 
   boolean purgeLogs();
 
-  void createAndSaveSummary(String stateType, String appId, String stateExecutionId, String query, String message);
+  void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
 
-  void bumpClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery, Set<String> host,
-      int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel);
+  void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
+      Set<String> host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel);
 
-  void deleteClusterLevel(String stateType, String stateExecutionId, String appId, String searchQuery, Set<String> host,
-      int logCollectionMinute, ClusterLevel... clusterLevels);
+  void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
+      Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
 
   int getLastAnalysisMinute(String stateExecutionId, String applicationId, StateType stateType);
 
   boolean isStateValid(String appdId, String stateExecutionID);
 
   int getCollectionMinuteForL1(
-      String query, String appdId, String stateExecutionId, String type, Set<String> testNodes);
+      String query, String appdId, String stateExecutionId, StateType type, Set<String> testNodes);
 
-  Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, String type);
+  Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, StateType type);
 
-  boolean isProcessingComplete(String query, String appId, String stateExecutionId, String type, int timeDurationMins);
+  boolean isProcessingComplete(
+      String query, String appId, String stateExecutionId, StateType type, int timeDurationMins);
 
-  boolean hasDataRecords(String query, String appdId, String stateExecutionId, String type, Set<String> nodes,
+  boolean hasDataRecords(String query, String appdId, String stateExecutionId, StateType type, Set<String> nodes,
       ClusterLevel level, int logCollectionMinute);
 }
