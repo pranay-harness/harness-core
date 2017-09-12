@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,9 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public Log save(Log log) {
+    if (log == null) {
+      return log;
+    }
     return wingsPersistence.saveAndGet(Log.class, log);
   }
 
@@ -107,6 +111,9 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public List<String> batchedSave(List<Log> logs) {
+    if (logs == null || logs.isEmpty()) {
+      return Arrays.asList();
+    }
     List<String> savedLogIds = wingsPersistence.save(logs);
     // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
     Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(
