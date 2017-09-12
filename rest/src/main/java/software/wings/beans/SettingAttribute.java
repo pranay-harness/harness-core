@@ -24,6 +24,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -202,8 +203,8 @@ public class SettingAttribute extends Base {
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, DIRECT)),
 
-    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, APP_DYNAMICS, NEW_RELIC, ELB, SLACK, DOCKER,
-        ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
+    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, ELB, SLACK,
+        DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

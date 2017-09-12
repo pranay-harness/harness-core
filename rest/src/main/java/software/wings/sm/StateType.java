@@ -72,6 +72,7 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
+import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -147,14 +148,19 @@ public enum StateType implements StateTypeDescriptor {
   ELK(ElkAnalysisState.class, VERIFICATIONS, 6, "ELK", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
-   * Elk state type.
+   * LOGZ state type.
    */
   LOGZ(LogzAnalysisState.class, VERIFICATIONS, 7, "LOGZ", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
+   * Sumo state type.
+   */
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SUMO", Collections.emptyList(), ORCHESTRATION_STENCILS),
+
+  /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 7, asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
