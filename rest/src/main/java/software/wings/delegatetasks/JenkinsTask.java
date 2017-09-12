@@ -58,7 +58,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
       Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
       BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild);
 
-      jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+      jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
       BuildResult buildResult = jenkinsBuildWithDetails.getResult();
       jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
