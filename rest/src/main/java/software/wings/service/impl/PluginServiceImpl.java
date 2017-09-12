@@ -30,6 +30,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -143,6 +144,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.LOGZ.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.LOGZ.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(SumoConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.SUMO.name())
+            .withType(SettingVariableTypes.SUMO.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.SUMO.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SmtpConfig.class)
