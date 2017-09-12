@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
+import software.wings.beans.command.CodeDeployParams;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
