@@ -184,29 +184,20 @@ public class InstanceHelper {
 
     if (InfrastructureMappingType.AWS_SSH.getName().equals(infraMappingType)
         || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName().equals(infraMappingType)) {
-      if (host != null) {
-        com.amazonaws.services.ec2.model.Instance ec2Instance = host.getEc2Instance();
-        if (ec2Instance != null) {
-          instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
-                             .withEc2Instance(ec2Instance)
-                             .withHostId(host.getUuid())
-                             .withHostName(host.getHostName())
-                             .withHostPublicDns(host.getPublicDns())
-                             .build();
-        }
-      }
+      instanceInfo = Ec2InstanceInfo.Builder.anEc2InstanceInfo()
+                         .withEc2Instance(host.getEc2Instance())
+                         .withHostId(host.getUuid())
+                         .withHostName(host.getHostName())
+                         .withHostPublicDns(host.getPublicDns())
+                         .build();
     } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
-      if (host != null) {
-        instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
-                           .withHostPublicDns(host.getPublicDns())
-                           .withHostId(host.getUuid())
-                           .withHostName(host.getHostName())
-                           .build();
-      }
+      instanceInfo = PhysicalHostInstanceInfo.Builder.aPhysicalHostInstanceInfo()
+                         .withHostPublicDns(host.getPublicDns())
+                         .withHostId(host.getUuid())
+                         .withHostName(host.getHostName())
+                         .build();
     }
 
-    if (instanceInfo != null) {
-      builder.withInstanceInfo(instanceInfo);
-    }
+    builder.withInstanceInfo(instanceInfo);
   }
 }
