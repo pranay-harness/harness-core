@@ -2,9 +2,8 @@ package software.wings.yaml;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineStage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PipelineYaml extends GenericYaml {
@@ -12,15 +11,7 @@ public class PipelineYaml extends GenericYaml {
 
   @YamlSerialize public String name;
   @YamlSerialize public String description;
-  @YamlSerialize public List<PipelineStage> pipelineStages;
-
-  public PipelineYaml() {}
-
-  public PipelineYaml(Pipeline pipeline) {
-    this.name = pipeline.getName();
-    this.description = pipeline.getDescription();
-    this.pipelineStages = pipeline.getPipelineStages();
-  }
+  @YamlSerialize public List<PipelineStageYaml> pipelineStages = new ArrayList<>();
 
   public String getName() {
     return name;
@@ -38,11 +29,11 @@ public class PipelineYaml extends GenericYaml {
     this.description = description;
   }
 
-  public List<PipelineStage> getPipelineStages() {
+  public List<PipelineStageYaml> getPipelineStages() {
     return pipelineStages;
   }
 
-  public void setPipelineStages(List<PipelineStage> pipelineStages) {
+  public void setPipelineStages(List<PipelineStageYaml> pipelineStages) {
     this.pipelineStages = pipelineStages;
   }
 }

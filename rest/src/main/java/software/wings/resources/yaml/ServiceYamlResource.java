@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.yaml;
 
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;

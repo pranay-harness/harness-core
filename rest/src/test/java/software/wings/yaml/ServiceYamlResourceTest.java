@@ -9,7 +9,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.resources.ServiceYamlResource;
+import software.wings.resources.yaml.ServiceYamlResource;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;

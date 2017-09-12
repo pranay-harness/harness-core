@@ -5,6 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -16,7 +21,11 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.YamlResourceService;
+import software.wings.yaml.PipelineStageElementYaml;
+import software.wings.yaml.PipelineStageYaml;
+import software.wings.yaml.PipelineYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.ServiceCommandYaml;
@@ -36,8 +45,11 @@ import javax.inject.Inject;
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private CommandService commandService;
   @Inject private EnvironmentService environmentService;
+  @Inject private PipelineService pipelineService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private static final String ENV_ID_PROPERTY = "envId";
 
   /**
    * Find by app, service and service command ids.
@@ -136,9 +148,16 @@ public class YamlResourceServiceImpl implements YamlResourceService {
           serviceCommandYaml.getVersions().add(ycv);
         }
       }
+    } else {
+      // handle missing serviceCommand
+      RestResponse rr = new RestResponse<>();
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+          "The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '" + serviceCommandId
+              + "' was not found!");
+      return rr;
     }
 
-    return YamlHelper.getYamlRestResponse(serviceCommandYaml, "setup.yaml");
+    return YamlHelper.getYamlRestResponse(serviceCommandYaml, serviceCommand.getName() + ".yaml");
   }
 
   /**
@@ -150,8 +169,68 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param yamlPayload the yaml version of the service command
    * @return the application
    */
-  public ServiceCommand updateServiceCommand(
-      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String serviceCommandId, YamlPayload yamlPayload) {
+  public ServiceCommand updateServiceCommand(@NotEmpty String appId, @NotEmpty String serviceId,
+      @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled) {
+    // TODO - needs implementation
+    return null;
+  }
+
+  /**
+   * Gets the yaml version of a pipeline by pipelineId
+   *
+   * @param appId     the app id
+   * @param pipelineId the pipeline id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getPipeline(String appId, String pipelineId) {
+    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
+
+    PipelineYaml pipelineYaml = new PipelineYaml();
+
+    pipelineYaml.setName(pipeline.getName());
+    pipelineYaml.setDescription(pipeline.getDescription());
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+
+    if (pipelineStages != null) {
+      for (PipelineStage ps : pipelineStages) {
+        PipelineStageYaml pipelineStageYaml = new PipelineStageYaml();
+
+        List<PipelineStageElement> stageElements = ps.getPipelineStageElements();
+
+        if (stageElements != null) {
+          for (PipelineStageElement se : stageElements) {
+            PipelineStageElementYaml pipelineStageElementYaml = new PipelineStageElementYaml();
+
+            pipelineStageElementYaml.setName(se.getName());
+            pipelineStageElementYaml.setType(se.getType());
+
+            Map<String, Object> theMap = se.getProperties();
+
+            if (theMap.containsKey(ENV_ID_PROPERTY)) {
+              String envId = (String) theMap.get(ENV_ID_PROPERTY);
+              pipelineStageElementYaml.setEnvName(environmentService.get(appId, envId, false).getName());
+            }
+
+            pipelineStageYaml.getPipelineStageElements().add(pipelineStageElementYaml);
+          }
+        }
+        pipelineYaml.getPipelineStages().add(pipelineStageYaml);
+      }
+    }
+
+    return YamlHelper.getYamlRestResponse(pipelineYaml, pipeline.getName() + ".yaml");
+  }
+
+  /**
+   * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param appId     the app id
+   * @param pipelineId the pipeline id
+   * @param yamlPayload the yaml version of the service command
+   * @return the rest response
+   */
+  public Pipeline updatePipeline(String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled) {
     // TODO - needs implementation
     return null;
   }

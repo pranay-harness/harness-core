@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.yaml;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;

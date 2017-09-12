@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.yaml;
 
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 

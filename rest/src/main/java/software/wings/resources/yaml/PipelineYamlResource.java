@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.yaml;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -7,8 +7,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
-import software.wings.beans.command.ServiceCommand;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.YamlResourceService;
 import software.wings.yaml.YamlPayload;
@@ -23,15 +23,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 /**
- * Coomand Resource class.
+ * Pipeline Yaml Resource class.
  *
  * @author bsollish
  */
-@Api("/commandYaml")
-@Path("/commandYaml")
+@Api("/pipelineYaml")
+@Path("/pipelineYaml")
 @Produces("application/json")
 @AuthRule(APPLICATION)
-public class CommandYamlResource {
+public class PipelineYamlResource {
   private YamlResourceService yamlResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -42,33 +42,30 @@ public class CommandYamlResource {
    * @param yamlResourceService     the yaml resource service
    */
   @Inject
-  public CommandYamlResource(YamlResourceService yamlResourceService) {
+  public PipelineYamlResource(YamlResourceService yamlResourceService) {
     this.yamlResourceService = yamlResourceService;
   }
 
   /**
-   * Gets the yaml version of a service by serviceId
+   * Gets the yaml version of a pipeline by pipelineId
    *
    * @param appId     the app id
-   * @param serviceId the service id
-   * @param serviceCommandId the service command id
+   * @param pipelineId the pipeline id
    * @return the rest response
    */
   @GET
-  @Path("/{appId}/{serviceId}/{serviceCommandId}")
+  @Path("/{appId}/{pipelineId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      @PathParam("serviceCommandId") String serviceCommandId) {
-    return yamlResourceService.getServiceCommand(appId, serviceId, serviceCommandId);
+  public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
+    return yamlResourceService.getPipeline(appId, pipelineId);
   }
 
   /**
-   * Update a service that is sent as Yaml (in a JSON "wrapper")
+   * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
    *
    * @param appId     the app id
-   * @param serviceId the service id
-   * @param serviceCommandId the service command id
+   * @param pipelineId the pipeline id
    * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
@@ -76,10 +73,8 @@ public class CommandYamlResource {
   @Path("/{appId}/{serviceId}/{serviceCommandId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ServiceCommand> update(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      @PathParam("serviceCommandId") String serviceCommandId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(
-        yamlResourceService.updateServiceCommand(appId, serviceId, serviceCommandId, yamlPayload));
+  public RestResponse<Pipeline> update(@PathParam("appId") String appId, @PathParam("pipelineId") String pipelineId,
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return new RestResponse<>(yamlResourceService.updatePipeline(appId, pipelineId, yamlPayload, deleteEnabled));
   }
 }
