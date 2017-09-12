@@ -93,7 +93,7 @@ public class AwsCodeDeployState extends State {
 
   @EnumData(enumDataProvider = CodeDeployFileExistBehaviorProvider.class)
   @DefaultValue("DISALLOW")
-  @Attributes(title = "File Exists Behavior")
+  @Attributes(title = "Content options")
   private String fileExistsBehavior;
 
   @Attributes(title = "Command")
