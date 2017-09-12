@@ -12,6 +12,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
@@ -37,10 +38,9 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployCommandExecutionData;
+import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
-import software.wings.beans.command.CommandExecutionContext.CodeDeployParams.Builder;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -60,6 +60,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -78,6 +79,19 @@ public class AwsCodeDeployState extends State {
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
   @Attributes(title = "Bundle Type", required = true) private String bundleType;
+
+  @Attributes(title = "Ignore ApplicationStop lifecycle event failure") private boolean ignoreApplicationStopFailures;
+
+  @Attributes(title = "Enable Rollbacks") private boolean enableAutoRollback;
+
+  @EnumData(enumDataProvider = CodeDeployAutoRollbackConfigurationProvider.class)
+  @Attributes(title = "Rollback configuration overrides")
+  private List<String> autoRollbackConfigurations;
+
+  @EnumData(enumDataProvider = CodeDeployFileExistBehaviorProvider.class)
+  @DefaultValue("DISALLOW")
+  @Attributes(title = "File Exists Behavior")
+  private String fileExistsBehavior;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -198,16 +212,19 @@ public class AwsCodeDeployState extends State {
     String key = context.renderExpression(this.key);
     String bucket = context.renderExpression(this.bucket);
 
-    CodeDeployParams codeDeployParams =
-        new Builder()
-            .withApplicationName(infrastructureMapping.getApplicationName())
-            .withDeploymentGroupName(infrastructureMapping.getDeploymentGroup())
-            .withRegion(infrastructureMapping.getRegion())
-            .withDeploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
-            .withBucket(bucket)
-            .withKey(key)
-            .withBundleType(bundleType)
-            .build();
+    CodeDeployParams codeDeployParams = CodeDeployParams.builder()
+                                            .applicationName(infrastructureMapping.getApplicationName())
+                                            .deploymentGroupName(infrastructureMapping.getDeploymentGroup())
+                                            .region(infrastructureMapping.getRegion())
+                                            .deploymentConfigurationName(infrastructureMapping.getDeploymentConfig())
+                                            .bucket(bucket)
+                                            .key(key)
+                                            .bundleType(bundleType)
+                                            .enableAutoRollback(enableAutoRollback)
+                                            .autoRollbackConfigurations(autoRollbackConfigurations)
+                                            .fileExistsBehavior(fileExistsBehavior)
+                                            .ignoreApplicationStopFailures(ignoreApplicationStopFailures)
+                                            .build();
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
     RevisionLocation revisionLocation = awsCodeDeployService.getApplicationRevisionList(codeDeployParams.getRegion(),
@@ -215,13 +232,17 @@ public class AwsCodeDeployState extends State {
     if (revisionLocation != null && revisionLocation.getS3Location() != null) {
       S3Location s3Location = revisionLocation.getS3Location();
       CodeDeployParams oldCodeDeployParams =
-          new Builder()
-              .withApplicationName(codeDeployParams.getApplicationName())
-              .withDeploymentGroupName(codeDeployParams.getDeploymentGroupName())
-              .withDeploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
-              .withBucket(s3Location.getBucket())
-              .withKey(s3Location.getKey())
-              .withBundleType(s3Location.getBundleType())
+          CodeDeployParams.builder()
+              .applicationName(codeDeployParams.getApplicationName())
+              .deploymentGroupName(codeDeployParams.getDeploymentGroupName())
+              .deploymentConfigurationName(codeDeployParams.getDeploymentConfigurationName())
+              .bucket(s3Location.getBucket())
+              .key(s3Location.getKey())
+              .bundleType(s3Location.getBundleType())
+              .enableAutoRollback(enableAutoRollback)
+              .autoRollbackConfigurations(autoRollbackConfigurations)
+              .fileExistsBehavior(fileExistsBehavior)
+              .ignoreApplicationStopFailures(ignoreApplicationStopFailures)
               .build();
       executionDataBuilder.withOldCodeDeployParams(oldCodeDeployParams);
     }
@@ -343,5 +364,53 @@ public class AwsCodeDeployState extends State {
 
   public void setBundleType(String bundleType) {
     this.bundleType = bundleType;
+  }
+
+  public boolean isIgnoreApplicationStopFailures() {
+    return ignoreApplicationStopFailures;
+  }
+
+  public void setIgnoreApplicationStopFailures(boolean ignoreApplicationStopFailures) {
+    this.ignoreApplicationStopFailures = ignoreApplicationStopFailures;
+  }
+
+  public String getFileExistsBehavior() {
+    return fileExistsBehavior;
+  }
+
+  public void setFileExistsBehavior(String fileExistsBehavior) {
+    this.fileExistsBehavior = fileExistsBehavior;
+  }
+
+  public boolean isEnableAutoRollback() {
+    return enableAutoRollback;
+  }
+
+  public void setEnableAutoRollback(boolean enableAutoRollback) {
+    this.enableAutoRollback = enableAutoRollback;
+  }
+
+  public List<String> getAutoRollbackConfigurations() {
+    return autoRollbackConfigurations;
+  }
+
+  public void setAutoRollbackConfigurations(List<String> autoRollbackConfigurations) {
+    this.autoRollbackConfigurations = autoRollbackConfigurations;
+  }
+
+  public static class CodeDeployAutoRollbackConfigurationProvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return ImmutableMap.of("DEPLOYMENT_FAILURE", "Roll back when a deployment fails", "DEPLOYMENT_STOP_ON_ALARM",
+          "Roll back when alarm thresholds are met", "DEPLOYMENT_STOP_ON_REQUEST", "Roll back on request");
+    }
+  }
+
+  public static class CodeDeployFileExistBehaviorProvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return ImmutableMap.of("DISALLOW", "Fail the deployment (Default option)", "OVERWRITE", "Overwrite the content",
+          "RETAIN", "Retain the content");
+    }
   }
 }
