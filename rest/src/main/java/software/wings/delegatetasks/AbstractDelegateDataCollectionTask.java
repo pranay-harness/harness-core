@@ -6,6 +6,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.sm.StateType;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +51,7 @@ public abstract class AbstractDelegateDataCollectionTask
     }
   }
 
-  protected ScheduledExecutorService scheduleDataCollection(DataCollectionTaskResult taskResult) {
+  protected ScheduledExecutorService scheduleDataCollection(DataCollectionTaskResult taskResult) throws IOException {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleAtFixedRate(getDataCollector(taskResult), 0, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
@@ -82,5 +83,5 @@ public abstract class AbstractDelegateDataCollectionTask
 
   protected abstract Logger getLogger();
 
-  protected abstract Runnable getDataCollector(DataCollectionTaskResult taskResult);
+  protected abstract Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException;
 }
