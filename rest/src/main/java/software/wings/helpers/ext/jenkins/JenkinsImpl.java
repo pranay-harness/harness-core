@@ -17,7 +17,6 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
-import com.offbytwo.jenkins.model.ExtractHeader;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
@@ -149,7 +148,8 @@ public class JenkinsImpl implements Jenkins {
                     throw e;
                   }
                 }
-                logger.info("Retrieving job {} success", jobname);
+                logger.info("Retrieved job details display name {}, and url {}", jobWithDetails.getDisplayName(),
+                    jobWithDetails.getUrl());
                 return Collections.singletonList(jobWithDetails);
               },
               notNullValue())
@@ -359,15 +359,23 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
-    QueueReference queueReference;
-    if (MapUtils.isEmpty(parameters)) {
-      ExtractHeader location =
-          jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null, ExtractHeader.class, true);
-      queueReference = new QueueReference(location.getLocation());
-    } else {
-      queueReference = jobWithDetails.build(parameters, true);
+    if (jobWithDetails == null) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "No job [" + jobname + "] found");
     }
-    return queueReference;
+    try {
+      QueueReference queueReference;
+      if (MapUtils.isEmpty(parameters)) {
+        // ExtractHeader location = jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null,
+        // ExtractHeader.class, true); queueReference = new QueueReference(location.getLocation());
+        queueReference = jobWithDetails.build(true);
+      } else {
+        queueReference = jobWithDetails.build(parameters, true);
+      }
+      return queueReference;
+    } catch (IOException e) {
+      logger.error("Failed to trigger job {} with url {} ", jobname, jobWithDetails.getUrl(), e);
+      throw e;
+    }
   }
 
   /* (non-Javadoc)
