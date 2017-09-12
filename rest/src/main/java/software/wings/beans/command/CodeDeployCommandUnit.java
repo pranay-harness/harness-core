@@ -101,7 +101,8 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
               .withIgnoreApplicationStopFailures(ignoreApplicationStopFailures)
               .withAutoRollbackConfiguration(new AutoRollbackConfiguration()
                                                  .withEnabled(enableAutoRollback)
-                                                 .withEvents(autoRollbackConfigurations));
+                                                 .withEvents(autoRollbackConfigurations))
+              .withFileExistsBehavior(fileExistsBehavior);
 
       CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
           region, cloudProviderSetting, createDeploymentRequest, executionLogCallback);

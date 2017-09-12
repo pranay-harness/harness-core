@@ -78,7 +78,10 @@ public class AwsCodeDeployState extends State {
 
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
-  @Attributes(title = "Bundle Type", required = true) private String bundleType;
+
+  @EnumData(enumDataProvider = CodeDeployBundleTypeProvider.class)
+  @Attributes(title = "Bundle Type", required = true)
+  private String bundleType;
 
   @Attributes(title = "Ignore ApplicationStop lifecycle event failure") private boolean ignoreApplicationStopFailures;
 
@@ -411,6 +414,14 @@ public class AwsCodeDeployState extends State {
     public Map<String, String> getData(String appId, String... params) {
       return ImmutableMap.of("DISALLOW", "Fail the deployment (Default option)", "OVERWRITE", "Overwrite the content",
           "RETAIN", "Retain the content");
+    }
+  }
+
+  public static class CodeDeployBundleTypeProvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return ImmutableMap.of("tar", "A tar archive file (tar)", "tgz", "A compressed tar archive file (tgz)", "zip",
+          "A zip archive file (zip)");
     }
   }
 }
