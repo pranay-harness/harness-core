@@ -11,6 +11,8 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
+import java.util.List;
+
 /**
  * Created by rishi on 6/26/17.
  */
@@ -45,5 +47,29 @@ public class AwsCodeDeployRollback extends AwsCodeDeployState {
   @SchemaIgnore
   public String getBundleType() {
     return super.getBundleType();
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isIgnoreApplicationStopFailures() {
+    return super.isIgnoreApplicationStopFailures();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getFileExistsBehavior() {
+    return super.getFileExistsBehavior();
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isEnableAutoRollback() {
+    return super.isEnableAutoRollback();
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getAutoRollbackConfigurations() {
+    return super.getAutoRollbackConfigurations();
   }
 }
