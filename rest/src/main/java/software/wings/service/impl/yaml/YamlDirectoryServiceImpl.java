@@ -19,12 +19,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.Workflow;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -34,6 +36,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
+import software.wings.yaml.ArtifactStreamYaml;
 import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
 import software.wings.yaml.PipelineYaml;
@@ -48,7 +51,6 @@ import software.wings.yaml.directory.SettingAttributeYamlNode;
 import software.wings.yaml.directory.YamlNode;
 import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -61,6 +63,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   // TODO - not sure what to use for this
   // @Inject private TriggerService triggerService;
   @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public DirectoryNode get(@NotEmpty String accountId) {
@@ -154,9 +157,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (workflows != null) {
       // iterate over workflows
       for (Workflow workflow : workflows) {
-        FolderNode wflwFolder = new FolderNode(workflow.getName(), Workflow.class);
-        workflowsFolder.addChild(wflwFolder);
-        wflwFolder.addChild(new AppLevelYamlNode(
+        workflowsFolder.addChild(new AppLevelYamlNode(
             workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
       }
     }
@@ -173,9 +174,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (pipelines != null) {
       // iterate over pipelines
       for (Pipeline pipeline : pipelines) {
-        FolderNode pplnFolder = new FolderNode(pipeline.getName(), Pipeline.class);
-        pipelinesFolder.addChild(pplnFolder);
-        pplnFolder.addChild(new AppLevelYamlNode(
+        pipelinesFolder.addChild(new AppLevelYamlNode(
             pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
       }
     }
@@ -185,21 +184,25 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode triggersFolder = new FolderNode("Triggers", Trigger.class);
     theFolder.addChild(triggersFolder);
 
-    // TODO - need solution for triggerService and/or equivalent of this
-    // List<Trigger> triggers = triggerService.getTriggersByApp(app.getAppId());
-    List<Trigger> triggers = new ArrayList<>();
+    PageRequest<ArtifactStream> pageRequest =
+        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getAppId()).build()).build();
+    List<ArtifactStream> artifactStreams = artifactStreamService.list(pageRequest).getResponse();
 
-    /*
-    if (triggers != null) {
-      // iterate over triggers
-      for (Trigger trigger : triggers) {
-        FolderNode trgrFolder = new FolderNode(trigger.getName(), Trigger.class);
-        triggersFolder.addChild(trgrFolder);
-        trgrFolder.addChild(new AppLevelYamlNode(trigger.getUuid(), trigger.getAppId(), trigger.getName() + ".yaml",
-    TriggerYaml.class));
+    if (artifactStreams != null) {
+      // iterate over artifactStreams
+      for (ArtifactStream as : artifactStreams) {
+        Service service = serviceResourceService.get(app.getAppId(), as.getServiceId());
+        String name = "";
+        if (service != null) {
+          name = as.getSourceName() + "(" + service.getName() + ")";
+        } else {
+          // TODO - handle service not found
+        }
+
+        triggersFolder.addChild(
+            new AppLevelYamlNode(as.getUuid(), as.getAppId(), name + ".yaml", ArtifactStreamYaml.class));
       }
     }
-    */
   }
 
   private void doCloudProviders(FolderNode theFolder, String accountId) {
