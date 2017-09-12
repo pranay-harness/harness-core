@@ -9,7 +9,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
-import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
+import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;

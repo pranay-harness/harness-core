@@ -3,8 +3,10 @@ package software.wings.beans.command;
 import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
@@ -13,12 +15,14 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.CommandExecutionContext.CodeDeployParams;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anubhaw on 6/23/17.
@@ -42,6 +46,14 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
     String deploymentGroupName = codeDeployParams.getDeploymentGroupName();
     String applicationName = codeDeployParams.getApplicationName();
     String deploymentConfigurationName = codeDeployParams.getDeploymentConfigurationName();
+    boolean enableAutoRollback = codeDeployParams.isEnableAutoRollback();
+    List<String> autoRollbackConfigurations = codeDeployParams.getAutoRollbackConfigurations() != null
+        ? codeDeployParams.getAutoRollbackConfigurations()
+        : new ArrayList<>();
+    boolean ignoreApplicationStopFailures = codeDeployParams.isIgnoreApplicationStopFailures();
+
+    String fileExistsBehavior = codeDeployParams.getFileExistsBehavior();
+
     RevisionLocation revision = new RevisionLocation().withRevisionType("S3").withS3Location(
         new S3Location()
             .withBucket(codeDeployParams.getBucket())
@@ -64,33 +76,33 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
               deploymentConfigurationName == null ? "DEFAULT" : deploymentConfigurationName),
           LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
+          String.format("Enable Auto Rollback: [%s]", enableAutoRollback), LogLevel.INFO);
+      if (enableAutoRollback) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Auto Rollback Configurations: [%s]", Joiner.on(",").join(autoRollbackConfigurations)),
+            LogLevel.INFO);
+      }
+      executionLogCallback.saveExecutionLog(
+          String.format("Ignore Application Stop Failures: [%s]", ignoreApplicationStopFailures), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
+          String.format("File Exists Behavior: [%s]", fileExistsBehavior), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(
           String.format("Revision: [Type: %s, Bucket: %s, Bundle: %s, Key: %s]", revision.getRevisionType(),
               revision.getS3Location().getBucket(), revision.getS3Location().getBundleType(),
               revision.getS3Location().getKey()),
           LogLevel.INFO);
 
-      /*
-        create-deployment
-                                    [--application-name <value>]
-                                    [--deployment-group-name <value>]
-                                    [--revision <value>]
-                                    [--deployment-config-name <value>]
-                                    [--description <value>]**
-[--ignore-application-stop-failures | --no-ignore-application-stop-failures]
-                                    [--target-instances <value>]**
-[--auto-rollback-configuration <value>]
-[--update-outdated-instances-only | --no-update-outdated-instances-only]
-[--file-exists-behavior <value>]
-                                    [--s3-location <value>]**
-[--github-location <value>]
+      CreateDeploymentRequest createDeploymentRequest =
+          new CreateDeploymentRequest()
+              .withApplicationName(applicationName)
+              .withDeploymentGroupName(deploymentGroupName)
+              .withDeploymentConfigName(deploymentConfigurationName)
+              .withRevision(revision)
+              .withIgnoreApplicationStopFailures(ignoreApplicationStopFailures)
+              .withAutoRollbackConfiguration(new AutoRollbackConfiguration()
+                                                 .withEnabled(enableAutoRollback)
+                                                 .withEvents(autoRollbackConfigurations));
 
-       */
-
-      CreateDeploymentRequest createDeploymentRequest = new CreateDeploymentRequest()
-                                                            .withApplicationName(applicationName)
-                                                            .withDeploymentGroupName(deploymentGroupName)
-                                                            .withDeploymentConfigName(deploymentConfigurationName)
-                                                            .withRevision(revision);
       CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
           region, cloudProviderSetting, createDeploymentRequest, executionLogCallback);
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
