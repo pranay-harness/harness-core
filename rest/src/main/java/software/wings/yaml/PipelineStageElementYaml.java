@@ -1,6 +1,6 @@
 package software.wings.yaml;
 
-public class PipelineStageElementYaml {
+public class PipelineStageElementYaml extends GenericYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String type;
   @YamlSerialize public String envName;
