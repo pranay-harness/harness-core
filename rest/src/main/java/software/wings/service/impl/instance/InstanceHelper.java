@@ -159,7 +159,7 @@ public class InstanceHelper {
             .withInfraMappingType(infraMappingType)
             .withLastPipelineExecutionId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
             .withLastPipelineExecutionName(pipelineSummary == null ? null : pipelineSummary.getPipelineName())
-            .withLastDeployedAt(phaseExecutionData.getEndTs().longValue())
+            .withLastDeployedAt(phaseExecutionData.getEndTs())
             .withLastDeployedById(triggeredBy.getUuid())
             .withLastDeployedByName(triggeredBy.getName())
             .withServiceId(phaseExecutionData.getServiceId())

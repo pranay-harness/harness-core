@@ -2,6 +2,9 @@ package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -11,6 +14,9 @@ import java.util.Map;
 /**
  * Created by brett on 3/13/17
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class KubernetesReplicationControllerExecutionData extends StateExecutionData implements NotifyResponseData {
   private String gkeClusterName;
   private String kubernetesReplicationControllerName;
@@ -21,69 +27,6 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   private String commandName;
   private int instanceCount;
 
-  public String getGkeClusterName() {
-    return gkeClusterName;
-  }
-
-  public void setGkeClusterName(String gkeClusterName) {
-    this.gkeClusterName = gkeClusterName;
-  }
-
-  public String getKubernetesReplicationControllerName() {
-    return kubernetesReplicationControllerName;
-  }
-
-  public void setKubernetesReplicationControllerName(String kubernetesReplicationControllerName) {
-    this.kubernetesReplicationControllerName = kubernetesReplicationControllerName;
-  }
-
-  public String getKubernetesServiceName() {
-    return kubernetesServiceName;
-  }
-
-  public void setKubernetesServiceName(String kubernetesServiceName) {
-    this.kubernetesServiceName = kubernetesServiceName;
-  }
-
-  public String getKubernetesServiceClusterIP() {
-    return kubernetesServiceClusterIP;
-  }
-
-  public void setKubernetesServiceClusterIP(String kubernetesServiceClusterIP) {
-    this.kubernetesServiceClusterIP = kubernetesServiceClusterIP;
-  }
-
-  public String getKubernetesServiceLoadBalancerEndpoint() {
-    return kubernetesServiceLoadBalancerEndpoint;
-  }
-
-  public void setKubernetesServiceLoadBalancerEndpoint(String kubernetesServiceLoadBalancerEndpoint) {
-    this.kubernetesServiceLoadBalancerEndpoint = kubernetesServiceLoadBalancerEndpoint;
-  }
-
-  public String getCommandName() {
-    return commandName;
-  }
-
-  public void setCommandName(String commandName) {
-    this.commandName = commandName;
-  }
-
-  public int getInstanceCount() {
-    return instanceCount;
-  }
-
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
-  }
-
-  public String getDockerImageName() {
-    return dockerImageName;
-  }
-
-  public void setDockerImageName(String dockerImageName) {
-    this.dockerImageName = dockerImageName;
-  }
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();

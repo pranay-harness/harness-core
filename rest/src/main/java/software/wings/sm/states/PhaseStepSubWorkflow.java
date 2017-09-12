@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
+import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
-import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStepExecutionSummary;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerUpgradeRequestElement;
 import software.wings.api.DeploymentType;
@@ -167,18 +168,20 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return null;
       }
       CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      List<ContainerServiceData> oldServiceNames = commandStepExecutionSummary.getOldPreviousInstanceCounts();
+      String name = oldServiceNames.isEmpty() ? "" : oldServiceNames.iterator().next().getName();
       ContainerServiceElement contextElement =
           aContainerServiceElement()
-              .withName(commandStepExecutionSummary.getOldContainerServiceName())
+              .withName(name)
               .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
               .withClusterName(commandStepExecutionSummary.getClusterName())
               .build();
 
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          aContainerUpgradeRequestElement()
-              .withOldServiceInstanceCount(commandStepExecutionSummary.getNewServicePreviousInstanceCount())
-              .withNewServiceInstanceCount(commandStepExecutionSummary.getOldServicePreviousInstanceCount())
-              .withContainerServiceElement(contextElement)
+          ContainerUpgradeRequestElement.builder()
+              .oldServiceInstanceCounts(reverse(commandStepExecutionSummary.getNewPreviousInstanceCounts()))
+              .newServiceInstanceCounts(reverse(commandStepExecutionSummary.getOldPreviousInstanceCounts()))
+              .containerServiceElement(contextElement)
               .build();
       return singletonList(containerUpgradeRequestElement);
     } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
@@ -198,6 +201,17 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return singletonList(deployRequestElement);
     }
     return null;
+  }
+
+  private List<ContainerServiceData> reverse(List<ContainerServiceData> serviceCounts) {
+    return serviceCounts.stream()
+        .map(sc
+            -> aContainerServiceData()
+                   .withName(sc.getName())
+                   .withPreviousCount(sc.getDesiredCount())
+                   .withDesiredCount(sc.getPreviousCount())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private ServiceInstanceArtifactParam buildInstanceArtifactParam(

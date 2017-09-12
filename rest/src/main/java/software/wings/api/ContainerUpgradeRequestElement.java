@@ -1,43 +1,24 @@
 package software.wings.api;
 
+import lombok.Builder;
+import lombok.Data;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by rishi on 4/11/17.
  */
+@Data
+@Builder
 public class ContainerUpgradeRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
-  private int newServiceInstanceCount;
-  private int oldServiceInstanceCount;
-
-  public ContainerServiceElement getContainerServiceElement() {
-    return containerServiceElement;
-  }
-
-  public void setContainerServiceElement(ContainerServiceElement containerServiceElement) {
-    this.containerServiceElement = containerServiceElement;
-  }
-
-  public int getNewServiceInstanceCount() {
-    return newServiceInstanceCount;
-  }
-
-  public void setNewServiceInstanceCount(int newServiceInstanceCount) {
-    this.newServiceInstanceCount = newServiceInstanceCount;
-  }
-
-  public int getOldServiceInstanceCount() {
-    return oldServiceInstanceCount;
-  }
-
-  public void setOldServiceInstanceCount(int oldServiceInstanceCount) {
-    this.oldServiceInstanceCount = oldServiceInstanceCount;
-  }
+  private List<ContainerServiceData> newServiceInstanceCounts;
+  private List<ContainerServiceData> oldServiceInstanceCounts;
 
   @Override
   public ContextElementType getElementType() {
@@ -57,41 +38,5 @@ public class ContainerUpgradeRequestElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
-  }
-
-  public static final class ContainerUpgradeRequestElementBuilder {
-    private ContainerServiceElement containerServiceElement;
-    private int newServiceInstanceCount;
-    private int oldServiceInstanceCount;
-
-    private ContainerUpgradeRequestElementBuilder() {}
-
-    public static ContainerUpgradeRequestElementBuilder aContainerUpgradeRequestElement() {
-      return new ContainerUpgradeRequestElementBuilder();
-    }
-
-    public ContainerUpgradeRequestElementBuilder withContainerServiceElement(
-        ContainerServiceElement containerServiceElement) {
-      this.containerServiceElement = containerServiceElement;
-      return this;
-    }
-
-    public ContainerUpgradeRequestElementBuilder withNewServiceInstanceCount(int newServiceInstanceCount) {
-      this.newServiceInstanceCount = newServiceInstanceCount;
-      return this;
-    }
-
-    public ContainerUpgradeRequestElementBuilder withOldServiceInstanceCount(int oldServiceInstanceCount) {
-      this.oldServiceInstanceCount = oldServiceInstanceCount;
-      return this;
-    }
-
-    public ContainerUpgradeRequestElement build() {
-      ContainerUpgradeRequestElement containerUpgradeRequestElement = new ContainerUpgradeRequestElement();
-      containerUpgradeRequestElement.setContainerServiceElement(containerServiceElement);
-      containerUpgradeRequestElement.setNewServiceInstanceCount(newServiceInstanceCount);
-      containerUpgradeRequestElement.setOldServiceInstanceCount(oldServiceInstanceCount);
-      return containerUpgradeRequestElement;
-    }
   }
 }

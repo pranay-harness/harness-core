@@ -2,9 +2,11 @@ package software.wings.beans.command;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import software.wings.api.ContainerServiceData;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -12,14 +14,16 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 6/9/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Data
 public class CommandExecutionContext {
   private String accountId;
   private String envId;
@@ -44,13 +48,9 @@ public class CommandExecutionContext {
   private String region;
   private CodeDeployParams codeDeployParams;
   private Map<String, String> metadata = Maps.newHashMap();
-  private Integer desiredCount;
-  private Integer desiredPercentage;
+  private List<ContainerServiceData> desiredCounts = new ArrayList<>();
   private CommandExecutionData commandExecutionData;
 
-  /**
-   * Instantiates a new Command execution context.
-   */
   public CommandExecutionContext() {}
 
   /**
@@ -61,257 +61,29 @@ public class CommandExecutionContext {
   public CommandExecutionContext(CommandExecutionContext other) {
     this.accountId = other.accountId;
     this.envId = other.envId;
+    this.host = other.host;
     this.appId = other.appId;
     this.activityId = other.activityId;
     this.runtimePath = other.runtimePath;
     this.stagingPath = other.stagingPath;
     this.backupPath = other.backupPath;
     this.serviceTemplateId = other.serviceTemplateId;
-    this.appContainer = other.appContainer;
     this.executionCredential = other.executionCredential;
+    this.appContainer = other.appContainer;
     this.artifactFiles = other.artifactFiles;
-    this.envVariables = other.envVariables;
     this.serviceVariables = other.serviceVariables;
-    this.host = other.host;
+    this.envVariables = other.envVariables;
     this.hostConnectionAttributes = other.hostConnectionAttributes;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
+    this.cloudProviderSetting = other.cloudProviderSetting;
+    this.clusterName = other.clusterName;
+    this.serviceName = other.serviceName;
+    this.region = other.region;
     this.codeDeployParams = other.codeDeployParams;
     this.metadata = other.metadata;
-  }
-
-  /**
-   * Getter for property 'artifactFiles'.
-   *
-   * @return Value for property 'artifactFiles'.
-   */
-  public List<ArtifactFile> getArtifactFiles() {
-    return artifactFiles;
-  }
-
-  /**
-   * Setter for property 'artifactFiles'.
-   *
-   * @param artifactFiles Value to set for property 'artifactFiles'.
-   */
-  public void setArtifactFiles(List<ArtifactFile> artifactFiles) {
-    this.artifactFiles = artifactFiles;
-  }
-
-  /**
-   * Gets activity id.
-   *
-   * @return the activity id
-   */
-  public String getActivityId() {
-    return activityId;
-  }
-
-  /**
-   * Sets activity id.
-   *
-   * @param activityId the activity id
-   */
-  public void setActivityId(String activityId) {
-    this.activityId = activityId;
-  }
-
-  /**
-   * Gets runtime path.
-   *
-   * @return the runtime path
-   */
-  public String getRuntimePath() {
-    return runtimePath;
-  }
-
-  /**
-   * Sets runtime path.
-   *
-   * @param runtimePath the runtime path
-   */
-  public void setRuntimePath(String runtimePath) {
-    this.runtimePath = runtimePath;
-  }
-
-  /**
-   * Gets staging path.
-   *
-   * @return the staging path
-   */
-  public String getStagingPath() {
-    return stagingPath;
-  }
-
-  /**
-   * Sets staging path.
-   *
-   * @param stagingPath the staging path
-   */
-  public void setStagingPath(String stagingPath) {
-    this.stagingPath = stagingPath;
-  }
-
-  /**
-   * Gets backup path.
-   *
-   * @return the backup path
-   */
-  public String getBackupPath() {
-    return backupPath;
-  }
-
-  /**
-   * Sets backup path.
-   *
-   * @param backupPath the backup path
-   */
-  public void setBackupPath(String backupPath) {
-    this.backupPath = backupPath;
-  }
-
-  /**
-   * Gets execution credential.
-   *
-   * @return the execution credential
-   */
-  public ExecutionCredential getExecutionCredential() {
-    return executionCredential;
-  }
-
-  /**
-   * Sets execution credential.
-   *
-   * @param executionCredential the execution credential
-   */
-  public void setExecutionCredential(ExecutionCredential executionCredential) {
-    this.executionCredential = executionCredential;
-  }
-
-  /**
-   * Gets app id.
-   *
-   * @return the app id
-   */
-  public String getAppId() {
-    return appId;
-  }
-
-  /**
-   * Sets app id.
-   *
-   * @param appId the app id
-   */
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  /**
-   * Gets service instance.
-   *
-   * @return the service instance
-   */
-  public String getEnvId() {
-    return envId;
-  }
-
-  /**
-   * Sets service instance.
-   *
-   * @param envId the service instance
-   */
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
-  /**
-   * Getter for property 'serviceVariables'.
-   *
-   * @return Value for property 'serviceVariables'.
-   */
-  public Map<String, String> getServiceVariables() {
-    return serviceVariables;
-  }
-
-  /**
-   * Setter for property 'serviceVariables'.
-   *
-   * @param serviceVariables Value to set for property 'serviceVariables'.
-   */
-  public void setServiceVariables(Map<String, String> serviceVariables) {
-    this.serviceVariables = serviceVariables;
-  }
-
-  /**
-   * Getter for property 'host'.
-   *
-   * @return Value for property 'host'.
-   */
-  public Host getHost() {
-    return host;
-  }
-
-  /**
-   * Setter for property 'host'.
-   *
-   * @param host Value to set for property 'host'.
-   */
-  public void setHost(Host host) {
-    this.host = host;
-  }
-
-  /**
-   * Getter for property 'hostConnectionAttributes'.
-   *
-   * @return Value for property 'hostConnectionAttributes'.
-   */
-  public SettingAttribute getHostConnectionAttributes() {
-    return hostConnectionAttributes;
-  }
-
-  /**
-   * Setter for property 'hostConnectionAttributes'.
-   *
-   * @param hostConnectionAttributes Value to set for property 'hostConnectionAttributes'.
-   */
-  public void setHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
-    this.hostConnectionAttributes = hostConnectionAttributes;
-  }
-
-  /**
-   * Getter for property 'bastionConnectionAttributes'.
-   *
-   * @return Value for property 'bastionConnectionAttributes'.
-   */
-  public SettingAttribute getBastionConnectionAttributes() {
-    return bastionConnectionAttributes;
-  }
-
-  /**
-   * Setter for property 'bastionConnectionAttributes'.
-   *
-   * @param bastionConnectionAttributes Value to set for property 'bastionConnectionAttributes'.
-   */
-  public void setBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
-    this.bastionConnectionAttributes = bastionConnectionAttributes;
-  }
-
-  /**
-   * Getter for property 'accountId'.
-   *
-   * @return Value for property 'accountId'.
-   */
-  public String getAccountId() {
-    return accountId;
-  }
-
-  /**
-   * Setter for property 'accountId'.
-   *
-   * @param accountId Value to set for property 'accountId'.
-   */
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
+    this.desiredCounts = other.desiredCounts;
+    this.commandExecutionData = other.commandExecutionData;
   }
 
   /**
@@ -344,279 +116,9 @@ public class CommandExecutionContext {
   }
 
   /**
-   * Gets artifact stream attributes.
-   *
-   * @return the artifact stream attributes
-   */
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    return artifactStreamAttributes;
-  }
-
-  /**
-   * Sets artifact stream attributes.
-   *
-   * @param artifactStreamAttributes the artifact stream attributes
-   */
-  public void setArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
-    this.artifactStreamAttributes = artifactStreamAttributes;
-  }
-
-  /**
-   * Gets service template id.
-   *
-   * @return the service template id
-   */
-  public String getServiceTemplateId() {
-    return serviceTemplateId;
-  }
-
-  /**
-   * Sets service template id.
-   *
-   * @param serviceTemplateId the service template id
-   */
-  public void setServiceTemplateId(String serviceTemplateId) {
-    this.serviceTemplateId = serviceTemplateId;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(accountId, envId, host, appId, activityId, runtimePath, stagingPath, backupPath,
-        serviceTemplateId, executionCredential, artifactFiles, serviceVariables, envVariables, hostConnectionAttributes,
-        bastionConnectionAttributes, artifactStreamAttributes, cloudProviderSetting, clusterName, serviceName, region,
-        desiredCount, desiredPercentage, metadata, commandExecutionData);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final CommandExecutionContext other = (CommandExecutionContext) obj;
-    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.envId, other.envId)
-        && Objects.equals(this.host, other.host) && Objects.equals(this.appId, other.appId)
-        && Objects.equals(this.activityId, other.activityId) && Objects.equals(this.runtimePath, other.runtimePath)
-        && Objects.equals(this.stagingPath, other.stagingPath) && Objects.equals(this.backupPath, other.backupPath)
-        && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
-        && Objects.equals(this.executionCredential, other.executionCredential)
-        && Objects.equals(this.artifactFiles, other.artifactFiles)
-        && Objects.equals(this.serviceVariables, other.serviceVariables)
-        && Objects.equals(this.envVariables, other.envVariables)
-        && Objects.equals(this.hostConnectionAttributes, other.hostConnectionAttributes)
-        && Objects.equals(this.bastionConnectionAttributes, other.bastionConnectionAttributes)
-        && Objects.equals(this.artifactStreamAttributes, other.artifactStreamAttributes)
-        && Objects.equals(this.cloudProviderSetting, other.cloudProviderSetting)
-        && Objects.equals(this.clusterName, other.clusterName) && Objects.equals(this.serviceName, other.serviceName)
-        && Objects.equals(this.region, other.region) && Objects.equals(this.desiredCount, other.desiredCount)
-        && Objects.equals(this.desiredPercentage, other.desiredPercentage)
-        && Objects.equals(this.commandExecutionData, other.commandExecutionData)
-        && Objects.equals(this.metadata, other.metadata);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("accountId", accountId)
-        .add("envId", envId)
-        .add("host", host)
-        .add("appId", appId)
-        .add("activityId", activityId)
-        .add("runtimePath", runtimePath)
-        .add("stagingPath", stagingPath)
-        .add("backupPath", backupPath)
-        .add("serviceTemplateId", serviceTemplateId)
-        .add("executionCredential", executionCredential)
-        .add("artifactFiles", artifactFiles)
-        .add("serviceVariables", serviceVariables)
-        .add("envVariables", envVariables)
-        .add("hostConnectionAttributes", hostConnectionAttributes)
-        .add("bastionConnectionAttributes", bastionConnectionAttributes)
-        .add("artifactStreamAttributes", artifactStreamAttributes)
-        .add("cloudProviderSetting", cloudProviderSetting)
-        .add("clusterName", clusterName)
-        .add("serviceName", serviceName)
-        .add("region", region)
-        .add("desiredCount", desiredCount)
-        .add("desiredPercentage", desiredPercentage)
-        .add("commandExecutionData", commandExecutionData)
-        .add("metadata", metadata)
-        .toString();
-  }
-
-  /**
-   * Gets cloud provider setting.
-   *
-   * @return the cloud provider setting
-   */
-  public SettingAttribute getCloudProviderSetting() {
-    return cloudProviderSetting;
-  }
-
-  /**
-   * Sets cloud provider setting.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   */
-  public void setCloudProviderSetting(SettingAttribute cloudProviderSetting) {
-    this.cloudProviderSetting = cloudProviderSetting;
-  }
-
-  /**
-   * Gets cluster name.
-   *
-   * @return the cluster name
-   */
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  /**
-   * Sets cluster name.
-   *
-   * @param clusterName the cluster name
-   */
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  /**
-   * Gets service name.
-   *
-   * @return the service name
-   */
-  public String getServiceName() {
-    return serviceName;
-  }
-
-  /**
-   * Sets service name.
-   *
-   * @param serviceName the service name
-   */
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
-  }
-
-  /**
-   * Gets region.
-   *
-   * @return the region
-   */
-  public String getRegion() {
-    return region;
-  }
-
-  /**
-   * Sets region.
-   *
-   * @param region the region
-   */
-  public void setRegion(String region) {
-    this.region = region;
-  }
-
-  /**
-   * Gets desired count.
-   *
-   * @return the desired count
-   */
-  public Integer getDesiredCount() {
-    return desiredCount;
-  }
-
-  /**
-   * Sets desired count.
-   *
-   * @param desiredCount the desired count
-   */
-  public void setDesiredCount(Integer desiredCount) {
-    this.desiredCount = desiredCount;
-  }
-
-  /**
-   * Gets desired percentage.
-   *
-   * @return the desired percentage
-   */
-  public Integer getDesiredPercentage() {
-    return desiredPercentage;
-  }
-
-  /**
-   * Sets desired percentage.
-   *
-   * @param desiredPercentage the desired percentage
-   */
-  public void setDesiredPercentage(Integer desiredPercentage) {
-    this.desiredPercentage = desiredPercentage;
-  }
-
-  /**
-   * Gets command execution data.
-   *
-   * @return the command execution data
-   */
-  public CommandExecutionData getCommandExecutionData() {
-    return commandExecutionData;
-  }
-
-  /**
-   * Sets command execution data.
-   *
-   * @param commandExecutionData the command execution data
-   */
-  public void setCommandExecutionData(CommandExecutionData commandExecutionData) {
-    this.commandExecutionData = commandExecutionData;
-  }
-
-  /**
-   * Gets app container.
-   *
-   * @return the app container
-   */
-  public AppContainer getAppContainer() {
-    return appContainer;
-  }
-
-  /**
-   * Sets app container.
-   *
-   * @param appContainer the app container
-   */
-  public void setAppContainer(AppContainer appContainer) {
-    this.appContainer = appContainer;
-  }
-
-  public CodeDeployParams getCodeDeployParams() {
-    return codeDeployParams;
-  }
-
-  public void setCodeDeployParams(CodeDeployParams codeDeployParams) {
-    this.codeDeployParams = codeDeployParams;
-  }
-
-  /**
-   * Get Artifact Meta data such build no artifact path etc
-   * @return
-   */
-  public Map<String, String> getMetadata() {
-    return metadata;
-  }
-
-  /**
-   * Set Meta Data
-   * @param metadata
-   */
-  public void setMetadata(Map<String, String> metadata) {
-    this.metadata = metadata;
-  }
-
-  /**
    * The type Code deploy params.
    */
+  @Data
   public static class CodeDeployParams {
     private String applicationName;
     private String deploymentConfigurationName;
@@ -636,102 +138,6 @@ public class CommandExecutionContext {
       setBucket(builder.bucket);
       setKey(builder.key);
       setBundleType(builder.bundleType);
-    }
-
-    /**
-     * Gets application name.
-     *
-     * @return the application name
-     */
-    public String getApplicationName() {
-      return applicationName;
-    }
-
-    /**
-     * Sets application name.
-     *
-     * @param applicationName the application name
-     */
-    public void setApplicationName(String applicationName) {
-      this.applicationName = applicationName;
-    }
-
-    /**
-     * Gets deployment configuration name.
-     *
-     * @return the deployment configuration name
-     */
-    public String getDeploymentConfigurationName() {
-      return deploymentConfigurationName;
-    }
-
-    /**
-     * Sets deployment configuration name.
-     *
-     * @param deploymentConfigurationName the deployment configuration name
-     */
-    public void setDeploymentConfigurationName(String deploymentConfigurationName) {
-      this.deploymentConfigurationName = deploymentConfigurationName;
-    }
-
-    /**
-     * Gets deployment group name.
-     *
-     * @return the deployment group name
-     */
-    public String getDeploymentGroupName() {
-      return deploymentGroupName;
-    }
-
-    /**
-     * Sets deployment group name.
-     *
-     * @param deploymentGroupName the deployment group name
-     */
-    public void setDeploymentGroupName(String deploymentGroupName) {
-      this.deploymentGroupName = deploymentGroupName;
-    }
-
-    /**
-     * Gets region.
-     *
-     * @return the region
-     */
-    public String getRegion() {
-      return region;
-    }
-
-    /**
-     * Sets region.
-     *
-     * @param region the region
-     */
-    public void setRegion(String region) {
-      this.region = region;
-    }
-
-    public String getBucket() {
-      return bucket;
-    }
-
-    public void setBucket(String bucket) {
-      this.bucket = bucket;
-    }
-
-    public String getBundleType() {
-      return bundleType;
-    }
-
-    public void setBundleType(String bundleType) {
-      this.bundleType = bundleType;
-    }
-
-    public String getKey() {
-      return key;
-    }
-
-    public void setKey(String key) {
-      this.key = key;
     }
 
     public static final class Builder {
@@ -809,9 +215,8 @@ public class CommandExecutionContext {
     private String serviceName;
     private String region;
     private CodeDeployParams codeDeployParams;
-    private Map<String, String> metadata;
-    private Integer desiredCount;
-    private Integer desiredPercentage;
+    private Map<String, String> metadata = Maps.newHashMap();
+    private List<ContainerServiceData> desiredCounts = new ArrayList<>();
     private CommandExecutionData commandExecutionData;
 
     private Builder() {}
@@ -930,23 +335,18 @@ public class CommandExecutionContext {
       return this;
     }
 
-    public Builder withDesiredCount(Integer desiredCount) {
-      this.desiredCount = desiredCount;
+    public Builder withMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
       return this;
     }
 
-    public Builder withDesiredPercentage(Integer desiredPercentage) {
-      this.desiredPercentage = desiredPercentage;
+    public Builder withDesiredCounts(List<ContainerServiceData> desiredCounts) {
+      this.desiredCounts = desiredCounts;
       return this;
     }
 
     public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
       this.commandExecutionData = commandExecutionData;
-      return this;
-    }
-
-    public Builder withMetadata(Map<String, String> metadata) {
-      this.metadata = metadata;
       return this;
     }
 
@@ -974,10 +374,9 @@ public class CommandExecutionContext {
           .withServiceName(serviceName)
           .withRegion(region)
           .withCodeDeployParams(codeDeployParams)
-          .withDesiredCount(desiredCount)
-          .withDesiredPercentage(desiredPercentage)
-          .withCommandExecutionData(commandExecutionData)
-          .withMetadata(metadata);
+          .withMetadata(metadata)
+          .withDesiredCounts(desiredCounts)
+          .withCommandExecutionData(commandExecutionData);
     }
 
     public CommandExecutionContext build() {
@@ -995,6 +394,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setAppContainer(appContainer);
       commandExecutionContext.setArtifactFiles(artifactFiles);
       commandExecutionContext.setServiceVariables(serviceVariables);
+      commandExecutionContext.setEnvVariables(envVariables);
       commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
@@ -1003,11 +403,9 @@ public class CommandExecutionContext {
       commandExecutionContext.setServiceName(serviceName);
       commandExecutionContext.setRegion(region);
       commandExecutionContext.setCodeDeployParams(codeDeployParams);
-      commandExecutionContext.setDesiredCount(desiredCount);
-      commandExecutionContext.setDesiredPercentage(desiredPercentage);
-      commandExecutionContext.setCommandExecutionData(commandExecutionData);
-      commandExecutionContext.envVariables = this.envVariables;
       commandExecutionContext.setMetadata(metadata);
+      commandExecutionContext.setDesiredCounts(desiredCounts);
+      commandExecutionContext.setCommandExecutionData(commandExecutionData);
       return commandExecutionContext;
     }
   }

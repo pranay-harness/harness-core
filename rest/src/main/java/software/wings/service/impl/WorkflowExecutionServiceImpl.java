@@ -1438,9 +1438,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           .filter(instance
               -> !StateType.REPEAT.name().equals(instance.getStateType())
                   && !StateType.FORK.name().equals(instance.getStateType()))
-          .forEach(instance -> {
-            stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary());
-          });
+          .forEach(
+              instance -> stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary()));
 
       parentInstanceIds = pageResponse.getResponse()
                               .stream()
