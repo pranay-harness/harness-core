@@ -88,6 +88,11 @@ public abstract class SettingValue implements ExtensionPoint {
     LOGZ("LOGZ"),
 
     /**
+     * SUMO setting variable types.
+     */
+    SUMO("SUMO"),
+
+    /**
      * App dynamics setting variable types.
      */
     APP_DYNAMICS("AppDynamics"),

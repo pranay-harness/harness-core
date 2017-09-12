@@ -62,7 +62,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     super(name, stateType);
   }
 
-  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
   public String getQuery() {
     return query;

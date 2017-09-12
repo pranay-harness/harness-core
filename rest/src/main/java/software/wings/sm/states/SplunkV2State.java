@@ -66,7 +66,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return timeDuration;
   }
 
-  @Attributes(required = true, title = "Search Keywords", description = "Such as *Exception*")
+  @Attributes(required = true, title = "Search Keywords")
   @DefaultValue("*exception*")
   public String getQuery() {
     return query;
