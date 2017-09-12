@@ -10,7 +10,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
@@ -27,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -109,9 +107,6 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public List<String> batchedSave(List<Log> logs) {
-    if (logs == null || CollectionUtils.isEmpty(logs)) {
-      return Arrays.asList();
-    }
     List<String> savedLogIds = wingsPersistence.save(logs);
     // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
     Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(
