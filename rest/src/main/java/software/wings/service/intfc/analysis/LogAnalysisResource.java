@@ -22,6 +22,8 @@ public interface LogAnalysisResource {
 
   String LOGZ_RESOURCE_BASE_URL = "logz";
 
+  String SUMO_RESOURCE_BASE_URL = "sumo";
+
   /**
    * url for delegate to send collected logs
    */
