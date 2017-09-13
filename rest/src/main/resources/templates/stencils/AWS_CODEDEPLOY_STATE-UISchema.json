@@ -1,4 +1,4 @@
 {
   "commandName": { "ui:widget": "hidden" },
-  "ui:order": ["bucket", "key", "bundleType", "commandName", "enableAutoRollback", "autoRollbackConfigurations", "ignoreApplicationStopFailures", "fileExistsBehavior"]
+  "ui:order": ["bucket", "key", "bundleType", "commandName",  "fileExistsBehavior", "enableAutoRollback","autoRollbackConfigurations","ignoreApplicationStopFailures"]
 }
