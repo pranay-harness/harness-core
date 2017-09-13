@@ -17,7 +17,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SUMO")
 @Data
-@ToString(exclude = "accessId, accessKey")
+@ToString(exclude = {"accessId", "accessKey"})
 public class SumoConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Sumo Logic api server Url", required = true) @NotEmpty private String sumoUrl;
 
