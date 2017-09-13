@@ -46,7 +46,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String artifactId;
   private String artifactName;
   private CountsByStatuses countsByStatuses;
-  private String newContainerServiceName;
   private int newRunningInstanceCount;
   private List<ContainerServiceData> newPreviousInstanceCounts = new ArrayList<>();
   private int oldRunningInstanceCount;
@@ -123,7 +122,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   public StepExecutionSummary getStepExecutionSummary() {
     CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
     populateStepExecutionSummary(commandStepExecutionSummary);
-    commandStepExecutionSummary.setNewContainerServiceName(newContainerServiceName);
     commandStepExecutionSummary.setNewPreviousInstanceCounts(newPreviousInstanceCounts);
     commandStepExecutionSummary.setOldPreviousInstanceCounts(oldPreviousInstanceCounts);
     // TODO: Set newRunning and oldRunning instance counts? Where are they used?
@@ -156,7 +154,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String artifactId;
     private String artifactName;
     private CountsByStatuses countsByStatuses;
-    private String newContainerServiceName;
     private int newRunningInstanceCount;
     private List<ContainerServiceData> newPreviousInstanceCounts = new ArrayList<>();
     private int oldRunningInstanceCount;
@@ -279,11 +276,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withNewContainerServiceName(String newContainerServiceName) {
-      this.newContainerServiceName = newContainerServiceName;
-      return this;
-    }
-
     public Builder withNewRunningInstanceCount(int newRunningInstanceCount) {
       this.newRunningInstanceCount = newRunningInstanceCount;
       return this;
@@ -359,7 +351,6 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withNewPreviousInstanceCounts(newPreviousInstanceCounts)
           .withDownsize(downsize)
           .withCountsByStatuses(countsByStatuses)
-          .withNewContainerServiceName(newContainerServiceName)
           .withNewRunningInstanceCount(newRunningInstanceCount)
           .withOldRunningInstanceCount(oldRunningInstanceCount)
           .withOldPreviousInstanceCounts(oldPreviousInstanceCounts)
@@ -393,7 +384,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setArtifactId(artifactId);
       commandStateExecutionData.setArtifactName(artifactName);
       commandStateExecutionData.setCountsByStatuses(countsByStatuses);
-      commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
       commandStateExecutionData.setNewRunningInstanceCount(newRunningInstanceCount);
       commandStateExecutionData.setOldRunningInstanceCount(oldRunningInstanceCount);
       commandStateExecutionData.setNewPreviousInstanceCounts(newPreviousInstanceCounts);

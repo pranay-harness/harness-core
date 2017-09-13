@@ -170,12 +170,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
       List<ContainerServiceData> oldServiceNames = commandStepExecutionSummary.getOldPreviousInstanceCounts();
       String name = oldServiceNames.isEmpty() ? "" : oldServiceNames.iterator().next().getName();
-      ContainerServiceElement contextElement =
-          aContainerServiceElement()
-              .withName(name)
-              .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
-              .withClusterName(commandStepExecutionSummary.getClusterName())
-              .build();
+      ContainerServiceElement contextElement = aContainerServiceElement()
+                                                   .withName(name)
+                                                   .withClusterName(commandStepExecutionSummary.getClusterName())
+                                                   .build();
 
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           ContainerUpgradeRequestElement.builder()

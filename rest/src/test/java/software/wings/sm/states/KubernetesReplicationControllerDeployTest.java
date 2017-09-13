@@ -132,7 +132,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                 .withOldName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withDeploymentType(DeploymentType.KUBERNETES)
                                  .build())

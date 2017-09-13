@@ -217,7 +217,6 @@ public class KubernetesReplicationControllerSetup extends State {
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
                                                           .withUuid(serviceId)
                                                           .withName(replicationControllerName)
-                                                          .withOldName(lastReplicationControllerName)
                                                           .withClusterName(clusterName)
                                                           .withDeploymentType(DeploymentType.KUBERNETES)
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())

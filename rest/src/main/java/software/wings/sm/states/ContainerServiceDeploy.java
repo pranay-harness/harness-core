@@ -149,7 +149,6 @@ public abstract class ContainerServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     String activityId = activityService.save(activityBuilder.build()).getUuid();
-    executionDataBuilder.withActivityId(activityId);
 
     List<ContainerServiceData> desiredCounts;
     if (isRollback()) {
@@ -180,9 +179,6 @@ public abstract class ContainerServiceDeploy extends State {
                             .withPreviousCount(previousDesiredCount.get())
                             .withDesiredCount(desiredCount)
                             .build());
-
-      executionDataBuilder.withNewContainerServiceName(newContainerServiceName);
-      executionDataBuilder.withNewPreviousInstanceCounts(desiredCounts);
     }
     logger.info("Setting desired desiredCount for {} services", desiredCounts.size());
     desiredCounts.forEach(dc
@@ -202,6 +198,8 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withEnvId(envId)
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
+
+    executionDataBuilder.withActivityId(activityId).withNewPreviousInstanceCounts(desiredCounts);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -299,8 +297,9 @@ public abstract class ContainerServiceDeploy extends State {
         }
         remaining -= previousDesiredCount - desiredCount;
       }
-      commandStateExecutionData.setOldPreviousInstanceCounts(desiredCounts);
     }
+
+    commandStateExecutionData.setOldPreviousInstanceCounts(desiredCounts);
 
     logger.info("Downsizing {} services", desiredCounts.size());
     desiredCounts.forEach(dc
