@@ -53,7 +53,8 @@ public abstract class AbstractDelegateDataCollectionTask
 
   protected ScheduledExecutorService scheduleDataCollection(DataCollectionTaskResult taskResult) throws IOException {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleAtFixedRate(getDataCollector(taskResult), 0, 1, TimeUnit.MINUTES);
+    scheduledExecutorService.scheduleAtFixedRate(
+        getDataCollector(taskResult), SplunkDataCollectionTask.DELAY_MINUTES, 1, TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
