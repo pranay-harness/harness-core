@@ -73,11 +73,12 @@ public class YamlHelper {
   }
 
   public static YamlRepresenter getRepresenter() {
-    return getRepresenter(false);
+    return getRepresenter(false, false);
   }
 
-  public static YamlRepresenter getRepresenter(boolean everythingExceptDoNotSerializeAndTransients) {
-    YamlRepresenter representer = new YamlRepresenter(everythingExceptDoNotSerializeAndTransients);
+  public static YamlRepresenter getRepresenter(
+      boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
+    YamlRepresenter representer = new YamlRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients);
 
     // use custom that PropertyUtils that doesn't sort alphabetically
     PropertyUtils pu = new UnsortedPropertyUtils();
@@ -131,11 +132,11 @@ public class YamlHelper {
 
   // added this while working on workflows
   public static <T> RestResponse<YamlPayload> getYamlRestResponseGeneric(
-      T obj, String payloadName, boolean everythingExceptDoNotSerializeAndTransients) {
+      T obj, String payloadName, boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
     RestResponse rr = new RestResponse<>();
 
-    Yaml yaml =
-        new Yaml(YamlHelper.getRepresenter(everythingExceptDoNotSerializeAndTransients), YamlHelper.getDumperOptions());
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients),
+        YamlHelper.getDumperOptions());
     String dumpedYaml = yaml.dump(obj);
 
     // instead of removing the first line - we should remove any line that starts with two exclamation points

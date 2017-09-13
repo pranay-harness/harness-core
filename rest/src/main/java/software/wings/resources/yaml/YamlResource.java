@@ -49,7 +49,24 @@ public class YamlResource {
   @Path("/workflows/{workflowId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
+  public RestResponse<YamlPayload> getWorkflow(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return yamlResourceService.getWorkflow(appId, workflowId);
+  }
+
+  /**
+   * Gets the yaml for a state machine (workflow version)
+   *
+   * @param appId     the app id
+   * @param stateMachineId the state machine (workflow version) id
+   * @return the rest response
+   */
+  @GET
+  @Path("/stateMachines/{stateMachineId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getWorkflowVersion(
+      @QueryParam("appId") String appId, @PathParam("stateMachineId") String stateMachineId) {
+    return yamlResourceService.getWorkflowVersion(appId, stateMachineId);
   }
 }
