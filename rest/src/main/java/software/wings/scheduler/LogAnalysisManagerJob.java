@@ -103,6 +103,7 @@ public class LogAnalysisManagerJob implements Job {
           context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), logAnalysisMinute);
 
       switch (context.getStateType()) {
+        case SUMO:
         case ELK:
         case LOGZ:
           new LogMLClusterGenerator(context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest).run();
