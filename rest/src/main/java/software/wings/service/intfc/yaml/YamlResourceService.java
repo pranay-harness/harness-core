@@ -74,4 +74,13 @@ public interface YamlResourceService {
    */
   public ArtifactStream updateTrigger(
       String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled);
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId     the app id
+   * @param workflowId the workflow id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId);
 }

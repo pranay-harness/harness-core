@@ -20,6 +20,7 @@ import software.wings.beans.Setup;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
@@ -34,6 +35,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.StateMachine;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.AppYaml;
 import software.wings.yaml.ArtifactStreamYaml;
@@ -121,8 +123,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         // iterate over service commands
         for (ServiceCommand serviceCommand : serviceCommands) {
-          serviceCommandsFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
+          FolderNode scFolder = new FolderNode(serviceCommand.getName(), ServiceCommand.class);
+          serviceCommandsFolder.addChild(scFolder);
+          scFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
               serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class));
+          FolderNode versionsFolder = new FolderNode("Versions", Command.class);
+          scFolder.addChild(versionsFolder);
         }
         // ------------------- END SERVICE COMMANDS SECTION -----------------------
       }
@@ -157,8 +163,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (workflows != null) {
       // iterate over workflows
       for (Workflow workflow : workflows) {
-        workflowsFolder.addChild(new AppLevelYamlNode(
+        FolderNode wrkflwFolder = new FolderNode(workflow.getName(), Workflow.class);
+        workflowsFolder.addChild(wrkflwFolder);
+        wrkflwFolder.addChild(new AppLevelYamlNode(
             workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
+        FolderNode versionsFolder = new FolderNode("Versions", StateMachine.class);
+        wrkflwFolder.addChild(versionsFolder);
       }
     }
   }
