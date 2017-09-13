@@ -255,6 +255,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
       case SPLUNKV2:
         return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
+      case SUMO:
+        return LogAnalysisResource.SUMO_RESOURCE_BASE_URL;
+
       default:
         throw new IllegalArgumentException("invalid stateType: " + stateType);
     }
