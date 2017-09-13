@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Integration
 @Ignore
-public class InstanceWorkflowNameMigration extends WingsBaseTest {
+public class InstanceWorkflowNameMigrationTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
