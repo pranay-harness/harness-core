@@ -75,19 +75,21 @@ public class ContainerInstanceHelper {
                 phaseStepExecutionSummary.getStepExecutionSummaryList();
             for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
               if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
-                Validator.notNullCheck("StepExecutionSummary", stepExecutionSummary);
                 CommandStepExecutionSummary commandStepExecutionSummary =
                     (CommandStepExecutionSummary) stepExecutionSummary;
                 String clusterName = commandStepExecutionSummary.getClusterName();
                 List<String> containerServiceNameList = Lists.newArrayList();
-                List<String> oldContainerServiceNames = commandStepExecutionSummary.getOldPreviousInstanceCounts()
-                                                            .stream()
-                                                            .map(ContainerServiceData::getName)
-                                                            .collect(Collectors.toList());
-                String newContainerServiceName = commandStepExecutionSummary.getNewContainerServiceName();
-                if (oldContainerServiceNames != null) {
+
+                List<ContainerServiceData> oldPreviousInstanceCounts =
+                    commandStepExecutionSummary.getOldPreviousInstanceCounts();
+                if (oldPreviousInstanceCounts != null) {
+                  List<String> oldContainerServiceNames = oldPreviousInstanceCounts.stream()
+                                                              .map(ContainerServiceData::getName)
+                                                              .collect(Collectors.toList());
                   containerServiceNameList.addAll(oldContainerServiceNames);
                 }
+
+                String newContainerServiceName = commandStepExecutionSummary.getNewContainerServiceName();
                 if (newContainerServiceName != null) {
                   containerServiceNameList.add(newContainerServiceName);
                 }
