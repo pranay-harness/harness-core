@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Pipeline;
@@ -42,12 +41,10 @@ import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.ServiceCommandYaml;
 import software.wings.yaml.command.YamlCommandRefCommandUnit;
 import software.wings.yaml.command.YamlCommandUnit;
-import software.wings.yaml.command.YamlCommandVersion;
 import software.wings.yaml.command.YamlCopyConfigCommandUnit;
 import software.wings.yaml.command.YamlExecCommandUnit;
 import software.wings.yaml.command.YamlScpCommandUnit;
 import software.wings.yaml.command.YamlSetupEnvCommandUnit;
-import software.wings.yaml.command.YamlTargetEnvironment;
 
 import java.util.List;
 import java.util.Map;
@@ -83,33 +80,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     if (serviceCommand != null) {
       serviceCommandYaml.setName(serviceCommand.getName());
-      serviceCommandYaml.setDefaultVersion(serviceCommand.getDefaultVersion());
-
-      if (environments != null) {
-        Map<String, EntityVersion> envMap = serviceCommand.getEnvIdVersionMap();
-
-        for (Environment env : environments) {
-          YamlTargetEnvironment targetEnv = new YamlTargetEnvironment();
-          targetEnv.setName(env.getName());
-
-          String envId = env.getUuid();
-
-          if (envId != null && envMap.containsKey(envId)) {
-            EntityVersion et = envMap.get(envId);
-            targetEnv.setVersion(new Integer(et.getVersion()).toString());
-          } else {
-            targetEnv.setVersion("default");
-          }
-
-          serviceCommandYaml.getTargetEnvironments().add(targetEnv);
-        }
-      } else {
-        // handle missing environments (should never happen)
-        RestResponse rr = new RestResponse<>();
-        YamlHelper.addResponseMessage(
-            rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "The Environments are NULL!");
-        return rr;
-      }
 
       List<Command> commands = commandService.getCommandList(appId, serviceCommandId);
 
@@ -118,66 +88,65 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         serviceCommandYaml.setCommandType(commands.get(0).getCommandType().toString());
 
         for (Command command : commands) {
-          YamlCommandVersion ycv = new YamlCommandVersion();
-          ycv.setVersion(command.getVersion());
+          if (command.getVersion() != null && serviceCommand.getDefaultVersion() != null) {
+            if (command.getVersion().intValue() == serviceCommand.getDefaultVersion().intValue()) {
+              List<CommandUnit> commandUnits = command.getCommandUnits();
 
-          List<CommandUnit> commandUnits = command.getCommandUnits();
+              if (commandUnits != null) {
+                for (CommandUnit cu : commandUnits) {
+                  YamlCommandUnit ycu;
 
-          if (commandUnits != null) {
-            for (CommandUnit cu : commandUnits) {
-              YamlCommandUnit ycu;
+                  CommandUnitType cut = cu.getCommandUnitType();
 
-              CommandUnitType cut = cu.getCommandUnitType();
+                  switch (cut) {
+                    case EXEC:
+                      ycu = new YamlExecCommandUnit();
+                      ycu.setName(cu.getName());
+                      ycu.setCommandUnitType(cut.getName());
+                      ((YamlExecCommandUnit) ycu).setCommandPath(((ExecCommandUnit) cu).getCommandPath());
+                      ((YamlExecCommandUnit) ycu).setCommandString(((ExecCommandUnit) cu).getCommandString());
+                      break;
+                    case SCP:
+                      ycu = new YamlScpCommandUnit();
+                      ycu.setName(cu.getName());
+                      ycu.setCommandUnitType(cut.getName());
+                      ((YamlScpCommandUnit) ycu).setFileCategory(((ScpCommandUnit) cu).getFileCategory().getName());
+                      ((YamlScpCommandUnit) ycu)
+                          .setDestinationDirectoryPath(((ScpCommandUnit) cu).getDestinationDirectoryPath());
+                      break;
+                    case COPY_CONFIGS:
+                      ycu = new YamlCopyConfigCommandUnit();
+                      ycu.setName(cu.getName());
+                      ycu.setCommandUnitType(cut.getName());
+                      ((YamlCopyConfigCommandUnit) ycu)
+                          .setDestinationParentPath(((CopyConfigCommandUnit) cu).getDestinationParentPath());
+                      break;
+                    case COMMAND:
+                      ycu = new YamlCommandRefCommandUnit();
+                      ycu.setName(cu.getName());
+                      ycu.setCommandUnitType(cut.getName());
+                      ((YamlCommandRefCommandUnit) ycu).setReferenceId(((Command) cu).getReferenceId());
+                      ((YamlCommandRefCommandUnit) ycu).setCommandType(((Command) cu).getCommandType().name());
+                      break;
+                    case SETUP_ENV:
+                      ycu = new YamlSetupEnvCommandUnit();
+                      ycu.setName(cu.getName());
+                      ycu.setCommandUnitType(cut.getName());
+                      ((YamlSetupEnvCommandUnit) ycu).setCommandString(((SetupEnvCommandUnit) cu).getCommandString());
+                      break;
 
-              switch (cut) {
-                case EXEC:
-                  ycu = new YamlExecCommandUnit();
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-                  ((YamlExecCommandUnit) ycu).setCommandPath(((ExecCommandUnit) cu).getCommandPath());
-                  ((YamlExecCommandUnit) ycu).setCommandString(((ExecCommandUnit) cu).getCommandString());
-                  break;
-                case SCP:
-                  ycu = new YamlScpCommandUnit();
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-                  ((YamlScpCommandUnit) ycu).setFileCategory(((ScpCommandUnit) cu).getFileCategory().getName());
-                  ((YamlScpCommandUnit) ycu)
-                      .setDestinationDirectoryPath(((ScpCommandUnit) cu).getDestinationDirectoryPath());
-                  break;
-                case COPY_CONFIGS:
-                  ycu = new YamlCopyConfigCommandUnit();
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-                  ((YamlCopyConfigCommandUnit) ycu)
-                      .setDestinationParentPath(((CopyConfigCommandUnit) cu).getDestinationParentPath());
-                  break;
-                case COMMAND:
-                  ycu = new YamlCommandRefCommandUnit();
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-                  ((YamlCommandRefCommandUnit) ycu).setReferenceId(((Command) cu).getReferenceId());
-                  ((YamlCommandRefCommandUnit) ycu).setCommandType(((Command) cu).getCommandType().name());
-                  break;
-                case SETUP_ENV:
-                  ycu = new YamlSetupEnvCommandUnit();
-                  ycu.setName(cu.getName());
-                  ycu.setCommandUnitType(cut.getName());
-                  ((YamlSetupEnvCommandUnit) ycu).setCommandString(((SetupEnvCommandUnit) cu).getCommandString());
-                  break;
+                      // TODO - NEED DOCKER AND KUBERNETES TYPES
 
-                  // TODO - NEED DOCKER AND KUBERNETES TYPES
+                    default:
+                      // handle unfound
+                      ycu = new YamlCommandUnit();
+                  }
 
-                default:
-                  // handle unfound
-                  ycu = new YamlCommandUnit();
+                  serviceCommandYaml.getCommandUnits().add(ycu);
+                }
               }
-
-              ycv.getCommandUnits().add(ycu);
             }
           }
-
-          serviceCommandYaml.getVersions().add(ycv);
         }
       }
     } else {
