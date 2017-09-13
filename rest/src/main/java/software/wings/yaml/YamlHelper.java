@@ -102,7 +102,10 @@ public class YamlHelper {
     String dumpedYaml = yaml.dump(theYaml);
 
     // remove first line of Yaml:
-    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
+    // dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
+
+    // instead of removing the first line - we should remove any line that starts with two exclamation points
+    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
 
     // remove empty arrays/lists:
     dumpedYaml = dumpedYaml.replace("[]", "");
@@ -120,6 +123,39 @@ public class YamlHelper {
     }
 
     return rr;
+  }
+
+  private static String cleanUpDoubleExclamationLines(String content) {
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(content));
+
+    String line = null;
+
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        String trimmedLine = line.trim();
+
+        // check for line starting with two exclamation points
+        if (trimmedLine.length() >= 2 && trimmedLine.charAt(0) == '!' && trimmedLine.charAt(1) == '!') {
+          continue;
+        } else {
+          // TODO - LEFT OFF HERE - we need to do something like this to remove lines BUT we have to add the dash to the
+          // NEXT line!
+          /*
+          if (trimmedLine.length() >= 4 && trimmedLine.charAt(0) == '-' && trimmedLine.charAt(1) == ' ' &&
+          trimmedLine.charAt(2) == '!' && trimmedLine.charAt(3) == '!') { continue;
+          }
+          */
+        }
+
+        sb.append(line + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return sb.toString();
   }
 
   private static String fixIndentSpaces(String content) {

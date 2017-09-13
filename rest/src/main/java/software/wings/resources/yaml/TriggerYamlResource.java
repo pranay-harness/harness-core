@@ -5,8 +5,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlPayload;
@@ -21,15 +21,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 /**
- * Pipeline Yaml Resource class.
+ * Trigger (ArtifactStream) Yaml Resource class.
  *
  * @author bsollish
  */
-@Api("/pipelineYaml")
-@Path("/pipelineYaml")
+@Api("/triggerYaml")
+@Path("/triggerYaml")
 @Produces("application/json")
 @AuthRule(APPLICATION)
-public class PipelineYamlResource {
+public class TriggerYamlResource {
   private YamlResourceService yamlResourceService;
 
   /**
@@ -38,39 +38,41 @@ public class PipelineYamlResource {
    * @param yamlResourceService     the yaml resource service
    */
   @Inject
-  public PipelineYamlResource(YamlResourceService yamlResourceService) {
+  public TriggerYamlResource(YamlResourceService yamlResourceService) {
     this.yamlResourceService = yamlResourceService;
   }
 
   /**
-   * Gets the yaml version of a pipeline by pipelineId
+   * Gets the yaml version of a trigger by artifactStreamId
    *
    * @param appId     the app id
-   * @param pipelineId the pipeline id
+   * @param artifactStreamId the artifact stream id
    * @return the rest response
    */
   @GET
-  @Path("/{appId}/{pipelineId}")
+  @Path("/{appId}/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
-    return yamlResourceService.getPipeline(appId, pipelineId);
+  public RestResponse<YamlPayload> get(
+      @PathParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
+    return yamlResourceService.getTrigger(appId, artifactStreamId);
   }
 
   /**
-   * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
+   * Update a trigger that is sent as Yaml (in a JSON "wrapper")
    *
    * @param appId     the app id
-   * @param pipelineId the pipeline id
+   * @param artifactStreamId the artifact stream id
    * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
   @PUT
-  @Path("/{appId}/{serviceId}/{serviceCommandId}")
+  @Path("/{appId}/{serviceId}/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Pipeline> update(@PathParam("appId") String appId, @PathParam("pipelineId") String pipelineId,
-      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(yamlResourceService.updatePipeline(appId, pipelineId, yamlPayload, deleteEnabled));
+  public RestResponse<ArtifactStream> update(@PathParam("appId") String appId,
+      @PathParam("artifactStreamId") String artifactStreamId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return new RestResponse<>(yamlResourceService.updateTrigger(appId, artifactStreamId, yamlPayload, deleteEnabled));
   }
 }

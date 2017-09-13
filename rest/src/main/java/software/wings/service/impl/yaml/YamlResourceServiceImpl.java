@@ -11,6 +11,9 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
@@ -19,13 +22,18 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.yaml.ArtifactStreamYaml;
+import software.wings.yaml.OrchestrationStreamActionYaml;
 import software.wings.yaml.PipelineStageElementYaml;
 import software.wings.yaml.PipelineStageYaml;
 import software.wings.yaml.PipelineYaml;
+import software.wings.yaml.StreamActionYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.ServiceCommandYaml;
@@ -46,6 +54,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private CommandService commandService;
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -183,9 +193,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getPipeline(String appId, String pipelineId) {
-    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
-
     PipelineYaml pipelineYaml = new PipelineYaml();
+
+    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
 
     pipelineYaml.setName(pipeline.getName());
     pipelineYaml.setDescription(pipeline.getDescription());
@@ -232,6 +242,99 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public Pipeline updatePipeline(String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled) {
     // TODO - needs implementation
+    return null;
+  }
+
+  /**
+   * Gets the yaml version of a trigger by artifactStreamId
+   *
+   * @param appId     the app id
+   * @param artifactStreamId the artifact stream id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId) {
+    ArtifactStreamYaml artifactStreamYaml = new ArtifactStreamYaml();
+
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+
+    if (artifactStream == null) {
+      // handle missing artifactStream
+      RestResponse rr = new RestResponse<>();
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+          "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
+              + "' was not found!");
+      return rr;
+    }
+
+    artifactStreamYaml.setArtifactStreamType(artifactStream.getArtifactStreamType());
+    artifactStreamYaml.setSourceName(artifactStream.getSourceName());
+
+    String serviceId = artifactStream.getServiceId();
+
+    String serviceName = "";
+
+    if (serviceId != null) {
+      Service service = serviceResourceService.get(appId, serviceId);
+
+      if (service != null) {
+        serviceName = service.getName();
+      } else {
+        // handle service not found
+        RestResponse rr = new RestResponse<>();
+        YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+            "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
+        return rr;
+      }
+    }
+
+    artifactStreamYaml.setServiceName(serviceName);
+
+    List<ArtifactStreamAction> streamActions = artifactStream.getStreamActions();
+
+    if (streamActions != null) {
+      for (ArtifactStreamAction sa : streamActions) {
+        StreamActionYaml say;
+
+        switch (sa.getWorkflowType()) {
+          case ORCHESTRATION:
+            say = new OrchestrationStreamActionYaml();
+            say.setWorkflowName(sa.getWorkflowName());
+            say.setWorkflowType(sa.getWorkflowType().name());
+            ((OrchestrationStreamActionYaml) say).setEnvName(sa.getEnvName());
+            break;
+          case PIPELINE:
+            say = new StreamActionYaml();
+            say.setWorkflowName(sa.getWorkflowName());
+            say.setWorkflowType(sa.getWorkflowType().name());
+            break;
+          case SIMPLE:
+            say = new StreamActionYaml();
+            break;
+          default:
+            // handle not found
+            say = new StreamActionYaml();
+        }
+
+        artifactStreamYaml.getStreamActions().add(say);
+      }
+    }
+
+    String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
+
+    return YamlHelper.getYamlRestResponse(artifactStreamYaml, payLoadName + ".yaml");
+  }
+
+  /**
+   * Update a trigger that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param appId     the app id
+   * @param artifactStreamId the artifact stream id
+   * @param yamlPayload the yaml version of the service command
+   * @param deleteEnabled required to allow deletions
+   * @return the rest response
+   */
+  public ArtifactStream updateTrigger(
+      String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled) {
     return null;
   }
 }

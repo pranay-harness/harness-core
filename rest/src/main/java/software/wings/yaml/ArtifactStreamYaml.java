@@ -1,12 +1,13 @@
 package software.wings.yaml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ArtifactStreamYaml extends GenericYaml {
   @YamlSerialize public String artifactStreamType;
   @YamlSerialize public String sourceName;
   @YamlSerialize public String serviceName;
-  @YamlSerialize public List<StreamActionYaml> streamActions;
+  @YamlSerialize public List<StreamActionYaml> streamActions = new ArrayList<>();
 
   public String getArtifactStreamType() {
     return artifactStreamType;
