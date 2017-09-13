@@ -28,6 +28,10 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
         return execute(managerClient.saveSplunkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
                            serviceId, ClusterLevel.L1, delegateTaskId, logs))
             .getResource();
+      case SUMO:
+        return execute(managerClient.saveSumoLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+            .getResource();
       case ELK:
         return execute(managerClient.saveElkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
                            serviceId, ClusterLevel.L0, delegateTaskId, logs))
