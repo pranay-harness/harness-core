@@ -30,6 +30,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.sm.StateMachine;
 import software.wings.yaml.ArtifactStreamYaml;
 import software.wings.yaml.OrchestrationStreamActionYaml;
 import software.wings.yaml.PipelineStageElementYaml;
@@ -369,6 +370,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
 
-    return YamlHelper.getYamlRestResponseGeneric(workflow, workflow.getName() + ".yaml", false);
+    return YamlHelper.getYamlRestResponseGeneric(workflow, workflow.getName() + ".yaml", false, false);
+  }
+
+  /**
+   * Gets the yaml for a state machine (workflow version)
+   *
+   * @param appId     the app id
+   * @param stateMachineId the state machine (workflow version) id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getWorkflowVersion(String appId, String stateMachineId) {
+    StateMachine workflowVersion = workflowService.readStateMachine(appId, stateMachineId);
+
+    return YamlHelper.getYamlRestResponseGeneric(
+        workflowVersion, "version_" + workflowVersion.getOriginVersion() + ".yaml", true, true);
   }
 }

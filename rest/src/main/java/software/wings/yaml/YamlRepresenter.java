@@ -11,6 +11,7 @@ import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,11 +19,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class YamlRepresenter extends Representer {
+  private boolean removeEmptyValues = false;
   private boolean everythingExceptDoNotSerializeAndTransients = false;
 
   public YamlRepresenter() {}
 
-  public YamlRepresenter(boolean everythingExceptDoNotSerializeAndTransients) {
+  public YamlRepresenter(boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
+    this.removeEmptyValues = removeEmptyValues;
     this.everythingExceptDoNotSerializeAndTransients = everythingExceptDoNotSerializeAndTransients;
   }
 
@@ -77,6 +80,13 @@ public class YamlRepresenter extends Representer {
       return null;
     }
     */
+
+    if (removeEmptyValues) {
+      if (propertyValue == null || propertyValue.equals("")
+          || (propertyValue instanceof Collection<?> && ((Collection) propertyValue).size() == 0)) {
+        return null;
+      }
+    }
 
     if (yamlSerializableFields.contains(property.getName())) {
       return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);

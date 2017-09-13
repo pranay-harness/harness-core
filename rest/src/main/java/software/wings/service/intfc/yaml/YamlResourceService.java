@@ -83,4 +83,13 @@ public interface YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId);
+
+  /**
+   * Gets the yaml for a state machine (workflow version)
+   *
+   * @param appId     the app id
+   * @param stateMachineId the state machine (workflow version) id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getWorkflowVersion(String appId, String stateMachineId);
 }
