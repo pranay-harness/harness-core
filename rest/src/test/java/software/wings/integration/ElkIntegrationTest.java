@@ -98,13 +98,25 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
       for (int logCollectionMinute : recordsByMinute.keySet()) {
-        new LogMLClusterGenerator(
-            new LogClusterContext(applicationId, workflowId, workflowExecutionId, stateExecutionId, serviceId,
-                Sets.newHashSet(Collections.singletonList(host)), Sets.newHashSet(Collections.singletonList(host)),
-                Sets.newHashSet(Collections.singletonList(query)), true, 9090, accountId, StateType.ELK.getName(),
-                LogAnalysisResource.ELK_RESOURCE_BASE_URL,
-                AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ")),
-            ClusterLevel.L0, ClusterLevel.L1,
+        final LogClusterContext logClusterContext =
+            LogClusterContext.builder()
+                .accountId(accountId)
+                .appId(applicationId)
+                .workflowExecutionId(workflowExecutionId)
+                .workflowId(workflowId)
+                .stateExecutionId(stateExecutionId)
+                .serviceId(serviceId)
+                .controlNodes(Sets.newHashSet(Collections.singletonList(host)))
+                .testNodes(Sets.newHashSet(Collections.singletonList(host)))
+                .queries(Sets.newHashSet(Collections.singletonList(query)))
+                .isSSL(true)
+                .appPort(9090)
+                .stateType(StateType.ELK)
+                .stateBaseUrl(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
+                .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+                .build();
+
+        new LogMLClusterGenerator(logClusterContext, ClusterLevel.L0, ClusterLevel.L1,
             new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
                 Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute))
             .run();

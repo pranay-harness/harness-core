@@ -24,12 +24,12 @@ public interface AwsClusterService {
    * Resize cluster.
    */
   List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, Integer desiredSize, ExecutionLogCallback executionLogCallback);
+      String serviceName, int previousCount, int desiredSize, ExecutionLogCallback executionLogCallback);
 
   /**
-   * Destroy cluster.
+   * Delete service.
    */
-  void destroyCluster(String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  void deleteService(String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
 
   /**
    * Gets services.

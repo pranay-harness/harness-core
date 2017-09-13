@@ -14,12 +14,13 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,8 +46,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
 
-  @Inject @Transient private transient EcsContainerService ecsContainerService;
-
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
   }
@@ -67,28 +66,43 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
+      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    String serviceNamePrefix = getServiceNamePrefixFromServiceName(serviceName);
+    List<Service> activeOldServices =
+        awsClusterService.getServices(region, settingAttribute, clusterName)
+            .stream()
+            .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+            .collect(Collectors.toList());
+    activeOldServices.sort(Comparator.comparingInt(service -> getRevisionFromServiceName(service.getServiceName())));
+    activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
+    return result;
+  }
+
+  @Override
   protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
     int revision = getRevisionFromServiceName(serviceName);
     if (revision > ContainerServiceDeploy.KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS;
       String serviceNamePrefix = getServiceNamePrefixFromServiceName(serviceName);
-      List<Service> services = ecsContainerService.getServices(region, settingAttribute, clusterName);
-      for (Service service :
-          services.stream()
-              .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
-              .collect(Collectors.toList())) {
-        String oldServiceName = service.getServiceName();
-        if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
-          logger.info("Deleting old version: " + oldServiceName);
-          ecsContainerService.deleteService(region, settingAttribute, clusterName, oldServiceName);
-        }
-      }
+      awsClusterService.getServices(region, settingAttribute, clusterName)
+          .stream()
+          .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
+          .collect(Collectors.toList())
+          .forEach(s -> {
+            String oldServiceName = s.getServiceName();
+            if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
+              logger.info("Deleting old version: " + oldServiceName);
+              awsClusterService.deleteService(region, settingAttribute, clusterName, oldServiceName);
+            }
+          });
     }
   }
 
   @Override
   public int fetchDesiredCount(int lastDeploymentDesiredCount) {
-    if (instanceUnitType != null && instanceUnitType == InstanceUnitType.PERCENTAGE) {
+    if (getInstanceUnitType() == InstanceUnitType.PERCENTAGE) {
       // TODO: take care of previous occurrence and ensure total does not exceed previousDesiredCount
       int realCount = (getInstanceCount() * lastDeploymentDesiredCount) / 100;
       if (realCount < 1) {

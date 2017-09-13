@@ -143,7 +143,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldSetControllerPodCount() {
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
-        KUBERNETES_CONFIG, "foo", "bar", 3, new ExecutionLogCallback());
+        KUBERNETES_CONFIG, "foo", "bar", 0, 3, new ExecutionLogCallback());
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());

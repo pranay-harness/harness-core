@@ -40,6 +40,7 @@ import java.util.List;
  */
 public class InstanceHelper {
   private static final Logger logger = LoggerFactory.getLogger(InstanceHelper.class);
+
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
   @Inject private Queue<InstanceChangeEvent> instanceChangeEventQueue;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -159,13 +160,15 @@ public class InstanceHelper {
             .withInfraMappingType(infraMappingType)
             .withLastPipelineExecutionId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
             .withLastPipelineExecutionName(pipelineSummary == null ? null : pipelineSummary.getPipelineName())
-            .withLastDeployedAt(phaseExecutionData.getEndTs().longValue())
+            .withLastDeployedAt(phaseExecutionData.getEndTs())
             .withLastDeployedById(triggeredBy.getUuid())
             .withLastDeployedByName(triggeredBy.getName())
             .withServiceId(phaseExecutionData.getServiceId())
             .withServiceName(phaseExecutionData.getServiceName())
-            .withLastWorkflowExecutionId(workflowExecution.getUuid())
-            .withLastWorkflowExecutionName(workflowExecution.getName());
+            .withLastWorkflowExecutionId(workflowExecution.getUuid());
+    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
+    Validator.notNullCheck("WorkflowName", workflowName);
+    builder.withLastWorkflowExecutionName(workflowName);
 
     instanceUtil.setInstanceType(builder, infraMappingType);
     setInstanceInfoAndKey(builder, host, infraMappingType, phaseExecutionData.getInfraMappingId());

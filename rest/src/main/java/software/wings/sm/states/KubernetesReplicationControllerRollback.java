@@ -7,11 +7,11 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -39,6 +39,12 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   }
 
   @Override
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
+      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    return new LinkedHashMap<>();
+  }
+
+  @Override
   public String getCommandName() {
     return commandName;
   }
@@ -55,58 +61,5 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   @Override
   public int fetchDesiredCount(int lastDeploymentDesiredCount) {
     return 0;
-  }
-
-  public static final class KubernetesReplicationControllerRollbackBuilder {
-    private String id;
-    private String name;
-    private ContextElementType requiredContextElementType;
-    private String stateType;
-    private String commandName;
-
-    private KubernetesReplicationControllerRollbackBuilder(String name) {
-      this.name = name;
-    }
-
-    public static KubernetesReplicationControllerRollbackBuilder aKubernetesReplicationControllerRollback(String name) {
-      return new KubernetesReplicationControllerRollbackBuilder(name);
-    }
-
-    public KubernetesReplicationControllerRollbackBuilder withId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public KubernetesReplicationControllerRollbackBuilder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public KubernetesReplicationControllerRollbackBuilder withRequiredContextElementType(
-        ContextElementType requiredContextElementType) {
-      this.requiredContextElementType = requiredContextElementType;
-      return this;
-    }
-
-    public KubernetesReplicationControllerRollbackBuilder withStateType(String stateType) {
-      this.stateType = stateType;
-      return this;
-    }
-
-    public KubernetesReplicationControllerRollbackBuilder withCommandName(String commandName) {
-      this.commandName = commandName;
-      return this;
-    }
-
-    public KubernetesReplicationControllerRollback build() {
-      KubernetesReplicationControllerRollback kubernetesReplicationControllerRollback =
-          new KubernetesReplicationControllerRollback(name);
-      kubernetesReplicationControllerRollback.setId(id);
-      kubernetesReplicationControllerRollback.setRequiredContextElementType(requiredContextElementType);
-      kubernetesReplicationControllerRollback.setStateType(stateType);
-      kubernetesReplicationControllerRollback.setRollback(true);
-      kubernetesReplicationControllerRollback.setCommandName(commandName);
-      return kubernetesReplicationControllerRollback;
-    }
   }
 }
