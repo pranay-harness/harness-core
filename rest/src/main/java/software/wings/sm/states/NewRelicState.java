@@ -22,6 +22,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
@@ -220,7 +221,8 @@ public class NewRelicState extends AbstractAnalysisState {
   }
 
   private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
-    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
+    Date startDate =
+        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
     JobDetail job = JobBuilder.newJob(NewRelicMetricAnalysisJob.class)
                         .withIdentity(context.getStateExecutionId(), "NEWRELIC_METRIC_VERIFY_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))
