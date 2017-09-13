@@ -81,19 +81,30 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       serviceCommandYaml.setName(serviceCommand.getName());
       serviceCommandYaml.setDefaultVersion(serviceCommand.getDefaultVersion());
 
-      if (serviceCommand.isTargetToAllEnv()) {
-        if (environments != null) {
-          for (Environment env : environments) {
-            YamlTargetEnvironment targetEnv = new YamlTargetEnvironment();
-            targetEnv.setName(targetEnv.getName());
-            targetEnv.setVersion("default");
-            serviceCommandYaml.getTargetEnvironments().add(targetEnv);
-          }
-        }
-      } else {
+      if (environments != null) {
         Map<String, EntityVersion> envMap = serviceCommand.getEnvIdVersionMap();
 
-        logger.info("********* envMap: " + envMap);
+        for (Environment env : environments) {
+          YamlTargetEnvironment targetEnv = new YamlTargetEnvironment();
+          targetEnv.setName(env.getName());
+
+          String envId = env.getUuid();
+
+          if (envId != null && envMap.containsKey(envId)) {
+            EntityVersion et = envMap.get(envId);
+            targetEnv.setVersion(new Integer(et.getVersion()).toString());
+          } else {
+            targetEnv.setVersion("default");
+          }
+
+          serviceCommandYaml.getTargetEnvironments().add(targetEnv);
+        }
+      } else {
+        // handle missing environments (should never happen)
+        RestResponse rr = new RestResponse<>();
+        YamlHelper.addResponseMessage(
+            rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR, "The Environments are NULL!");
+        return rr;
       }
 
       List<Command> commands = commandService.getCommandList(appId, serviceCommandId);
@@ -117,27 +128,37 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               switch (cut) {
                 case EXEC:
                   ycu = new YamlExecCommandUnit();
+                  ycu.setName(cu.getName());
+                  ycu.setCommandUnitType(cut.getName());
                   ((YamlExecCommandUnit) ycu).setCommandPath(((ExecCommandUnit) cu).getCommandPath());
                   ((YamlExecCommandUnit) ycu).setCommandString(((ExecCommandUnit) cu).getCommandString());
                   break;
                 case SCP:
                   ycu = new YamlScpCommandUnit();
+                  ycu.setName(cu.getName());
+                  ycu.setCommandUnitType(cut.getName());
                   ((YamlScpCommandUnit) ycu).setFileCategory(((ScpCommandUnit) cu).getFileCategory().getName());
                   ((YamlScpCommandUnit) ycu)
                       .setDestinationDirectoryPath(((ScpCommandUnit) cu).getDestinationDirectoryPath());
                   break;
                 case COPY_CONFIGS:
                   ycu = new YamlCopyConfigCommandUnit();
+                  ycu.setName(cu.getName());
+                  ycu.setCommandUnitType(cut.getName());
                   ((YamlCopyConfigCommandUnit) ycu)
                       .setDestinationParentPath(((CopyConfigCommandUnit) cu).getDestinationParentPath());
                   break;
                 case COMMAND:
                   ycu = new YamlCommandRefCommandUnit();
-                  ((YamlCommandRefCommandUnit) ycu).setReferenceId(command.getReferenceId());
-                  ((YamlCommandRefCommandUnit) ycu).setCommandType("OTHER");
+                  ycu.setName(cu.getName());
+                  ycu.setCommandUnitType(cut.getName());
+                  ((YamlCommandRefCommandUnit) ycu).setReferenceId(((Command) cu).getReferenceId());
+                  ((YamlCommandRefCommandUnit) ycu).setCommandType(((Command) cu).getCommandType().name());
                   break;
                 case SETUP_ENV:
                   ycu = new YamlSetupEnvCommandUnit();
+                  ycu.setName(cu.getName());
+                  ycu.setCommandUnitType(cut.getName());
                   ((YamlSetupEnvCommandUnit) ycu).setCommandString(((SetupEnvCommandUnit) cu).getCommandString());
                   break;
 
@@ -147,9 +168,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
                   // handle unfound
                   ycu = new YamlCommandUnit();
               }
-
-              ycu.setName(cu.getName());
-              ycu.setCommandUnitType(cut.getName());
 
               ycv.getCommandUnits().add(ycu);
             }

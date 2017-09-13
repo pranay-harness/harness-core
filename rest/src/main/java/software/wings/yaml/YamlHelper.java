@@ -140,13 +140,25 @@ public class YamlHelper {
         if (trimmedLine.length() >= 2 && trimmedLine.charAt(0) == '!' && trimmedLine.charAt(1) == '!') {
           continue;
         } else {
-          // TODO - LEFT OFF HERE - we need to do something like this to remove lines BUT we have to add the dash to the
-          // NEXT line!
-          /*
-          if (trimmedLine.length() >= 4 && trimmedLine.charAt(0) == '-' && trimmedLine.charAt(1) == ' ' &&
-          trimmedLine.charAt(2) == '!' && trimmedLine.charAt(3) == '!') { continue;
+          // we need to remove lines BUT we have to add the dash to the NEXT line!
+          if (trimmedLine.length() >= 4 && trimmedLine.charAt(0) == '-' && trimmedLine.charAt(1) == ' '
+              && trimmedLine.charAt(2) == '!' && trimmedLine.charAt(3) == '!') {
+            line = bufReader.readLine();
+            if (line != null) {
+              char[] chars = line.toCharArray();
+
+              for (int i = 0; i < chars.length; i++) {
+                if (chars[i] != ' ') {
+                  if (i >= 2) {
+                    chars[i - 2] = '-';
+                    sb.append(new String(chars) + "\n");
+                    break;
+                  }
+                }
+              }
+            }
+            continue;
           }
-          */
         }
 
         sb.append(line + "\n");
