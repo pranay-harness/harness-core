@@ -21,6 +21,7 @@ public class ArtifactStreamActionJob implements Job {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
     String workflowId = jobExecutionContext.getMergedJobDataMap().getString("workflowId");
-    artifactStreamService.triggerScheduledStreamAction(appId, artifactStreamId, workflowId);
+    String actionId = jobExecutionContext.getMergedJobDataMap().getString("actionId");
+    artifactStreamService.triggerScheduledStreamAction(appId, artifactStreamId, actionId);
   }
 }

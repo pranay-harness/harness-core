@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
@@ -75,9 +76,15 @@ public class InitSshCommandUnit extends SshCommandUnit {
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
     if (!isEmpty(context.getArtifactFiles())) {
-      envVariables.put("ARTIFACT_FILE_NAME", context.getArtifactFiles().get(0).getName());
+      String name = context.getArtifactFiles().get(0).getName();
+      if (StringUtils.isNotEmpty(name)) {
+        envVariables.put("ARTIFACT_FILE_NAME", name);
+      }
     } else if (!isEmpty(context.getMetadata())) {
-      envVariables.put("ARTIFACT_FILE_NAME", context.getMetadata().get(Constants.ARTIFACT_FILE_NAME));
+      String value = context.getMetadata().get(Constants.ARTIFACT_FILE_NAME);
+      if (StringUtils.isNotEmpty(value)) {
+        envVariables.put("ARTIFACT_FILE_NAME", value);
+      }
     }
 
     launcherScriptFileName = "harnesslauncher" + activityId + ".sh";

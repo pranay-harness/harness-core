@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.service.intfc.analysis.ClusterLevel;
 
 /**
  * Created by rsingh on 08/30/17.
@@ -22,7 +23,7 @@ import software.wings.beans.Base;
   @Index(fields = {
     @Field("name")
     , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
-        @Field("serviceId"), @Field("workflowId")
+        @Field("serviceId"), @Field("workflowId"), @Field("level")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
@@ -44,9 +45,11 @@ public class NewRelicMetricDataRecord extends Base {
 
   @NotEmpty @Indexed private long timeStamp;
 
-  private int dataCollectionMinute;
+  @Indexed private int dataCollectionMinute;
 
   @NotEmpty private String host;
+
+  @Indexed private ClusterLevel level;
 
   private double throughput = -1;
   private double averageResponseTime = -1;

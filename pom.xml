@@ -986,6 +986,7 @@
                         <skip>true</skip>
                         <forkCount>4</forkCount>
                         <reuseForks>true</reuseForks>
+                        <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
                     </configuration>
                     <executions>
                         <execution>

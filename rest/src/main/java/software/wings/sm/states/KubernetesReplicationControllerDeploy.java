@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static software.wings.utils.KubernetesConvention.getReplicationControllerNamePrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
@@ -22,6 +23,9 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -67,32 +71,50 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
+      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    KubernetesConfig kubernetesConfig = settingAttribute.getValue() instanceof GcpConfig
+        ? gkeClusterService.getCluster(settingAttribute, clusterName)
+        : (KubernetesConfig) settingAttribute.getValue();
+    ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+    if (replicationControllers != null) {
+      String controllerNamePrefix = getReplicationControllerNamePrefixFromControllerName(serviceName);
+      List<ReplicationController> activeOldReplicationControllers =
+          replicationControllers.getItems()
+              .stream()
+              .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() > 0)
+              .collect(Collectors.toList());
+      activeOldReplicationControllers.sort(
+          Comparator.comparingInt(rc -> getRevisionFromControllerName(rc.getMetadata().getName())));
+      activeOldReplicationControllers.forEach(rc -> result.put(rc.getMetadata().getName(), rc.getSpec().getReplicas()));
+    }
+    return result;
+  }
+
+  @Override
   protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
     int revision = getRevisionFromControllerName(serviceName);
     if (revision >= ContainerServiceDeploy.KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS + 1;
-      KubernetesConfig kubernetesConfig;
-      if (settingAttribute.getValue() instanceof GcpConfig) {
-        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
-      } else {
-        kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
-      }
+      KubernetesConfig kubernetesConfig = settingAttribute.getValue() instanceof GcpConfig
+          ? gkeClusterService.getCluster(settingAttribute, clusterName)
+          : (KubernetesConfig) settingAttribute.getValue();
       String controllerNamePrefix =
           KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(serviceName);
       ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
       if (replicationControllers != null) {
-        for (ReplicationController controller :
-            replicationControllers.getItems()
-                .stream()
-                .filter(
-                    c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
-                .collect(Collectors.toList())) {
-          String controllerName = controller.getMetadata().getName();
-          if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
-            logger.info("Deleting old version: " + controllerName);
-            kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
-          }
-        }
+        replicationControllers.getItems()
+            .stream()
+            .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
+            .collect(Collectors.toList())
+            .forEach(rc -> {
+              String controllerName = rc.getMetadata().getName();
+              if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
+                logger.info("Deleting old version: " + controllerName);
+                kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
+              }
+            });
       }
     }
   }

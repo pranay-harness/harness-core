@@ -24,6 +24,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -44,7 +45,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(17)
+        .hasSize(18)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -121,8 +122,16 @@ public class PluginServiceTest {
                 .withSettingClass(LogzConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName(SettingVariableTypes.LOGZ.name())
-                .withType(SettingVariableTypes.LOGZ.name())
+                .withDisplayName("LOGZ")
+                .withType("LOGZ")
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(SumoConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("SUMO")
+                .withType("SUMO")
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -188,9 +197,9 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(17)
+        .hasSize(18)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
-            "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY");
   }
 }

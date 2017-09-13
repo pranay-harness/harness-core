@@ -193,7 +193,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
     verify(activityService).save(any(Activity.class));
     verify(delegateService).queueTask(any(DelegateTask.class));
@@ -218,8 +217,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
-    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(),
-        aCommandStateExecutionData().withOldContainerServiceName("oldService").build());
+    stateExecutionInstance.getStateExecutionMap().put(
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);

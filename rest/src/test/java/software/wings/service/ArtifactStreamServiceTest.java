@@ -207,7 +207,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
-    verify(query).field("streamActions.workflowId");
+    verify(query).field("streamActions.uuid");
     verify(end).notEqual(WORKFLOW_ID);
     verify(updateOperations).add("streamActions", artifactStreamAction);
     verify(wingsPersistence).update(query, updateOperations);
@@ -264,6 +264,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
                                                     .withWorkflowType(WorkflowType.ORCHESTRATION)
                                                     .withWorkflowId(WORKFLOW_ID)
+                                                    .withUuid("ACTION_ID")
                                                     .withCustomAction(true)
                                                     .withCronExpression("0 * * * * ?")
                                                     .build();
@@ -272,6 +273,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     // when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID,
     // ARTIFACT_STREAM_ID)).thenReturn(Artifact.Builder.anArtifact().withAppId(APP_ID))
-    artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, WORKFLOW_ID);
+    artifactStreamService.triggerScheduledStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
   }
 }

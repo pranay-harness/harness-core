@@ -1,5 +1,8 @@
 package software.wings.service.impl.instance;
 
+import static software.wings.beans.infrastructure.instance.EcsContainerDeploymentInfo.Builder.anEcsContainerDeploymentInfo;
+import static software.wings.beans.infrastructure.instance.KubernetesContainerDeploymentInfo.Builder.aKubernetesContainerDeploymentInfo;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -7,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentEvent;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.PhaseExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -19,8 +23,6 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
-import software.wings.beans.infrastructure.instance.EcsContainerDeploymentInfo;
-import software.wings.beans.infrastructure.instance.KubernetesContainerDeploymentInfo;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.exception.WingsException;
@@ -34,6 +36,7 @@ import software.wings.utils.Validator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -77,17 +80,20 @@ public class ContainerInstanceHelper {
                     (CommandStepExecutionSummary) stepExecutionSummary;
                 String clusterName = commandStepExecutionSummary.getClusterName();
                 List<String> containerServiceNameList = Lists.newArrayList();
-                String oldContainerServiceName = commandStepExecutionSummary.getOldContainerServiceName();
+                List<String> oldContainerServiceNames = commandStepExecutionSummary.getOldPreviousInstanceCounts()
+                                                            .stream()
+                                                            .map(ContainerServiceData::getName)
+                                                            .collect(Collectors.toList());
                 String newContainerServiceName = commandStepExecutionSummary.getNewContainerServiceName();
-                if (oldContainerServiceName != null) {
-                  containerServiceNameList.add(oldContainerServiceName);
+                if (oldContainerServiceNames != null) {
+                  containerServiceNameList.addAll(oldContainerServiceNames);
                 }
                 if (newContainerServiceName != null) {
                   containerServiceNameList.add(newContainerServiceName);
                 }
 
                 if (containerServiceNameList.isEmpty()) {
-                  String msg = "Both old and new container services are empty. Cannot proceed for phase step"
+                  String msg = "Both old and new container services are empty. Cannot proceed for phase step "
                       + commandStepExecutionSummary.getServiceId();
                   logger.error(msg);
                   throw new WingsException(msg);
@@ -123,7 +129,7 @@ public class ContainerInstanceHelper {
 
     if (InfrastructureMappingType.AWS_ECS.name().equals(infraMappingType)) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      return EcsContainerDeploymentInfo.Builder.anEcsContainerDeploymentInfo()
+      return anEcsContainerDeploymentInfo()
           .withEcsServiceNameList(containerServiceNameList)
           .withAwsRegion(ecsInfrastructureMapping.getRegion())
           .withAccountId(application.getAccountId())
@@ -143,7 +149,7 @@ public class ContainerInstanceHelper {
           .withInfraMappingType(infraMappingType)
           .withLastPipelineId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
           .withLastPipelineName(pipelineSummary == null ? null : pipelineSummary.getPipelineName())
-          .withLastDeployedAt(phaseExecutionData.getEndTs().longValue())
+          .withLastDeployedAt(phaseExecutionData.getEndTs())
           .withLastDeployedById(triggeredBy.getUuid())
           .withLastDeployedByName(triggeredBy.getName())
           .withServiceId(phaseExecutionData.getServiceId())
@@ -155,7 +161,7 @@ public class ContainerInstanceHelper {
 
     } else if (InfrastructureMappingType.GCP_KUBERNETES.name().equals(infraMappingType)
         || InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infraMappingType)) {
-      return KubernetesContainerDeploymentInfo.Builder.aKubernetesContainerDeploymentInfo()
+      return aKubernetesContainerDeploymentInfo()
           .withReplicationControllerNameList(containerServiceNameList)
           .withAccountId(application.getAccountId())
           .withAppId(workflowExecution.getAppId())
@@ -174,7 +180,7 @@ public class ContainerInstanceHelper {
           .withInfraMappingType(infraMappingType)
           .withLastPipelineId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
           .withLastPipelineName(pipelineSummary == null ? null : pipelineSummary.getPipelineName())
-          .withLastDeployedAt(phaseExecutionData.getEndTs().longValue())
+          .withLastDeployedAt(phaseExecutionData.getEndTs())
           .withLastDeployedById(triggeredBy.getUuid())
           .withLastDeployedByName(triggeredBy.getName())
           .withServiceId(phaseExecutionData.getServiceId())

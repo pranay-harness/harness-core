@@ -173,6 +173,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should return failure for failed command execution.
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(configBuilder.build());
     CommandExecutionStatus execute = executor.executeCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST"));
