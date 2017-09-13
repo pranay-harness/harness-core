@@ -3,6 +3,7 @@ package software.wings.service.intfc.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.yaml.YamlPayload;
 
@@ -53,4 +54,24 @@ public interface YamlResourceService {
    * @return the rest response
    */
   public Pipeline updatePipeline(String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled);
+
+  /**
+   * Gets the yaml version of a trigger by artifactStreamId
+   *
+   * @param appId     the app id
+   * @param artifactStreamId the artifact stream id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId);
+
+  /**
+   * Update a trigger that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param appId     the app id
+   * @param artifactStreamId the artifact stream id
+   * @param yamlPayload the yaml version of the service command
+   * @return the rest response
+   */
+  public ArtifactStream updateTrigger(
+      String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled);
 }
