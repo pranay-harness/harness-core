@@ -83,9 +83,9 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
             LogLevel.INFO);
       }
       executionLogCallback.saveExecutionLog(
-          String.format("Ignore Application Stop Failures: [%s]", ignoreApplicationStopFailures), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog(
-          String.format("File Exists Behavior: [%s]", fileExistsBehavior), LogLevel.INFO);
+          String.format("Ignore ApplicationStop lifecycle event failure: [%s]", ignoreApplicationStopFailures),
+          LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(String.format("Content options : [%s]", fileExistsBehavior), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
           String.format("Revision: [Type: %s, Bucket: %s, Bundle: %s, Key: %s]", revision.getRevisionType(),
               revision.getS3Location().getBucket(), revision.getS3Location().getBundleType(),
