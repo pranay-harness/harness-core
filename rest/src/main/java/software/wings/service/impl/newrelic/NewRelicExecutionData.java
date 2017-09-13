@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import lombok.Data;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
+import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -42,6 +43,9 @@ public class NewRelicExecutionData extends StateExecutionData {
     final int total = timeDuration + 1;
     putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
+    if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
+      elapsedMinutes = 0;
+    }
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case FAILED:
