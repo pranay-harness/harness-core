@@ -177,8 +177,6 @@ public class EcsServiceSetup extends State {
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
-    String lastEcsServiceName = lastECSService(region, computeProviderSetting, clusterName, taskDefinition.getFamily());
-
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
@@ -220,7 +218,6 @@ public class EcsServiceSetup extends State {
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
                                                           .withUuid(serviceId)
                                                           .withName(ecsServiceName)
-                                                          .withOldName(lastEcsServiceName)
                                                           .withClusterName(clusterName)
                                                           .withDeploymentType(DeploymentType.ECS)
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())

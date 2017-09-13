@@ -89,9 +89,13 @@ public class ContainerInstanceHelper {
                   containerServiceNameList.addAll(oldContainerServiceNames);
                 }
 
-                String newContainerServiceName = commandStepExecutionSummary.getNewContainerServiceName();
-                if (newContainerServiceName != null) {
-                  containerServiceNameList.add(newContainerServiceName);
+                List<ContainerServiceData> newPreviousInstanceCounts =
+                    commandStepExecutionSummary.getNewPreviousInstanceCounts();
+                if (newPreviousInstanceCounts != null) {
+                  List<String> newContainerServiceNames = newPreviousInstanceCounts.stream()
+                                                              .map(ContainerServiceData::getName)
+                                                              .collect(Collectors.toList());
+                  containerServiceNameList.addAll(newContainerServiceNames);
                 }
 
                 if (containerServiceNameList.isEmpty()) {

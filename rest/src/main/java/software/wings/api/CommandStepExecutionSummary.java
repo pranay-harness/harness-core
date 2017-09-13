@@ -16,7 +16,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
-  private String newContainerServiceName;
   private List<ContainerServiceData> newPreviousInstanceCounts;
   private List<ContainerServiceData> oldPreviousInstanceCounts;
   private String clusterName;

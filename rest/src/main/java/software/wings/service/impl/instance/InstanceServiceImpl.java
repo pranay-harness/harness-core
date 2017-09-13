@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -26,14 +25,12 @@ import software.wings.beans.infrastructure.instance.key.InstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
 
 /**
@@ -44,9 +41,7 @@ public class InstanceServiceImpl implements InstanceService {
   private static final Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ArtifactService artifactService;
   @Inject private AppService appService;
-  @Inject private ExecutorService executorService;
   @Inject private InstanceUtil instanceUtil;
 
   @Override
@@ -214,7 +209,7 @@ public class InstanceServiceImpl implements InstanceService {
     Validator.notNullCheck("Application", application);
     Validator.notNullCheck("ControllerInfoList", containerInfoList);
 
-    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(containerDeploymentInfo, containerInfoList);
+    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(containerDeploymentInfo);
 
     List<Instance> newInstanceList = Lists.newArrayList();
     List<Instance> updateInstanceList = Lists.newArrayList();
@@ -265,10 +260,9 @@ public class InstanceServiceImpl implements InstanceService {
     return true;
   }
 
-  private Map<InstanceKey, Instance> getCurrentInstancesInDB(
-      ContainerDeploymentInfo containerDeploymentInfo, List<ContainerInfo> containerInfoList) {
+  private Map<InstanceKey, Instance> getCurrentInstancesInDB(ContainerDeploymentInfo containerDeploymentInfo) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
-    Map<InstanceKey, Instance> instanceMap = Maps.newHashMap();
+    Map<InstanceKey, Instance> instanceMap;
     if (containerDeploymentInfo instanceof KubernetesContainerDeploymentInfo) {
       KubernetesContainerDeploymentInfo kubernetesContainerDeploymentInfo =
           (KubernetesContainerDeploymentInfo) containerDeploymentInfo;

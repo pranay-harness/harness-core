@@ -14,7 +14,6 @@ import java.util.Map;
 public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
-  private String oldName;
   private String clusterName;
   private DeploymentType deploymentType;
   private String infraMappingId;
@@ -40,14 +39,6 @@ public class ContainerServiceElement implements ContextElement {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getOldName() {
-    return oldName;
-  }
-
-  public void setOldName(String oldName) {
-    this.oldName = oldName;
   }
 
   @Override
@@ -82,7 +73,6 @@ public class ContainerServiceElement implements ContextElement {
   public static final class ContainerServiceElementBuilder {
     private String uuid;
     private String name;
-    private String oldName;
     private String clusterName;
     private DeploymentType deploymentType;
     private String infraMappingId;
@@ -100,11 +90,6 @@ public class ContainerServiceElement implements ContextElement {
 
     public ContainerServiceElementBuilder withName(String name) {
       this.name = name;
-      return this;
-    }
-
-    public ContainerServiceElementBuilder withOldName(String oldName) {
-      this.oldName = oldName;
       return this;
     }
 
@@ -127,7 +112,6 @@ public class ContainerServiceElement implements ContextElement {
       ContainerServiceElement containerServiceElement = new ContainerServiceElement();
       containerServiceElement.setUuid(uuid);
       containerServiceElement.setName(name);
-      containerServiceElement.setOldName(oldName);
       containerServiceElement.setClusterName(clusterName);
       containerServiceElement.setDeploymentType(deploymentType);
       containerServiceElement.setInfraMappingId(infraMappingId);
