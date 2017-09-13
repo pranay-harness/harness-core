@@ -55,6 +55,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -96,6 +97,7 @@ public class AppServiceImpl implements AppService {
   @Inject private RoleService roleService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
+  @Inject private InstanceService instanceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -296,6 +298,7 @@ public class AppServiceImpl implements AppService {
         workflowService.deleteStateMachinesByApplication(appId);
         pipelineService.deletePipelineByApplication(appId);
         serviceResourceService.deleteByApp(appId);
+        instanceService.deleteByApp(appId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())

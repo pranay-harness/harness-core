@@ -175,6 +175,13 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
+  public boolean deleteByApp(String appId) {
+    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    query.field("appId").equal(appId);
+    return wingsPersistence.delete(query);
+  }
+
+  @Override
   public boolean delete(Set<String> instanceIdSet) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
@@ -218,7 +225,7 @@ public class InstanceServiceImpl implements InstanceService {
       if (existingInstance == null) {
         newInstanceList.add(
             buildInstanceFromContainerInfo(application, containerDeploymentInfo, containerInfo, instanceKey));
-      } else {
+      } else if (shoudUpdateInstance(existingInstance, containerInfo)) {
         updateInstanceList.add(
             buildInstanceFromContainerInfo(application, containerDeploymentInfo, containerInfo, instanceKey));
       }
@@ -228,6 +235,34 @@ public class InstanceServiceImpl implements InstanceService {
     update(updateInstanceList);
     Set<String> staleIds = currentInstanceMap.values().stream().map(Instance::getUuid).collect(toSet());
     delete(staleIds);
+  }
+
+  private boolean shoudUpdateInstance(Instance existingInstance, ContainerInfo containerInfo) {
+    if (containerInfo instanceof EcsContainerInfo) {
+      EcsContainerInfo existingContainerInfo = (EcsContainerInfo) existingInstance.getInstanceInfo();
+      if (existingContainerInfo == null) {
+        return true;
+      }
+      EcsContainerInfo newContainerInfo = (EcsContainerInfo) containerInfo;
+      if (newContainerInfo.getTaskDefinitionArn().equals(existingContainerInfo.getTaskDefinitionArn())) {
+        return false;
+      }
+    } else if (containerInfo instanceof KubernetesContainerInfo) {
+      KubernetesContainerInfo existingContainerInfo = (KubernetesContainerInfo) existingInstance.getInstanceInfo();
+      if (existingContainerInfo == null) {
+        return true;
+      }
+      KubernetesContainerInfo newContainerInfo = (KubernetesContainerInfo) containerInfo;
+      if (newContainerInfo.getReplicationControllerName().equals(
+              existingContainerInfo.getReplicationControllerName())) {
+        return false;
+      }
+
+    } else {
+      throw new WingsException("Unsupported container type");
+    }
+
+    return true;
   }
 
   private Map<InstanceKey, Instance> getCurrentInstancesInDB(

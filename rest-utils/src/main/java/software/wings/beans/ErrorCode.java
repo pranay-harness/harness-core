@@ -377,6 +377,11 @@ public enum ErrorCode {
   LOGZ_CONFIGURATION_ERROR("LOGZ_CONFIGURATION_ERROR"),
 
   /**
+   * SUMO configuration error error code.
+   */
+  SUMO_CONFIGURATION_ERROR("SUMO_CONFIGURATION_ERROR"),
+
+  /**
    * Appdynamics error error code.
    */
   APPDYNAMICS_ERROR("APPDYNAMICS_ERROR"),

@@ -48,9 +48,9 @@ public class AwsClusterServiceImpl implements AwsClusterService {
 
   @Override
   public List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, Integer desiredSize, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog(
-        String.format("Resize service [%s] in cluster [%s] to %s instances", serviceName, clusterName, desiredSize),
+      String serviceName, int previousCount, int desiredSize, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
+                                              serviceName, clusterName, previousCount, desiredSize),
         LogLevel.INFO);
     List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(
         region, cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
@@ -60,7 +60,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   }
 
   @Override
-  public void destroyCluster(
+  public void deleteService(
       String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
     ecsContainerService.deleteService(region, cloudProviderSetting, clusterName, serviceName);
     logger.info("Successfully deleted service {}", serviceName);

@@ -27,4 +27,5 @@ public class NewRelicDataCollectionInfo {
   private long startTime;
   private int collectionTime;
   private long newRelicAppId;
+  private int dataCollectionMinute;
 }

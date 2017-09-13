@@ -58,12 +58,13 @@ public interface KubernetesContainerService {
    * @param kubernetesConfig          the kubernetes config
    * @param clusterName               the cluster name
    * @param replicationControllerName the replication controller name
-   * @param number                    the number
+   * @param previousCount                    the previous count
+   * @param count                    the count
    * @param executionLogCallback      the execution log callback
    * @return the controller pod count
    */
   List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
-      String replicationControllerName, int number, ExecutionLogCallback executionLogCallback);
+      String replicationControllerName, int previousCount, int count, ExecutionLogCallback executionLogCallback);
 
   /**
    * Gets the pod count of a replication controller.

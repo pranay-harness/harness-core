@@ -1,0 +1,7 @@
+{
+  "accessKey": { "ui:widget": "password" },
+  "accessId": { "ui:widget": "password" },
+  "type": { "ui:widget": "hidden" },
+  "custom:encryptedFields": [ "accessId", "accessKey" ],
+  "ui:order": [ "type", "sumoUrl",  "accessId", "accessKey" ]
+}
