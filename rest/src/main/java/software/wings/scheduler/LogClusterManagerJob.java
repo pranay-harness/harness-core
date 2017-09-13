@@ -156,6 +156,7 @@ public class LogClusterManagerJob implements Job {
         }
 
         switch (context.getStateType()) {
+          case SUMO:
           case ELK:
           case LOGZ:
             cluster();
