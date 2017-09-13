@@ -21,9 +21,11 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -183,6 +185,13 @@ public class NewRelicServiceImpl implements NewRelicService {
       return null;
     }
 
+    if (analysisRecord.getMetricAnalyses() == null) {
+      return NewRelicMetricAnalysisRecord.builder()
+          .message(
+              "Could not get metric data from new relic. Please make sure that the new relic account is a paid account and metrics can be pulled using rest API")
+          .build();
+    }
+
     int highRisk = 0;
     int mediumRisk = 0;
     for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
@@ -213,5 +222,55 @@ public class NewRelicServiceImpl implements NewRelicService {
 
     Collections.sort(analysisRecord.getMetricAnalyses());
     return analysisRecord;
+  }
+
+  @Override
+  public boolean isStateValid(String appdId, String stateExecutionID) {
+    StateExecutionInstance stateExecutionInstance =
+        workflowExecutionService.getStateExecutionData(appdId, stateExecutionID);
+    return (stateExecutionInstance == null || stateExecutionInstance.getStatus().isFinalStatus()) ? false : true;
+  }
+
+  @Override
+  public int getCollectionMinuteToProcess(String stateExecutionId, String workflowExecutionId, String serviceId) {
+    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("workflowExecutionId")
+                                                .equal(workflowExecutionId)
+                                                .field("stateExecutionId")
+                                                .equal(stateExecutionId)
+                                                .field("serviceId")
+                                                .equal(serviceId)
+                                                .field("level")
+                                                .equal(ClusterLevel.HF)
+                                                .order("-dataCollectionMinute")
+                                                .limit(1);
+
+    if (query.asList().size() == 0) {
+      logger.info(
+          "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}. Will be running analysis for minute 0",
+          ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
+      return 0;
+    }
+
+    return query.asList().get(0).getDataCollectionMinute() + 1;
+  }
+
+  @Override
+  public void bumpCollectionMinuteToProcess(
+      String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute) {
+    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("workflowExecutionId")
+                                                .equal(workflowExecutionId)
+                                                .field("stateExecutionId")
+                                                .equal(stateExecutionId)
+                                                .field("serviceId")
+                                                .equal(serviceId)
+                                                .field("level")
+                                                .equal(ClusterLevel.H0)
+                                                .field("dataCollectionMinute")
+                                                .lessThanOrEq(analysisMinute);
+
+    wingsPersistence.update(
+        query, wingsPersistence.createUpdateOperations(NewRelicMetricDataRecord.class).set("level", ClusterLevel.HF));
   }
 }

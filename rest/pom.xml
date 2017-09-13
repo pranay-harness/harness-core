@@ -575,6 +575,12 @@
             <version>1.08</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.sumologic.api.client</groupId>
+            <artifactId>sumo-java-client</artifactId>
+            <version>2.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

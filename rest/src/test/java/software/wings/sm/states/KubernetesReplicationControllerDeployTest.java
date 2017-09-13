@@ -235,8 +235,8 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
-    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(),
-        aCommandStateExecutionData().withOldContainerServiceName("oldService").build());
+    stateExecutionInstance.getStateExecutionMap().put(
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);

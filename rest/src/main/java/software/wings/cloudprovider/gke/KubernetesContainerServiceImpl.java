@@ -80,17 +80,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
-      String replicationControllerName, int number, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] to %s instances",
-                                              replicationControllerName, clusterName, number),
+      String replicationControllerName, int previousCount, int count, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
+                                              replicationControllerName, clusterName, previousCount, count),
         Log.LogLevel.INFO);
     kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .replicationControllers()
         .withName(replicationControllerName)
-        .scale(number);
-    logger.info("Scaled controller {} to {} instances", replicationControllerName, number);
+        .scale(count);
+    logger.info("Scaled controller {} in cluster {} from {} to {} instances", replicationControllerName, clusterName,
+        previousCount, count);
     logger.info("Waiting for pods to be ready...");
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number);
+    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, count);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     for (Pod pod : pods) {
@@ -104,8 +105,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       if (phase.equals(RUNNING)) {
         containerInfo.setStatus(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
-        executionLogCallback.saveExecutionLog(String.format("Pod [%s] started successfully. Host IP: %s. Pod IP: %s",
-                                                  podName, pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
+        executionLogCallback.saveExecutionLog(String.format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
+                                                  pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
             Log.LogLevel.INFO);
       } else {
         containerInfo.setStatus(Status.FAILURE);

@@ -19,6 +19,7 @@ public enum TaskGroup {
   S3,
   ELK,
   LOGZ,
+  SUMO,
   ARTIFACTORY,
   HOST_VALIDATION
 }

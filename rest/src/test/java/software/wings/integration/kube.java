@@ -222,7 +222,7 @@ public class kube {
             .endSpec()
             .build());
 
-    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 2, new ExecutionLogCallback());
+    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
 
     int backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
     int frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");

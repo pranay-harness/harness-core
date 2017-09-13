@@ -257,7 +257,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                       .equal(appId)
                                       .field(ID_KEY)
                                       .equal(streamId)
-                                      .field("streamActions.workflowId")
+                                      .field("streamActions.uuid")
                                       .notEqual(artifactStreamAction.getWorkflowId());
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
@@ -291,7 +291,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void addCronForScheduledJobExecution(
       String appId, String streamId, ArtifactStreamAction artifactStreamAction, String cronExpression) {
     JobDetail job = JobBuilder.newJob(ArtifactStreamActionJob.class)
-                        .withIdentity(artifactStreamAction.getWorkflowId(), streamId)
+                        .withIdentity(artifactStreamAction.getUuid(), streamId)
                         .usingJobData("artifactStreamId", streamId)
                         .usingJobData("appId", appId)
                         .usingJobData("workflowId", artifactStreamAction.getWorkflowId())
@@ -299,7 +299,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(artifactStreamAction.getWorkflowId(), streamId)
+                          .withIdentity(artifactStreamAction.getUuid(), streamId)
                           .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                           .build();
 
@@ -403,24 +403,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void triggerScheduledStreamAction(String appId, String streamId, String workflowId) {
-    logger.info(
-        "Triggering scheduled action for app Id {} streamId {} and workflow id {} ", appId, streamId, workflowId);
+  public void triggerScheduledStreamAction(String appId, String streamId, String actionId) {
+    logger.info("Triggering scheduled action for app Id {} streamId {} and action id {} ", appId, streamId, actionId);
     ArtifactStream artifactStream = get(appId, streamId);
     if (artifactStream == null) {
       logger.info("Artifact stream does not exist. Hence deleting associated job");
-      jobScheduler.deleteJob(workflowId, streamId);
+      jobScheduler.deleteJob(actionId, streamId);
       return;
     }
     ArtifactStreamAction artifactStreamAction =
         artifactStream.getStreamActions()
             .stream()
-            .filter(asa -> asa.isCustomAction() && asa.getWorkflowId().equals(workflowId))
+            .filter(asa -> asa.isCustomAction() && asa.getUuid().equals(actionId))
             .findFirst()
             .orElse(null);
     if (artifactStreamAction == null) {
       logger.info("Artifact stream does not have trigger anymore. Deleting associated job");
-      jobScheduler.deleteJob(workflowId, streamId);
+      jobScheduler.deleteJob(actionId, streamId);
       return;
     }
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
