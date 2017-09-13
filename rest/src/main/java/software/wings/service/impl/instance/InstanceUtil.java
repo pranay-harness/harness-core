@@ -11,6 +11,9 @@ import software.wings.utils.Validator;
  * @author rktummala on 09/11/17
  */
 public class InstanceUtil {
+  private static final String WORKFLOW_PREFIX = "Workflow: ";
+  private static final int WORKFLOW_PREFIX_LENGTH = 10;
+
   public void setInstanceType(Instance.Builder builder, String infraMappingType) {
     InstanceType instanceType = null;
     if (InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infraMappingType)
@@ -28,5 +31,17 @@ public class InstanceUtil {
     Validator.notNullCheck("InstanceType", instanceType);
 
     builder.withInstanceType(instanceType);
+  }
+
+  public String getWorkflowName(String workflowName) {
+    if (workflowName == null) {
+      return null;
+    }
+
+    if (workflowName.startsWith(WORKFLOW_PREFIX)) {
+      return workflowName.substring(WORKFLOW_PREFIX_LENGTH);
+    } else {
+      return workflowName;
+    }
   }
 }

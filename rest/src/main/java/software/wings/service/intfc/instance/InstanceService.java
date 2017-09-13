@@ -68,6 +68,13 @@ public interface InstanceService {
    */
   boolean delete(String instanceId);
 
+  /**
+   * delete all the instances of an app
+   * @param appId application id
+   * @return
+   */
+  boolean deleteByApp(String appId);
+
   boolean delete(Set<String> instanceIdSet);
 
   /**

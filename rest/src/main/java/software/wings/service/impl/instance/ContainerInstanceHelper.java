@@ -42,6 +42,7 @@ import java.util.Set;
 public class ContainerInstanceHelper {
   private static final Logger logger = LoggerFactory.getLogger(ContainerInstanceHelper.class);
   @Inject private AppService appService;
+  @Inject private InstanceUtil instanceUtil;
 
   // This queue is used to asynchronously process all the container deployment information that the workflow touched
   // upon.
@@ -71,6 +72,7 @@ public class ContainerInstanceHelper {
                 phaseStepExecutionSummary.getStepExecutionSummaryList();
             for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
               if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+                Validator.notNullCheck("StepExecutionSummary", stepExecutionSummary);
                 CommandStepExecutionSummary commandStepExecutionSummary =
                     (CommandStepExecutionSummary) stepExecutionSummary;
                 String clusterName = commandStepExecutionSummary.getClusterName();
@@ -116,6 +118,9 @@ public class ContainerInstanceHelper {
     Validator.notNullCheck("triggeredBy", triggeredBy);
     String infraMappingType = infrastructureMapping.getInfraMappingType();
 
+    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
+    Validator.notNullCheck("WorkflowName", workflowName);
+
     if (InfrastructureMappingType.AWS_ECS.name().equals(infraMappingType)) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       return EcsContainerDeploymentInfo.Builder.anEcsContainerDeploymentInfo()
@@ -144,7 +149,7 @@ public class ContainerInstanceHelper {
           .withServiceId(phaseExecutionData.getServiceId())
           .withServiceName(phaseExecutionData.getServiceName())
           .withLastWorkflowId(workflowExecution.getUuid())
-          .withLastWorkflowName(workflowExecution.getName())
+          .withLastWorkflowName(workflowName)
           .withClusterName(clusterName)
           .build();
 
@@ -175,7 +180,7 @@ public class ContainerInstanceHelper {
           .withServiceId(phaseExecutionData.getServiceId())
           .withServiceName(phaseExecutionData.getServiceName())
           .withLastWorkflowId(workflowExecution.getUuid())
-          .withLastWorkflowName(workflowExecution.getName())
+          .withLastWorkflowName(workflowName)
           .withClusterName(clusterName)
           .build();
     }

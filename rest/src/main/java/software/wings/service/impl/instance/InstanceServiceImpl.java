@@ -19,7 +19,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.KubernetesContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
-import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
@@ -173,6 +172,13 @@ public class InstanceServiceImpl implements InstanceService {
     Instance instance = get(instanceId);
     Validator.notNullCheck("Instance", instance);
     return wingsPersistence.delete(instance);
+  }
+
+  @Override
+  public boolean deleteByApp(String appId) {
+    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    query.field("appId").equal(appId);
+    return wingsPersistence.delete(query);
   }
 
   @Override
