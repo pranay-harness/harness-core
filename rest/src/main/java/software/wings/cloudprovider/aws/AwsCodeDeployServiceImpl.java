@@ -10,6 +10,8 @@ import com.google.common.collect.Sets;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
 import com.amazonaws.services.codedeploy.model.DeploymentGroupInfo;
+import com.amazonaws.services.codedeploy.model.DeploymentInfo;
+import com.amazonaws.services.codedeploy.model.ErrorInformation;
 import com.amazonaws.services.codedeploy.model.GetDeploymentGroupRequest;
 import com.amazonaws.services.codedeploy.model.GetDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.ListApplicationsRequest;
@@ -113,12 +115,20 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       executionLogCallback.saveExecutionLog(
           String.format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
       waitForDeploymentToComplete(awsConfig, region, deploymentResult.getDeploymentId());
-      String finalDeploymentStatus =
+      DeploymentInfo deploymentInfo =
           awsHelperService
               .getCodeDeployDeployment(
                   awsConfig, region, new GetDeploymentRequest().withDeploymentId(deploymentResult.getDeploymentId()))
-              .getDeploymentInfo()
-              .getStatus();
+              .getDeploymentInfo();
+      String finalDeploymentStatus = deploymentInfo.getStatus();
+
+      ErrorInformation errorInformation = deploymentInfo.getErrorInformation();
+      if (errorInformation != null) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Deployment Error: [%s] [%s]", errorInformation.getCode(), errorInformation.getMessage()),
+            LogLevel.ERROR);
+      }
+
       CodeDeployDeploymentInfo codeDeployDeploymentInfo = new CodeDeployDeploymentInfo();
       codeDeployDeploymentInfo.setStatus(Failed.name().equals(finalDeploymentStatus) ? CommandExecutionStatus.FAILURE
                                                                                      : CommandExecutionStatus.SUCCESS);
