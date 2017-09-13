@@ -12,6 +12,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.command.Command;
@@ -27,6 +28,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.ArtifactStreamYaml;
 import software.wings.yaml.OrchestrationStreamActionYaml;
@@ -56,6 +58,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private WorkflowService workflowService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -354,5 +357,18 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public ArtifactStream updateTrigger(
       String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled) {
     return null;
+  }
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId     the app id
+   * @param workflowId the workflow id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId) {
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+
+    return YamlHelper.getYamlRestResponseGeneric(workflow, workflow.getName() + ".yaml", false);
   }
 }

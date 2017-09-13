@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.NodeTuple;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
 
+import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,30 +18,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class YamlRepresenter extends Representer {
-  public YamlRepresenter() {
-    // this.representers.put(Dice.class, new RepresentDice());
-    // this.representers.put(Application.class, new RepresentApplication());
-  }
+  private boolean everythingExceptDoNotSerializeAndTransients = false;
 
-  /*
-  private class RepresentDice implements Represent {
-    public Node representData(Object data) {
-      Dice dice = (Dice) data;
-      String value = dice.getA() + "d" + dice.getB();
-      return representScalar(new Tag("!dice"), value);
-    }
-  }
-*/
+  public YamlRepresenter() {}
 
-  /*
-  private class RepresentApplication implements Represent {
-    public Node representData(Object data) {
-      Application dice = (Application) data;
-      String value = dice.getA() + "d" + dice.getB();
-      return representScalar(new Tag("!dice"), value);
-    }
+  public YamlRepresenter(boolean everythingExceptDoNotSerializeAndTransients) {
+    this.everythingExceptDoNotSerializeAndTransients = everythingExceptDoNotSerializeAndTransients;
   }
-*/
 
   @Override
   public NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
@@ -66,9 +50,18 @@ public class YamlRepresenter extends Representer {
     Set<String> yamlSerializableFields = new HashSet<>();
 
     for (Field field : fields) {
-      YamlSerialize annos = field.getAnnotation(YamlSerialize.class);
-      if (annos != null) {
-        yamlSerializableFields.add(field.getName());
+      if (everythingExceptDoNotSerializeAndTransients) {
+        YamlDoNotSerialize doNotAnnos = field.getAnnotation(YamlDoNotSerialize.class);
+        Transient transientAnnos = field.getAnnotation(Transient.class);
+
+        if (doNotAnnos == null && transientAnnos == null) {
+          yamlSerializableFields.add(field.getName());
+        }
+      } else {
+        YamlSerialize annos = field.getAnnotation(YamlSerialize.class);
+        if (annos != null) {
+          yamlSerializableFields.add(field.getName());
+        }
       }
     }
 
