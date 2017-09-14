@@ -68,7 +68,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
-  public DirectoryNode get(@NotEmpty String accountId) {
+  public DirectoryNode getDirectory(@NotEmpty String accountId) {
     FolderNode configFolder = new FolderNode("Setup", Setup.class);
     configFolder.addChild(new YamlNode("setup.yaml", SetupYaml.class));
 

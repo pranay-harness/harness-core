@@ -15,5 +15,5 @@ public interface YamlDirectoryService {
    * @param accountId the account id
    * @return the application
    */
-  DirectoryNode get(@NotEmpty String accountId);
+  DirectoryNode getDirectory(@NotEmpty String accountId);
 }

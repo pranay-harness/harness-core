@@ -18,9 +18,11 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlPayload;
+import software.wings.yaml.directory.DirectoryNode;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -43,6 +45,7 @@ public class YamlResource {
   private ServiceYamlResourceService serviceYamlResourceService;
   private AppYamlResourceService appYamlResourceService;
   private SetupYamlResourceService setupYamlResourceService;
+  private YamlDirectoryService yamlDirectoryService;
 
   /**
    * Instantiates a new service resource.
@@ -51,11 +54,13 @@ public class YamlResource {
    */
   @Inject
   public YamlResource(YamlResourceService yamlResourceService, ServiceYamlResourceService serviceYamlResourceService,
-      AppYamlResourceService appYamlResourceService, SetupYamlResourceService setupYamlResourceService) {
+      AppYamlResourceService appYamlResourceService, SetupYamlResourceService setupYamlResourceService,
+      YamlDirectoryService yamlDirectoryService) {
     this.yamlResourceService = yamlResourceService;
     this.serviceYamlResourceService = serviceYamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
     this.setupYamlResourceService = setupYamlResourceService;
+    this.yamlDirectoryService = yamlDirectoryService;
   }
 
   /**
@@ -345,11 +350,25 @@ public class YamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/{accountId}")
+  @Path("/setup/{accountId}")
   @Timed
   @ExceptionMetered
   public RestResponse<SetupYaml> updateSetup(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return setupYamlResourceService.updateSetup(accountId, yamlPayload, deleteEnabled);
+  }
+
+  /**
+   * Gets the config as code directory by accountId
+   *
+   * @param accountId the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("/directory/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DirectoryNode> getDirectory(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(yamlDirectoryService.getDirectory(accountId));
   }
 }
