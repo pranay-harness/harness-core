@@ -1,6 +1,7 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -31,7 +32,7 @@ public interface YamlResourceService {
    * @param yamlPayload the yaml version of the service command
    * @return the service command
    */
-  ServiceCommand updateServiceCommand(
+  RestResponse<ServiceCommand> updateServiceCommand(
       @NotEmpty String appId, @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled);
 
   /**
@@ -51,7 +52,8 @@ public interface YamlResourceService {
    * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
-  public Pipeline updatePipeline(String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled);
+  public RestResponse<Pipeline> updatePipeline(
+      String appId, String pipelineId, YamlPayload yamlPayload, boolean deleteEnabled);
 
   /**
    * Gets the yaml version of a trigger by artifactStreamId
@@ -70,7 +72,7 @@ public interface YamlResourceService {
    * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
-  public ArtifactStream updateTrigger(
+  public RestResponse<ArtifactStream> updateTrigger(
       String appId, String artifactStreamId, YamlPayload yamlPayload, boolean deleteEnabled);
 
   /**
@@ -109,6 +111,25 @@ public interface YamlResourceService {
    * @param yamlPayload the yaml version of setup
    * @return the rest response
    */
-  public SettingAttribute updateSettingAttribute(
+  public RestResponse<SettingAttribute> updateSettingAttribute(
       String accountId, String uuid, String type, YamlPayload yamlPayload, boolean deleteEnabled);
+
+  /**
+   * Gets the yaml version of an environment by envId
+   *
+   * @param appId   the app id
+   * @param envId   the environment id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getEnvironment(String appId, String envId);
+
+  /**
+   * Update a environment that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param envId  the environment id
+   * @param yamlPayload the yaml version of environment
+   * @return the rest response
+   */
+  public RestResponse<Environment> updateEnvironment(
+      String appId, String envId, YamlPayload yamlPayload, boolean deleteEnabled);
 }
