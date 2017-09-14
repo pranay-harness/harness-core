@@ -9,12 +9,30 @@ import java.util.Map;
  * Created by anubhaw on 11/17/16.
  */
 public class PipelineStage {
+  private String name;
+  private boolean parallel;
   private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
 
   /**
    * Instantiates a new Pipeline stage.
    */
   public PipelineStage() {}
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public boolean isParallel() {
+    return parallel;
+  }
+
+  public void setParallel(boolean parallel) {
+    this.parallel = parallel;
+  }
 
   /**
    * Instantiates a new Pipeline stage.
