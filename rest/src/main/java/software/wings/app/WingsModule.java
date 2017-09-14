@@ -132,6 +132,7 @@ import software.wings.service.impl.instance.sync.InstanceSyncService;
 import software.wings.service.impl.instance.sync.KubernetesInstanceSyncServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
+import software.wings.service.impl.yaml.SetupYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
@@ -200,6 +201,7 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
@@ -318,6 +320,7 @@ public class WingsModule extends AbstractModule {
     bind(YamlResourceService.class).to(YamlResourceServiceImpl.class);
     bind(ServiceYamlResourceService.class).to(ServiceYamlResourceServiceImpl.class);
     bind(AppYamlResourceService.class).to(AppYamlResourceServiceImpl.class);
+    bind(SetupYamlResourceService.class).to(SetupYamlResourceServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
