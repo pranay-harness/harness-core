@@ -9,7 +9,7 @@ import java.util.List;
  * @author rktummala on 09/02/17
  */
 @Data
-public class InstanceSyncResponse {
+public class ContainerSyncResponse {
   private List<ContainerInfo> containerInfoList;
 
   public static final class Builder {
@@ -17,7 +17,7 @@ public class InstanceSyncResponse {
 
     private Builder() {}
 
-    public static Builder anInstanceSyncResponse() {
+    public static Builder aContainerSyncResponse() {
       return new Builder();
     }
 
@@ -27,13 +27,13 @@ public class InstanceSyncResponse {
     }
 
     public Builder but() {
-      return anInstanceSyncResponse().withContainerInfoList(containerInfoList);
+      return aContainerSyncResponse().withContainerInfoList(containerInfoList);
     }
 
-    public InstanceSyncResponse build() {
-      InstanceSyncResponse instanceSyncResponse = new InstanceSyncResponse();
-      instanceSyncResponse.setContainerInfoList(containerInfoList);
-      return instanceSyncResponse;
+    public ContainerSyncResponse build() {
+      ContainerSyncResponse containerSyncResponse = new ContainerSyncResponse();
+      containerSyncResponse.setContainerInfoList(containerInfoList);
+      return containerSyncResponse;
     }
   }
 }

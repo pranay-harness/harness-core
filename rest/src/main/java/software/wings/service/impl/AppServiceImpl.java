@@ -39,6 +39,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.intfc.AppContainerService;
@@ -77,7 +78,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class AppServiceImpl implements AppService {
   private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
+  private static final String INSTANCE_SYNC_CRON_GROUP = "INSTANCE_SYNC_CRON_GROUP";
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
+  private static final int INSTANCE_SYNC_POLL_INTERVAL = 60;
 
   private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
@@ -119,6 +122,7 @@ public class AppServiceImpl implements AppService {
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
     addCronForStateMachineExecutionCleanup(application);
+    addCronForInstanceSync(application);
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -164,6 +168,22 @@ public class AppServiceImpl implements AppService {
             .withSchedule(
                 SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
             .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+  }
+
+  void addCronForInstanceSync(Application application) {
+    JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
+                        .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
+                        .usingJobData("appId", application.getUuid())
+                        .build();
+
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(INSTANCE_SYNC_POLL_INTERVAL)
+                                            .repeatForever())
+                          .build();
 
     jobScheduler.scheduleJob(job, trigger);
   }
@@ -308,6 +328,7 @@ public class AppServiceImpl implements AppService {
                 .build());
       });
       deleteCronForStateMachineExecutionCleanup(appId);
+      deleteCronForInstanceSync(appId);
     }
   }
 
@@ -351,6 +372,10 @@ public class AppServiceImpl implements AppService {
 
   void deleteCronForStateMachineExecutionCleanup(String appId) {
     jobScheduler.deleteJob(appId, SM_CLEANUP_CRON_GROUP);
+  }
+
+  void deleteCronForInstanceSync(String appId) {
+    jobScheduler.deleteJob(appId, INSTANCE_SYNC_CRON_GROUP);
   }
 
   @Override

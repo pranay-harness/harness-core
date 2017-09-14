@@ -53,8 +53,9 @@ public class InstanceHelper {
    * dashboards. The instance processing happens asynchronously.
    *   @see InstanceChangeEventListener
    */
-  public void extractInstanceOrContainerInfoBaseOnType(StateExecutionData stateExecutionData,
-      WorkflowStandardParams workflowStandardParams, String appId, WorkflowExecution workflowExecution) {
+  public void extractInstanceOrContainerInfoBaseOnType(String stateExecutionInstanceId,
+      StateExecutionData stateExecutionData, WorkflowStandardParams workflowStandardParams, String appId,
+      WorkflowExecution workflowExecution) {
     try {
       if (!(stateExecutionData instanceof PhaseExecutionData)) {
         logger.error("stateExecutionData is not of type PhaseExecutionData");
@@ -81,7 +82,7 @@ public class InstanceHelper {
 
       if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
         containerInstanceHelper.extractContainerInfo(
-            phaseExecutionData, workflowExecution, artifact, infrastructureMapping);
+            stateExecutionInstanceId, phaseExecutionData, workflowExecution, infrastructureMapping);
       } else {
         List<Instance> instanceList = Lists.newArrayList();
 
@@ -93,8 +94,8 @@ public class InstanceHelper {
           }
           for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
             if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
-              Instance instance = buildInstance(workflowExecution, artifact, instanceStatusSummary, phaseExecutionData,
-                  infrastructureMapping.getInfraMappingType());
+              Instance instance = buildInstanceUsingHostInfo(workflowExecution, artifact, instanceStatusSummary,
+                  phaseExecutionData, infrastructureMapping.getInfraMappingType());
               instanceList.add(instance);
             }
           }
@@ -131,10 +132,19 @@ public class InstanceHelper {
     }
   }
 
-  public Instance buildInstance(WorkflowExecution workflowExecution, Artifact artifact,
+  public Instance buildInstanceUsingHostInfo(WorkflowExecution workflowExecution, Artifact artifact,
       InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData, String infraMappingType) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
     Validator.notNullCheck("Host", host);
+
+    Instance.Builder builder = buildInstanceBase(workflowExecution, artifact, phaseExecutionData, infraMappingType);
+    setInstanceInfoAndKey(builder, host, infraMappingType, phaseExecutionData.getInfraMappingId());
+
+    return builder.build();
+  }
+
+  public Instance.Builder buildInstanceBase(WorkflowExecution workflowExecution, Artifact artifact,
+      PhaseExecutionData phaseExecutionData, String infraMappingType) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     Validator.notNullCheck("Application", application);
@@ -171,9 +181,8 @@ public class InstanceHelper {
     builder.withLastWorkflowExecutionName(workflowName);
 
     instanceUtil.setInstanceType(builder, infraMappingType);
-    setInstanceInfoAndKey(builder, host, infraMappingType, phaseExecutionData.getInfraMappingId());
 
-    return builder.build();
+    return builder;
   }
 
   private void setInstanceInfoAndKey(

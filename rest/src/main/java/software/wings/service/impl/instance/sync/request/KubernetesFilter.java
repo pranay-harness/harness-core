@@ -4,18 +4,18 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.KubernetesConfig;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesFilter extends ContainerFilter {
   private KubernetesConfig kubernetesConfig;
-  private List<String> replicationControllerNameList;
+  private Set<String> replicationControllerNameSet;
 
   public static final class Builder {
     protected String clusterName;
     private KubernetesConfig kubernetesConfig;
-    private List<String> replicationControllerNameList;
+    private Set<String> replicationControllerNameSet;
 
     private Builder() {}
 
@@ -33,8 +33,8 @@ public class KubernetesFilter extends ContainerFilter {
       return this;
     }
 
-    public Builder withReplicationControllerNameList(List<String> replicationControllerNameList) {
-      this.replicationControllerNameList = replicationControllerNameList;
+    public Builder withReplicationControllerNameSet(Set<String> replicationControllerNameSet) {
+      this.replicationControllerNameSet = replicationControllerNameSet;
       return this;
     }
 
@@ -42,14 +42,14 @@ public class KubernetesFilter extends ContainerFilter {
       return aKubernetesFilter()
           .withClusterName(clusterName)
           .withKubernetesConfig(kubernetesConfig)
-          .withReplicationControllerNameList(replicationControllerNameList);
+          .withReplicationControllerNameSet(replicationControllerNameSet);
     }
 
     public KubernetesFilter build() {
       KubernetesFilter kubernetesFilter = new KubernetesFilter();
       kubernetesFilter.setClusterName(clusterName);
       kubernetesFilter.setKubernetesConfig(kubernetesConfig);
-      kubernetesFilter.setReplicationControllerNameList(replicationControllerNameList);
+      kubernetesFilter.setReplicationControllerNameSet(replicationControllerNameSet);
       return kubernetesFilter;
     }
   }

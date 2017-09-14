@@ -4,33 +4,42 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
-import software.wings.beans.infrastructure.instance.EcsContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.KubernetesContainerDeploymentInfo;
+import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.InstanceKey;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 /**
@@ -39,6 +48,8 @@ import javax.validation.Valid;
 @Singleton
 public class InstanceServiceImpl implements InstanceService {
   private static final Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);
+  // We want to maintain only 10 revisions of each container service family.
+  private int MAX_CONTAINER_SERVICE_COUNT = 10;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -183,46 +194,22 @@ public class InstanceServiceImpl implements InstanceService {
     return wingsPersistence.delete(query);
   }
 
-  private ContainerInstanceKey generateInstanceKeyForContainer(
-      ContainerInfo containerInfo, ContainerDeploymentInfo containerDeploymentInfo) {
-    ContainerInstanceKey containerInstanceKey = null;
-
-    if (containerDeploymentInfo instanceof KubernetesContainerDeploymentInfo) {
-      KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
-      containerInstanceKey = ContainerInstanceKey.Builder.aContainerInstanceKey()
-                                 .withContainerId(kubernetesContainerInfo.getPodName())
-                                 .build();
-
-    } else if (containerDeploymentInfo instanceof EcsContainerDeploymentInfo) {
-      EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
-      containerInstanceKey =
-          ContainerInstanceKey.Builder.aContainerInstanceKey().withContainerId(ecsContainerInfo.getTaskArn()).build();
-    }
-
-    return containerInstanceKey;
-  }
-
   @Override
-  public void buildAndSaveInstances(
-      ContainerDeploymentInfo containerDeploymentInfo, List<ContainerInfo> containerInfoList) {
-    Application application = appService.get(containerDeploymentInfo.getAppId());
-    Validator.notNullCheck("Application", application);
-    Validator.notNullCheck("ControllerInfoList", containerInfoList);
+  public void saveOrUpdateContainerInstances(
+      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList) {
+    Validator.notNullCheck("InstanceList", instanceList);
 
-    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(containerDeploymentInfo);
+    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(instanceType, containerSvcNameNoRevision);
 
     List<Instance> newInstanceList = Lists.newArrayList();
     List<Instance> updateInstanceList = Lists.newArrayList();
-    for (ContainerInfo containerInfo : containerInfoList) {
-      ContainerInstanceKey instanceKey = generateInstanceKeyForContainer(containerInfo, containerDeploymentInfo);
 
-      Instance existingInstance = currentInstanceMap.remove(instanceKey);
+    for (Instance instance : instanceList) {
+      Instance existingInstance = currentInstanceMap.remove(instance.getContainerInstanceKey());
       if (existingInstance == null) {
-        newInstanceList.add(
-            buildInstanceFromContainerInfo(application, containerDeploymentInfo, containerInfo, instanceKey));
-      } else if (shoudUpdateInstance(existingInstance, containerInfo)) {
-        updateInstanceList.add(
-            buildInstanceFromContainerInfo(application, containerDeploymentInfo, containerInfo, instanceKey));
+        newInstanceList.add(instance);
+      } else if (shouldUpdateInstance(existingInstance, (ContainerInfo) instance.getInstanceInfo())) {
+        updateInstanceList.add(instance);
       }
     }
 
@@ -232,90 +219,160 @@ public class InstanceServiceImpl implements InstanceService {
     delete(staleIds);
   }
 
-  private boolean shoudUpdateInstance(Instance existingInstance, ContainerInfo containerInfo) {
+  @Override
+  public void saveOrUpdateContainerDeploymentInfo(String containerSvcNameNoRevision,
+      Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection, String appId, InstanceType instanceType,
+      long syncTimestamp) {
+    List<String> containerServiceNamesInDB = getContainerServiceNames(containerSvcNameNoRevision, appId);
+    List<ContainerDeploymentInfo> newList = Lists.newArrayList();
+    List<String> updateList = Lists.newArrayList();
+    HashSet<String> deleteSet = Sets.newHashSet();
+    TreeSet<String> treeSet = Sets.newTreeSet(containerServiceNamesInDB);
+    synchronized (containerSvcNameNoRevision) {
+      for (ContainerDeploymentInfo containerDeploymentInfo : containerDeploymentInfoCollection) {
+        if (!treeSet.contains(containerDeploymentInfo.getContainerSvcName())) {
+          newList.add(containerDeploymentInfo);
+        } else {
+          updateList.add(containerDeploymentInfo.getContainerSvcName());
+        }
+      }
+
+      int numOfEntriesToBeOverwritten = treeSet.size() + newList.size() - MAX_CONTAINER_SERVICE_COUNT;
+
+      while (numOfEntriesToBeOverwritten > 0) {
+        deleteSet.add(treeSet.pollFirst());
+        numOfEntriesToBeOverwritten--;
+      }
+
+      if (!newList.isEmpty()) {
+        // save the new containerDeploymentInfo objects
+        wingsPersistence.save(newList);
+      }
+
+      // delete the oldest revisions when the max count is reached.
+      if (!deleteSet.isEmpty()) {
+        deleteContainerDeploymentInfoAndInstances(deleteSet, instanceType, appId);
+      }
+
+      if (!updateList.isEmpty()) {
+        // update the lastVisited column so that they would be re-evaluated only after the configured interval.
+        Query<ContainerDeploymentInfo> query =
+            wingsPersistence.createQuery(ContainerDeploymentInfo.class).field("containerSvcName").in(updateList);
+        UpdateOperations<ContainerDeploymentInfo> operations =
+            wingsPersistence.createUpdateOperations(ContainerDeploymentInfo.class).set("lastVisited", syncTimestamp);
+        wingsPersistence.update(query, operations);
+      }
+    }
+  }
+
+  @Override
+  public List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId) {
+    PageRequest<ContainerDeploymentInfo> pageRequest =
+        PageRequest.Builder.aPageRequest()
+            .addFilter("containerSvcNameNoRevision", Operator.EQ, containerSvcNameNoRevision)
+            .addFilter("appId", Operator.EQ, appId)
+            .addOrder("containerSvcName", OrderType.ASC)
+            .build();
+    PageResponse<ContainerDeploymentInfo> response = wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
+    return response.getResponse();
+  }
+
+  @Override
+  public List<String> getContainerServiceNames(String containerSvcNameNoRevision, String appId) {
+    PageRequest<ContainerDeploymentInfo> pageRequest =
+        PageRequest.Builder.aPageRequest()
+            .addFilter("containerSvcNameNoRevision", Operator.EQ, containerSvcNameNoRevision)
+            .addFilter("appId", Operator.EQ, appId)
+            .addFieldsIncluded("containerSvcName")
+            .addOrder("containerSvcName", OrderType.ASC)
+            .build();
+    PageResponse<ContainerDeploymentInfo> response = wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
+    return response.getResponse()
+        .stream()
+        .map(ContainerDeploymentInfo::getContainerSvcName)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Set<String> getLeastRecentVisitedContainerDeployments(String appId, long lastVisitedTimestamp) {
+    // query for the least recently visited 20 container service names (without revision)
+    FindOptions findOptions = new FindOptions().limit(20);
+    Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
+    query.field("appId").equal(appId);
+    query.field("lastVisited").lessThan(lastVisitedTimestamp);
+    query.project("containerSvcNameNoRevision", true);
+    query.order("lastVisited").order("containerSvcNameNoRevision");
+
+    List<ContainerDeploymentInfo> list = query.asList(findOptions);
+    return list.stream().map(ContainerDeploymentInfo::getContainerSvcNameNoRevision).collect(Collectors.toSet());
+  }
+
+  @Override
+  public void deleteContainerDeploymentInfoAndInstances(
+      Set<String> containerServiceNameSetToBeDeleted, InstanceType instanceType, String appId) {
+    Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
+    query.field("appId").equal(appId);
+    query.field("containerSvcName").in(containerServiceNameSetToBeDeleted);
+    wingsPersistence.delete(query);
+
+    query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
+    query.field("appId").equal(appId);
+    query.field("instanceType").equal(instanceType);
+    query.field("containerInstanceKey.containerId").in(containerServiceNameSetToBeDeleted);
+    wingsPersistence.delete(query);
+  }
+
+  /**
+   * returns if the instance in db needs to be updated or not.
+   * This method returns true only if the task
+   * @param existingInstance
+   * @param containerInfo
+   * @return
+   */
+  private boolean shouldUpdateInstance(Instance existingInstance, ContainerInfo containerInfo) {
     if (containerInfo instanceof EcsContainerInfo) {
       EcsContainerInfo existingContainerInfo = (EcsContainerInfo) existingInstance.getInstanceInfo();
       if (existingContainerInfo == null) {
         return true;
       }
       EcsContainerInfo newContainerInfo = (EcsContainerInfo) containerInfo;
-      if (newContainerInfo.getTaskDefinitionArn().equals(existingContainerInfo.getTaskDefinitionArn())) {
-        return false;
-      }
+      // If the taskDefinitionArn is the same (including the revision), no need to update.
+      // We only need to update if the task has been re-assigned to a different task definition.
+      return !newContainerInfo.getTaskDefinitionArn().equals(existingContainerInfo.getTaskDefinitionArn());
+
     } else if (containerInfo instanceof KubernetesContainerInfo) {
       KubernetesContainerInfo existingContainerInfo = (KubernetesContainerInfo) existingInstance.getInstanceInfo();
       if (existingContainerInfo == null) {
         return true;
       }
       KubernetesContainerInfo newContainerInfo = (KubernetesContainerInfo) containerInfo;
-      if (newContainerInfo.getReplicationControllerName().equals(
-              existingContainerInfo.getReplicationControllerName())) {
-        return false;
-      }
+      // If the replicationControllerName is the same (including the revision), no need to update.
+      // We only need to update if the pod has been re-assigned to a different replication controller.
+      return !newContainerInfo.getReplicationControllerName().equals(
+          existingContainerInfo.getReplicationControllerName());
 
     } else {
       throw new WingsException("Unsupported container type");
     }
-
-    return true;
   }
 
-  private Map<InstanceKey, Instance> getCurrentInstancesInDB(ContainerDeploymentInfo containerDeploymentInfo) {
+  private Map<InstanceKey, Instance> getCurrentInstancesInDB(
+      InstanceType instanceType, String containerSvcNameNoRevision) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
-    if (containerDeploymentInfo instanceof KubernetesContainerDeploymentInfo) {
-      KubernetesContainerDeploymentInfo kubernetesContainerDeploymentInfo =
-          (KubernetesContainerDeploymentInfo) containerDeploymentInfo;
-      query.field("instanceInfo.replicationControllerName")
-          .in(kubernetesContainerDeploymentInfo.getReplicationControllerNameList());
-
-    } else if (containerDeploymentInfo instanceof EcsContainerDeploymentInfo) {
-      EcsContainerDeploymentInfo ecsContainerDeploymentInfo = (EcsContainerDeploymentInfo) containerDeploymentInfo;
-      query.field("instanceInfo.serviceName").in(ecsContainerDeploymentInfo.getEcsServiceNameList());
-
+    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
+      query.field("instanceInfo.replicationControllerName").startsWith(containerSvcNameNoRevision);
+    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+      query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
     } else {
-      throw new WingsException(
-          "Unsupported ContainerDeployementInfo type:" + containerDeploymentInfo.getClass().getCanonicalName());
+      String msg = "Unsupported container instanceType:" + instanceType;
+      logger.error(msg);
+      throw new WingsException(msg);
     }
 
     List<Instance> instanceList = query.asList();
     instanceMap = instanceList.stream().collect(toMap(Instance::getContainerInstanceKey, instance -> instance));
 
     return instanceMap;
-  }
-
-  private Instance buildInstanceFromContainerInfo(Application application,
-      ContainerDeploymentInfo containerDeploymentInfo, ContainerInfo containerInfo, ContainerInstanceKey instanceKey) {
-    Instance.Builder instanceBuilder =
-        Instance.Builder.anInstance()
-            .withAccountId(application.getAccountId())
-            .withAppId(application.getAppId())
-            .withAppName(application.getName())
-            .withLastArtifactId(containerDeploymentInfo.getLastArtifactId())
-            .withLastArtifactName(containerDeploymentInfo.getLastArtifactName())
-            .withLastArtifactStreamId(containerDeploymentInfo.getLastArtifactStreamId())
-            .withLastArtifactSourceName(containerDeploymentInfo.getLastArtifactSourceName())
-            .withLastArtifactBuildNum(containerDeploymentInfo.getLastArtifactBuildNum())
-            .withEnvName(containerDeploymentInfo.getEnvName())
-            .withEnvId(containerDeploymentInfo.getEnvId())
-            .withEnvType(containerDeploymentInfo.getEnvType())
-            .withComputeProviderId(containerDeploymentInfo.getComputeProviderId())
-            .withComputeProviderName(containerDeploymentInfo.getComputeProviderName())
-            .withInfraMappingId(containerDeploymentInfo.getInfraMappingId())
-            .withInfraMappingType(containerDeploymentInfo.getInfraMappingType())
-            .withLastPipelineExecutionId(containerDeploymentInfo.getLastPipelineId())
-            .withLastPipelineExecutionName(containerDeploymentInfo.getLastPipelineName())
-            .withLastDeployedAt(containerDeploymentInfo.getLastDeployedAt())
-            .withLastDeployedById(containerDeploymentInfo.getLastDeployedById())
-            .withLastDeployedByName(containerDeploymentInfo.getLastDeployedByName())
-            .withServiceId(containerDeploymentInfo.getServiceId())
-            .withServiceName(containerDeploymentInfo.getServiceName())
-            .withLastWorkflowExecutionId(containerDeploymentInfo.getLastWorkflowId())
-            .withLastWorkflowExecutionName(containerDeploymentInfo.getLastWorkflowName());
-
-    instanceUtil.setInstanceType(instanceBuilder, containerDeploymentInfo.getInfraMappingType());
-    instanceBuilder.withInstanceInfo(containerInfo);
-    instanceBuilder.withContainerInstanceKey(instanceKey);
-    return instanceBuilder.build();
   }
 }
