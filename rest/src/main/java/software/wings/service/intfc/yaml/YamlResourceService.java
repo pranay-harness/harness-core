@@ -3,6 +3,7 @@ package software.wings.service.intfc.yaml;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.yaml.YamlPayload;
@@ -17,24 +18,21 @@ public interface YamlResourceService {
    * Find by app, service and service command ids.
    *
    * @param appId     the app id
-   * @param serviceId the service id
    * @param serviceCommandId the service command id
    * @return the service command
    */
-  RestResponse<YamlPayload> getServiceCommand(
-      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String serviceCommandId);
+  RestResponse<YamlPayload> getServiceCommand(@NotEmpty String appId, @NotEmpty String serviceCommandId);
 
   /**
    * Update by app, service and service command ids and yaml payload
    *
    * @param appId     the app id
-   * @param serviceId the service id
    * @param serviceCommandId the service command id
    * @param yamlPayload the yaml version of the service command
    * @return the service command
    */
-  ServiceCommand updateServiceCommand(@NotEmpty String appId, @NotEmpty String serviceId,
-      @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled);
+  ServiceCommand updateServiceCommand(
+      @NotEmpty String appId, @NotEmpty String serviceCommandId, YamlPayload yamlPayload, boolean deleteEnabled);
 
   /**
    * Gets the yaml version of a pipeline by pipelineId
@@ -85,11 +83,32 @@ public interface YamlResourceService {
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId);
 
   /**
-   * Gets the yaml for a state machine (workflow version)
+   * Gets all the setting attributes of a given type by accountId
    *
-   * @param appId     the app id
-   * @param stateMachineId the state machine (workflow version) id
+   * @param accountId   the account id
+   * @param type        the SettingVariableTypes
    * @return the rest response
    */
-  public RestResponse<YamlPayload> getWorkflowVersion(String appId, String stateMachineId);
+  public RestResponse<YamlPayload> getSettingAttributesList(String accountId, String type);
+
+  /**
+   * Gets the yaml for a setting attribute by accountId and uuid
+   *
+   * @param accountId the account id
+   * @param uuid      the uid of the setting attribute
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid);
+
+  /**
+   * Update setting attribute sent as Yaml (in a JSON "wrapper")
+   *
+   * @param accountId   the account id
+   * @param uuid        the uid of the setting attribute
+   * @param type        the SettingVariableTypes
+   * @param yamlPayload the yaml version of setup
+   * @return the rest response
+   */
+  public SettingAttribute updateSettingAttribute(
+      String accountId, String uuid, String type, YamlPayload yamlPayload, boolean deleteEnabled);
 }
