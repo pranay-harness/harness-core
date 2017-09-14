@@ -15,7 +15,6 @@ import java.util.Map;
 public class InstanceUnitTypeDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    // TODO: make it plain english
-    return ImmutableMap.of(COUNT.name(), COUNT.name(), PERCENTAGE.name(), PERCENTAGE.name());
+    return ImmutableMap.of(COUNT.name(), "Count", PERCENTAGE.name(), "Percent");
   }
 }

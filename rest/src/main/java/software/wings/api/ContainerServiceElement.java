@@ -14,6 +14,7 @@ import java.util.Map;
 public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
+  private int maxInstances;
   private String clusterName;
   private DeploymentType deploymentType;
   private String infraMappingId;
@@ -39,6 +40,14 @@ public class ContainerServiceElement implements ContextElement {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public int getMaxInstances() {
+    return maxInstances;
+  }
+
+  public void setMaxInstances(int maxInstances) {
+    this.maxInstances = maxInstances;
   }
 
   @Override
@@ -73,6 +82,7 @@ public class ContainerServiceElement implements ContextElement {
   public static final class ContainerServiceElementBuilder {
     private String uuid;
     private String name;
+    private int maxInstances;
     private String clusterName;
     private DeploymentType deploymentType;
     private String infraMappingId;
@@ -90,6 +100,11 @@ public class ContainerServiceElement implements ContextElement {
 
     public ContainerServiceElementBuilder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public ContainerServiceElementBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
       return this;
     }
 
@@ -112,6 +127,7 @@ public class ContainerServiceElement implements ContextElement {
       ContainerServiceElement containerServiceElement = new ContainerServiceElement();
       containerServiceElement.setUuid(uuid);
       containerServiceElement.setName(name);
+      containerServiceElement.setMaxInstances(maxInstances);
       containerServiceElement.setClusterName(clusterName);
       containerServiceElement.setDeploymentType(deploymentType);
       containerServiceElement.setInfraMappingId(infraMappingId);
