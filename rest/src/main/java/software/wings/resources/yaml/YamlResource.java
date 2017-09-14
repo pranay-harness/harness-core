@@ -5,6 +5,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -93,7 +94,7 @@ public class YamlResource {
   public RestResponse<ArtifactStream> updateTrigger(@QueryParam("appId") String appId,
       @PathParam("artifactStreamId") String artifactStreamId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(yamlResourceService.updateTrigger(appId, artifactStreamId, yamlPayload, deleteEnabled));
+    return yamlResourceService.updateTrigger(appId, artifactStreamId, yamlPayload, deleteEnabled);
   }
 
   /**
@@ -127,7 +128,7 @@ public class YamlResource {
   public RestResponse<Pipeline> updatePipeline(@QueryParam("appId") String appId,
       @PathParam("pipelineId") String pipelineId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(yamlResourceService.updatePipeline(appId, pipelineId, yamlPayload, deleteEnabled));
+    return yamlResourceService.updatePipeline(appId, pipelineId, yamlPayload, deleteEnabled);
   }
 
   /**
@@ -161,8 +162,7 @@ public class YamlResource {
   public RestResponse<ServiceCommand> updateServiceCommand(@QueryParam("appId") String appId,
       @PathParam("serviceCommandId") String serviceCommandId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(
-        yamlResourceService.updateServiceCommand(appId, serviceCommandId, yamlPayload, deleteEnabled));
+    return yamlResourceService.updateServiceCommand(appId, serviceCommandId, yamlPayload, deleteEnabled);
   }
 
   /**
@@ -213,7 +213,37 @@ public class YamlResource {
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return new RestResponse<>(
-        yamlResourceService.updateSettingAttribute(accountId, uuid, type, yamlPayload, deleteEnabled));
+    return yamlResourceService.updateSettingAttribute(accountId, uuid, type, yamlPayload, deleteEnabled);
+  }
+
+  /**
+   * Gets the yaml version of an environment by envId
+   *
+   * @param appId   the app id
+   * @param envId   the environment id
+   * @return the rest response
+   */
+  @GET
+  @Path("/environments/{envId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> get(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return yamlResourceService.getEnvironment(appId, envId);
+  }
+
+  /**
+   * Update a environment that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param envId  the environment id
+   * @param yamlPayload the yaml version of environment
+   * @return the rest response
+   */
+  @PUT
+  @Path("/environments/{envId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> update(@QueryParam("appId") String appId, @PathParam("envId") String envId,
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlResourceService.updateEnvironment(appId, envId, yamlPayload, deleteEnabled);
   }
 }
