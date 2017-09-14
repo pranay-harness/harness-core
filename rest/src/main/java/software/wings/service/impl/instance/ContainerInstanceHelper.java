@@ -35,7 +35,6 @@ import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -64,35 +63,26 @@ public class ContainerInstanceHelper {
       Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
           phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
       if (phaseStepExecutionSummaryMap != null) {
-        Set<String> stepNames = phaseStepExecutionSummaryMap.keySet();
-        for (String stepName : stepNames) {
-          if (stepName.equals(Constants.DEPLOY_CONTAINERS)) {
-            PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(stepName);
-            if (phaseStepExecutionSummary == null) {
-              continue;
-            }
-            List<StepExecutionSummary> stepExecutionSummaryList =
-                phaseStepExecutionSummary.getStepExecutionSummaryList();
-            for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+        for (String stepName : phaseStepExecutionSummaryMap.keySet()) {
+          if (stepName.equals(Constants.DEPLOY_CONTAINERS) && phaseStepExecutionSummaryMap.containsKey(stepName)) {
+            for (StepExecutionSummary stepExecutionSummary :
+                phaseStepExecutionSummaryMap.get(stepName).getStepExecutionSummaryList()) {
               if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
                 CommandStepExecutionSummary commandStepExecutionSummary =
                     (CommandStepExecutionSummary) stepExecutionSummary;
                 String clusterName = commandStepExecutionSummary.getClusterName();
                 List<String> containerServiceNameList = Lists.newArrayList();
 
-                List<ContainerServiceData> oldPreviousInstanceCounts =
-                    commandStepExecutionSummary.getOldPreviousInstanceCounts();
-                if (oldPreviousInstanceCounts != null) {
-                  List<String> oldContainerServiceNames = oldPreviousInstanceCounts.stream()
-                                                              .map(ContainerServiceData::getName)
-                                                              .collect(Collectors.toList());
-                  containerServiceNameList.addAll(oldContainerServiceNames);
+                if (commandStepExecutionSummary.getOldInstanceData() != null) {
+                  containerServiceNameList.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                                      .stream()
+                                                      .map(ContainerServiceData::getName)
+                                                      .collect(Collectors.toList()));
                 }
 
-                List<ContainerServiceData> newPreviousInstanceCounts =
-                    commandStepExecutionSummary.getNewPreviousInstanceCounts();
-                if (newPreviousInstanceCounts != null) {
-                  List<String> newContainerServiceNames = newPreviousInstanceCounts.stream()
+                if (commandStepExecutionSummary.getNewInstanceData() != null) {
+                  List<String> newContainerServiceNames = commandStepExecutionSummary.getNewInstanceData()
+                                                              .stream()
                                                               .map(ContainerServiceData::getName)
                                                               .collect(Collectors.toList());
                   containerServiceNameList.addAll(newContainerServiceNames);

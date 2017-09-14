@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -59,7 +60,7 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   }
 
   @Override
-  public int fetchDesiredCount(int lastDeploymentDesiredCount) {
-    return 0;
+  public InstanceUnitType getInstanceUnitType() {
+    return null;
   }
 }

@@ -24,6 +24,7 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -80,30 +81,24 @@ import java.util.Optional;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceSetup extends State {
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
+
   private String ecsServiceName;
+  private int maxInstances;
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
   private String roleArn;
-
   @Inject @Transient private transient AwsClusterService awsClusterService;
-
   @Inject @Transient private transient EcrService ecrService;
-
   @Inject @Transient private transient EcrClassicService ecrClassicService;
-
   @Inject @Transient private transient SettingsService settingsService;
-
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
-
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
-
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
-
-  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
   /**
    * Instantiates a new state.
@@ -218,6 +213,7 @@ public class EcsServiceSetup extends State {
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
                                                           .withUuid(serviceId)
                                                           .withName(ecsServiceName)
+                                                          .withMaxInstances(maxInstances)
                                                           .withClusterName(clusterName)
                                                           .withDeploymentType(DeploymentType.ECS)
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())
@@ -246,30 +242,6 @@ public class EcsServiceSetup extends State {
       logger.error("Exception occurred in processing service variables ", ex);
     }
     return variables;
-  }
-
-  private String lastECSService(
-      String region, SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(region, computeProviderSetting, clusterName);
-    if (services == null) {
-      return null;
-    }
-    List<com.amazonaws.services.ecs.model.Service> serviceList =
-        services.stream()
-            .filter(service
-                -> ((service.getServiceName().equals(serviceNamePrefix)
-                        || service.getServiceName().startsWith(serviceNamePrefix + EcsConvention.DELIMITER))
-                    && service.getDesiredCount() > 0))
-            .collect(toList());
-
-    com.amazonaws.services.ecs.model.Service lastECSService = null;
-    for (com.amazonaws.services.ecs.model.Service service : serviceList) {
-      if (lastECSService == null || service.getCreatedAt().compareTo(lastECSService.getCreatedAt()) > 0) {
-        lastECSService = service;
-      }
-    }
-    return lastECSService != null ? lastECSService.getServiceName() : null;
   }
 
   /**
@@ -485,9 +457,18 @@ public class EcsServiceSetup extends State {
     this.ecsServiceName = ecsServiceName;
   }
 
+  public int getMaxInstances() {
+    return maxInstances;
+  }
+
+  public void setMaxInstances(int maxInstances) {
+    this.maxInstances = maxInstances;
+  }
+
   public static final class EcsServiceSetupBuilder {
     private String id;
     private String name;
+    private int maxInstances;
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
@@ -510,6 +491,11 @@ public class EcsServiceSetup extends State {
 
     public EcsServiceSetupBuilder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
       return this;
     }
 
@@ -557,6 +543,7 @@ public class EcsServiceSetup extends State {
       return anEcsServiceSetup()
           .withId(id)
           .withName(name)
+          .withMaxInstances(maxInstances)
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)
@@ -569,6 +556,7 @@ public class EcsServiceSetup extends State {
 
     public EcsServiceSetup build() {
       EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
+      ecsServiceSetup.setMaxInstances(maxInstances);
       ecsServiceSetup.setId(id);
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);

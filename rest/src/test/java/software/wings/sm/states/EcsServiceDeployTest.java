@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
@@ -7,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -58,6 +60,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Log;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -72,6 +75,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -101,6 +105,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private LogService logService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -161,6 +166,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(ecsServiceDeploy).set("infrastructureMappingService", infrastructureMappingService);
     on(ecsServiceDeploy).set("awsClusterService", awsClusterService);
     on(ecsServiceDeploy).set("serviceTemplateService", serviceTemplateService);
+    on(ecsServiceDeploy).set("logService", logService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withRegion(Regions.US_EAST_1.getName())
@@ -176,6 +182,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(Arrays.asList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+
+    when(logService.save(any(Log.class))).thenReturn(null);
   }
 
   @Test
@@ -240,7 +248,11 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
     CommandStateExecutionData commandStateExecutionData =
-        aCommandStateExecutionData().withActivityId(ACTIVITY_ID).build();
+        aCommandStateExecutionData()
+            .withActivityId(ACTIVITY_ID)
+            .withNewInstanceData(singletonList(
+                aContainerServiceData().withName(ECS_SERVICE_NAME).withPreviousCount(0).withDesiredCount(1).build()))
+            .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
