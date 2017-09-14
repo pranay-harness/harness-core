@@ -34,14 +34,12 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
-  private static final String STATE_MACHINES = "stateMachines";
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void migrateContainerCounts() {
     List<StateMachine> stateMachines = wingsPersistence.createQuery(StateMachine.class).asList();
-    Set<StateMachine> affectedStateMachines = new HashSet<>();
+    List<StateMachine> affectedStateMachines = new ArrayList<>();
     Set<StateMachine> percentUsedMachines = new HashSet<>();
     for (StateMachine stateMachine : stateMachines) {
       Map<String, StateMachine> childStateMachines = stateMachine.getChildStateMachines();
@@ -72,34 +70,36 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
       }
       if (!kubeSetup.isEmpty() || !kubeDeploy.isEmpty() || !ecsSetup.isEmpty() || !ecsDeploy.isEmpty()) {
         System.out.println("\n\n*** State Machine: " + stateMachine.getUuid());
+        boolean affected = false;
 
         if (!kubeSetup.isEmpty()) {
           System.out.println("\nKubernetes Setups: " + kubeSetup.size());
           System.out.println("Kubernetes Deploys: " + kubeDeploy.size());
           assertThat(kubeSetup.size() == 1);
           KubernetesReplicationControllerSetup setup = (KubernetesReplicationControllerSetup) kubeSetup.get(0);
-          int totalInstances = 0;
-          kubeDeploy.sort(
-              Comparator.comparingInt(state -> ((KubernetesReplicationControllerDeploy) state).getInstanceCount()));
-          for (State state : kubeDeploy) {
-            KubernetesReplicationControllerDeploy deploy = (KubernetesReplicationControllerDeploy) state;
-            System.out.println("Kubernetes deploy incremental instances: " + deploy.getInstanceCount());
-            totalInstances += deploy.getInstanceCount();
-            if (deploy.getInstanceCount() < totalInstances) {
-              deploy.setInstanceCount(totalInstances);
-              System.out.println("---Setting Kubernetes deploy instance count to " + totalInstances);
-            }
-            if (deploy.getInstanceUnitType() == COUNT) {
-              System.out.println("Already set to COUNT");
-            } else if (deploy.getInstanceUnitType() == PERCENTAGE) {
-              System.out.println("Already set to PERCENTAGE");
-              percentUsedMachines.add(stateMachine);
-            } else {
-              deploy.setInstanceUnitType(COUNT);
-              System.out.println("---Setting Kubernetes deploy instance unit type to Count");
-            }
-          }
           if (setup.getMaxInstances() < 10) {
+            affected = true;
+            int totalInstances = 0;
+            kubeDeploy.sort(
+                Comparator.comparingInt(state -> ((KubernetesReplicationControllerDeploy) state).getInstanceCount()));
+            for (State state : kubeDeploy) {
+              KubernetesReplicationControllerDeploy deploy = (KubernetesReplicationControllerDeploy) state;
+              System.out.println("Kubernetes deploy incremental instances: " + deploy.getInstanceCount());
+              totalInstances += deploy.getInstanceCount();
+              if (deploy.getInstanceCount() < totalInstances) {
+                deploy.setInstanceCount(totalInstances);
+                System.out.println("---Setting Kubernetes deploy instance count to " + totalInstances);
+              }
+              if (deploy.getInstanceUnitType() == COUNT) {
+                System.out.println("Already set to COUNT");
+              } else if (deploy.getInstanceUnitType() == PERCENTAGE) {
+                System.out.println("Already set to PERCENTAGE");
+                percentUsedMachines.add(stateMachine);
+              } else {
+                deploy.setInstanceUnitType(COUNT);
+                System.out.println("---Setting Kubernetes deploy instance unit type to Count");
+              }
+            }
             setup.setMaxInstances(Math.max(totalInstances, 10));
             System.out.println("---Setting Kubernetes setup max instances to " + setup.getMaxInstances());
           }
@@ -110,36 +110,42 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
           System.out.println("ECS Deploys: " + ecsDeploy.size());
           assertThat(ecsSetup.size() == 1);
           EcsServiceSetup setup = (EcsServiceSetup) ecsSetup.get(0);
-          int totalInstances = 0;
-          ecsDeploy.sort(Comparator.comparingInt(state -> ((EcsServiceDeploy) state).getInstanceCount()));
-          for (State state : ecsDeploy) {
-            EcsServiceDeploy deploy = (EcsServiceDeploy) state;
-            System.out.println("ECS deploy incremental instances: " + deploy.getInstanceCount());
-            totalInstances += deploy.getInstanceCount();
-            if (deploy.getInstanceCount() < totalInstances) {
-              deploy.setInstanceCount(totalInstances);
-              System.out.println("---Setting ECS deploy instance count to " + totalInstances);
-            }
-            if (deploy.getInstanceUnitType() == COUNT) {
-              System.out.println("Already set to COUNT");
-            } else if (deploy.getInstanceUnitType() == PERCENTAGE) {
-              System.out.println("Already set to PERCENTAGE");
-              percentUsedMachines.add(stateMachine);
-            } else {
-              deploy.setInstanceUnitType(COUNT);
-              System.out.println("---Setting ECS deploy instance unit type to Count");
-            }
-          }
           if (setup.getMaxInstances() < 10) {
+            affected = true;
+            int totalInstances = 0;
+            ecsDeploy.sort(Comparator.comparingInt(state -> ((EcsServiceDeploy) state).getInstanceCount()));
+            for (State state : ecsDeploy) {
+              EcsServiceDeploy deploy = (EcsServiceDeploy) state;
+              System.out.println("ECS deploy incremental instances: " + deploy.getInstanceCount());
+              totalInstances += deploy.getInstanceCount();
+              if (deploy.getInstanceCount() < totalInstances) {
+                deploy.setInstanceCount(totalInstances);
+                System.out.println("---Setting ECS deploy instance count to " + totalInstances);
+              }
+              if (deploy.getInstanceUnitType() == COUNT) {
+                System.out.println("Already set to COUNT");
+              } else if (deploy.getInstanceUnitType() == PERCENTAGE) {
+                System.out.println("Already set to PERCENTAGE");
+                percentUsedMachines.add(stateMachine);
+              } else {
+                deploy.setInstanceUnitType(COUNT);
+                System.out.println("---Setting ECS deploy instance unit type to Count");
+              }
+            }
             setup.setMaxInstances(Math.max(totalInstances, 10));
             System.out.println("---Setting ECS setup max instances to " + setup.getMaxInstances());
           }
         }
-
-        affectedStateMachines.add(stateMachine);
-        //        wingsPersistence.save(stateMachine);
+        if (affected) {
+          affectedStateMachines.add(stateMachine);
+        }
       }
     }
+
+    //    System.out.println("\nSaving...");
+    //    List<String> savedIds = wingsPersistence.save(affectedStateMachines);
+    //    System.out.println("savedIds = " + savedIds);
+
     System.out.println("\nMigration complete.");
     System.out.println("Checked " + stateMachines.size() + " state machines.");
     Set<String> affectedSmIds = affectedStateMachines.stream().map(StateMachine::getUuid).collect(Collectors.toSet());
@@ -152,7 +158,7 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
     Set<String> percentSmAppIds = percentUsedMachines.stream().map(StateMachine::getAppId).collect(Collectors.toSet());
     System.out.println("Percentage used in " + percentSmAppIds.size() + " apps: " + percentSmAppIds);
 
-    //    DBCollection collection = wingsPersistence.getCollection(STATE_MACHINES);
+    //    DBCollection collection = wingsPersistence.getCollection("stateMachines");
     //    saveMongoObjectsAsJson("affectedBackupProd.json", collection, affectedSmIds);
     //    saveMongoObjectsAsJson("percentBackupProd.json", collection, percentSmIds);
   }
