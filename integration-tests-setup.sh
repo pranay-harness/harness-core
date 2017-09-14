@@ -16,13 +16,13 @@ java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX
 
 echo 'sleep for server to start'
 #wait for server to start
-output=$(curl -sS https://localhost:9090/api/version)
+output=$(curl -sSk https://localhost:9090/api/version)
 status=$?
 count=1
 while [[ $status == 7 && $count -lt 20 ]]
 do
 sleep 5
-output=$(curl -sS https://localhost:9090/api/version)
+output=$(curl -sSk https://localhost:9090/api/version)
 status=$?
 count=`expr $count + 1`
 done
