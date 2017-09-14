@@ -187,6 +187,21 @@ public abstract class ContainerServiceDeploy extends State {
                             .build());
       }
 
+      if (desiredCount > serviceElement.getMaxInstances()) {
+        String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
+            + serviceElement.getMaxInstances() + ", desired: " + desiredCount + "}";
+        logger.error(msg);
+        logService.save(Log.Builder.aLog()
+                            .withActivityId(activityId)
+                            .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
+                                    ? CommandUnitType.RESIZE.name()
+                                    : CommandUnitType.RESIZE_KUBERNETES.name())
+                            .withLogLine(msg)
+                            .withLogLevel(Log.LogLevel.WARN)
+                            .build());
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
+      }
+
       desiredCounts = new ArrayList<>();
       desiredCounts.add(aContainerServiceData()
                             .withName(newContainerServiceName)
