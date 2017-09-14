@@ -29,8 +29,8 @@ import javax.ws.rs.QueryParam;
  *
  * @author bsollish
  */
-@Api("/yamlHistory")
-@Path("/yamlHistory")
+@Api("/yaml-history")
+@Path("/yaml-history")
 @Produces("application/json")
 @AuthRule(APPLICATION)
 public class YamlHistoryResource {
