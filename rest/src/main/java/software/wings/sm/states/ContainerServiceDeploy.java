@@ -10,6 +10,7 @@ import static software.wings.api.InstanceElementListParam.InstanceElementListPar
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -177,7 +178,8 @@ public abstract class ContainerServiceDeploy extends State {
         String msg = "Desired instance count is less than or equal to the current instance count: {current: "
             + previousCount + ", desired: " + desiredCount + "}";
         logger.warn(msg);
-        logService.save(Log.Builder.aLog()
+        logService.save(aLog()
+                            .withAppId(context.getAppId())
                             .withActivityId(activityId)
                             .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
                                     ? CommandUnitType.RESIZE.name()
@@ -191,7 +193,8 @@ public abstract class ContainerServiceDeploy extends State {
         String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
             + serviceElement.getMaxInstances() + ", desired: " + desiredCount + "}";
         logger.error(msg);
-        logService.save(Log.Builder.aLog()
+        logService.save(aLog()
+                            .withAppId(context.getAppId())
                             .withActivityId(activityId)
                             .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
                                     ? CommandUnitType.RESIZE.name()
