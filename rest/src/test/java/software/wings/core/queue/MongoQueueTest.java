@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
+import software.wings.rules.RepeatRule.Repeat;
 
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -147,6 +148,7 @@ public class MongoQueueTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     QueuableObject message = new QueuableObject(1);
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
