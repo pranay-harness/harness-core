@@ -1,21 +1,14 @@
-package software.wings.resources.yaml;
+package software.wings.service.impl.yaml;
 
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
@@ -31,10 +24,10 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
@@ -48,48 +41,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 
-/**
- * Service Resource class.
- *
- * @author bsollish
- */
-@Api("/serviceYaml")
-@Path("/serviceYaml")
-@Produces("application/json")
-@AuthRule(APPLICATION)
-public class ServiceYamlResource {
-  private AppService appService;
-  private ServiceResourceService serviceResourceService;
-  private ServiceVariableService serviceVariableService;
-  private YamlHistoryService yamlHistoryService;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  /**
-   * Instantiates new resources
-   *
-   * @param appService the app service
-   * @param serviceResourceService the service (resource) service
-   * @param serviceVariableService the service (variable) service
-   * @param yamlHistoryService the yaml history service
-   */
-  @Inject
-  public ServiceYamlResource(AppService appService, ServiceResourceService serviceResourceService,
-      ServiceVariableService serviceVariableService, YamlHistoryService yamlHistoryService) {
-    this.appService = appService;
-    this.serviceResourceService = serviceResourceService;
-    this.serviceVariableService = serviceVariableService;
-    this.yamlHistoryService = yamlHistoryService;
-  }
+public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceService {
+  @Inject private AppService appService;
+  @Inject private YamlHistoryService yamlHistoryService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceVariableService serviceVariableService;
 
   /**
    * Gets the yaml version of a service by serviceId
@@ -98,11 +55,7 @@ public class ServiceYamlResource {
    * @param serviceId  the service id
    * @return the rest response
    */
-  @GET
-  @Path("/{accountId}/{appId}/{serviceId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<YamlPayload> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+  public RestResponse<YamlPayload> getService(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId, true);
 
     if (service != null) {
@@ -124,32 +77,6 @@ public class ServiceYamlResource {
     return rr;
   }
 
-  // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
-
-  /**
-   * Save the changes reflected in serviceYaml (in a JSON "wrapper")
-   *
-   * @param serviceId  the service id
-   * @param yamlPayload the yaml version of service
-   * @return the rest response
-   */
-  @POST
-  @Path("/{accountId}/{appId}/{serviceId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Application> save(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    String yaml = yamlPayload.getYaml();
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
-    RestResponse rr = new RestResponse<>();
-    rr.setResponseMessages(yamlPayload.getResponseMessages());
-
-    // DOES NOTHING
-
-    return rr;
-  }
-
   /**
    * Update a service that is sent as Yaml (in a JSON "wrapper")
    *
@@ -157,12 +84,8 @@ public class ServiceYamlResource {
    * @param yamlPayload the yaml version of service
    * @return the rest response
    */
-  @PUT
-  @Path("/{accountId}/{appId}/{serviceId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Service> update(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+  public RestResponse<Service> updateService(
+      String appId, String serviceId, YamlPayload yamlPayload, boolean deleteEnabled) {
     String yaml = yamlPayload.getYaml();
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -170,7 +93,7 @@ public class ServiceYamlResource {
     rr.setResponseMessages(yamlPayload.getResponseMessages());
 
     // get the before Yaml
-    RestResponse beforeResponse = get(appId, serviceId);
+    RestResponse beforeResponse = getService(appId, serviceId);
     YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
     String beforeYaml = beforeYP.getYaml();
 

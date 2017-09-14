@@ -8,11 +8,13 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlPayload;
 
@@ -34,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class YamlResource {
   private YamlResourceService yamlResourceService;
+  private ServiceYamlResourceService serviceYamlResourceService;
 
   /**
    * Instantiates a new service resource.
@@ -41,8 +44,9 @@ public class YamlResource {
    * @param yamlResourceService the yaml resource service
    */
   @Inject
-  public YamlResource(YamlResourceService yamlResourceService) {
+  public YamlResource(YamlResourceService yamlResourceService, ServiceYamlResourceService serviceYamlResourceService) {
     this.yamlResourceService = yamlResourceService;
+    this.serviceYamlResourceService = serviceYamlResourceService;
   }
 
   /**
@@ -245,5 +249,38 @@ public class YamlResource {
   public RestResponse<Environment> update(@QueryParam("appId") String appId, @PathParam("envId") String envId,
       YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return yamlResourceService.updateEnvironment(appId, envId, yamlPayload, deleteEnabled);
+  }
+
+  /**
+   * Gets the yaml version of a service by serviceId
+   *
+   * @param appId  the app id
+   * @param serviceId  the service id
+   * @return the rest response
+   */
+  @GET
+  @Path("/services/{serviceId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getService(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return serviceYamlResourceService.getService(appId, serviceId);
+  }
+
+  /**
+   * Update a service that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param serviceId  the service id
+   * @param yamlPayload the yaml version of service
+   * @return the rest response
+   */
+  @PUT
+  @Path("/{accountId}/{appId}/{serviceId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> updateService(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return serviceYamlResourceService.updateService(appId, serviceId, yamlPayload, deleteEnabled);
   }
 }
