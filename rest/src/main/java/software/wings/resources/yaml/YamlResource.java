@@ -36,8 +36,8 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by bsollish
  */
-@Api("setupAsCode/yaml")
-@Path("setupAsCode/yaml")
+@Api("setup-as-code/yaml")
+@Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @AuthRule(ResourceType.SETTING)
 public class YamlResource {
@@ -157,7 +157,7 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/serviceCommands/{serviceCommandId}")
+  @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> getServiceCommand(
@@ -174,7 +174,7 @@ public class YamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/serviceCommands/{serviceCommandId}")
+  @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
   public RestResponse<ServiceCommand> updateServiceCommand(@QueryParam("appId") String appId,
@@ -191,7 +191,7 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/settingAttributes")
+  @Path("/settings")
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> getSettingAttributesList(
@@ -207,7 +207,7 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/settingAttributes/{uuid}")
+  @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
   public RestResponse<YamlPayload> getSettingAttribute(
@@ -225,7 +225,7 @@ public class YamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/settingAttributes/{uuid}")
+  @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
@@ -335,10 +335,10 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/setup/{accountId}")
+  @Path("/setup")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getSetup(@PathParam("accountId") String accountId) {
+  public RestResponse<YamlPayload> getSetup(@QueryParam("accountId") String accountId) {
     return setupYamlResourceService.getSetup(accountId);
   }
 
@@ -350,10 +350,10 @@ public class YamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/setup/{accountId}")
+  @Path("/setup")
   @Timed
   @ExceptionMetered
-  public RestResponse<SetupYaml> updateSetup(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
+  public RestResponse<SetupYaml> updateSetup(@QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return setupYamlResourceService.updateSetup(accountId, yamlPayload, deleteEnabled);
   }
@@ -365,10 +365,10 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/directory/{accountId}")
+  @Path("/directory")
   @Timed
   @ExceptionMetered
-  public RestResponse<DirectoryNode> getDirectory(@PathParam("accountId") String accountId) {
+  public RestResponse<DirectoryNode> getDirectory(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId));
   }
 }
