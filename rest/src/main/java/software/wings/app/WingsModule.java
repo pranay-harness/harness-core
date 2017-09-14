@@ -121,15 +121,14 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
-import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
-import software.wings.service.impl.instance.sync.EcsInstanceSyncServiceImpl;
-import software.wings.service.impl.instance.sync.InstanceSyncService;
-import software.wings.service.impl.instance.sync.KubernetesInstanceSyncServiceImpl;
+import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
+import software.wings.service.impl.instance.sync.ContainerSync;
+import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.SetupYamlResourceServiceImpl;
@@ -355,9 +354,9 @@ public class WingsModule extends AbstractModule {
         .annotatedWith(Names.named("VerificationJobScheduler"))
         .to(VerificationJobScheduler.class);
 
-    bind(InstanceSyncService.class)
+    bind(ContainerSync.class)
         .annotatedWith(Names.named("KubernetesInstanceSync"))
-        .to(KubernetesInstanceSyncServiceImpl.class);
-    bind(InstanceSyncService.class).annotatedWith(Names.named("EcsInstanceSync")).to(EcsInstanceSyncServiceImpl.class);
+        .to(KubernetesContainerSyncImpl.class);
+    bind(ContainerSync.class).annotatedWith(Names.named("EcsInstanceSync")).to(EcsContainerSyncImpl.class);
   }
 }

@@ -1,14 +1,12 @@
 package software.wings.api;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
-import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.core.queue.Queuable;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 /**
  * This is a wrapper class of ContainerDeploymentInfo to make it extend queuable.
@@ -17,26 +15,51 @@ import java.util.List;
  *
  */
 @Entity(value = "containerDeploymentQueue", noClassnameStored = true)
+@Data
 public class ContainerDeploymentEvent extends Queuable {
-  private ContainerDeploymentInfo containerDeploymentInfo;
+  private String appId;
+  private String accountId;
+  private String serviceId;
+  private String envId;
+  private String infraMappingId;
+  private String computeProviderId;
+  private String workflowId;
+  private String workflowExecutionId;
+  private String pipelineExecutionId;
+  private String stateExecutionInstanceId;
+  private String clusterName;
+  private InstanceType instanceType;
+  private String containerSvcNameNoRevision;
 
-  public ContainerDeploymentInfo getContainerDeploymentInfo() {
-    return containerDeploymentInfo;
-  }
-
-  public void setContainerDeploymentInfo(ContainerDeploymentInfo containerDeploymentInfo) {
-    this.containerDeploymentInfo = containerDeploymentInfo;
-  }
+  /**
+   * In case of ECS, this would be a list of taskDefinitionArns belonging to the same family (in other words, same
+   * containerSvcNameNoRevision). In case of Kubernetes, this would be a list of replicationControllerNames belonging to
+   * the same family (in other words, same containerSvcNameNoRevision). This has the revision number in it.
+   */
+  private Set<String> containerSvcNameSet;
 
   public static final class Builder {
-    private ContainerDeploymentInfo containerDeploymentInfo;
+    private String appId;
+    private String accountId;
+    private String serviceId;
+    private String envId;
+    private String infraMappingId;
+    private String computeProviderId;
+    private String workflowId;
+    private String workflowExecutionId;
     private String id;
+    private String pipelineExecutionId;
     private boolean running = false;
+    private String stateExecutionInstanceId;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
+    private String clusterName;
     private Date earliestGet = new Date();
+    private InstanceType instanceType;
     private double priority = 0.0;
+    private String containerSvcNameNoRevision;
     private Date created = new Date();
     private int retries = 0;
+    private Set<String> containerSvcNameSet;
 
     private Builder() {}
 
@@ -44,8 +67,43 @@ public class ContainerDeploymentEvent extends Queuable {
       return new Builder();
     }
 
-    public Builder withContainerDeploymentInfo(ContainerDeploymentInfo containerDeploymentInfo) {
-      this.containerDeploymentInfo = containerDeploymentInfo;
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    public Builder withComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
+      return this;
+    }
+
+    public Builder withWorkflowId(String workflowId) {
+      this.workflowId = workflowId;
+      return this;
+    }
+
+    public Builder withWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
       return this;
     }
 
@@ -54,8 +112,18 @@ public class ContainerDeploymentEvent extends Queuable {
       return this;
     }
 
+    public Builder withPipelineExecutionId(String pipelineExecutionId) {
+      this.pipelineExecutionId = pipelineExecutionId;
+      return this;
+    }
+
     public Builder withRunning(boolean running) {
       this.running = running;
+      return this;
+    }
+
+    public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
+      this.stateExecutionInstanceId = stateExecutionInstanceId;
       return this;
     }
 
@@ -64,13 +132,28 @@ public class ContainerDeploymentEvent extends Queuable {
       return this;
     }
 
+    public Builder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
+      return this;
+    }
+
     public Builder withEarliestGet(Date earliestGet) {
       this.earliestGet = earliestGet;
       return this;
     }
 
+    public Builder withInstanceType(InstanceType instanceType) {
+      this.instanceType = instanceType;
+      return this;
+    }
+
     public Builder withPriority(double priority) {
       this.priority = priority;
+      return this;
+    }
+
+    public Builder withContainerSvcNameNoRevision(String containerSvcNameNoRevision) {
+      this.containerSvcNameNoRevision = containerSvcNameNoRevision;
       return this;
     }
 
@@ -84,28 +167,59 @@ public class ContainerDeploymentEvent extends Queuable {
       return this;
     }
 
+    public Builder withContainerSvcNameSet(Set<String> containerSvcNameSet) {
+      this.containerSvcNameSet = containerSvcNameSet;
+      return this;
+    }
+
     public Builder but() {
       return aContainerDeploymentEvent()
-          .withContainerDeploymentInfo(containerDeploymentInfo)
+          .withAppId(appId)
+          .withAccountId(accountId)
+          .withServiceId(serviceId)
+          .withEnvId(envId)
+          .withInfraMappingId(infraMappingId)
+          .withComputeProviderId(computeProviderId)
+          .withWorkflowId(workflowId)
+          .withWorkflowExecutionId(workflowExecutionId)
           .withId(id)
+          .withPipelineExecutionId(pipelineExecutionId)
           .withRunning(running)
+          .withStateExecutionInstanceId(stateExecutionInstanceId)
           .withResetTimestamp(resetTimestamp)
+          .withClusterName(clusterName)
           .withEarliestGet(earliestGet)
+          .withInstanceType(instanceType)
           .withPriority(priority)
+          .withContainerSvcNameNoRevision(containerSvcNameNoRevision)
           .withCreated(created)
-          .withRetries(retries);
+          .withRetries(retries)
+          .withContainerSvcNameSet(containerSvcNameSet);
     }
 
     public ContainerDeploymentEvent build() {
       ContainerDeploymentEvent containerDeploymentEvent = new ContainerDeploymentEvent();
-      containerDeploymentEvent.setContainerDeploymentInfo(containerDeploymentInfo);
+      containerDeploymentEvent.setAppId(appId);
+      containerDeploymentEvent.setAccountId(accountId);
+      containerDeploymentEvent.setServiceId(serviceId);
+      containerDeploymentEvent.setEnvId(envId);
+      containerDeploymentEvent.setInfraMappingId(infraMappingId);
+      containerDeploymentEvent.setComputeProviderId(computeProviderId);
+      containerDeploymentEvent.setWorkflowId(workflowId);
+      containerDeploymentEvent.setWorkflowExecutionId(workflowExecutionId);
       containerDeploymentEvent.setId(id);
+      containerDeploymentEvent.setPipelineExecutionId(pipelineExecutionId);
       containerDeploymentEvent.setRunning(running);
+      containerDeploymentEvent.setStateExecutionInstanceId(stateExecutionInstanceId);
       containerDeploymentEvent.setResetTimestamp(resetTimestamp);
+      containerDeploymentEvent.setClusterName(clusterName);
       containerDeploymentEvent.setEarliestGet(earliestGet);
+      containerDeploymentEvent.setInstanceType(instanceType);
       containerDeploymentEvent.setPriority(priority);
+      containerDeploymentEvent.setContainerSvcNameNoRevision(containerSvcNameNoRevision);
       containerDeploymentEvent.setCreated(created);
       containerDeploymentEvent.setRetries(retries);
+      containerDeploymentEvent.setContainerSvcNameSet(containerSvcNameSet);
       return containerDeploymentEvent;
     }
   }

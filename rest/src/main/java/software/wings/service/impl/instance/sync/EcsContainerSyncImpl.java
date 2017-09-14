@@ -12,24 +12,25 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.request.EcsFilter;
-import software.wings.service.impl.instance.sync.request.InstanceSyncRequest;
-import software.wings.service.impl.instance.sync.response.InstanceSyncResponse;
+import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author rktummala on 09/08/17
  */
-public class EcsInstanceSyncServiceImpl implements InstanceSyncService {
+public class EcsContainerSyncImpl implements ContainerSync {
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
 
   @Override
-  public InstanceSyncResponse getInstances(InstanceSyncRequest syncRequest) {
+  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
     EcsFilter filter = (EcsFilter) syncRequest.getFilter();
     String nextToken = null;
     SettingAttribute settingAttribute = settingsService.get(filter.getAwsComputeProviderId());
@@ -38,9 +39,8 @@ public class EcsInstanceSyncServiceImpl implements InstanceSyncService {
     Validator.notNullCheck("AwsConfig", awsConfig);
     List<Task> tasks;
     List<ContainerInfo> result = new ArrayList<>();
-
-    List<String> serviceNameList = filter.getServiceNameList();
-    for (String serviceName : serviceNameList) {
+    Set<String> serviceNameSet = filter.getServiceNameSet();
+    for (String serviceName : serviceNameSet) {
       do {
         ListTasksRequest listTasksRequest = new ListTasksRequest()
                                                 .withCluster(filter.getClusterName())
@@ -73,6 +73,6 @@ public class EcsInstanceSyncServiceImpl implements InstanceSyncService {
       } while (nextToken != null);
     }
 
-    return InstanceSyncResponse.Builder.anInstanceSyncResponse().withContainerInfoList(result).build();
+    return ContainerSyncResponse.Builder.aContainerSyncResponse().withContainerInfoList(result).build();
   }
 }

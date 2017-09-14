@@ -19,20 +19,18 @@ import java.util.List;
 @Integration
 @Ignore
 public class InstanceWorkflowNameMigrationUtil extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+
+  @Inject  private WingsPersistence wingsPersistence;
 
   @Test
   public void removePrefixFromWorkflowName() {
     System.out.println("Removing prefix from workflow name");
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    List<Instance> instanceList = query.field("lastWorkflowExecutionName")
-                                      .startsWith("Workflow: ")
-                                      .project("lastWorkflowExecutionName", true)
-                                      .asList();
-    for (Instance instance : instanceList) {
-      wingsPersistence.updateField(Instance.class, instance.getUuid(), "lastWorkflowExecutionName",
-          instance.getLastWorkflowExecutionName().substring(10));
-    }
-    System.out.println("Changing instance workflow names completed");
+      Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+      List<Instance> instanceList = query.field("lastWorkflowExecutionName").startsWith("Workflow: ").project("lastWorkflowExecutionName", true).asList();
+      for (Instance instance:instanceList) {
+        wingsPersistence.updateField(Instance.class, instance.getUuid(), "lastWorkflowExecutionName",
+            instance.getLastWorkflowExecutionName().substring(10));
+      }
+      System.out.println("Changing instance workflow names completed");
   }
 }

@@ -3,18 +3,18 @@ package software.wings.service.impl.instance.sync.request;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class EcsFilter extends ContainerFilter {
-  private List<String> serviceNameList;
+  private Set<String> serviceNameSet;
   private String awsComputeProviderId;
   private String region;
 
   public static final class Builder {
     protected String clusterName;
-    private List<String> serviceNameList;
+    private Set<String> serviceNameSet;
     private String awsComputeProviderId;
     private String region;
 
@@ -29,8 +29,8 @@ public class EcsFilter extends ContainerFilter {
       return this;
     }
 
-    public Builder withServiceNameList(List<String> serviceNameList) {
-      this.serviceNameList = serviceNameList;
+    public Builder withServiceNameSet(Set<String> serviceNameSet) {
+      this.serviceNameSet = serviceNameSet;
       return this;
     }
 
@@ -47,7 +47,7 @@ public class EcsFilter extends ContainerFilter {
     public Builder but() {
       return anEcsFilter()
           .withClusterName(clusterName)
-          .withServiceNameList(serviceNameList)
+          .withServiceNameSet(serviceNameSet)
           .withAwsComputeProviderId(awsComputeProviderId)
           .withRegion(region);
     }
@@ -55,7 +55,7 @@ public class EcsFilter extends ContainerFilter {
     public EcsFilter build() {
       EcsFilter ecsFilter = new EcsFilter();
       ecsFilter.setClusterName(clusterName);
-      ecsFilter.setServiceNameList(serviceNameList);
+      ecsFilter.setServiceNameSet(serviceNameSet);
       ecsFilter.setAwsComputeProviderId(awsComputeProviderId);
       ecsFilter.setRegion(region);
       return ecsFilter;
