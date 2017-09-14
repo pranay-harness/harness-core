@@ -17,8 +17,8 @@ import java.util.Map;
 @Builder
 public class ContainerUpgradeRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
-  private List<ContainerServiceData> newServiceInstanceCounts;
-  private List<ContainerServiceData> oldServiceInstanceCounts;
+  private List<ContainerServiceData> newInstanceData;
+  private List<ContainerServiceData> oldInstanceData;
 
   @Override
   public ContextElementType getElementType() {

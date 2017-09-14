@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -36,7 +37,12 @@ import javax.annotation.Nullable;
 public class KubernetesReplicationControllerDeploy extends ContainerServiceDeploy {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
 
-  @Attributes(title = "Number of instances") private int instanceCount;
+  @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
+
+  @Attributes(title = "Instance Unit Type (Count/Percent)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("COUNT")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -120,11 +126,6 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
-  public int fetchDesiredCount(int lastDeploymentDesiredCount) {
-    return getInstanceCount();
-  }
-
-  @Override
   public String getCommandName() {
     return commandName;
   }
@@ -142,6 +143,15 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     this.instanceCount = instanceCount;
   }
 
+  @Override
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
+  }
+
   public static final class KubernetesReplicationControllerDeployBuilder {
     private String id;
     private String name;
@@ -149,6 +159,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     private String stateType;
     private String commandName;
     private int instanceCount;
+    private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
     private KubernetesReplicationControllerDeployBuilder(String name) {
       this.name = name;
@@ -189,6 +200,11 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       return this;
     }
 
+    public KubernetesReplicationControllerDeployBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
+      this.instanceUnitType = instanceUnitType;
+      return this;
+    }
+
     public KubernetesReplicationControllerDeploy build() {
       KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
           new KubernetesReplicationControllerDeploy(name);
@@ -198,6 +214,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       kubernetesReplicationControllerDeploy.setRollback(false);
       kubernetesReplicationControllerDeploy.setCommandName(commandName);
       kubernetesReplicationControllerDeploy.setInstanceCount(instanceCount);
+      kubernetesReplicationControllerDeploy.setInstanceUnitType(instanceUnitType);
       return kubernetesReplicationControllerDeploy;
     }
   }
