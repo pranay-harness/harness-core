@@ -32,9 +32,9 @@ import javax.annotation.Nullable;
 public class EcsServiceDeploy extends ContainerServiceDeploy {
   private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
 
-  @Attributes(title = "Number of instances") private int instanceCount;
+  @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
-  @Attributes(title = "Instance Unit Type (Count/Percentage)")
+  @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
   @DefaultValue("COUNT")
   private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
@@ -101,20 +101,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  public int fetchDesiredCount(int lastDeploymentDesiredCount) {
-    if (getInstanceUnitType() == InstanceUnitType.PERCENTAGE) {
-      // TODO: take care of previous occurrence and ensure total does not exceed previousDesiredCount
-      int realCount = (getInstanceCount() * lastDeploymentDesiredCount) / 100;
-      if (realCount < 1) {
-        realCount = 1;
-      }
-      return realCount;
-    } else {
-      return getInstanceCount();
-    }
-  }
-
-  @Override
   public String getCommandName() {
     return commandName;
   }
@@ -131,6 +117,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     this.instanceCount = instanceCount;
   }
 
+  @Override
   public InstanceUnitType getInstanceUnitType() {
     return instanceUnitType;
   }

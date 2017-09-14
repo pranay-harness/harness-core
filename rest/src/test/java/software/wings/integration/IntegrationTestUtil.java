@@ -2,6 +2,11 @@ package software.wings.integration;
 
 import static java.lang.Integer.MAX_VALUE;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.util.JSON;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -30,6 +35,25 @@ public class IntegrationTestUtil {
     }
     out.close();
     return file;
+  }
+
+  public static void saveMongoObjectsAsJson(
+      String filename, DBCollection collection, Iterable<String> stateMachineIds) {
+    BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", stateMachineIds));
+    DBCursor dbObjects = collection.find(query);
+
+    String st = JSON.serialize(dbObjects);
+    File file = new File(filename);
+    if (file.exists()) {
+      file.delete();
+    }
+    try {
+      FileWriter fileWriter = new FileWriter(file);
+      fileWriter.write(st);
+      fileWriter.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**

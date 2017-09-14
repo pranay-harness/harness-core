@@ -1,4 +1,4 @@
-package software.wings.integration;
+package software.wings.integration.migration;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
@@ -33,11 +34,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
+import software.wings.rules.Integration;
 
 import java.util.List;
 
-public class kube {
-  private static final Logger logger = LoggerFactory.getLogger(kube.class);
+@Integration
+@Ignore
+public class KubernetesIntegrationTest {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesIntegrationTest.class);
 
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()

@@ -1,4 +1,4 @@
-package software.wings.integration;
+package software.wings.integration.migration;
 
 import com.google.inject.Inject;
 
@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Integration
 @Ignore
-public class InstanceWorkflowNameMigrationTest extends WingsBaseTest {
+public class InstanceWorkflowNameMigrationUtil extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test

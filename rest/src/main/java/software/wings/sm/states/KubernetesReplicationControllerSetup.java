@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
@@ -90,12 +91,14 @@ import java.util.stream.Collectors;
 /**
  * Created by brett on 3/1/17
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesReplicationControllerSetup extends State {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
+  @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
   private String replicationControllerName;
+  private int maxInstances;
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -112,9 +115,7 @@ public class KubernetesReplicationControllerSetup extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
-
   @Inject @Transient private transient EcrService ecrService;
-
   @Inject @Transient private transient EcrClassicService ecrClassicService;
 
   /**
@@ -217,6 +218,7 @@ public class KubernetesReplicationControllerSetup extends State {
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
                                                           .withUuid(serviceId)
                                                           .withName(replicationControllerName)
+                                                          .withMaxInstances(maxInstances)
                                                           .withClusterName(clusterName)
                                                           .withDeploymentType(DeploymentType.KUBERNETES)
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())
@@ -592,6 +594,14 @@ public class KubernetesReplicationControllerSetup extends State {
     this.replicationControllerName = replicationControllerName;
   }
 
+  public int getMaxInstances() {
+    return maxInstances;
+  }
+
+  public void setMaxInstances(int maxInstances) {
+    this.maxInstances = maxInstances;
+  }
+
   /**
    * Gets service type.
    */
@@ -684,11 +694,20 @@ public class KubernetesReplicationControllerSetup extends State {
 
   public static final class KubernetesReplicationControllerSetupBuilder {
     private String id;
+    private String parentId;
     private String name;
-    private ContextElementType requiredContextElementType;
-    private String stateType;
     private boolean rollback;
+    private String replicationControllerName;
+    private int maxInstances;
     private String serviceType;
+    private String port;
+    private String targetPort;
+    private String protocol;
+    private String clusterIP;
+    private String externalIPs;
+    private String loadBalancerIP;
+    private String nodePort;
+    private String externalName;
 
     private KubernetesReplicationControllerSetupBuilder() {}
 
@@ -701,19 +720,13 @@ public class KubernetesReplicationControllerSetup extends State {
       return this;
     }
 
+    public KubernetesReplicationControllerSetupBuilder withParentId(String parentId) {
+      this.parentId = parentId;
+      return this;
+    }
+
     public KubernetesReplicationControllerSetupBuilder withName(String name) {
       this.name = name;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withRequiredContextElementType(
-        ContextElementType requiredContextElementType) {
-      this.requiredContextElementType = requiredContextElementType;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withStateType(String stateType) {
-      this.stateType = stateType;
       return this;
     }
 
@@ -722,29 +735,97 @@ public class KubernetesReplicationControllerSetup extends State {
       return this;
     }
 
+    public KubernetesReplicationControllerSetupBuilder withReplicationControllerName(String replicationControllerName) {
+      this.replicationControllerName = replicationControllerName;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
+      return this;
+    }
+
     public KubernetesReplicationControllerSetupBuilder withServiceType(String serviceType) {
       this.serviceType = serviceType;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withPort(String port) {
+      this.port = port;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withTargetPort(String targetPort) {
+      this.targetPort = targetPort;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withProtocol(String protocol) {
+      this.protocol = protocol;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withClusterIP(String clusterIP) {
+      this.clusterIP = clusterIP;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withExternalIPs(String externalIPs) {
+      this.externalIPs = externalIPs;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withLoadBalancerIP(String loadBalancerIP) {
+      this.loadBalancerIP = loadBalancerIP;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withNodePort(String nodePort) {
+      this.nodePort = nodePort;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withExternalName(String externalName) {
+      this.externalName = externalName;
       return this;
     }
 
     public KubernetesReplicationControllerSetupBuilder but() {
       return aKubernetesReplicationControllerSetup()
           .withId(id)
+          .withParentId(parentId)
           .withName(name)
-          .withRequiredContextElementType(requiredContextElementType)
-          .withStateType(stateType)
           .withRollback(rollback)
-          .withServiceType(serviceType);
+          .withReplicationControllerName(replicationControllerName)
+          .withMaxInstances(maxInstances)
+          .withServiceType(serviceType)
+          .withPort(port)
+          .withTargetPort(targetPort)
+          .withProtocol(protocol)
+          .withClusterIP(clusterIP)
+          .withExternalIPs(externalIPs)
+          .withLoadBalancerIP(loadBalancerIP)
+          .withNodePort(nodePort)
+          .withExternalName(externalName);
     }
 
     public KubernetesReplicationControllerSetup build() {
       KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
           new KubernetesReplicationControllerSetup(name);
       kubernetesReplicationControllerSetup.setId(id);
-      kubernetesReplicationControllerSetup.setRequiredContextElementType(requiredContextElementType);
-      kubernetesReplicationControllerSetup.setStateType(stateType);
+      kubernetesReplicationControllerSetup.setParentId(parentId);
       kubernetesReplicationControllerSetup.setRollback(rollback);
+      kubernetesReplicationControllerSetup.setReplicationControllerName(replicationControllerName);
+      kubernetesReplicationControllerSetup.setMaxInstances(maxInstances);
       kubernetesReplicationControllerSetup.setServiceType(serviceType);
+      kubernetesReplicationControllerSetup.setPort(port);
+      kubernetesReplicationControllerSetup.setTargetPort(targetPort);
+      kubernetesReplicationControllerSetup.setProtocol(protocol);
+      kubernetesReplicationControllerSetup.setClusterIP(clusterIP);
+      kubernetesReplicationControllerSetup.setExternalIPs(externalIPs);
+      kubernetesReplicationControllerSetup.setLoadBalancerIP(loadBalancerIP);
+      kubernetesReplicationControllerSetup.setNodePort(nodePort);
+      kubernetesReplicationControllerSetup.setExternalName(externalName);
       return kubernetesReplicationControllerSetup;
     }
   }

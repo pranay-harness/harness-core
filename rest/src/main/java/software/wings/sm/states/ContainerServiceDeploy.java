@@ -35,6 +35,8 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
+import software.wings.beans.Log;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -44,6 +46,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
@@ -51,6 +54,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -81,16 +85,12 @@ public abstract class ContainerServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
   @Inject @Transient protected transient SettingsService settingsService;
-
   @Inject @Transient protected transient DelegateService delegateService;
-
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-
   @Inject @Transient protected transient ActivityService activityService;
-
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
+  @Inject @Transient protected transient LogService logService;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -155,7 +155,7 @@ public abstract class ContainerServiceDeploy extends State {
       logger.info("Executing for rollback");
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      desiredCounts = containerUpgradeRequestElement.getNewServiceInstanceCounts();
+      desiredCounts = containerUpgradeRequestElement.getNewInstanceData();
       if (desiredCounts == null || desiredCounts.isEmpty()) {
         // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to
         // scale up during rollback. We just need to downsize the new one (which is called 'old' during rollback
@@ -170,17 +170,31 @@ public abstract class ContainerServiceDeploy extends State {
         throw new WingsException(
             ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + newContainerServiceName);
       }
-      int desiredCount = previousDesiredCount.get()
-          + fetchDesiredCount(getOldServiceCounts(context).values().stream().mapToInt(Integer::intValue).sum());
+      int previousCount = previousDesiredCount.get();
+      int desiredCount = fetchDesiredCount(serviceElement.getMaxInstances());
+
+      if (desiredCount <= previousCount) {
+        String msg = "Desired instance count is less than or equal to the current instance count: {current: "
+            + previousCount + ", desired: " + desiredCount + "}";
+        logger.warn(msg);
+        logService.save(Log.Builder.aLog()
+                            .withActivityId(activityId)
+                            .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
+                                    ? CommandUnitType.RESIZE.name()
+                                    : CommandUnitType.RESIZE_KUBERNETES.name())
+                            .withLogLine(msg)
+                            .withLogLevel(Log.LogLevel.WARN)
+                            .build());
+      }
 
       desiredCounts = new ArrayList<>();
       desiredCounts.add(aContainerServiceData()
                             .withName(newContainerServiceName)
-                            .withPreviousCount(previousDesiredCount.get())
+                            .withPreviousCount(previousCount)
                             .withDesiredCount(desiredCount)
                             .build());
     }
-    logger.info("Setting desired desiredCount for {} services", desiredCounts.size());
+    logger.info("Setting desired count for {} services", desiredCounts.size());
     desiredCounts.forEach(dc
         -> logger.info("Changing desired count for service {} from {} to {}", dc.getName(), dc.getPreviousCount(),
             dc.getDesiredCount()));
@@ -199,7 +213,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
-    executionDataBuilder.withActivityId(activityId).withNewPreviousInstanceCounts(desiredCounts);
+    executionDataBuilder.withActivityId(activityId).withNewInstanceData(desiredCounts);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -238,17 +252,6 @@ public abstract class ContainerServiceDeploy extends State {
       return downsizeOldInstances(context, commandStateExecutionData);
     } else {
       // Handle downsize response
-      CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
-      if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
-        int actualOldInstanceCount =
-            ((ResizeCommandUnitExecutionData) commandExecutionData)
-                .getContainerInfos()
-                .stream()
-                .filter(containerInfo -> containerInfo.getStatus() == ContainerInfo.Status.SUCCESS)
-                .collect(Collectors.toList())
-                .size();
-        commandStateExecutionData.setOldRunningInstanceCount(actualOldInstanceCount);
-      }
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
   }
@@ -275,31 +278,31 @@ public abstract class ContainerServiceDeploy extends State {
       logger.info("Downsizing for rollback");
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      desiredCounts = containerUpgradeRequestElement.getOldServiceInstanceCounts();
+      desiredCounts = containerUpgradeRequestElement.getOldInstanceData();
     } else {
       LinkedHashMap<String, Integer> oldServiceCounts = getOldServiceCounts(context);
       if (oldServiceCounts.isEmpty()) {
         // Old service doesn't exist so we don't need to do anything
         return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
-
-      int remaining = fetchDesiredCount(oldServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
+      ContainerServiceData newServiceData = commandStateExecutionData.getNewInstanceData().iterator().next();
+      int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
       desiredCounts = new ArrayList<>();
       for (String serviceName : oldServiceCounts.keySet()) {
-        int previousDesiredCount = oldServiceCounts.get(serviceName);
-        int desiredCount = Math.max(previousDesiredCount - remaining, 0);
-        if (previousDesiredCount != desiredCount) {
+        int previousCount = oldServiceCounts.get(serviceName);
+        int desiredCount = Math.max(previousCount - downsizeCount, 0);
+        if (previousCount != desiredCount) {
           desiredCounts.add(aContainerServiceData()
                                 .withName(serviceName)
-                                .withPreviousCount(previousDesiredCount)
+                                .withPreviousCount(previousCount)
                                 .withDesiredCount(desiredCount)
                                 .build());
         }
-        remaining -= previousDesiredCount - desiredCount;
+        downsizeCount -= previousCount - desiredCount;
       }
     }
 
-    commandStateExecutionData.setOldPreviousInstanceCounts(desiredCounts);
+    commandStateExecutionData.setOldInstanceData(desiredCounts);
 
     logger.info("Downsizing {} services", desiredCounts.size());
     desiredCounts.forEach(dc
@@ -370,6 +373,16 @@ public abstract class ContainerServiceDeploy extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   public abstract int getInstanceCount();
+
+  public abstract InstanceUnitType getInstanceUnitType();
+
+  private int fetchDesiredCount(int maxInstances) {
+    if (getInstanceUnitType() == InstanceUnitType.PERCENTAGE) {
+      return Math.max((Math.min(getInstanceCount(), 100) * maxInstances) / 100, 1);
+    } else {
+      return Math.min(getInstanceCount(), maxInstances);
+    }
+  }
 
   @Override
   public Map<String, String> validateFields() {
@@ -443,10 +456,6 @@ public abstract class ContainerServiceDeploy extends State {
     }
 
     commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-    commandStateExecutionData.setNewRunningInstanceCount(
-        (int) instanceStatusSummaries.stream()
-            .filter(instanceStatusSummary -> instanceStatusSummary.getStatus() == ExecutionStatus.SUCCESS)
-            .count());
   }
 
   private CommandExecutionContext buildCommandExecutionContext(Application app, String envId, String clusterName,
@@ -462,8 +471,6 @@ public abstract class ContainerServiceDeploy extends State {
         .withDesiredCounts(desiredCounts)
         .build();
   }
-
-  public abstract int fetchDesiredCount(int lastDeploymentDesiredCount);
 
   public abstract String getCommandName();
 

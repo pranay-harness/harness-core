@@ -1,4 +1,4 @@
-package software.wings.integration;
+package software.wings.integration.migration;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;

@@ -78,7 +78,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.List;
@@ -132,10 +131,7 @@ public class CommandState extends State {
 
   @Transient @Inject private transient ArtifactService artifactService;
 
-  @Inject @Transient private transient WaitNotifyEngine waitNotifyEngine;
-
   @Attributes(title = "Command")
-  //@Expand(dataProvider = CommandStateDataProvider.class)
   @Expand(dataProvider = CommandStateEnumDataProvider.class)
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   private String commandName;

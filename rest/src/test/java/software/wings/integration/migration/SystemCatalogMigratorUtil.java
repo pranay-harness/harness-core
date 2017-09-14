@@ -1,4 +1,4 @@
-package software.wings.integration;
+package software.wings.integration.migration;
 
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.SearchFilter.Operator.EQ;
