@@ -10,7 +10,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.yaml.YamlPayload;
 
 /**
- * Yaml Directory Service.
+ * Yaml Resource Service.
  *
  * @author bsollish
  */
