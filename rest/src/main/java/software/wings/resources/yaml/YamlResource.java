@@ -17,7 +17,9 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.yaml.SetupYaml;
 import software.wings.yaml.YamlPayload;
 
 import javax.inject.Inject;
@@ -40,6 +42,7 @@ public class YamlResource {
   private YamlResourceService yamlResourceService;
   private ServiceYamlResourceService serviceYamlResourceService;
   private AppYamlResourceService appYamlResourceService;
+  private SetupYamlResourceService setupYamlResourceService;
 
   /**
    * Instantiates a new service resource.
@@ -48,10 +51,11 @@ public class YamlResource {
    */
   @Inject
   public YamlResource(YamlResourceService yamlResourceService, ServiceYamlResourceService serviceYamlResourceService,
-      AppYamlResourceService appYamlResourceService) {
+      AppYamlResourceService appYamlResourceService, SetupYamlResourceService setupYamlResourceService) {
     this.yamlResourceService = yamlResourceService;
     this.serviceYamlResourceService = serviceYamlResourceService;
     this.appYamlResourceService = appYamlResourceService;
+    this.setupYamlResourceService = setupYamlResourceService;
   }
 
   /**
@@ -314,8 +318,38 @@ public class YamlResource {
   @Path("/applications/{appId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> update(@PathParam("appId") String appId, YamlPayload yamlPayload,
+  public RestResponse<Application> updateApp(@PathParam("appId") String appId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return appYamlResourceService.updateApp(appId, yamlPayload, deleteEnabled);
+  }
+
+  /**
+   * Gets the setup yaml by accountId
+   *
+   * @param accountId  the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("/setup/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getSetup(@PathParam("accountId") String accountId) {
+    return setupYamlResourceService.getSetup(accountId);
+  }
+
+  /**
+   * Update setup that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param accountId  the account id
+   * @param yamlPayload the yaml version of setup
+   * @return the rest response
+   */
+  @PUT
+  @Path("/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SetupYaml> updateSetup(@PathParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return setupYamlResourceService.updateSetup(accountId, yamlPayload, deleteEnabled);
   }
 }
