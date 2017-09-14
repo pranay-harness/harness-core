@@ -18,6 +18,7 @@ import java.util.Objects;
 public class PipelineExecution extends Base {
   @Indexed private String pipelineId;
   @Indexed private String workflowExecutionId;
+  private String stateMachineId;
   private String artifactId;
   private String artifactName;
   private Pipeline pipeline;
@@ -213,6 +214,14 @@ public class PipelineExecution extends Base {
     this.workflowExecutionId = workflowExecutionId;
   }
 
+  public String getStateMachineId() {
+    return stateMachineId;
+  }
+
+  public void setStateMachineId(String stateMachineId) {
+    this.stateMachineId = stateMachineId;
+  }
+
   /**
    * Gets artifact id.
    *
@@ -324,6 +333,7 @@ public class PipelineExecution extends Base {
   public static final class Builder {
     private String pipelineId;
     private String workflowExecutionId;
+    private String stateMachineId;
     private String artifactId;
     private String artifactName;
     private Pipeline pipeline;
@@ -372,6 +382,17 @@ public class PipelineExecution extends Base {
      */
     public Builder withWorkflowExecutionId(String workflowExecutionId) {
       this.workflowExecutionId = workflowExecutionId;
+      return this;
+    }
+
+    /**
+     * With state machine id builder.
+     *
+     * @param stateMachineId  the state machine id
+     * @return the builder
+     */
+    public Builder withStateMachineId(String stateMachineId) {
+      this.stateMachineId = stateMachineId;
       return this;
     }
 
@@ -587,7 +608,8 @@ public class PipelineExecution extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withStateMachineId(stateMachineId);
     }
 
     /**
@@ -616,6 +638,7 @@ public class PipelineExecution extends Base {
       pipelineExecution.setCreatedAt(createdAt);
       pipelineExecution.setLastUpdatedBy(lastUpdatedBy);
       pipelineExecution.setLastUpdatedAt(lastUpdatedAt);
+      pipelineExecution.setStateMachineId(stateMachineId);
       return pipelineExecution;
     }
   }

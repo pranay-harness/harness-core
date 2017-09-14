@@ -75,7 +75,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -129,66 +128,68 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipelineExecution == null || pipelineExecution.getStatus().isFinalStatus()) {
       return;
     }
-    StateMachine stateMachine =
-        workflowService.readLatestStateMachine(pipelineExecution.getAppId(), pipelineExecution.getPipelineId());
+    Pipeline pipeline = readPipeline(pipelineExecution.getAppId(), pipelineExecution.getPipelineId(), false);
+
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         getStateExecutionInstanceMap(pipelineExecution);
     List<PipelineStageExecution> stageExecutionDataList = new ArrayList<>();
 
-    State currState = stateMachine.getInitialState();
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+        .forEach(pipelineStageElement -> {
 
-    while (currState != null) {
-      StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(currState.getName());
+          StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(pipelineStageElement.getName());
 
-      if (stateExecutionInstance == null) {
-        stageExecutionDataList.add(
-            aPipelineStageExecution()
-                .withStateType(currState.getStateType())
-                .withStateName(currState.getName())
-                .withStatus(ExecutionStatus.QUEUED)
-                .withEstimatedTime(pipelineExecution.getPipeline().getStateEtaMap().get(currState.getName()))
-                .build());
-      } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-        PipelineStageExecution stageExecution = aPipelineStageExecution()
-                                                    .withStateType(stateExecutionInstance.getStateType())
-                                                    .withStatus(stateExecutionInstance.getStatus())
-                                                    .withStateName(stateExecutionInstance.getStateName())
-                                                    .withStartTs(stateExecutionInstance.getStartTs())
-                                                    .withEndTs(stateExecutionInstance.getEndTs())
-                                                    .build();
-        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+          if (stateExecutionInstance == null) {
+            stageExecutionDataList.add(aPipelineStageExecution()
+                                           .withStateType(pipelineStageElement.getType())
+                                           .withStateName(pipelineStageElement.getName())
+                                           .withStatus(ExecutionStatus.QUEUED)
+                                           .withEstimatedTime(pipelineExecution.getPipeline().getStateEtaMap().get(
+                                               pipelineStageElement.getName()))
+                                           .build());
+          } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
+            PipelineStageExecution stageExecution = aPipelineStageExecution()
+                                                        .withStateType(stateExecutionInstance.getStateType())
+                                                        .withStatus(stateExecutionInstance.getStatus())
+                                                        .withStateName(stateExecutionInstance.getStateName())
+                                                        .withStartTs(stateExecutionInstance.getStartTs())
+                                                        .withEndTs(stateExecutionInstance.getEndTs())
+                                                        .build();
+            StateExecutionData stateExecutionData =
+                stateExecutionInstance.getStateExecutionMap().get(pipelineStageElement.getName());
 
-        if (stateExecutionData != null && stateExecutionData instanceof ApprovalStateExecutionData) {
-          stageExecution.setStateExecutionData(stateExecutionData);
-        }
+            if (stateExecutionData != null && stateExecutionData instanceof ApprovalStateExecutionData) {
+              stageExecution.setStateExecutionData(stateExecutionData);
+            }
 
-        stageExecutionDataList.add(stageExecution);
-      } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
-        PipelineStageExecution stageExecution = aPipelineStageExecution()
-                                                    .withStateType(currState.getStateType())
-                                                    .withStateName(currState.getName())
-                                                    .withStatus(stateExecutionInstance.getStatus())
-                                                    .withStartTs(stateExecutionInstance.getStartTs())
-                                                    .withEndTs(stateExecutionInstance.getEndTs())
-                                                    .build();
+            stageExecutionDataList.add(stageExecution);
+          } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
+            PipelineStageExecution stageExecution = aPipelineStageExecution()
+                                                        .withStateType(pipelineStageElement.getType())
+                                                        .withStateName(pipelineStageElement.getName())
+                                                        .withStatus(stateExecutionInstance.getStatus())
+                                                        .withStartTs(stateExecutionInstance.getStartTs())
+                                                        .withEndTs(stateExecutionInstance.getEndTs())
+                                                        .build();
 
-        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+            StateExecutionData stateExecutionData =
+                stateExecutionInstance.getStateExecutionMap().get(pipelineStageElement.getName());
 
-        if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
-          EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-          WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-              pipelineExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
-          stageExecution.setWorkflowExecutions(asList(workflowExecution));
-        }
+            if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
+              EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
+              WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+                  pipelineExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+              stageExecution.setWorkflowExecutions(asList(workflowExecution));
+            }
 
-        stageExecutionDataList.add(stageExecution);
-      } else {
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
-      }
-      List<State> nextStates = stateMachine.getNextStates(currState.getName());
-      currState = nextStates != null ? nextStates.get(0) : null;
-    }
+            stageExecutionDataList.add(stageExecution);
+          } else {
+            throw new WingsException(
+                ErrorCode.INVALID_REQUEST, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
+          }
+        });
 
     WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetailsWithoutGraph(
         pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
@@ -487,6 +488,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withStartTs(System.currentTimeMillis())
                                               .withArtifactId(artifact.getUuid())
                                               .withArtifactName(artifact.getDisplayName())
+                                              .withStateMachineId(workflowExecution.getStateMachineId())
                                               .build();
     pipelineExecution = wingsPersistence.saveAndGet(PipelineExecution.class, pipelineExecution);
     refreshPipelineExecution(appId, pipelineExecution.getWorkflowExecutionId());

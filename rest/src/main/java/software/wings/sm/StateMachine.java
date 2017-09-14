@@ -24,6 +24,8 @@ import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.common.cache.ResponseCodeCache;
@@ -138,54 +140,99 @@ public class StateMachine extends Base {
   }
 
   private void transformPipeline(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    String originStateName = pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getName();
+    String originStateName = null;
+    State prevState = null;
 
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
-        .forEach(pipelineStageElement -> {
+    for (int i = 0; i < pipeline.getPipelineStages().size(); i++) {
+      PipelineStage pipelineStage = pipeline.getPipelineStages().get(i);
+      State state = convertToState(pipelineStage, pipeline, stencilMap);
 
-          StateTypeDescriptor stateTypeDesc = stencilMap.get(pipelineStageElement.getType());
-
-          State state = stateTypeDesc.newInstance(pipelineStageElement.getName());
-
-          Map<String, Object> properties = pipelineStageElement.getProperties();
-
-          properties.put("pipelineId", pipeline.getUuid());
-
-          // populate properties
-          MapperUtils.mapObject(properties, state);
-
-          state.resolveProperties();
-
-          addState(state);
-        });
-
-    if (originStateName == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Origin state missing");
-    }
-
-    if (pipeline.getPipelineStages().size() > 1) {
-      Map<String, State> statesMap = getStatesMap();
-      for (int stageIdx = 0; stageIdx < pipeline.getPipelineStages().size() - 1; stageIdx++) {
-        String currentStateName =
-            pipeline.getPipelineStages().get(stageIdx).getPipelineStageElements().get(0).getName();
-        String nextStateName =
-            pipeline.getPipelineStages().get(stageIdx + 1).getPipelineStageElements().get(0).getName();
-
-        State stateFrom = statesMap.get(currentStateName);
-        State stateTo = statesMap.get(nextStateName);
-        addTransition(aTransition()
-                          .withFromState(stateFrom)
-                          .withTransitionType(TransitionType.SUCCESS)
-                          .withToState(stateTo)
-                          .build());
+      if (i > 0 && pipelineStage.isParallel()) {
+        // part of fork - 2nd, 3rd stage in parallel
+        ((ForkState) prevState).addForkState(state);
+      } else if (i < pipeline.getPipelineStages().size() - 1 && pipeline.getPipelineStages().get(i + 1).isParallel()) {
+        // start of a fork - not a parallel, but following stage has parallel flag
+        String forkName = getForkStateName(pipelineStage);
+        ForkState forkState = new ForkState(forkName);
+        forkState.addForkState(state);
+        addState(forkState);
+        if (prevState != null) {
+          addTransition(aTransition()
+                            .withTransitionType(TransitionType.SUCCESS)
+                            .withFromState(prevState)
+                            .withToState(forkState)
+                            .build());
+        }
+        prevState = forkState;
+        if (originStateName == null) {
+          originStateName = forkState.getName();
+        }
+      } else {
+        if (prevState != null) {
+          addTransition(aTransition()
+                            .withTransitionType(TransitionType.SUCCESS)
+                            .withFromState(prevState)
+                            .withToState(state)
+                            .build());
+        }
+        prevState = state;
+        if (originStateName == null) {
+          originStateName = state.getName();
+        }
       }
     }
+
     setInitialStateName(originStateName);
     validate();
-    addRepeatersForRequiredContextElement();
     clearCache();
+  }
+
+  private State convertToState(
+      PipelineStage pipelineStage, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
+    if (pipelineStage == null || pipelineStage.getPipelineStageElements() == null
+        || pipelineStage.getPipelineStageElements().isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Pipeline Stage: pipelineStage");
+    }
+    if (pipelineStage.getPipelineStageElements().size() == 1) {
+      return convertToState(pipelineStage.getPipelineStageElements().get(0), pipeline, stencilMap);
+    } else {
+      String forkName = getForkStateName(pipelineStage);
+      ForkState forkState = new ForkState(forkName);
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        State state = convertToState(pipelineStageElement, pipeline, stencilMap);
+        forkState.addForkState(state);
+      }
+      addState(forkState);
+      return forkState;
+    }
+  }
+
+  private String getForkStateName(PipelineStage pipelineStage) {
+    String forkName;
+    if (pipelineStage.getName() == null) {
+      forkName = "fork-pipeline-stage-" + System.currentTimeMillis();
+    } else {
+      forkName = pipelineStage.getName() + "-fork";
+    }
+    return forkName;
+  }
+
+  private State convertToState(
+      PipelineStageElement pipelineStageElement, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
+    StateTypeDescriptor stateTypeDesc = stencilMap.get(pipelineStageElement.getType());
+
+    State state = stateTypeDesc.newInstance(pipelineStageElement.getName());
+
+    Map<String, Object> properties = pipelineStageElement.getProperties();
+
+    properties.put("pipelineId", pipeline.getUuid());
+
+    // populate properties
+    MapperUtils.mapObject(properties, state);
+
+    state.resolveProperties();
+    addState(state);
+    return state;
   }
 
   public void deepTransform(

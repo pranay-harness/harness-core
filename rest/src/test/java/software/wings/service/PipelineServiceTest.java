@@ -128,7 +128,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetPipeline() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.Builder.aPipeline()
+        .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
@@ -143,7 +143,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetPipelineWithServices() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.Builder.aPipeline()
+        .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
@@ -162,7 +162,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetPipelineWithWorkflowVariables() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.Builder.aPipeline()
+        .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
@@ -246,6 +246,18 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(pipelineExecution);
     when(workflowExecutionService.getExecutionDetailsWithoutGraph(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withStatus(RUNNING).build());
+
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(
+            aPipeline()
+                .withAppId(APP_ID)
+                .withUuid(PIPELINE_ID)
+                .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement("DEV", ENV_STATE.name(),
+                                               ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID)))),
+                    new PipelineStage(asList(new PipelineStageElement("APPROVAL", APPROVAL.name(), ImmutableMap.of()))),
+                    new PipelineStage(asList(new PipelineStageElement(
+                        "PROD", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                .build());
     pipelineService.refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
     assertThat(pipelineExecution.getStatus()).isEqualTo(RUNNING);
@@ -290,6 +302,19 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(pipelineExecution);
     when(workflowExecutionService.getExecutionDetailsWithoutGraph(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withStatus(RUNNING).build());
+
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(
+            aPipeline()
+                .withAppId(APP_ID)
+                .withUuid(PIPELINE_ID)
+                .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement("DEV", ENV_STATE.name(),
+                                               ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID)))),
+                    new PipelineStage(asList(new PipelineStageElement("APPROVAL", APPROVAL.name(), ImmutableMap.of()))),
+                    new PipelineStage(asList(new PipelineStageElement(
+                        "PROD", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                .build());
+
     pipelineService.refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
     assertThat(pipelineExecution.getStatus()).isEqualTo(RUNNING);
@@ -341,6 +366,19 @@ public class PipelineServiceTest extends WingsBaseTest {
         PageResponse.Builder.aPageResponse().withResponse(asList(seiEnvDev, seiApproval, seiEnvProd)).build();
 
     when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class))).thenReturn(pageResponse);
+
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(
+            aPipeline()
+                .withAppId(APP_ID)
+                .withUuid(PIPELINE_ID)
+                .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement("DEV", ENV_STATE.name(),
+                                               ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID)))),
+                    new PipelineStage(asList(new PipelineStageElement("APPROVAL", APPROVAL.name(), ImmutableMap.of()))),
+                    new PipelineStage(asList(new PipelineStageElement(
+                        "PROD", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                .build());
+
     PipelineExecution pipelineExecution = aPipelineExecution()
                                               .withAppId(APP_ID)
                                               .withWorkflowExecutionId(PIPELINE_WORKFLOW_EXECUTION_ID)
@@ -372,7 +410,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeletePipeline() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.Builder.aPipeline()
+        .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
@@ -386,7 +424,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test(expected = WingsException.class)
   public void deletePipelineExecutionInProgress() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.Builder.aPipeline()
+        .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
                         .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
