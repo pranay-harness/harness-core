@@ -398,8 +398,9 @@ public class StateMachineExecutor {
           status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
           executionResponse.getNotifyElements());
       if (!updated) {
-        throw new WingsException("updateStateExecutionData failed");
+        return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
+
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, status, executionEventAdvice);
@@ -412,6 +413,20 @@ public class StateMachineExecutor {
       }
     }
     return stateExecutionInstance;
+  }
+
+  private StateExecutionInstance reloadStateExecutionInstanceAndCheckStatus(
+      StateExecutionInstance stateExecutionInstance) {
+    String stateExecutionInstanceId = stateExecutionInstance.getUuid();
+    stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getAppId(), stateExecutionInstanceId);
+    if (stateExecutionInstance.getStatus().isFinalStatus()) {
+      logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
+          + stateExecutionInstanceId);
+      return stateExecutionInstance;
+    } else {
+      throw new WingsException("updateStateExecutionData failed");
+    }
   }
 
   private StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
