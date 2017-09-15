@@ -693,12 +693,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .get();
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
+    return getInfrastructureMappingHosts(infrastructureMapping);
+  }
+
+  private List<String> getInfrastructureMappingHosts(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+      SettingAttribute computeProviderSetting =
+          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(((AwsInfrastructureMapping) infrastructureMapping).getRegion(), computeProviderSetting,
@@ -709,6 +714,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listHosts(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    return getInfrastructureMappingHosts(infrastructureMapping);
   }
 
   @Override
