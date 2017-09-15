@@ -17,7 +17,10 @@ import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.CloudProvidersYaml;
+import software.wings.yaml.CollaborationProvidersYaml;
+import software.wings.yaml.LoadBalancersYaml;
 import software.wings.yaml.SetupYaml;
+import software.wings.yaml.VerificationProvidersYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.YamlVersion;
@@ -70,18 +73,38 @@ public class SetupYamlResourceServiceImpl implements SetupYamlResourceService {
     doArtifactServers(setup, accountId, SettingVariableTypes.ARTIFACTORY);
     //------------- END ARTIFACT SERVERS SECTION ------------------
 
-    // TODO - LEFT OFF HERE
+    //------------- COLLABORATION PROVIDERS SECTION ------------------
+    CollaborationProvidersYaml collaborationProvidersYaml = new CollaborationProvidersYaml();
 
-    /*
-    List<String> collaborationProviderNames = settingsService.getAppNamesByAccountId(accountId);
-    setup.setCollaborationProviderNames(collaborationProviderNames);
+    // types of collaboration providers
+    doCollaborationProviders(collaborationProvidersYaml, setup, accountId, "SMTP", SettingVariableTypes.SMTP);
+    doCollaborationProviders(collaborationProvidersYaml, setup, accountId, "SLACK", SettingVariableTypes.SLACK);
 
-    List<String> loadBalancerNames = settingsService.getAppNamesByAccountId(accountId);
-    setup.setLoadBalancerNames(loadBalancerNames);
+    setup.setCollaborationProviders(collaborationProvidersYaml);
+    //------------- END COLLABORATION PROVIDERS SECTION ------------------
 
-    List<String> verificationProviderNames = settingsService.getAppNamesByAccountId(accountId);
-    setup.setVerificationProviderNames(verificationProviderNames);
-    */
+    //------------- LOAD BALANCERS SECTION ------------------
+    LoadBalancersYaml loadBalancersYaml = new LoadBalancersYaml();
+
+    // types of load balancers
+    doLoadBalancers(loadBalancersYaml, setup, accountId, "ELB", SettingVariableTypes.ELB);
+
+    setup.setLoadBalancers(loadBalancersYaml);
+    //------------- END LOAD BALANCERS SECTION ------------------
+
+    //------------- VERIFICATION PROVIDERS SECTION ------------------
+    VerificationProvidersYaml verificationProvidersYaml = new VerificationProvidersYaml();
+
+    // types of verification providers
+    doVerificationProviders(verificationProvidersYaml, setup, accountId, "Jenkins", SettingVariableTypes.JENKINS);
+    doVerificationProviders(
+        verificationProvidersYaml, setup, accountId, "AppDynamics", SettingVariableTypes.APP_DYNAMICS);
+    doVerificationProviders(verificationProvidersYaml, setup, accountId, "Splunk", SettingVariableTypes.SPLUNK);
+    doVerificationProviders(verificationProvidersYaml, setup, accountId, "ELK", SettingVariableTypes.ELK);
+    doVerificationProviders(verificationProvidersYaml, setup, accountId, "Logz", SettingVariableTypes.LOGZ);
+
+    setup.setVerificationProviders(verificationProvidersYaml);
+    //------------- END VERIFICATION PROVIDERS SECTION ------------------
 
     return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
   }
@@ -115,6 +138,69 @@ public class SetupYamlResourceServiceImpl implements SetupYamlResourceService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         setup.addArtifactServerName(settingAttribute.getName());
+      }
+    }
+  }
+
+  private void doCollaborationProviders(CollaborationProvidersYaml collaborationProvidersYaml, SetupYaml setup,
+      String accountId, String subListName, SettingVariableTypes type) {
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        switch (type) {
+          case SMTP:
+            collaborationProvidersYaml.getSMTP().add(settingAttribute.getName());
+            break;
+          case SLACK:
+            collaborationProvidersYaml.getSlack().add(settingAttribute.getName());
+            break;
+        }
+      }
+    }
+  }
+
+  private void doLoadBalancers(LoadBalancersYaml loadBalancersYaml, SetupYaml setup, String accountId,
+      String subListName, SettingVariableTypes type) {
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    if (settingAttributes != null) {
+      // iterate over load balancers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        switch (type) {
+          case ELB:
+            loadBalancersYaml.getELB().add(settingAttribute.getName());
+            break;
+        }
+      }
+    }
+  }
+
+  private void doVerificationProviders(VerificationProvidersYaml verificationProvidersYaml, SetupYaml setup,
+      String accountId, String subListName, SettingVariableTypes type) {
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        switch (type) {
+          case JENKINS:
+            verificationProvidersYaml.getJenkins().add(settingAttribute.getName());
+            break;
+          case APP_DYNAMICS:
+            verificationProvidersYaml.getAppDynamics().add(settingAttribute.getName());
+            break;
+          case SPLUNK:
+            verificationProvidersYaml.getSplunk().add(settingAttribute.getName());
+            break;
+          case ELK:
+            verificationProvidersYaml.getElk().add(settingAttribute.getName());
+            break;
+          case LOGZ:
+            verificationProvidersYaml.getLogz().add(settingAttribute.getName());
+            break;
+        }
       }
     }
   }

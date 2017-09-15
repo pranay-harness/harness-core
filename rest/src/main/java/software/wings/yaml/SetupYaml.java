@@ -9,9 +9,9 @@ public class SetupYaml extends GenericYaml {
   @YamlSerialize public List<String> applications = new ArrayList<>();
   @YamlSerialize public CloudProvidersYaml cloudProviders;
   @YamlSerialize public List<String> artifactServers = new ArrayList<>();
-  @YamlSerialize public List<String> collaborationProviders = new ArrayList<>();
-  @YamlSerialize public List<String> loadBalancers = new ArrayList<>();
-  @YamlSerialize public List<String> verificationProviders = new ArrayList<>();
+  @YamlSerialize public CollaborationProvidersYaml collaborationProviders;
+  @YamlSerialize public LoadBalancersYaml loadBalancers;
+  @YamlSerialize public VerificationProvidersYaml verificationProviders;
 
   @JsonIgnore
   public List<String> getAppNames() {
@@ -44,30 +44,27 @@ public class SetupYaml extends GenericYaml {
     artifactServers.add(artifactServerName);
   }
 
-  @JsonIgnore
-  public List<String> getCollaborationProviderNames() {
+  public CollaborationProvidersYaml getCollaborationProviders() {
     return collaborationProviders;
   }
 
-  public void setCollaborationProviderNames(List<String> collaborationProviderNames) {
-    this.collaborationProviders = collaborationProviderNames;
+  public void setCollaborationProviders(CollaborationProvidersYaml collaborationProviders) {
+    this.collaborationProviders = collaborationProviders;
   }
 
-  @JsonIgnore
-  public List<String> getLoadBalancerNames() {
+  public LoadBalancersYaml getLoadBalancers() {
     return loadBalancers;
   }
 
-  public void setLoadBalancerNames(List<String> loadBalancerNames) {
-    this.loadBalancers = loadBalancerNames;
+  public void setLoadBalancers(LoadBalancersYaml loadBalancers) {
+    this.loadBalancers = loadBalancers;
   }
 
-  @JsonIgnore
-  public List<String> getVerificationProviderNames() {
+  public VerificationProvidersYaml getVerificationProviders() {
     return verificationProviders;
   }
 
-  public void setVerificationProviderNames(List<String> verificationProviderNames) {
-    this.verificationProviders = verificationProviderNames;
+  public void setVerificationProviders(VerificationProvidersYaml verificationProviders) {
+    this.verificationProviders = verificationProviders;
   }
 }
