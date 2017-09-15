@@ -326,12 +326,25 @@ public class JenkinsImpl implements Jenkins {
   }
 
   public BuildDetails getBuildDetails(BuildWithDetails buildWithDetails) {
-    return aBuildDetails()
-        .withNumber(String.valueOf(buildWithDetails.getNumber()))
-        .withRevision(extractRevision(buildWithDetails))
-        .withDescription(buildWithDetails.getDescription())
-        .withBuildParameters(buildWithDetails.getParameters())
-        .build();
+    BuildDetails buildDetails = aBuildDetails()
+                                    .withNumber(String.valueOf(buildWithDetails.getNumber()))
+                                    .withRevision(extractRevision(buildWithDetails))
+                                    .withDescription(buildWithDetails.getDescription())
+                                    .build();
+    populateBuildParams(buildWithDetails, buildDetails);
+    return buildDetails;
+  }
+
+  public void populateBuildParams(BuildWithDetails buildWithDetails, BuildDetails buildDetails) {
+    try {
+      if (buildWithDetails.getParameters() != null) {
+        buildDetails.setBuildParameters(buildWithDetails.getParameters());
+      }
+    } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
+      // unexpected exception
+      logger.error(
+          "Error occurred while retrieving build parameters for build number {} ", buildWithDetails.getNumber(), e);
+    }
   }
 
   @Override
@@ -339,7 +352,7 @@ public class JenkinsImpl implements Jenkins {
     logger.info("Retrieving last successful build for job name {}", jobName);
     JobWithDetails jobWithDetails = getJob(jobName);
     if (jobWithDetails == null) {
-      logger.info("Job {} does not exist");
+      logger.info("Job {} does not exist", jobName);
       return null;
     }
 
@@ -349,7 +362,7 @@ public class JenkinsImpl implements Jenkins {
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
-    logger.info("Last successful build for job {}", buildWithDetails.getNumber());
+    logger.info("Last successful build {} for job {}", buildWithDetails.getNumber(), jobName);
     return getBuildDetails(buildWithDetails);
   }
 
@@ -499,7 +512,7 @@ public class JenkinsImpl implements Jenkins {
             .findFirst();
     if (gitRevOpt.isPresent()) {
       return gitRevOpt.get();
-    } else if ("svn".equals(buildWithDetails.getChangeSet().getKind())) {
+    } else if (buildWithDetails.getChangeSet() != null && "svn".equals(buildWithDetails.getChangeSet().getKind())) {
       try {
         SvnBuildDetails svnBuildDetails =
             buildWithDetails.getClient().get(buildWithDetails.getUrl(), SvnBuildDetails.class);

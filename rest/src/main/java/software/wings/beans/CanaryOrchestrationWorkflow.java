@@ -8,11 +8,13 @@ import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
 import static software.wings.common.Constants.ROLLBACK_PREFIX;
+import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -174,6 +176,36 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .collect(Collectors.toList());
   }
 
+  @Override
+  public void setCloneMetadata(Map<String, String> serviceIdMapping) {
+    if (workflowPhaseIdMap == null || serviceIdMapping == null) {
+      return;
+    }
+    workflowPhaseIdMap.values().stream().forEach(workflowPhase -> {
+      String serviceId = workflowPhase.getServiceId();
+      if (serviceId != null) {
+        if (serviceIdMapping.containsKey(serviceId)) {
+          workflowPhase.setServiceId(serviceIdMapping.get(serviceId));
+        }
+      }
+      workflowPhase.setInfraMappingId(null);
+      workflowPhase.setInfraMappingName(null);
+    });
+
+    if (rollbackWorkflowPhaseIdMap == null || serviceIdMapping == null) {
+      return;
+    }
+    rollbackWorkflowPhaseIdMap.values().stream().forEach(rollbackPhase -> {
+      String serviceId = rollbackPhase.getServiceId();
+      if (serviceId != null) {
+        if (serviceIdMapping.containsKey(serviceId)) {
+          rollbackPhase.setServiceId(serviceIdMapping.get(serviceId));
+        }
+      }
+      rollbackPhase.setInfraMappingId(null);
+      rollbackPhase.setInfraMappingName(null);
+    });
+  }
   /**
    * Invoked before inserting document in mongo by morphia.
    */
@@ -334,8 +366,26 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (!invalid.isEmpty()) {
         setValidationMessage(String.format(WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
+      validateInframapping();
     }
     return isValid();
+  }
+
+  private void validateInframapping() {
+    if (workflowPhases != null) {
+      List<String> invalidInfraPhaseIds = new ArrayList<>();
+      for (WorkflowPhase phase : workflowPhases) {
+        if (phase != null) {
+          if (phase.getInfraMappingId() == null) {
+            invalidInfraPhaseIds.add(phase.getName());
+          }
+        }
+      }
+      if (!CollectionUtils.isEmpty(invalidInfraPhaseIds)) {
+        setValid(false);
+        setValidationMessage(String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
+      }
+    }
   }
 
   @Override

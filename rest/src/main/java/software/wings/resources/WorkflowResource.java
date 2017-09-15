@@ -28,7 +28,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -212,10 +211,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> cloneWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, CloneMetadata cloneMetadata) {
-    Workflow workflow = cloneMetadata.getWorkflow();
-    Validator.notNullCheck("workflow", workflow);
-    workflow.setAppId(appId);
-    return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, workflow));
+    return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, cloneMetadata));
   }
 
   /**
