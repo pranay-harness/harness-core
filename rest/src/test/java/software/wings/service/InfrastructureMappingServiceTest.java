@@ -443,7 +443,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   public void shouldListAwsComputeProviderHosts() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
                                                             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                            .withComputeProviderSettingId(SETTING_ID)
+                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                             .withAppId(APP_ID)
                                                             .withEnvId(ENV_ID)
                                                             .withComputeProviderType(AWS.name())

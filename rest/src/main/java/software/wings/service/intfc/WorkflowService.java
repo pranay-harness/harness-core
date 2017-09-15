@@ -8,6 +8,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
@@ -78,6 +79,16 @@ public interface WorkflowService {
    * @return the workflow
    */
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
+
+  /**
+   * Update workflow.
+   *
+   * @param workflow the workflow
+   * @param inframappingChanged Inframapping changed or not
+   * @return the workflow
+   */
+  Workflow updateWorkflow(
+      @Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean inframappingChanged);
 
   /**
    * Delete workflow.
@@ -187,4 +198,6 @@ public interface WorkflowService {
   Workflow templatizeWorkflow(String appId, String workflowId, Workflow workflow);
 
   Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
+
+  Workflow cloneWorkflow(String appId, String workflowId, CloneMetadata cloneMetadata);
 }

@@ -330,4 +330,13 @@ public interface InfrastructureMappingService {
    * @return the map
    */
   Map<String, String> listTargetGroups(String appId, String infraMappingId, String loadbalancerName);
+
+  /**
+   * List hosts list.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @return the list
+   */
+  List<String> listHosts(String appId, String infraMappingId);
 }

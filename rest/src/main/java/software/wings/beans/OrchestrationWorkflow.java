@@ -36,15 +36,6 @@ public abstract class OrchestrationWorkflow {
 
   private String validationMessage;
 
-  @JsonIgnore
-  public boolean isTemplatized() {
-    List<Variable> userVariables = getUserVariables();
-    if (userVariables == null || userVariables.size() == 0) {
-      return false;
-    }
-    return userVariables.stream().anyMatch(variable -> !variable.isFixed());
-  }
-
   public OrchestrationWorkflowType getOrchestrationWorkflowType() {
     return orchestrationWorkflowType;
   }
@@ -84,6 +75,21 @@ public abstract class OrchestrationWorkflow {
   public abstract OrchestrationWorkflow clone();
 
   public abstract List<Variable> getUserVariables();
+
+  public abstract void setCloneMetadata(Map<String, String> serviceIdMapping);
+
+  /**
+   * Checks if the workflow is templatized or not
+   * @return
+   */
+  @JsonIgnore
+  public boolean isTemplatized() {
+    List<Variable> userVariables = getUserVariables();
+    if (userVariables == null || userVariables.size() == 0) {
+      return false;
+    }
+    return userVariables.stream().anyMatch(variable -> !variable.isFixed());
+  }
 
   /***
    * Add template expressions to workflow variables

@@ -243,6 +243,17 @@ public interface Constants {
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
 
   /**
+   * The constant WORKFLOW_ENV_INFRAMAPPING_VALIDATION_MESSAGE.
+   */
+  String WORKFLOW_ENV_VALIDATION_MESSAGE = "Environment is found to be invalid/incomplete.";
+
+  /**
+   * The constant WORKFLOW_ENV_INFRAMAPPING_VALIDATION_MESSAGE.
+   */
+  String WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE =
+      "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
+
+  /**
    * The constant WAIT_RESUME_GROUP.
    */
   String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
