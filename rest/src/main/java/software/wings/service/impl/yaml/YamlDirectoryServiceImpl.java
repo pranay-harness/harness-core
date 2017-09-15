@@ -5,6 +5,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.quartz.Trigger;
+import software.wings.beans.Account;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
@@ -16,7 +17,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Setup;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -35,14 +35,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
-import software.wings.yaml.AppYaml;
-import software.wings.yaml.ArtifactStreamYaml;
-import software.wings.yaml.EnvironmentYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
-import software.wings.yaml.PipelineYaml;
-import software.wings.yaml.ServiceYaml;
-import software.wings.yaml.SetupYaml;
-import software.wings.yaml.WorkflowYaml;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.FolderNode;
@@ -67,8 +60,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public DirectoryNode getDirectory(@NotEmpty String accountId) {
-    FolderNode configFolder = new FolderNode("Setup", Setup.class);
-    configFolder.addChild(new YamlNode("setup.yaml", SetupYaml.class));
+    FolderNode configFolder = new FolderNode("Setup", Account.class);
+    configFolder.addChild(new YamlNode("setup.yaml", Account.class));
 
     doApplications(configFolder, accountId);
     doCloudProviders(configFolder, accountId);
@@ -90,7 +83,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     for (Application app : apps) {
       FolderNode appFolder = new FolderNode(app.getName(), Application.class);
       applicationsFolder.addChild(appFolder);
-      appFolder.addChild(new YamlNode(app.getUuid(), app.getName() + ".yaml", AppYaml.class));
+      appFolder.addChild(new YamlNode(app.getUuid(), app.getName() + ".yaml", Application.class));
 
       doServices(appFolder, app);
       doEnvironments(appFolder, app);
@@ -111,8 +104,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (Service service : services) {
         FolderNode serviceFolder = new FolderNode(service.getName(), Service.class);
         servicesFolder.addChild(serviceFolder);
-        serviceFolder.addChild(new AppLevelYamlNode(
-            service.getUuid(), service.getAppId(), service.getName() + ".yaml", ServiceYaml.class));
+        serviceFolder.addChild(
+            new AppLevelYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml", Service.class));
         FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class);
         serviceFolder.addChild(serviceCommandsFolder);
 
@@ -139,7 +132,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over environments
       for (Environment environment : environments) {
         environmentsFolder.addChild(new AppLevelYamlNode(
-            environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", EnvironmentYaml.class));
+            environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml", Environment.class));
       }
     }
   }
@@ -156,7 +149,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over workflows
       for (Workflow workflow : workflows) {
         workflowsFolder.addChild(new AppLevelYamlNode(
-            workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", WorkflowYaml.class));
+            workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", Workflow.class));
       }
     }
   }
@@ -173,7 +166,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over pipelines
       for (Pipeline pipeline : pipelines) {
         pipelinesFolder.addChild(new AppLevelYamlNode(
-            pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", PipelineYaml.class));
+            pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", Pipeline.class));
       }
     }
   }
@@ -198,7 +191,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         triggersFolder.addChild(
-            new AppLevelYamlNode(as.getUuid(), as.getAppId(), name + ".yaml", ArtifactStreamYaml.class));
+            new AppLevelYamlNode(as.getUuid(), as.getAppId(), name + ".yaml", ArtifactStream.class));
       }
     }
   }
@@ -228,7 +221,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", SettingAttribute.class));
       }
     }
   }
@@ -253,18 +246,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         parentFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", SettingAttribute.class));
       }
     }
   }
 
   private void doCollaborationProviders(FolderNode theFolder, String accountId) {
     // create collaboration providers
-    // TODO - Application.class is WRONG for this!
-    FolderNode collaborationProvidersFolder = new FolderNode("Collaboration Providers", Application.class);
+    FolderNode collaborationProvidersFolder = new FolderNode("Collaboration Providers", SettingAttribute.class);
     theFolder.addChild(collaborationProvidersFolder);
 
-    // TODO - SettingAttribute.class may be WRONG for these!
     doCollaborationProviderType(
         accountId, collaborationProvidersFolder, "SMTP", SettingVariableTypes.SMTP, SettingAttribute.class);
     doCollaborationProviderType(
@@ -282,18 +273,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", SettingAttribute.class));
       }
     }
   }
 
   private void doLoadBalancers(FolderNode theFolder, String accountId) {
     // create load balancers
-    // TODO - Application.class is WRONG for this!
-    FolderNode loadBalancersFolder = new FolderNode("Load Balancers", Application.class);
+    FolderNode loadBalancersFolder = new FolderNode("Load Balancers", SettingAttribute.class);
     theFolder.addChild(loadBalancersFolder);
 
-    // TODO - SettingAttribute.class may be WRONG for these!
     doLoadBalancerType(accountId, loadBalancersFolder, "Elastic Classic Load Balancers", SettingVariableTypes.ELB,
         SettingAttribute.class);
   }
@@ -309,7 +298,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", SettingAttribute.class));
       }
     }
   }
@@ -342,7 +331,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
         typeFolder.addChild(new SettingAttributeYamlNode(settingAttribute.getUuid(),
-            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", theClass));
+            settingAttribute.getValue().getType(), settingAttribute.getName() + ".yaml", SettingAttribute.class));
       }
     }
   }
