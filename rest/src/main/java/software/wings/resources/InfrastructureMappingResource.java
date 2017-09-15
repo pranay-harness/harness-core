@@ -82,6 +82,15 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("{infraMappingId}/hosts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listComputeProviderHosts(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listHosts(appId, infraMappingId));
+  }
+
+  @GET
   @Path("{infraMappingId}/launchconfigs")
   @Timed
   @ExceptionMetered
