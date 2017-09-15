@@ -20,6 +20,9 @@ import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
+import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
+import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.PAUSING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -74,12 +77,15 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.KryoUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -108,6 +114,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private ArtifactService artifactService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -276,15 +283,18 @@ public class PipelineServiceImpl implements PipelineService {
 
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
       PipelineExecution pipelineExecution) {
+    List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(pipelineExecution);
+    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getStateName());
+  }
+
+  private List<StateExecutionInstance> getStateExecutionInstances(PipelineExecution pipelineExecution) {
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
             .withLimit(UNLIMITED)
             .addFilter("appId", EQ, pipelineExecution.getAppId())
             .addFilter("executionUuid", EQ, pipelineExecution.getWorkflowExecutionId())
             .build();
-    List<StateExecutionInstance> stateExecutionInstances =
-        wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
-    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getStateName());
+    return wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
   }
 
   @Override
@@ -459,12 +469,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public void refreshPipelineExecution(String appId, String workflowExecutionId) {
-    PipelineExecution pipelineExecution = wingsPersistence.createQuery(PipelineExecution.class)
-                                              .field("appId")
-                                              .equal(appId)
-                                              .field("workflowExecutionId")
-                                              .equal(workflowExecutionId)
-                                              .get();
+    PipelineExecution pipelineExecution = wingsPersistence.get(PipelineExecution.class, appId, workflowExecutionId);
     refreshPipelineExecution(pipelineExecution);
   }
 
@@ -572,6 +577,62 @@ public class PipelineServiceImpl implements PipelineService {
             .build();
 
     return wingsPersistence.query(PipelineExecution.class, pageRequest, true);
+  }
+
+  @Override
+  public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    String appId = executionInterrupt.getAppId();
+    String pipelineExecutionId = executionInterrupt.getExecutionUuid();
+    PipelineExecution pipelineExecution = wingsPersistence.get(PipelineExecution.class, appId, pipelineExecutionId);
+    if (pipelineExecution == null || pipelineExecution.getStatus().isFinalStatus()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Pipeline Execution Already Completed");
+    }
+
+    if (executionInterrupt == null || executionInterrupt.getExecutionInterruptType() == null
+        || !(executionInterrupt.getExecutionInterruptType() == PAUSE_ALL
+               || executionInterrupt.getExecutionInterruptType() == RESUME_ALL
+               || executionInterrupt.getExecutionInterruptType() == ABORT_ALL)) {
+      throw new WingsException(
+          ErrorCode.INVALID_REQUEST, "message", "Invalid ExecutionInterrupt: " + executionInterrupt);
+    }
+
+    executionInterrupt.setAppId(appId);
+    executionInterrupt.setExecutionUuid(pipelineExecution.getWorkflowExecutionId());
+    try {
+      executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+    } catch (Exception e) {
+      logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+          pipelineExecution.getWorkflowExecutionId(), executionInterrupt.getExecutionInterruptType());
+    }
+
+    List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(pipelineExecution);
+    for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+      if (stateExecutionInstance.getStatus() != null && stateExecutionInstance.getStatus().isFinalStatus()) {
+        continue;
+      }
+      StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+      if (stateExecutionData == null || !(stateExecutionData instanceof EnvStateExecutionData)) {
+        continue;
+      }
+      EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
+      WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+          pipelineExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+
+      if (workflowExecution == null
+          || (workflowExecution.getStatus() != null && workflowExecution.getStatus().isFinalStatus())) {
+        continue;
+      }
+
+      try {
+        ExecutionInterrupt executionInterruptClone = KryoUtils.clone(executionInterrupt);
+        executionInterruptClone.setExecutionUuid(workflowExecution.getUuid());
+        executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
+      } catch (Exception e) {
+        logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+            workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType());
+      }
+    }
+    return executionInterrupt;
   }
 
   private List<Artifact> validateAndFetchArtifact(String appId, List<Artifact> artifacts) {

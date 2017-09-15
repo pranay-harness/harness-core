@@ -9,6 +9,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.sm.ExecutionInterrupt;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -130,4 +131,6 @@ public interface PipelineService {
    * @return list of pipeline executions with end state SUCCESS, FAILED, ABORTED and ERROR.
    */
   List<PipelineExecution> getPipelineExecutionHistory(String serviceId, int limit);
+
+  ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt);
 }
