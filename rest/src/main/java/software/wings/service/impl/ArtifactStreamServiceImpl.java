@@ -258,7 +258,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                       .field(ID_KEY)
                                       .equal(streamId)
                                       .field("streamActions.uuid")
-                                      .notEqual(artifactStreamAction.getWorkflowId());
+                                      .notEqual(artifactStreamAction.getUuid());
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
     UpdateResults update = wingsPersistence.update(query, operations);
@@ -326,12 +326,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .orElseGet(null);
     Validator.notNullCheck("Stream Action", streamAction);
 
-    UpdateOperations<ArtifactStream> operations =
-        wingsPersistence.createUpdateOperations(ArtifactStream.class).removeAll("streamActions", streamAction);
+    UpdateOperations<ArtifactStream> operations = wingsPersistence.createUpdateOperations(ArtifactStream.class)
+                                                      .removeAll("streamActions", ImmutableMap.of("uuid", actionId));
 
     UpdateResults update = wingsPersistence.update(query, operations);
 
-    jobScheduler.deleteJob(actionId, streamId);
+    if (update.getUpdatedCount() == 1) {
+      jobScheduler.deleteJob(actionId, streamId);
+    } else {
+      logger.warn("Could not delete Artifact Stream trigger. streamId: [{}], actionId: [{}]", streamId, actionId);
+    }
 
     return get(appId, streamId);
   }
