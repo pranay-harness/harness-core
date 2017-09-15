@@ -33,6 +33,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.utils.MapperUtils;
+import software.wings.yaml.YamlDoNotSerialize;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public class StateMachine extends Base {
 
   @Embedded private List<State> states = Lists.newArrayList();
 
-  @Embedded private List<Transition> transitions = Lists.newArrayList();
+  @YamlDoNotSerialize @Embedded private List<Transition> transitions = Lists.newArrayList();
 
   @Embedded private Map<String, StateMachine> childStateMachines = new HashMap<>();
 

@@ -120,8 +120,12 @@ public class CommandStateExecutionData extends StateExecutionData {
   public StepExecutionSummary getStepExecutionSummary() {
     CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
     populateStepExecutionSummary(commandStepExecutionSummary);
-    commandStepExecutionSummary.setNewInstanceData(newInstanceData);
-    commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
+    if (newInstanceData != null) {
+      commandStepExecutionSummary.setNewInstanceData(newInstanceData);
+    }
+    if (oldInstanceData != null) {
+      commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
+    }
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);

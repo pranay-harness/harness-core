@@ -8,6 +8,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.yaml.YamlSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,14 +21,14 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "workflows", noClassnameStored = true)
 public class Workflow extends Base {
-  @NotNull private String name;
-  private String description;
+  @YamlSerialize @NotNull private String name;
+  @YamlSerialize private String description;
 
-  private WorkflowType workflowType;
+  @YamlSerialize private WorkflowType workflowType;
 
   private String envId;
 
-  private Integer defaultVersion;
+  @YamlSerialize private Integer defaultVersion;
 
   private boolean templatized;
 
