@@ -128,7 +128,7 @@ public class YamlVersion extends Base implements YamlHistory {
         .toString();
   }
 
-  public enum Type { SETUP, APP, SERVICE, SERVICE_COMMAND, ENVIRONMENT }
+  public enum Type { SETUP, APP, SERVICE, SERVICE_COMMAND, ENVIRONMENT, SETTING, WORKFLOW, PIPELINE, TRIGGER }
 
   public YamlVersion clone() {
     return aYamlVersion()
