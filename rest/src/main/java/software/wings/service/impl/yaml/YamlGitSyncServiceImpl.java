@@ -14,7 +14,11 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @return the rest response
    */
   public RestResponse<YamlGitSync> getYamlGitSync(String type, String entityId, String accountId) {
-    return null;
+    RestResponse rr = new RestResponse<>();
+
+    rr.setResource(new YamlGitSync());
+
+    return rr;
   }
 
   /**
@@ -26,7 +30,11 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @return the rest response
    */
   public RestResponse<YamlGitSync> saveYamlGitSync(String type, String accountId, YamlGitSync yamlGitSync) {
-    return null;
+    RestResponse rr = new RestResponse<>();
+
+    rr.setResource(new YamlGitSync());
+
+    return rr;
   }
 
   /**
@@ -40,6 +48,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    */
   public RestResponse<YamlGitSync> updateYamlGitSync(
       String type, String entityId, String accountId, YamlGitSync yamlGitSync) {
-    return null;
+    RestResponse rr = new RestResponse<>();
+
+    rr.setResource(new YamlGitSync());
+
+    return rr;
   }
 }
