@@ -208,7 +208,6 @@ public class ExecutionInterruptManager {
   private PageResponse<ExecutionInterrupt> listExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
     PageRequest<ExecutionInterrupt> req = PageRequest.Builder.aPageRequest()
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
-                                              .addFilter("envId", EQ, executionInterrupt.getEnvId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
                                               .addOrder("createdAt", OrderType.DESC)
                                               .build();

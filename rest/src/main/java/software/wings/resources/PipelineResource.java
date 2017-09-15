@@ -225,7 +225,10 @@ public class PipelineResource {
   @AuthRule(value = ResourceType.CD)
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
       @PathParam("pipelineExecutionId") String pipelineExecutionId, ExecutionInterrupt executionInterrupt) {
-    return new RestResponse<>(executionInterrupt);
+    executionInterrupt.setAppId(appId);
+    executionInterrupt.setExecutionUuid(pipelineExecutionId);
+
+    return new RestResponse<>(pipelineService.triggerExecutionInterrupt(executionInterrupt));
   }
 
   /**
