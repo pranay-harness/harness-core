@@ -20,6 +20,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import com.google.common.collect.ImmutableMap;
+
+import com.mongodb.WriteResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -29,6 +32,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
@@ -208,7 +212,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
     verify(query).field("streamActions.uuid");
-    verify(end).notEqual(WORKFLOW_ID);
+    verify(end).notEqual(artifactStreamAction.getUuid());
     verify(updateOperations).add("streamActions", artifactStreamAction);
     verify(wingsPersistence).update(query, updateOperations);
     verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
@@ -223,6 +227,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .build();
     jenkinsArtifactStream.setStreamActions(asList(artifactStreamAction));
     when(query.get()).thenReturn(jenkinsArtifactStream);
+    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class)))
+        .thenReturn(new UpdateResults(new WriteResult(1, true, null)));
     artifactStreamService.deleteStreamAction(APP_ID, ARTIFACT_STREAM_ID, "ACTION_ID");
     verify(wingsPersistence).createQuery(any());
     verify(query).field("appId");
@@ -231,7 +237,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).equal(ARTIFACT_STREAM_ID);
     verify(query).field("streamActions.uuid");
     verify(end).equal("ACTION_ID");
-    verify(updateOperations).removeAll("streamActions", artifactStreamAction);
+    verify(updateOperations).removeAll("streamActions", ImmutableMap.of("uuid", "ACTION_ID"));
     verify(wingsPersistence).update(query, updateOperations);
     verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
   }
