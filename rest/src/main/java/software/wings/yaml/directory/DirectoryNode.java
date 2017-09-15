@@ -26,7 +26,9 @@ public abstract class DirectoryNode {
     } else if (this.shortClassName.equals("ServiceCommand")) {
       this.restName = "service-commands";
     } else if (this.shortClassName.equals("ArtifactStream")) {
-      this.restName = "artifact-streams";
+      this.restName = "triggers";
+    } else if (this.shortClassName.equals("Account")) {
+      this.restName = "setup";
     } else {
       this.restName = this.shortClassName.toLowerCase() + "s";
     }

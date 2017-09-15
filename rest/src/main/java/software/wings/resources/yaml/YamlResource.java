@@ -335,10 +335,10 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/setup")
+  @Path("/setup/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getSetup(@QueryParam("accountId") String accountId) {
+  public RestResponse<YamlPayload> getSetup(@PathParam("accountId") String accountId) {
     return setupYamlResourceService.getSetup(accountId);
   }
 
