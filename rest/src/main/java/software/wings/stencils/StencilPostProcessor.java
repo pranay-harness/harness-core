@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -171,7 +170,9 @@ public class StencilPostProcessor {
       if (value != null) {
         JsonNode jsonSchema = stencil.getJsonSchema();
         ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(fieldName));
-        jsonSchemaField.set("default", JsonUtils.asTree(value));
+        if (jsonSchemaField != null) {
+          jsonSchemaField.set("default", JsonUtils.asTree(value));
+        }
         OverridingStencil overridingStencil = stencil.getOverridingStencil();
         overridingStencil.setOverridingJsonSchema(jsonSchema);
         return overridingStencil;

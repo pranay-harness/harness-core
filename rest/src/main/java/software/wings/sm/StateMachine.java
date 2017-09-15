@@ -27,6 +27,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
+import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
@@ -118,8 +119,14 @@ public class StateMachine extends Base {
       orchestrationWorkflow.setValid(false);
       orchestrationWorkflow.setValidationMessage(sb.toString());
     }
+    if (workflow.getEnvId() == null || workflow.getEnvId().isEmpty()) {
+      orchestrationWorkflow.setValid(false);
+      orchestrationWorkflow.setValidationMessage(Constants.WORKFLOW_ENV_VALIDATION_MESSAGE);
+    } else if (orchestrationWorkflow.isValid()) {
+      orchestrationWorkflow.setValid(true);
+      orchestrationWorkflow.setValidationMessage(null);
+    }
   }
-
   public StateMachine(
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     deepTransform(graph, stencilMap, orchestrationWorkflow);

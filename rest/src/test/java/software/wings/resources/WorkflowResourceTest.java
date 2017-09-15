@@ -91,9 +91,8 @@ public class WorkflowResourceTest extends WingsBaseTest {
                              .withUuid(UUIDGenerator.getUuid())
                              .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                              .build();
-    when(WORKFLOW_SERVICE.cloneWorkflow(APP_ID, WORKFLOW_ID, WORKFLOW)).thenReturn(workflow2);
     CloneMetadata cloneMetadata = CloneMetadata.builder().workflow(WORKFLOW).build();
-
+    when(WORKFLOW_SERVICE.cloneWorkflow(APP_ID, WORKFLOW_ID, cloneMetadata)).thenReturn(workflow2);
     RestResponse<Workflow> restResponse = RESOURCES.client()
                                               .target(format("/workflows/%s/clone?appId=%s", WORKFLOW_ID, APP_ID))
                                               .request()
@@ -101,7 +100,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
                                                   new GenericType<RestResponse<Workflow>>() {});
 
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
-    verify(WORKFLOW_SERVICE).cloneWorkflow(APP_ID, WORKFLOW_ID, WORKFLOW);
+    verify(WORKFLOW_SERVICE).cloneWorkflow(APP_ID, WORKFLOW_ID, cloneMetadata);
   }
 
   /**
