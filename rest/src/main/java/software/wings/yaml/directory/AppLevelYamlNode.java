@@ -1,17 +1,17 @@
 package software.wings.yaml.directory;
 
-public class ServiceYamlNode extends YamlNode {
+public class AppLevelYamlNode extends YamlNode {
   private String appId;
 
-  public ServiceYamlNode() {
+  public AppLevelYamlNode() {
     super();
   }
 
-  public ServiceYamlNode(String name, Class theClass) {
+  public AppLevelYamlNode(String name, Class theClass) {
     super(name, theClass);
   }
 
-  public ServiceYamlNode(String uuid, String appId, String name, Class theClass) {
+  public AppLevelYamlNode(String uuid, String appId, String name, Class theClass) {
     super(uuid, name, theClass);
     this.appId = appId;
   }

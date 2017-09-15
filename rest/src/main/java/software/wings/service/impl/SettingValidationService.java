@@ -66,6 +66,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof NewRelicConfig) {
       newRelicService.validateConfig(settingAttribute);
     }
+
     return true;
   }
 }

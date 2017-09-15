@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ public class AppYaml extends GenericYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String description;
   @YamlSerialize public List<String> services = new ArrayList<>();
-  //@YamlSerialize public List services = new ArrayList();
+  @YamlSerialize public List<String> environments = new ArrayList<>();
 
   public String getName() {
     return name;
@@ -43,5 +44,23 @@ public class AppYaml extends GenericYaml {
 
   public void addService(String serviceName) {
     this.services.add(serviceName);
+  }
+
+  public List<String> getEnvironmentNames() {
+    return environments;
+  }
+
+  public void setEnvironments(List<String> environmentNames) {
+    this.environments = environmentNames;
+  }
+
+  public void setEnvironmentNamesFromEnvironments(List<Environment> environments) {
+    for (Environment environment : environments) {
+      this.environments.add(environment.getName());
+    }
+  }
+
+  public void addEnvironment(String environmentName) {
+    this.environments.add(environmentName);
   }
 }
