@@ -7,6 +7,7 @@ public abstract class DirectoryNode {
   private String name;
   @JsonIgnore private Class theClass;
   private String className;
+  private String shortClassName;
 
   public DirectoryNode() {}
 
@@ -14,6 +15,10 @@ public abstract class DirectoryNode {
     this.name = name;
     this.theClass = theClass;
     this.className = theClass.getName();
+
+    // (simple) className is the last part of fullClassName
+    String[] tokens = this.className.split("\\.");
+    this.shortClassName = tokens[tokens.length - 1];
   }
 
   public String getType() {
@@ -46,5 +51,13 @@ public abstract class DirectoryNode {
 
   public void setClassName(String className) {
     this.className = className;
+  }
+
+  public String getShortClassName() {
+    return shortClassName;
+  }
+
+  public void setShortClassName(String shortClassName) {
+    this.shortClassName = shortClassName;
   }
 }
