@@ -150,7 +150,7 @@ public abstract class ContainerServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     String activityId = activityService.save(activityBuilder.build()).getUuid();
-
+    executionDataBuilder.withActivityId(activityId);
     List<ContainerServiceData> desiredCounts;
     if (isRollback()) {
       logger.info("Executing for rollback");
@@ -231,7 +231,7 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
-    executionDataBuilder.withActivityId(activityId).withNewInstanceData(desiredCounts);
+    executionDataBuilder.withNewInstanceData(desiredCounts);
 
     return anExecutionResponse()
         .withAsync(true)
