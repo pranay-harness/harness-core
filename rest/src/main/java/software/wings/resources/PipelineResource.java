@@ -19,6 +19,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
@@ -207,6 +208,24 @@ public class PipelineResource {
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("pipelineExecutionId") String pipelineExecutionId, ApprovalDetails approvalDetails) {
     return new RestResponse<>(pipelineService.approveOrRejectExecution(appId, pipelineExecutionId, approvalDetails));
+  }
+
+  /**
+   * Trigger execution rest response.
+   *
+   * @param appId         the app id
+   * @param pipelineExecutionId    the pipeline execution id
+   * @param executionInterrupt the executionInterrupt
+   * @return the rest response
+   */
+  @PUT
+  @Path("executions/{pipelineExecutionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(value = ResourceType.CD)
+  public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
+      @PathParam("pipelineExecutionId") String pipelineExecutionId, ExecutionInterrupt executionInterrupt) {
+    return new RestResponse<>(executionInterrupt);
   }
 
   /**
