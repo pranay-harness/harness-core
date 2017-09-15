@@ -23,6 +23,12 @@ public class WingsTestConstants {
    * The constant SERVICE_ID.
    */
   public static final String SERVICE_ID = "SERVICE_ID";
+
+  /**
+   * The constant SERVICE_ID_CHANGED.
+   */
+  public static final String SERVICE_ID_CHANGED = "SERVICE_ID_CHANGED";
+  /**
   /**
    * The constant SERVICE_NAME.
    */
@@ -31,6 +37,11 @@ public class WingsTestConstants {
    * The constant ENV_ID.
    */
   public static final String ENV_ID = "ENV_ID";
+
+  /**
+   * The constant ENV_ID_CHANGED.
+   */
+  public static final String ENV_ID_CHANGED = "ENV_ID_CHANGED";
 
   /**
    * The constant ENV_NAME.
@@ -389,6 +400,11 @@ public class WingsTestConstants {
    * The constant INFRA_MAPPING_ID.
    */
   public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
+
+  /**
+   * The constant INFRA_MAPPING_ID_CHANGED.
+   */
+  public static final String INFRA_MAPPING_ID_CHANGED = "INFRA_MAPPING_ID_CHANGED";
 
   /**
    * The constant COMPUTE_PROVIDER_ID.

@@ -5,6 +5,7 @@ import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrati
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -69,6 +70,9 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public List<Variable> getUserVariables() {
     return null;
   }
+
+  @Override
+  public void setCloneMetadata(Map<String, String> serviceIdMapping) {}
 
   @Override
   public boolean equals(Object o) {

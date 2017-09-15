@@ -128,7 +128,7 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipelineExecution == null || pipelineExecution.getStatus().isFinalStatus()) {
       return;
     }
-    Pipeline pipeline = readPipeline(pipelineExecution.getAppId(), pipelineExecution.getPipelineId(), false);
+    Pipeline pipeline = pipelineExecution.getPipeline();
 
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         getStateExecutionInstanceMap(pipelineExecution);
@@ -489,6 +489,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withArtifactId(artifact.getUuid())
                                               .withArtifactName(artifact.getDisplayName())
                                               .withStateMachineId(workflowExecution.getStateMachineId())
+                                              .withExecutionArgs(executionArgs)
                                               .build();
     pipelineExecution = wingsPersistence.saveAndGet(PipelineExecution.class, pipelineExecution);
     refreshPipelineExecution(appId, pipelineExecution.getWorkflowExecutionId());
