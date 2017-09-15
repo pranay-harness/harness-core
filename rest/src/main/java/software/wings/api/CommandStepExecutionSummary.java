@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.StepExecutionSummary;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,8 +17,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
-  private List<ContainerServiceData> newInstanceData;
-  private List<ContainerServiceData> oldInstanceData;
+  private List<ContainerServiceData> newInstanceData = new ArrayList<>();
+  private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
