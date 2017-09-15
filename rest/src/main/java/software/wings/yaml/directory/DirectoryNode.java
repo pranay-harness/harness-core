@@ -8,6 +8,7 @@ public abstract class DirectoryNode {
   @JsonIgnore private Class theClass;
   private String className;
   private String shortClassName;
+  private String restName;
 
   public DirectoryNode() {}
 
@@ -19,6 +20,16 @@ public abstract class DirectoryNode {
     // (simple) className is the last part of fullClassName
     String[] tokens = this.className.split("\\.");
     this.shortClassName = tokens[tokens.length - 1];
+
+    if (this.shortClassName.equals("SettingAttribute")) {
+      this.restName = "settings";
+    } else if (this.shortClassName.equals("ServiceCommand")) {
+      this.restName = "service-commands";
+    } else if (this.shortClassName.equals("ArtifactStream")) {
+      this.restName = "artifact-streams";
+    } else {
+      this.restName = this.shortClassName.toLowerCase() + "s";
+    }
   }
 
   public String getType() {
@@ -59,5 +70,13 @@ public abstract class DirectoryNode {
 
   public void setShortClassName(String shortClassName) {
     this.shortClassName = shortClassName;
+  }
+
+  public String getRestName() {
+    return restName;
+  }
+
+  public void setRestName(String restName) {
+    this.restName = restName;
   }
 }
