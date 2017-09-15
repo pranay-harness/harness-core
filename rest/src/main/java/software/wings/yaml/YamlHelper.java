@@ -1,5 +1,6 @@
 package software.wings.yaml;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
@@ -13,12 +14,16 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.exception.WingsException;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class YamlHelper {
   public static void addResponseMessage(
@@ -57,8 +62,23 @@ public class YamlHelper {
         "WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
   }
 
+  public static void addSettingAttributeNotFoundMessage(RestResponse rr, String uuid) {
+    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "ERROR: No Setting Attribute found for uuid: '" + uuid + "'!");
+  }
+
+  public static void addUnknownSettingVariableTypeMessage(RestResponse rr, SettingVariableTypes settingVariableType) {
+    addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "ERROR: Unrecognized SettingVariableType: '" + settingVariableType + "'!");
+  }
+
   public static YamlRepresenter getRepresenter() {
-    YamlRepresenter representer = new YamlRepresenter();
+    return getRepresenter(false, false);
+  }
+
+  public static YamlRepresenter getRepresenter(
+      boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
+    YamlRepresenter representer = new YamlRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients);
 
     // use custom that PropertyUtils that doesn't sort alphabetically
     PropertyUtils pu = new UnsortedPropertyUtils();
@@ -87,12 +107,16 @@ public class YamlHelper {
     String dumpedYaml = yaml.dump(theYaml);
 
     // remove first line of Yaml:
-    dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
+    // dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
+
+    // instead of removing the first line - we should remove any line that starts with two exclamation points
+    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
 
     // remove empty arrays/lists:
     dumpedYaml = dumpedYaml.replace("[]", "");
 
     dumpedYaml = fixIndentSpaces(dumpedYaml);
+    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
 
     YamlPayload yp = new YamlPayload(dumpedYaml);
     yp.setName(payloadName);
@@ -104,6 +128,81 @@ public class YamlHelper {
     }
 
     return rr;
+  }
+
+  // added this while working on workflows
+  public static <T> RestResponse<YamlPayload> getYamlRestResponseGeneric(
+      T obj, String payloadName, boolean removeEmptyValues, boolean everythingExceptDoNotSerializeAndTransients) {
+    RestResponse rr = new RestResponse<>();
+
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(removeEmptyValues, everythingExceptDoNotSerializeAndTransients),
+        YamlHelper.getDumperOptions());
+    String dumpedYaml = yaml.dump(obj);
+
+    // instead of removing the first line - we should remove any line that starts with two exclamation points
+    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
+
+    // remove empty arrays/lists:
+    dumpedYaml = dumpedYaml.replace("[]", "");
+
+    dumpedYaml = fixIndentSpaces(dumpedYaml);
+    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
+
+    YamlPayload yp = new YamlPayload(dumpedYaml);
+    yp.setName(payloadName);
+
+    rr.setResponseMessages(yp.getResponseMessages());
+
+    if (yp.getYaml() != null && !yp.getYaml().isEmpty()) {
+      rr.setResource(yp);
+    }
+
+    return rr;
+  }
+
+  private static String cleanUpDoubleExclamationLines(String content) {
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(content));
+
+    String line = null;
+
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        String trimmedLine = line.trim();
+
+        // check for line starting with two exclamation points
+        if (trimmedLine.length() >= 2 && trimmedLine.charAt(0) == '!' && trimmedLine.charAt(1) == '!') {
+          continue;
+        } else {
+          // we need to remove lines BUT we have to add the dash to the NEXT line!
+          if (trimmedLine.length() >= 4 && trimmedLine.charAt(0) == '-' && trimmedLine.charAt(1) == ' '
+              && trimmedLine.charAt(2) == '!' && trimmedLine.charAt(3) == '!') {
+            line = bufReader.readLine();
+            if (line != null) {
+              char[] chars = line.toCharArray();
+
+              for (int i = 0; i < chars.length; i++) {
+                if (chars[i] != ' ') {
+                  if (i >= 2) {
+                    chars[i - 2] = '-';
+                    sb.append(new String(chars) + "\n");
+                    break;
+                  }
+                }
+              }
+            }
+            continue;
+          }
+        }
+
+        sb.append(line + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return sb.toString();
   }
 
   private static String fixIndentSpaces(String content) {
@@ -143,6 +242,46 @@ public class YamlHelper {
     return sb.toString();
   }
 
+  // TODO - newer version attempts to thr over-indenting of "sub folders" like AWS, GCP, etc. in Cloud Providers section
+  // of setup.yaml
+  private static String fixIndentSpaces2(String content) {
+    System.out.println("********* BEFORE: \n" + content);
+
+    StringBuilder sb = new StringBuilder();
+
+    BufferedReader bufReader = new BufferedReader(new StringReader(content));
+
+    String line = null;
+
+    try {
+      while ((line = bufReader.readLine()) != null) {
+        StringBuilder newLine = new StringBuilder();
+
+        String lineTrimmed = line.trim();
+
+        // if the line starts with a dash - prepend two spaces
+        if (lineTrimmed.charAt(0) == '-') {
+          newLine.append("  ");
+        } else {
+          System.out.println("    ********* lineTrimmed: |" + lineTrimmed + "|");
+
+          // check that the line doesn't end in a colon
+          if (lineTrimmed.length() > 0 && !lineTrimmed.substring(lineTrimmed.length() - 1).equals(":")) {
+            newLine.append("  ");
+          }
+        }
+
+        sb.append(newLine.append(line) + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    System.out.println("********* AFTER: \n" + sb.toString());
+
+    return sb.toString();
+  }
+
   public static FolderNode sampleConfigAsCodeDirectory() {
     FolderNode config = new FolderNode("config", Setup.class);
     config.addChild(new YamlNode("setup.yaml", SetupYaml.class));
@@ -177,5 +316,32 @@ public class YamlHelper {
     applications.addChild(myapp2_services);
 
     return config;
+  }
+
+  public static <E> List<E> findDifferenceBetweenLists(List<E> itemsA, List<E> itemsB) {
+    // we need to make a copy of itemsA, because we don't want to modify itemsA!
+    List<E> diffList = new ArrayList<>();
+    diffList.addAll(itemsA);
+
+    if (diffList != null && itemsB != null) {
+      diffList.removeAll(itemsB);
+    }
+
+    return diffList;
+  }
+
+  public static <T> Optional<T> doMapperReadValue(
+      RestResponse rr, ObjectMapper mapper, String yamlStr, Class<T> theClass) {
+    try {
+      T thing = mapper.readValue(yamlStr, theClass);
+      return Optional.of(thing);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      // bad before Yaml
+      e.printStackTrace();
+      YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+      return Optional.empty();
+    }
   }
 }
