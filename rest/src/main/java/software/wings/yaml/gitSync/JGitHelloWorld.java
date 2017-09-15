@@ -15,7 +15,7 @@ public class JGitHelloWorld {
   public static void main(String[] args) {
     // Creation of a temp folder that will contain the Git repository
     try {
-      File workingDirectory = File.createTempFile("nuxeo-git-test", "");
+      File workingDirectory = File.createTempFile("harness-git-test", "");
       workingDirectory.delete();
       workingDirectory.mkdirs();
 
