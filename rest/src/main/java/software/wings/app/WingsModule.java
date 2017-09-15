@@ -135,6 +135,8 @@ import software.wings.service.impl.yaml.SetupYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
+import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
+import software.wings.service.impl.yaml.YamlGitSyncServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -204,6 +206,8 @@ import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
@@ -320,6 +324,8 @@ public class WingsModule extends AbstractModule {
     bind(ServiceYamlResourceService.class).to(ServiceYamlResourceServiceImpl.class);
     bind(AppYamlResourceService.class).to(AppYamlResourceServiceImpl.class);
     bind(SetupYamlResourceService.class).to(SetupYamlResourceServiceImpl.class);
+    bind(YamlGitSyncService.class).to(YamlGitSyncServiceImpl.class);
+    bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
