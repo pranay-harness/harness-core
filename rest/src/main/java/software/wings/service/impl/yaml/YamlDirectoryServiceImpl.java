@@ -61,7 +61,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public DirectoryNode getDirectory(@NotEmpty String accountId) {
     FolderNode configFolder = new FolderNode("Setup", Account.class);
-    configFolder.addChild(new YamlNode("setup.yaml", Account.class));
+    configFolder.addChild(new YamlNode(accountId, "setup.yaml", Account.class));
 
     doApplications(configFolder, accountId);
     doCloudProviders(configFolder, accountId);
