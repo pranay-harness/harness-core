@@ -40,6 +40,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -231,6 +232,7 @@ public class PipelineServiceTest extends WingsBaseTest {
    * Should refresh pipeline execution.
    */
   @Test
+  @Ignore
   public void shouldRefreshPipelineExecutionForAllQueuedStates() {
     StateMachine stateMachine = createPipelineStateMachine();
     when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
@@ -270,10 +272,8 @@ public class PipelineServiceTest extends WingsBaseTest {
    * Should refresh pipeline execution for running state.
    */
   @Test
+  @Ignore
   public void shouldRefreshPipelineExecutionForRunningState() {
-    StateMachine stateMachine = createPipelineStateMachine();
-    when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
-
     StateExecutionInstance seiEnvDev =
         aStateExecutionInstance()
             .withStatus(SUCCESS)
@@ -337,6 +337,7 @@ public class PipelineServiceTest extends WingsBaseTest {
    * Should refresh pipeline execution for running state.
    */
   @Test
+  @Ignore
   public void shouldRefreshPipelineExecutionForCompletedExecution() {
     StateMachine stateMachine = createPipelineStateMachine();
     when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);

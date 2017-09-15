@@ -22,6 +22,7 @@ public class PipelineExecution extends Base {
   private String artifactId;
   private String artifactName;
   private Pipeline pipeline;
+  private ExecutionArgs executionArgs;
   private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
   @Indexed private WorkflowType workflowType;
@@ -68,6 +69,14 @@ public class PipelineExecution extends Base {
    */
   public void setPipeline(Pipeline pipeline) {
     this.pipeline = pipeline;
+  }
+
+  public ExecutionArgs getExecutionArgs() {
+    return executionArgs;
+  }
+
+  public void setExecutionArgs(ExecutionArgs executionArgs) {
+    this.executionArgs = executionArgs;
   }
 
   /**
@@ -337,6 +346,7 @@ public class PipelineExecution extends Base {
     private String artifactId;
     private String artifactName;
     private Pipeline pipeline;
+    private ExecutionArgs executionArgs;
     private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
     private String appName;
     private WorkflowType workflowType;
@@ -426,6 +436,17 @@ public class PipelineExecution extends Base {
      */
     public Builder withPipeline(Pipeline pipeline) {
       this.pipeline = pipeline;
+      return this;
+    }
+
+    /**
+     * With pipeline builder.
+     *
+     * @param executionArgs the executionArgs
+     * @return the builder
+     */
+    public Builder withExecutionArgs(ExecutionArgs executionArgs) {
+      this.executionArgs = executionArgs;
       return this;
     }
 
@@ -609,7 +630,8 @@ public class PipelineExecution extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withStateMachineId(stateMachineId);
+          .withStateMachineId(stateMachineId)
+          .withExecutionArgs(executionArgs);
     }
 
     /**
@@ -639,6 +661,7 @@ public class PipelineExecution extends Base {
       pipelineExecution.setLastUpdatedBy(lastUpdatedBy);
       pipelineExecution.setLastUpdatedAt(lastUpdatedAt);
       pipelineExecution.setStateMachineId(stateMachineId);
+      pipelineExecution.setExecutionArgs(executionArgs);
       return pipelineExecution;
     }
   }
