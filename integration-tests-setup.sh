@@ -19,7 +19,7 @@ echo 'sleep for server to start'
 output=$(curl -sSk https://localhost:9090/api/version)
 status=$?
 count=1
-while [[ $status == 7 && $count -lt 20 ]]
+while [[ $status == 7 && $count -lt 50 ]]
 do
 sleep 5
 output=$(curl -sSk https://localhost:9090/api/version)
@@ -27,7 +27,7 @@ status=$?
 count=`expr $count + 1`
 done
 
-if [ $count -eq 20 ]
+if [ $count -eq 50 ]
 then
   echo 'server failed to start'
   exit 1
