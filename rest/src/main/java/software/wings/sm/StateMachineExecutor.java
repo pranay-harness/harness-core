@@ -1192,6 +1192,10 @@ public class StateMachineExecutor {
             .map(StateExecutionInstance::getUuid)
             .collect(Collectors.toList());
 
+    if (parentInstanceIds == null || parentInstanceIds.isEmpty()) {
+      return allInstanceIds;
+    }
+
     // Query children
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
