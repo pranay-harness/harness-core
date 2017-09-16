@@ -603,6 +603,7 @@ public class PipelineServiceImpl implements PipelineService {
     } catch (Exception e) {
       logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
           pipelineExecution.getWorkflowExecutionId(), executionInterrupt.getExecutionInterruptType());
+      logger.warn(e.getMessage(), e);
     }
 
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(pipelineExecution);
@@ -627,6 +628,7 @@ public class PipelineServiceImpl implements PipelineService {
       } catch (Exception e) {
         logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
             workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType());
+        logger.warn(e.getMessage(), e);
       }
     }
     return executionInterrupt;
