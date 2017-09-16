@@ -607,9 +607,6 @@ public class PipelineServiceImpl implements PipelineService {
 
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(pipelineExecution);
     for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-      if (stateExecutionInstance.getStatus() != null && stateExecutionInstance.getStatus().isFinalStatus()) {
-        continue;
-      }
       StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
       if (stateExecutionData == null || !(stateExecutionData instanceof EnvStateExecutionData)) {
         continue;
