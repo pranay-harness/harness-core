@@ -66,7 +66,7 @@ public class PipelineSummary {
   }
 
   /**
-   * A pipline summary Builder
+   * A pipeline summary Builder
    */
   public static final class Builder {
     private String pipelineId;
@@ -111,7 +111,7 @@ public class PipelineSummary {
     }
 
     /**
-     * Build pipline summary
+     * Build pipeline summary
      * @return
      */
     public PipelineSummary build() {

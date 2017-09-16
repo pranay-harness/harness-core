@@ -187,7 +187,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (pipelines.size() > 0) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       throw new WingsException(INVALID_REQUEST, "message",
-          String.format("Environment is referenced by %s pipline%s [%s].", pipelines.size(),
+          String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
               pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
     }
   }
