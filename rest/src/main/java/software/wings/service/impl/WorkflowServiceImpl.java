@@ -649,7 +649,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
           throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Service [" + newService.getName() + "is not compatible with the old service [" + oldService.getName()
+              "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName()
                   + "]");
         }
       }
@@ -1176,8 +1176,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           if (oldService.getArtifactType() != null
               && !oldService.getArtifactType().equals(newService.getArtifactType())) {
             throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-                "Target service  [" + oldService.getName() + "is not compatible with service [" + newService.getName()
-                    + "]");
+                "Target service  [" + oldService.getName() + " ] is not compatible with service ["
+                    + newService.getName() + "]");
           }
         }
       }

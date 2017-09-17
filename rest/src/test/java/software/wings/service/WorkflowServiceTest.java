@@ -1065,7 +1065,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     String name2 = "Name2";
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(DOCKER).build());
+        .thenReturn(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).withArtifactType(DOCKER).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
         .thenReturn(aService().withName(SERVICE_NAME).withArtifactType(WAR).withUuid(SERVICE_ID_CHANGED).build());
 
@@ -1090,7 +1090,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     } catch (WingsException e) {
       assertThat(e.getMessage()).isNotNull();
       assertThat(e.getParams().get("message"))
-          .isEqualTo("Workflow is not compatible with service [" + SERVICE_NAME + "]");
+          .isEqualTo("Service [SERVICE_NAME] is not compatible with the service [SERVICE_NAME]");
     }
   }
 
