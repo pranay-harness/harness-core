@@ -455,17 +455,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
-    return updateWorkflow(workflow, orchestrationWorkflow, true, false);
+    return updateWorkflow(workflow, orchestrationWorkflow, true, false, false);
   }
 
   @Override
   public Workflow updateWorkflow(
-      Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean inframappingChanged) {
-    return updateWorkflow(workflow, orchestrationWorkflow, true, inframappingChanged);
+      Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean inframappingChanged, boolean envChanged) {
+    return updateWorkflow(workflow, orchestrationWorkflow, true, inframappingChanged, envChanged);
   }
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
-      boolean onSaveCallNeeded, boolean inframappingChanged) {
+      boolean onSaveCallNeeded, boolean inframappingChanged, boolean envChanged) {
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
@@ -476,7 +476,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String envId = workflow.getEnvId();
     String inframappingId = workflow.getInfraMappingId();
 
-    boolean envChanged = false;
     if (orchestrationWorkflow == null) {
       workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
       orchestrationWorkflow = workflow.getOrchestrationWorkflow();
@@ -486,6 +485,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
     }
+
     orchestrationWorkflow = propagateWorkflowDataToPhases(orchestrationWorkflow, templateExpressions,
         workflow.getAppId(), serviceId, inframappingId, envChanged, inframappingChanged);
 
@@ -545,7 +545,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             phase.setTemplateExpressions(templateExpressions);
             validateServiceCompatibility(appId, serviceId, phase.getServiceId());
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged);
+            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
             if (inframappingChanged || envChanged) {
               resetNodeSelection(phase);
             }
@@ -556,7 +556,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (rollbackWorkflowPhaseIdMap != null) {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged);
+            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
           });
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -649,7 +649,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
           throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-              "Workflow is not compatible with service [" + newService.getName() + "]");
+              "Service [" + newService.getName() + "is not compatible with the old service [" + oldService.getName()
+                  + "]");
         }
       }
     }
@@ -660,7 +661,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * @param inframappingId
    * @param phase
    */
-  private void resetInframapping(String appId, String inframappingId, WorkflowPhase phase, boolean envChanged) {
+  private void resetInframapping(
+      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean inframappingChanged) {
     if (inframappingId != null) {
       if (!inframappingId.equals(phase.getInfraMappingId())) {
         phase.setInfraMappingId(inframappingId);
@@ -672,7 +674,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
         resetNodeSelection(phase);
       }
-    } else if (envChanged) {
+    } else if (envChanged || inframappingChanged) {
       phase.setInfraMappingName(null);
       phase.setComputeProviderId(null);
       phase.setInfraMappingId(null);
@@ -1039,7 +1041,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, inframappingChanged)
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, inframappingChanged, false)
             .getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
@@ -1123,7 +1125,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
       savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
     }
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false);
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false);
   }
 
   @Override
@@ -1138,6 +1140,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else {
       logger.info(
           "Cloning workflow across applications. Environment, Service Infrastructure and Node selection will not be cloned");
+      validateServiceMapping(appId, targetAppId, cloneMetadata.getServiceMapping());
       Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
       Workflow clonedWorkflow = originalWorkflow.clone();
       clonedWorkflow.setName(workflow.getName());
@@ -1152,7 +1155,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         clonedOrchestrationWorkflow.setCloneMetadata(cloneMetadata.getServiceMapping());
         savedWorkflow.setOrchestrationWorkflow(clonedOrchestrationWorkflow);
       }
-      return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true);
+      return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, true, true);
+    }
+  }
+
+  /**
+   * Validates whether service id and mapped service are of same type
+   * @param serviceMapping
+   */
+  private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
+    if (serviceMapping != null) {
+      Set<String> serviceIds = serviceMapping.keySet();
+      for (String serviceId : serviceIds) {
+        String targetServiceId = serviceMapping.get(serviceId);
+        if (serviceId != null && targetServiceId != null) {
+          Service oldService = serviceResourceService.get(appId, serviceId, false);
+          Validator.notNullCheck("service", oldService);
+          Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
+          Validator.notNullCheck("targetService", newService);
+          if (oldService.getArtifactType() != null
+              && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+            throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+                "Target service  [" + oldService.getName() + "is not compatible with service [" + newService.getName()
+                    + "]");
+          }
+        }
+      }
     }
   }
 
@@ -1165,7 +1193,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     templatizedWorkflow.setTemplatized(true);
     Workflow savedWorkflow = createWorkflow(templatizedWorkflow);
     savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false);
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false);
   }
 
   @Override

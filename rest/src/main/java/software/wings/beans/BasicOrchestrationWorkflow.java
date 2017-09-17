@@ -26,6 +26,7 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
+        .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
         .withPostDeploymentSteps(getPostDeploymentSteps())
         .withRollbackWorkflowPhaseIdMap(getRollbackWorkflowPhaseIdMap())
@@ -124,7 +125,12 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       return this;
     }
 
-    public CanaryOrchestrationWorkflow build() {
+    public BasicOrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
+      this.workflowPhases = workflowPhases;
+      return this;
+    }
+
+    public BasicOrchestrationWorkflow build() {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = new BasicOrchestrationWorkflow();
       basicOrchestrationWorkflow.setGraph(graph);
       basicOrchestrationWorkflow.setPreDeploymentSteps(preDeploymentSteps);

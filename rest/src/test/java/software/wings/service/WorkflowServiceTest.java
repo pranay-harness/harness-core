@@ -55,6 +55,8 @@ import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
+import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -100,6 +102,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -287,6 +290,186 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateWorkflow() {
     createWorkflow();
+  }
+
+  /**
+   * Clone workflow within the same application
+   */
+  @Test
+  public void shouldCloneWorkflow() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    Workflow clonedWorkflow =
+        workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), CloneMetadata.builder().workflow(workflow2).build());
+    assertThat(clonedWorkflow).isNotNull();
+    assertThat(clonedWorkflow.getUuid()).isNotEqualTo(workflow2.getUuid());
+    assertThat(clonedWorkflow.getAppId()).isEqualTo(workflow2.getAppId());
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    CanaryOrchestrationWorkflow clonedOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) clonedWorkflow.getOrchestrationWorkflow();
+    assertThat(clonedOrchestrationWorkflow).isNotNull();
+    assertThat(clonedOrchestrationWorkflow.getOrchestrationWorkflowType())
+        .isEqualTo(orchestrationWorkflow.getOrchestrationWorkflowType());
+
+    assertThat(clonedOrchestrationWorkflow.getWorkflowPhases()).isNotNull().hasSize(1);
+  }
+
+  /**
+   * Clone workflow within the same application
+   */
+  @Test
+  public void shouldCloneWorkflowAcrossApps() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    CloneMetadata cloneMetadata = CloneMetadata.builder()
+                                      .workflow(workflow2)
+                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
+                                      .targetAppId(TARGET_APP_ID)
+                                      .build();
+    Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
+    assertThat(clonedWorkflow).isNotNull();
+    assertThat(clonedWorkflow.getUuid()).isNotEqualTo(workflow2.getUuid());
+    assertThat(clonedWorkflow.getAppId()).isEqualTo(TARGET_APP_ID);
+    assertThat(clonedWorkflow.getEnvId()).isNullOrEmpty();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    CanaryOrchestrationWorkflow clonedOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) clonedWorkflow.getOrchestrationWorkflow();
+    assertThat(clonedOrchestrationWorkflow).isNotNull();
+    assertThat(clonedOrchestrationWorkflow.getOrchestrationWorkflowType())
+        .isEqualTo(orchestrationWorkflow.getOrchestrationWorkflowType());
+    assertThat(clonedOrchestrationWorkflow.isValid()).isFalse();
+    assertThat(clonedOrchestrationWorkflow.getValidationMessage()).startsWith("Environment");
+    List<WorkflowPhase> workflowPhases = clonedOrchestrationWorkflow.getWorkflowPhases();
+    assertThat(workflowPhases).extracting(workflowPhase -> workflowPhase.getServiceId()).contains(TARGET_SERVICE_ID);
+    assertThat(workflowPhases)
+        .isNotNull()
+        .hasSize(1)
+        .extracting(workflowPhase -> workflowPhase.getInfraMappingId())
+        .containsNull();
+    assertThat(workflowPhases)
+        .isNotNull()
+        .hasSize(1)
+        .extracting(workflowPhase -> workflowPhase.getInfraMappingName())
+        .containsNull();
+    assertThat(workflowPhases)
+        .isNotNull()
+        .hasSize(1)
+        .extracting(workflowPhase -> workflowPhase.getComputeProviderId())
+        .containsNull();
+  }
+
+  /**
+   * Clone workflow within the same application
+   */
+  @Test(expected = WingsException.class)
+  public void shouldCloneWorkflowAcrossAppsDifferentArtifactType() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(DOCKER).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    CloneMetadata cloneMetadata = CloneMetadata.builder()
+                                      .workflow(workflow2)
+                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
+                                      .targetAppId(TARGET_APP_ID)
+                                      .build();
+    Workflow clonedWorkflow = workflowService.cloneWorkflow(APP_ID, workflow2.getUuid(), cloneMetadata);
   }
 
   /**
