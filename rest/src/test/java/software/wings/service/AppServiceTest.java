@@ -31,6 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -139,7 +140,8 @@ public class AppServiceTest extends WingsBaseTest {
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
     ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
-    verify(jobScheduler).scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
+    verify(jobScheduler, Mockito.times(2))
+        .scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
 
     assertThat(jobDetailArgumentCaptor.getValue()).isNotNull();
     assertThat(jobDetailArgumentCaptor.getValue().getJobDataMap().getString("appId")).isEqualTo(savedApp.getUuid());
@@ -267,6 +269,6 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
     inOrder.verify(pipelineService).deletePipelineByApplication(APP_ID);
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
-    inOrder.verify(jobScheduler).deleteJob(eq(APP_ID), anyString());
+    inOrder.verify(jobScheduler, Mockito.times(2)).deleteJob(eq(APP_ID), anyString());
   }
 }
