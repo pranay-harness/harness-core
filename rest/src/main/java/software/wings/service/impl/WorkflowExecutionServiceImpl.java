@@ -288,18 +288,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, StateExecutionInstance> allInstancesIdMap =
           allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-      if (allInstances.stream().anyMatch(
-              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-        workflowExecution.setStatus(ExecutionStatus.PAUSED);
-      } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        workflowExecution.setStatus(ExecutionStatus.WAITING);
-      } else {
-        List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
-            workflowExecution.getAppId(), workflowExecution.getUuid());
-        if (executionInterrupts != null
-            && executionInterrupts.stream().anyMatch(
-                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
-          workflowExecution.setStatus(ExecutionStatus.PAUSING);
+      if (!workflowExecution.isFailedStatus()) {
+        if (allInstances.stream().anyMatch(
+                i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
+          workflowExecution.setStatus(ExecutionStatus.PAUSED);
+        } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+          workflowExecution.setStatus(ExecutionStatus.WAITING);
+        } else {
+          List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
+              workflowExecution.getAppId(), workflowExecution.getUuid());
+          if (executionInterrupts != null
+              && executionInterrupts.stream().anyMatch(
+                     e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
+            workflowExecution.setStatus(ExecutionStatus.PAUSING);
+          }
         }
       }
       if (includeGraph) {

@@ -26,6 +26,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
+        .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
         .withPostDeploymentSteps(getPostDeploymentSteps())
         .withRollbackWorkflowPhaseIdMap(getRollbackWorkflowPhaseIdMap())
@@ -79,6 +80,11 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
+    public MultiServiceOrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
+      this.workflowPhases = workflowPhases;
+      return this;
+    }
+
     public MultiServiceOrchestrationWorkflowBuilder withRollbackWorkflowPhaseIdMap(
         Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap) {
       this.rollbackWorkflowPhaseIdMap = rollbackWorkflowPhaseIdMap;
@@ -125,22 +131,22 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
-    public CanaryOrchestrationWorkflow build() {
-      MultiServiceOrchestrationWorkflow MultiServiceOrchestrationWorkflow = new MultiServiceOrchestrationWorkflow();
-      MultiServiceOrchestrationWorkflow.setGraph(graph);
-      MultiServiceOrchestrationWorkflow.setPreDeploymentSteps(preDeploymentSteps);
-      MultiServiceOrchestrationWorkflow.setWorkflowPhaseIds(workflowPhaseIds);
-      MultiServiceOrchestrationWorkflow.setWorkflowPhaseIdMap(workflowPhaseIdMap);
-      MultiServiceOrchestrationWorkflow.setRollbackWorkflowPhaseIdMap(rollbackWorkflowPhaseIdMap);
-      MultiServiceOrchestrationWorkflow.setWorkflowPhases(workflowPhases);
-      MultiServiceOrchestrationWorkflow.setPostDeploymentSteps(postDeploymentSteps);
-      MultiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
-      MultiServiceOrchestrationWorkflow.setFailureStrategies(failureStrategies);
-      MultiServiceOrchestrationWorkflow.setSystemVariables(systemVariables);
-      MultiServiceOrchestrationWorkflow.setUserVariables(userVariables);
-      MultiServiceOrchestrationWorkflow.setDerivedVariables(derivedVariables);
-      MultiServiceOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
-      return MultiServiceOrchestrationWorkflow;
+    public MultiServiceOrchestrationWorkflow build() {
+      MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow = new MultiServiceOrchestrationWorkflow();
+      multiServiceOrchestrationWorkflow.setGraph(graph);
+      multiServiceOrchestrationWorkflow.setPreDeploymentSteps(preDeploymentSteps);
+      multiServiceOrchestrationWorkflow.setWorkflowPhaseIds(workflowPhaseIds);
+      multiServiceOrchestrationWorkflow.setWorkflowPhaseIdMap(workflowPhaseIdMap);
+      multiServiceOrchestrationWorkflow.setRollbackWorkflowPhaseIdMap(rollbackWorkflowPhaseIdMap);
+      multiServiceOrchestrationWorkflow.setWorkflowPhases(workflowPhases);
+      multiServiceOrchestrationWorkflow.setPostDeploymentSteps(postDeploymentSteps);
+      multiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
+      multiServiceOrchestrationWorkflow.setFailureStrategies(failureStrategies);
+      multiServiceOrchestrationWorkflow.setSystemVariables(systemVariables);
+      multiServiceOrchestrationWorkflow.setUserVariables(userVariables);
+      multiServiceOrchestrationWorkflow.setDerivedVariables(derivedVariables);
+      multiServiceOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      return multiServiceOrchestrationWorkflow;
     }
   }
 }
