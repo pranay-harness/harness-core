@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.*;
 
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
@@ -238,6 +239,22 @@ public class WorkflowPhase implements UuidAware {
     return valid;
   }
 
+  public WorkflowPhase clone() {
+    return aWorkflowPhase()
+        .withServiceId(getServiceId())
+        .withInfraMappingId(getInfraMappingId())
+        .withInfraMappingName(getInfraMappingName())
+        .withComputeProviderId(getComputeProviderId())
+        .withDeploymentType(getDeploymentType())
+        .withRollback(isRollback())
+        .withPhaseNameForRollback(getPhaseNameForRollback())
+        .withPhaseSteps(getPhaseSteps())
+        .withValid(isValid())
+        .withValidationMessage(validationMessage)
+        .withTemplateExpressions(templateExpressions)
+        .build();
+  }
+
   public static final class WorkflowPhaseBuilder {
     private String uuid = UUIDGenerator.getUuid();
     private String name;
@@ -251,6 +268,7 @@ public class WorkflowPhase implements UuidAware {
     private boolean valid;
     private String validationMessage;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
+    private List<TemplateExpression> templateExpressions;
 
     private WorkflowPhaseBuilder() {}
 
@@ -313,6 +331,16 @@ public class WorkflowPhase implements UuidAware {
       return this;
     }
 
+    public WorkflowPhaseBuilder withPhaseSteps(List<PhaseStep> phaseSteps) {
+      this.phaseSteps = phaseSteps;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
+      this.templateExpressions = templateExpressions;
+      return this;
+    }
+
     public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
       this.phaseSteps.add(phaseStep);
       return this;
@@ -332,6 +360,7 @@ public class WorkflowPhase implements UuidAware {
       workflowPhase.setValid(valid);
       workflowPhase.setValidationMessage(validationMessage);
       workflowPhase.setPhaseSteps(phaseSteps);
+      workflowPhase.setTemplateExpressions(templateExpressions);
       return workflowPhase;
     }
   }

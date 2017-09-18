@@ -930,6 +930,38 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
+  @Override
+  public WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+    String phaseId = workflowPhase.getUuid();
+    String phaseName = workflowPhase.getName();
+    Workflow workflow = readWorkflow(appId, workflowId);
+    Validator.notNullCheck("workflow", workflow);
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+
+    workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+    Validator.notNullCheck("workflowPhase", workflowPhase);
+
+    WorkflowPhase clonedWorkflowPhase = workflowPhase.clone();
+    clonedWorkflowPhase.setName(phaseName);
+
+    orchestrationWorkflow.getWorkflowPhases().add(clonedWorkflowPhase);
+
+    WorkflowPhase rollbackWorkflowPhase =
+        orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+
+    if (rollbackWorkflowPhase != null) {
+      WorkflowPhase clonedRollbackWorkflowPhase = rollbackWorkflowPhase.clone();
+      orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
+          clonedWorkflowPhase.getUuid(), clonedRollbackWorkflowPhase);
+    }
+
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+  }
+
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflow.getAppId(), workflowPhase.getInfraMappingId());
