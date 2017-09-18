@@ -10,6 +10,11 @@ public class WingsTestConstants {
   public static final String APP_ID = "APP_ID";
 
   /**
+   * The constant APP_ID.
+   */
+  public static final String TARGET_APP_ID = "TARGET_APP_ID";
+
+  /**
    * The constant APP_NAME.
    */
   public static final String APP_NAME = "APP_NAME";
@@ -23,6 +28,11 @@ public class WingsTestConstants {
    * The constant SERVICE_ID.
    */
   public static final String SERVICE_ID = "SERVICE_ID";
+
+  /**
+   * The constant TARGET_SERVICE_ID.
+   */
+  public static final String TARGET_SERVICE_ID = "TARGET_SERVICE_ID";
 
   /**
    * The constant SERVICE_ID_CHANGED.

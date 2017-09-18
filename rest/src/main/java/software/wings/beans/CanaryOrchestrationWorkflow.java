@@ -394,6 +394,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .aCanaryOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
         .withPostDeploymentSteps(getPostDeploymentSteps())
@@ -440,6 +441,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     public CanaryOrchestrationWorkflowBuilder withWorkflowPhaseIds(List<String> workflowPhaseIds) {
       this.workflowPhaseIds = workflowPhaseIds;
+      return this;
+    }
+
+    public CanaryOrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
+      this.workflowPhases = workflowPhases;
       return this;
     }
 

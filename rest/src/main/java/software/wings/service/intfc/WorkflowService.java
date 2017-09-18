@@ -85,10 +85,11 @@ public interface WorkflowService {
    *
    * @param workflow the workflow
    * @param inframappingChanged Inframapping changed or not
+   * @param envChanged Env changed or not
    * @return the workflow
    */
-  Workflow updateWorkflow(
-      @Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, boolean inframappingChanged);
+  Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
+      boolean inframappingChanged, boolean envChanged);
 
   /**
    * Delete workflow.
@@ -200,4 +201,6 @@ public interface WorkflowService {
   Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
 
   Workflow cloneWorkflow(String appId, String workflowId, CloneMetadata cloneMetadata);
+
+  WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 }

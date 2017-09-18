@@ -13,5 +13,5 @@ public class WebHookRequest {
   @NotEmpty private String application;
   @NotEmpty private String artifactSource;
   private String buildNumber;
-  private String imageTag;
+  private String dockerImageTag;
 }
