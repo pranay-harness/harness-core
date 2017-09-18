@@ -266,6 +266,23 @@ public class WorkflowResource {
   }
 
   /**
+   * Creates the phase.
+   *
+   * @param appId         the app id
+   * @param workflowId    the orchestration id
+   * @param workflowPhase the phase
+   * @return the rest response
+   */
+  @POST
+  @Path("{workflowId}/phases/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WorkflowPhase> clone(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowPhase workflowPhase) {
+    return new RestResponse<>(workflowService.cloneWorkflowPhase(appId, workflowId, workflowPhase));
+  }
+
+  /**
    * Updates the phase.
    *
    * @param appId         the app id
