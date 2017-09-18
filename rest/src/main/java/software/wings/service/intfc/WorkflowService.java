@@ -201,4 +201,6 @@ public interface WorkflowService {
   Workflow updateWorkflow(String appId, String workflowId, Integer defaultVersion);
 
   Workflow cloneWorkflow(String appId, String workflowId, CloneMetadata cloneMetadata);
+
+  WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 }
