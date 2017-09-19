@@ -57,15 +57,16 @@ public class EcsContainerSyncImpl implements ContainerSync {
               awsHelperService.describeTasks(filter.getRegion(), awsConfig, describeTasksRequest);
           tasks = describeTasksResult.getTasks();
           for (Task task : tasks) {
-            EcsContainerInfo ecsContainerInfo = EcsContainerInfo.Builder.anEcsContainerInfo()
-                                                    .withClusterName(filter.getClusterName())
-                                                    .withTaskDefinitionArn(task.getTaskDefinitionArn())
-                                                    .withTaskArn(task.getTaskArn())
-                                                    .withVersion(task.getVersion())
-                                                    .withStartedAt(task.getStartedAt().getTime())
-                                                    .withStartedBy(task.getStartedBy())
-                                                    .withServiceName(serviceName)
-                                                    .build();
+            EcsContainerInfo ecsContainerInfo =
+                EcsContainerInfo.Builder.anEcsContainerInfo()
+                    .withClusterName(filter.getClusterName())
+                    .withTaskDefinitionArn(task.getTaskDefinitionArn())
+                    .withTaskArn(task.getTaskArn())
+                    .withVersion(task.getVersion())
+                    .withStartedAt(task.getStartedAt() == null ? null : task.getStartedAt().getTime())
+                    .withStartedBy(task.getStartedBy())
+                    .withServiceName(serviceName)
+                    .build();
             result.add(ecsContainerInfo);
           }
         }
