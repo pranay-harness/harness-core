@@ -959,7 +959,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
-    return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+    return orchestrationWorkflow.getWorkflowPhaseIdMap().get(clonedWorkflowPhase.getUuid());
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
