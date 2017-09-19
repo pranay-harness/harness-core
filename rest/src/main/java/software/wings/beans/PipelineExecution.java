@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Version;
@@ -21,7 +22,7 @@ public class PipelineExecution extends Base {
   private String stateMachineId;
   private String artifactId;
   private String artifactName;
-  private Pipeline pipeline;
+  @Embedded private Pipeline pipeline;
   private ExecutionArgs executionArgs;
   private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
