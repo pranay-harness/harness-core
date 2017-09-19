@@ -4,6 +4,7 @@ import static software.wings.yaml.gitSync.YamlGitSync.Builder.aYamlGitSync;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -22,7 +23,7 @@ import java.util.Objects;
 @Indexes(@Index(
     fields = { @Field("entityId") }, options = @IndexOptions(name = "yamlGitSyncIdx", unique = true, dropDups = true)))
 public class YamlGitSync extends Base {
-  private Type type;
+  @JsonIgnore private Type type;
   private String entityId;
 
   private boolean enabled;
@@ -156,6 +157,33 @@ public class YamlGitSync extends Base {
         .withSyncMode(getSyncMode())
         .withAccountId(getAccountId())
         .build();
+  }
+
+  public static Type convertRestNameToType(String restName) {
+    switch (restName) {
+      case "setup":
+        return Type.SETUP;
+      case "applications":
+        return Type.APP;
+      case "services":
+        return Type.SERVICE;
+      case "service-commands":
+        return Type.SERVICE_COMMAND;
+      case "environments":
+        return Type.ENVIRONMENT;
+      case "settings":
+        return Type.SETTING;
+      case "workflows":
+        return Type.WORKFLOW;
+      case "pipelines":
+        return Type.PIPELINE;
+      case "triggers":
+        return Type.TRIGGER;
+      default:
+        // do nothing
+    }
+
+    return null;
   }
 
   public static final class Builder {

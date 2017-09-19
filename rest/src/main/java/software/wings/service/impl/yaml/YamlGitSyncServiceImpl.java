@@ -13,6 +13,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitSync.Type;
 
 import javax.inject.Inject;
 
@@ -45,14 +46,14 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @param accountId the account id
    * @return the rest response
    */
-  public YamlGitSync get(String type, String entityId, @NotEmpty String accountId) {
+  public YamlGitSync get(Type type, String entityId, @NotEmpty String accountId) {
     YamlGitSync yamlGitSync = wingsPersistence.createQuery(YamlGitSync.class)
                                   .field("accountId")
                                   .equal(accountId)
                                   .field("entityId")
                                   .equal(entityId)
                                   .field("type")
-                                  .equal(type)
+                                  .equal(type.name())
                                   .get();
 
     return yamlGitSync;
@@ -74,18 +75,17 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)
    *
-   * @param type the object type
    * @param accountId the account id
    * @param ygs the yamlGitSync info
    * @return the rest response
    */
-  public YamlGitSync save(String type, String accountId, YamlGitSync ygs) {
+  public YamlGitSync save(String accountId, YamlGitSync ygs) {
     Validator.notNullCheck("accountId", ygs.getAccountId());
 
     // check if it already exists
     if (exist(ygs.getType().name(), ygs.getEntityId(), accountId)) {
       // do update instead
-      return update(ygs.getType().name(), ygs.getEntityId(), accountId, ygs);
+      return update(ygs.getEntityId(), accountId, ygs);
     }
 
     YamlGitSync yamlGitSync = wingsPersistence.saveAndGet(YamlGitSync.class, ygs);
@@ -96,16 +96,15 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   /**
    * Updates the yaml git sync info by object type and entitytId (uuid)
    *
-   * @param type the object type
    * @param entityId the uuid of the entity
    * @param accountId the account id
    * @param ygs the yamlGitSync info
    * @return the rest response
    */
-  public YamlGitSync update(String type, String entityId, String accountId, YamlGitSync ygs) {
+  public YamlGitSync update(String entityId, String accountId, YamlGitSync ygs) {
     // check if it already exists
     if (exist(ygs.getType().name(), ygs.getEntityId(), accountId)) {
-      YamlGitSync yamlGitSync = get(ygs.getType().name(), ygs.getEntityId(), accountId);
+      YamlGitSync yamlGitSync = get(ygs.getType(), ygs.getEntityId(), accountId);
 
       Query<YamlGitSync> query =
           wingsPersistence.createQuery(YamlGitSync.class).field(ID_KEY).equal(yamlGitSync.getUuid());
