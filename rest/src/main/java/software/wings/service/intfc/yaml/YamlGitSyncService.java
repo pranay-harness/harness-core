@@ -1,9 +1,17 @@
 package software.wings.service.intfc.yaml;
 
-import software.wings.beans.RestResponse;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.gitSync.YamlGitSync;
 
 public interface YamlGitSyncService {
+  /**
+   * Gets the yaml git sync info by uuid
+   *
+   * @param uuid the uuid
+   * @return the rest response
+   */
+  public YamlGitSync get(String uuid);
+
   /**
    * Gets the yaml git sync info by object type and entitytId (uuid)
    *
@@ -12,7 +20,9 @@ public interface YamlGitSyncService {
    * @param accountId the account id
    * @return the rest response
    */
-  public RestResponse<YamlGitSync> getYamlGitSync(String type, String entityId, String accountId);
+  public YamlGitSync get(String type, String entityId, String accountId);
+
+  public boolean exist(@NotEmpty String type, @NotEmpty String entityId, @NotEmpty String accountId);
 
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)
@@ -22,7 +32,7 @@ public interface YamlGitSyncService {
    * @param yamlGitSync the yamlGitSync info
    * @return the rest response
    */
-  public RestResponse<YamlGitSync> saveYamlGitSync(String type, String accountId, YamlGitSync yamlGitSync);
+  public YamlGitSync save(String type, String accountId, YamlGitSync yamlGitSync);
 
   /**
    * Updates the yaml git sync info by object type and entitytId (uuid)
@@ -33,6 +43,5 @@ public interface YamlGitSyncService {
    * @param yamlGitSync the yamlGitSync info
    * @return the rest response
    */
-  public RestResponse<YamlGitSync> updateYamlGitSync(
-      String type, String entityId, String accountId, YamlGitSync yamlGitSync);
+  public YamlGitSync update(String type, String entityId, String accountId, YamlGitSync yamlGitSync);
 }
