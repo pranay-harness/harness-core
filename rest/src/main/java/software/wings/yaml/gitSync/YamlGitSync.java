@@ -19,29 +19,22 @@ import java.util.Objects;
  * Created by bsollish
  */
 @Entity(value = "yamlGitSync", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("entityId") }, options = @IndexOptions(name = "yamlGitSyncIdx")))
+@Indexes(@Index(
+    fields = { @Field("entityId") }, options = @IndexOptions(name = "yamlGitSyncIdx", unique = true, dropDups = true)))
 public class YamlGitSync extends Base {
-  private String yamlGitSyncId;
   private Type type;
   private String entityId;
 
   private boolean enabled;
-  private String URL;
+  private String url;
   private String rootPath;
   private String sshKey;
+  private String passphrase;
   private SyncMode syncMode;
 
   @SchemaIgnore private String accountId;
 
   public YamlGitSync() {}
-
-  public String getYamlGitSyncId() {
-    return yamlGitSyncId;
-  }
-
-  public void setYamlGitSyncId(String yamlGitSyncId) {
-    this.yamlGitSyncId = yamlGitSyncId;
-  }
 
   public Type getType() {
     return type;
@@ -67,12 +60,12 @@ public class YamlGitSync extends Base {
     this.enabled = enabled;
   }
 
-  public String getURL() {
-    return URL;
+  public String getUrl() {
+    return url;
   }
 
-  public void setURL(String URL) {
-    this.URL = URL;
+  public void setUrl(String url) {
+    this.url = url;
   }
 
   public String getRootPath() {
@@ -88,7 +81,15 @@ public class YamlGitSync extends Base {
   }
 
   public void setSshKey(String sshKey) {
-    sshKey = sshKey;
+    this.sshKey = sshKey;
+  }
+
+  public String getPassphrase() {
+    return passphrase;
+  }
+
+  public void setPassphrase(String passphrase) {
+    this.passphrase = passphrase;
   }
 
   public SyncMode getSyncMode() {
@@ -127,11 +128,11 @@ public class YamlGitSync extends Base {
   public String toString() {
     MoreObjects.toStringHelper(this);
     return MoreObjects.toStringHelper(this)
-        .add("yamlGitSyncId", yamlGitSyncId)
+        .add("uuid", getUuid())
         .add("type", type)
         .add("entityId", entityId)
         .add("enabled", enabled)
-        .add("URL", URL)
+        .add("url", url)
         .add("rootPath", rootPath)
         .add("syncMode", syncMode)
         .add("accountId", accountId)
@@ -144,13 +145,14 @@ public class YamlGitSync extends Base {
 
   public YamlGitSync clone() {
     return aYamlGitSync()
-        .withUuid(getYamlGitSyncId())
+        .withUuid(getUuid())
         .withType(getType())
         .withEntityId(getEntityId())
         .withEnabled(isEnabled())
-        .withURL(getURL())
+        .withUrl(getUrl())
         .withRootPath(getRootPath())
         .withSshKey(getSshKey())
+        .withPassphrase(getPassphrase())
         .withSyncMode(getSyncMode())
         .withAccountId(getAccountId())
         .build();
@@ -161,9 +163,10 @@ public class YamlGitSync extends Base {
     private Type type;
     private String entityId;
     private boolean enabled;
-    private String URL;
+    private String url;
     private String rootPath;
     private String sshKey;
+    private String passphrase;
     private SyncMode syncMode;
 
     private String accountId;
@@ -199,8 +202,8 @@ public class YamlGitSync extends Base {
       return this;
     }
 
-    public YamlGitSync.Builder withURL(String URL) {
-      this.URL = URL;
+    public YamlGitSync.Builder withUrl(String url) {
+      this.url = url;
       return this;
     }
 
@@ -211,6 +214,11 @@ public class YamlGitSync extends Base {
 
     public YamlGitSync.Builder withSshKey(String sshKey) {
       this.sshKey = sshKey;
+      return this;
+    }
+
+    public YamlGitSync.Builder withPassphrase(String passphrase) {
+      this.passphrase = passphrase;
       return this;
     }
 
@@ -250,23 +258,25 @@ public class YamlGitSync extends Base {
           .withType(type)
           .withEntityId(entityId)
           .withEnabled(enabled)
-          .withURL(URL)
+          .withUrl(url)
           .withRootPath(rootPath)
           .withSshKey(sshKey)
+          .withPassphrase(passphrase)
           .withSyncMode(syncMode)
           .withAccountId(accountId);
     }
 
     public YamlGitSync build() {
       YamlGitSync yamlGitSync = new YamlGitSync();
-      yamlGitSync.setYamlGitSyncId(uuid);
+      yamlGitSync.setUuid(uuid);
       yamlGitSync.setType(type);
       yamlGitSync.setEntityId(entityId);
       yamlGitSync.setEnabled(enabled);
 
-      yamlGitSync.setURL(URL);
+      yamlGitSync.setUrl(url);
       yamlGitSync.setRootPath(rootPath);
       yamlGitSync.setSshKey(sshKey);
+      yamlGitSync.setPassphrase(passphrase);
       yamlGitSync.setSyncMode(syncMode);
 
       yamlGitSync.setAccountId(accountId);
