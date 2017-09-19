@@ -241,6 +241,7 @@ public class WorkflowPhase implements UuidAware {
 
   public WorkflowPhase clone() {
     return aWorkflowPhase()
+        .withUuid(UUIDGenerator.getUuid())
         .withServiceId(getServiceId())
         .withInfraMappingId(getInfraMappingId())
         .withInfraMappingName(getInfraMappingName())
