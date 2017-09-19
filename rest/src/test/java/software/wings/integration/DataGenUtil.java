@@ -152,8 +152,9 @@ public class DataGenUtil extends BaseIntegrationTest {
                                           .get("properties")))
                             .get("hostConnectionAttrs"))
             .get("enumNames");
-    assertThat(names).hasSize(4).containsExactly(
-        "Wings Key", "User/Password", "User/Password :: sudo - <app-account>", "User/Password :: su - <app-account>");
+    //    assertThat(names).hasSize(4).containsExactly("Wings Key", "User/Password", "User/Password :: sudo -
+    //    <app-account>", "User/Password :: su - <app-account>");
+    assertThat(names).hasSize(2).containsExactly("Wings Key", "User/Password");
   }
 
   private void createGlobalSettings() {

@@ -2,7 +2,6 @@ package software.wings.app;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.api.ContainerDeploymentEvent;
@@ -16,8 +15,6 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.instance.ContainerDeploymentEventListener;
 import software.wings.service.impl.instance.InstanceChangeEventListener;
-import software.wings.service.impl.instance.sync.InstanceSyncService;
-import software.wings.service.impl.instance.sync.KubernetesInstanceSyncServiceImpl;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 

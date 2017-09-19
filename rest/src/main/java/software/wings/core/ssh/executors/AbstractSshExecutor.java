@@ -34,7 +34,6 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -393,7 +392,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     Channel channel = null;
     try {
       Pair<String, Long> fileInfo = fileProvider.getInfo();
-      String command = "scp -r -d -t '" + remoteFilePath + "'";
+      //      String command = "scp -r -d -t '" + remoteFilePath + "'";
+      String command = String.format("mkdir -p %s && scp -r -d -t '%s'", remoteFilePath, remoteFilePath);
       channel = getCachedSession(config).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 
@@ -482,7 +482,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } while (c != '\n');
 
       if (b <= 2) {
-        throw new WingsException(UNKNOWN_ERROR, new Throwable(sb.toString()));
+        saveExecutionLogError(sb.toString());
+        return 1;
       }
       logger.error(sb.toString());
       return 0;

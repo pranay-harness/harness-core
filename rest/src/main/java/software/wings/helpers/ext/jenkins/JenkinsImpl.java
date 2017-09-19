@@ -50,11 +50,9 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Vector;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -196,7 +194,6 @@ public class JenkinsImpl implements Jenkins {
       // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to add it again
       browseJobsRecursively(
           null, null, parentFolderJobName, depth, jobDetailsList, true, callableCount, lock, allJobsDoneCondition);
-
     } else {
       // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to add it again
       // at the root level, we only want to fetch the first level jobs
@@ -208,7 +205,9 @@ public class JenkinsImpl implements Jenkins {
     // collected so far.
     lock.lock();
     try {
-      allJobsDoneCondition.await(20, TimeUnit.SECONDS);
+      if (callableCount.intValue() > 0) {
+        allJobsDoneCondition.await(20, TimeUnit.SECONDS);
+      }
     } catch (InterruptedException ex) {
       logger.warn("Failed to retrieve all jobs within 20 secs");
     } finally {
@@ -224,7 +223,8 @@ public class JenkinsImpl implements Jenkins {
     if (depth == MAX_FOLDER_DEPTH) {
       return;
     }
-    // Each time a new parentJob needs to be fetched,
+
+    // Each time a new parentJob needs to be fetched, the count is incremented.
     callableCount.incrementAndGet();
     Future<Void> submit = executorService.submit((Callable<Void>) () -> {
       FolderJob folderJob = null;
@@ -278,13 +278,12 @@ public class JenkinsImpl implements Jenkins {
     });
 
     try {
-      submit.get(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    } catch (TimeoutException e) {
-      e.printStackTrace();
+      // This call is done only to check if the callable failed for any reason.
+      submit.get(5, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      String msg = "Fetching jobs from jenkins server failed. Reason: " + ex.getMessage();
+      logger.error(msg, ex);
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", msg, ex);
     }
 
     return;

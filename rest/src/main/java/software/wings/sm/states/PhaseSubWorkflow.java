@@ -31,7 +31,6 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
