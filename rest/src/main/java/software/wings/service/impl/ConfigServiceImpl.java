@@ -94,8 +94,8 @@ public class ConfigServiceImpl implements ConfigService {
       toWrite = EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
     }
 
-    configFile.setSize(inputStream.getTotalBytesRead());
     String fileId = fileService.saveFile(configFile, toWrite, CONFIGS);
+    configFile.setSize(inputStream.getTotalBytesRead()); // set this only after saving file to gridfs
     String id = wingsPersistence.save(configFile);
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
