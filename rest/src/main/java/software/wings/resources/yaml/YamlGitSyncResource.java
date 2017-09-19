@@ -10,6 +10,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitSync.Type;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -60,7 +61,7 @@ public class YamlGitSyncResource {
   /**
    * Gets the yaml git sync info by object type and entitytId (uuid)
    *
-   * @param type the object type
+   * @param restName the restName of the object type
    * @param entityId the uuid of the entity
    * @param accountId the account id
    * @return the rest response
@@ -69,15 +70,16 @@ public class YamlGitSyncResource {
   @Path("/{type}/{entityId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlGitSync> get(@PathParam("type") String type, @PathParam("entityId") String entityId,
+  public RestResponse<YamlGitSync> get(@PathParam("type") String restName, @PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId) {
+    Type type = YamlGitSync.convertRestNameToType(restName);
     return new RestResponse<>(yamlGitSyncService.get(type, entityId, accountId));
   }
 
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)
    *
-   * @param type the object type
+   * @param restName the restName of the object type
    * @param accountId the account id
    * @param yamlGitSync the yamlGitSync info
    * @return the rest response
@@ -87,16 +89,17 @@ public class YamlGitSyncResource {
   @Timed
   @ExceptionMetered
   public RestResponse<YamlGitSync> save(
-      @PathParam("type") String type, @QueryParam("accountId") String accountId, YamlGitSync yamlGitSync) {
+      @PathParam("type") String restName, @QueryParam("accountId") String accountId, YamlGitSync yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
-    yamlGitSync.setType(YamlGitSync.Type.valueOf(type));
-    return new RestResponse<>(yamlGitSyncService.save(type, accountId, yamlGitSync));
+    Type type = YamlGitSync.convertRestNameToType(restName);
+    yamlGitSync.setType(type);
+    return new RestResponse<>(yamlGitSyncService.save(accountId, yamlGitSync));
   }
 
   /**
    * Updates the yaml git sync info by object type and entitytId (uuid)
    *
-   * @param type the object type
+   * @param restName the restName of the object type
    *@param entityId the uuid of the entity
    * @param accountId the account id
    * @param yamlGitSync the yamlGitSync info
@@ -106,10 +109,11 @@ public class YamlGitSyncResource {
   @Path("/{type}/{entityId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlGitSync> update(@PathParam("type") String type, @PathParam("entityId") String entityId,
+  public RestResponse<YamlGitSync> update(@PathParam("type") String restName, @PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, YamlGitSync yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
-    yamlGitSync.setType(YamlGitSync.Type.valueOf(type));
-    return new RestResponse<>(yamlGitSyncService.update(type, entityId, accountId, yamlGitSync));
+    Type type = YamlGitSync.convertRestNameToType(restName);
+    yamlGitSync.setType(type);
+    return new RestResponse<>(yamlGitSyncService.update(entityId, accountId, yamlGitSync));
   }
 }
