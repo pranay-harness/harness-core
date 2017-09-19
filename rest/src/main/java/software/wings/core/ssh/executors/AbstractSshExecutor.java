@@ -392,7 +392,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     Channel channel = null;
     try {
       Pair<String, Long> fileInfo = fileProvider.getInfo();
-      String command = "scp -r -d -t '" + remoteFilePath + "'";
+      //      String command = "scp -r -d -t '" + remoteFilePath + "'";
+      String command = String.format("mkdir -p %s && scp -r -d -t '%s'", remoteFilePath, remoteFilePath);
       channel = getCachedSession(config).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 
