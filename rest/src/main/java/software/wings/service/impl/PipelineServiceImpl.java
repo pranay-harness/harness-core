@@ -65,6 +65,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowDetails;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -124,11 +125,23 @@ public class PipelineServiceImpl implements PipelineService {
     for (PipelineExecution pipelineExecution : pageResponse.getResponse()) {
       try {
         refreshPipelineExecution(pipelineExecution);
+        setPipelineUuid(pipelineExecution);
       } catch (Exception e) {
         logger.error("Failed to refresh pipeline execution {} ", pipelineExecution, e);
       }
     }
     return pageResponse;
+  }
+
+  /**
+   * Replacing embedded pipeline id with the real pipeline id
+   * @param pipelineExecution
+   */
+  private void setPipelineUuid(PipelineExecution pipelineExecution) {
+    if (pipelineExecution == null || pipelineExecution.getPipeline() == null) {
+      return;
+    }
+    pipelineExecution.getPipeline().setUuid(pipelineExecution.getPipelineId());
   }
 
   private void refreshPipelineExecution(PipelineExecution pipelineExecution) {
@@ -478,6 +491,10 @@ public class PipelineServiceImpl implements PipelineService {
     WorkflowExecution workflowExecution =
         workflowExecutionService.triggerPipelineExecution(appId, pipelineId, executionArgs);
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+
+    // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
+    pipeline.setUuid(UUIDGenerator.getUuid() + "_embedded");
+
     Application application = appService.get(appId);
     List<Artifact> artifacts = validateAndFetchArtifact(appId, executionArgs.getArtifacts());
     executionArgs.setArtifacts(artifacts);
