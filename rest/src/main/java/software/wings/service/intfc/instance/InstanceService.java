@@ -1,21 +1,13 @@
 package software.wings.service.intfc.instance;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.api.PhaseExecutionData;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.info.ContainerInfo;
-import software.wings.beans.infrastructure.instance.key.InstanceKey;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.InstanceStatusSummary;
-import software.wings.sm.StateExecutionData;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.WorkflowStandardParams;
+import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -45,7 +37,7 @@ public interface InstanceService {
   List<Instance> update(List<Instance> instances);
 
   /**
-   * Get instance information.
+   * Gets instance information.
    *
    * @param instanceId  the instance id
    * @return the infrastructure mapping
@@ -53,7 +45,7 @@ public interface InstanceService {
   Instance get(String instanceId);
 
   /**
-   * Update the entity. If entity doesn't exist, it creates one.
+   * Updates the entity. If entity doesn't exist, it creates one.
    *
    * @param instance the instance
    * @return the instance
@@ -63,24 +55,59 @@ public interface InstanceService {
   Instance update(@Valid Instance instance) throws Exception;
 
   /**
-   * Delete the given instance.
+   * Deletes the given instance.
    * @param instanceId the instance id
    */
   boolean delete(String instanceId);
 
   /**
-   * delete all the instances of an app
+   * Deletes all the instances of an app
    * @param appId application id
    * @return
    */
   boolean deleteByApp(String appId);
 
+  /**
+   * Deletes the instances with the given ids
+   * @param instanceIdSet
+   * @return
+   */
   boolean delete(Set<String> instanceIdSet);
 
   /**
-   * Builds the instances from the container deployment info and save the instances to the database.
-   * @param containerDeploymentInfo
-   * @param containerInfoList
+   * Handles save or update of container related instances.
+   * Stale ones are also deleted.
+   * @param instanceType
+   * @param containerSvcNameNoRevision
+   * @param instanceList
    */
-  void buildAndSaveInstances(ContainerDeploymentInfo containerDeploymentInfo, List<ContainerInfo> containerInfoList);
+  void saveOrUpdateContainerInstances(
+      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList);
+
+  /**
+   * @param containerSvcNameNoRevision
+   * @param containerDeploymentInfoCollection
+   * @param appId
+   * @param instanceType
+   * @param syncTimestamp
+   */
+  void saveOrUpdateContainerDeploymentInfo(String containerSvcNameNoRevision,
+      Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection, String appId, InstanceType instanceType,
+      long syncTimestamp);
+
+  /**
+   * Get the container deployment info of all the container services that belong to the same family
+   * containerSvcNameNoRevision for the given app.
+   * @param containerSvcNameNoRevision
+   * @param appId
+   * @return
+   */
+  List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId);
+
+  List<String> getContainerServiceNames(String containerServiceNameWithoutRevision, String appId);
+
+  Set<String> getLeastRecentVisitedContainerDeployments(String appId, long lastVisitedTimestamp);
+
+  void deleteContainerDeploymentInfoAndInstances(
+      Set<String> containerServiceNameSetToBeDeleted, InstanceType instanceType, String appId);
 }

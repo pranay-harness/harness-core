@@ -17,22 +17,6 @@ public class EcsContainerInfo extends ContainerInfo {
     super();
   }
 
-  public String getTaskDefinitionArnWithoutRevision() {
-    if (taskDefinitionArn == null) {
-      return null;
-    }
-
-    // taskDefinitionArn looks like
-    // arn:aws:ecs:us-east-1:830767422336:task-definition/Abaris__dockerFromECR__Development:11 we need to extract
-    // arn:aws:ecs:us-east-1:830767422336:task-definition/Abaris__dockerFromECR__Development so that we can pull all the
-    // instances of all the revisions at once.
-    int index = taskDefinitionArn.lastIndexOf(":");
-    if (index == -1) {
-      return taskDefinitionArn;
-    }
-    return taskDefinitionArn.substring(0, index);
-  }
-
   public static final class Builder {
     private String taskArn;
     private String taskDefinitionArn;

@@ -18,7 +18,6 @@ import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -79,7 +78,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
       if (executionEvent.getExecutionStatus() == ExecutionStatus.SUCCESS) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-        instanceHelper.extractInstanceOrContainerInfoBaseOnType(
+        instanceHelper.extractInstanceOrContainerInfoBaseOnType(context.getStateExecutionInstanceId(),
             context.getStateExecutionData(), workflowStandardParams, context.getAppId(), workflowExecution);
       }
 
