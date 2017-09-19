@@ -235,11 +235,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
             userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
           } else {
             ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
-            List<EnvironmentRole> environmentRoles = applicationRole.getEnvironmentRoles();
-            if (environmentRoles != null) {
-              ImmutableList<String> envIds = copyOf(
-                  environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(Collectors.toList()));
-              userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+            if (applicationRole != null) {
+              List<EnvironmentRole> environmentRoles = applicationRole.getEnvironmentRoles();
+              if (environmentRoles != null) {
+                ImmutableList<String> envIds = copyOf(
+                    environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(Collectors.toList()));
+                userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+              } else {
+                userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(
+                    ImmutableList.<String>builder().build());
+              }
             } else {
               userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(
                   ImmutableList.<String>builder().build());
