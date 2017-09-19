@@ -222,6 +222,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Ignore
   public void shouldTransferGridFSFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -251,6 +252,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Ignore
   @Repeat(times = 3, successes = 1)
   public void shouldTransferGridFSFileWithDifferentName() throws IOException {
     File file = testFolder.newFile();
