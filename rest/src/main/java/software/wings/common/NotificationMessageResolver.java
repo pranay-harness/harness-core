@@ -70,7 +70,7 @@ public class NotificationMessageResolver {
     WORKFLOW_PHASE_FAILED_NOTIFICATION
   }
 
-  private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
+  private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
 
   /**
    * Gets decorated notification message.

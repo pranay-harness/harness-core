@@ -108,7 +108,7 @@ public class CommandExecutionContext {
       for (Entry<String, String> entry : envVariables.entrySet()) {
         String key = entry.getKey();
         String value = entry.getValue();
-        text = text.replaceAll("\\$\\{" + key + "\\}", value);
+        text = text.replaceAll("\\$\\{" + key + "}", value);
         text = text.replaceAll("\\$" + key, value);
       }
     }

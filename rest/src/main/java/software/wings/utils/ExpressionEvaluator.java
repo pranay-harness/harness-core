@@ -28,7 +28,7 @@ public class ExpressionEvaluator {
   /**
    * The constant wingsVariablePattern.
    */
-  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
+  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
   public static final Pattern variableNamePattern = Pattern.compile("^[_a-zA-Z][_\\w]*$");
 
   private static ExpressionEvaluator instance = new ExpressionEvaluator();

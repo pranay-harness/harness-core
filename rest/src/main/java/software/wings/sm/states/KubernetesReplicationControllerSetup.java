@@ -7,9 +7,9 @@ import static software.wings.api.ContainerServiceElement.ContainerServiceElement
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
-import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER;
-import static software.wings.beans.container.KubernetesContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER;
-import static software.wings.beans.container.KubernetesContainerTask.SECRET_NAME_PLACEHOLDER;
+import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
@@ -339,9 +339,9 @@ public class KubernetesReplicationControllerSetup extends State {
       configTemplate = kubernetesContainerTask.fetchYamlConfig();
       type = YAML;
     }
-    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER, imageName + ":" + tag)
-                        .replaceAll(CONTAINER_NAME_PLACEHOLDER, containerName)
-                        .replaceAll(SECRET_NAME_PLACEHOLDER, secretName);
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName + ":" + tag)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+                        .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
 
     try {
       ReplicationController rc =
@@ -351,6 +351,7 @@ public class KubernetesReplicationControllerSetup extends State {
       KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
       rc.getSpec().setSelector(controllerLabels);
       rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
+      rc.getSpec().setReplicas(0);
       return rc;
     } catch (IOException e) {
       logger.error(e.getMessage(), e);
