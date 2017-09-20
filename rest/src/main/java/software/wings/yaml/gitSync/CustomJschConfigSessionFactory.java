@@ -23,10 +23,13 @@ public class CustomJschConfigSessionFactory extends JschConfigSessionFactory {
 
   @Override
   protected JSch createDefaultJSch(FS fs) throws JSchException {
-    String passphrase = "fish monkey dog mouse";
-
     JSch defaultJSch = super.createDefaultJSch(fs);
-    defaultJSch.addIdentity(this.sshKeyPath, this.passphrase);
+
+    if (this.passphrase != null && !this.passphrase.isEmpty()) {
+      defaultJSch.addIdentity(this.sshKeyPath, this.passphrase);
+    } else {
+      defaultJSch.addIdentity(this.sshKeyPath);
+    }
     return defaultJSch;
   }
 

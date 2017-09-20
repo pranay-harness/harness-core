@@ -81,6 +81,7 @@ public class AppYamlResource {
     this.serviceResourceService = serviceResourceService;
     this.environmentService = environmentService;
     this.yamlHistoryService = yamlHistoryService;
+    this.yamlGitSyncService = yamlGitSyncService;
   }
 
   /**
