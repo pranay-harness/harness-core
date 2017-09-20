@@ -369,7 +369,7 @@ public class ServiceVariable extends Base implements Encryptable {
         .withAccountId(getAccountId())
         .withAppId(getAppId())
         .withEnvId(getEnvId())
-        .withEntityId(getUuid())
+        .withEntityId(getEntityId())
         .withEntityType(getEntityType())
         .withTemplateId(getTemplateId())
         .withName(getName())

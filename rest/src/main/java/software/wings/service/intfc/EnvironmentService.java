@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -100,4 +101,13 @@ public interface EnvironmentService {
    * @return the env by app
    */
   List<Environment> getEnvByApp(@NotEmpty String appId);
+
+  /**
+   * Clones Environment along with Service Infrastructure
+   * @param appId
+   * @param envId
+   * @param cloneMetadata
+   * @return
+   */
+  Environment cloneEnvironment(@NotEmpty String appId, @NotEmpty String envId, CloneMetadata cloneMetadata);
 }
