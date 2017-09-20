@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.*;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -249,6 +250,33 @@ public class PhaseStep {
     return valid;
   }
 
+  public PhaseStep clone() {
+    PhaseStep clonedPhaseStep = aPhaseStep(getPhaseStepType(), getName())
+                                    .withPhaseStepNameForRollback(getPhaseStepNameForRollback())
+                                    .withPhaseStepType(getPhaseStepType())
+                                    .withRollback(isRollback())
+                                    .withFailureStrategies(getFailureStrategies())
+                                    .withStatusForRollback(getStatusForRollback())
+                                    .withStepsInParallel(isStepsInParallel())
+                                    .withArtifactNeeded(isArtifactNeeded())
+                                    .withWaitInterval(getWaitInterval())
+                                    .build();
+
+    List<Node> steps = getSteps();
+    List<String> clonedStepIds = new ArrayList<>();
+    List<Node> clonedSteps = new ArrayList<>();
+    if (steps != null) {
+      for (Node step : steps) {
+        Node clonedStep = step.clone();
+        clonedSteps.add(step.clone());
+        clonedStepIds.add(clonedStep.getId());
+      }
+    }
+    clonedPhaseStep.setStepsIds(clonedStepIds);
+    clonedPhaseStep.setSteps(clonedSteps);
+    return clonedPhaseStep;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -304,8 +332,10 @@ public class PhaseStep {
     private boolean rollback;
     private String phaseStepNameForRollback;
     private ExecutionStatus statusForRollback;
+    private boolean artifactNeeded;
     private boolean valid = true;
     private String validationMessage;
+    private Integer waitInterval;
 
     private PhaseStepBuilder() {}
 
@@ -367,6 +397,16 @@ public class PhaseStep {
       return this;
     }
 
+    public PhaseStepBuilder withArtifactNeeded(boolean artifactNeeded) {
+      this.artifactNeeded = artifactNeeded;
+      return this;
+    }
+
+    public PhaseStepBuilder withWaitInterval(Integer waitInterval) {
+      this.waitInterval = waitInterval;
+      return this;
+    }
+
     public PhaseStep build() {
       PhaseStep phaseStep = new PhaseStep();
       phaseStep.setUuid(uuid);
@@ -381,6 +421,8 @@ public class PhaseStep {
       phaseStep.setStatusForRollback(statusForRollback);
       phaseStep.setValid(valid);
       phaseStep.setValidationMessage(validationMessage);
+      phaseStep.setArtifactNeeded(artifactNeeded);
+      phaseStep.setWaitInterval(waitInterval);
       return phaseStep;
     }
   }
