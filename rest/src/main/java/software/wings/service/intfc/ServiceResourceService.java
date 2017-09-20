@@ -208,13 +208,10 @@ public interface ServiceResourceService {
    */
   void deleteContainerTask(String appId, String containerTaskId);
 
-  /**
-   * Update container task container task.
-   *
-   * @param containerTask the container task
-   * @return the container task
-   */
-  ContainerTask updateContainerTask(ContainerTask containerTask);
+  ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced);
+
+  ContainerTask updateContainerTaskAdvanced(
+      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset);
 
   /**
    * List container tasks page response.

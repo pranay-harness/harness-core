@@ -22,6 +22,9 @@ public abstract class ContainerTask extends Base {
   @NotEmpty private String deploymentType;
   @SchemaIgnore @NotEmpty private String serviceId;
 
+  private AdvancedType advancedType;
+  private String advancedConfig;
+
   public ContainerTask(String deploymentType) {
     this.deploymentType = deploymentType;
   }
@@ -36,6 +39,22 @@ public abstract class ContainerTask extends Base {
 
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
+  }
+
+  public AdvancedType getAdvancedType() {
+    return advancedType;
+  }
+
+  public void setAdvancedType(AdvancedType advancedType) {
+    this.advancedType = advancedType;
+  }
+
+  public String getAdvancedConfig() {
+    return advancedConfig;
+  }
+
+  public void setAdvancedConfig(String advancedConfig) {
+    this.advancedConfig = advancedConfig;
   }
 
   @SchemaIgnore
@@ -73,4 +92,12 @@ public abstract class ContainerTask extends Base {
   public String getUuid() {
     return super.getUuid();
   }
+
+  public abstract void convertToAdvanced();
+
+  public abstract void convertFromAdvanced();
+
+  public abstract void validateAdvanced();
+
+  public enum AdvancedType { JSON, YAML }
 }

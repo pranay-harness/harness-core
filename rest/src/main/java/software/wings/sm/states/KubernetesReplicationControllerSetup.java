@@ -5,6 +5,11 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
+import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
+import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
+import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER;
+import static software.wings.beans.container.KubernetesContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER;
+import static software.wings.beans.container.KubernetesContainerTask.SECRET_NAME_PLACEHOLDER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
@@ -14,14 +19,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -29,8 +30,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -57,6 +56,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -79,11 +79,9 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -326,54 +324,38 @@ public class KubernetesReplicationControllerSetup extends State {
       KubernetesContainerTask.ContainerDefinition containerDefinition =
           new KubernetesContainerTask.ContainerDefinition();
       containerDefinition.setMemory(256);
+      containerDefinition.setCpu(1);
       kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
     String containerName = KubernetesConvention.getContainerName(imageName);
-    String dockerImageName = imageName + ":" + tag;
-    List<Container> containerDefinitions =
-        kubernetesContainerTask.getContainerDefinitions()
-            .stream()
-            .map(containerDefinition -> createContainerDefinition(dockerImageName, containerName, containerDefinition))
-            .collect(Collectors.toList());
 
-    List<Volume> volumeList = new ArrayList<>();
-    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition -> {
-      if (containerDefinition.getStorageConfigurations() != null) {
-        volumeList.addAll(
-            containerDefinition.getStorageConfigurations()
-                .stream()
-                .map(storageConfiguration
-                    -> new VolumeBuilder()
-                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
-                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
-                           .build())
-                .collect(Collectors.toList()));
-      }
-    });
+    String configTemplate;
+    ContainerTask.AdvancedType type;
+    if (isNotEmpty(kubernetesContainerTask.getAdvancedConfig())) {
+      configTemplate = kubernetesContainerTask.getAdvancedConfig();
+      type = kubernetesContainerTask.getAdvancedType();
+    } else {
+      configTemplate = kubernetesContainerTask.fetchYamlConfig();
+      type = YAML;
+    }
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER, imageName + ":" + tag)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER, containerName)
+                        .replaceAll(SECRET_NAME_PLACEHOLDER, secretName);
 
-    return new ReplicationControllerBuilder()
-        .withApiVersion("v1")
-        .withNewMetadata()
-        .withName(replicationControllerName)
-        .withNamespace("default")
-        .addToLabels(controllerLabels)
-        .endMetadata()
-        .withNewSpec()
-        .withReplicas(0)
-        .withSelector(controllerLabels)
-        .withNewTemplate()
-        .withNewMetadata()
-        .addToLabels(controllerLabels)
-        .endMetadata()
-        .withNewSpec()
-        .addNewImagePullSecret(secretName)
-        .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
-        .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
-        .endSpec()
-        .endTemplate()
-        .endSpec()
-        .build();
+    try {
+      ReplicationController rc =
+          type == JSON ? (ReplicationController) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
+
+      KubernetesHelper.setName(rc, replicationControllerName);
+      KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
+      rc.getSpec().setSelector(controllerLabels);
+      rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
+      return rc;
+    } catch (IOException e) {
+      logger.error(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+    }
   }
 
   /**
@@ -421,65 +403,6 @@ public class KubernetesReplicationControllerSetup extends State {
         .build();
   }
 
-  /**
-   * Creates container definition
-   */
-  private Container createContainerDefinition(
-      String imageName, String containerName, KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
-    ContainerBuilder containerBuilder = new ContainerBuilder().withName(containerName).withImage(imageName);
-
-    Map<String, Quantity> limits = new HashMap<>();
-    if (wingsContainerDefinition.getCpu() != null) {
-      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu().toString()));
-    }
-
-    if (wingsContainerDefinition.getMemory() != null) {
-      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Mi"));
-    }
-
-    if (!limits.isEmpty()) {
-      containerBuilder.withNewResources().withLimits(limits).endResources();
-    }
-
-    if (wingsContainerDefinition.getPortMappings() != null) {
-      wingsContainerDefinition.getPortMappings().forEach(portMapping
-          -> containerBuilder.addNewPort()
-                 .withContainerPort(portMapping.getContainerPort())
-                 .withHostPort(portMapping.getHostPort())
-                 .withProtocol("TCP")
-                 .endPort());
-    }
-
-    if (wingsContainerDefinition.getCommands() != null) {
-      wingsContainerDefinition.getCommands().forEach(command -> {
-        if (!command.trim().isEmpty()) {
-          containerBuilder.withCommand(command.trim());
-        }
-      });
-    }
-
-    if (wingsContainerDefinition.getEnvironmentVariables() != null) {
-      wingsContainerDefinition.getEnvironmentVariables().forEach(
-          envVar -> containerBuilder.addNewEnv().withName(envVar.getName()).withValue(envVar.getValue()).endEnv());
-    }
-
-    if (wingsContainerDefinition.getLogConfiguration() != null) {
-      KubernetesContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
-      // TODO:: Check about kubernetes logs.  See https://kubernetes.io/docs/concepts/clusters/logging/
-    }
-
-    if (wingsContainerDefinition.getStorageConfigurations() != null) {
-      wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
-          -> containerBuilder.addNewVolumeMount()
-                 .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
-                 .withMountPath(storageConfiguration.getContainerPath())
-                 .withReadOnly(storageConfiguration.isReadonly())
-                 .endVolumeMount());
-    }
-
-    return containerBuilder.build();
-  }
-
   private class ImageDetails {
     String name;
     String sourceName;
@@ -487,6 +410,7 @@ public class KubernetesReplicationControllerSetup extends State {
     String username;
     String password;
   }
+
   /**
    * Fetches artifact image details
    */
@@ -510,7 +434,7 @@ public class KubernetesReplicationControllerSetup extends State {
       // sourceName should be todolist
       imageDetails.sourceName = ecrArtifactStream.getSourceName();
       // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-      imageDetails.registryUrl = constructEcrRegistryUrl(imageUrl);
+      imageDetails.registryUrl = "https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/");
       imageDetails.username = "AWS";
 
       SettingValue settingValue = settingsService.get(settingId).getValue();
@@ -518,8 +442,8 @@ public class KubernetesReplicationControllerSetup extends State {
       // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
       if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(
-            getAwsAccount(imageUrl), ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
+            ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       } else {
         // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
         // migration happens. The deployment code handles both the cases.
@@ -542,7 +466,7 @@ public class KubernetesReplicationControllerSetup extends State {
       imageDetails.password = new String(artifactoryConfig.getPassword());
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
+          artifactStream.getArtifactStreamType() + " artifact source can't be used for Kubernetes");
     }
     return imageDetails;
   }
@@ -557,20 +481,6 @@ public class KubernetesReplicationControllerSetup extends State {
       EcrConfig ecrConfig = (EcrConfig) value;
       return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
     }
-  }
-
-  private String constructEcrRegistryUrl(String imageUrl) {
-    StringBuilder sb = new StringBuilder("https://");
-    sb.append(imageUrl);
-    if (!imageUrl.endsWith("/")) {
-      sb.append("/");
-    }
-
-    return sb.toString();
-  }
-
-  private String getAwsAccount(String imageUrl) {
-    return imageUrl.substring(0, imageUrl.indexOf('.'));
   }
 
   private ClusterElement getClusterElement(ExecutionContext context) {

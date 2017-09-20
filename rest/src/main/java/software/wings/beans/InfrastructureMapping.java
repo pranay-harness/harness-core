@@ -3,8 +3,6 @@ package software.wings.beans;
 import static java.util.stream.Collectors.groupingBy;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
 
 import com.google.common.base.MoreObjects;
 
@@ -277,7 +275,7 @@ public abstract class InfrastructureMapping extends Base {
       Map<AccessType, List<SettingAttribute>> settingAttributeByType = settingAttributes.stream().collect(
           groupingBy(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType()));
 
-      return Stream.of(KEY, USER_PASSWORD, USER_PASSWORD_SUDO_APP_USER, USER_PASSWORD_SU_APP_USER)
+      return Stream.of(KEY, USER_PASSWORD)
           .map(settingAttributeByType::get)
           .filter(Objects::nonNull)
           .flatMap(Collection::stream)
