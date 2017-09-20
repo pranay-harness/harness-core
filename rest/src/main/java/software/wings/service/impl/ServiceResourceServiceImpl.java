@@ -495,7 +495,31 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ContainerTask updateContainerTask(ContainerTask containerTask) {
+  public ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced) {
+    if (advanced) {
+      containerTask.convertToAdvanced();
+    }
+    return createContainerTask(containerTask);
+  }
+
+  @Override
+  public ContainerTask updateContainerTaskAdvanced(
+      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset) {
+    ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
+                                      .field("appId")
+                                      .equal(appId)
+                                      .field("serviceId")
+                                      .equal(serviceId)
+                                      .field("taskId")
+                                      .equal(taskId)
+                                      .get();
+    if (reset) {
+      containerTask.convertFromAdvanced();
+    } else {
+      containerTask.setAdvancedType(ContainerTask.AdvancedType.valueOf(advancedType));
+      containerTask.setAdvancedConfig(advancedConfig);
+      containerTask.validateAdvanced();
+    }
     return createContainerTask(containerTask);
   }
 

@@ -265,11 +265,24 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId, ContainerTask containerTask) {
+      @QueryParam("advanced") boolean advanced, @PathParam("serviceId") String serviceId,
+      @PathParam("taskId") String taskId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
     containerTask.setServiceId(serviceId);
     containerTask.setUuid(taskId);
-    return new RestResponse<>(serviceResourceService.updateContainerTask(containerTask));
+    return new RestResponse<>(serviceResourceService.updateContainerTask(containerTask, advanced));
+  }
+
+  @PUT
+  @Path("{serviceId}/containers/tasks/{taskId}/advanced")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ContainerTask> createContainerTaskAdvanced(@QueryParam("appId") String appId,
+      @QueryParam("advancedType") String advancedType, @QueryParam("advancedConfig") String advancedConfig,
+      @QueryParam("reset") boolean reset, @PathParam("serviceId") String serviceId,
+      @PathParam("taskId") String taskId) {
+    return new RestResponse<>(serviceResourceService.updateContainerTaskAdvanced(
+        appId, serviceId, taskId, advancedConfig, advancedType, reset));
   }
 
   @GET

@@ -3,17 +3,39 @@ package software.wings.beans.container;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.api.DeploymentType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
+import software.wings.exception.WingsException;
 import software.wings.stencils.EnumData;
+import software.wings.utils.KubernetesConvention;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/8/17
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
+  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER = "hv--docker-image-name--hv";
+  public static final String CONTAINER_NAME_PLACEHOLDER = "hv--container-name--hv";
+  public static final String SECRET_NAME_PLACEHOLDER = "hv--secret-name--hv";
+
   @Attributes(title = "LABELS") List<Label> labels;
   private List<ContainerDefinition> containerDefinitions;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
@@ -261,5 +283,140 @@ public class KubernetesContainerTask extends ContainerTask {
     public void setReadonly(boolean readonly) {
       this.readonly = readonly;
     }
+  }
+
+  @Override
+  public void convertToAdvanced() {
+    setAdvancedConfig(fetchYamlConfig());
+    setAdvancedType(AdvancedType.YAML);
+  }
+
+  public String fetchYamlConfig() {
+    try {
+      return KubernetesHelper.toYaml(createReplicationController());
+    } catch (IOException e) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public void convertFromAdvanced() {
+    setAdvancedConfig("");
+  }
+
+  @Override
+  public void validateAdvanced() {
+    if (StringUtils.isNotEmpty(getAdvancedConfig())) {
+      try {
+        ReplicationController rc;
+        if (getAdvancedType() == AdvancedType.YAML) {
+          rc = KubernetesHelper.loadYaml(getAdvancedConfig());
+        } else {
+          rc = (ReplicationController) KubernetesHelper.loadJson(getAdvancedConfig());
+        }
+      } catch (Exception e) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      }
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Advanced configuration is empty.");
+    }
+  }
+
+  private ReplicationController createReplicationController() {
+    List<Container> containerDefinitions =
+        getContainerDefinitions().stream().map(this ::createContainerDefinition).collect(Collectors.toList());
+
+    List<Volume> volumeList = new ArrayList<>();
+    getContainerDefinitions().forEach(containerDefinition -> {
+      if (containerDefinition.getStorageConfigurations() != null) {
+        volumeList.addAll(
+            containerDefinition.getStorageConfigurations()
+                .stream()
+                .map(storageConfiguration
+                    -> new VolumeBuilder()
+                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
+                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
+                           .build())
+                .collect(Collectors.toList()));
+      }
+    });
+
+    return new ReplicationControllerBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata()
+        .withNamespace("default")
+        .endMetadata()
+        .withNewSpec()
+        .withReplicas(0)
+        .withNewTemplate()
+        .withNewMetadata()
+        .endMetadata()
+        .withNewSpec()
+        .addNewImagePullSecret(SECRET_NAME_PLACEHOLDER)
+        .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
+        .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
+        .endSpec()
+        .endTemplate()
+        .endSpec()
+        .build();
+  }
+
+  /**
+   * Creates container definition
+   */
+  private Container createContainerDefinition(KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
+    ContainerBuilder containerBuilder =
+        new ContainerBuilder().withName(CONTAINER_NAME_PLACEHOLDER).withImage(DOCKER_IMAGE_NAME_PLACEHOLDER);
+
+    Map<String, Quantity> limits = new HashMap<>();
+    if (wingsContainerDefinition.getCpu() != null) {
+      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu().toString()));
+    }
+
+    if (wingsContainerDefinition.getMemory() != null) {
+      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Mi"));
+    }
+
+    if (!limits.isEmpty()) {
+      containerBuilder.withNewResources().withLimits(limits).endResources();
+    }
+
+    if (wingsContainerDefinition.getPortMappings() != null) {
+      wingsContainerDefinition.getPortMappings().forEach(portMapping
+          -> containerBuilder.addNewPort()
+                 .withContainerPort(portMapping.getContainerPort())
+                 .withHostPort(portMapping.getHostPort())
+                 .withProtocol("TCP")
+                 .endPort());
+    }
+
+    if (wingsContainerDefinition.getCommands() != null) {
+      wingsContainerDefinition.getCommands().forEach(command -> {
+        if (!command.trim().isEmpty()) {
+          containerBuilder.withCommand(command.trim());
+        }
+      });
+    }
+
+    if (wingsContainerDefinition.getEnvironmentVariables() != null) {
+      wingsContainerDefinition.getEnvironmentVariables().forEach(
+          envVar -> containerBuilder.addNewEnv().withName(envVar.getName()).withValue(envVar.getValue()).endEnv());
+    }
+
+    if (wingsContainerDefinition.getLogConfiguration() != null) {
+      KubernetesContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
+      // TODO:: Check about kubernetes logs.  See https://kubernetes.io/docs/concepts/clusters/logging/
+    }
+
+    if (wingsContainerDefinition.getStorageConfigurations() != null) {
+      wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
+          -> containerBuilder.addNewVolumeMount()
+                 .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
+                 .withMountPath(storageConfiguration.getContainerPath())
+                 .withReadOnly(storageConfiguration.isReadonly())
+                 .endVolumeMount());
+    }
+
+    return containerBuilder.build();
   }
 }
