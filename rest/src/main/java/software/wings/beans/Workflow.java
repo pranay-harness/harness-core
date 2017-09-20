@@ -44,6 +44,24 @@ public class Workflow extends Base {
   @Transient private String serviceId; // Only for UI payload to support BasicOrchestration workflow
   @Transient private String infraMappingId; //// Only for UI payload to support BasicOrchestration workflow
 
+  @Transient private List<String> templatizedServiceIds = new ArrayList<>();
+
+  /**
+   * Get Templatized ServiceIds
+   * @return
+   */
+  public List<String> getTemplatizedServiceIds() {
+    return templatizedServiceIds;
+  }
+
+  /**
+   * Set templatized serviceids
+   * @param templatizedServiceIds
+   */
+  public void setTemplatizedServiceIds(List<String> templatizedServiceIds) {
+    this.templatizedServiceIds = templatizedServiceIds;
+  }
+
   /**
    * Gets name.
    *

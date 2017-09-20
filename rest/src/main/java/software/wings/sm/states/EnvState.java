@@ -57,6 +57,7 @@ public class EnvState extends State {
 
   @Transient @Inject private PipelineService pipelineService;
 
+  private Map<String, String> workflowVariables;
   /**
    * Creates env state with given name.
    *
@@ -64,6 +65,22 @@ public class EnvState extends State {
    */
   public EnvState(String name) {
     super(name, StateType.ENV_STATE.name());
+  }
+
+  /**
+   * Get workflow variables
+   * @return
+   */
+  public Map<String, String> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  /**
+   * Set workflow variables
+   * @param workflowVariables
+   */
+  public void setWorkflowVariables(Map<String, String> workflowVariables) {
+    this.workflowVariables = workflowVariables;
   }
 
   /* (non-Javadoc)
@@ -87,6 +104,7 @@ public class EnvState extends State {
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
     executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
+    executionArgs.setWorkflowVariables(getWorkflowVariables());
 
     EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
     envStateExecutionData.setWorkflowId(workflowId);

@@ -408,6 +408,23 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .build();
   }
 
+  @Override
+  public List<String> getTemplatizedServiceIds() {
+    if (workflowPhaseIdMap == null) {
+      return null;
+    }
+    List<String> templatizedServiceIds = new ArrayList<>();
+    for (WorkflowPhase workflowPhase : workflowPhaseIdMap.values()) {
+      if (workflowPhase.getTemplateExpressions() != null) {
+        if (workflowPhase.getTemplateExpressions().stream().anyMatch(
+                templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
+          templatizedServiceIds.add(workflowPhase.getServiceId());
+        }
+      }
+    }
+    return templatizedServiceIds;
+  }
+
   public static final class CanaryOrchestrationWorkflowBuilder {
     private Graph graph;
     private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, PRE_DEPLOYMENT);
