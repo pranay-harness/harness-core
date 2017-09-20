@@ -32,9 +32,13 @@ import java.util.stream.Collectors;
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
-  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER = "hv--docker-image-name--hv";
-  public static final String CONTAINER_NAME_PLACEHOLDER = "hv--container-name--hv";
-  public static final String SECRET_NAME_PLACEHOLDER = "hv--secret-name--hv";
+  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  public static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
+  public static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
+
+  private static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
+  private static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
+  private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
 
   @Attributes(title = "LABELS") List<Label> labels;
   private List<ContainerDefinition> containerDefinitions;
@@ -293,7 +297,10 @@ public class KubernetesContainerTask extends ContainerTask {
 
   public String fetchYamlConfig() {
     try {
-      return KubernetesHelper.toYaml(createReplicationController());
+      return KubernetesHelper.toYaml(createReplicationController())
+          .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
+          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
+          .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
@@ -308,11 +315,22 @@ public class KubernetesContainerTask extends ContainerTask {
   public void validateAdvanced() {
     if (StringUtils.isNotEmpty(getAdvancedConfig())) {
       try {
+        String advancedConfig = getAdvancedConfig()
+                                    .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
+                                    .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
+                                    .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME);
         ReplicationController rc;
         if (getAdvancedType() == AdvancedType.YAML) {
-          rc = KubernetesHelper.loadYaml(getAdvancedConfig());
+          rc = KubernetesHelper.loadYaml(advancedConfig);
         } else {
-          rc = (ReplicationController) KubernetesHelper.loadJson(getAdvancedConfig());
+          rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
+        }
+
+        boolean containerHasDockerPlaceholder = rc.getSpec().getTemplate().getSpec().getContainers().stream().anyMatch(
+            container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
+        if (!containerHasDockerPlaceholder) {
+          throw new WingsException(
+              ErrorCode.INVALID_ARGUMENT, "args", "No container spec contains ${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
@@ -352,7 +370,7 @@ public class KubernetesContainerTask extends ContainerTask {
         .withNewMetadata()
         .endMetadata()
         .withNewSpec()
-        .addNewImagePullSecret(SECRET_NAME_PLACEHOLDER)
+        .addNewImagePullSecret(DUMMY_SECRET_NAME)
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
         .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
         .endSpec()
@@ -366,7 +384,7 @@ public class KubernetesContainerTask extends ContainerTask {
    */
   private Container createContainerDefinition(KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerBuilder containerBuilder =
-        new ContainerBuilder().withName(CONTAINER_NAME_PLACEHOLDER).withImage(DOCKER_IMAGE_NAME_PLACEHOLDER);
+        new ContainerBuilder().withName(DUMMY_CONTAINER_NAME).withImage(DUMMY_DOCKER_IMAGE_NAME);
 
     Map<String, Quantity> limits = new HashMap<>();
     if (wingsContainerDefinition.getCpu() != null) {
