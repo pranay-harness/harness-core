@@ -104,10 +104,31 @@ public interface InstanceService {
    */
   List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId);
 
-  List<String> getContainerServiceNames(String containerServiceNameWithoutRevision, String appId);
+  /**
+   * Get the container service names (taskDefinitionName for ECS and replicationControllerName for Kubernetes) of all
+   * the container services that belong to the same family (containerSvcNameNoRevision) for the given app.
+   * @param containerSvcNameNoRevision
+   * @param appId
+   * @return
+   */
+  List<String> getContainerServiceNames(String containerSvcNameNoRevision, String appId);
 
-  Set<String> getLeastRecentVisitedContainerDeployments(String appId, long lastVisitedTimestamp);
+  /**
+   * Get the least visited container family (containerSvcNameNoRevision) info from db. This is done so that no container
+   * family is starved from update. Each time the sync job comes up, it picks up a batch of least visited families and
+   * updates the instances.
+   * @param appId
+   * @param lastVisitedTimestamp
+   * @return
+   */
+  Set<String> getLeastRecentVisitedContainerFamilies(String appId, long lastVisitedTimestamp);
 
+  /**
+   * Deletes the container deployments that have no active instances on the container server (ECS or Kubernetes).
+   * @param containerSvcNameSetToBeDeleted
+   * @param instanceType
+   * @param appId
+   */
   void deleteContainerDeploymentInfoAndInstances(
-      Set<String> containerServiceNameSetToBeDeleted, InstanceType instanceType, String appId);
+      Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId);
 }
