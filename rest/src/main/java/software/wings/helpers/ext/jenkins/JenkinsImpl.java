@@ -44,7 +44,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,13 +53,9 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
@@ -190,7 +185,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       return with()
           .pollInterval(100L, TimeUnit.MILLISECONDS)
-          .atMost(new Duration(25L, TimeUnit.SECONDS))
+          .atMost(new Duration(60L, TimeUnit.SECONDS))
           .until(() -> getJobDetails(parentJob), notNullValue());
     } catch (ConditionTimeoutException e) {
       jenkinsExceptionHandler(e);
