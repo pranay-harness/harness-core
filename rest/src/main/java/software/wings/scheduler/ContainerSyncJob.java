@@ -38,7 +38,7 @@ public class ContainerSyncJob implements Job {
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
 
     Set<String> containerSvcNameNoRevisionSet =
-        instanceService.getLeastRecentVisitedContainerDeployments(appId, System.currentTimeMillis() - INTERVAL);
+        instanceService.getLeastRecentVisitedContainerFamilies(appId, System.currentTimeMillis() - INTERVAL);
     if (containerSvcNameNoRevisionSet == null || containerSvcNameNoRevisionSet.isEmpty()) {
       return;
     }
@@ -52,8 +52,8 @@ public class ContainerSyncJob implements Job {
           -> containerSvcNameDeploymentInfoMap.put(
               containerDeploymentInfo.getContainerSvcName(), containerDeploymentInfo));
 
-      // containerDeploymentInfoList.get(0) is passed to get the information that is common to all the deployments
-      // queried by appId and containerSvcNameNoRevision.
+      // containerDeploymentInfoList.get(0) is passed to get the information that is common to all the deployments that
+      // belong to the same containerSvcNameNoRevision.
       buildContainerInstances(containerSvcNameDeploymentInfoMap, containerDeploymentInfoList.get(0));
     }
   }
@@ -71,7 +71,7 @@ public class ContainerSyncJob implements Job {
 
     Set<String> containerServiceNameSet = containerSvcNameDeploymentInfoMap.keySet();
 
-    ContainerSyncResponse instanceSyncResponse = containerInstanceHelper.getLatestInstancesFromCloud(
+    ContainerSyncResponse instanceSyncResponse = containerInstanceHelper.getLatestInstancesFromContainerServer(
         containerServiceNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId);
 
     Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
@@ -84,7 +84,7 @@ public class ContainerSyncJob implements Job {
 
     // Even though the containerInfoList is empty, we still run through this method since it also deletes the revisions
     // that don't have any instances
-    containerInstanceHelper.buildAndSaveInstancesFromContainerInfo(
+    containerInstanceHelper.updateInstancesFromContainerInfo(
         containerSvcNameDeploymentInfoMap, containerInfoList, containerSvcNameNoRevision, instanceType, appId);
   }
 }

@@ -51,6 +51,8 @@ public class ContainerDeploymentEventListener extends AbstractQueueListener<Cont
 
         Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
 
+        // Fetching all the container deployment revisions from the db for the given family
+        // (containerSvcNameNoRevision).
         List<ContainerDeploymentInfo> currentContainerDeploymentsInDB =
             instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, appId);
 
@@ -63,14 +65,13 @@ public class ContainerDeploymentEventListener extends AbstractQueueListener<Cont
           if (containerDeploymentInfo == null) {
             containerDeploymentInfo = containerInstanceHelper.buildContainerDeploymentInfo(
                 containerSvcName, containerDeploymentEvent, syncTimestamp);
-            containerSvcNameDeploymentInfoMap.put(
-                containerDeploymentInfo.getContainerSvcName(), containerDeploymentInfo);
+            containerSvcNameDeploymentInfoMap.put(containerSvcName, containerDeploymentInfo);
           }
         }
 
         // This includes the service names that were involved in the event update and the ones in the db
         ContainerSyncResponse instanceSyncResponse =
-            containerInstanceHelper.getLatestInstancesFromCloud(containerSvcNameDeploymentInfoMap.keySet(),
+            containerInstanceHelper.getLatestInstancesFromContainerServer(containerSvcNameDeploymentInfoMap.keySet(),
                 instanceType, appId, infraMappingId, clusterName, computeProviderId);
         Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
 
@@ -82,7 +83,7 @@ public class ContainerDeploymentEventListener extends AbstractQueueListener<Cont
 
         // Even though the containerInfoList is empty, we still run through this method since it also deletes the
         // revisions that don't have any instances
-        containerInstanceHelper.buildAndSaveInstancesFromContainerInfo(
+        containerInstanceHelper.updateInstancesFromContainerInfo(
             containerSvcNameDeploymentInfoMap, containerInfoList, containerSvcNameNoRevision, instanceType, appId);
 
         containerInstanceHelper.buildAndSaveContainerDeploymentInfo(
