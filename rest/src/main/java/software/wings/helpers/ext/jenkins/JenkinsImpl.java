@@ -190,7 +190,7 @@ public class JenkinsImpl implements Jenkins {
   public List<JobDetails> getJobs(String parentJob) throws IOException {
     try {
       return with()
-          .pollInterval(3L, TimeUnit.SECONDS)
+          .pollInterval(100L, TimeUnit.MILLISECONDS)
           .atMost(new Duration(25L, TimeUnit.SECONDS))
           .until(() -> getJobDetails(parentJob), notNullValue());
     } catch (ConditionTimeoutException e) {
