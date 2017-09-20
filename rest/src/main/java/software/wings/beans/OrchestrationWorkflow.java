@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +92,9 @@ public abstract class OrchestrationWorkflow {
     return userVariables.stream().anyMatch(variable -> !variable.isFixed());
   }
 
+  public List<String> getTemplatizedServiceIds() {
+    return Arrays.asList();
+  }
   /***
    * Add template expressions to workflow variables
    */
