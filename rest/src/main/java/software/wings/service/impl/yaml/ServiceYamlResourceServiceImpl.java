@@ -28,6 +28,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
@@ -47,6 +48,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Inject private YamlGitSyncService yamlGitSyncService;
 
   /**
    * Gets the yaml version of a service by serviceId
@@ -67,7 +69,8 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
       List<ServiceVariable> serviceVariables = service.getServiceVariables();
       serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
 
-      return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, service.getUuid(), serviceYaml, service.getName() + ".yaml");
     }
 
     RestResponse rr = new RestResponse<>();

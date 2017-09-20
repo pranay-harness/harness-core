@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -9,7 +8,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitSync;
@@ -28,12 +26,20 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @param uuid the uuid
    * @return the rest response
    */
-  public YamlGitSync get(String uuid) {
+  public YamlGitSync getByUuid(String uuid) {
     YamlGitSync yamlGitSync = wingsPersistence.get(YamlGitSync.class, uuid);
 
-    if (yamlGitSync == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "YamlGitSync for uuid: " + uuid + " doesn't exist!");
-    }
+    return yamlGitSync;
+  }
+
+  /**
+   * Gets the yaml git sync info by entitytId
+   *
+   * @param entityId the uuid of the entity
+   * @return the rest response
+   */
+  public YamlGitSync get(String entityId) {
+    YamlGitSync yamlGitSync = wingsPersistence.createQuery(YamlGitSync.class).field("entityId").equal(entityId).get();
 
     return yamlGitSync;
   }

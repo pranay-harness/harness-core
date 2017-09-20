@@ -20,6 +20,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.CloudProvidersYaml;
@@ -57,6 +58,7 @@ public class SetupYamlResource {
   private AppService appService;
   private SettingsService settingsService;
   private YamlHistoryService yamlHistoryService;
+  private YamlGitSyncService yamlGitSyncService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -69,11 +71,12 @@ public class SetupYamlResource {
    * @param yamlHistoryService the yaml history service
    */
   @Inject
-  public SetupYamlResource(
-      AppService appService, SettingsService settingsService, YamlHistoryService yamlHistoryService) {
+  public SetupYamlResource(AppService appService, SettingsService settingsService,
+      YamlHistoryService yamlHistoryService, YamlGitSyncService yamlGitSyncService) {
     this.appService = appService;
     this.settingsService = settingsService;
     this.yamlHistoryService = yamlHistoryService;
+    this.yamlGitSyncService = yamlGitSyncService;
   }
 
   /**
@@ -126,7 +129,7 @@ public class SetupYamlResource {
     setup.setVerificationProviderNames(verificationProviderNames);
     */
 
-    return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, accountId, setup, "setup.yaml");
   }
 
   private void doCloudProviders(CloudProvidersYaml cloudProvidersYaml, SetupYaml setup, String accountId,
