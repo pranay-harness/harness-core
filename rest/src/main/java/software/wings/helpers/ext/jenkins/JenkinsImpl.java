@@ -108,7 +108,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       return with()
           .pollInterval(1L, TimeUnit.SECONDS)
-          .atMost(new Duration(25L, TimeUnit.SECONDS))
+          .atMost(new Duration(120L, TimeUnit.SECONDS))
           .until(
               ()
                   -> {
@@ -185,7 +185,7 @@ public class JenkinsImpl implements Jenkins {
     try {
       return with()
           .pollInterval(100L, TimeUnit.MILLISECONDS)
-          .atMost(new Duration(60L, TimeUnit.SECONDS))
+          .atMost(new Duration(120L, TimeUnit.SECONDS))
           .until(() -> getJobDetails(parentJob), notNullValue());
     } catch (ConditionTimeoutException e) {
       jenkinsExceptionHandler(e);

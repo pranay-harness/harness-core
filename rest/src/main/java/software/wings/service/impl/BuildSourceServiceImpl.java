@@ -20,6 +20,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Comparator;
 import java.util.List;
@@ -135,6 +136,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    if (settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())) {
+      syncTaskContext.setTimeOut(120 * 1000);
+    }
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
 
@@ -145,6 +149,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    if (artifactStreamType.equals(ArtifactStreamType.JENKINS.name())) {
+      syncTaskContext.setTimeOut(120 * 1000);
+    }
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 }
