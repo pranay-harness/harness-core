@@ -27,12 +27,12 @@ import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.ClientPodResource;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
-import io.fabric8.kubernetes.client.dsl.ClientRollableScallableResource;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.PodResource;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -60,21 +60,18 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private KubernetesClient kubernetesClient;
   @Mock
-  private ClientMixedOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
-      ClientRollableScallableResource<ReplicationController, DoneableReplicationController>> replicationControllers;
+  private MixedOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
+      RollableScalableResource<ReplicationController, DoneableReplicationController>> replicationControllers;
   @Mock
-  private ClientNonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
-      ClientRollableScallableResource<ReplicationController, DoneableReplicationController>> defaultNamespace;
+  private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
+      RollableScalableResource<ReplicationController, DoneableReplicationController>> defaultNamespace;
+  @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> services;
   @Mock
-  private ClientMixedOperation<Service, ServiceList, DoneableService, ClientResource<Service, DoneableService>>
-      services;
-  @Mock
-  private ClientRollableScallableResource<ReplicationController, DoneableReplicationController>
-      scalableReplicationController;
+  private RollableScalableResource<ReplicationController, DoneableReplicationController> scalableReplicationController;
   @Mock private ReplicationController replicationController;
-  @Mock private ClientResource<Service, DoneableService> serviceResource;
+  @Mock private Resource<Service, DoneableService> serviceResource;
   @Mock private ObjectMeta replicationControllerMetadata;
-  @Mock private ClientMixedOperation<Pod, PodList, DoneablePod, ClientPodResource<Pod, DoneablePod>> pods;
+  @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> pods;
   @Mock private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> podsWithLabels;
   @Mock private PodList podList;
   @Mock private Pod pod;
