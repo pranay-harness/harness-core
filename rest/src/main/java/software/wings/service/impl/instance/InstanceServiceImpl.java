@@ -294,7 +294,7 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public Set<String> getLeastRecentVisitedContainerDeployments(String appId, long lastVisitedTimestamp) {
+  public Set<String> getLeastRecentVisitedContainerFamilies(String appId, long lastVisitedTimestamp) {
     // query for the least recently visited 20 container service names (without revision)
     FindOptions findOptions = new FindOptions().limit(20);
     Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
@@ -309,16 +309,16 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void deleteContainerDeploymentInfoAndInstances(
-      Set<String> containerServiceNameSetToBeDeleted, InstanceType instanceType, String appId) {
+      Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId) {
     Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
     query.field("appId").equal(appId);
-    query.field("containerSvcName").in(containerServiceNameSetToBeDeleted);
+    query.field("containerSvcName").in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
 
     query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     query.field("appId").equal(appId);
     query.field("instanceType").equal(instanceType);
-    query.field("containerInstanceKey.containerId").in(containerServiceNameSetToBeDeleted);
+    query.field("containerInstanceKey.containerId").in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
   }
 

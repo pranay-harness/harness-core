@@ -60,6 +60,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * Handles all the container instance related operations like querying the latest instances from container provider,
+ * building instances out of container info, etc.
  *
  * @author rktummala on 09/10/17
  */
@@ -227,9 +229,9 @@ public class ContainerInstanceHelper {
     }
   }
 
-  public void buildAndSaveInstancesFromContainerInfo(
-      Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap, List<ContainerInfo> containerInfoList,
-      String containerSvcNameWithoutRevision, InstanceType instanceType, String appId) {
+  public void updateInstancesFromContainerInfo(Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap,
+      List<ContainerInfo> containerInfoList, String containerSvcNameWithoutRevision, InstanceType instanceType,
+      String appId) {
     List<Instance> instanceList = Lists.newArrayList();
     // initialize the containerSvcNamesWithZeroInstances with the whole map first and then remove the ones which have
     // instances in it.
@@ -249,7 +251,10 @@ public class ContainerInstanceHelper {
       Instance instance = buildInstanceFromContainerInfo(containerDeploymentInfo.getAppId(),
           containerDeploymentInfo.getWorkflowExecutionId(), containerDeploymentInfo.getStateExecutionInstanceId(),
           containerDeploymentInfo.getInfraMappingId(), containerInfo, instanceType);
-      instanceList.add(instance);
+      // instance could be returned null in some scenarios like artifact is null, etc
+      if (instance != null) {
+        instanceList.add(instance);
+      }
     }
 
     // Save or update the container instances
@@ -335,8 +340,8 @@ public class ContainerInstanceHelper {
         .build();
   }
 
-  public ContainerSyncResponse getLatestInstancesFromCloud(Set<String> containerSvcNameSet, InstanceType instanceType,
-      String appId, String infraMappingId, String clusterName, String computeProviderId) {
+  public ContainerSyncResponse getLatestInstancesFromContainerServer(Set<String> containerSvcNameSet,
+      InstanceType instanceType, String appId, String infraMappingId, String clusterName, String computeProviderId) {
     ContainerFilter containerFilter =
         getContainerFilter(containerSvcNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId);
     Validator.notNullCheck("ContainerFilter", containerFilter);

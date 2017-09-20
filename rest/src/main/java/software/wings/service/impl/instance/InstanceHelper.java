@@ -67,14 +67,13 @@ public class InstanceHelper {
       Validator.notNullCheck("ElementStatusSummary", phaseExecutionData.getElementStatusSummary());
 
       if (workflowStandardParams == null) {
-        logger.error("workflowStandardParams can't be null");
+        logger.warn("workflowStandardParams can't be null, skipping instance processing");
         return;
       }
 
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
       if (artifact == null) {
         logger.debug("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
-        return;
       }
 
       InfrastructureMapping infrastructureMapping =
