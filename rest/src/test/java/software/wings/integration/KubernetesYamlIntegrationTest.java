@@ -22,6 +22,8 @@ import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.rules.Integration;
 
+import java.io.IOException;
 import java.util.List;
 
 @Integration
@@ -158,7 +161,11 @@ public class KubernetesYamlIntegrationTest {
         + "      volumes: []\n";
 
     String rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
-    kubernetesService.createController(config, rcDefinition);
+    try {
+      kubernetesService.createController(config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     yaml = "---\n"
         + "apiVersion: \"v1\"\n"
@@ -226,7 +233,11 @@ public class KubernetesYamlIntegrationTest {
         + "      nodeSelector: {}\n"
         + "      volumes: []\n";
     rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
-    kubernetesService.createController(config, rcDefinition);
+    try {
+      kubernetesService.createController(config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     yaml = "---\n"
         + "apiVersion: \"v1\"\n"
