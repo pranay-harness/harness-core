@@ -53,8 +53,8 @@ import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 
 /**
@@ -186,25 +187,33 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public List<JobDetails> getJobs(String ignoredParentJob) throws IOException {
+  public List<JobDetails> getJobs(String parentJob) throws IOException {
     try {
       return with()
           .pollInterval(3L, TimeUnit.SECONDS)
           .atMost(new Duration(25L, TimeUnit.SECONDS))
-          .until(() -> getJobDetails(), notNullValue());
+          .until(() -> getJobDetails(parentJob), notNullValue());
     } catch (ConditionTimeoutException e) {
       jenkinsExceptionHandler(e);
     }
     return Collections.emptyList();
   }
 
-  private List<JobDetails> getJobDetails() {
+  private List<JobDetails> getJobDetails(String parentJob) {
     try {
       List<JobDetails> result = new ArrayList<>(); // TODO:: extend jobDetails to keep track of prefix.
       Stack<Job> jobs = new Stack<>();
       Queue<Future> futures = new ConcurrentLinkedQueue<>();
 
-      jobs.addAll(jenkinsServer.getJobs().values());
+      if (Misc.isNullOrEmpty(parentJob)) {
+        return jenkinsServer.getJobs()
+            .values()
+            .stream()
+            .map(job -> new JobDetails(getJobNameFromUrl(job.getUrl()), job.getUrl(), isFolderJob(job)))
+            .collect(Collectors.toList());
+      } else {
+        jobs.addAll(jenkinsServer.getJobs(new FolderJob(parentJob, "/job/" + parentJob + "/")).values());
+      }
 
       while (!jobs.empty() || !futures.isEmpty()) {
         while (!jobs.empty()) {
