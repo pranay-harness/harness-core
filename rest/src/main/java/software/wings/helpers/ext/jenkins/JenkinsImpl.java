@@ -36,28 +36,33 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.utils.HttpUtil;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Vector;
+import java.util.Queue;
+import java.util.Stack;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 
 /**
@@ -107,7 +112,7 @@ public class JenkinsImpl implements Jenkins {
     logger.info("Retrieving job {}", jobname);
     try {
       return with()
-          .pollInterval(3L, TimeUnit.SECONDS)
+          .pollInterval(1L, TimeUnit.SECONDS)
           .atMost(new Duration(25L, TimeUnit.SECONDS))
           .until(
               ()
@@ -147,7 +152,7 @@ public class JenkinsImpl implements Jenkins {
                     throw e;
                   }
                 }
-                logger.info("Retrieved job details with name {} success", jobname);
+                logger.info("Retrieving job {} success", jobname);
                 return Collections.singletonList(jobWithDetails);
               },
               notNullValue())
@@ -181,112 +186,74 @@ public class JenkinsImpl implements Jenkins {
   }
 
   @Override
-  public List<JobDetails> getJobs(String parentFolderJobName) throws IOException {
-    logger.info("Retrieving jenkins jobs");
-    List<JobDetails> jobDetailsList = new Vector<>();
-    int depth = 1;
-    // We need to maintain a counter to know how many async callables were spun up.
-    AtomicInteger callableCount = new AtomicInteger();
-    final Lock lock = new ReentrantLock();
-    final Condition allJobsDoneCondition = lock.newCondition();
-
-    if (parentFolderJobName != null && parentFolderJobName.length() > 0) {
-      // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to add it again
-      browseJobsRecursively(
-          null, null, parentFolderJobName, depth, jobDetailsList, true, callableCount, lock, allJobsDoneCondition);
-    } else {
-      // passing null for parentJobDisplayName since the root is expanded in the ui model, we don't need to add it again
-      // at the root level, we only want to fetch the first level jobs
-      browseJobsRecursively(
-          null, null, parentFolderJobName, depth, jobDetailsList, false, callableCount, lock, allJobsDoneCondition);
-    }
-
-    // Wait for all async callable jobs to complete. If not completed within the timeout, return the job details list
-    // collected so far.
-    lock.lock();
+  public List<JobDetails> getJobs(String parentJob) throws IOException {
     try {
-      if (callableCount.intValue() > 0) {
-        allJobsDoneCondition.await(20, TimeUnit.SECONDS);
-      }
-    } catch (InterruptedException ex) {
-      logger.warn("Failed to retrieve all jobs within 20 secs");
-    } finally {
-      lock.unlock();
+      return with()
+          .pollInterval(100L, TimeUnit.MILLISECONDS)
+          .atMost(new Duration(25L, TimeUnit.SECONDS))
+          .until(() -> getJobDetails(parentJob), notNullValue());
+    } catch (ConditionTimeoutException e) {
+      jenkinsExceptionHandler(e);
     }
-    logger.info("Jenkins jobs retrieved successfully");
-    return jobDetailsList;
+    return Collections.emptyList();
   }
 
-  private void browseJobsRecursively(String folderJobUrl, String folderJobDisplayName, String folderJobName,
-      final int depth, List<JobDetails> jobDetailsList, boolean recurseThrough, AtomicInteger callableCount, Lock lock,
-      Condition allJobsDoneCondition) throws IOException {
-    if (depth == MAX_FOLDER_DEPTH) {
-      return;
-    }
+  private List<JobDetails> getJobDetails(String parentJob) {
+    try {
+      List<JobDetails> result = new ArrayList<>(); // TODO:: extend jobDetails to keep track of prefix.
+      Stack<Job> jobs = new Stack<>();
+      Queue<Future> futures = new ConcurrentLinkedQueue<>();
 
-    // Each time a new parentJob needs to be fetched, the count is incremented.
-    callableCount.incrementAndGet();
-    Future<Void> submit = executorService.submit((Callable<Void>) () -> {
-      FolderJob folderJob = null;
-      String jobUrl = null;
-      String jobDisplayName = null;
-      if (folderJobName != null && folderJobName.length() > 0) {
-        if (folderJobUrl != null) {
-          jobUrl = folderJobUrl + "job/" + folderJobName + "/";
-
-        } else {
-          jobUrl = "/job/" + folderJobName + "/";
-        }
-
-        folderJob = new FolderJob(folderJobName, jobUrl);
-        // We need to show the parent job name starting from depth 2 since ui presents the first level as an expanded
-        // tree. From depth 2, we flatten it
-        if (depth >= 2) {
-          jobDisplayName =
-              (folderJobDisplayName != null) ? (folderJobDisplayName + "/" + folderJobName) : folderJobName;
-        }
+      if (Misc.isNullOrEmpty(parentJob)) {
+        return jenkinsServer.getJobs()
+            .values()
+            .stream()
+            .map(job -> new JobDetails(getJobNameFromUrl(job.getUrl()), job.getUrl(), isFolderJob(job)))
+            .collect(Collectors.toList());
+      } else {
+        jobs.addAll(jenkinsServer.getJobs(new FolderJob(parentJob, "/job/" + parentJob + "/")).values());
       }
 
-      Map<String, Job> jobsMap = jenkinsServer.getJobs(folderJob);
-      Collection<Job> jobCollection = jobsMap.values();
-      for (Job job : jobCollection) {
-        boolean isFolderJob = isFolderJob(job);
-        if (!recurseThrough) {
-          jobDetailsList.add(new JobDetails(job.getName(), isFolderJob));
-        } else {
-          if (isFolderJob) {
-            browseJobsRecursively(jobUrl, jobDisplayName, job.getName(), depth + 1, jobDetailsList, recurseThrough,
-                callableCount, lock, allJobsDoneCondition);
+      while (!jobs.empty() || !futures.isEmpty()) {
+        while (!jobs.empty()) {
+          Job job = jobs.pop();
+          if (isFolderJob(job)) {
+            futures.add(executorService.submit((Callable<Void>) () -> {
+              jobs.addAll(jenkinsServer.getJobs(new FolderJob(job.getName(), job.getUrl())).values());
+              return null;
+            }));
           } else {
-            jobDetailsList.add(new JobDetails(
-                (jobDisplayName != null) ? (jobDisplayName + "/" + job.getName()) : job.getName(), false));
+            String jobName = getJobNameFromUrl(job.getUrl());
+            result.add(new JobDetails(jobName, job.getUrl(), false));
           }
         }
-      }
-
-      // The last job signals that the main caller job can return the results now
-      lock.lock();
-      try {
-        callableCount.decrementAndGet();
-        if (callableCount.intValue() == 0) {
-          allJobsDoneCondition.signalAll();
+        while (!futures.isEmpty() && futures.peek().isDone()) {
+          futures.poll().get();
         }
-      } finally {
-        lock.unlock();
+        Misc.quietSleep(10, TimeUnit.MILLISECONDS); // avoid busy wait
       }
-      return null;
-    });
-
-    try {
-      // This call is done only to check if the callable failed for any reason.
-      submit.get(5, TimeUnit.SECONDS);
+      return result;
     } catch (Exception ex) {
-      String msg = "Fetching jobs from jenkins server failed. Reason: " + ex.getMessage();
-      logger.error(msg, ex);
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", msg, ex);
+      logger.error("Error in fetching job lists ", ex);
+      jenkinsExceptionHandler(ex);
+      return Collections.emptyList();
     }
+  }
 
-    return;
+  private String getJobNameFromUrl(String url) {
+    // TODO:: remove it post review. Extend jobDetails object
+    try {
+      URI uri = new URI(url);
+      String[] parts = uri.getPath().split("/");
+      String name = "";
+      for (int idx = 2; idx <= parts.length - 1; idx = idx + 2) {
+        name += "/" + parts[idx];
+      }
+      return name.startsWith("/") ? name.substring(1) : name;
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+      return url;
+    }
   }
 
   private boolean isFolderJob(Job job) {
@@ -467,18 +434,30 @@ public class JenkinsImpl implements Jenkins {
     try {
       this.jenkinsHttpClient.get("/");
       return true;
-    } catch (HttpResponseException e) {
-      if (e.getStatusCode() == 401) {
+    } catch (Exception e) {
+      jenkinsExceptionHandler(e);
+      return false;
+    }
+  }
+
+  private void jenkinsExceptionHandler(Exception e) {
+    if (e instanceof HttpResponseException) {
+      if (((HttpResponseException) e).getStatusCode() == 401) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Jenkins credentials");
-      } else if (e.getStatusCode() == 403) {
+      } else if (((HttpResponseException) e).getStatusCode() == 403) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access jenkins");
       }
       final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
       wingsException.addParam("message", "Jenkins server may not be running");
       wingsException.addParam("jenkinsResponse", e.getMessage());
       throw wingsException;
-    } catch (IOException e) {
-      logger.warn("isRunning() {} ", e);
+    } else if (e instanceof ConditionTimeoutException) {
+      logger.warn("Jenkins server request did not succeed within 25 secs", e);
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      wingsException.addParam("message", "Failed to get job details");
+      wingsException.addParam("jenkinsResponse", "Server Error");
+      throw wingsException;
+    } else {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
     }
   }
