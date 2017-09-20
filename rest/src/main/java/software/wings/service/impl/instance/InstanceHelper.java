@@ -73,7 +73,7 @@ public class InstanceHelper {
 
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
       if (artifact == null) {
-        logger.error("artifact can't be null");
+        logger.debug("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
         return;
       }
 
@@ -81,7 +81,7 @@ public class InstanceHelper {
           infrastructureMappingService.get(appId, phaseExecutionData.getInfraMappingId());
 
       if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
-        containerInstanceHelper.extractContainerInfo(
+        containerInstanceHelper.extractContainerInfoAndSendEvent(
             stateExecutionInstanceId, phaseExecutionData, workflowExecution, infrastructureMapping);
       } else {
         List<Instance> instanceList = Lists.newArrayList();
@@ -156,11 +156,11 @@ public class InstanceHelper {
             .withAccountId(application.getAccountId())
             .withAppId(workflowExecution.getAppId())
             .withAppName(workflowExecution.getAppName())
-            .withLastArtifactId(artifact.getUuid())
-            .withLastArtifactName(artifact.getDisplayName())
-            .withLastArtifactStreamId(artifact.getArtifactStreamId())
-            .withLastArtifactSourceName(artifact.getArtifactSourceName())
-            .withLastArtifactBuildNum(artifact.getBuildNo())
+            .withLastArtifactId(artifact == null ? null : artifact.getUuid())
+            .withLastArtifactName(artifact == null ? null : artifact.getDisplayName())
+            .withLastArtifactStreamId(artifact == null ? null : artifact.getArtifactStreamId())
+            .withLastArtifactSourceName(artifact == null ? null : artifact.getArtifactSourceName())
+            .withLastArtifactBuildNum(artifact == null ? null : artifact.getBuildNo())
             .withEnvName(workflowExecution.getEnvName())
             .withEnvId(workflowExecution.getEnvId())
             .withEnvType(workflowExecution.getEnvType())

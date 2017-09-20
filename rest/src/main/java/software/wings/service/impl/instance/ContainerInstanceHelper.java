@@ -16,6 +16,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EmbeddedUser;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -87,7 +88,7 @@ public class ContainerInstanceHelper {
         || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping);
   }
 
-  public void extractContainerInfo(String stateExecutionInstanceId, PhaseExecutionData phaseExecutionData,
+  public void extractContainerInfoAndSendEvent(String stateExecutionInstanceId, PhaseExecutionData phaseExecutionData,
       WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping) {
     PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
     if (phaseExecutionSummary != null) {
@@ -96,8 +97,17 @@ public class ContainerInstanceHelper {
       if (phaseStepExecutionSummaryMap != null) {
         for (String stepName : phaseStepExecutionSummaryMap.keySet()) {
           if (stepName.equals(Constants.DEPLOY_CONTAINERS) && phaseStepExecutionSummaryMap.containsKey(stepName)) {
-            for (StepExecutionSummary stepExecutionSummary :
-                phaseStepExecutionSummaryMap.get(stepName).getStepExecutionSummaryList()) {
+            List<StepExecutionSummary> stepExecutionSummaryList =
+                phaseStepExecutionSummaryMap.get(stepName).getStepExecutionSummaryList();
+            // This was observed when the "deploy containers" step was executed in rollback and no commands were
+            // executed since setup failed.
+            if (stepExecutionSummaryList == null) {
+              logger.debug(
+                  "StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+              continue;
+            }
+
+            for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
               if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
                 CommandStepExecutionSummary commandStepExecutionSummary =
                     (CommandStepExecutionSummary) stepExecutionSummary;
@@ -227,7 +237,12 @@ public class ContainerInstanceHelper {
     for (ContainerInfo containerInfo : containerInfoList) {
       String containerSvcName = getContainerSvcName(containerInfo);
       ContainerDeploymentInfo containerDeploymentInfo = containerSvcNameDeploymentInfoMap.get(containerSvcName);
-      Validator.notNullCheck("ContainerDeploymentInfo", containerDeploymentInfo);
+      // Added this to debug the null containerDeploymentInfo, which isn't expected.
+      if (containerDeploymentInfo == null) {
+        String msg = "ContainerDeploymentInfo is null for containerSvcName:" + containerSvcName;
+        logger.error(msg);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", msg);
+      }
 
       // remove the ones which have instances in it.
       containerSvcNamesWithZeroInstances.remove(containerSvcName);
@@ -273,7 +288,9 @@ public class ContainerInstanceHelper {
         }
       }
 
-      Validator.notNullCheck("Artifact", serviceArtifact);
+      if (serviceArtifact == null) {
+        logger.debug("artifact is null for stateExecutionInstance: " + stateExecutionInstanceId);
+      }
 
       final String infraMappingType = infrastructureMapping.getInfraMappingType();
 
