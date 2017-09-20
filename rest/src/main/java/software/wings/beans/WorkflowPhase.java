@@ -240,20 +240,28 @@ public class WorkflowPhase implements UuidAware {
   }
 
   public WorkflowPhase clone() {
-    return aWorkflowPhase()
-        .withUuid(UUIDGenerator.getUuid())
-        .withServiceId(getServiceId())
-        .withInfraMappingId(getInfraMappingId())
-        .withInfraMappingName(getInfraMappingName())
-        .withComputeProviderId(getComputeProviderId())
-        .withDeploymentType(getDeploymentType())
-        .withRollback(isRollback())
-        .withPhaseNameForRollback(getPhaseNameForRollback())
-        .withPhaseSteps(getPhaseSteps())
-        .withValid(isValid())
-        .withValidationMessage(validationMessage)
-        .withTemplateExpressions(templateExpressions)
-        .build();
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .withUuid(UUIDGenerator.getUuid())
+                                      .withServiceId(getServiceId())
+                                      .withInfraMappingId(getInfraMappingId())
+                                      .withInfraMappingName(getInfraMappingName())
+                                      .withComputeProviderId(getComputeProviderId())
+                                      .withDeploymentType(getDeploymentType())
+                                      .withRollback(isRollback())
+                                      .withPhaseNameForRollback(getPhaseNameForRollback())
+                                      .withValid(isValid())
+                                      .withValidationMessage(getValidationMessage())
+                                      .withTemplateExpressions(getTemplateExpressions())
+                                      .build();
+    List<PhaseStep> phaseSteps = getPhaseSteps();
+    List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
+    if (phaseSteps != null) {
+      for (PhaseStep phaseStep : phaseSteps) {
+        clonedPhaseSteps.add(phaseStep.clone());
+      }
+    }
+    workflowPhase.setPhaseSteps(clonedPhaseSteps);
+    return workflowPhase;
   }
 
   public static final class WorkflowPhaseBuilder {

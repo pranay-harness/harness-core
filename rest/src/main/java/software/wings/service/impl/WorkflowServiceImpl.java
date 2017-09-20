@@ -932,6 +932,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+    logger.info("Cloning workflow phase for appId {}, workflowId {} workflowPhase {}", appId, workflowId,
+        workflowPhase.getUuid());
     String phaseId = workflowPhase.getUuid();
     String phaseName = workflowPhase.getName();
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -959,6 +961,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    logger.info("Cloning workflow phase for appId {}, workflowId {} workflowPhase {} success", appId, workflowId,
+        workflowPhase.getUuid());
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(clonedWorkflowPhase.getUuid());
   }
 
@@ -1064,6 +1068,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     validateServiceCompatibility(appId, serviceId, oldServiceId);
+    WorkflowPhase rollbackWorkflowPhase =
+        orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+
+    if (rollbackWorkflowPhase != null) {
+      rollbackWorkflowPhase.setServiceId(serviceId);
+      rollbackWorkflowPhase.setInfraMappingId(infraMappingId);
+      rollbackWorkflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+      rollbackWorkflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
+      rollbackWorkflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
+      orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+    }
     if (!infraMappingId.equals(oldInfraMappingId)) {
       inframappingChanged = true;
     }
