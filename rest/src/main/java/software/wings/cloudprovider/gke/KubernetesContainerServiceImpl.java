@@ -6,6 +6,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
@@ -28,6 +29,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .replicationControllers()
         .createOrReplace(definition);
+  }
+
+  @Override
+  public ReplicationController createController(KubernetesConfig kubernetesConfig, String yaml) {
+    try {
+      return createController(kubernetesConfig, KubernetesHelper.loadYaml(yaml, ReplicationController.class));
+    } catch (IOException e) {
+      logger.error("Error loading Kubernetes replication controller from YAML.", e);
+    }
+    return null;
   }
 
   @Override
@@ -174,6 +186,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Service service = kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name).get();
     logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", name);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().createOrReplace(definition);
+  }
+
+  @Override
+  public Service createOrReplaceService(KubernetesConfig kubernetesConfig, String yaml) {
+    try {
+      return createOrReplaceService(kubernetesConfig, KubernetesHelper.loadYaml(yaml, Service.class));
+    } catch (IOException e) {
+      logger.error("Error loading Kubernetes service from YAML.", e);
+    }
+    return null;
   }
 
   @Override

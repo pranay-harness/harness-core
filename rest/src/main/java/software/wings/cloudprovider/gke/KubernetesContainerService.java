@@ -26,6 +26,7 @@ public interface KubernetesContainerService {
    */
   ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition);
 
+  ReplicationController createController(KubernetesConfig kubernetesConfig, String yaml);
   /**
    * Gets a replication controller.
    *
@@ -83,6 +84,8 @@ public interface KubernetesContainerService {
    * @return the service
    */
   Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
+
+  Service createOrReplaceService(KubernetesConfig kubernetesConfig, String yaml);
 
   /**
    * Gets a service.

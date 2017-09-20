@@ -9,9 +9,9 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 
 /**
  * Represents the instance that the service get deployed onto.
@@ -68,19 +68,19 @@ public class Instance extends Base {
     private String accountId;
     private String serviceId;
     private String serviceName;
-    private String uuid;
     private String appName;
+    private String uuid;
     private String infraMappingId;
     private String infraMappingType;
-    private EmbeddedUser createdBy;
     private String computeProviderId;
-    private long createdAt;
+    private EmbeddedUser createdBy;
     private String computeProviderName;
+    private long createdAt;
     private String lastArtifactStreamId;
     private EmbeddedUser lastUpdatedBy;
     private String lastArtifactId;
-    private long lastUpdatedAt;
     private String lastArtifactName;
+    private long lastUpdatedAt;
     private String lastArtifactSourceName;
     private String lastArtifactBuildNum;
     private String lastDeployedById;
@@ -143,13 +143,13 @@ public class Instance extends Base {
       return this;
     }
 
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
+    public Builder withAppName(String appName) {
+      this.appName = appName;
       return this;
     }
 
-    public Builder withAppName(String appName) {
-      this.appName = appName;
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
       return this;
     }
 
@@ -158,18 +158,13 @@ public class Instance extends Base {
       return this;
     }
 
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
     public Builder withInfraMappingType(String infraMappingType) {
       this.infraMappingType = infraMappingType;
       return this;
     }
 
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
+    public Builder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -178,13 +173,18 @@ public class Instance extends Base {
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
       return this;
     }
 
     public Builder withComputeProviderName(String computeProviderName) {
       this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
       return this;
     }
 
@@ -203,13 +203,13 @@ public class Instance extends Base {
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
+    public Builder withLastArtifactName(String lastArtifactName) {
+      this.lastArtifactName = lastArtifactName;
       return this;
     }
 
-    public Builder withLastArtifactName(String lastArtifactName) {
-      this.lastArtifactName = lastArtifactName;
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
@@ -274,20 +274,20 @@ public class Instance extends Base {
           .withAccountId(accountId)
           .withServiceId(serviceId)
           .withServiceName(serviceName)
-          .withUuid(uuid)
           .withAppName(appName)
+          .withUuid(uuid)
           .withInfraMappingId(infraMappingId)
-          .withAppId(appId)
           .withInfraMappingType(infraMappingType)
-          .withCreatedBy(createdBy)
+          .withAppId(appId)
           .withComputeProviderId(computeProviderId)
-          .withCreatedAt(createdAt)
+          .withCreatedBy(createdBy)
           .withComputeProviderName(computeProviderName)
+          .withCreatedAt(createdAt)
           .withLastArtifactStreamId(lastArtifactStreamId)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastArtifactId(lastArtifactId)
-          .withLastUpdatedAt(lastUpdatedAt)
           .withLastArtifactName(lastArtifactName)
+          .withLastUpdatedAt(lastUpdatedAt)
           .withLastArtifactSourceName(lastArtifactSourceName)
           .withLastArtifactBuildNum(lastArtifactBuildNum)
           .withLastDeployedById(lastDeployedById)
@@ -311,20 +311,20 @@ public class Instance extends Base {
       instance.setAccountId(accountId);
       instance.setServiceId(serviceId);
       instance.setServiceName(serviceName);
-      instance.setUuid(uuid);
       instance.setAppName(appName);
+      instance.setUuid(uuid);
       instance.setInfraMappingId(infraMappingId);
-      instance.setAppId(appId);
       instance.setInfraMappingType(infraMappingType);
-      instance.setCreatedBy(createdBy);
+      instance.setAppId(appId);
       instance.setComputeProviderId(computeProviderId);
-      instance.setCreatedAt(createdAt);
+      instance.setCreatedBy(createdBy);
       instance.setComputeProviderName(computeProviderName);
+      instance.setCreatedAt(createdAt);
       instance.setLastArtifactStreamId(lastArtifactStreamId);
       instance.setLastUpdatedBy(lastUpdatedBy);
       instance.setLastArtifactId(lastArtifactId);
-      instance.setLastUpdatedAt(lastUpdatedAt);
       instance.setLastArtifactName(lastArtifactName);
+      instance.setLastUpdatedAt(lastUpdatedAt);
       instance.setLastArtifactSourceName(lastArtifactSourceName);
       instance.setLastArtifactBuildNum(lastArtifactBuildNum);
       instance.setLastDeployedById(lastDeployedById);

@@ -222,4 +222,19 @@ public class EcsContainerTask extends ContainerTask {
       this.readonly = readonly;
     }
   }
+
+  @Override
+  public void convertToAdvanced() {
+    // TODO
+  }
+
+  @Override
+  public void convertFromAdvanced() {
+    setAdvancedConfig("");
+  }
+
+  @Override
+  public void validateAdvanced() {
+    // TODO
+  }
 }

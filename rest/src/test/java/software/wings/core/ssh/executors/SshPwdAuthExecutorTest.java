@@ -222,6 +222,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Repeat(times = 3, successes = 1)
+  @Ignore
   public void shouldTransferGridFSFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -251,6 +252,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Ignore
   @Repeat(times = 3, successes = 1)
   public void shouldTransferGridFSFileWithDifferentName() throws IOException {
     File file = testFolder.newFile();
@@ -281,6 +283,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Ignore
   @Repeat(times = 3, successes = 1)
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
@@ -288,7 +291,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.copyFiles("/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
+    assertThat(executor.copyFiles("/tmp/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), file.getName())).hasSameContentAs(file).canRead().canWrite();
   }

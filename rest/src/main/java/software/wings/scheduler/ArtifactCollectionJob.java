@@ -2,7 +2,8 @@ package software.wings.scheduler;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.Artifact.Status.*;
+import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -19,10 +20,12 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -58,7 +61,15 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
     } catch (Exception e) {
-      logger.warn("Failed to collect artifact for appId {} , artifact stream {}", appId, artifactStream, e);
+      if (e instanceof WingsException
+          && ((WingsException) e)
+                 .getResponseMessageList()
+                 .stream()
+                 .anyMatch(responseMessage -> responseMessage.getCode() == ErrorCode.UNAVAILABLE_DELEGATES)) {
+        logger.warn("No delegate available to collect artifact for app {}, artifact stream {}", appId, artifactStream);
+      } else {
+        logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
+      }
     }
 
     if (artifacts != null && artifacts.size() != 0) {
