@@ -8,6 +8,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.google.common.base.MoreObjects;
@@ -358,6 +359,27 @@ public class Graph {
 
     private Node next;
     private Group group;
+
+    public Node clone() {
+      Node clonedNode = aNode()
+                            .withId("node_" + UUIDGenerator.getUuid())
+                            .withName(getName())
+                            .withType(getType())
+                            .withRollback(getRollback())
+                            .withStatus(getStatus())
+                            .withX(getX())
+                            .withY(getY())
+                            .withWidth(getWidth())
+                            .withHeight(getHeight())
+                            .withTemplateExpressions(getTemplateExpressions())
+                            .withExpanded(isExpanded())
+                            .withValid(isValid())
+                            .withValidationMessage(getValidationMessage())
+                            .withOrigin(isOrigin())
+                            .build();
+      clonedNode.setProperties(getProperties());
+      return clonedNode;
+    }
 
     /**
      * Gets id.
@@ -835,10 +857,22 @@ public class Graph {
       private int y;
       private int width;
       private int height;
-      private boolean origin;
       private boolean rollback;
       private Map<String, Object> properties = new HashMap<>();
       private List<TemplateExpression> templateExpressions;
+
+      private Object executionSummary;
+      private Object executionDetails;
+      private String detailsReference;
+      private boolean expanded;
+      private boolean origin;
+
+      private boolean valid;
+      private String validationMessage;
+      private Map<String, String> inValidFieldMessages;
+
+      private List<ElementExecutionSummary> elementStatusSummary;
+      private List<InstanceStatusSummary> instanceStatusSummary;
 
       private Builder() {}
 
@@ -989,6 +1023,54 @@ public class Graph {
        */
       public Builder withTemplateExpressions(List<TemplateExpression> templateExpressions) {
         this.templateExpressions = templateExpressions;
+        return this;
+      }
+
+      /**
+       * With Execution Summary builder
+       */
+      public Builder withExecutionSummary(Object executionSummary) {
+        this.executionSummary = executionSummary;
+        return this;
+      }
+
+      /**
+       * With Execution Details builder
+       */
+      public Builder withExecutionDetails(Object executionDetails) {
+        this.executionDetails = executionDetails;
+        return this;
+      }
+
+      /**
+       * With Details Reference builder
+       */
+      public Builder withDetailsRefernce(String detailsReference) {
+        this.detailsReference = detailsReference;
+        return this;
+      }
+
+      /**
+       * With Expanded Builder
+       */
+      public Builder withExpanded(boolean expanded) {
+        this.expanded = expanded;
+        return this;
+      }
+
+      /**
+       * With Valid Builder
+       */
+      public Builder withValid(boolean valid) {
+        this.valid = valid;
+        return this;
+      }
+
+      /**
+       * With Valid Builder
+       */
+      public Builder withValidationMessage(String validationMessage) {
+        this.validationMessage = validationMessage;
         return this;
       }
 
