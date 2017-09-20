@@ -26,7 +26,6 @@ public interface KubernetesContainerService {
    */
   ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition);
 
-  ReplicationController createController(KubernetesConfig kubernetesConfig, String yaml);
   /**
    * Gets a replication controller.
    *

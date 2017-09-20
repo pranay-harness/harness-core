@@ -55,16 +55,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ReplicationController createController(KubernetesConfig kubernetesConfig, String yaml) {
-    try {
-      return createController(kubernetesConfig, KubernetesHelper.loadYaml(yaml, ReplicationController.class));
-    } catch (IOException e) {
-      logger.error("Error loading Kubernetes replication controller from YAML.", e);
-    }
-    return null;
-  }
-
-  @Override
   public ReplicationController getController(KubernetesConfig kubernetesConfig, String name) {
     return name != null
         ? kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get()
