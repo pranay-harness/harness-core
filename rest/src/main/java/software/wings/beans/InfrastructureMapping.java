@@ -52,6 +52,10 @@ public abstract class InfrastructureMapping extends Base {
 
   /**
    * Instantiates a new Infrastructure mapping.
+   */
+  public InfrastructureMapping() {}
+  /**
+   * Instantiates a new Infrastructure mapping.
    *
    * @param infraMappingType the infra mapping type
    */

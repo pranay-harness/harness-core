@@ -498,7 +498,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
         .withAppId(getAppId())
         .withEnvId(getEnvId())
         .withEntityType(getEntityType())
-        .withEntityId(getUuid())
+        .withEntityId(getEntityId())
         .withTemplateId(getTemplateId())
         .withFileName(getFileName())
         .withRelativeFilePath(getRelativeFilePath())

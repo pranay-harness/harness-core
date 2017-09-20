@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -125,5 +126,22 @@ public class EnvironmentResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     envService.delete(appId, envId);
     return new RestResponse();
+  }
+
+  /**
+   * Clone environment rest response.
+   *
+   * @param appId      the app id
+   * @param envId the workflow id
+   * @param cloneMetadata   the clone metadata
+   * @return the rest response
+   */
+  @POST
+  @Path("{envId}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> cloneEnvironment(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, CloneMetadata cloneMetadata) {
+    return new RestResponse<>(envService.cloneEnvironment(appId, envId, cloneMetadata));
   }
 }
