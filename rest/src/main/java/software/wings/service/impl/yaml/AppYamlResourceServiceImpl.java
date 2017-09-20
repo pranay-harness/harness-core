@@ -18,6 +18,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.AppYaml;
@@ -37,6 +38,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private YamlGitSyncService yamlGitSyncService;
 
   /**
    * Gets the yaml version of an app by appId
@@ -55,7 +57,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
     appYaml.setServiceNamesFromServices(services);
     appYaml.setEnvironmentNamesFromEnvironments(environments);
 
-    return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, appId, appYaml, app.getName() + ".yaml");
   }
 
   /**

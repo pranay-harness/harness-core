@@ -19,6 +19,7 @@ import software.wings.beans.RestResponse;
 import software.wings.resources.yaml.SetupYamlResource;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ResourceTestRule;
 
@@ -41,6 +42,7 @@ public class SetupYamlResourceTest {
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);
   private static final YamlHistoryService yamlHistoryService = mock(YamlHistoryService.class);
+  private static final YamlGitSyncService yamlGitSyncService = mock(YamlGitSyncService.class);
   private static final SetupYamlResource syr = mock(SetupYamlResource.class);
 
   /**
@@ -49,7 +51,7 @@ public class SetupYamlResourceTest {
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
-          .addResource(new SetupYamlResource(appService, settingsService, yamlHistoryService))
+          .addResource(new SetupYamlResource(appService, settingsService, yamlHistoryService, yamlGitSyncService))
           .build();
 
   private final long TIME_IN_MS = System.currentTimeMillis();
@@ -107,7 +109,8 @@ public class SetupYamlResourceTest {
     List<String> appNames = appService.getAppNamesByAccountId(TEST_ACCOUNT_ID);
     SetupYaml setup = new SetupYaml();
     setup.setAppNames(appNames);
-    when(syr.get(TEST_ACCOUNT_ID)).thenReturn(YamlHelper.getYamlRestResponse(setup, "setup.yaml"));
+    when(syr.get(TEST_ACCOUNT_ID))
+        .thenReturn(YamlHelper.getYamlRestResponse(yamlGitSyncService, TEST_ACCOUNT_ID, setup, "setup.yaml"));
   }
 
   /**

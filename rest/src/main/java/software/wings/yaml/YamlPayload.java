@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+import software.wings.yaml.gitSync.YamlGitSync;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class YamlPayload {
   private String name = "";
   private String yaml = "";
   @JsonIgnore private List<ResponseMessage> responseMessages = new ArrayList<>();
+
+  private YamlGitSync gitSync;
 
   // required no arg constructor
   public YamlPayload() {}
@@ -73,5 +76,13 @@ public class YamlPayload {
     }
 
     return false;
+  }
+
+  public YamlGitSync getGitSync() {
+    return gitSync;
+  }
+
+  public void setGitSync(YamlGitSync gitSync) {
+    this.gitSync = gitSync;
   }
 }

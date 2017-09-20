@@ -24,6 +24,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.AppYaml;
@@ -60,6 +61,7 @@ public class AppYamlResource {
   private ServiceResourceService serviceResourceService;
   private EnvironmentService environmentService;
   private YamlHistoryService yamlHistoryService;
+  private YamlGitSyncService yamlGitSyncService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -73,7 +75,8 @@ public class AppYamlResource {
    */
   @Inject
   public AppYamlResource(AppService appService, ServiceResourceService serviceResourceService,
-      EnvironmentService environmentService, YamlHistoryService yamlHistoryService) {
+      EnvironmentService environmentService, YamlHistoryService yamlHistoryService,
+      YamlGitSyncService yamlGitSyncService) {
     this.appService = appService;
     this.serviceResourceService = serviceResourceService;
     this.environmentService = environmentService;
@@ -101,7 +104,7 @@ public class AppYamlResource {
     appYaml.setServiceNamesFromServices(services);
     appYaml.setEnvironmentNamesFromEnvironments(environments);
 
-    return YamlHelper.getYamlRestResponse(appYaml, app.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, appId, appYaml, app.getName() + ".yaml");
   }
 
   // TODO - NOTE: we probably don't need PUT and POST endpoints - there is really only one method - update (PUT)
