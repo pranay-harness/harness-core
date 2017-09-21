@@ -2,6 +2,7 @@ package software.wings.api;
 
 import static software.wings.sm.ContextElementType.CONTAINER_SERVICE;
 
+import software.wings.beans.ResizeStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -15,6 +16,7 @@ public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
   private int maxInstances;
+  private ResizeStrategy resizeStrategy;
   private String clusterName;
   private DeploymentType deploymentType;
   private String infraMappingId;
@@ -50,6 +52,14 @@ public class ContainerServiceElement implements ContextElement {
     this.maxInstances = maxInstances;
   }
 
+  public ResizeStrategy getResizeStrategy() {
+    return resizeStrategy;
+  }
+
+  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
+    this.resizeStrategy = resizeStrategy;
+  }
+
   @Override
   public Map<String, Object> paramMap(ExecutionContext context) {
     return null;
@@ -83,6 +93,7 @@ public class ContainerServiceElement implements ContextElement {
     private String uuid;
     private String name;
     private int maxInstances;
+    private ResizeStrategy resizeStrategy;
     private String clusterName;
     private DeploymentType deploymentType;
     private String infraMappingId;
@@ -108,6 +119,11 @@ public class ContainerServiceElement implements ContextElement {
       return this;
     }
 
+    public ContainerServiceElementBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
+      return this;
+    }
+
     public ContainerServiceElementBuilder withClusterName(String clusterName) {
       this.clusterName = clusterName;
       return this;
@@ -128,6 +144,7 @@ public class ContainerServiceElement implements ContextElement {
       containerServiceElement.setUuid(uuid);
       containerServiceElement.setName(name);
       containerServiceElement.setMaxInstances(maxInstances);
+      containerServiceElement.setResizeStrategy(resizeStrategy);
       containerServiceElement.setClusterName(clusterName);
       containerServiceElement.setDeploymentType(deploymentType);
       containerServiceElement.setInfraMappingId(infraMappingId);
