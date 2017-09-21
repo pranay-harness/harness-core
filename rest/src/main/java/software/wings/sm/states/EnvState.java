@@ -53,6 +53,8 @@ public class EnvState extends State {
 
   @SchemaIgnore private String pipelineId;
 
+  @SchemaIgnore private Map<String, String> workflowVariables;
+
   @Transient @Inject private WorkflowExecutionService executionService;
 
   @Transient @Inject private PipelineService pipelineService;
@@ -87,7 +89,7 @@ public class EnvState extends State {
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
     executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
-    // executionArgs.setWorkflowVariables(getWorkflowVariables());
+    executionArgs.setWorkflowVariables(getWorkflowVariables());
 
     EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
     envStateExecutionData.setWorkflowId(workflowId);
@@ -169,6 +171,22 @@ public class EnvState extends State {
    */
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;
+  }
+
+  /**
+   * Get Workflow variables
+   * @return
+   */
+  public Map<String, String> getWorkflowVariables() {
+    return workflowVariables;
+  }
+
+  /**
+   * Set workflow variables
+   * @param workflowVariables
+   */
+  public void setWorkflowVariables(Map<String, String> workflowVariables) {
+    this.workflowVariables = workflowVariables;
   }
 
   /**
