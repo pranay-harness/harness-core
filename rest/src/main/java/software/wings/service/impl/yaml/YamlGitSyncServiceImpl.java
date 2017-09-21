@@ -3,6 +3,10 @@ package software.wings.service.impl.yaml;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.PushResult;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,6 +25,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.text.SimpleDateFormat;
+import java.util.HashSet;
+import java.util.Set;
 import javax.inject.Inject;
 
 public class YamlGitSyncServiceImpl implements YamlGitSyncService {
@@ -175,16 +185,22 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         // TODO - annoying that we need to write the sshKey to a file, because the addIdentity method in
         // createDefaultJSch of the CustomJschConfigSessionFactory requires a path and won't take the key directly!
 
-        File keyPath = null;
+        File sshKeyPath = null;
 
         try {
           // Path keyDir = Files.createTempDirectory("sync-repo-keys");
-          // keyPath = File.createTempFile(entityId, "", keyDir.toFile());
-          keyPath = File.createTempFile("sync-keys_" + entityId, "");
-          keyPath.delete();
-          // keyPath.mkdirs();
+          // sshKeyPath = File.createTempFile(entityId, "", keyDir.toFile());
+          sshKeyPath = File.createTempFile("sync-keys_" + entityId, "");
 
-          FileWriter fw = new FileWriter(keyPath);
+          Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+          perms.add(PosixFilePermission.OWNER_READ);
+          perms.add(PosixFilePermission.OWNER_WRITE);
+          Files.setPosixFilePermissions(Paths.get(sshKeyPath.getAbsolutePath()), perms);
+
+          // sshKeyPath.delete();
+          // sshKeyPath.mkdirs();
+
+          FileWriter fw = new FileWriter(sshKeyPath);
           BufferedWriter bw = new BufferedWriter(fw);
           bw.write(ygs.getSshKey());
 
@@ -200,13 +216,14 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         }
         //---------------------
 
-        GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), keyPath.getPath());
+        GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
 
         try {
           //---------------------
           // Path repoDir = Files.createTempDirectory("sync-repos");
           // File repoPath = File.createTempFile("sync-repos_" + entityId, "", repoDir.toFile());
           File repoPath = File.createTempFile("sync-repos_" + entityId, "");
+
           repoPath.delete();
           repoPath.mkdirs();
 
@@ -220,29 +237,39 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
           switch (klass.getCanonicalName()) {}
 
-          /*
           //---------------------
           // Create a new file and add it to the index
           String fileName = "test_file1.txt";
 
-          File newFile = new File(localPath, fileName);
+          File newFile = new File(repoPath, fileName);
           newFile.createNewFile();
           FileWriter writer = new FileWriter(newFile);
 
           String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
 
-          writer.write("Test data" + "\n" + "test data2" + "\n" + "Last Commit: " + timestamp + "\n");
+          writer.write("Test data"
+              + "\n"
+              + "test data2"
+              + "\n"
+              + "Last Commit: " + timestamp + "\n");
           writer.close();
           //---------------------
 
-          DirCache dirCache = git.add().addFilepattern(fileName).call();
+          try {
+            DirCache dirCache = git.add().addFilepattern(fileName).call();
+          } catch (GitAPIException e) {
+            e.printStackTrace();
+          }
 
           RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "My first test commit");
 
           System.out.println(rev.toString());
 
           Iterable<PushResult> pushResults = gsh.push("origin");
-          */
+
+          // need to clean up TEMP files
+          sshKeyPath.delete();
+          repoPath.delete();
 
         } catch (IOException e) {
           e.printStackTrace();

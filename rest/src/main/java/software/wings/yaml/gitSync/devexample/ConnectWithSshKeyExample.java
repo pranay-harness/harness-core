@@ -24,24 +24,31 @@ public class ConnectWithSshKeyExample {
     String passphrase = passphraseBR.readLine();
     String sshKeyPath = sshKeyPathBR.readLine();
 
+    // TODO - TEMP FOR DEBUG:
+    // sshKeyPath =
+    // "/var/folders/yk/bsk0g38s3nv2jv327yqswyc00000gn/T/sync-keys_w2nJ72QPTNyg_EdyZjwRXQ8199717070629768290";  sshKeyPath
+    // = "/Users/bsollish/.ssh/id_rsa1";
+    sshKeyPath = "/Users/bsollish/.ssh/test/id_rsa1";
+    // sshKeyPath = "/Users/bsollish/.ssh/id_rsa";
+
     GitSyncHelper gsh = new GitSyncHelper(passphrase, sshKeyPath);
 
     //---------------------
-    File localPath = File.createTempFile("TestGitRepository", "");
-    localPath.delete();
-    localPath.mkdirs();
+    File repoPath = File.createTempFile("TestGitRepository", "");
+    repoPath.delete();
+    repoPath.mkdirs();
 
     // prints absolute path
-    System.out.println("Absolute path: " + localPath.getAbsolutePath());
+    System.out.println("Absolute path: " + repoPath.getAbsolutePath());
     //---------------------
 
-    Git git = gsh.clone("git@github.com:wings-software/yml-test.git", localPath);
+    Git git = gsh.clone("git@github.com:wings-software/yml-test.git", repoPath);
 
     //---------------------
     // Create a new file and add it to the index
     String fileName = "test_file1.txt";
 
-    File newFile = new File(localPath, fileName);
+    File newFile = new File(repoPath, fileName);
     newFile.createNewFile();
     FileWriter writer = new FileWriter(newFile);
 
@@ -62,5 +69,8 @@ public class ConnectWithSshKeyExample {
     System.out.println(rev.toString());
 
     Iterable<PushResult> pushResults = gsh.push("origin");
+
+    // need to clean up TEMP files
+    repoPath.delete();
   }
 }
