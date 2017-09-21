@@ -26,11 +26,11 @@ public class GitSyncHelper {
     this.transportConfigCallback = new CustomTransportConfigCallback(this.sshSessionFactory);
   }
 
-  public Git clone(String Uri, File localPath) {
+  public Git clone(String Uri, File clonePath) {
     // clone the repo
     CloneCommand cloneCommand = Git.cloneRepository();
     cloneCommand.setURI(Uri);
-    cloneCommand.setDirectory(localPath);
+    cloneCommand.setDirectory(clonePath);
     cloneCommand.setTransportConfigCallback(this.transportConfigCallback);
 
     try {
