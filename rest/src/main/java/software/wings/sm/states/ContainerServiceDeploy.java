@@ -378,6 +378,16 @@ public abstract class ContainerServiceDeploy extends State {
 
   public abstract InstanceUnitType getInstanceUnitType();
 
+  public abstract String getCommandName();
+
+  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
+
+  protected abstract Optional<Integer> getServiceDesiredCount(
+      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName);
+
+  protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(
+      SettingAttribute settingAttribute, String region, String clusterName, String serviceName);
+
   private ExecutionResponse buildEndStateExecution(
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
@@ -449,16 +459,6 @@ public abstract class ContainerServiceDeploy extends State {
         .withDesiredCounts(desiredCounts)
         .build();
   }
-
-  public abstract String getCommandName();
-
-  protected abstract Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName);
-
-  protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, String clusterName, String serviceName);
-
-  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
 
   private static class ContextData {
     final Application app;
