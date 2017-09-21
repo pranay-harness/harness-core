@@ -55,6 +55,7 @@ import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -76,6 +77,8 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent;
+import software.wings.yaml.gitSync.EntityUpdateEvent.CrudType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -114,6 +117,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WorkflowService workflowService;
+  @com.google.inject.Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
   /**
    * {@inheritDoc}
@@ -339,6 +343,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                  -> serviceTemplateService.updateDefaultServiceTemplateName(service.getAppId(),
                                      service.getUuid(), savedService.getName(), service.getName().trim()));
     }
+
+    // queue an entity update event
+    EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
+                                              .withEntityId(service.getUuid())
+                                              .withClass(Service.class)
+                                              .withCrudType(CrudType.UPDATE)
+                                              .build();
+    entityUpdateEventQueue.send(entityUpdateEvent);
+
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }
 

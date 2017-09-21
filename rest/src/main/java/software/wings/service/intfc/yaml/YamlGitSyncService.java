@@ -1,6 +1,7 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
@@ -23,7 +24,7 @@ public interface YamlGitSyncService {
    */
   public YamlGitSync get(Type type, String entityId, String accountId);
 
-  public boolean exist(@NotEmpty String type, @NotEmpty String entityId, @NotEmpty String accountId);
+  public boolean exist(@NotEmpty Type type, @NotEmpty String entityId, @NotEmpty String accountId);
 
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)
@@ -43,4 +44,6 @@ public interface YamlGitSyncService {
    * @return the rest response
    */
   public YamlGitSync update(String entityId, String accountId, YamlGitSync yamlGitSync);
+
+  public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent);
 }

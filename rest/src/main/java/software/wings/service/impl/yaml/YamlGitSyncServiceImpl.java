@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import org.eclipse.jgit.api.Git;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -10,9 +11,16 @@ import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent;
+import software.wings.yaml.gitSync.EntityUpdateEvent.CrudType;
+import software.wings.yaml.gitSync.GitSyncHelper;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import javax.inject.Inject;
 
 public class YamlGitSyncServiceImpl implements YamlGitSyncService {
@@ -66,14 +74,14 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   @Override
-  public boolean exist(@NotEmpty String type, @NotEmpty String entityId, @NotEmpty String accountId) {
+  public boolean exist(@NotEmpty Type type, @NotEmpty String entityId, @NotEmpty String accountId) {
     return wingsPersistence.createQuery(YamlGitSync.class)
                .field("accountId")
                .equal(accountId)
                .field("entityId")
                .equal(entityId)
                .field("type")
-               .equal(type)
+               .equal(type.name())
                .getKey()
         != null;
   }
@@ -89,14 +97,14 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     Validator.notNullCheck("accountId", ygs.getAccountId());
 
     // check if it already exists
-    if (exist(ygs.getType().name(), ygs.getEntityId(), accountId)) {
+    if (exist(ygs.getType(), ygs.getEntityId(), accountId)) {
       // do update instead
       return update(ygs.getEntityId(), accountId, ygs);
     }
 
     YamlGitSync yamlGitSync = wingsPersistence.saveAndGet(YamlGitSync.class, ygs);
 
-    return get(yamlGitSync.getUuid());
+    return getByUuid(yamlGitSync.getUuid());
   }
 
   /**
@@ -109,7 +117,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    */
   public YamlGitSync update(String entityId, String accountId, YamlGitSync ygs) {
     // check if it already exists
-    if (exist(ygs.getType().name(), ygs.getEntityId(), accountId)) {
+    if (exist(ygs.getType(), ygs.getEntityId(), accountId)) {
       YamlGitSync yamlGitSync = get(ygs.getType(), ygs.getEntityId(), accountId);
 
       Query<YamlGitSync> query =
@@ -128,5 +136,126 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     }
 
     return null;
+  }
+
+  public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
+    logger.info("*************** handleEntityUpdateEvent: " + entityUpdateEvent);
+
+    String entityId = entityUpdateEvent.getEntityId();
+    CrudType crudType = entityUpdateEvent.getCrudType();
+    Class klass = entityUpdateEvent.getKlass();
+
+    if (entityId == null || entityId.isEmpty()) {
+      logger.info("ERROR: EntityUpdateEvent entityId is missing!");
+      return false;
+    }
+
+    if (crudType == null) {
+      logger.info("ERROR: EntityUpdateEvent crudType is missing!");
+      return false;
+    }
+
+    if (klass == null) {
+      logger.info("ERROR: EntityUpdateEvent class is missing!");
+      return false;
+    }
+
+    switch (crudType) {
+      case CREATE:
+        // TODO - needs implementation!
+        break;
+      case UPDATE:
+        YamlGitSync ygs = get(entityId);
+
+        logger.info("*************** ygs: " + ygs);
+
+        // logger.info("*************** ygs.getSshKey(): " + ygs.getSshKey());
+
+        //---------------------
+        // TODO - annoying that we need to write the sshKey to a file, because the addIdentity method in
+        // createDefaultJSch of the CustomJschConfigSessionFactory requires a path and won't take the key directly!
+
+        File keyPath = null;
+
+        try {
+          // Path keyDir = Files.createTempDirectory("sync-repo-keys");
+          // keyPath = File.createTempFile(entityId, "", keyDir.toFile());
+          keyPath = File.createTempFile("sync-keys_" + entityId, "");
+          keyPath.delete();
+          // keyPath.mkdirs();
+
+          FileWriter fw = new FileWriter(keyPath);
+          BufferedWriter bw = new BufferedWriter(fw);
+          bw.write(ygs.getSshKey());
+
+          if (bw != null) {
+            bw.close();
+          }
+
+          if (fw != null) {
+            fw.close();
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+        //---------------------
+
+        GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), keyPath.getPath());
+
+        try {
+          //---------------------
+          // Path repoDir = Files.createTempDirectory("sync-repos");
+          // File repoPath = File.createTempFile("sync-repos_" + entityId, "", repoDir.toFile());
+          File repoPath = File.createTempFile("sync-repos_" + entityId, "");
+          repoPath.delete();
+          repoPath.mkdirs();
+
+          // prints absolute path
+          logger.info("Absolute path: " + repoPath.getAbsolutePath());
+          //---------------------
+
+          Git git = gsh.clone(ygs.getUrl(), repoPath);
+
+          logger.info("*************** klass.getCanonicalName(): " + klass.getCanonicalName());
+
+          switch (klass.getCanonicalName()) {}
+
+          /*
+          //---------------------
+          // Create a new file and add it to the index
+          String fileName = "test_file1.txt";
+
+          File newFile = new File(localPath, fileName);
+          newFile.createNewFile();
+          FileWriter writer = new FileWriter(newFile);
+
+          String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+
+          writer.write("Test data" + "\n" + "test data2" + "\n" + "Last Commit: " + timestamp + "\n");
+          writer.close();
+          //---------------------
+
+          DirCache dirCache = git.add().addFilepattern(fileName).call();
+
+          RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "My first test commit");
+
+          System.out.println(rev.toString());
+
+          Iterable<PushResult> pushResults = gsh.push("origin");
+          */
+
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+
+        break;
+      case DELETE:
+        // TODO - needs implementation!
+        break;
+      default:
+        // do nothing
+    }
+
+    return false;
   }
 }
