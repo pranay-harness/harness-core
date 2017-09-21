@@ -34,6 +34,7 @@ public class BambooArtifactStream extends ArtifactStream {
    */
   public BambooArtifactStream() {
     super(ArtifactStreamType.BAMBOO.name());
+    super.setAutoApproveForProduction(true);
   }
 
   @Override

@@ -37,6 +37,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   public ArtifactoryArtifactStream() {
     super(ArtifactStreamType.ARTIFACTORY.name());
+    super.setAutoApproveForProduction(true);
   }
 
   @SchemaIgnore

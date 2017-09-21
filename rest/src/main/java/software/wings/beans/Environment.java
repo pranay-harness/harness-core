@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.Environment.Builder.*;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -139,6 +140,14 @@ public class Environment extends Base {
     this.setup = setup;
   }
 
+  public Environment clone() {
+    return anEnvironment()
+        .withName(getName())
+        .withAppId(getAppId())
+        .withDescription(getDescription())
+        .withEnvironmentType(getEnvironmentType())
+        .build();
+  }
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(name, description, environmentType, configFiles);

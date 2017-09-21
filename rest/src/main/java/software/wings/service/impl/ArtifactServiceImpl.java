@@ -166,7 +166,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private Status getArtifactStatus(ArtifactStream artifactStream) {
     if (artifactStream.isMetadataOnly()) {
-      return READY;
+      return APPROVED;
     }
     return (DOCKER.name().equals(artifactStream.getArtifactStreamType())
                || ECR.name().equals(artifactStream.getArtifactStreamType())

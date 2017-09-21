@@ -34,6 +34,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    */
   public JenkinsArtifactStream() {
     super(ArtifactStreamType.JENKINS.name());
+    super.setAutoApproveForProduction(true);
   }
 
   /**

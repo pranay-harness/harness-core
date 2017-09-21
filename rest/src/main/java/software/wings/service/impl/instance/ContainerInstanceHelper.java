@@ -230,7 +230,7 @@ public class ContainerInstanceHelper {
   }
 
   public void updateInstancesFromContainerInfo(Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap,
-      List<ContainerInfo> containerInfoList, String containerSvcNameWithoutRevision, InstanceType instanceType,
+      List<ContainerInfo> containerInfoList, String containerSvcNameNoRevision, InstanceType instanceType,
       String appId) {
     List<Instance> instanceList = Lists.newArrayList();
     // initialize the containerSvcNamesWithZeroInstances with the whole map first and then remove the ones which have
@@ -258,7 +258,7 @@ public class ContainerInstanceHelper {
     }
 
     // Save or update the container instances
-    instanceService.saveOrUpdateContainerInstances(instanceType, containerSvcNameWithoutRevision, instanceList);
+    instanceService.saveOrUpdateContainerInstances(instanceType, containerSvcNameNoRevision, instanceList);
 
     //  Cleans up container services that were either deleted or have a zero count.
     if (!containerSvcNamesWithZeroInstances.isEmpty()) {

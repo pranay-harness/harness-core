@@ -1,9 +1,11 @@
 package software.wings.service;
 
+import static java.util.Arrays.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
@@ -13,12 +15,19 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.ServiceTemplate.Builder.*;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -34,24 +43,31 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Notification;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
+import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceTemplateService;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -70,6 +86,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private NotificationService notificationService;
   @Mock private PipelineService pipelineService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -100,7 +117,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     envPageResponse.setResponse(asList(environment));
     when(wingsPersistence.query(Environment.class, envPageRequest)).thenReturn(envPageResponse);
 
-    ServiceTemplate serviceTemplate = Builder.aServiceTemplate().build();
+    ServiceTemplate serviceTemplate = aServiceTemplate().build();
     PageRequest<ServiceTemplate> serviceTemplatePageRequest = new PageRequest<>();
     serviceTemplatePageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
     serviceTemplatePageRequest.addFilter("envId", environment.getUuid(), EQ);
@@ -154,6 +171,52 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
+  /**
+   * Should clone environment.
+   */
+  @Test
+  public void shouldCloneEnvironment() {
+    Environment environment =
+        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    Environment clonedEnvironment = environment.clone();
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
+
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withDescription(TEMPLATE_DESCRIPTION)
+                                          .withServiceId(SERVICE_ID)
+                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
+                                          .build();
+
+    ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
+    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+        .thenReturn(serviceTemplate);
+
+    CloneMetadata cloneMetadata = CloneMetadata.builder().environment(environment).build();
+    environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
+    verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
+    verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
+    verify(serviceTemplateService).list(pageRequest, false, false);
+    verify(serviceTemplateService).save(any(ServiceTemplate.class));
+    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+  }
   /**
    * Should update environment.
    */
