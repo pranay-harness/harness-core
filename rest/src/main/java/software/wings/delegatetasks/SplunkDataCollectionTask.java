@@ -222,7 +222,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                 completed.set(true);
                 throw(e);
               } else {
-                logger.warn("error fetching elk logs. retrying...", e);
+                logger.warn("error fetching splunk logs. retrying...", e);
               }
             }
           }
@@ -236,7 +236,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       }
 
       if (completed.get()) {
-        logger.info("Shutting down Splunk data collection");
+        logger.info("Shutting down Splunk data collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
         return;
       }
