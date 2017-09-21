@@ -461,7 +461,6 @@ public abstract class ContainerServiceDeploy extends State {
   protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
 
   private static class ContextData {
-    final ExecutionContext context;
     final Application app;
     final Environment env;
     final Service service;
@@ -476,7 +475,6 @@ public abstract class ContainerServiceDeploy extends State {
     final String infrastructureMappingId;
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
-      this.context = context;
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       serviceElement = phaseElement.getServiceElement();
       serviceId = phaseElement.getServiceElement().getUuid();
@@ -485,9 +483,9 @@ public abstract class ContainerServiceDeploy extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       app = workflowStandardParams.getApp();
       env = workflowStandardParams.getEnv();
-      service = containerServiceDeploy.serviceResourceService.get(app.getUuid(), serviceId);
+      service = containerServiceDeploy.serviceResourceService.get(appId, serviceId);
       command = containerServiceDeploy.serviceResourceService
-                    .getCommandByName(app.getUuid(), serviceId, env.getUuid(), containerServiceDeploy.getCommandName())
+                    .getCommandByName(appId, serviceId, env.getUuid(), containerServiceDeploy.getCommandName())
                     .getCommand();
       InfrastructureMapping infrastructureMapping = containerServiceDeploy.infrastructureMappingService.get(
           workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
