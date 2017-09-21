@@ -78,9 +78,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class AppServiceImpl implements AppService {
   private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
-  private static final String INSTANCE_SYNC_CRON_GROUP = "INSTANCE_SYNC_CRON_GROUP";
+  private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
-  private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
+  private static final int INSTANCE_SYNC_POLL_INTERVAL = 120;
 
   private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
@@ -122,7 +122,7 @@ public class AppServiceImpl implements AppService {
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
     addCronForStateMachineExecutionCleanup(application);
-    addCronForInstanceSync(application);
+    addCronForContainerSync(application);
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -172,14 +172,14 @@ public class AppServiceImpl implements AppService {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  void addCronForInstanceSync(Application application) {
+  void addCronForContainerSync(Application application) {
     JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
-                        .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
+                        .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
                         .usingJobData("appId", application.getUuid())
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
+                          .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(INSTANCE_SYNC_POLL_INTERVAL)
                                             .repeatForever())
@@ -328,7 +328,7 @@ public class AppServiceImpl implements AppService {
                 .build());
       });
       deleteCronForStateMachineExecutionCleanup(appId);
-      deleteCronForInstanceSync(appId);
+      deleteCronForContainerSync(appId);
     }
   }
 
@@ -374,8 +374,8 @@ public class AppServiceImpl implements AppService {
     jobScheduler.deleteJob(appId, SM_CLEANUP_CRON_GROUP);
   }
 
-  void deleteCronForInstanceSync(String appId) {
-    jobScheduler.deleteJob(appId, INSTANCE_SYNC_CRON_GROUP);
+  void deleteCronForContainerSync(String appId) {
+    jobScheduler.deleteJob(appId, CONTAINER_SYNC_CRON_GROUP);
   }
 
   @Override
