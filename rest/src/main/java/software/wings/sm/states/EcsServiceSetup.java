@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -41,6 +42,7 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -87,6 +89,7 @@ public class EcsServiceSetup extends State {
 
   private String ecsServiceName;
   private int maxInstances;
+  private ResizeStrategy resizeStrategy;
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
@@ -210,14 +213,16 @@ public class EcsServiceSetup extends State {
     logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
     awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
 
-    ContainerServiceElement containerServiceElement = aContainerServiceElement()
-                                                          .withUuid(serviceId)
-                                                          .withName(ecsServiceName)
-                                                          .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-                                                          .withClusterName(clusterName)
-                                                          .withDeploymentType(DeploymentType.ECS)
-                                                          .withInfraMappingId(phaseElement.getInfraMappingId())
-                                                          .build();
+    ContainerServiceElement containerServiceElement =
+        aContainerServiceElement()
+            .withUuid(serviceId)
+            .withName(ecsServiceName)
+            .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
+            .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+            .withClusterName(clusterName)
+            .withDeploymentType(DeploymentType.ECS)
+            .withInfraMappingId(phaseElement.getInfraMappingId())
+            .build();
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -465,10 +470,19 @@ public class EcsServiceSetup extends State {
     this.maxInstances = maxInstances;
   }
 
+  public ResizeStrategy getResizeStrategy() {
+    return resizeStrategy;
+  }
+
+  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
+    this.resizeStrategy = resizeStrategy;
+  }
+
   public static final class EcsServiceSetupBuilder {
     private String id;
     private String name;
     private int maxInstances;
+    private ResizeStrategy resizeStrategy;
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
@@ -496,6 +510,11 @@ public class EcsServiceSetup extends State {
 
     public EcsServiceSetupBuilder withMaxInstances(int maxInstances) {
       this.maxInstances = maxInstances;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
@@ -551,12 +570,14 @@ public class EcsServiceSetup extends State {
           .withUseLoadBalancer(useLoadBalancer)
           .withLoadBalancerName(loadBalancerName)
           .withTargetGroupArn(targetGroupArn)
-          .withRoleArn(roleArn);
+          .withRoleArn(roleArn)
+          .withResizeStrategy(resizeStrategy);
     }
 
     public EcsServiceSetup build() {
       EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
       ecsServiceSetup.setMaxInstances(maxInstances);
+      ecsServiceSetup.setResizeStrategy(resizeStrategy);
       ecsServiceSetup.setId(id);
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);

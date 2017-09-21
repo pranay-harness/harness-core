@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
@@ -47,6 +48,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -97,6 +99,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
   private String replicationControllerName;
   private int maxInstances;
+  private ResizeStrategy resizeStrategy;
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -213,14 +216,16 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
     }
 
-    ContainerServiceElement containerServiceElement = aContainerServiceElement()
-                                                          .withUuid(serviceId)
-                                                          .withName(replicationControllerName)
-                                                          .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-                                                          .withClusterName(clusterName)
-                                                          .withDeploymentType(DeploymentType.KUBERNETES)
-                                                          .withInfraMappingId(phaseElement.getInfraMappingId())
-                                                          .build();
+    ContainerServiceElement containerServiceElement =
+        aContainerServiceElement()
+            .withUuid(serviceId)
+            .withName(replicationControllerName)
+            .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
+            .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+            .withClusterName(clusterName)
+            .withDeploymentType(DeploymentType.KUBERNETES)
+            .withInfraMappingId(phaseElement.getInfraMappingId())
+            .build();
 
     String dockerImageName = imageDetails.name + ":" + artifact.getBuildNo();
     return anExecutionResponse()
@@ -513,6 +518,14 @@ public class KubernetesReplicationControllerSetup extends State {
     this.maxInstances = maxInstances;
   }
 
+  public ResizeStrategy getResizeStrategy() {
+    return resizeStrategy;
+  }
+
+  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
+    this.resizeStrategy = resizeStrategy;
+  }
+
   /**
    * Gets service type.
    */
@@ -610,6 +623,7 @@ public class KubernetesReplicationControllerSetup extends State {
     private boolean rollback;
     private String replicationControllerName;
     private int maxInstances;
+    private ResizeStrategy resizeStrategy;
     private String serviceType;
     private String port;
     private String targetPort;
@@ -653,6 +667,11 @@ public class KubernetesReplicationControllerSetup extends State {
 
     public KubernetesReplicationControllerSetupBuilder withMaxInstances(int maxInstances) {
       this.maxInstances = maxInstances;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
@@ -717,7 +736,8 @@ public class KubernetesReplicationControllerSetup extends State {
           .withExternalIPs(externalIPs)
           .withLoadBalancerIP(loadBalancerIP)
           .withNodePort(nodePort)
-          .withExternalName(externalName);
+          .withExternalName(externalName)
+          .withResizeStrategy(resizeStrategy);
     }
 
     public KubernetesReplicationControllerSetup build() {
@@ -728,6 +748,7 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesReplicationControllerSetup.setRollback(rollback);
       kubernetesReplicationControllerSetup.setReplicationControllerName(replicationControllerName);
       kubernetesReplicationControllerSetup.setMaxInstances(maxInstances);
+      kubernetesReplicationControllerSetup.setResizeStrategy(resizeStrategy);
       kubernetesReplicationControllerSetup.setServiceType(serviceType);
       kubernetesReplicationControllerSetup.setPort(port);
       kubernetesReplicationControllerSetup.setTargetPort(targetPort);

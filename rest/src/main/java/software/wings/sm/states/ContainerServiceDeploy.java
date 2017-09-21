@@ -11,6 +11,8 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -100,7 +102,6 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.info("Executing container service deploy");
-    CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
@@ -113,21 +114,6 @@ public abstract class ContainerServiceDeploy extends State {
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
-
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
-
-    ContainerServiceElement serviceElement = getContainerServiceElement(context);
-    String region = infrastructureMapping instanceof EcsInfrastructureMapping
-        ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
-        : "";
-
-    executionDataBuilder.withServiceId(service.getUuid())
-        .withServiceName(service.getName())
-        .withAppId(app.getUuid())
-        .withCommandName(getCommandName())
-        .withClusterName(serviceElement.getClusterName());
 
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(app.getUuid())
@@ -150,68 +136,144 @@ public abstract class ContainerServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     String activityId = activityService.save(activityBuilder.build()).getUuid();
-    executionDataBuilder.withActivityId(activityId);
-    List<ContainerServiceData> desiredCounts;
-    if (isRollback()) {
-      logger.info("Executing for rollback");
+
+    ContainerServiceElement serviceElement = getContainerServiceElement(context);
+
+    CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData()
+                                                                 .withServiceId(service.getUuid())
+                                                                 .withServiceName(service.getName())
+                                                                 .withAppId(app.getUuid())
+                                                                 .withCommandName(getCommandName())
+                                                                 .withClusterName(serviceElement.getClusterName())
+                                                                 .withActivityId(activityId);
+
+    if (!isRollback()) {
+      logger.info("Executing resize");
+      List<ContainerServiceData> desiredCountsNew = new ArrayList<>();
+      ContainerServiceData newInstanceData = getNewInstanceData(context, activityId);
+      desiredCountsNew.add(newInstanceData);
+      executionDataBuilder.withNewInstanceData(desiredCountsNew);
+      executionDataBuilder.withOldInstanceData(getOldInstanceData(context, newInstanceData));
+      executionDataBuilder.withResizeStrategy(serviceElement.getResizeStrategy());
+    } else {
+      logger.info("Executing rollback");
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      desiredCounts = containerUpgradeRequestElement.getNewInstanceData();
-      if (desiredCounts == null || desiredCounts.isEmpty()) {
-        // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to
-        // scale up during rollback. We just need to downsize the new one (which is called 'old' during rollback
-        // execution)
-        return downsizeOldInstances(context, executionDataBuilder.build());
-      }
-    } else {
-      String newContainerServiceName = serviceElement.getName();
-      Optional<Integer> previousDesiredCount =
-          getServiceDesiredCount(settingAttribute, region, serviceElement.getClusterName(), newContainerServiceName);
-      if (!previousDesiredCount.isPresent()) {
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + newContainerServiceName);
-      }
-      int previousCount = previousDesiredCount.get();
-      int desiredCount = fetchDesiredCount(serviceElement.getMaxInstances());
-
-      if (desiredCount <= previousCount) {
-        String msg = "Desired instance count is less than or equal to the current instance count: {current: "
-            + previousCount + ", desired: " + desiredCount + "}";
-        logger.warn(msg);
-        logService.save(aLog()
-                            .withAppId(context.getAppId())
-                            .withActivityId(activityId)
-                            .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
-                                    ? CommandUnitType.RESIZE.name()
-                                    : CommandUnitType.RESIZE_KUBERNETES.name())
-                            .withLogLine(msg)
-                            .withLogLevel(Log.LogLevel.WARN)
-                            .build());
-      }
-
-      if (desiredCount > serviceElement.getMaxInstances()) {
-        String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
-            + serviceElement.getMaxInstances() + ", desired: " + desiredCount + "}";
-        logger.error(msg);
-        logService.save(aLog()
-                            .withAppId(context.getAppId())
-                            .withActivityId(activityId)
-                            .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
-                                    ? CommandUnitType.RESIZE.name()
-                                    : CommandUnitType.RESIZE_KUBERNETES.name())
-                            .withLogLine(msg)
-                            .withLogLevel(Log.LogLevel.WARN)
-                            .build());
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
-      }
-
-      desiredCounts = new ArrayList<>();
-      desiredCounts.add(aContainerServiceData()
-                            .withName(newContainerServiceName)
-                            .withPreviousCount(previousCount)
-                            .withDesiredCount(desiredCount)
-                            .build());
+      executionDataBuilder.withNewInstanceData(containerUpgradeRequestElement.getNewInstanceData());
+      executionDataBuilder.withOldInstanceData(containerUpgradeRequestElement.getOldInstanceData());
+      executionDataBuilder.withResizeStrategy(containerUpgradeRequestElement.getResizeStrategy());
     }
+
+    CommandStateExecutionData commandStateExecutionData = executionDataBuilder.build();
+    if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
+      return resizeNewInstances(context, commandStateExecutionData);
+    } else {
+      return downsizeOldInstances(context, commandStateExecutionData);
+    }
+  }
+
+  private ContainerServiceData getNewInstanceData(ExecutionContext context, String activityId) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    ContainerServiceElement serviceElement = getContainerServiceElement(context);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(workflowStandardParams.getApp().getUuid(), phaseElement.getInfraMappingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
+    String region = infrastructureMapping instanceof EcsInfrastructureMapping
+        ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
+        : "";
+    String newContainerServiceName = serviceElement.getName();
+    Optional<Integer> previousDesiredCount =
+        getServiceDesiredCount(settingAttribute, region, serviceElement.getClusterName(), newContainerServiceName);
+    if (!previousDesiredCount.isPresent()) {
+      throw new WingsException(
+          ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + newContainerServiceName);
+    }
+    int previousCountNew = previousDesiredCount.get();
+    int desiredCountNew = fetchDesiredCount(serviceElement.getMaxInstances());
+
+    if (desiredCountNew <= previousCountNew) {
+      String msg = "Desired instance count is less than or equal to the current instance count: {current: "
+          + previousCountNew + ", desired: " + desiredCountNew + "}";
+      logger.warn(msg);
+      logService.save(aLog()
+                          .withAppId(context.getAppId())
+                          .withActivityId(activityId)
+                          .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
+                                  ? CommandUnitType.RESIZE.name()
+                                  : CommandUnitType.RESIZE_KUBERNETES.name())
+                          .withLogLine(msg)
+                          .withLogLevel(Log.LogLevel.WARN)
+                          .build());
+    }
+
+    if (desiredCountNew > serviceElement.getMaxInstances()) {
+      String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
+          + serviceElement.getMaxInstances() + ", desired: " + desiredCountNew + "}";
+      logger.error(msg);
+      logService.save(aLog()
+                          .withAppId(context.getAppId())
+                          .withActivityId(activityId)
+                          .withCommandUnitName(infrastructureMapping instanceof EcsInfrastructureMapping
+                                  ? CommandUnitType.RESIZE.name()
+                                  : CommandUnitType.RESIZE_KUBERNETES.name())
+                          .withLogLine(msg)
+                          .withLogLevel(Log.LogLevel.WARN)
+                          .build());
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
+    }
+
+    return aContainerServiceData()
+        .withName(newContainerServiceName)
+        .withPreviousCount(previousCountNew)
+        .withDesiredCount(desiredCountNew)
+        .build();
+  }
+
+  private List<ContainerServiceData> getOldInstanceData(ExecutionContext context, ContainerServiceData newServiceData) {
+    List<ContainerServiceData> desiredCountsOld = new ArrayList<>();
+    LinkedHashMap<String, Integer> oldServiceCounts = getOldServiceCounts(context);
+    int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
+    for (String serviceName : oldServiceCounts.keySet()) {
+      int previousCount = oldServiceCounts.get(serviceName);
+      int desiredCount = Math.max(previousCount - downsizeCount, 0);
+      if (previousCount != desiredCount) {
+        desiredCountsOld.add(aContainerServiceData()
+                                 .withName(serviceName)
+                                 .withPreviousCount(previousCount)
+                                 .withDesiredCount(desiredCount)
+                                 .build());
+      }
+      downsizeCount -= previousCount - desiredCount;
+    }
+    return desiredCountsOld;
+  }
+
+  private ExecutionResponse resizeNewInstances(
+      ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    List<ContainerServiceData> desiredCounts = commandStateExecutionData.getNewInstanceData();
+    ContainerServiceElement serviceElement = getContainerServiceElement(context);
+    commandStateExecutionData.setDownsize(false);
+    if (desiredCounts == null || desiredCounts.isEmpty()) {
+      // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to scale
+      // up during rollback. We just need to downsize the new one (which is called 'old' during rollback execution)
+      return handleResizeNewComplete(context, commandStateExecutionData);
+    }
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    String envId = workflowStandardParams.getEnv().getUuid();
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+    SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
+    String region = infrastructureMapping instanceof EcsInfrastructureMapping
+        ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
+        : "";
+    String activityId = commandStateExecutionData.getActivityId();
+    Command command =
+        serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
+
     logger.info("Setting desired count for {} services", desiredCounts.size());
     desiredCounts.forEach(dc
         -> logger.info("Changing desired count for service {} from {} to {}", dc.getName(), dc.getPreviousCount(),
@@ -231,106 +293,41 @@ public abstract class ContainerServiceDeploy extends State {
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                       .build());
 
-    executionDataBuilder.withNewInstanceData(desiredCounts);
-
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(singletonList(activityId))
-        .withStateExecutionData(executionDataBuilder.build())
+        .withStateExecutionData(commandStateExecutionData)
         .withDelegateTaskId(delegateTaskId)
         .build();
   }
 
-  private SettingAttribute getSettingAttribute(InfrastructureMapping infrastructureMapping) {
-    SettingAttribute settingAttribute;
-    if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      settingAttribute =
-          aSettingAttribute()
-              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
-              .build();
-    } else {
-      settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    }
-    return settingAttribute;
-  }
-
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    logger.info("Received async response");
-    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
-
-    CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
-    if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
-      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
-    }
-    if (!commandStateExecutionData.isDownsize()) {
-      // Handle execute response
-      buildInstanceStatusSummaries(context, response, commandStateExecutionData);
-      cleanupOldVersions(context);
-      return downsizeOldInstances(context, commandStateExecutionData);
-    } else {
-      // Handle downsize response
-      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
-    }
-  }
-
   private ExecutionResponse downsizeOldInstances(
       ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    List<ContainerServiceData> desiredCounts = commandStateExecutionData.getOldInstanceData();
+    ContainerServiceElement serviceElement = getContainerServiceElement(context);
+    commandStateExecutionData.setDownsize(true);
+    if (desiredCounts == null || desiredCounts.isEmpty()) {
+      // Old service doesn't exist so we don't need to do anything
+      return handleDownsizeOldComplete(context, commandStateExecutionData);
+    }
     logger.info("Downsizing old instances");
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    String envId = workflowStandardParams.getEnv().getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
     SettingAttribute settingAttribute = getSettingAttribute(infrastructureMapping);
-
-    ContainerServiceElement serviceElement = getContainerServiceElement(context);
     String clusterName = serviceElement.getClusterName();
     String region = infrastructureMapping instanceof EcsInfrastructureMapping
         ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
         : "";
-
-    commandStateExecutionData.setDownsize(true);
-    List<ContainerServiceData> desiredCounts;
-
-    if (isRollback()) {
-      logger.info("Downsizing for rollback");
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      desiredCounts = containerUpgradeRequestElement.getOldInstanceData();
-    } else {
-      LinkedHashMap<String, Integer> oldServiceCounts = getOldServiceCounts(context);
-      if (oldServiceCounts.isEmpty()) {
-        // Old service doesn't exist so we don't need to do anything
-        return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
-      }
-      ContainerServiceData newServiceData = commandStateExecutionData.getNewInstanceData().iterator().next();
-      int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
-      desiredCounts = new ArrayList<>();
-      for (String serviceName : oldServiceCounts.keySet()) {
-        int previousCount = oldServiceCounts.get(serviceName);
-        int desiredCount = Math.max(previousCount - downsizeCount, 0);
-        if (previousCount != desiredCount) {
-          desiredCounts.add(aContainerServiceData()
-                                .withName(serviceName)
-                                .withPreviousCount(previousCount)
-                                .withDesiredCount(desiredCount)
-                                .build());
-        }
-        downsizeCount -= previousCount - desiredCount;
-      }
-    }
-
-    commandStateExecutionData.setOldInstanceData(desiredCounts);
 
     logger.info("Downsizing {} services", desiredCounts.size());
     desiredCounts.forEach(dc
         -> logger.info("Changing desired count for service {} from {} to {}", dc.getName(), dc.getPreviousCount(),
             dc.getDesiredCount()));
 
-    Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
-
-    String envId = env.getUuid();
     Command command = serviceResourceService
                           .getCommandByName(workflowStandardParams.getAppId(),
                               phaseElement.getServiceElement().getUuid(), envId, getCommandName())
@@ -356,6 +353,46 @@ public abstract class ContainerServiceDeploy extends State {
         .withStateExecutionData(commandStateExecutionData)
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    logger.info("Received async response");
+    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+
+    CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
+    if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
+    }
+    if (!commandStateExecutionData.isDownsize()) {
+      buildInstanceStatusSummaries(context, response, commandStateExecutionData);
+      cleanupOldVersions(context);
+      return handleResizeNewComplete(context, commandStateExecutionData);
+    } else {
+      return handleDownsizeOldComplete(context, commandStateExecutionData);
+    }
+  }
+
+  private ExecutionResponse handleResizeNewComplete(
+      ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
+      // Done with resize new, now downsize old
+      return downsizeOldInstances(context, commandStateExecutionData);
+    } else {
+      // Done with everything, return success
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
+    }
+  }
+
+  private ExecutionResponse handleDownsizeOldComplete(
+      ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    if (commandStateExecutionData.getResizeStrategy() == DOWNSIZE_OLD_FIRST) {
+      // Done with downsize old, now resize new
+      return resizeNewInstances(context, commandStateExecutionData);
+    } else {
+      // Done with everything, return success
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
+    }
   }
 
   private void cleanupOldVersions(ExecutionContext context) {
@@ -385,6 +422,14 @@ public abstract class ContainerServiceDeploy extends State {
         getSettingAttribute(infrastructureMapping), region, serviceElement.getClusterName(), serviceElement.getName());
     activeServiceCounts.remove(serviceElement.getName());
     return activeServiceCounts;
+  }
+
+  private SettingAttribute getSettingAttribute(InfrastructureMapping infrastructureMapping) {
+    return infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+        ? aSettingAttribute()
+              .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
+              .build()
+        : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
   }
 
   @Override
@@ -418,7 +463,6 @@ public abstract class ContainerServiceDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-
     InstanceElementListParam instanceElementListParam =
         anInstanceElementListParam()
             .withInstanceElements(Optional
@@ -442,9 +486,9 @@ public abstract class ContainerServiceDeploy extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
+    String envId = workflowStandardParams.getEnv().getUuid();
     Key<ServiceTemplate> serviceTemplateKey =
-        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, envId).get(0);
 
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
@@ -495,10 +539,10 @@ public abstract class ContainerServiceDeploy extends State {
   protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName);
 
-  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
-
   protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(
       SettingAttribute settingAttribute, String region, String clusterName, String serviceName);
+
+  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
 
   private ContainerServiceElement getContainerServiceElement(ExecutionContext context) {
     if (isRollback()) {
@@ -507,10 +551,8 @@ public abstract class ContainerServiceDeploy extends State {
       return upgradeElement.getContainerServiceElement();
     } else {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      List<ContainerServiceElement> containerServiceElements =
-          context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
-
-      return containerServiceElements.stream()
+      return context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+          .stream()
           .filter(containerServiceElement
               -> phaseElement.getDeploymentType().equals(containerServiceElement.getDeploymentType().name())
                   && phaseElement.getInfraMappingId().equals(containerServiceElement.getInfraMappingId()))
