@@ -114,14 +114,14 @@ public interface InstanceService {
   List<String> getContainerServiceNames(String containerSvcNameNoRevision, String appId);
 
   /**
-   * Get the least visited container family (containerSvcNameNoRevision) info from db. This is done so that no container
-   * family is starved from update. Each time the sync job comes up, it picks up a batch of least visited families and
-   * updates the instances.
+   * Get the least recently synced container family (all container deployments with the same containerSvcNameNoRevision)
+   * info from db. This is done so that no container family is starved from update. Each time the sync job comes up, it
+   * picks up a batch of least visited families and updates the instances.
    * @param appId
-   * @param lastVisitedTimestamp
+   * @param lastSyncTimestamp
    * @return
    */
-  Set<String> getLeastRecentVisitedContainerFamilies(String appId, long lastVisitedTimestamp);
+  Set<String> getLeastRecentSyncedContainerDeployments(String appId, long lastSyncTimestamp);
 
   /**
    * Deletes the container deployments that have no active instances on the container server (ECS or Kubernetes).
