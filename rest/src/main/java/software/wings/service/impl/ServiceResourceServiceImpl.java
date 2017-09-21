@@ -347,6 +347,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // queue an entity update event
     EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
                                               .withEntityId(service.getUuid())
+                                              .withName(service.getName())
+                                              .withAppId(service.getAppId())
                                               .withClass(Service.class)
                                               .withCrudType(CrudType.UPDATE)
                                               .build();
