@@ -81,6 +81,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         if (fieldName != null && fieldName.equals("serviceId")) {
           serviceIdExpression = templateExpression.getExpression();
           service = templateExpressionProcessor.resolveService(context, app, templateExpression);
+          Validator.notNullCheck("Service", service);
+          finalServiceId = service.getUuid();
         } else if (fieldName != null && fieldName.equals("infraMappingId")) {
           infraMappingIdExpression = templateExpression.getExpression();
           if (service != null) {
@@ -98,6 +100,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     } else {
       service = serviceResourceService.get(app.getAppId(), serviceId, false);
     }
+    Validator.notNullCheck("Service", service);
     if (infraMappingIdExpression == null) {
       infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
     }
