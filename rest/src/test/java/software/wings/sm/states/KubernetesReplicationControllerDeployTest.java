@@ -18,6 +18,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -137,6 +138,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
+                                 .withResizeStrategy(RESIZE_NEW_FIRST)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withDeploymentType(DeploymentType.KUBERNETES)
                                  .build())
@@ -280,6 +282,13 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                    .withPreviousCount(0)
                                                    .withDesiredCount(1)
                                                    .build()))
+            .withOldInstanceData(singletonList(aContainerServiceData()
+                                                   .withName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
+                                                   .withPreviousCount(1)
+                                                   .withDesiredCount(0)
+                                                   .build()))
+            .withDownsize(false)
+            .withResizeStrategy(RESIZE_NEW_FIRST)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
