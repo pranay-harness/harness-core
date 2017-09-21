@@ -12,9 +12,12 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.RestResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
+import software.wings.yaml.YamlPayload;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.CrudType;
 import software.wings.yaml.gitSync.GitSyncHelper;
@@ -37,6 +40,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ServiceYamlResourceService serviceYamlResourceService;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -152,6 +156,8 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     logger.info("*************** handleEntityUpdateEvent: " + entityUpdateEvent);
 
     String entityId = entityUpdateEvent.getEntityId();
+    String name = entityUpdateEvent.getName();
+    String appId = entityUpdateEvent.getAppId();
     CrudType crudType = entityUpdateEvent.getCrudType();
     Class klass = entityUpdateEvent.getKlass();
 
@@ -220,8 +226,6 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
         try {
           //---------------------
-          // Path repoDir = Files.createTempDirectory("sync-repos");
-          // File repoPath = File.createTempFile("sync-repos_" + entityId, "", repoDir.toFile());
           File repoPath = File.createTempFile("sync-repos_" + entityId, "");
 
           repoPath.delete();
@@ -237,21 +241,18 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
           switch (klass.getCanonicalName()) {}
 
-          //---------------------
-          // Create a new file and add it to the index
-          String fileName = "test_file1.txt";
+          String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
 
+          //---------------------
+          RestResponse<YamlPayload> rr = serviceYamlResourceService.getService(appId, entityId);
+          YamlPayload yp = rr.getResource();
+          String theYaml = yp.getYaml();
+
+          String fileName = name + ".yaml";
           File newFile = new File(repoPath, fileName);
           newFile.createNewFile();
           FileWriter writer = new FileWriter(newFile);
-
-          String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
-
-          writer.write("Test data"
-              + "\n"
-              + "test data2"
-              + "\n"
-              + "Last Commit: " + timestamp + "\n");
+          writer.write(theYaml);
           writer.close();
           //---------------------
 
@@ -261,13 +262,15 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
             e.printStackTrace();
           }
 
-          RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "My first test commit");
+          // commit
+          RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
 
-          System.out.println(rev.toString());
+          logger.info("*************** RevCommit: " + rev.toString());
 
+          // push the change
           Iterable<PushResult> pushResults = gsh.push("origin");
 
-          // need to clean up TEMP files
+          // clean up TEMP files
           sshKeyPath.delete();
           repoPath.delete();
 

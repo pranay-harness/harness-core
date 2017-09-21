@@ -15,6 +15,8 @@ import java.util.Objects;
 @Entity(value = "entityUpdateQueue", noClassnameStored = true)
 public class EntityUpdateEvent extends Queuable {
   private String entityId;
+  private String name;
+  private String appId;
   private Class klass;
   private CrudType crudType;
 
@@ -24,6 +26,22 @@ public class EntityUpdateEvent extends Queuable {
 
   public void setEntityId(String entityId) {
     this.entityId = entityId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   public Class getKlass() {
@@ -72,6 +90,8 @@ public class EntityUpdateEvent extends Queuable {
 
   public static final class Builder {
     private String entityId;
+    private String name;
+    private String appId;
     private Class klass;
     private CrudType crudType;
 
@@ -86,6 +106,16 @@ public class EntityUpdateEvent extends Queuable {
       return this;
     }
 
+    public EntityUpdateEvent.Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public EntityUpdateEvent.Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public EntityUpdateEvent.Builder withClass(Class klass) {
       this.klass = klass;
       return this;
@@ -97,12 +127,15 @@ public class EntityUpdateEvent extends Queuable {
     }
 
     public EntityUpdateEvent.Builder but() {
-      return anEntityUpdateEvent().withEntityId(entityId).withClass(klass).withCrudType(crudType);
+      return anEntityUpdateEvent().withEntityId(entityId).withName(name).withAppId(appId).withClass(klass).withCrudType(
+          crudType);
     }
 
     public EntityUpdateEvent build() {
       EntityUpdateEvent entityUpdateEvent = new EntityUpdateEvent();
       entityUpdateEvent.setEntityId(entityId);
+      entityUpdateEvent.setName(name);
+      entityUpdateEvent.setAppId(appId);
       entityUpdateEvent.setKlass(klass);
       entityUpdateEvent.setCrudType(crudType);
       return entityUpdateEvent;
