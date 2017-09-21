@@ -44,6 +44,7 @@ public class NexusArtifactStream extends ArtifactStream {
    */
   public NexusArtifactStream() {
     super(ArtifactStreamType.NEXUS.name());
+    super.setAutoApproveForProduction(true);
   }
 
   @Override

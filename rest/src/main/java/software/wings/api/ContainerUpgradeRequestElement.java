@@ -2,6 +2,7 @@ package software.wings.api;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.ResizeStrategy;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -19,6 +20,7 @@ public class ContainerUpgradeRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private ResizeStrategy resizeStrategy;
 
   @Override
   public ContextElementType getElementType() {

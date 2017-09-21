@@ -294,12 +294,12 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public Set<String> getLeastRecentVisitedContainerFamilies(String appId, long lastVisitedTimestamp) {
+  public Set<String> getLeastRecentSyncedContainerDeployments(String appId, long lastSyncTimestamp) {
     // query for the least recently visited 20 container service names (without revision)
     FindOptions findOptions = new FindOptions().limit(20);
     Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
     query.field("appId").equal(appId);
-    query.field("lastVisited").lessThan(lastVisitedTimestamp);
+    query.field("lastVisited").lessThan(lastSyncTimestamp);
     query.project("containerSvcNameNoRevision", true);
     query.order("lastVisited").order("containerSvcNameNoRevision");
 
@@ -360,17 +360,9 @@ public class InstanceServiceImpl implements InstanceService {
       InstanceType instanceType, String containerSvcNameNoRevision) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
-    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      query.field("instanceInfo.replicationControllerName").startsWith(containerSvcNameNoRevision);
-    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
-    } else {
-      String msg = "Unsupported container instanceType:" + instanceType;
-      logger.error(msg);
-      throw new WingsException(msg);
-    }
+    List<Instance> instanceList =
+        query.field("containerInstanceKey.containerId").startsWith(containerSvcNameNoRevision).asList();
 
-    List<Instance> instanceList = query.asList();
     instanceMap = instanceList.stream().collect(toMap(Instance::getContainerInstanceKey, instance -> instance));
 
     return instanceMap;

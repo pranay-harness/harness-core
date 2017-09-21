@@ -15,6 +15,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -130,6 +131,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                  .withName(ECS_SERVICE_NAME)
                                  .withDeploymentType(DeploymentType.ECS)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
+                                 .withResizeStrategy(RESIZE_NEW_FIRST)
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
@@ -252,6 +254,13 @@ public class EcsServiceDeployTest extends WingsBaseTest {
             .withActivityId(ACTIVITY_ID)
             .withNewInstanceData(singletonList(
                 aContainerServiceData().withName(ECS_SERVICE_NAME).withPreviousCount(0).withDesiredCount(1).build()))
+            .withOldInstanceData(singletonList(aContainerServiceData()
+                                                   .withName(ECS_SERVICE_OLD_NAME)
+                                                   .withPreviousCount(1)
+                                                   .withDesiredCount(0)
+                                                   .build()))
+            .withResizeStrategy(RESIZE_NEW_FIRST)
+            .withDownsize(false)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);

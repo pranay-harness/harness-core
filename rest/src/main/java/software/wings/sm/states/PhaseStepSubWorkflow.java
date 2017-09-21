@@ -180,6 +180,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .containerServiceElement(contextElement)
               .oldInstanceData(reverse(commandStepExecutionSummary.getNewInstanceData()))
               .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
+              .resizeStrategy(commandStepExecutionSummary.getResizeStrategy())
               .build();
       return singletonList(containerUpgradeRequestElement);
     } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
