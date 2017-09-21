@@ -21,6 +21,7 @@ import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
@@ -39,6 +40,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
+import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
@@ -624,6 +626,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * Sets service Id to Phase
+   *
    * @param serviceId
    * @param phase
    */
@@ -635,6 +638,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * Validates service compatibility
+   *
    * @param appId
    * @param serviceId
    * @param oldServiceId
@@ -658,6 +662,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * Resets inframapping and cloud provider details along with deployment type
+   *
    * @param inframappingId
    * @param phase
    */
@@ -683,6 +688,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * Resets node selection if environment of infra changed
+   *
    * @param phase
    */
   private void resetNodeSelection(WorkflowPhase phase) {
@@ -1209,6 +1215,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * Validates whether service id and mapped service are of same type
+   *
    * @param serviceMapping
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
@@ -1396,9 +1403,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseStepsForKubernetes(appId, envId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
       generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, envId, workflowPhase);
+    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+      generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, envId, workflowPhase);
     }
+  }
+
+  private void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+
+    workflowPhase.addPhaseStep(
+        aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+            .addStep(aNode().withId(getUuid()).withType(AWS_LAMBDA_STATE.name()).withName(Constants.AWS_LAMBDA).build())
+            .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
   private void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, String envId, WorkflowPhase workflowPhase) {

@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
@@ -44,6 +45,7 @@ import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
+import software.wings.sm.states.AwsLambdaState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.CloudWatchState;
@@ -237,6 +239,9 @@ public enum StateType implements StateTypeDescriptor {
   AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
       ORCHESTRATION_STENCILS),
+
+  AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
+      asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

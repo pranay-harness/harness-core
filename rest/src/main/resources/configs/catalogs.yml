@@ -161,6 +161,8 @@ DEPLOYMENT_TYPE:
       value: ECS
     - name: Kubernetes
       value: KUBERNETES
+    - name: AWS Lambda
+      value: AWS_LAMBDA
 
 ENVIRONMENT_TYPE:
     - name: Production

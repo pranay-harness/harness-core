@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -845,6 +846,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+      if (artifactType == ArtifactType.ZIP) {
+        infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
+      }
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
