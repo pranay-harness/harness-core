@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.Lists;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -199,22 +199,14 @@ public class InstanceServiceImpl implements InstanceService {
       InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList) {
     Validator.notNullCheck("InstanceList", instanceList);
 
-    Map<String, Instance> currentInstanceMap = getCurrentInstancesInDB(containerSvcNameNoRevision);
+    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(instanceType, containerSvcNameNoRevision);
 
     List<Instance> newInstanceList = Lists.newArrayList();
     List<Instance> updateInstanceList = Lists.newArrayList();
 
     for (Instance instance : instanceList) {
-      logger.info("container id in instance key is: " + instance.getContainerInstanceKey().getContainerId());
-      Instance existingInstance = currentInstanceMap.remove(instance.getContainerInstanceKey().getContainerId());
+      Instance existingInstance = currentInstanceMap.remove(instance.getContainerInstanceKey());
       if (existingInstance == null) {
-        // debug code to isolate the issue in prod where duplicate instances were getting created.
-        logger.info("instance null for container id: " + instance.getContainerInstanceKey().getContainerId());
-        logger.info("entries in currentInstanceMap are: ");
-        for (String key : currentInstanceMap.keySet()) {
-          logger.info(key + " ");
-        }
-
         newInstanceList.add(instance);
       } else if (shouldUpdateInstance(existingInstance, (ContainerInfo) instance.getInstanceInfo())) {
         updateInstanceList.add(instance);
@@ -364,15 +356,15 @@ public class InstanceServiceImpl implements InstanceService {
     }
   }
 
-  private Map<String, Instance> getCurrentInstancesInDB(String containerSvcNameNoRevision) {
+  private Map<InstanceKey, Instance> getCurrentInstancesInDB(
+      InstanceType instanceType, String containerSvcNameNoRevision) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
-    Map<String, Instance> instanceMap = new HashMap<>();
+    Map<InstanceKey, Instance> instanceMap;
     List<Instance> instanceList =
         query.field("containerInstanceKey.containerId").startsWith(containerSvcNameNoRevision).asList();
 
-    for (Instance instance : instanceList) {
-      instanceMap.put(instance.getContainerInstanceKey().getContainerId(), instance);
-    }
+    instanceMap = instanceList.stream().collect(toMap(Instance::getContainerInstanceKey, instance -> instance));
+
     return instanceMap;
   }
 }

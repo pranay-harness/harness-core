@@ -80,7 +80,7 @@ public class AppServiceImpl implements AppService {
   private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
   private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
-  private static final int INSTANCE_SYNC_POLL_INTERVAL = 120;
+  private static final int INSTANCE_SYNC_POLL_INTERVAL = 600;
 
   private final static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
