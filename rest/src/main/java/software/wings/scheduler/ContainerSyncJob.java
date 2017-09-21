@@ -45,9 +45,8 @@ public class ContainerSyncJob implements Job {
       return;
     }
 
-    final Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
-
     for (String containerSvcNameNoRevision : containerSvcNameNoRevisionSet) {
+      final Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
       List<ContainerDeploymentInfo> containerDeploymentInfoList =
           instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, appId);
       containerDeploymentInfoList.stream().forEach(containerDeploymentInfo
