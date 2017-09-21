@@ -158,7 +158,7 @@ public abstract class ContainerServiceDeploy extends State {
     CommandStateExecutionData commandStateExecutionData = executionDataBuilder.build();
 
     if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
-      return resizeNewInstances(contextData, commandStateExecutionData);
+      return addNewInstances(contextData, commandStateExecutionData);
     } else {
       return downsizeOldInstances(contextData, commandStateExecutionData);
     }
@@ -231,13 +231,13 @@ public abstract class ContainerServiceDeploy extends State {
     return desiredCounts;
   }
 
-  private ExecutionResponse resizeNewInstances(
+  private ExecutionResponse addNewInstances(
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     List<ContainerServiceData> desiredCounts = commandStateExecutionData.getNewInstanceData();
     if (desiredCounts == null || desiredCounts.isEmpty()) {
-      // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to scale
-      // up during rollback. We just need to downsize the new one (which is called 'old' during rollback execution)
-      return handleNewResized(contextData, commandStateExecutionData);
+      // No instances to add; continue execution. This happens during a rollback where the new version was the first
+      // one.
+      return handleNewInstancesAdded(contextData, commandStateExecutionData);
     }
     commandStateExecutionData.setDownsize(false);
     logger.info("Adding instances for {} services", desiredCounts.size());
@@ -271,8 +271,8 @@ public abstract class ContainerServiceDeploy extends State {
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     List<ContainerServiceData> desiredCounts = commandStateExecutionData.getOldInstanceData();
     if (desiredCounts == null || desiredCounts.isEmpty()) {
-      // Old service doesn't exist so we don't need to do anything
-      return handleOldDownsized(contextData, commandStateExecutionData);
+      // No instances to downsize; continue execution.
+      return handleOldInstancesDownsized(contextData, commandStateExecutionData);
     }
     commandStateExecutionData.setDownsize(true);
     logger.info("Downsizing {} services", desiredCounts.size());
@@ -317,13 +317,13 @@ public abstract class ContainerServiceDeploy extends State {
     if (!commandStateExecutionData.isDownsize()) {
       buildInstanceStatusSummaries(contextData, response, commandStateExecutionData);
       cleanupOldVersions(contextData);
-      return handleNewResized(contextData, commandStateExecutionData);
+      return handleNewInstancesAdded(contextData, commandStateExecutionData);
     } else {
-      return handleOldDownsized(contextData, commandStateExecutionData);
+      return handleOldInstancesDownsized(contextData, commandStateExecutionData);
     }
   }
 
-  private ExecutionResponse handleNewResized(
+  private ExecutionResponse handleNewInstancesAdded(
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
       // Done adding new instances, now downsize old instances
@@ -334,11 +334,11 @@ public abstract class ContainerServiceDeploy extends State {
     }
   }
 
-  private ExecutionResponse handleOldDownsized(
+  private ExecutionResponse handleOldInstancesDownsized(
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     if (commandStateExecutionData.getResizeStrategy() == DOWNSIZE_OLD_FIRST) {
       // Done downsizing old instances, now add new instances
-      return resizeNewInstances(contextData, commandStateExecutionData);
+      return addNewInstances(contextData, commandStateExecutionData);
     } else {
       // Done with both, return success
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
