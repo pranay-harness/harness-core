@@ -479,7 +479,6 @@ public abstract class ContainerServiceDeploy extends State {
       serviceElement = phaseElement.getServiceElement();
       serviceId = phaseElement.getServiceElement().getUuid();
       appId = context.getAppId();
-      containerServiceElement = getContainerServiceElement(context, containerServiceDeploy);
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       app = workflowStandardParams.getApp();
       env = workflowStandardParams.getEnv();
@@ -501,23 +500,21 @@ public abstract class ContainerServiceDeploy extends State {
       commandUnitName = infrastructureMapping instanceof EcsInfrastructureMapping
           ? CommandUnitType.RESIZE.name()
           : CommandUnitType.RESIZE_KUBERNETES.name();
-    }
 
-    private ContainerServiceElement getContainerServiceElement(
-        ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       if (containerServiceDeploy.isRollback()) {
         ContainerUpgradeRequestElement rollbackElement =
             context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-        return rollbackElement.getContainerServiceElement();
+        containerServiceElement = rollbackElement.getContainerServiceElement();
       } else {
-        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-        return context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
-            .stream()
-            .filter(containerServiceElement
-                -> phaseElement.getDeploymentType().equals(containerServiceElement.getDeploymentType().name())
-                    && phaseElement.getInfraMappingId().equals(containerServiceElement.getInfraMappingId()))
-            .findFirst()
-            .orElse(null);
+        PhaseElement phaseElement1 = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        containerServiceElement =
+            context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+                .stream()
+                .filter(containerServiceElement1
+                    -> phaseElement1.getDeploymentType().equals(containerServiceElement1.getDeploymentType().name())
+                        && phaseElement1.getInfraMappingId().equals(containerServiceElement1.getInfraMappingId()))
+                .findFirst()
+                .orElse(null);
       }
     }
   }
