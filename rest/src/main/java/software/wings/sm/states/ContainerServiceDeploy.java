@@ -141,19 +141,19 @@ public abstract class ContainerServiceDeploy extends State {
 
     if (!isRollback()) {
       logger.info("Executing resize");
-      List<ContainerServiceData> desiredCountsNew = new ArrayList<>();
+      List<ContainerServiceData> newInstanceDataList = new ArrayList<>();
       ContainerServiceData newInstanceData = getNewInstanceData(contextData, activityId);
-      desiredCountsNew.add(newInstanceData);
-      executionDataBuilder.withNewInstanceData(desiredCountsNew);
+      newInstanceDataList.add(newInstanceData);
+      executionDataBuilder.withNewInstanceData(newInstanceDataList);
       executionDataBuilder.withOldInstanceData(getOldInstanceData(contextData, newInstanceData));
       executionDataBuilder.withResizeStrategy(contextData.containerServiceElement.getResizeStrategy());
     } else {
       logger.info("Executing rollback");
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
+      ContainerUpgradeRequestElement rollbackElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      executionDataBuilder.withNewInstanceData(containerUpgradeRequestElement.getNewInstanceData());
-      executionDataBuilder.withOldInstanceData(containerUpgradeRequestElement.getOldInstanceData());
-      executionDataBuilder.withResizeStrategy(containerUpgradeRequestElement.getResizeStrategy());
+      executionDataBuilder.withNewInstanceData(rollbackElement.getNewInstanceData());
+      executionDataBuilder.withOldInstanceData(rollbackElement.getOldInstanceData());
+      executionDataBuilder.withResizeStrategy(rollbackElement.getResizeStrategy());
     }
     CommandStateExecutionData commandStateExecutionData = executionDataBuilder.build();
 
@@ -237,7 +237,7 @@ public abstract class ContainerServiceDeploy extends State {
     if (desiredCounts == null || desiredCounts.isEmpty()) {
       // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to scale
       // up during rollback. We just need to downsize the new one (which is called 'old' during rollback execution)
-      return handleResizeNewComplete(contextData, commandStateExecutionData);
+      return handleNewResized(contextData, commandStateExecutionData);
     }
     commandStateExecutionData.setDownsize(false);
     logger.info("Adding instances for {} services", desiredCounts.size());
@@ -272,7 +272,7 @@ public abstract class ContainerServiceDeploy extends State {
     List<ContainerServiceData> desiredCounts = commandStateExecutionData.getOldInstanceData();
     if (desiredCounts == null || desiredCounts.isEmpty()) {
       // Old service doesn't exist so we don't need to do anything
-      return handleDownsizeOldComplete(contextData, commandStateExecutionData);
+      return handleOldDownsized(contextData, commandStateExecutionData);
     }
     commandStateExecutionData.setDownsize(true);
     logger.info("Downsizing {} services", desiredCounts.size());
@@ -317,13 +317,13 @@ public abstract class ContainerServiceDeploy extends State {
     if (!commandStateExecutionData.isDownsize()) {
       buildInstanceStatusSummaries(contextData, response, commandStateExecutionData);
       cleanupOldVersions(contextData);
-      return handleResizeNewComplete(contextData, commandStateExecutionData);
+      return handleNewResized(contextData, commandStateExecutionData);
     } else {
-      return handleDownsizeOldComplete(contextData, commandStateExecutionData);
+      return handleOldDownsized(contextData, commandStateExecutionData);
     }
   }
 
-  private ExecutionResponse handleResizeNewComplete(
+  private ExecutionResponse handleNewResized(
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
       // Done adding new instances, now downsize old instances
@@ -334,7 +334,7 @@ public abstract class ContainerServiceDeploy extends State {
     }
   }
 
-  private ExecutionResponse handleDownsizeOldComplete(
+  private ExecutionResponse handleOldDownsized(
       ContextData contextData, CommandStateExecutionData commandStateExecutionData) {
     if (commandStateExecutionData.getResizeStrategy() == DOWNSIZE_OLD_FIRST) {
       // Done downsizing old instances, now add new instances
@@ -506,9 +506,9 @@ public abstract class ContainerServiceDeploy extends State {
     private ContainerServiceElement getContainerServiceElement(
         ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       if (containerServiceDeploy.isRollback()) {
-        ContainerUpgradeRequestElement upgradeElement =
+        ContainerUpgradeRequestElement rollbackElement =
             context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-        return upgradeElement.getContainerServiceElement();
+        return rollbackElement.getContainerServiceElement();
       } else {
         PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
         return context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
