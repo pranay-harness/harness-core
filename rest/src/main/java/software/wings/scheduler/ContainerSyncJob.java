@@ -36,10 +36,12 @@ public class ContainerSyncJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
+    logger.info("Executing container sync job for appId:" + appId);
 
     Set<String> containerSvcNameNoRevisionSet =
-        instanceService.getLeastRecentVisitedContainerFamilies(appId, System.currentTimeMillis() - INTERVAL);
+        instanceService.getLeastRecentSyncedContainerDeployments(appId, System.currentTimeMillis() - INTERVAL);
     if (containerSvcNameNoRevisionSet == null || containerSvcNameNoRevisionSet.isEmpty()) {
+      logger.info("No Container deployments to process for appId:" + appId);
       return;
     }
 
@@ -54,11 +56,12 @@ public class ContainerSyncJob implements Job {
 
       // containerDeploymentInfoList.get(0) is passed to get the information that is common to all the deployments that
       // belong to the same containerSvcNameNoRevision.
-      buildContainerInstances(containerSvcNameDeploymentInfoMap, containerDeploymentInfoList.get(0));
+      syncContainerInstances(containerSvcNameDeploymentInfoMap, containerDeploymentInfoList.get(0));
     }
+    logger.info("Container sync done for appId:" + appId);
   }
 
-  private void buildContainerInstances(Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap,
+  private void syncContainerInstances(Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap,
       ContainerDeploymentInfo containerDeploymentInfo) {
     // common attributes for all the instances belonging to the same containerSvcNameNoRevision.
     // The workflow and stateExecutionInstanceId and other attributes might be different
