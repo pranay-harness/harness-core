@@ -506,13 +506,12 @@ public abstract class ContainerServiceDeploy extends State {
             context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
         containerServiceElement = rollbackElement.getContainerServiceElement();
       } else {
-        PhaseElement phaseElement1 = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
         containerServiceElement =
             context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
                 .stream()
-                .filter(containerServiceElement1
-                    -> phaseElement1.getDeploymentType().equals(containerServiceElement1.getDeploymentType().name())
-                        && phaseElement1.getInfraMappingId().equals(containerServiceElement1.getInfraMappingId()))
+                .filter(cse
+                    -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name())
+                        && phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
                 .findFirst()
                 .orElse(null);
       }
