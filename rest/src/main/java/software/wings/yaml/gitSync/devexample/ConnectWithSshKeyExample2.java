@@ -77,6 +77,7 @@ public class ConnectWithSshKeyExample2 {
   public YamlGitSync createYamlGitSync(YamlGitSyncService yamlGitSyncService, String pathToSecrets)
       throws IOException, GitAPIException {
     String accountId = "kmpySmUISimoRrJL6NL73w";
+    String appId = "";
 
     BufferedReader passphraseBR = new BufferedReader(new FileReader(pathToSecrets + "passphrase.txt"));
     BufferedReader sshKeyPathBR = new BufferedReader(new FileReader(pathToSecrets + "sshKeyPath.txt"));
@@ -97,6 +98,6 @@ public class ConnectWithSshKeyExample2 {
                           .withSyncMode(SyncMode.HARNESS_TO_GIT)
                           .build();
 
-    return yamlGitSyncService.save(accountId, ygs);
+    return yamlGitSyncService.save(accountId, appId, ygs);
   }
 }

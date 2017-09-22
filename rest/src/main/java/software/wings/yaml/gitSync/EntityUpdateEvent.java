@@ -16,9 +16,10 @@ import java.util.Objects;
 public class EntityUpdateEvent extends Queuable {
   private String entityId;
   private String name;
+  private String accountId;
   private String appId;
   private Class klass;
-  private CrudType crudType;
+  private SourceType type;
 
   public String getEntityId() {
     return entityId;
@@ -34,6 +35,14 @@ public class EntityUpdateEvent extends Queuable {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   public String getAppId() {
@@ -52,12 +61,12 @@ public class EntityUpdateEvent extends Queuable {
     this.klass = klass;
   }
 
-  public CrudType getCrudType() {
-    return crudType;
+  public SourceType getSourceType() {
+    return type;
   }
 
-  public void setCrudType(CrudType crudType) {
-    this.crudType = crudType;
+  public void setSourceType(SourceType type) {
+    this.type = type;
   }
 
   @Override
@@ -73,7 +82,8 @@ public class EntityUpdateEvent extends Queuable {
       return false;
     }
     EntityUpdateEvent eue = (EntityUpdateEvent) o;
-    return Objects.equals(klass, eue.klass) && Objects.equals(entityId, eue.entityId);
+    return Objects.equals(klass, eue.klass) && Objects.equals(entityId, eue.entityId)
+        && Objects.equals(accountId, eue.accountId);
   }
 
   @Override
@@ -82,18 +92,27 @@ public class EntityUpdateEvent extends Queuable {
     return MoreObjects.toStringHelper(this)
         .add("class", getKlass())
         .add("entityId", getEntityId())
-        .add("crudType", getCrudType().name())
+        .add("accountId", getAccountId())
+        .add("type", getSourceType().name())
         .toString();
   }
 
-  public enum CrudType { CREATE, UPDATE, DELETE }
+  public enum SourceType {
+    ENTITY_CREATE,
+    ENTITY_UPDATE,
+    ENTITY_DELETE,
+    GIT_SYNC_CREATE,
+    GIT_SYNC_UPDATE,
+    GIT_SYNC_DELETE
+  }
 
   public static final class Builder {
     private String entityId;
     private String name;
+    private String accountId;
     private String appId;
     private Class klass;
-    private CrudType crudType;
+    private SourceType type;
 
     private Builder() {}
 
@@ -111,6 +130,11 @@ public class EntityUpdateEvent extends Queuable {
       return this;
     }
 
+    public EntityUpdateEvent.Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public EntityUpdateEvent.Builder withAppId(String appId) {
       this.appId = appId;
       return this;
@@ -121,23 +145,29 @@ public class EntityUpdateEvent extends Queuable {
       return this;
     }
 
-    public EntityUpdateEvent.Builder withCrudType(CrudType crudType) {
-      this.crudType = crudType;
+    public EntityUpdateEvent.Builder withSourceType(SourceType type) {
+      this.type = type;
       return this;
     }
 
     public EntityUpdateEvent.Builder but() {
-      return anEntityUpdateEvent().withEntityId(entityId).withName(name).withAppId(appId).withClass(klass).withCrudType(
-          crudType);
+      return anEntityUpdateEvent()
+          .withEntityId(entityId)
+          .withName(name)
+          .withAccountId(accountId)
+          .withAppId(appId)
+          .withClass(klass)
+          .withSourceType(type);
     }
 
     public EntityUpdateEvent build() {
       EntityUpdateEvent entityUpdateEvent = new EntityUpdateEvent();
       entityUpdateEvent.setEntityId(entityId);
       entityUpdateEvent.setName(name);
+      entityUpdateEvent.setAccountId(accountId);
       entityUpdateEvent.setAppId(appId);
       entityUpdateEvent.setKlass(klass);
-      entityUpdateEvent.setCrudType(crudType);
+      entityUpdateEvent.setSourceType(type);
       return entityUpdateEvent;
     }
   }

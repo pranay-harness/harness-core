@@ -61,6 +61,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -78,7 +79,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
-import software.wings.yaml.gitSync.EntityUpdateEvent.CrudType;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -117,7 +118,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WorkflowService workflowService;
-  @com.google.inject.Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
+  @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
+  @Inject private AppService appService;
 
   /**
    * {@inheritDoc}
@@ -345,12 +347,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     // queue an entity update event
+    String appId = service.getAppId();
+    String accountId = appService.get(appId).getAccountId();
     EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
                                               .withEntityId(service.getUuid())
                                               .withName(service.getName())
-                                              .withAppId(service.getAppId())
+                                              .withAccountId(accountId)
+                                              .withAppId(appId)
                                               .withClass(Service.class)
-                                              .withCrudType(CrudType.UPDATE)
+                                              .withSourceType(SourceType.ENTITY_UPDATE)
                                               .build();
     entityUpdateEventQueue.send(entityUpdateEvent);
 
