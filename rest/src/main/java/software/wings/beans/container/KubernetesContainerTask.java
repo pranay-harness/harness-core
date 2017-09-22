@@ -309,7 +309,7 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public void convertFromAdvanced() {
-    setAdvancedConfig("");
+    setAdvancedConfig(null);
   }
 
   @Override
