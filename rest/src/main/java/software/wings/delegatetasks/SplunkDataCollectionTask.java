@@ -35,6 +35,7 @@ import javax.inject.Inject;
  */
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
   public static final int DELAY_MINUTES = 2;
+  public static final int RETRY_SLEEP_SECS = 30;
 
   private static final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final Logger logger = LoggerFactory.getLogger(SplunkDataCollectionTask.class);
@@ -222,7 +223,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                 completed.set(true);
                 throw(e);
               } else {
-                logger.warn("error fetching splunk logs. retrying...", e);
+                logger.warn("error fetching splunk logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
+                Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
               }
             }
           }
@@ -232,6 +234,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {
+        completed.set(true);
         logger.error("error fetching splunk logs", e);
       }
 

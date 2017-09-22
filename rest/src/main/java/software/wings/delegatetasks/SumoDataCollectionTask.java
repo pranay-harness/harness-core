@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
+
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.model.LogMessage;
@@ -218,7 +220,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 completed.set(true);
                 throw(e);
               } else {
-                logger.warn("error fetching elk logs. retrying...", e);
+                logger.warn("error fetching sumo logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
+                Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
               }
             }
           }
@@ -228,6 +231,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {
+        completed.set(true);
         logger.error("error fetching sumo logs", e);
       }
 
