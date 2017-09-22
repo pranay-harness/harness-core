@@ -31,17 +31,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Graph;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -388,7 +392,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // safe to delete
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
     if (deleted) {
-      executorService.submit(() -> deleteCommand(service));
+      executorService.submit(() -> deleteCommands(service));
       executorService.submit(() -> serviceTemplateService.deleteByService(appId, serviceId));
       executorService.submit(() -> artifactStreamService.deleteByService(appId, serviceId));
       executorService.submit(() -> configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId));
@@ -424,7 +428,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  private void deleteCommand(Service service) {
+  private void deleteCommands(Service service) {
     service.getServiceCommands().forEach(serviceCommand
         -> deleteCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid()));
   }
@@ -437,23 +441,73 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
+    ServiceCommand serviceCommand = wingsPersistence.createQuery(ServiceCommand.class)
+                                        .field("appId")
+                                        .equal(service.getAppId())
+                                        .field(ID_KEY)
+                                        .equal(commandId)
+                                        .get();
+
+    ensureServiceCommandSafeToDelete(service, serviceCommand);
+
     wingsPersistence.update(
         wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
         wingsPersistence.createUpdateOperations(Service.class).removeAll("serviceCommands", commandId));
 
-    deleteServiceCommand(appId, commandId);
+    deleteServiceCommand(service, serviceCommand);
     return get(appId, serviceId);
   }
 
-  private void deleteServiceCommand(String appId, String commandId) {
-    boolean serviceCommandDeleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceCommand.class).field("appId").equal(appId).field(ID_KEY).equal(commandId));
+  private void deleteServiceCommand(Service service, ServiceCommand serviceCommand) {
+    boolean serviceCommandDeleted = wingsPersistence.delete(serviceCommand);
     if (serviceCommandDeleted) {
       wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
                                   .field("appId")
-                                  .equal(appId)
+                                  .equal(service.getAppId())
                                   .field("originEntityId")
-                                  .equal(commandId));
+                                  .equal(serviceCommand.getUuid()));
+    }
+  }
+
+  private void ensureServiceCommandSafeToDelete(Service service, ServiceCommand serviceCommand) {
+    List<Workflow> workflows =
+        workflowService
+            .listWorkflows(
+                aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
+            .getResponse();
+
+    StringBuilder sb = new StringBuilder();
+    for (Workflow workflow : workflows) {
+      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+        List<WorkflowPhase> workflowPhases =
+            ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
+        for (WorkflowPhase workflowPhase : workflowPhases) {
+          for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+            if (phaseStep.getSteps() == null) {
+              continue;
+            }
+            for (Graph.Node step : phaseStep.getSteps()) {
+              if ("COMMAND".equals(step.getType())) {
+                if (serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
+                  sb.append(" (");
+                  sb.append(workflow.getName());
+                  sb.append(":");
+                  sb.append(workflowPhase.getName());
+                  sb.append(":");
+                  sb.append(phaseStep.getName());
+                  sb.append(") ");
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (sb.length() > 0) {
+      String message = String.format(
+          "Command: [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
+          serviceCommand.getName());
+      throw new WingsException(INVALID_REQUEST, "message", message);
     }
   }
 
