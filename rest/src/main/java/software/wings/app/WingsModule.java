@@ -24,6 +24,8 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.cloudprovider.aws.AwsCodeDeployServiceImpl;
+import software.wings.cloudprovider.aws.AwsLambdaService;
+import software.wings.cloudprovider.aws.AwsLambdaServiceImpl;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -358,5 +360,6 @@ public class WingsModule extends AbstractModule {
         .annotatedWith(Names.named("KubernetesInstanceSync"))
         .to(KubernetesContainerSyncImpl.class);
     bind(ContainerSync.class).annotatedWith(Names.named("EcsInstanceSync")).to(EcsContainerSyncImpl.class);
+    bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
   }
 }
