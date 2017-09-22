@@ -475,7 +475,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .listWorkflows(
                 aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, service.getAppId()).build())
             .getResponse();
-
+    if (workflows == null || workflows.size() == 0) {
+      return;
+    }
     StringBuilder sb = new StringBuilder();
     for (Workflow workflow : workflows) {
       if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
