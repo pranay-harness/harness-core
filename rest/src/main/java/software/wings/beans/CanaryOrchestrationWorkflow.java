@@ -327,18 +327,24 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
             Optional<Variable> infraVariable = entityVariables.stream()
                                                    .filter(variable1
                                                        -> variable1.getEntityType().equals(INFRASTRUCTURE_MAPPING)
-                                                           && variable1.getName().equals(variable.getName()))
+                                                           && variable1.getName().equals(variable.getRelatedField()))
                                                    .findFirst();
             if (infraVariable.isPresent()) {
-              serviceInfraVariables.add(variable);
+              serviceInfraVariables.add(infraVariable.get());
             }
-          } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
+          }
+        }
+        for (Variable variable : entityVariables) {
+          EntityType entityType = variable.getEntityType();
+          if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
             if (!serviceInfraVariables.stream().anyMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
               serviceInfraVariables.add(variable);
             }
           }
         }
-        reorderVariables.addAll(serviceInfraVariables);
+        if (serviceInfraVariables != null) {
+          reorderVariables.addAll(serviceInfraVariables);
+        }
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
