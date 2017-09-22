@@ -76,7 +76,6 @@ public abstract class OrchestrationWorkflow {
   public abstract OrchestrationWorkflow clone();
 
   public abstract List<Variable> getUserVariables();
-
   public abstract void setCloneMetadata(Map<String, String> serviceIdMapping);
 
   /**
@@ -139,6 +138,7 @@ public abstract class OrchestrationWorkflow {
                                      .withRelatedField(relatedField)
                                      .withType(entityType != null ? ENTITY : TEXT)
                                      .withMandatory(templateExpression.isMandatory())
+                                     .withDescription(templateExpression.getDescription())
                                      .build());
         }
       } else {
@@ -150,6 +150,8 @@ public abstract class OrchestrationWorkflow {
                                      .withArtifactType(artifactType)
                                      .withRelatedField(relatedField)
                                      .withType(entityType != null ? ENTITY : TEXT)
+                                     .withMandatory(templateExpression.isMandatory())
+                                     .withDescription(templateExpression.getDescription())
                                      .build());
         }
       }

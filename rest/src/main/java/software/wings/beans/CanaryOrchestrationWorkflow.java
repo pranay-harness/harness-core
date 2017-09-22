@@ -2,8 +2,11 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.EntityType.*;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.OrchestrationWorkflowType.*;
+import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
@@ -15,6 +18,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.validator.Var;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -27,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,7 +41,7 @@ import java.util.stream.Collectors;
 @JsonTypeName("CANARY")
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
-    setOrchestrationWorkflowType(OrchestrationWorkflowType.CANARY);
+    setOrchestrationWorkflowType(CANARY);
   }
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
@@ -226,6 +231,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           templateExpressions.stream().forEach(templateExpression -> {
             templateExpression.setExpressionAllowed(false);
             templateExpression.setMandatory(true);
+            setTemplateDescription(templateExpression, workflowPhase.getName());
           });
           addToUserVariables(templateExpressions);
         }
@@ -242,6 +248,36 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
+  /**
+   * Set template descripton
+   * @param templateExpression
+   */
+  private void setTemplateDescription(TemplateExpression templateExpression, String phaseName) {
+    EntityType entityType = templateExpression.getEntityType();
+    Map<String, Object> metadata = templateExpression.getMetadata();
+    if (metadata != null) {
+      if (metadata.get(ENTITY_TYPE) != null) {
+        entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
+      }
+    }
+    if (entityType != null) {
+      if (entityType.equals(ENVIRONMENT)) {
+        templateExpression.setDescription("Variable for Environment entity");
+      } else if (entityType.equals(SERVICE)) {
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
+          templateExpression.setDescription("Variable for Service entity");
+        } else {
+          templateExpression.setDescription("Variable for Service entity in " + phaseName);
+        }
+      } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
+          templateExpression.setDescription("Variable for Service Infra-strucuture entity");
+        } else {
+          templateExpression.setDescription("Variable for Service Infra-strucuture entity " + phaseName);
+        }
+      }
+    }
+  }
   /**
    * Invoked after loading document from mongo by morphia.
    */
@@ -261,6 +297,54 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       });
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
+    reorderUserVariables();
+  }
+
+  /**
+   * Re orderes the user variables first by Entity - Enviroment, Service - Service Infra
+   */
+  private void reorderUserVariables() {
+    List<Variable> reorderVariables = new ArrayList<>();
+    if (userVariables != null) {
+      // First get all Entity type user variables
+      List<Variable> entityVariables =
+          userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
+      List<Variable> nonEntityVariables =
+          userVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+      if (entityVariables != null) {
+        for (Variable variable : entityVariables) {
+          EntityType entityType = variable.getEntityType();
+          if (entityType != null && entityType.equals(ENVIRONMENT)) {
+            reorderVariables.add(variable);
+            break;
+          }
+        }
+        List<Variable> serviceInfraVariables = new ArrayList<>();
+        for (Variable variable : entityVariables) {
+          EntityType entityType = variable.getEntityType();
+          if (entityType.equals(SERVICE)) {
+            serviceInfraVariables.add(variable);
+            Optional<Variable> infraVariable = entityVariables.stream()
+                                                   .filter(variable1
+                                                       -> variable1.getEntityType().equals(INFRASTRUCTURE_MAPPING)
+                                                           && variable1.getName().equals(variable.getName()))
+                                                   .findFirst();
+            if (infraVariable.isPresent()) {
+              serviceInfraVariables.add(variable);
+            }
+          } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
+            if (!serviceInfraVariables.stream().anyMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
+              serviceInfraVariables.add(variable);
+            }
+          }
+        }
+        reorderVariables.addAll(serviceInfraVariables);
+      }
+      if (nonEntityVariables != null) {
+        reorderVariables.addAll(nonEntityVariables);
+      }
+    }
+    userVariables = reorderVariables;
   }
 
   public void populatePhaseStepIds(WorkflowPhase workflowPhase) {
