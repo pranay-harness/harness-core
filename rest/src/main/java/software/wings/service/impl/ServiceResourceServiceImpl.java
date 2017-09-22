@@ -51,6 +51,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -555,20 +556,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset) {
+      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
                                       .field("appId")
                                       .equal(appId)
                                       .field("serviceId")
                                       .equal(serviceId)
-                                      .field("taskId")
+                                      .field(ID_KEY)
                                       .equal(taskId)
                                       .get();
     if (reset) {
       containerTask.convertFromAdvanced();
     } else {
-      containerTask.setAdvancedType(ContainerTask.AdvancedType.valueOf(advancedType));
-      containerTask.setAdvancedConfig(advancedConfig);
+      containerTask.setAdvancedType(advancedPayload.getAdvancedType());
+      containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
       containerTask.validateAdvanced();
     }
     return createContainerTask(containerTask, false);

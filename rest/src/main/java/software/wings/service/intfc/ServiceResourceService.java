@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -205,7 +206,7 @@ public interface ServiceResourceService {
   ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced);
 
   ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset);
+      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset);
 
   /**
    * List container tasks page response.
