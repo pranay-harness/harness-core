@@ -42,7 +42,7 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
   @SchemaIgnore @NotEmpty private String accountId;
 
   /**
-   * Instantiates a new App dynamics config.
+   * Instantiates a new New Relic dynamics config.
    */
   public NewRelicConfig() {
     super(StateType.NEW_RELIC.name());
