@@ -692,24 +692,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should delete command state.
-   */
-  @Test
-  public void shouldDeleteCommand() {
-    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
-    srs.deleteCommand(APP_ID, SERVICE_ID, "START");
-
-    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence, times(1)).createUpdateOperations(Service.class);
-    verify(wingsPersistence, times(1)).createQuery(Service.class);
-    verify(wingsPersistence, times(1)).createQuery(ServiceCommand.class);
-    verify(wingsPersistence, times(1)).createQuery(Command.class);
-    verify(wingsPersistence, times(2)).delete(any(Query.class));
-    verify(wingsPersistence, times(1)).update(any(Query.class), any());
-    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }
-
-  /**
    * Should get command stencils.
    */
   @Test

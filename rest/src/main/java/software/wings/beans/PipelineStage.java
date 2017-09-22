@@ -68,7 +68,7 @@ public class PipelineStage {
     private String name;
     private String type;
     private Map<String, Object> properties = new HashMap<>();
-
+    private Map<String, String> workflowVariables = new HashMap<>();
     /**
      * Instantiates a new Pipeline stage element.
      */
@@ -139,6 +139,22 @@ public class PipelineStage {
      */
     public void setProperties(Map<String, Object> properties) {
       this.properties = properties;
+    }
+
+    /**
+     * Get workflow variables
+     * @return
+     */
+    public Map<String, String> getWorkflowVariables() {
+      return workflowVariables;
+    }
+
+    /**
+     * Set workflow variables
+     * @param workflowVariables
+     */
+    public void setWorkflowVariables(Map<String, String> workflowVariables) {
+      this.workflowVariables = workflowVariables;
     }
   }
 }

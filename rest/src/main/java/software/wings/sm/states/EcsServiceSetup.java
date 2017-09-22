@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
+import com.amazonaws.services.ecs.model.HostVolumeProperties;
 import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.MountPoint;
@@ -25,6 +26,7 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
+import com.amazonaws.services.ecs.model.Volume;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -54,6 +56,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsContainerTask.StorageConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -156,6 +159,21 @@ public class EcsServiceSetup extends State {
 
     String containerName = EcsConvention.getContainerName(imageName);
 
+    Map<String, Volume> volumeMap = new HashMap<>();
+    for (EcsContainerTask.ContainerDefinition containerDefinition : ecsContainerTask.getContainerDefinitions()) {
+      if (isNotEmpty(containerDefinition.getStorageConfigurations())) {
+        for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
+          Volume volume = new Volume();
+          String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
+          volume.setName(volumeName);
+          HostVolumeProperties hostVolumeProperties = new HostVolumeProperties();
+          hostVolumeProperties.setSourcePath(strip(storageConfiguration.getHostSourcePath()));
+          volume.setHost(hostVolumeProperties);
+          volumeMap.put(volume.getName(), volume);
+        }
+      }
+    }
+
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
             .stream()
@@ -166,8 +184,10 @@ public class EcsServiceSetup extends State {
     String taskFamily = isNotEmpty(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
-    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
-        new RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions).withFamily(taskFamily);
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = new RegisterTaskDefinitionRequest()
+                                                                      .withContainerDefinitions(containerDefinitions)
+                                                                      .withFamily(taskFamily)
+                                                                      .withVolumes(volumeMap.values());
 
     logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
     TaskDefinition taskDefinition =
@@ -305,14 +325,13 @@ public class EcsServiceSetup extends State {
     }
 
     if (isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
-      List<EcsContainerTask.StorageConfiguration> harnessStorageConfigurations =
-          harnessContainerDefinition.getStorageConfigurations();
+      List<StorageConfiguration> harnessStorageConfigurations = harnessContainerDefinition.getStorageConfigurations();
       containerDefinition.setMountPoints(
           harnessStorageConfigurations.stream()
               .map(storageConfiguration
                   -> new MountPoint()
                          .withContainerPath(strip(storageConfiguration.getContainerPath()))
-                         .withSourceVolume(strip(storageConfiguration.getHostSourcePath()))
+                         .withSourceVolume(EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath())))
                          .withReadOnly(storageConfiguration.isReadonly()))
               .collect(toList()));
     }
