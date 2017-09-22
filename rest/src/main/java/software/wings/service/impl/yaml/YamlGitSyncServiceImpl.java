@@ -13,15 +13,19 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
+import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
-import software.wings.yaml.gitSync.EntityUpdateEvent.CrudType;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.GitSyncHelper;
 import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
 import java.io.BufferedWriter;
@@ -41,6 +45,8 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -48,7 +54,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @param uuid the uuid
    * @return the rest response
    */
-  public YamlGitSync getByUuid(String uuid) {
+  public YamlGitSync getByUuid(String uuid, String accountId, String appId) {
     YamlGitSync yamlGitSync = wingsPersistence.get(YamlGitSync.class, uuid);
 
     return yamlGitSync;
@@ -67,14 +73,36 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   /**
+   * Gets the yaml git sync info by entitytId
+   *
+   * @param entityId the uuid of the entity
+   * @param accountId the account id
+   * @param appId the app id
+   * @return the rest response
+   */
+  public YamlGitSync get(String entityId, String accountId, String appId) {
+    YamlGitSync yamlGitSync = wingsPersistence.createQuery(YamlGitSync.class)
+                                  .field("entityId")
+                                  .equal(entityId)
+                                  .field("accountId")
+                                  .equal(accountId)
+                                  .field("appId")
+                                  .equal(appId)
+                                  .get();
+
+    return yamlGitSync;
+  }
+
+  /**
    * Gets the yaml git sync info by object type and entitytId
    *
    * @param type the object type
    * @param entityId the uuid of the entity
    * @param accountId the account id
+   * @param appId the app id
    * @return the rest response
    */
-  public YamlGitSync get(Type type, String entityId, @NotEmpty String accountId) {
+  public YamlGitSync get(Type type, String entityId, @NotEmpty String accountId, String appId) {
     YamlGitSync yamlGitSync = wingsPersistence.createQuery(YamlGitSync.class)
                                   .field("accountId")
                                   .equal(accountId)
@@ -88,10 +116,12 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   @Override
-  public boolean exist(@NotEmpty Type type, @NotEmpty String entityId, @NotEmpty String accountId) {
+  public boolean exist(@NotEmpty Type type, @NotEmpty String entityId, @NotEmpty String accountId, String appId) {
     return wingsPersistence.createQuery(YamlGitSync.class)
                .field("accountId")
                .equal(accountId)
+               .field("appId")
+               .equal(appId)
                .field("entityId")
                .equal(entityId)
                .field("type")
@@ -107,18 +137,23 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @param ygs the yamlGitSync info
    * @return the rest response
    */
-  public YamlGitSync save(String accountId, YamlGitSync ygs) {
+  public YamlGitSync save(String accountId, String appId, YamlGitSync ygs) {
     Validator.notNullCheck("accountId", ygs.getAccountId());
 
     // check if it already exists
-    if (exist(ygs.getType(), ygs.getEntityId(), accountId)) {
+    if (exist(ygs.getType(), ygs.getEntityId(), accountId, appId)) {
       // do update instead
-      return update(ygs.getEntityId(), accountId, ygs);
+      return update(ygs.getEntityId(), accountId, appId, ygs);
     }
 
     YamlGitSync yamlGitSync = wingsPersistence.saveAndGet(YamlGitSync.class, ygs);
 
-    return getByUuid(yamlGitSync.getUuid());
+    // check to see if we need to push the initial yaml for this entity to synced Git repo
+    if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
+      createEntityUpdateEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
+    }
+
+    return getByUuid(yamlGitSync.getUuid(), accountId, appId);
   }
 
   /**
@@ -129,10 +164,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
    * @param ygs the yamlGitSync info
    * @return the rest response
    */
-  public YamlGitSync update(String entityId, String accountId, YamlGitSync ygs) {
+  public YamlGitSync update(String entityId, String accountId, String appId, YamlGitSync ygs) {
     // check if it already exists
-    if (exist(ygs.getType(), ygs.getEntityId(), accountId)) {
-      YamlGitSync yamlGitSync = get(ygs.getType(), ygs.getEntityId(), accountId);
+    if (exist(ygs.getType(), ygs.getEntityId(), accountId, appId)) {
+      YamlGitSync yamlGitSync = get(ygs.getType(), ygs.getEntityId(), accountId, appId);
 
       Query<YamlGitSync> query =
           wingsPersistence.createQuery(YamlGitSync.class).field(ID_KEY).equal(yamlGitSync.getUuid());
@@ -146,10 +181,61 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
                                                      .set("syncMode", ygs.getSyncMode());
 
       wingsPersistence.update(query, operations);
+
+      // check to see if sync mode has changed such that we need to push the yaml to synced Git repo
+      if (yamlGitSync.getSyncMode() == SyncMode.GIT_TO_HARNESS || yamlGitSync.getSyncMode() == null) {
+        if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
+          createEntityUpdateEvent(accountId, appId, ygs, SourceType.GIT_SYNC_UPDATE);
+        }
+      }
+
       return wingsPersistence.get(YamlGitSync.class, yamlGitSync.getUuid());
     }
 
     return null;
+  }
+
+  public void createEntityUpdateEvent(String accountId, String appId, YamlGitSync ygs, SourceType sourceType) {
+    String name = "";
+    Class klass = null;
+
+    // TODO - this is very narrow (for now) just (SERVICE) to get something working
+    switch (ygs.getType()) {
+      case SETUP:
+        break;
+      case APP:
+        break;
+      case SERVICE:
+        Service service = serviceResourceService.get(appId, ygs.getEntityId());
+        name = service.getName();
+        klass = service.getClass();
+        break;
+      case SERVICE_COMMAND:
+        break;
+      case ENVIRONMENT:
+        break;
+      case SETTING:
+        break;
+      case WORKFLOW:
+        break;
+      case PIPELINE:
+        break;
+      case TRIGGER:
+        break;
+      default:
+        // nothing to do
+    }
+
+    // queue an entity update event
+    EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
+                                              .withEntityId(ygs.getEntityId())
+                                              .withName(name)
+                                              .withAccountId(accountId)
+                                              .withAppId(appId)
+                                              .withClass(klass)
+                                              .withSourceType(sourceType)
+                                              .build();
+    entityUpdateEventQueue.send(entityUpdateEvent);
   }
 
   public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
@@ -157,8 +243,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
     String entityId = entityUpdateEvent.getEntityId();
     String name = entityUpdateEvent.getName();
+    String accountId = entityUpdateEvent.getAccountId();
     String appId = entityUpdateEvent.getAppId();
-    CrudType crudType = entityUpdateEvent.getCrudType();
+    SourceType sourceType = entityUpdateEvent.getSourceType();
     Class klass = entityUpdateEvent.getKlass();
 
     if (entityId == null || entityId.isEmpty()) {
@@ -166,8 +253,8 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       return false;
     }
 
-    if (crudType == null) {
-      logger.info("ERROR: EntityUpdateEvent crudType is missing!");
+    if (sourceType == null) {
+      logger.info("ERROR: EntityUpdateEvent sourceType is missing!");
       return false;
     }
 
@@ -176,12 +263,18 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       return false;
     }
 
-    switch (crudType) {
-      case CREATE:
-        // TODO - needs implementation!
-        break;
-      case UPDATE:
-        YamlGitSync ygs = get(entityId);
+    switch (sourceType) {
+      case ENTITY_CREATE:
+        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
+        // break;
+      case GIT_SYNC_CREATE:
+        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
+        // break;
+      case ENTITY_UPDATE:
+        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
+        // break;
+      case GIT_SYNC_UPDATE:
+        YamlGitSync ygs = get(entityId, accountId, appId);
 
         logger.info("*************** ygs: " + ygs);
 
@@ -239,36 +332,40 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
           logger.info("*************** klass.getCanonicalName(): " + klass.getCanonicalName());
 
-          switch (klass.getCanonicalName()) {}
+          switch (klass.getCanonicalName()) {
+            // TODO - this (idea) needs to be used (in some form)
+          }
 
           String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
 
-          //---------------------
-          RestResponse<YamlPayload> rr = serviceYamlResourceService.getService(appId, entityId);
-          YamlPayload yp = rr.getResource();
-          String theYaml = yp.getYaml();
+          if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT) {
+            //---------------------
+            RestResponse<YamlPayload> rr = serviceYamlResourceService.getService(appId, entityId);
+            YamlPayload yp = rr.getResource();
+            String theYaml = yp.getYaml();
 
-          String fileName = name + ".yaml";
-          File newFile = new File(repoPath, fileName);
-          newFile.createNewFile();
-          FileWriter writer = new FileWriter(newFile);
-          writer.write(theYaml);
-          writer.close();
-          //---------------------
+            String fileName = name + ".yaml";
+            File newFile = new File(repoPath, fileName);
+            newFile.createNewFile();
+            FileWriter writer = new FileWriter(newFile);
+            writer.write(theYaml);
+            writer.close();
+            //---------------------
 
-          try {
-            DirCache dirCache = git.add().addFilepattern(fileName).call();
-          } catch (GitAPIException e) {
-            e.printStackTrace();
+            try {
+              DirCache dirCache = git.add().addFilepattern(fileName).call();
+            } catch (GitAPIException e) {
+              e.printStackTrace();
+            }
+
+            // commit
+            RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
+
+            logger.info("*************** RevCommit: " + rev.toString());
+
+            // push the change
+            Iterable<PushResult> pushResults = gsh.push("origin");
           }
-
-          // commit
-          RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
-
-          logger.info("*************** RevCommit: " + rev.toString());
-
-          // push the change
-          Iterable<PushResult> pushResults = gsh.push("origin");
 
           // clean up TEMP files
           sshKeyPath.delete();
@@ -279,7 +376,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         }
 
         break;
-      case DELETE:
+      case GIT_SYNC_DELETE:
+        // TODO - needs implementation!
+        break;
+      case ENTITY_DELETE:
         // TODO - needs implementation!
         break;
       default:

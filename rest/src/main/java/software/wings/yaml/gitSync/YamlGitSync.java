@@ -110,6 +110,16 @@ public class YamlGitSync extends Base {
   }
 
   @Override
+  public String getAppId() {
+    return appId;
+  }
+
+  @Override
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(type, entityId);
   }
@@ -137,6 +147,7 @@ public class YamlGitSync extends Base {
         .add("rootPath", rootPath)
         .add("syncMode", syncMode)
         .add("accountId", accountId)
+        .add("appId", appId)
         .toString();
   }
 
@@ -156,6 +167,7 @@ public class YamlGitSync extends Base {
         .withPassphrase(getPassphrase())
         .withSyncMode(getSyncMode())
         .withAccountId(getAccountId())
+        .withAppId(getAppId())
         .build();
   }
 
@@ -198,6 +210,7 @@ public class YamlGitSync extends Base {
     private SyncMode syncMode;
 
     private String accountId;
+    private String appId;
 
     private EmbeddedUser createdBy;
     private long createdAt;
@@ -260,6 +273,11 @@ public class YamlGitSync extends Base {
       return this;
     }
 
+    public YamlGitSync.Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public YamlGitSync.Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -291,7 +309,8 @@ public class YamlGitSync extends Base {
           .withSshKey(sshKey)
           .withPassphrase(passphrase)
           .withSyncMode(syncMode)
-          .withAccountId(accountId);
+          .withAccountId(accountId)
+          .withAppId(appId);
     }
 
     public YamlGitSync build() {
@@ -308,6 +327,7 @@ public class YamlGitSync extends Base {
       yamlGitSync.setSyncMode(syncMode);
 
       yamlGitSync.setAccountId(accountId);
+      yamlGitSync.setAppId(appId);
       return yamlGitSync;
     }
   }

@@ -24,12 +24,7 @@ public class ConnectWithSshKeyExample {
     String passphrase = passphraseBR.readLine();
     String sshKeyPath = sshKeyPathBR.readLine();
 
-    // TODO - TEMP FOR DEBUG:
-    // sshKeyPath =
-    // "/var/folders/yk/bsk0g38s3nv2jv327yqswyc00000gn/T/sync-keys_w2nJ72QPTNyg_EdyZjwRXQ8199717070629768290";  sshKeyPath
-    // = "/Users/bsollish/.ssh/id_rsa1";
-    sshKeyPath = "/Users/bsollish/.ssh/test/id_rsa1";
-    // sshKeyPath = "/Users/bsollish/.ssh/id_rsa";
+    sshKeyPath = "/Users/bsollish/.ssh/id_rsa";
 
     GitSyncHelper gsh = new GitSyncHelper(passphrase, sshKeyPath);
 
