@@ -230,7 +230,7 @@ public class EcsContainerTask extends ContainerTask {
 
   @Override
   public void convertFromAdvanced() {
-    setAdvancedConfig("");
+    setAdvancedConfig(null);
   }
 
   @Override
