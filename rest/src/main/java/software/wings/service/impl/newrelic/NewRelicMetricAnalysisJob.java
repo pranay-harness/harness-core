@@ -1,12 +1,20 @@
 package software.wings.service.impl.newrelic;
 
+import com.google.common.base.Preconditions;
+
+import org.apache.commons.lang.StringUtils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricDefinition.Threshold;
@@ -16,21 +24,27 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 
 /**
@@ -48,7 +62,10 @@ public class NewRelicMetricAnalysisJob implements Job {
 
   @Inject private DelegateService delegateService;
 
+  @Inject private FeatureFlagService featureFlagService;
+
   private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricAnalysisJob.class);
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
@@ -75,17 +92,166 @@ public class NewRelicMetricAnalysisJob implements Job {
   }
 
   private class NewRelicAnalysisGenerator implements Runnable {
+    public static final int PYTHON_JOB_RETRIES = 3;
+    public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
+    protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
+    private final String pythonScriptRoot;
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
     private final UUID uuid;
+    private final Set<String> testNodes;
+    private final Set<String> controlNodes;
 
     private NewRelicAnalysisGenerator(
         AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId, UUID uuid) {
+      this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
+      Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
+
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;
       this.uuid = uuid;
+      this.testNodes = context.getTestNodes();
+      this.controlNodes = context.getControlNodes();
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        this.controlNodes.removeAll(this.testNodes);
+      }
+    }
+
+    private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute) {
+      logger.info("running new relic analysis for minute {}", analysisMinute);
+      final List<NewRelicMetricDataRecord> controlRecords =
+          context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+          ? newRelicService.getPreviousSuccessfulRecords(
+                context.getWorkflowId(), context.getServiceId(), analysisMinute)
+          : newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
+                context.getWorkflowId(), context.getServiceId(), context.getControlNodes(), analysisMinute);
+
+      final List<NewRelicMetricDataRecord> testRecords =
+          newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
+              context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), analysisMinute);
+
+      Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
+      Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
+
+      NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                        .stateExecutionId(context.getStateExecutionId())
+                                                        .workflowExecutionId(context.getWorkflowExecutionId())
+                                                        .workflowId(context.getWorkflowId())
+                                                        .applicationId(context.getAppId())
+                                                        .riskLevel(RiskLevel.LOW)
+                                                        .metricAnalyses(new ArrayList<>())
+                                                        .build();
+
+      for (Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
+        final String metricName = metric.getKey();
+        NewRelicMetricAnalysis metricAnalysis = NewRelicMetricAnalysis.builder()
+                                                    .metricName(metricName)
+                                                    .riskLevel(RiskLevel.LOW)
+                                                    .metricValues(new ArrayList<>())
+                                                    .build();
+
+        for (Entry<String, List<Threshold>> valuesToAnalyze :
+            NewRelicMetricValueDefinition.VALUES_TO_ANALYZE.entrySet()) {
+          NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
+                                                                    .metricName(metricName)
+                                                                    .metricValueName(valuesToAnalyze.getKey())
+                                                                    .thresholds(valuesToAnalyze.getValue())
+                                                                    .build();
+
+          NewRelicMetricAnalysisValue metricAnalysisValue =
+              metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
+          metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
+
+          if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) < 0) {
+            metricAnalysis.setRiskLevel(metricAnalysisValue.getRiskLevel());
+          }
+
+          if (metricAnalysisValue.getRiskLevel().compareTo(analysisRecord.getRiskLevel()) < 0) {
+            analysisRecord.setRiskLevel(metricAnalysisValue.getRiskLevel());
+          }
+        }
+        analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);
+      }
+
+      analysisRecord.setAnalysisMinute(analysisMinute);
+
+      return analysisRecord;
+    }
+
+    private void timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
+      String protocol = context.isSSL() ? "https" : "http";
+      String serverUrl = protocol + "://localhost:" + context.getAppPort();
+
+      String testInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
+          + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=true";
+      String controlInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
+          + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=";
+      controlInputUrl = context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+          ? controlInputUrl + true
+          : controlInputUrl + false;
+
+      final String logAnalysisSaveUrl = serverUrl + "/api/" + context.getStateBaseUrl()
+          + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
+          + "workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute;
+
+      final List<String> command = new ArrayList<>();
+      command.add(this.pythonScriptRoot + "/" + TS_ML_SHELL_FILE_NAME);
+
+      command.add("--control_input_url");
+      command.add(controlInputUrl);
+      command.add("--test_input_url");
+      command.add(testInputUrl);
+      command.add("--control_nodes");
+      command.addAll(controlNodes);
+      command.add("--test_nodes");
+      command.addAll(testNodes);
+      command.add("--auth_token=" + context.getAuthToken());
+      command.add("--application_id=" + context.getAppId());
+      command.add("--workflow_id=" + context.getWorkflowId());
+      command.add("--workflow_execution_id=" + context.getWorkflowExecutionId());
+      command.add("--service_id=" + context.getServiceId());
+      command.add("--analysis_minute");
+      command.add(String.valueOf(analysisMinute));
+      command.add("--state_execution_id=" + context.getStateExecutionId());
+      command.add("--analysis_save_url");
+      command.add(logAnalysisSaveUrl);
+      command.add("--smooth_window");
+      command.add(String.valueOf(context.getSmooth_window()));
+      command.add("--tolerance");
+      command.add(String.valueOf(context.getTolerance()));
+
+      int attempt = 0;
+      for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
+        final ProcessResult result =
+            new ProcessExecutor(command)
+                .redirectOutput(
+                    Slf4jStream.of(LoggerFactory.getLogger(getClass().getName() + "." + context.getStateExecutionId()))
+                        .asInfo())
+                .execute();
+
+        switch (result.getExitValue()) {
+          case 0:
+            logger.info("Log analysis done for " + context.getStateExecutionId() + " for minute " + analysisMinute);
+            attempt += PYTHON_JOB_RETRIES;
+            break;
+          case 2:
+            logger.warn("No test data from the deployed nodes " + context.getStateExecutionId() + " for minute "
+                + analysisMinute);
+            attempt += PYTHON_JOB_RETRIES;
+            break;
+          default:
+            logger.warn("Log analysis failed for " + context.getStateExecutionId() + " for minute " + analysisMinute
+                + " trial: " + (attempt + 1));
+            Thread.sleep(2000);
+        }
+      }
+
+      if (attempt == PYTHON_JOB_RETRIES) {
+        throw new RuntimeException("Finished all retries.");
+      }
     }
 
     @Override
@@ -115,63 +281,22 @@ public class NewRelicMetricAnalysisJob implements Job {
           completeCron = true;
           return;
         }
-        logger.info("running new relic analysis for minute {}", analysisMinute);
-        final List<NewRelicMetricDataRecord> controlRecords =
-            context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-            ? newRelicService.getPreviousSuccessfulRecords(
-                  context.getWorkflowId(), context.getServiceId(), analysisMinute)
-            : newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                  context.getWorkflowId(), context.getServiceId(), context.getControlNodes(), analysisMinute);
-
-        final List<NewRelicMetricDataRecord> testRecords =
-            newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), analysisMinute);
-
-        Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
-        Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
-
-        NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
-                                                          .stateExecutionId(context.getStateExecutionId())
-                                                          .workflowExecutionId(context.getWorkflowExecutionId())
-                                                          .workflowId(context.getWorkflowId())
-                                                          .applicationId(context.getAppId())
-                                                          .riskLevel(RiskLevel.LOW)
-                                                          .metricAnalyses(new ArrayList<>())
-                                                          .build();
-
-        for (Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
-          final String metricName = metric.getKey();
-          NewRelicMetricAnalysis metricAnalysis = NewRelicMetricAnalysis.builder()
-                                                      .metricName(metricName)
-                                                      .riskLevel(RiskLevel.LOW)
-                                                      .metricValues(new ArrayList<>())
-                                                      .build();
-
-          for (Entry<String, List<Threshold>> valuesToAnalyze :
-              NewRelicMetricValueDefinition.VALUES_TO_ANALYZE.entrySet()) {
-            NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
-                                                                      .metricName(metricName)
-                                                                      .metricValueName(valuesToAnalyze.getKey())
-                                                                      .thresholds(valuesToAnalyze.getValue())
-                                                                      .build();
-
-            NewRelicMetricAnalysisValue metricAnalysisValue =
-                metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
-            metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
-
-            if (metricAnalysisValue.getRiskLevel().compareTo(metricAnalysis.getRiskLevel()) < 0) {
-              metricAnalysis.setRiskLevel(metricAnalysisValue.getRiskLevel());
-            }
-
-            if (metricAnalysisValue.getRiskLevel().compareTo(analysisRecord.getRiskLevel()) < 0) {
-              analysisRecord.setRiskLevel(metricAnalysisValue.getRiskLevel());
-            }
+        if (featureFlagService.isEnabled(FeatureName.TIME_SERIES_ML, context.getAccountId())) {
+          if (context.getControlNodes() != null && context.getControlNodes().size() > 0) {
+            timeSeriesML(analysisMinute);
+          } else {
+            newRelicService.saveAnalysisRecords(NewRelicMetricAnalysisRecord.builder()
+                                                    .analysisMinute(analysisMinute)
+                                                    .applicationId(context.getAppId())
+                                                    .message("No baseline found. This will be the new baseline.")
+                                                    .stateExecutionId(context.getStateExecutionId())
+                                                    .workflowExecutionId(context.getWorkflowExecutionId())
+                                                    .build());
           }
-          analysisRecord.addNewRelicMetricAnalysis(metricAnalysis);
+        } else {
+          NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
+          newRelicService.saveAnalysisRecords(analysisRecord);
         }
-
-        analysisRecord.setAnalysisMinute(analysisMinute);
-        newRelicService.saveAnalysisRecords(analysisRecord);
         newRelicService.bumpCollectionMinuteToProcess(
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
       } catch (Exception ex) {

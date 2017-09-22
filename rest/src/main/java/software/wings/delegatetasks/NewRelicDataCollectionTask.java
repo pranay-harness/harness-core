@@ -147,9 +147,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
                   NewRelicWebTransactions webTransactions =
                       JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
-                  metricDataRecord.setThroughput(webTransactions.getThroughput());
-                  metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
-                  records.put(metric.getName(), timeStamp, metricDataRecord);
+                  if (webTransactions.getCall_count() > 0) {
+                    metricDataRecord.setThroughput(webTransactions.getThroughput());
+                    metricDataRecord.setAverageResponseTime(webTransactions.getAverage_response_time());
+                    metricDataRecord.setCallCount(webTransactions.getCall_count());
+                    metricDataRecord.setRequestsPerMinute(webTransactions.getRequests_per_minute());
+                    records.put(metric.getName(), timeStamp, metricDataRecord);
+                  }
                 }
               }
             } catch (Exception e) {

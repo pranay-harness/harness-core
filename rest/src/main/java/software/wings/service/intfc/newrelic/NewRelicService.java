@@ -2,6 +2,7 @@ package software.wings.service.intfc.newrelic;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -27,6 +28,9 @@ public interface NewRelicService {
       @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
 
   @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
+
+  @ValidationGroups(Create.class)
+  boolean saveAnalysisRecordsML(@Valid TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord);
 
   List<NewRelicMetricDataRecord> getRecords(String workflowExecutionId, String stateExecutionId, String workflowId,
       String serviceId, Set<String> nodes, int analysisMinute);

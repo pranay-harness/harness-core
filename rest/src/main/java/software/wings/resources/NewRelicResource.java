@@ -9,10 +9,17 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.analysis.TSRequest;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,6 +58,23 @@ public class NewRelicResource {
     return new RestResponse<>(newRelicService.saveMetricData(accountId, applicationId, metricData));
   }
 
+  @POST
+  @Path("/get-metrics")
+  @Timed
+  @ExternalServiceAuth
+  @ExceptionMetered
+  public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
+      @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
+    if (compareCurrent) {
+      return new RestResponse<>(
+          newRelicService.getRecords(request.getWorkflowExecutionId(), request.getStateExecutionId(),
+              request.getWorkflowId(), request.getServiceId(), request.getNodes(), request.getAnalysisMinute()));
+    } else {
+      return new RestResponse<>(newRelicService.getPreviousSuccessfulRecords(
+          request.getWorkflowId(), request.getServiceId(), request.getAnalysisMinute()));
+    }
+  }
+
   @GET
   @Path("/generate-metrics")
   @Timed
@@ -60,5 +84,22 @@ public class NewRelicResource {
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
     return new RestResponse<>(newRelicService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
+  }
+
+  @POST
+  @Path("/save-analysis")
+  @Timed
+  @ExceptionMetered
+  @ExternalServiceAuth
+  public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workflowExecutionId") final String workflowExecutionId,
+      @QueryParam("analysisMinute") Integer analysisMinute, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
+      throws IOException {
+    mlAnalysisResponse.setApplicationId(applicationId);
+    mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
+    mlAnalysisResponse.setStateExecutionId(stateExecutionId);
+    mlAnalysisResponse.setAnalysisMinute(analysisMinute);
+    return new RestResponse<>(newRelicService.saveAnalysisRecordsML(mlAnalysisResponse));
   }
 }

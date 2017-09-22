@@ -64,6 +64,9 @@ import javax.inject.Named;
  * Created by rsingh on 8/28/17.
  */
 public class NewRelicState extends AbstractAnalysisState {
+  private static final int SMOOTH_WINDOW = 3;
+  private static final int TOLERANCE = 1;
+
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicState.class);
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
@@ -172,7 +175,7 @@ public class NewRelicState extends AbstractAnalysisState {
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (canaryNewHostNames == null || canaryNewHostNames.isEmpty()) {
-      getLogger().error("Could not find test nodes to compare the data");
+      getLogger().error("Could not find test nodes to analyze");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
     }
 
@@ -319,6 +322,8 @@ public class NewRelicState extends AbstractAnalysisState {
           .authToken(generateAuthToken())
           .analysisServerConfigId(getAnalysisServerConfigId())
           .correlationId(correlationId)
+          .smooth_window(SMOOTH_WINDOW)
+          .tolerance(TOLERANCE)
           .build();
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
