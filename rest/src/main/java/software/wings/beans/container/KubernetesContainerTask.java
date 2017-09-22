@@ -23,6 +23,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -294,6 +295,7 @@ public class KubernetesContainerTask extends ContainerTask {
   public void convertToAdvanced() {
     setAdvancedConfig(fetchYamlConfig());
     setAdvancedType(AdvancedType.YAML);
+    setContainerDefinitions(new ArrayList<>());
   }
 
   public String fetchYamlConfig() {
@@ -310,6 +312,7 @@ public class KubernetesContainerTask extends ContainerTask {
   @Override
   public void convertFromAdvanced() {
     setAdvancedConfig(null);
+    setAdvancedType(null);
   }
 
   @Override
