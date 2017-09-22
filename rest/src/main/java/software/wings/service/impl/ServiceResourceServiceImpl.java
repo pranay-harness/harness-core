@@ -532,10 +532,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ContainerTask createContainerTask(ContainerTask containerTask) {
+  public ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced) {
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
       throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
+    }
+    if (advanced) {
+      containerTask.convertToAdvanced();
     }
     return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
   }
@@ -547,10 +550,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced) {
-    if (advanced) {
-      containerTask.convertToAdvanced();
-    }
-    return createContainerTask(containerTask);
+    return createContainerTask(containerTask, advanced);
   }
 
   @Override
@@ -571,7 +571,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       containerTask.setAdvancedConfig(advancedConfig);
       containerTask.validateAdvanced();
     }
-    return createContainerTask(containerTask);
+    return createContainerTask(containerTask, false);
   }
 
   @Override
