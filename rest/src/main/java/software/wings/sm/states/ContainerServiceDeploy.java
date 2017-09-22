@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.ContainerUpgradeRequestElement;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -472,7 +472,7 @@ public abstract class ContainerServiceDeploy extends State {
     final Command command;
     final ServiceElement serviceElement;
     final ContainerServiceElement containerServiceElement;
-    final ContainerUpgradeRequestElement rollbackElement;
+    final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
     final String appId;
     final String serviceId;
@@ -508,10 +508,10 @@ public abstract class ContainerServiceDeploy extends State {
           : CommandUnitType.RESIZE_KUBERNETES.name();
       if (containerServiceDeploy.isRollback()) {
         rollbackElement =
-            context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
+            context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
         containerServiceElement = rollbackElement.getContainerServiceElement();
       } else {
-        rollbackElement = ContainerUpgradeRequestElement.builder().build();
+        rollbackElement = ContainerRollbackRequestElement.builder().build();
         containerServiceElement =
             context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
                 .stream()
