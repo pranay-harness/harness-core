@@ -6,10 +6,10 @@ import java.util.regex.Pattern;
  * Created by brett on 3/8/17
  */
 public class KubernetesConvention {
+  public static final String DOT = ".";
+  private static final String DASH = "-";
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
-  public static final String DOT = ".";
-  public static final String DASH = "-";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
   public static String getReplicationControllerName(String prefix, int revision) {
