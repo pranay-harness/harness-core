@@ -16,7 +16,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -223,7 +222,7 @@ public class ContainerInstanceHelper {
     if (containerInfo instanceof KubernetesContainerInfo) {
       return ((KubernetesContainerInfo) containerInfo).getReplicationControllerName();
     } else if (containerInfo instanceof EcsContainerInfo) {
-      return ((EcsContainerInfo) containerInfo).getTaskDefinitionArn();
+      return ((EcsContainerInfo) containerInfo).getServiceName();
     } else {
       throw new WingsException("Unsupported container info type:" + containerInfo.getClass().getCanonicalName());
     }
@@ -239,12 +238,7 @@ public class ContainerInstanceHelper {
     for (ContainerInfo containerInfo : containerInfoList) {
       String containerSvcName = getContainerSvcName(containerInfo);
       ContainerDeploymentInfo containerDeploymentInfo = containerSvcNameDeploymentInfoMap.get(containerSvcName);
-      // Added this to debug the null containerDeploymentInfo, which isn't expected.
-      if (containerDeploymentInfo == null) {
-        String msg = "ContainerDeploymentInfo is null for containerSvcName:" + containerSvcName;
-        logger.error(msg);
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", msg);
-      }
+      Validator.notNullCheck("ContainerDeploymentInfo" + containerSvcName, containerDeploymentInfo);
 
       // remove the ones which have instances in it.
       containerSvcNamesWithZeroInstances.remove(containerSvcName);

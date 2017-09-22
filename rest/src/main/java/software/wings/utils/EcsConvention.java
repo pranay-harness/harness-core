@@ -6,7 +6,9 @@ import java.util.regex.Pattern;
  * Created by rishi on 2/7/17.
  */
 public class EcsConvention {
-  public static final String DELIMITER = "__";
+  private static final String DELIMITER = "__";
+  private static final String VOLUME_PREFIX = "vol_";
+  private static final String VOLUME_SUFFIX = "_vol";
   private static Pattern wildCharPattern = Pattern.compile("[:.+*/\\\\ &$|\"']");
 
   public static String getTaskFamily(String appName, String serviceName, String envName) {
@@ -23,6 +25,10 @@ public class EcsConvention {
 
   public static String getContainerName(String imageName) {
     return wildCharPattern.matcher(imageName).replaceAll("_").toLowerCase();
+  }
+
+  public static String getVolumeName(String path) {
+    return VOLUME_PREFIX + wildCharPattern.matcher(path).replaceAll(DELIMITER).toLowerCase() + VOLUME_SUFFIX;
   }
 
   public static int getRevisionFromServiceName(String name) {

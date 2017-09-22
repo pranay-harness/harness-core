@@ -235,6 +235,10 @@ public class StateMachine extends Base {
 
     properties.put("pipelineId", pipeline.getUuid());
 
+    if (pipelineStageElement.getWorkflowVariables() != null) {
+      properties.put("workflowVariables", pipelineStageElement.getWorkflowVariables());
+    }
+
     // populate properties
     MapperUtils.mapObject(properties, state);
 

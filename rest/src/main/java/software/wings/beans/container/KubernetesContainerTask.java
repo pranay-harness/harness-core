@@ -1,5 +1,8 @@
 package software.wings.beans.container;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.strip;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -12,7 +15,6 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import ro.fortsoft.pf4j.util.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
@@ -21,7 +23,6 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -313,7 +314,7 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public void validateAdvanced() {
-    if (StringUtils.isNotEmpty(getAdvancedConfig())) {
+    if (isNotEmpty(getAdvancedConfig())) {
       try {
         String advancedConfig = getAdvancedConfig()
                                     .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
@@ -344,20 +345,19 @@ public class KubernetesContainerTask extends ContainerTask {
     List<Container> containerDefinitions =
         getContainerDefinitions().stream().map(this ::createContainerDefinition).collect(Collectors.toList());
 
-    List<Volume> volumeList = new ArrayList<>();
-    getContainerDefinitions().forEach(containerDefinition -> {
+    Map<String, Volume> volumeMap = new HashMap<>();
+    for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
       if (containerDefinition.getStorageConfigurations() != null) {
-        volumeList.addAll(
-            containerDefinition.getStorageConfigurations()
-                .stream()
-                .map(storageConfiguration
-                    -> new VolumeBuilder()
-                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
-                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
-                           .build())
-                .collect(Collectors.toList()));
+        for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
+          String volumeName = KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
+          volumeMap.put(volumeName,
+              new VolumeBuilder()
+                  .withName(volumeName)
+                  .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath())))
+                  .build());
+        }
       }
-    });
+    }
 
     return new ReplicationControllerBuilder()
         .withApiVersion("v1")
@@ -372,7 +372,7 @@ public class KubernetesContainerTask extends ContainerTask {
         .withNewSpec()
         .addNewImagePullSecret(DUMMY_SECRET_NAME)
         .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
-        .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
+        .addToVolumes(volumeMap.values().toArray(new Volume[volumeMap.size()]))
         .endSpec()
         .endTemplate()
         .endSpec()
@@ -429,8 +429,8 @@ public class KubernetesContainerTask extends ContainerTask {
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
           -> containerBuilder.addNewVolumeMount()
-                 .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
-                 .withMountPath(storageConfiguration.getContainerPath())
+                 .withName(KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath())))
+                 .withMountPath(strip(storageConfiguration.getContainerPath()))
                  .withReadOnly(storageConfiguration.isReadonly())
                  .endVolumeMount());
     }

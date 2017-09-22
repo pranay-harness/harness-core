@@ -380,18 +380,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void populateServices(Workflow workflow) {
-    if (workflow == null || workflow.getOrchestrationWorkflow() == null
-        || workflow.getOrchestrationWorkflow().getServiceIds() == null) {
+    if (workflow == null) {
       return;
     }
 
-    List<Service> services = workflow.getOrchestrationWorkflow()
-                                 .getServiceIds()
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow == null || orchestrationWorkflow.getServiceIds() == null) {
+      return;
+    }
+    List<Service> services = orchestrationWorkflow.getServiceIds()
                                  .stream()
                                  .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
                                  .filter(Objects::nonNull)
                                  .collect(Collectors.toList());
+
     workflow.setServices(services);
+    workflow.setTemplatizedServiceIds(orchestrationWorkflow.getTemplatizedServiceIds());
   }
 
   /**
@@ -472,7 +476,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
-    setUnset(ops, "templateExpressions", templateExpressions);
 
     String serviceId = workflow.getServiceId();
     String envId = workflow.getEnvId();
@@ -488,8 +491,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (templateExpressions == null || templateExpressions.size() == 0) {
+      templateExpressions = new ArrayList<>();
+    }
     orchestrationWorkflow = propagateWorkflowDataToPhases(orchestrationWorkflow, templateExpressions,
         workflow.getAppId(), serviceId, inframappingId, envChanged, inframappingChanged);
+
+    setUnset(ops, "templateExpressions", templateExpressions);
 
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
@@ -544,7 +552,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
         if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
           for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
-            phase.setTemplateExpressions(templateExpressions);
+            setTemplateExpresssions(templateExpressions, phase);
             validateServiceCompatibility(appId, serviceId, phase.getServiceId());
             setServiceId(serviceId, phase);
             resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
@@ -564,6 +572,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
             (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+        multiServiceOrchestrationWorkflow.addToUserVariables(templateExpressions);
         List<WorkflowPhase> workflowPhases = multiServiceOrchestrationWorkflow.getWorkflowPhases();
         if (workflowPhases != null) {
           for (WorkflowPhase phase : workflowPhases) {
@@ -624,6 +633,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow;
   }
 
+  /**
+   * Propagate template expressions back and forth
+   * @param templateExpressions
+   * @param workflowPhase
+   */
+  private void setTemplateExpresssions(List<TemplateExpression> templateExpressions, WorkflowPhase workflowPhase) {
+    if (workflowPhase != null) {
+      List<TemplateExpression> phaseTemplateExpressions = workflowPhase.getTemplateExpressions();
+      if (templateExpressions.size() == 0) {
+        if (phaseTemplateExpressions != null) {
+          templateExpressions.addAll(phaseTemplateExpressions);
+        }
+      } else {
+        workflowPhase.setTemplateExpressions(templateExpressions);
+      }
+    }
+  }
   /**
    * Sets service Id to Phase
    *
