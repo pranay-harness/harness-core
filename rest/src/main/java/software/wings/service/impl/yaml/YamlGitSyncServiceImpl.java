@@ -12,15 +12,26 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.RestResponse;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
-import software.wings.yaml.YamlPayload;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.GitSyncHelper;
@@ -45,7 +56,13 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
+  @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private SettingsService settingsService;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
   /**
@@ -199,28 +216,48 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     String name = "";
     Class klass = null;
 
-    // TODO - this is very narrow (for now) just (SERVICE) to get something working
     switch (ygs.getType()) {
       case SETUP:
+        name = "setup";
+        klass = Account.class;
         break;
       case APP:
+        Application app = appService.get(appId);
+        name = app.getName();
+        klass = Application.class;
         break;
       case SERVICE:
         Service service = serviceResourceService.get(appId, ygs.getEntityId());
         name = service.getName();
-        klass = service.getClass();
+        klass = Service.class;
         break;
       case SERVICE_COMMAND:
         break;
       case ENVIRONMENT:
+        Environment environment = environmentService.get(appId, ygs.getEntityId(), false);
+        name = environment.getName();
+        klass = Environment.class;
         break;
       case SETTING:
+        SettingAttribute settingAttribute = settingsService.get(appId, ygs.getEntityId());
+        name = settingAttribute.getName();
+        klass = SettingAttribute.class;
         break;
       case WORKFLOW:
+        Workflow workflow = workflowService.readWorkflow(appId, ygs.getEntityId());
+        name = workflow.getName();
+        klass = Workflow.class;
         break;
       case PIPELINE:
+        Pipeline pipeline = pipelineService.readPipeline(appId, ygs.getEntityId(), false);
+        name = pipeline.getName();
+        klass = Pipeline.class;
         break;
       case TRIGGER:
+        ArtifactStream artifactStream = artifactStreamService.get(appId, ygs.getEntityId());
+        Service asService = serviceResourceService.get(appId, artifactStream.getServiceId());
+        name = artifactStream.getSourceName() + "(" + asService.getName() + ")";
+        klass = ArtifactStream.class;
         break;
       default:
         // nothing to do
@@ -247,6 +284,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     String appId = entityUpdateEvent.getAppId();
     SourceType sourceType = entityUpdateEvent.getSourceType();
     Class klass = entityUpdateEvent.getKlass();
+    String yaml = entityUpdateEvent.getYaml();
 
     if (entityId == null || entityId.isEmpty()) {
       logger.info("ERROR: EntityUpdateEvent entityId is missing!");
@@ -265,39 +303,29 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
     switch (sourceType) {
       case ENTITY_CREATE:
-        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-        // break;
+        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
       case GIT_SYNC_CREATE:
-        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-        // break;
+        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
       case ENTITY_UPDATE:
-        // TODO - may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-        // break;
+        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
       case GIT_SYNC_UPDATE:
         YamlGitSync ygs = get(entityId, accountId, appId);
 
         logger.info("*************** ygs: " + ygs);
 
-        // logger.info("*************** ygs.getSshKey(): " + ygs.getSshKey());
-
         //---------------------
-        // TODO - annoying that we need to write the sshKey to a file, because the addIdentity method in
-        // createDefaultJSch of the CustomJschConfigSessionFactory requires a path and won't take the key directly!
+        // annoying that we need to write the sshKey to a file, because the addIdentity method in createDefaultJSch of
+        // the CustomJschConfigSessionFactory requires a path and won't take the key directly!
 
         File sshKeyPath = null;
 
         try {
-          // Path keyDir = Files.createTempDirectory("sync-repo-keys");
-          // sshKeyPath = File.createTempFile(entityId, "", keyDir.toFile());
           sshKeyPath = File.createTempFile("sync-keys_" + entityId, "");
 
           Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
           perms.add(PosixFilePermission.OWNER_READ);
           perms.add(PosixFilePermission.OWNER_WRITE);
           Files.setPosixFilePermissions(Paths.get(sshKeyPath.getAbsolutePath()), perms);
-
-          // sshKeyPath.delete();
-          // sshKeyPath.mkdirs();
 
           FileWriter fw = new FileWriter(sshKeyPath);
           BufferedWriter bw = new BufferedWriter(fw);
@@ -338,19 +366,13 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
           String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
 
-          if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT) {
-            //---------------------
-            RestResponse<YamlPayload> rr = serviceYamlResourceService.getService(appId, entityId);
-            YamlPayload yp = rr.getResource();
-            String theYaml = yp.getYaml();
-
+          if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
             String fileName = name + ".yaml";
             File newFile = new File(repoPath, fileName);
             newFile.createNewFile();
             FileWriter writer = new FileWriter(newFile);
-            writer.write(theYaml);
+            writer.write(yaml);
             writer.close();
-            //---------------------
 
             try {
               DirCache dirCache = git.add().addFilepattern(fileName).call();
