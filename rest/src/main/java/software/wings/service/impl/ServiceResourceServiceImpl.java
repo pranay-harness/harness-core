@@ -421,9 +421,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
-      String message = String.format(
-          "Service:[%s] couldn't be deleted. Remove Service reference from following workflows [" + workflowNames + "]",
-          service.getName());
+      String message =
+          String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
+                  + workflowNames + "]",
+              service.getName());
       throw new WingsException(INVALID_REQUEST, "message", message);
     }
   }
@@ -441,12 +442,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
-    ServiceCommand serviceCommand = wingsPersistence.createQuery(ServiceCommand.class)
-                                        .field("appId")
-                                        .equal(service.getAppId())
-                                        .field(ID_KEY)
-                                        .equal(commandId)
-                                        .get();
+    ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, appId, commandId);
 
     ensureServiceCommandSafeToDelete(service, serviceCommand);
 
@@ -489,16 +485,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               continue;
             }
             for (Graph.Node step : phaseStep.getSteps()) {
-              if ("COMMAND".equals(step.getType())) {
-                if (serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
-                  sb.append(" (");
-                  sb.append(workflow.getName());
-                  sb.append(":");
-                  sb.append(workflowPhase.getName());
-                  sb.append(":");
-                  sb.append(phaseStep.getName());
-                  sb.append(") ");
-                }
+              if ("COMMAND".equals(step.getType())
+                  && serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
+                sb.append(" (")
+                    .append(workflow.getName())
+                    .append(":")
+                    .append(workflowPhase.getName())
+                    .append(":")
+                    .append(phaseStep.getName())
+                    .append(") ");
               }
             }
           }
@@ -507,7 +502,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     if (sb.length() > 0) {
       String message = String.format(
-          "Command: [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
+          "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
       throw new WingsException(INVALID_REQUEST, "message", message);
     }
