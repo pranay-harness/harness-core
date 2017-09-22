@@ -232,7 +232,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
 
       if (completed.get()) {
-        logger.info("Shutting down sumo data collection");
+        logger.info("Shutting down sumo data collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
         return;
       }
