@@ -102,7 +102,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.info("Executing container service deploy");
-    ContextData contextData = getContextData(context);
+    ContextData contextData = buildContextData(context);
 
     String activityId =
         activityService
@@ -313,7 +313,7 @@ public abstract class ContainerServiceDeploy extends State {
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
     }
 
-    ContextData contextData = getContextData(context);
+    ContextData contextData = buildContextData(context);
 
     if (!commandStateExecutionData.isDownsize()) {
       buildInstanceStatusSummaries(contextData, response, commandStateExecutionData);
@@ -461,7 +461,7 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private ContextData getContextData(ExecutionContext context) {
+  private ContextData buildContextData(ExecutionContext context) {
     return new ContextData(context, this);
   }
 
