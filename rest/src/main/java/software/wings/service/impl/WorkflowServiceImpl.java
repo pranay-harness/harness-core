@@ -474,7 +474,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
-    setUnset(ops, "templateExpressions", templateExpressions);
 
     String serviceId = workflow.getServiceId();
     String envId = workflow.getEnvId();
@@ -489,9 +488,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
     }
-
+    if (templateExpressions == null || templateExpressions.size() == 0) {
+      templateExpressions = new ArrayList<>();
+    }
     orchestrationWorkflow = propagateWorkflowDataToPhases(orchestrationWorkflow, templateExpressions,
         workflow.getAppId(), serviceId, inframappingId, envChanged, inframappingChanged);
+
+    setUnset(ops, "templateExpressions", templateExpressions);
 
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
@@ -635,9 +638,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void setTemplateExpresssions(List<TemplateExpression> templateExpressions, WorkflowPhase workflowPhase) {
     if (workflowPhase != null) {
       List<TemplateExpression> phaseTemplateExpressions = workflowPhase.getTemplateExpressions();
-      if (templateExpressions == null || templateExpressions.size() == 0) {
+      if (templateExpressions.size() == 0) {
         if (phaseTemplateExpressions != null) {
-          templateExpressions = new ArrayList<>();
           templateExpressions.addAll(phaseTemplateExpressions);
         }
       } else {

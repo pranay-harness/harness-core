@@ -102,6 +102,15 @@ public class Variable {
     return metadata.get(ARTIFACT_TYPE) != null ? ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE)) : null;
   }
 
+  @Transient
+  @JsonIgnore
+  public String getRelatedField() {
+    if (metadata == null) {
+      return "";
+    }
+    return metadata.get(RELATED_FIELD) != null ? (String) metadata.get(RELATED_FIELD) : "";
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)

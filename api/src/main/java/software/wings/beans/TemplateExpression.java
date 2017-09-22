@@ -12,6 +12,7 @@ public class TemplateExpression {
   private String fieldName;
   private String expression;
   private boolean expressionAllowed = true; // Can this template expression can contain other expression
+  private String description;
 
   private boolean mandatory;
 
@@ -74,5 +75,13 @@ public class TemplateExpression {
 
   public void setMandatory(boolean mandatory) {
     this.mandatory = mandatory;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 }
