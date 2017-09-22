@@ -192,13 +192,7 @@ public interface ServiceResourceService {
    */
   Service get(String appId, String serviceId, SetupStatus status);
 
-  /**
-   * Create container task container task.
-   *
-   * @param containerTask the container task  @return the container task
-   * @return the container task
-   */
-  ContainerTask createContainerTask(ContainerTask containerTask);
+  ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced);
 
   /**
    * Delete container task.

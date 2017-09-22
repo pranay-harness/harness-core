@@ -242,11 +242,11 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks")
   @Timed
   @ExceptionMetered
-  public RestResponse<ContainerTask> createContainerTask(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
+  public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
+      @QueryParam("advanced") boolean advanced, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
     containerTask.setServiceId(serviceId);
-    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask));
+    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask, advanced));
   }
 
   @GET
