@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandUnitType.AWS_LAMBDA;
 import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -398,7 +399,8 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand());
+      return asList(
+          getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand(), getAwsLambdaCommand());
     }
     /**
      * Gets start command graph.
@@ -533,6 +535,23 @@ public enum ArtifactType {
                                        .withId(UUIDGenerator.graphIdGenerator("node"))
                                        .withName("Amazon Code Deploy")
                                        .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    private Command getAwsLambdaCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon Lambda")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon Lambda")
+                                       .withType(AWS_LAMBDA.name())
                                        .build())
                          .buildPipeline())
           .build();

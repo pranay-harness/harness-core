@@ -118,6 +118,19 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
+import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.CreateFunctionRequest;
+import com.amazonaws.services.lambda.model.CreateFunctionResult;
+import com.amazonaws.services.lambda.model.GetFunctionRequest;
+import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.ListFunctionsRequest;
+import com.amazonaws.services.lambda.model.ListFunctionsResult;
+import com.amazonaws.services.lambda.model.PublishVersionRequest;
+import com.amazonaws.services.lambda.model.PublishVersionResult;
+import com.amazonaws.services.lambda.model.ResourceNotFoundException;
+import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
+import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.apache.commons.io.IOUtils;
@@ -182,6 +195,13 @@ public class AwsHelperService {
    */
   private AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey) {
     return (AmazonECSClient) AmazonECSClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
+  }
+
+  private AWSLambdaClient getAmazonLambdaClient(String region, String accessKey, char[] secretKey) {
+    return (AWSLambdaClient) AWSLambdaClientBuilder.standard()
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
@@ -571,6 +591,7 @@ public class AwsHelperService {
     }
     return new DescribeInstancesResult();
   }
+
   public TerminateInstancesResult terminateEc2Instances(AwsConfig awsConfig, String region, List<String> instancesIds) {
     try {
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -640,6 +661,7 @@ public class AwsHelperService {
     }
     return new CreateClusterResult();
   }
+
   public DescribeClustersResult describeClusters(
       String region, AwsConfig awsConfig, DescribeClustersRequest describeClustersRequest) {
     try {
@@ -650,6 +672,7 @@ public class AwsHelperService {
     }
     return new DescribeClustersResult();
   }
+
   public ListClustersResult listClusters(String region, AwsConfig awsConfig, ListClustersRequest listClustersRequest) {
     try {
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
@@ -670,6 +693,7 @@ public class AwsHelperService {
     }
     return new RegisterTaskDefinitionResult();
   }
+
   public ListServicesResult listServices(String region, AwsConfig awsConfig, ListServicesRequest listServicesRequest) {
     try {
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
@@ -679,6 +703,7 @@ public class AwsHelperService {
     }
     return new ListServicesResult();
   }
+
   public DescribeServicesResult describeServices(
       String region, AwsConfig awsConfig, DescribeServicesRequest describeServicesRequest) {
     try {
@@ -689,6 +714,7 @@ public class AwsHelperService {
     }
     return new DescribeServicesResult();
   }
+
   public CreateServiceResult createService(
       String region, AwsConfig awsConfig, CreateServiceRequest createServiceRequest) {
     try {
@@ -699,6 +725,7 @@ public class AwsHelperService {
     }
     return new CreateServiceResult();
   }
+
   public UpdateServiceResult updateService(
       String region, AwsConfig awsConfig, UpdateServiceRequest updateServiceRequest) {
     try {
@@ -1032,6 +1059,7 @@ public class AwsHelperService {
     }
     return Arrays.asList();
   }
+
   public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, ListMetricsRequest listMetricsRequest) {
     try {
       AmazonCloudWatchClient cloudWatchClient =
@@ -1101,5 +1129,58 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeStacksResult();
+  }
+
+  public ListFunctionsResult listFunctions(
+      String region, String accessKey, char[] secretKey, ListFunctionsRequest listFunctionsRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).listFunctions(listFunctionsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListFunctionsResult();
+  }
+
+  public GetFunctionResult getFunction(
+      String region, String accessKey, char[] secretKey, GetFunctionRequest getFunctionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).getFunction(getFunctionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      if (amazonServiceException instanceof ResourceNotFoundException) {
+        return null;
+      }
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new GetFunctionResult();
+  }
+
+  public CreateFunctionResult createFunction(
+      String region, String accessKey, char[] secretKey, CreateFunctionRequest createFunctionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).createFunction(createFunctionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new CreateFunctionResult();
+  }
+
+  public UpdateFunctionCodeResult updateFunction(
+      String region, String accessKey, char[] secretKey, UpdateFunctionCodeRequest updateFunctionCodeRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).updateFunctionCode(updateFunctionCodeRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new UpdateFunctionCodeResult();
+  }
+
+  public PublishVersionResult publishVersion(
+      String region, String accessKey, char[] secretKey, PublishVersionRequest publishVersionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).publishVersion(publishVersionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new PublishVersionResult();
   }
 }
