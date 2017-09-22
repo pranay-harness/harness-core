@@ -360,9 +360,17 @@ public class InstanceServiceImpl implements InstanceService {
       InstanceType instanceType, String containerSvcNameNoRevision) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
-    List<Instance> instanceList =
-        query.field("containerInstanceKey.containerId").startsWith(containerSvcNameNoRevision).asList();
+    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
+      query.field("instanceInfo.replicationControllerName").startsWith(containerSvcNameNoRevision);
+    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+      query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
+    } else {
+      String msg = "Unsupported container instanceType:" + instanceType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
 
+    List<Instance> instanceList = query.asList();
     instanceMap = instanceList.stream().collect(toMap(Instance::getContainerInstanceKey, instance -> instance));
 
     return instanceMap;
