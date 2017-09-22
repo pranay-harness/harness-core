@@ -9,6 +9,7 @@ import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
@@ -61,6 +62,19 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
     Service service = serviceResourceService.get(appId, serviceId, true);
 
     if (service != null) {
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, service.getUuid(), getServiceYamlObj(service), service.getName() + ".yaml");
+    }
+
+    RestResponse rr = new RestResponse<>();
+    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "Service with this serviceId: '" + serviceId + "' was not found!");
+
+    return rr;
+  }
+
+  public ServiceYaml getServiceYamlObj(Service service) {
+    if (service != null) {
       List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
       ServiceYaml serviceYaml = new ServiceYaml(service);
@@ -69,15 +83,15 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
       List<ServiceVariable> serviceVariables = service.getServiceVariables();
       serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
 
-      return YamlHelper.getYamlRestResponse(
-          yamlGitSyncService, service.getUuid(), serviceYaml, service.getName() + ".yaml");
+      return serviceYaml;
     }
 
-    RestResponse rr = new RestResponse<>();
-    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-        "Service with this serviceId: '" + serviceId + "' was not found!");
+    return null;
+  }
 
-    return rr;
+  public String getServiceYaml(Service service) {
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
+    return yaml.dump(getServiceYamlObj(service));
   }
 
   /**

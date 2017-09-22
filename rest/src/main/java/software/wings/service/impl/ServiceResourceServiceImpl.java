@@ -55,13 +55,11 @@ import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -72,14 +70,13 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -118,8 +115,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WorkflowService workflowService;
-  @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
-  @Inject private AppService appService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   /**
    * {@inheritDoc}
@@ -346,18 +342,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                      service.getUuid(), savedService.getName(), service.getName().trim()));
     }
 
-    // queue an entity update event
-    String appId = service.getAppId();
-    String accountId = appService.get(appId).getAccountId();
-    EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
-                                              .withEntityId(service.getUuid())
-                                              .withName(service.getName())
-                                              .withAccountId(accountId)
-                                              .withAppId(appId)
-                                              .withClass(Service.class)
-                                              .withSourceType(SourceType.ENTITY_UPDATE)
-                                              .build();
-    entityUpdateEventQueue.send(entityUpdateEvent);
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.serviceUpdate(service);
 
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }

@@ -110,20 +110,7 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
     String dumpedYaml = yaml.dump(theYaml);
-
-    // remove first line of Yaml:
-    // dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
-
-    // instead of removing the first line - we should remove any line that starts with two exclamation points
-    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
-
-    // remove empty arrays/lists:
-    dumpedYaml = dumpedYaml.replace("[]", "");
-
-    dumpedYaml = fixIndentSpaces(dumpedYaml);
-    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
+    YamlPayload yp = new YamlPayload(cleanupYaml(dumpedYaml));
     yp.setName(payloadName);
 
     // add the YamlGitSync instance (if found) to the payload
@@ -141,6 +128,18 @@ public class YamlHelper {
     }
 
     return rr;
+  }
+
+  public static String cleanupYaml(String yaml) {
+    // instead of removing the first line - we should remove any line that starts with two exclamation points
+    yaml = cleanUpDoubleExclamationLines(yaml);
+
+    // remove empty arrays/lists:
+    yaml = yaml.replace("[]", "");
+
+    yaml = fixIndentSpaces(yaml);
+
+    return yaml;
   }
 
   // added this while working on workflows

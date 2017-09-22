@@ -20,6 +20,7 @@ public class EntityUpdateEvent extends Queuable {
   private String appId;
   private Class klass;
   private SourceType type;
+  private String yaml;
 
   public String getEntityId() {
     return entityId;
@@ -69,6 +70,22 @@ public class EntityUpdateEvent extends Queuable {
     this.type = type;
   }
 
+  public SourceType getType() {
+    return type;
+  }
+
+  public void setType(SourceType type) {
+    this.type = type;
+  }
+
+  public String getYaml() {
+    return yaml;
+  }
+
+  public void setYaml(String yaml) {
+    this.yaml = yaml;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(klass, entityId);
@@ -83,7 +100,7 @@ public class EntityUpdateEvent extends Queuable {
     }
     EntityUpdateEvent eue = (EntityUpdateEvent) o;
     return Objects.equals(klass, eue.klass) && Objects.equals(entityId, eue.entityId)
-        && Objects.equals(accountId, eue.accountId);
+        && Objects.equals(accountId, eue.accountId) && Objects.equals(yaml, eue.yaml);
   }
 
   @Override
@@ -94,6 +111,7 @@ public class EntityUpdateEvent extends Queuable {
         .add("entityId", getEntityId())
         .add("accountId", getAccountId())
         .add("type", getSourceType().name())
+        .add("yaml", getYaml())
         .toString();
   }
 
@@ -113,6 +131,7 @@ public class EntityUpdateEvent extends Queuable {
     private String appId;
     private Class klass;
     private SourceType type;
+    private String yaml;
 
     private Builder() {}
 
@@ -150,6 +169,11 @@ public class EntityUpdateEvent extends Queuable {
       return this;
     }
 
+    public EntityUpdateEvent.Builder withYaml(String yaml) {
+      this.yaml = yaml;
+      return this;
+    }
+
     public EntityUpdateEvent.Builder but() {
       return anEntityUpdateEvent()
           .withEntityId(entityId)
@@ -157,7 +181,8 @@ public class EntityUpdateEvent extends Queuable {
           .withAccountId(accountId)
           .withAppId(appId)
           .withClass(klass)
-          .withSourceType(type);
+          .withSourceType(type)
+          .withYaml(yaml);
     }
 
     public EntityUpdateEvent build() {
@@ -168,6 +193,7 @@ public class EntityUpdateEvent extends Queuable {
       entityUpdateEvent.setAppId(appId);
       entityUpdateEvent.setKlass(klass);
       entityUpdateEvent.setSourceType(type);
+      entityUpdateEvent.setYaml(yaml);
       return entityUpdateEvent;
     }
   }
