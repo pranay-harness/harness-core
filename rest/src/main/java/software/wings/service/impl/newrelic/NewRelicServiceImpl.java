@@ -18,7 +18,13 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -31,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -96,6 +103,21 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
+  public boolean saveAnalysisRecordsML(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                .field("workflowExecutionId")
+                                .equal(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+                                .field("stateExecutionId")
+                                .equal(timeSeriesMLAnalysisRecord.getStateExecutionId()));
+
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: "
+        + timeSeriesMLAnalysisRecord.getWorkflowExecutionId()
+        + " StateExecutionInstanceId: " + timeSeriesMLAnalysisRecord.getStateExecutionId());
+    return true;
+  }
+
+  @Override
   public List<NewRelicMetricDataRecord> getRecords(String workflowExecutionId, String stateExecutionId,
       String workflowId, String serviceId, Set<String> nodes, int analysisMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
@@ -109,6 +131,8 @@ public class NewRelicServiceImpl implements NewRelicService {
                                                 .equal(serviceId)
                                                 .field("host")
                                                 .hasAnyOf(nodes)
+                                                .field("level")
+                                                .notEqual(ClusterLevel.H0)
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
     return query.asList();
@@ -126,6 +150,8 @@ public class NewRelicServiceImpl implements NewRelicService {
                                                 .equal(astSuccessfulWorkflowExecutionIdWithData)
                                                 .field("serviceId")
                                                 .equal(serviceId)
+                                                .field("level")
+                                                .notEqual(ClusterLevel.H0)
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
     return query.asList();
@@ -174,55 +200,156 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
-    Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
-        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+    NewRelicMetricAnalysisRecord analysisRecord;
+
+    Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("workflowExecutionId")
             .equal(workflowExecutionId);
-    NewRelicMetricAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
-    if (analysisRecord == null) {
-      return null;
-    }
-
-    if (analysisRecord.getMetricAnalyses() == null) {
-      return NewRelicMetricAnalysisRecord.builder()
-          .message(
-              "Could not get metric data from new relic. Please make sure that the new relic account is a paid account and metrics can be pulled using rest API")
-          .build();
-    }
-
-    int highRisk = 0;
-    int mediumRisk = 0;
-    for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-      switch (metricAnalysis.getRiskLevel()) {
-        case HIGH:
-          highRisk++;
-          break;
-        case MEDIUM:
-          mediumRisk++;
-          break;
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
+    if (timeSeriesMLAnalysisRecord != null) {
+      List<NewRelicMetricAnalysis> metricAnalysisList = new ArrayList<>();
+      for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
+        List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
+        RiskLevel globalRisk = RiskLevel.NA;
+        for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
+          RiskLevel riskLevel;
+          switch (mlMetricSummary.getMax_risk()) {
+            case -1:
+              riskLevel = RiskLevel.NA;
+              break;
+            case 0:
+              riskLevel = RiskLevel.LOW;
+              break;
+            case 1:
+              riskLevel = RiskLevel.MEDIUM;
+              break;
+            case 2:
+              riskLevel = RiskLevel.HIGH;
+              break;
+            default:
+              throw new RuntimeException("Unknown risk level " + mlMetricSummary.getMax_risk());
+          }
+          if (riskLevel.compareTo(globalRisk) < 0) {
+            globalRisk = riskLevel;
+          }
+          metricsList.add(NewRelicMetricAnalysisValue.builder()
+                              .name(mlMetricSummary.getMetric_name())
+                              .riskLevel(riskLevel)
+                              .controlValue(mlMetricSummary.getControl_avg())
+                              .testValue(mlMetricSummary.getTest_avg())
+                              .build());
+        }
+        metricAnalysisList.add(NewRelicMetricAnalysis.builder()
+                                   .metricName(txnSummary.getTxn_name())
+                                   .metricValues(metricsList)
+                                   .riskLevel(globalRisk)
+                                   .build());
       }
-    }
-
-    if (highRisk == 0 && mediumRisk == 0) {
-      analysisRecord.setMessage("No problems found");
+      analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                           .applicationId(timeSeriesMLAnalysisRecord.getApplicationId())
+                           .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
+                           .metricAnalyses(metricAnalysisList)
+                           .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
+                           .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+                           .build();
     } else {
-      String message = "";
-      if (highRisk > 0) {
-        message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
+      Query<NewRelicMetricAnalysisRecord> metricAnalysisRecordQuery =
+          wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+              .field("stateExecutionId")
+              .equal(stateExecutionId)
+              .field("workflowExecutionId")
+              .equal(workflowExecutionId);
+      analysisRecord = wingsPersistence.executeGetOneQuery(metricAnalysisRecordQuery);
+      if (analysisRecord == null) {
+        return null;
       }
-
-      if (mediumRisk > 0) {
-        message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
-      }
-
-      analysisRecord.setMessage(message);
     }
 
-    Collections.sort(analysisRecord.getMetricAnalyses());
+    if (analysisRecord.getMetricAnalyses() != null) {
+      int highRisk = 0;
+      int mediumRisk = 0;
+      for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
+        switch (metricAnalysis.getRiskLevel()) {
+          case HIGH:
+            highRisk++;
+            break;
+          case MEDIUM:
+            mediumRisk++;
+            break;
+        }
+      }
+
+      if (highRisk == 0 && mediumRisk == 0) {
+        analysisRecord.setMessage("No problems found");
+      } else {
+        String message = "";
+        if (highRisk > 0) {
+          message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
+        }
+
+        if (mediumRisk > 0) {
+          message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
+        }
+
+        analysisRecord.setMessage(message);
+      }
+
+      Collections.sort(analysisRecord.getMetricAnalyses());
+    }
     return analysisRecord;
   }
+
+  //  @Override
+  //  public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
+  //    Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
+  //        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).field("stateExecutionId").equal(stateExecutionId).field("workflowExecutionId")
+  //            .equal(workflowExecutionId);
+  //    NewRelicMetricAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
+  //    if (analysisRecord == null) {
+  //      return null;
+  //    }
+  //
+  //    if (analysisRecord.getMetricAnalyses() == null) {
+  //      return NewRelicMetricAnalysisRecord.builder().message(
+  //          "Could not get metric data from new relic. Please make sure that the new relic account is a paid account
+  //          and metrics can be pulled using rest API") .build();
+  //    }
+  //
+  //    int highRisk = 0;
+  //    int mediumRisk = 0;
+  //    for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
+  //      switch (metricAnalysis.getRiskLevel()) {
+  //        case HIGH:
+  //          highRisk++;
+  //          break;
+  //        case MEDIUM:
+  //          mediumRisk++;
+  //          break;
+  //      }
+  //    }
+  //
+  //    if (highRisk == 0 && mediumRisk == 0) {
+  //      analysisRecord.setMessage("No problems found");
+  //    } else {
+  //      String message = "";
+  //      if (highRisk > 0) {
+  //        message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
+  //      }
+  //
+  //      if (mediumRisk > 0) {
+  //        message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
+  //      }
+  //
+  //      analysisRecord.setMessage(message);
+  //    }
+  //
+  //    Collections.sort(analysisRecord.getMetricAnalyses());
+  //    return analysisRecord;
+  //  }
 
   @Override
   public boolean isStateValid(String appdId, String stateExecutionID) {

@@ -34,6 +34,8 @@ public class AnalysisContext {
   private String authToken;
   private String analysisServerConfigId;
   private String correlationId;
+  private int smooth_window;
+  private int tolerance;
 
   public LogClusterContext getClusterContext() {
     return LogClusterContext.builder()

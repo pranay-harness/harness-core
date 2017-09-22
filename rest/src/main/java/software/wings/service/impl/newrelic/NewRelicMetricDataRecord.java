@@ -55,4 +55,6 @@ public class NewRelicMetricDataRecord extends Base {
   private double averageResponseTime = -1;
   private double error = -1;
   private double apdexScore = -1;
+  private long callCount = 0;
+  private double requestsPerMinute = -1;
 }
