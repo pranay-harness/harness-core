@@ -117,10 +117,10 @@ public interface ServiceResourceService {
    *
    * @param appId       the app id
    * @param serviceId   the service id
-   * @param commandName the command name
+   * @param commandId   the command id
    * @return the service
    */
-  Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+  Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandId);
 
   /**
    * Gets command by name.
