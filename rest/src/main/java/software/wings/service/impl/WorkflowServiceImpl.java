@@ -673,7 +673,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         Validator.notNullCheck("service", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+          throw new WingsException(INVALID_REQUEST, "message",
               "Service [" + newService.getName() + "] is not compatible with the service [" + oldService.getName()
                   + "]");
         }
@@ -1056,8 +1056,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String infraMappingId = workflowPhase.getInfraMappingId();
     String serviceId = workflowPhase.getServiceId();
     if (infraMappingId == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
+      throw new WingsException(
+          INVALID_REQUEST, "message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
     }
 
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
@@ -1110,7 +1110,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "No matching Workflow Phase");
+      throw new WingsException(INVALID_REQUEST, "message", "No matching Workflow Phase");
     }
 
     orchestrationWorkflow =
@@ -1173,7 +1173,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "node");
+      throw new WingsException(INVALID_REQUEST, "args", "node");
     }
 
     orchestrationWorkflow =
@@ -1237,21 +1237,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * @param serviceMapping
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
-    if (serviceMapping != null) {
-      Set<String> serviceIds = serviceMapping.keySet();
-      for (String serviceId : serviceIds) {
-        String targetServiceId = serviceMapping.get(serviceId);
-        if (serviceId != null && targetServiceId != null) {
-          Service oldService = serviceResourceService.get(appId, serviceId, false);
-          Validator.notNullCheck("service", oldService);
-          Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
-          Validator.notNullCheck("targetService", newService);
-          if (oldService.getArtifactType() != null
-              && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-            throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-                "Target service  [" + oldService.getName() + " ] is not compatible with service ["
-                    + newService.getName() + "]");
-          }
+    if (serviceMapping == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "At least one service mapping required to clone across applications");
+    }
+    Set<String> serviceIds = serviceMapping.keySet();
+    for (String serviceId : serviceIds) {
+      String targetServiceId = serviceMapping.get(serviceId);
+      if (serviceId != null && targetServiceId != null) {
+        Service oldService = serviceResourceService.get(appId, serviceId, false);
+        Validator.notNullCheck("service", oldService);
+        Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
+        Validator.notNullCheck("targetService", newService);
+        if (oldService.getArtifactType() != null
+            && !oldService.getArtifactType().equals(newService.getArtifactType())) {
+          throw new WingsException(INVALID_REQUEST, "message",
+              "Target service  [" + oldService.getName() + " ] is not compatible with service [" + newService.getName()
+                  + "]");
         }
       }
     }
@@ -1539,7 +1541,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         : AWS_NODE_SELECT;
 
     if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
+      throw new WingsException(INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());

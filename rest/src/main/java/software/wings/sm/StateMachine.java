@@ -303,7 +303,16 @@ public class StateMachine extends Base {
 
       state.resolveProperties();
 
-      node.setInValidFieldMessages(state.validateFields());
+      Map<String, String> invalidFieldMessages = node.getInValidFieldMessages();
+      Map<String, String> stateValidateMessages = state.validateFields();
+      if (stateValidateMessages != null) {
+        if (invalidFieldMessages == null) {
+          node.setInValidFieldMessages(stateValidateMessages);
+        } else {
+          invalidFieldMessages.putAll(stateValidateMessages);
+          node.setInValidFieldMessages(invalidFieldMessages);
+        }
+      }
 
       if (orchestrationWorkflow != null) {
         if (state.getTemplateExpressions() != null) {
