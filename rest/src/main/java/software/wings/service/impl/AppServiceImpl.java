@@ -57,6 +57,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ public class AppServiceImpl implements AppService {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -285,6 +287,10 @@ public class AppServiceImpl implements AppService {
                                                    .set("name", app.getName())
                                                    .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.appUpdate(app);
+
     return wingsPersistence.get(Application.class, app.getUuid());
   }
 

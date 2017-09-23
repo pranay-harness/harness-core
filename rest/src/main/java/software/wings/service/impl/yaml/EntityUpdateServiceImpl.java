@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml;
 
+import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.core.queue.Queue;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
@@ -23,8 +25,42 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private YamlGitSyncService yamlGitSyncService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
   @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
+
+  public void appUpdate(Application app) {
+    if (app == null) {
+      // TODO - handle missing app
+      return;
+    }
+
+    String appId = app.getUuid();
+    String accountId = app.getAccountId();
+
+    YamlGitSync ygs = yamlGitSyncService.get(appId, accountId, appId);
+
+    // is it synced
+    if (ygs != null) {
+      // is it enabled
+      if (ygs.isEnabled()) {
+        String yaml = appYamlResourceService.getApp(appId).getResource().getYaml();
+        yaml = YamlHelper.cleanupYaml(yaml);
+
+        // queue an entity update event
+        EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
+                                                  .withEntityId(app.getUuid())
+                                                  .withName(app.getName())
+                                                  .withAccountId(accountId)
+                                                  .withAppId(appId)
+                                                  .withClass(Application.class)
+                                                  .withSourceType(SourceType.ENTITY_UPDATE)
+                                                  .withYaml(yaml)
+                                                  .build();
+        entityUpdateEventQueue.send(entityUpdateEvent);
+      }
+    }
+  }
 
   public void serviceUpdate(Service service) {
     if (service == null) {

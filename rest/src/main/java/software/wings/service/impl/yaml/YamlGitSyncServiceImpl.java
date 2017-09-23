@@ -259,6 +259,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         name = artifactStream.getSourceName() + "(" + asService.getName() + ")";
         klass = ArtifactStream.class;
         break;
+      case FOLDER:
+        // TODO - needs implementation
+        break;
       default:
         // nothing to do
     }
