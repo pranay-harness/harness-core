@@ -291,9 +291,26 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   @Override
-  public void convertToAdvanced() {
-    setAdvancedConfig(fetchYamlConfig());
+  public ContainerTask convertToAdvanced() {
+    String preamble = "# Placeholders:\n"
+        + "#\n"
+        + "# Required: ${DOCKER_IMAGE_NAME}\n"
+        + "#   - Replaced with the Docker image name and tag\n"
+        + "#\n"
+        + "# Optional: ${CONTAINER_NAME}\n"
+        + "#   - Replaced with a container name based on the image name\n"
+        + "#\n"
+        + "# Optional: ${SECRET_NAME}\n"
+        + "#   - Replaced with the name of the generated image pull\n"
+        + "#     secret when pulling from a private Docker registry\n"
+        + "#\n"
+        + "# Harness will also set the replication controller name,\n"
+        + "# selector labels, and number of replicas.\n"
+        + "#\n";
+
     setAdvancedType(AdvancedType.YAML);
+    setAdvancedConfig(preamble + fetchYamlConfig());
+    return this;
   }
 
   public String fetchYamlConfig() {
@@ -308,8 +325,10 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   @Override
-  public void convertFromAdvanced() {
-    setAdvancedConfig("");
+  public ContainerTask convertFromAdvanced() {
+    setAdvancedConfig(null);
+    setAdvancedType(null);
+    return this;
   }
 
   @Override
@@ -327,17 +346,27 @@ public class KubernetesContainerTask extends ContainerTask {
           rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
         }
 
+        boolean hasTemplateMetadata = rc.getSpec().getTemplate().getMetadata() != null;
+        if (!hasTemplateMetadata) {
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing valid pod template.");
+        }
+
         boolean containerHasDockerPlaceholder = rc.getSpec().getTemplate().getSpec().getContainers().stream().anyMatch(
             container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
         if (!containerHasDockerPlaceholder) {
-          throw new WingsException(
-              ErrorCode.INVALID_ARGUMENT, "args", "No container spec contains ${DOCKER_IMAGE_NAME} placeholder.");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+              "Replication controller spec must have a container definition with "
+                  + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+        if (e instanceof WingsException) {
+          throw(WingsException) e;
+        }
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "Cannot create replication controller from " + getAdvancedType().name() + ": " + e.getMessage(), e);
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Advanced configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Configuration is empty.");
     }
   }
 

@@ -47,7 +47,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
+      throw new WingsException("No logz setting with id: " + analysisServerConfigId + " found");
     }
 
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
@@ -88,7 +88,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
     if (StringUtils.isBlank(timeDuration)) {

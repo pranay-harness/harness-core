@@ -11,6 +11,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -242,11 +243,11 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks")
   @Timed
   @ExceptionMetered
-  public RestResponse<ContainerTask> createContainerTask(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
+  public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
+      @QueryParam("advanced") boolean advanced, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
     containerTask.setServiceId(serviceId);
-    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask));
+    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask, advanced));
   }
 
   @GET
@@ -278,11 +279,10 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ContainerTask> createContainerTaskAdvanced(@QueryParam("appId") String appId,
-      @QueryParam("advancedType") String advancedType, @QueryParam("advancedConfig") String advancedConfig,
-      @QueryParam("reset") boolean reset, @PathParam("serviceId") String serviceId,
-      @PathParam("taskId") String taskId) {
-    return new RestResponse<>(serviceResourceService.updateContainerTaskAdvanced(
-        appId, serviceId, taskId, advancedConfig, advancedType, reset));
+      @QueryParam("reset") boolean reset, @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
+      ContainerAdvancedPayload advancedPayload) {
+    return new RestResponse<>(
+        serviceResourceService.updateContainerTaskAdvanced(appId, serviceId, taskId, advancedPayload, reset));
   }
 
   @GET

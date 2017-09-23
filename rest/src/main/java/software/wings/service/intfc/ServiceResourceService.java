@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -117,10 +118,10 @@ public interface ServiceResourceService {
    *
    * @param appId       the app id
    * @param serviceId   the service id
-   * @param commandName the command name
+   * @param commandId   the command id
    * @return the service
    */
-  Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+  Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandId);
 
   /**
    * Gets command by name.
@@ -192,13 +193,7 @@ public interface ServiceResourceService {
    */
   Service get(String appId, String serviceId, SetupStatus status);
 
-  /**
-   * Create container task container task.
-   *
-   * @param containerTask the container task  @return the container task
-   * @return the container task
-   */
-  ContainerTask createContainerTask(ContainerTask containerTask);
+  ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced);
 
   /**
    * Delete container task.
@@ -211,7 +206,7 @@ public interface ServiceResourceService {
   ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced);
 
   ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset);
+      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset);
 
   /**
    * List container tasks page response.

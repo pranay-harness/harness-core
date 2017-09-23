@@ -65,9 +65,10 @@ public abstract class AbstractDelegateDataCollectionTask
         return taskResult;
       }
 
-      scheduleDataCollection(taskResult);
+      collectionService = scheduleDataCollection(taskResult);
       getLogger().info("going to collect data for " + parameters[0]);
       waitForCompletion();
+      getLogger().info(" finish data collection for " + parameters[0] + ". result is " + taskResult);
       return taskResult;
     } catch (Exception e) {
       return DataCollectionTaskResult.builder()

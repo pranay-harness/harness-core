@@ -16,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class ContainerUpgradeRequestElement implements ContextElement {
+public class ContainerRollbackRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
@@ -34,7 +34,7 @@ public class ContainerUpgradeRequestElement implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.CONTAINER_UPGRADE_REQUEST_PARAM;
+    return Constants.CONTAINER_ROLLBACK_REQUEST_PARAM;
   }
 
   @Override

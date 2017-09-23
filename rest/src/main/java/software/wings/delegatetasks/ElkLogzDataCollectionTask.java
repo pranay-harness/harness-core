@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP_SECS;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -235,7 +237,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   completed.set(true);
                   throw(e);
                 } else {
-                  logger.warn("error fetching elk logs. retrying...", e);
+                  logger.warn("error fetching elk logs. retrying in " + RETRY_SLEEP_SECS + "s", e);
+                  Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_SLEEP_SECS));
                 }
               }
             }
@@ -246,11 +249,12 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {
+        completed.set(true);
         logger.error("error fetching elk logs", e);
       }
 
       if (completed.get()) {
-        logger.info("Shutting down ELK/LOGZ collection");
+        logger.info("Shutting down ELK/LOGZ collection " + dataCollectionInfo.getStateExecutionId());
         shutDownCollection();
       }
     }

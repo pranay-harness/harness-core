@@ -51,6 +51,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -421,9 +422,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
-      String message = String.format(
-          "Service:[%s] couldn't be deleted. Remove Service reference from following workflows [" + workflowNames + "]",
-          service.getName());
+      String message =
+          String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
+                  + workflowNames + "]",
+              service.getName());
       throw new WingsException(INVALID_REQUEST, "message", message);
     }
   }
@@ -441,12 +443,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
-    ServiceCommand serviceCommand = wingsPersistence.createQuery(ServiceCommand.class)
-                                        .field("appId")
-                                        .equal(service.getAppId())
-                                        .field(ID_KEY)
-                                        .equal(commandId)
-                                        .get();
+    ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, appId, commandId);
 
     ensureServiceCommandSafeToDelete(service, serviceCommand);
 
@@ -489,16 +486,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               continue;
             }
             for (Graph.Node step : phaseStep.getSteps()) {
-              if ("COMMAND".equals(step.getType())) {
-                if (serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
-                  sb.append(" (");
-                  sb.append(workflow.getName());
-                  sb.append(":");
-                  sb.append(workflowPhase.getName());
-                  sb.append(":");
-                  sb.append(phaseStep.getName());
-                  sb.append(") ");
-                }
+              if ("COMMAND".equals(step.getType())
+                  && serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
+                sb.append(" (")
+                    .append(workflow.getName())
+                    .append(":")
+                    .append(workflowPhase.getName())
+                    .append(":")
+                    .append(phaseStep.getName())
+                    .append(") ");
               }
             }
           }
@@ -507,7 +503,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     if (sb.length() > 0) {
       String message = String.format(
-          "Command: [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
+          "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
       throw new WingsException(INVALID_REQUEST, "message", message);
     }
@@ -537,10 +533,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ContainerTask createContainerTask(ContainerTask containerTask) {
+  public ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced) {
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
       throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
+    }
+    if (advanced) {
+      return containerTask.convertToAdvanced();
     }
     return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
   }
@@ -552,31 +551,28 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced) {
-    if (advanced) {
-      containerTask.convertToAdvanced();
-    }
-    return createContainerTask(containerTask);
+    return createContainerTask(containerTask, advanced);
   }
 
   @Override
   public ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, String advancedConfig, String advancedType, boolean reset) {
+      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
                                       .field("appId")
                                       .equal(appId)
                                       .field("serviceId")
                                       .equal(serviceId)
-                                      .field("taskId")
+                                      .field(ID_KEY)
                                       .equal(taskId)
                                       .get();
     if (reset) {
       containerTask.convertFromAdvanced();
     } else {
-      containerTask.setAdvancedType(ContainerTask.AdvancedType.valueOf(advancedType));
-      containerTask.setAdvancedConfig(advancedConfig);
+      containerTask.setAdvancedType(advancedPayload.getAdvancedType());
+      containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
       containerTask.validateAdvanced();
     }
-    return createContainerTask(containerTask);
+    return createContainerTask(containerTask, false);
   }
 
   @Override

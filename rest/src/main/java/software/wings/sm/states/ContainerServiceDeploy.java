@@ -27,11 +27,10 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.ContainerUpgradeRequestElement;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -50,7 +49,6 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
@@ -104,32 +102,42 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     logger.info("Executing container service deploy");
-    ContextData contextData = new ContextData(context, this);
+    ContextData contextData = buildContextData(context);
 
-    List<CommandUnit> commandUnits = serviceResourceService.getFlattenCommandUnitList(
-        contextData.app.getUuid(), contextData.serviceId, contextData.env.getUuid(), contextData.command.getName());
+    String activityId =
+        activityService
+            .save(anActivity()
+                      .withAppId(contextData.appId)
+                      .withApplicationName(contextData.app.getName())
+                      .withEnvironmentId(contextData.env.getUuid())
+                      .withEnvironmentName(contextData.env.getName())
+                      .withEnvironmentType(contextData.env.getEnvironmentType())
+                      .withServiceId(contextData.service.getUuid())
+                      .withServiceName(contextData.service.getName())
+                      .withCommandName(contextData.command.getName())
+                      .withType(Type.Command)
+                      .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                      .withWorkflowType(context.getWorkflowType())
+                      .withWorkflowExecutionName(context.getWorkflowExecutionName())
+                      .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                      .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
+                      .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
+                          contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
+                      .withCommandType(contextData.command.getCommandUnitType().name())
+                      .withServiceVariables(context.getServiceVariables())
+                      .build())
+            .getUuid();
 
-    Activity.Builder activityBuilder = anActivity()
-                                           .withAppId(contextData.appId)
-                                           .withApplicationName(contextData.app.getName())
-                                           .withEnvironmentId(contextData.env.getUuid())
-                                           .withEnvironmentName(contextData.env.getName())
-                                           .withEnvironmentType(contextData.env.getEnvironmentType())
-                                           .withServiceId(contextData.service.getUuid())
-                                           .withServiceName(contextData.service.getName())
-                                           .withCommandName(contextData.command.getName())
-                                           .withType(Type.Command)
-                                           .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                                           .withWorkflowType(context.getWorkflowType())
-                                           .withWorkflowExecutionName(context.getWorkflowExecutionName())
-                                           .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                           .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                           .withCommandUnits(commandUnits)
-                                           .withCommandType(contextData.command.getCommandUnitType().name())
-                                           .withServiceVariables(context.getServiceVariables());
+    CommandStateExecutionData commandStateExecutionData = buildStateExecutionData(contextData, activityId);
 
-    String activityId = activityService.save(activityBuilder.build()).getUuid();
+    if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
+      return addNewInstances(contextData, commandStateExecutionData);
+    } else {
+      return downsizeOldInstances(contextData, commandStateExecutionData);
+    }
+  }
 
+  private CommandStateExecutionData buildStateExecutionData(ContextData contextData, String activityId) {
     CommandStateExecutionData.Builder executionDataBuilder =
         aCommandStateExecutionData()
             .withServiceId(contextData.service.getUuid())
@@ -149,19 +157,12 @@ public abstract class ContainerServiceDeploy extends State {
       executionDataBuilder.withResizeStrategy(contextData.containerServiceElement.getResizeStrategy());
     } else {
       logger.info("Executing rollback");
-      ContainerUpgradeRequestElement rollbackElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      executionDataBuilder.withNewInstanceData(rollbackElement.getNewInstanceData());
-      executionDataBuilder.withOldInstanceData(rollbackElement.getOldInstanceData());
-      executionDataBuilder.withResizeStrategy(rollbackElement.getResizeStrategy());
+      executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
+      executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
+      executionDataBuilder.withResizeStrategy(contextData.rollbackElement.getResizeStrategy());
     }
-    CommandStateExecutionData commandStateExecutionData = executionDataBuilder.build();
 
-    if (commandStateExecutionData.getResizeStrategy() == RESIZE_NEW_FIRST) {
-      return addNewInstances(contextData, commandStateExecutionData);
-    } else {
-      return downsizeOldInstances(contextData, commandStateExecutionData);
-    }
+    return executionDataBuilder.build();
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData, String activityId) {
@@ -312,7 +313,7 @@ public abstract class ContainerServiceDeploy extends State {
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
     }
 
-    ContextData contextData = new ContextData(context, this);
+    ContextData contextData = buildContextData(context);
 
     if (!commandStateExecutionData.isDownsize()) {
       buildInstanceStatusSummaries(contextData, response, commandStateExecutionData);
@@ -460,6 +461,10 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
+  private ContextData buildContextData(ExecutionContext context) {
+    return new ContextData(context, this);
+  }
+
   private static class ContextData {
     final Application app;
     final Environment env;
@@ -467,6 +472,7 @@ public abstract class ContainerServiceDeploy extends State {
     final Command command;
     final ServiceElement serviceElement;
     final ContainerServiceElement containerServiceElement;
+    final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
     final String appId;
     final String serviceId;
@@ -500,12 +506,12 @@ public abstract class ContainerServiceDeploy extends State {
       commandUnitName = infrastructureMapping instanceof EcsInfrastructureMapping
           ? CommandUnitType.RESIZE.name()
           : CommandUnitType.RESIZE_KUBERNETES.name();
-
       if (containerServiceDeploy.isRollback()) {
-        ContainerUpgradeRequestElement rollbackElement =
-            context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
+        rollbackElement =
+            context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
         containerServiceElement = rollbackElement.getContainerServiceElement();
       } else {
+        rollbackElement = ContainerRollbackRequestElement.builder().build();
         containerServiceElement =
             context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
                 .stream()

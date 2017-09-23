@@ -84,6 +84,7 @@ import software.wings.utils.KubernetesConvention;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -355,6 +356,11 @@ public class KubernetesReplicationControllerSetup extends State {
       KubernetesHelper.setName(rc, replicationControllerName);
       KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
       rc.getSpec().setSelector(controllerLabels);
+      Map<String, String> labels = rc.getSpec().getTemplate().getMetadata().getLabels();
+      if (labels == null) {
+        labels = new HashMap<>();
+        rc.getSpec().getTemplate().getMetadata().setLabels(labels);
+      }
       rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
       rc.getSpec().setReplicas(0);
       return rc;

@@ -16,6 +16,7 @@ import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
+import software.wings.rules.RepeatRule.Repeat;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
@@ -90,6 +91,7 @@ public class QueueListenerTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test(timeout = 5000)
+  @Repeat(times = 3, successes = 1)
   public void shouldExtendResetDuration() throws Exception {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);

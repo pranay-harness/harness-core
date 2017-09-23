@@ -45,7 +45,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Sumo Logic Server") protected String analysisServerConfigId;
 
   public SumoLogicAnalysisState(String name) {
-    super(name, StateType.SUMO.getName());
+    super(name, StateType.SUMO.getType());
   }
 
   @Override

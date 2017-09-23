@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.auth0.jwt.JWT;
@@ -40,10 +41,12 @@ import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -130,15 +133,27 @@ public abstract class AbstractAnalysisState extends State {
       hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
     }
 
+    hosts = hosts.stream()
+                .flatMap(hostname
+                    -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
+                                              : Collections.singletonList(hostname).stream())
+                .collect(Collectors.toSet());
+
     return hosts;
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
     CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    final Set<String> rv = new HashSet<>();
+    Set<String> rv = new HashSet<>();
     for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
       rv.add(instanceElement.getHostName());
     }
+
+    rv = rv.stream()
+             .flatMap(hostname
+                 -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
+                                           : Collections.singletonList(hostname).stream())
+             .collect(Collectors.toSet());
 
     return rv;
   }

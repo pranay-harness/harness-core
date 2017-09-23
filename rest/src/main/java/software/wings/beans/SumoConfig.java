@@ -19,10 +19,10 @@ import software.wings.settings.SettingValue;
 @Data
 @ToString(exclude = {"accessId", "accessKey"})
 public class SumoConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Sumo Logic api server Url", required = true) @NotEmpty private String sumoUrl;
+  @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
   @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Access Id", required = true)
+  @Attributes(title = "Access ID", required = true)
   @NotEmpty
   @Encrypted
   private char[] accessId;
@@ -39,6 +39,6 @@ public class SumoConfig extends SettingValue implements Encryptable {
    * Instantiates a new setting value.
    **/
   public SumoConfig() {
-    super(SettingVariableTypes.SUMO.name());
+    super(SettingVariableTypes.SUMO.getDisplayName());
   }
 }
