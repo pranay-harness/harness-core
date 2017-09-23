@@ -333,14 +333,19 @@ public class KubernetesContainerTask extends ContainerTask {
         boolean containerHasDockerPlaceholder = rc.getSpec().getTemplate().getSpec().getContainers().stream().anyMatch(
             container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
         if (!containerHasDockerPlaceholder) {
-          throw new WingsException(
-              ErrorCode.INVALID_ARGUMENT, "args", "No container spec contains ${DOCKER_IMAGE_NAME} placeholder.");
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+              "Replication controller spec must have a container definition with "
+                  + "${DOCKER_IMAGE_NAME} placeholder.");
         }
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+        if (e instanceof WingsException) {
+          throw(WingsException) e;
+        }
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "Cannot create replication controller from " + getAdvancedType().name() + ": " + e.getMessage(), e);
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Advanced configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Configuration is empty.");
     }
   }
 
