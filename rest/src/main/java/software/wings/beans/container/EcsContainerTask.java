@@ -224,13 +224,16 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   @Override
-  public void convertToAdvanced() {
+  public ContainerTask convertToAdvanced() {
     // TODO
+    return this;
   }
 
   @Override
-  public void convertFromAdvanced() {
+  public ContainerTask convertFromAdvanced() {
     setAdvancedConfig(null);
+    setAdvancedType(null);
+    return this;
   }
 
   @Override

@@ -291,9 +291,10 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   @Override
-  public void convertToAdvanced() {
+  public ContainerTask convertToAdvanced() {
     setAdvancedConfig(fetchYamlConfig());
     setAdvancedType(AdvancedType.YAML);
+    return this;
   }
 
   public String fetchYamlConfig() {
@@ -308,8 +309,10 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   @Override
-  public void convertFromAdvanced() {
+  public ContainerTask convertFromAdvanced() {
     setAdvancedConfig(null);
+    setAdvancedType(null);
+    return this;
   }
 
   @Override

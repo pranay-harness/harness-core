@@ -539,7 +539,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
     }
     if (advanced) {
-      containerTask.convertToAdvanced();
+      return containerTask.convertToAdvanced();
     }
     return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
   }
@@ -566,7 +566,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                       .equal(taskId)
                                       .get();
     if (reset) {
-      containerTask.convertFromAdvanced();
+      return containerTask.convertFromAdvanced();
     } else {
       containerTask.setAdvancedType(advancedPayload.getAdvancedType());
       containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
