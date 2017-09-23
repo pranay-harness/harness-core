@@ -153,7 +153,7 @@ public class YamlGitSync extends Base {
 
   public enum SyncMode { GIT_TO_HARNESS, HARNESS_TO_GIT, BOTH }
 
-  public enum Type { SETUP, APP, SERVICE, SERVICE_COMMAND, ENVIRONMENT, SETTING, WORKFLOW, PIPELINE, TRIGGER }
+  public enum Type { SETUP, APP, SERVICE, SERVICE_COMMAND, ENVIRONMENT, SETTING, WORKFLOW, PIPELINE, TRIGGER, FOLDER }
 
   public YamlGitSync clone() {
     return aYamlGitSync()
