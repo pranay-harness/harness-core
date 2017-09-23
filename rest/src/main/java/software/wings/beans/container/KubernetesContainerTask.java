@@ -292,8 +292,17 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    setAdvancedConfig(fetchYamlConfig());
+    String preamble = "# Placeholders:\n#\n"
+        + "# Required: ${DOCKER_IMAGE_NAME}\n"
+        + "#   - Replaced with the Docker image name and tag\n#\n"
+        + "# Optional: ${CONTAINER_NAME}\n"
+        + "#   - Replaced with a container name based on the image name\n#\n"
+        + "# Optional: ${SECRET_NAME}\n"
+        + "#   - Replaced with the name of the generated image pull\n"
+        + "#     secret when pulling from a private Docker registry\n#\n"
+        + "#\n";
     setAdvancedType(AdvancedType.YAML);
+    setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
   }
 
