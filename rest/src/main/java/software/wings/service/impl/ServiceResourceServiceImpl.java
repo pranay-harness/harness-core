@@ -566,7 +566,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                       .equal(taskId)
                                       .get();
     if (reset) {
-      return containerTask.convertFromAdvanced();
+      containerTask.convertFromAdvanced();
     } else {
       containerTask.setAdvancedType(advancedPayload.getAdvancedType());
       containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
