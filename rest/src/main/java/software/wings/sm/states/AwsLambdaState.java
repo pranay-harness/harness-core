@@ -37,6 +37,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -52,7 +53,6 @@ import software.wings.stencils.EnumData;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +69,7 @@ public class AwsLambdaState extends State {
    */
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
 
+  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
   /**
    * The Activity service.
    */
@@ -89,7 +90,7 @@ public class AwsLambdaState extends State {
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("AWS Lambda")
   @SchemaIgnore
-  private String commandName = "Amazon Lambda Deploy";
+  private String commandName = "Amazon Lambda";
 
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
@@ -176,7 +177,8 @@ public class AwsLambdaState extends State {
                                                                  .withServiceId(service.getUuid())
                                                                  .withServiceName(service.getName())
                                                                  .withAppId(app.getUuid())
-                                                                 .withCommandName(getCommandName());
+                                                                 .withCommandName(getCommandName())
+                                                                 .withActivityId(activity.getUuid());
 
     String key = context.renderExpression(this.key);
     String bucket = context.renderExpression(this.bucket);
@@ -192,12 +194,11 @@ public class AwsLambdaState extends State {
 
     AwsConfig value = (AwsConfig) cloudProviderSetting.getValue();
 
-    Map<String, String> serviceVariables = context.getServiceVariables();
-    if (serviceVariables != null) {
-      for (Entry<String, String> entry : serviceVariables.entrySet()) {
-        entry.setValue(context.renderExpression(entry.getValue()));
-      }
-    }
+    Map<String, String> serviceVariables =
+        serviceTemplateService
+            .computeServiceVariables(app.getUuid(), envId, infrastructureMapping.getServiceTemplateId())
+            .stream()
+            .collect(Collectors.toMap(sv -> sv.getName(), sv -> context.renderExpression(new String(sv.getValue()))));
 
     Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
     if (artifact == null) {

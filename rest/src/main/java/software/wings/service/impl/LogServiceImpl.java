@@ -57,11 +57,8 @@ public class LogServiceImpl implements LogService {
    * @see software.wings.service.intfc.LogService#save(software.wings.beans.Log)
    */
   @Override
-  public Log save(Log log) {
-    if (log == null) {
-      return log;
-    }
-    return wingsPersistence.saveAndGet(Log.class, log);
+  public String save(Log log) {
+    return batchedSave(Arrays.asList(log)).get(0);
   }
 
   @Override
