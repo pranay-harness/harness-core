@@ -292,15 +292,29 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    String preamble = "# Placeholders:\n#\n"
+    String preamble = "# Placeholders:\n"
+        + "#\n"
         + "# Required: ${DOCKER_IMAGE_NAME}\n"
-        + "#   - Replaced with the Docker image name and tag\n#\n"
+        + "#   - Replaced with the Docker image name and tag\n"
+        + "#\n"
         + "# Optional: ${CONTAINER_NAME}\n"
-        + "#   - Replaced with a container name based on the image name\n#\n"
+        + "#   - Replaced with a container name based on the image name\n"
+        + "#\n"
         + "# Optional: ${SECRET_NAME}\n"
         + "#   - Replaced with the name of the generated image pull\n"
-        + "#     secret when pulling from a private Docker registry\n#\n"
+        + "#     secret when pulling from a private Docker registry\n"
+        + "#\n"
+        + "# Harness will also set the replication controller name,\n"
+        + "# selector labels, and number of replicas.\n"
         + "#\n";
+
+    /*
+      KubernetesHelper.setName(rc, replicationControllerName);
+      KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
+      rc.getSpec().setSelector(controllerLabels);
+      rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
+      rc.getSpec().setReplicas(0);
+     */
     setAdvancedType(AdvancedType.YAML);
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
@@ -337,6 +351,11 @@ public class KubernetesContainerTask extends ContainerTask {
           rc = KubernetesHelper.loadYaml(advancedConfig);
         } else {
           rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
+        }
+
+        boolean hasTemplateLabels = rc.getSpec().getTemplate().getMetadata().getLabels() != null;
+        if (!hasTemplateLabels) {
+          throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing valid pod template.");
         }
 
         boolean containerHasDockerPlaceholder = rc.getSpec().getTemplate().getSpec().getContainers().stream().anyMatch(
