@@ -30,6 +30,11 @@ public class WingsTestConstants {
   public static final String SERVICE_ID = "SERVICE_ID";
 
   /**
+   * The constant SERVICE_COMMAND_ID.
+   */
+  public static final String SERVICE_COMMAND_ID = "SERVICE_COMMAND_ID";
+
+  /**
    * The constant TARGET_SERVICE_ID.
    */
   public static final String TARGET_SERVICE_ID = "TARGET_SERVICE_ID";

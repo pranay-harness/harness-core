@@ -19,7 +19,7 @@ import software.wings.settings.SettingValue;
 @Data
 @ToString(exclude = "password")
 public class ElkConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Elk Url", required = true) @NotEmpty private String elkUrl;
+  @Attributes(title = "ELK URL", required = true) @NotEmpty private String elkUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)

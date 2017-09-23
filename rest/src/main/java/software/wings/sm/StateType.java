@@ -157,7 +157,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SUMO", Collections.emptyList(), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SumoLogic", Collections.emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

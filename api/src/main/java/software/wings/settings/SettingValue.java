@@ -90,7 +90,7 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * SUMO setting variable types.
      */
-    SUMO("SUMO"),
+    SUMO("SumoLogic"),
 
     /**
      * App dynamics setting variable types.

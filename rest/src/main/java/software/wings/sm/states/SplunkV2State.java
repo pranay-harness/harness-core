@@ -57,7 +57,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
   }
 
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
     if (StringUtils.isBlank(timeDuration)) {

@@ -93,9 +93,9 @@ public abstract class ContainerTask extends Base {
     return super.getUuid();
   }
 
-  public abstract void convertToAdvanced();
+  public abstract ContainerTask convertToAdvanced();
 
-  public abstract void convertFromAdvanced();
+  public abstract ContainerTask convertFromAdvanced();
 
   public abstract void validateAdvanced();
 

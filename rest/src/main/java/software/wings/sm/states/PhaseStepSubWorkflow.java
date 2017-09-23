@@ -27,7 +27,7 @@ import software.wings.api.ClusterElement;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.ContainerUpgradeRequestElement;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -175,14 +175,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                                    .withClusterName(commandStepExecutionSummary.getClusterName())
                                                    .build();
 
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          ContainerUpgradeRequestElement.builder()
+      ContainerRollbackRequestElement rollbackElement =
+          ContainerRollbackRequestElement.builder()
               .containerServiceElement(contextElement)
               .oldInstanceData(reverse(commandStepExecutionSummary.getNewInstanceData()))
               .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
               .resizeStrategy(commandStepExecutionSummary.getResizeStrategy())
               .build();
-      return singletonList(containerUpgradeRequestElement);
+      return singletonList(rollbackElement);
     } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
       Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                  .stream()
