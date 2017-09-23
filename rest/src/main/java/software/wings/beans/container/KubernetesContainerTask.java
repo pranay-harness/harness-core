@@ -308,13 +308,6 @@ public class KubernetesContainerTask extends ContainerTask {
         + "# selector labels, and number of replicas.\n"
         + "#\n";
 
-    /*
-      KubernetesHelper.setName(rc, replicationControllerName);
-      KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
-      rc.getSpec().setSelector(controllerLabels);
-      rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
-      rc.getSpec().setReplicas(0);
-     */
     setAdvancedType(AdvancedType.YAML);
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
@@ -353,8 +346,8 @@ public class KubernetesContainerTask extends ContainerTask {
           rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
         }
 
-        boolean hasTemplateLabels = rc.getSpec().getTemplate().getMetadata().getLabels() != null;
-        if (!hasTemplateLabels) {
+        boolean hasTemplateMetadata = rc.getSpec().getTemplate().getMetadata() != null;
+        if (!hasTemplateMetadata) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing valid pod template.");
         }
 
