@@ -226,6 +226,12 @@ public interface Constants {
    * The constant PROVISION_NODE_NAME.
    */
   String PROVISION_NODE_NAME = "Provision Nodes";
+
+  /**
+   * The constant SELECT_NODE_NAME.
+   */
+  String SELECT_NODE_NAME = "Select Nodes";
+
   /**
    * The constant DE_PROVISION_NODE.
    */
