@@ -64,7 +64,7 @@ public class EcsContainerSyncImpl implements ContainerSync {
                       .withTaskDefinitionArn(task.getTaskDefinitionArn())
                       .withTaskArn(task.getTaskArn())
                       .withVersion(task.getVersion())
-                      .withStartedAt(task.getStartedAt() == null ? null : task.getStartedAt().getTime())
+                      .withStartedAt(task.getStartedAt() == null ? 0L : task.getStartedAt().getTime())
                       .withStartedBy(task.getStartedBy())
                       .withServiceName(serviceName)
                       .build();

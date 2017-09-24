@@ -4,6 +4,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.*;
+import static software.wings.sm.StateType.*;
 
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
@@ -166,7 +167,7 @@ public class WorkflowPhase implements UuidAware {
     return aNode()
         .withId(uuid)
         .withName(name)
-        .withType(StateType.PHASE.name())
+        .withType(PHASE.name())
         .addProperty("serviceId", serviceId)
         .withRollback(rollback)
         .addProperty("deploymentType", deploymentType)
@@ -240,19 +241,19 @@ public class WorkflowPhase implements UuidAware {
   }
 
   public WorkflowPhase clone() {
-    WorkflowPhase workflowPhase = aWorkflowPhase()
-                                      .withUuid(UUIDGenerator.getUuid())
-                                      .withServiceId(getServiceId())
-                                      .withInfraMappingId(getInfraMappingId())
-                                      .withInfraMappingName(getInfraMappingName())
-                                      .withComputeProviderId(getComputeProviderId())
-                                      .withDeploymentType(getDeploymentType())
-                                      .withRollback(isRollback())
-                                      .withPhaseNameForRollback(getPhaseNameForRollback())
-                                      .withValid(isValid())
-                                      .withValidationMessage(getValidationMessage())
-                                      .withTemplateExpressions(getTemplateExpressions())
-                                      .build();
+    WorkflowPhase clonedWorkflowPhase = aWorkflowPhase()
+                                            .withUuid(UUIDGenerator.getUuid())
+                                            .withServiceId(getServiceId())
+                                            .withInfraMappingId(getInfraMappingId())
+                                            .withInfraMappingName(getInfraMappingName())
+                                            .withComputeProviderId(getComputeProviderId())
+                                            .withDeploymentType(getDeploymentType())
+                                            .withRollback(isRollback())
+                                            .withPhaseNameForRollback(getPhaseNameForRollback())
+                                            .withValid(isValid())
+                                            .withValidationMessage(getValidationMessage())
+                                            .withTemplateExpressions(getTemplateExpressions())
+                                            .build();
     List<PhaseStep> phaseSteps = getPhaseSteps();
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
     if (phaseSteps != null) {
@@ -260,8 +261,8 @@ public class WorkflowPhase implements UuidAware {
         clonedPhaseSteps.add(phaseStep.clone());
       }
     }
-    workflowPhase.setPhaseSteps(clonedPhaseSteps);
-    return workflowPhase;
+    clonedWorkflowPhase.setPhaseSteps(clonedPhaseSteps);
+    return clonedWorkflowPhase;
   }
 
   public static final class WorkflowPhaseBuilder {
