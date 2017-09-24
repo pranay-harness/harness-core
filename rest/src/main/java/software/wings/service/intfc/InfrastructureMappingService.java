@@ -217,11 +217,10 @@ public interface InfrastructureMappingService {
    * List all roles map.
    *
    * @param appId             the app id
-   * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
    * @return the map
    */
-  Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId);
+  Map<String, String> listAllRoles(String appId, String computeProviderId);
 
   /**
    * List networks list.
@@ -339,4 +338,13 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listHosts(String appId, String infraMappingId);
+
+  /**
+   * List aws iam roles map.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @return the map
+   */
+  Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
 }

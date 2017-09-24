@@ -447,7 +447,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId) {
+  public Map<String, String> listAwsIamRoles(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    Validator.notNullCheck("Service Infrastructure", infrastructureMapping);
+    return listAllRoles(appId, infrastructureMapping.getComputeProviderSettingId());
+  }
+
+  @Override
+  public Map<String, String> listAllRoles(String appId, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 

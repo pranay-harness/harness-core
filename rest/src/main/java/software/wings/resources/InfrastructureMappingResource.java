@@ -211,12 +211,21 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("{infraMappingId}/iam-roles")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getInstanceRoles(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listAwsIamRoles(appId, infraMappingId));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/roles")
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> getRoles(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, deploymentType, computeProviderId));
+    return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, computeProviderId));
   }
 
   @GET
