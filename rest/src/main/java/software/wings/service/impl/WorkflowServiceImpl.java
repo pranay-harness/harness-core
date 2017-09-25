@@ -552,8 +552,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             setTemplateExpresssions(templateExpressions, phase);
             validateServiceCompatibility(appId, serviceId, phase.getServiceId());
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
-            if (inframappingChanged || envChanged) {
+            setInframappingId(appId, inframappingId, phase);
+            if (envChanged) {
+              phase.setComputeProviderId(null);
+              phase.setInfraMappingId(null);
+              phase.setInfraMappingName(null);
+              resetNodeSelection(phase);
+            }
+            if (inframappingChanged) {
               resetNodeSelection(phase);
             }
           }
@@ -563,7 +569,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (rollbackWorkflowPhaseIdMap != null) {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
+            setInframappingId(appId, inframappingId, phase);
+            if (envChanged) {
+              phase.setComputeProviderId(null);
+              phase.setInfraMappingId(null);
+              phase.setInfraMappingName(null);
+              resetNodeSelection(phase);
+            }
           });
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -611,6 +623,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               phase.setInfraMappingName(null);
               resetNodeSelection(phase);
             }
+            if (inframappingChanged) {
+              resetNodeSelection(phase);
+            }
           }
         }
         Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
@@ -621,6 +636,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               phase.setComputeProviderId(null);
               phase.setInfraMappingId(null);
               phase.setInfraMappingName(null);
+              resetNodeSelection(phase);
+            }
+            if (inframappingChanged) {
               resetNodeSelection(phase);
             }
           });
@@ -655,6 +673,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void setServiceId(String serviceId, WorkflowPhase phase) {
     if (serviceId != null) {
       phase.setServiceId(serviceId);
+    } else {
+      phase.setServiceId(phase.getServiceId());
     }
   }
 
@@ -686,8 +706,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * @param inframappingId
    * @param phase
    */
-  private void resetInframapping(
-      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean inframappingChanged) {
+  private void setInframappingId(String appId, String inframappingId, WorkflowPhase phase) {
     if (inframappingId != null) {
       if (!inframappingId.equals(phase.getInfraMappingId())) {
         phase.setInfraMappingId(inframappingId);
@@ -699,10 +718,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
         resetNodeSelection(phase);
       }
-    } else if (envChanged || inframappingChanged) {
-      phase.setInfraMappingName(null);
-      phase.setComputeProviderId(null);
-      phase.setInfraMappingId(null);
     }
   }
 
