@@ -43,10 +43,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
@@ -371,14 +374,22 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
           if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
             String fileName = name + ".yaml";
-            File newFile = new File(repoPath, fileName);
+
+            // we need a rootPath WITHOUT leading or trailing slashes
+            String rootPath = cleanRootPath(ygs.getRootPath());
+
+            File newFile = new File(repoPath + "/" + rootPath, fileName);
+            // we need to do this, as per:
+            // https://stackoverflow.com/questions/6666303/javas-createnewfile-will-it-also-create-directories
+            newFile.getParentFile().mkdirs();
             newFile.createNewFile();
             FileWriter writer = new FileWriter(newFile);
             writer.write(yaml);
             writer.close();
 
             try {
-              DirCache dirCache = git.add().addFilepattern(fileName).call();
+              DirCache dirCache = git.add().addFilepattern(rootPath).call();
+
             } catch (GitAPIException e) {
               e.printStackTrace();
             }
@@ -386,15 +397,24 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
             // commit
             RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
 
-            logger.info("*************** RevCommit: " + rev.toString());
-
             // push the change
             Iterable<PushResult> pushResults = gsh.push("origin");
           }
 
+          // close down git
+          git.close();
+
+          //-------------------
           // clean up TEMP files
           sshKeyPath.delete();
-          repoPath.delete();
+
+          Path cleanupPath = Paths.get(repoPath.getPath());
+          Files.walk(cleanupPath, FileVisitOption.FOLLOW_LINKS)
+              .sorted(Comparator.reverseOrder())
+              .map(Path::toFile)
+              /* .peek(System.out::println) */
+              .forEach(File::delete);
+          //-------------------
 
         } catch (IOException e) {
           e.printStackTrace();
@@ -412,5 +432,15 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     }
 
     return false;
+  }
+
+  // strips off leading and triling slashes
+  public String cleanRootPath(String rootPath) {
+    // leading:
+    rootPath = rootPath.replaceAll("^/+", "");
+    // trailing:
+    rootPath = rootPath.replaceAll("/+$", "");
+
+    return rootPath;
   }
 }

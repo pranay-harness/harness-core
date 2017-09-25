@@ -94,10 +94,14 @@ public class YamlGitSyncResource {
   @ExceptionMetered
   public RestResponse<YamlGitSync> save(@PathParam("type") String restName, @QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlGitSync yamlGitSync) {
-    yamlGitSync.setAccountId(accountId);
-    yamlGitSync.setAppId(appId);
     Type type = YamlGitSync.convertRestNameToType(restName);
     yamlGitSync.setType(type);
+    yamlGitSync.setAccountId(accountId);
+    if ((appId == null || appId.isEmpty()) && type == Type.APP) {
+      appId = yamlGitSync.getEntityId();
+    }
+    yamlGitSync.setAppId(appId);
+
     return new RestResponse<>(yamlGitSyncService.save(accountId, appId, yamlGitSync));
   }
 
