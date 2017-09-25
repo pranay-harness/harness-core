@@ -107,7 +107,7 @@ public class AwsLambdaState extends State {
   private String runtime;
   @Attributes(title = "Memory Size", required = true)
   @EnumData(enumDataProvider = LambdaMemorySizePrvider.class)
-  @DefaultValue("64")
+  @DefaultValue("128")
   private Integer memorySize;
   @Attributes(title = "Execution Timeout", required = true) @DefaultValue("3") private Integer timeout;
   @Attributes(title = "Function Name", required = true) private String functionName;
