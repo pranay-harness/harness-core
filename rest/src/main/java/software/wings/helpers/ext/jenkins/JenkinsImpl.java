@@ -68,6 +68,7 @@ public class JenkinsImpl implements Jenkins {
   private final int MAX_FOLDER_DEPTH = 10;
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
+  private String jenkinsBaseUrl;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject ExecutorService executorService;
 
@@ -81,6 +82,7 @@ public class JenkinsImpl implements Jenkins {
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
     jenkinsHttpClient = new HarnessJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder());
     jenkinsServer = new JenkinsServer(jenkinsHttpClient);
+    this.jenkinsBaseUrl = jenkinsUrl;
   }
 
   /**
@@ -97,6 +99,7 @@ public class JenkinsImpl implements Jenkins {
     jenkinsHttpClient =
         new HarnessJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder());
     jenkinsServer = new JenkinsServer(jenkinsHttpClient);
+    this.jenkinsBaseUrl = jenkinsUrl;
   }
 
   /* (non-Javadoc)
@@ -198,7 +201,6 @@ public class JenkinsImpl implements Jenkins {
       List<JobDetails> result = new ArrayList<>(); // TODO:: extend jobDetails to keep track of prefix.
       Stack<Job> jobs = new Stack<>();
       Queue<Future> futures = new ConcurrentLinkedQueue<>();
-
       if (Misc.isNullOrEmpty(parentJob)) {
         return jenkinsServer.getJobs()
             .values()
@@ -235,20 +237,35 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
+  /**
+   * This method generates the ui display name from the jenkins url.
+   * The jenkins url looks like <jenkins_base_url>/job/job1/job/job2/job/job3
+   * from which we have to show job1/job2/job3 in the ui.
+   * @param url
+   * @return
+   */
   private String getJobNameFromUrl(String url) {
     // TODO:: remove it post review. Extend jobDetails object
-    try {
-      URI uri = new URI(url);
-      String[] parts = uri.getPath().split("/");
-      String name = "";
-      for (int idx = 2; idx <= parts.length - 1; idx = idx + 2) {
-        name += "/" + parts[idx];
-      }
-      return name.startsWith("/") ? name.substring(1) : name;
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-      return url;
+    // Each jenkins server could have a different base url.
+    // Whichever is the format, the url after the base would always start with "/job/"
+    String relativeUrl;
+    String pattern;
+    if (!jenkinsBaseUrl.endsWith("/")) {
+      pattern = jenkinsBaseUrl + "/";
+    } else {
+      pattern = jenkinsBaseUrl;
     }
+
+    relativeUrl = url.replace(pattern, "");
+
+    // URI uri = new URI(relativeUrl);
+    String[] parts = relativeUrl.split("/");
+    String name = "";
+    // We start with index 2 since we have to skip /job/
+    for (int idx = 1; idx <= parts.length - 1; idx = idx + 2) {
+      name += "/" + parts[idx];
+    }
+    return name.startsWith("/") ? name.substring(1) : name;
   }
 
   private boolean isFolderJob(Job job) {
@@ -338,6 +355,7 @@ public class JenkinsImpl implements Jenkins {
     }
     try {
       QueueReference queueReference;
+      logger.info("Triggering job {} ", jobWithDetails.getUrl());
       if (MapUtils.isEmpty(parameters)) {
         ExtractHeader location =
             jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null, ExtractHeader.class, true);
@@ -345,7 +363,12 @@ public class JenkinsImpl implements Jenkins {
       } else {
         queueReference = jobWithDetails.build(parameters, true);
       }
+      logger.info("Triggering job {} success ", jobWithDetails.getUrl());
       return queueReference;
+    } catch (HttpResponseException e) {
+      logger.error("Failed to trigger job {} with url {}. Status code {} ", jobname, jobWithDetails.getUrl(),
+          e.getStatusCode(), e);
+      throw e;
     } catch (IOException e) {
       logger.error("Failed to trigger job {} with url {} ", jobname, jobWithDetails.getUrl(), e);
       throw e;
