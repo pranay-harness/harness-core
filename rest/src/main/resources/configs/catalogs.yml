@@ -283,3 +283,25 @@ TASK_TYPES:
       value: ELK
     - name: Logz
       value: LOGZ
+
+EXECUTION_STATUS:
+    - name: Aborted
+      value: ABORTED
+    - name: Aborting
+      value: ABORTING
+    - name: Error
+      valeu: ERROR
+    - name: Failed
+      value: FAILED
+    - name: Queued
+      value: QUEUED
+    - name: Pausing
+      value: PAUSING
+    - name: Paused
+      value: PAUSED
+    - name: Running
+      value: RUNNING
+    - name: Success
+      value: SUCCESS
+    - name: Waiting
+      value: WAITING
