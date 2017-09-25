@@ -11,8 +11,9 @@ public class ServiceLevelYamlNode extends AppLevelYamlNode {
     super(name, theClass);
   }
 
-  public ServiceLevelYamlNode(String uuid, String appId, String serviceId, String name, Class theClass) {
-    super(uuid, appId, name, theClass);
+  public ServiceLevelYamlNode(
+      String uuid, String appId, String serviceId, String name, Class theClass, DirectoryPath directoryPath) {
+    super(uuid, appId, name, theClass, directoryPath);
     this.serviceId = serviceId;
   }
 

@@ -7,8 +7,9 @@ public class SettingAttributeYamlNode extends YamlNode {
     super();
   }
 
-  public SettingAttributeYamlNode(String uuid, String settingVariableType, String name, Class theClass) {
-    super(uuid, name, theClass);
+  public SettingAttributeYamlNode(
+      String uuid, String settingVariableType, String name, Class theClass, DirectoryPath directoryPath) {
+    super(uuid, name, theClass, directoryPath);
     this.settingVariableType = settingVariableType;
   }
 

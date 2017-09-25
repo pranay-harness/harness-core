@@ -9,6 +9,7 @@ public abstract class DirectoryNode {
   private String className;
   private String shortClassName;
   private String restName;
+  private DirectoryPath directoryPath;
 
   public DirectoryNode() {}
 
@@ -32,6 +33,11 @@ public abstract class DirectoryNode {
     } else {
       this.restName = this.shortClassName.toLowerCase() + "s";
     }
+  }
+
+  public DirectoryNode(String name, Class theClass, DirectoryPath directoryPath) {
+    this(name, theClass);
+    this.directoryPath = directoryPath;
   }
 
   public String getType() {
@@ -80,5 +86,13 @@ public abstract class DirectoryNode {
 
   public void setRestName(String restName) {
     this.restName = restName;
+  }
+
+  public DirectoryPath getDirectoryPath() {
+    return directoryPath;
+  }
+
+  public void setDirectoryPath(DirectoryPath directoryPath) {
+    this.directoryPath = directoryPath;
   }
 }
