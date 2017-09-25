@@ -21,7 +21,7 @@ else
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
          -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
          -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=manager \
-         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/rest/target/rest-0.0.1-SNAPSHOT-capsule.jar $SERVER_BUILD_DIR/rest/config.yml > portal.log 2>&1 &
+         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
 fi
 
 echo 'sleep for server to start'
