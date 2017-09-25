@@ -264,9 +264,19 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return awsHelperService.listIAMRoles(awsConfig);
   }
 
-  public List<String> listVPCs(String region, SettingAttribute computeProviderSetting) {
+  public List<String> listVPCs(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listVPCs(awsConfig, region);
+  }
+
+  public List<String> listSecurityGroups(SettingAttribute computeProviderSetting, String region, String vpcId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listSecurityGroupIds(awsConfig, region, vpcId);
+  }
+
+  public List<String> listSubnets(SettingAttribute computeProviderSetting, String region, String vpcId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listSubnetIds(awsConfig, region, vpcId);
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {

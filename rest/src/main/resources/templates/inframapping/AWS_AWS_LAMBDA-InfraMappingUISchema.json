@@ -2,5 +2,5 @@
   "computeProviderType": { "ui:widget": "hidden" },
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
-  "ui:order": [  "deploymentType","computeProviderSettingId","region", "infraMappingType","computeProviderType"]
+  "ui:order": [  "deploymentType","computeProviderSettingId","region", "infraMappingType","computeProviderType", "vpcId", "subnetIds", "securityGroupIds"]
 }

@@ -14,6 +14,7 @@ import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
+import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -25,6 +26,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -33,6 +35,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.AwsLambdaService;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -53,6 +56,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -215,6 +219,7 @@ public class AwsLambdaState extends State {
 
     GetFunctionResult getFunctionResult = awsHelperService.getFunction(
         region, value.getAccessKey(), value.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
+
     if (getFunctionResult == null) { // function doesn't exist
       logService.save(aLog()
                           .withAppId(activity.getAppId())
@@ -226,8 +231,7 @@ public class AwsLambdaState extends State {
                           .build());
       // create function
 
-      CreateFunctionResult function = awsHelperService.createFunction(region, value.getAccessKey(),
-          value.getSecretKey(),
+      CreateFunctionRequest createFunctionRequest =
           new CreateFunctionRequest()
               .withEnvironment(new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
               .withRuntime(runtime)
@@ -235,7 +239,15 @@ public class AwsLambdaState extends State {
               .withHandler(handler)
               .withRole(role)
               .withCode(new FunctionCode().withS3Bucket(bucket).withS3Key(key))
-              .withPublish(true));
+              .withPublish(true);
+
+      VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
+
+      if (vpcConfig != null) {
+        createFunctionRequest.setVpcConfig(vpcConfig);
+      }
+      CreateFunctionResult function =
+          awsHelperService.createFunction(region, value.getAccessKey(), value.getSecretKey(), createFunctionRequest);
       System.out.println(function.toString());
     } else {
       logService.save(aLog()
@@ -253,7 +265,6 @@ public class AwsLambdaState extends State {
                   .withPublish(true)
                   .withS3Bucket(bucket)
                   .withS3Key(key));
-      System.out.println(updateFunctionCodeResult.toString());
     }
 
     //    ExecutionStatus status = commandExecutionResult != null &&
@@ -275,6 +286,22 @@ public class AwsLambdaState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .build();
+  }
+
+  public VpcConfig constructVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {
+    String vpcId = infrastructureMapping.getVpcId();
+    VpcConfig vpcConfig = null;
+    if (vpcId != null) {
+      List<String> subnetIds = infrastructureMapping.getSubnetIds();
+      List<String> securityGroupIds = infrastructureMapping.getSecurityGroupIds();
+      if (securityGroupIds.size() > 0 && subnetIds.size() > 0) {
+        vpcConfig = new VpcConfig().withSecurityGroupIds(securityGroupIds).withSubnetIds(subnetIds);
+      } else {
+        throw new WingsException(
+            ErrorCode.INVALID_REQUEST, "message", "Atleast one sercurity group and one subnet must be provided");
+      }
+    }
+    return vpcConfig;
   }
 
   @Override

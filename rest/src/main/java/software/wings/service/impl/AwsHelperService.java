@@ -55,12 +55,16 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.SecurityGroup;
+import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ec2.model.Vpc;
@@ -624,31 +628,72 @@ public class AwsHelperService {
     return Arrays.asList();
   }
 
+  //  public List<String> listVPCs(AwsConfig awsConfig, String region) {
+  //    List<String> results = Lists.newArrayList();
+  //    try {
+  //      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(),
+  //      awsConfig.getSecretKey()); results.addAll(amazonEC2Client.describeVpcs(
+  //          new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"), new
+  //          Filter().withName("isDefault").withValues("true")))
+  //          .getVpcs().stream().map(Vpc::getVpcId).collect(toList()));
+  //      results.addAll(amazonEC2Client.describeVpcs(
+  //          new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"), new
+  //          Filter().withName("isDefault").withValues("false")))
+  //          .getVpcs().stream().map(Vpc::getVpcId).collect(toList()));
+  //      return results;
+  //    } catch (AmazonServiceException amazonServiceException) {
+  //      handleAmazonServiceException(amazonServiceException);
+  //    }
+  //    return results;
+  //  }
+
   public List<String> listVPCs(AwsConfig awsConfig, String region) {
-    List<String> results = Lists.newArrayList();
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      results.addAll(amazonEC2Client
-                         .describeVpcs(new DescribeVpcsRequest().withFilters(
-                             new Filter().withName("state").withValues("available"),
-                             new Filter().withName("isDefault").withValues("true")))
-                         .getVpcs()
-                         .stream()
-                         .map(Vpc::getVpcId)
-                         .collect(toList()));
-      results.addAll(amazonEC2Client
-                         .describeVpcs(new DescribeVpcsRequest().withFilters(
-                             new Filter().withName("state").withValues("available"),
-                             new Filter().withName("isDefault").withValues("false")))
-                         .getVpcs()
-                         .stream()
-                         .map(Vpc::getVpcId)
-                         .collect(toList()));
-      return results;
+      return amazonEC2Client
+          .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available")))
+          .getVpcs()
+          .stream()
+          .map(Vpc::getVpcId)
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return results;
+    return Lists.newArrayList();
+  }
+
+  public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, String vpcId) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonEC2Client
+          .describeSecurityGroups(
+              new DescribeSecurityGroupsRequest().withFilters(new Filter().withName("state").withValues("available"),
+                  new Filter().withName("vpc-id").withValues(vpcId)))
+          .getSecurityGroups()
+          .stream()
+          .map(SecurityGroup::getGroupId)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
+  }
+
+  public List<String> listSubnetIds(AwsConfig awsConfig, String region, String vpcId) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonEC2Client
+          .describeSubnets(
+              new DescribeSubnetsRequest().withFilters(new Filter().withName("state").withValues("available"),
+                  new Filter().withName("vpc-id").withValues(vpcId)))
+          .getSubnets()
+          .stream()
+          .map(Subnet::getSubnetId)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
   }
 
   public CreateClusterResult createCluster(
