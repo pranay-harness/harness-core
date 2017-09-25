@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -51,9 +52,11 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * The type Aws lambda state.
@@ -88,16 +91,21 @@ public class AwsLambdaState extends State {
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("AWS Lambda")
+  @DefaultValue(AWS_LAMBDA)
   @SchemaIgnore
-  private String commandName = "Amazon Lambda";
+  private String commandName = AWS_LAMBDA;
 
-  @Attributes(title = "Bucket", required = true) private String bucket;
+  @Attributes(title = "S3 Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
   @EnumData(enumDataProvider = LambdaRuntimeProvider.class)
   @DefaultValue("nodejs4.3")
   @Attributes(title = "Runtime", required = true)
   private String runtime;
+  @Attributes(title = "Memory Size", required = true)
+  @EnumData(enumDataProvider = LambdaMemorySizePrvider.class)
+  @DefaultValue("64")
+  private Integer memorySize;
+  @Attributes(title = "Execution Timeout", required = true) @DefaultValue("3") private Integer timeout;
   @Attributes(title = "Function Name", required = true) private String functionName;
   @Attributes(title = "Handler", required = true) private String handler;
   @Attributes(title = "Role", required = true) private String role;
@@ -205,10 +213,6 @@ public class AwsLambdaState extends State {
       throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
     }
 
-    // search
-    // create or update
-    // publish
-
     GetFunctionResult getFunctionResult = awsHelperService.getFunction(
         region, value.getAccessKey(), value.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
     if (getFunctionResult == null) { // function doesn't exist
@@ -221,6 +225,7 @@ public class AwsLambdaState extends State {
                           .withExecutionResult(CommandExecutionStatus.RUNNING)
                           .build());
       // create function
+
       CreateFunctionResult function = awsHelperService.createFunction(region, value.getAccessKey(),
           value.getSecretKey(),
           new CreateFunctionRequest()
@@ -402,16 +407,39 @@ public class AwsLambdaState extends State {
     this.role = role;
   }
 
+  public Integer getMemorySize() {
+    return memorySize;
+  }
+
+  public void setMemorySize(Integer memorySize) {
+    this.memorySize = memorySize;
+  }
+
+  public Integer getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Integer timeout) {
+    this.timeout = timeout;
+  }
+
   /**
    * The type Lambda runtime provider.
    */
   public static class LambdaRuntimeProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {
-      return Arrays
-          .asList("nodejs4.3", "nodejs6.10", "java8", "python2.7", "python3.6", "dotnetcore1.0", "nodejs4.3-edge")
-          .stream()
-          .collect(Collectors.toMap(o -> o, o -> o));
+      return Stream.of("nodejs4.3", "nodejs4.3-edge", "nodejs6.10", "python2.7", "python3.6", "java8", "dotnetcore1.0")
+          .collect(Collectors.toMap(o -> o, o -> o, (o1, o2) -> o1, LinkedHashMap::new));
+    }
+  }
+
+  public static class LambdaMemorySizePrvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return IntStream.range(2, 48)
+          .mapToObj(m -> String.valueOf(m * 64))
+          .collect(Collectors.toMap(v -> v, v -> v + " MB", (p, q) -> p, LinkedHashMap::new));
     }
   }
 }

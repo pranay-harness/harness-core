@@ -188,7 +188,7 @@ public interface Constants {
   /**
    * The constant AWS_LAMBDA.
    */
-  String AWS_LAMBDA = "AWS LAMBDA";
+  String AWS_LAMBDA = "AWS Lambda";
   /**
    * The constant UPGRADE_CONTAINERS.
    */
