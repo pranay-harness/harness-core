@@ -2,6 +2,7 @@
 
 #run all integration tests
 export SPLUNKML_ROOT=$(pwd)/python/splunk_intelligence
+mvn test-compile
 mvn failsafe:integration-test failsafe:verify
 test_status=$?
 
