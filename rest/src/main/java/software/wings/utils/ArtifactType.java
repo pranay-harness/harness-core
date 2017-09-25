@@ -20,6 +20,7 @@ import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 
 import java.util.List;
@@ -544,13 +545,13 @@ public enum ArtifactType {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
-                         .withGraphName("Amazon Lambda")
+                         .withGraphName(Constants.AWS_LAMBDA)
                          .addNodes(aNode()
                                        .withOrigin(true)
                                        .withX(50)
                                        .withY(50)
                                        .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName("Amazon Lambda")
+                                       .withName(Constants.AWS_LAMBDA)
                                        .withType(AWS_LAMBDA.name())
                                        .build())
                          .buildPipeline())
