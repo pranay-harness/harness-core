@@ -467,14 +467,40 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region) {
+  public List<String> listVPC(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listVPCs(region, computeProviderSetting);
+      return infrastructureProvider.listVPCs(computeProviderSetting, region);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listSecurityGroups(String appId, String computeProviderId, String region, String vpcId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcId);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listSubnets(String appId, String computeProviderId, String region, String vpcId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcId);
     }
     return Collections.emptyList();
   }

@@ -226,12 +226,33 @@ public interface InfrastructureMappingService {
    * List networks list.
    *
    * @param appId             the app id
-   * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
    * @param region            the region
    * @return the list
    */
-  List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region);
+  List<String> listVPC(String appId, String computeProviderId, String region);
+
+  /**
+   * List security groups list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @param vpcId             the vpc id
+   * @return the list
+   */
+  List<String> listSecurityGroups(String appId, String computeProviderId, String region, String vpcId);
+
+  /**
+   * List subnets list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @param vpcId             the vpc id
+   * @return the list
+   */
+  List<String> listSubnets(String appId, String computeProviderId, String region, String vpcId);
 
   /**
    * List load balancers map.
