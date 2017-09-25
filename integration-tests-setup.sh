@@ -13,14 +13,12 @@ if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   mvn clean install -DskipTests=true
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
-       -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=manager \
        -Dfile.encoding=UTF-8 -jar rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
 else
   echo "SERVER_BUILD_DIR is set, using prebuilt server build"
   echo $SERVER_BUILD_DIR
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
          -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
-         -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=manager \
          -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
 fi
 
@@ -78,11 +76,9 @@ sed -i -e 's/^doUpgrade.*/doUpgrade: false/' config-delegate.yml
 rm -rf $HOME/appagent/ver4.3.1.0/logs/
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=delegate \
          -XX:MaxGCPauseMillis=500 -jar delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml > delgate.out 2>&1 &
 else
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -javaagent:$HOME/appagent/javaagent.jar -Dappdynamics.agent.nodeName=delegate \
          -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml > delgate.out 2>&1 &
 fi
 
