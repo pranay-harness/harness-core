@@ -25,6 +25,7 @@ import java.util.Objects;
 public class YamlGitSync extends Base {
   @JsonIgnore private Type type;
   private String entityId;
+  private String directoryPath;
 
   private boolean enabled;
   private String url;
@@ -51,6 +52,14 @@ public class YamlGitSync extends Base {
 
   public void setEntityId(String entityId) {
     this.entityId = entityId;
+  }
+
+  public String getDirectoryPath() {
+    return directoryPath;
+  }
+
+  public void setDirectoryPath(String directoryPath) {
+    this.directoryPath = directoryPath;
   }
 
   public boolean isEnabled() {
@@ -132,7 +141,8 @@ public class YamlGitSync extends Base {
       return false;
     }
     YamlGitSync ygs = (YamlGitSync) o;
-    return Objects.equals(type, ygs.type) && Objects.equals(entityId, ygs.entityId);
+    return Objects.equals(type, ygs.type) && Objects.equals(entityId, ygs.entityId)
+        && Objects.equals(directoryPath, ygs.directoryPath);
   }
 
   @Override
@@ -143,6 +153,7 @@ public class YamlGitSync extends Base {
         .add("type", type)
         .add("entityId", entityId)
         .add("enabled", enabled)
+        .add("directoryPath", directoryPath)
         .add("url", url)
         .add("rootPath", rootPath)
         .add("syncMode", syncMode)
@@ -160,6 +171,7 @@ public class YamlGitSync extends Base {
         .withUuid(getUuid())
         .withType(getType())
         .withEntityId(getEntityId())
+        .withDirectoryPath(getDirectoryPath())
         .withEnabled(isEnabled())
         .withUrl(getUrl())
         .withRootPath(getRootPath())
@@ -202,6 +214,7 @@ public class YamlGitSync extends Base {
     private String uuid;
     private Type type;
     private String entityId;
+    private String directoryPath;
     private boolean enabled;
     private String url;
     private String rootPath;
@@ -235,6 +248,11 @@ public class YamlGitSync extends Base {
 
     public YamlGitSync.Builder withEntityId(String entityId) {
       this.entityId = entityId;
+      return this;
+    }
+
+    public YamlGitSync.Builder withDirectoryPath(String directoryPath) {
+      this.directoryPath = directoryPath;
       return this;
     }
 
@@ -303,6 +321,7 @@ public class YamlGitSync extends Base {
           .withUuid(uuid)
           .withType(type)
           .withEntityId(entityId)
+          .withDirectoryPath(directoryPath)
           .withEnabled(enabled)
           .withUrl(url)
           .withRootPath(rootPath)
@@ -318,6 +337,7 @@ public class YamlGitSync extends Base {
       yamlGitSync.setUuid(uuid);
       yamlGitSync.setType(type);
       yamlGitSync.setEntityId(entityId);
+      yamlGitSync.setDirectoryPath(directoryPath);
       yamlGitSync.setEnabled(enabled);
 
       yamlGitSync.setUrl(url);

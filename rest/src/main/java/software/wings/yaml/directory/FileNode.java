@@ -10,4 +10,9 @@ public class FileNode extends DirectoryNode {
     super(name, theClass);
     this.setType("file");
   }
+
+  public FileNode(String name, Class theClass, DirectoryPath directoryPath) {
+    super(name, theClass, directoryPath);
+    this.setType("file");
+  }
 }

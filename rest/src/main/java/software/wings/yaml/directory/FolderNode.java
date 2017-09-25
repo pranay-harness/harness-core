@@ -17,6 +17,11 @@ public class FolderNode extends DirectoryNode {
     this.setType("folder");
   }
 
+  public FolderNode(String name, Class theClass, DirectoryPath directoryPath) {
+    super(name, theClass, directoryPath);
+    this.setType("folder");
+  }
+
   public boolean isDefaultToClosed() {
     return defaultToClosed;
   }

@@ -19,6 +19,12 @@ public class YamlNode extends DirectoryNode {
     this.uuid = uuid;
   }
 
+  public YamlNode(String uuid, String name, Class theClass, DirectoryPath directoryPath) {
+    super(name, theClass, directoryPath);
+    this.setType("yaml");
+    this.uuid = uuid;
+  }
+
   public String getUuid() {
     return uuid;
   }

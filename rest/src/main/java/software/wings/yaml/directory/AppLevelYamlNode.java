@@ -16,6 +16,11 @@ public class AppLevelYamlNode extends YamlNode {
     this.appId = appId;
   }
 
+  public AppLevelYamlNode(String uuid, String appId, String name, Class theClass, DirectoryPath directoryPath) {
+    super(uuid, name, theClass, directoryPath);
+    this.appId = appId;
+  }
+
   public String getAppId() {
     return appId;
   }
