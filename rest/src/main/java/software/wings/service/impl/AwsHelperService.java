@@ -667,8 +667,7 @@ public class AwsHelperService {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonEC2Client
           .describeSecurityGroups(
-              new DescribeSecurityGroupsRequest().withFilters(new Filter().withName("state").withValues("available"),
-                  new Filter().withName("vpc-id").withValues(vpcId)))
+              new DescribeSecurityGroupsRequest().withFilters(new Filter().withName("vpc-id").withValues(vpcId)))
           .getSecurityGroups()
           .stream()
           .map(SecurityGroup::getGroupId)
