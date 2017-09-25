@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationRequest;
@@ -230,7 +231,7 @@ public interface InfrastructureMappingService {
    * @param region            the region
    * @return the list
    */
-  List<String> listVPC(String appId, String computeProviderId, String region);
+  List<String> listVPC(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region);
 
   /**
    * List security groups list.
@@ -241,7 +242,8 @@ public interface InfrastructureMappingService {
    * @param vpcId             the vpc id
    * @return the list
    */
-  List<String> listSecurityGroups(String appId, String computeProviderId, String region, String vpcId);
+  List<String> listSecurityGroups(
+      @NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region, @NotEmpty String vpcId);
 
   /**
    * List subnets list.
@@ -252,7 +254,8 @@ public interface InfrastructureMappingService {
    * @param vpcId             the vpc id
    * @return the list
    */
-  List<String> listSubnets(String appId, String computeProviderId, String region, String vpcId);
+  List<String> listSubnets(
+      @NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region, @NotEmpty String vpcId);
 
   /**
    * List load balancers map.
