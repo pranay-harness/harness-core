@@ -259,7 +259,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                                    .withPreviousCount(1)
                                                    .withDesiredCount(0)
                                                    .build()))
-            .withResizeStrategy(RESIZE_NEW_FIRST)
             .withDownsize(false)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);

@@ -12,7 +12,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
@@ -49,7 +48,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
-  private ResizeStrategy resizeStrategy;
   private boolean downsize;
   private String clusterName;
 
@@ -128,7 +126,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (oldInstanceData != null) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
-    commandStepExecutionSummary.setResizeStrategy(resizeStrategy);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);
@@ -160,7 +157,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     private CountsByStatuses countsByStatuses;
     private List<ContainerServiceData> newInstanceData = new ArrayList<>();
     private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
-    private ResizeStrategy resizeStrategy;
     private boolean downsize;
     private String clusterName;
     private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
@@ -289,11 +285,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
-      return this;
-    }
-
     public Builder withDownsize(boolean downsize) {
       this.downsize = downsize;
       return this;
@@ -354,8 +345,7 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
           .withCodeDeployParams(codeDeployParams)
           .withOldCodeDeployParams(oldCodeDeployParams)
-          .withActivityService(activityService)
-          .withResizeStrategy(resizeStrategy);
+          .withActivityService(activityService);
     }
 
     public CommandStateExecutionData build() {
@@ -383,7 +373,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setCountsByStatuses(countsByStatuses);
       commandStateExecutionData.setNewInstanceData(newInstanceData);
       commandStateExecutionData.setOldInstanceData(oldInstanceData);
-      commandStateExecutionData.setResizeStrategy(resizeStrategy);
       commandStateExecutionData.setDownsize(downsize);
       commandStateExecutionData.setClusterName(clusterName);
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);

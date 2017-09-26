@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -7,10 +8,10 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -24,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /**
  * Created by rishi on 2/8/17.
@@ -52,12 +52,13 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
-    if (StringUtils.isNotEmpty(serviceName)) {
-      Optional<Service> service = awsClusterService.getServices(region, settingAttribute, clusterName)
-                                      .stream()
-                                      .filter(svc -> svc.getServiceName().equals(serviceName))
-                                      .findFirst();
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+    if (isNotEmpty(containerServiceElement.getName())) {
+      Optional<Service> service =
+          awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
+              .stream()
+              .filter(svc -> svc.getServiceName().equals(containerServiceElement.getName()))
+              .findFirst();
       if (service.isPresent()) {
         return Optional.of(service.get().getDesiredCount());
       }
@@ -67,11 +68,11 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   @Override
   protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String serviceNamePrefix = getServiceNamePrefixFromServiceName(serviceName);
+    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceElement.getName());
     List<Service> activeOldServices =
-        awsClusterService.getServices(region, settingAttribute, clusterName)
+        awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
             .stream()
             .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
             .collect(Collectors.toList());
@@ -81,12 +82,13 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
-    int revision = getRevisionFromServiceName(serviceName);
+  protected void cleanup(
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+    int revision = getRevisionFromServiceName(containerServiceElement.getName());
     if (revision > ContainerServiceDeploy.KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS;
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(serviceName);
-      awsClusterService.getServices(region, settingAttribute, clusterName)
+      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceElement.getName());
+      awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
           .collect(Collectors.toList())
@@ -94,7 +96,8 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
             String oldServiceName = s.getServiceName();
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
               logger.info("Deleting old version: " + oldServiceName);
-              awsClusterService.deleteService(region, settingAttribute, clusterName, oldServiceName);
+              awsClusterService.deleteService(
+                  region, settingAttribute, containerServiceElement.getClusterName(), oldServiceName);
             }
           });
     }

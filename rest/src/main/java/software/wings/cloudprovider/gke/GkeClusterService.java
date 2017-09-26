@@ -1,12 +1,13 @@
 package software.wings.cloudprovider.gke;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
+
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Created by bzane on 2/21/17.
@@ -16,7 +17,7 @@ public interface GkeClusterService {
    * Creates a new cluster unless a cluster with the given name already exists
    */
   KubernetesConfig createCluster(
-      SettingAttribute computeProviderSetting, String zoneClusterName, Map<String, String> params);
+      SettingAttribute computeProviderSetting, String zoneClusterName, String namespace, Map<String, String> params);
 
   /**
    * Deletes the given cluster
@@ -26,7 +27,7 @@ public interface GkeClusterService {
   /**
    * Gets the details about a cluster
    */
-  KubernetesConfig getCluster(SettingAttribute computeProviderSetting, String zoneClusterName);
+  KubernetesConfig getCluster(SettingAttribute computeProviderSetting, String zoneClusterName, String namespace);
 
   /**
    * Lists the available clusters

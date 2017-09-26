@@ -305,7 +305,7 @@ public class KubernetesContainerTask extends ContainerTask {
         + "#     secret when pulling from a private Docker registry\n"
         + "#\n"
         + "# Harness will also set the replication controller name,\n"
-        + "# selector labels, and number of replicas.\n"
+        + "# namespace, selector labels, and number of replicas.\n"
         + "#\n";
 
     setAdvancedType(AdvancedType.YAML);
@@ -391,7 +391,6 @@ public class KubernetesContainerTask extends ContainerTask {
     return new ReplicationControllerBuilder()
         .withApiVersion("v1")
         .withNewMetadata()
-        .withNamespace("default")
         .endMetadata()
         .withNewSpec()
         .withReplicas(0)

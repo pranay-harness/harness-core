@@ -15,6 +15,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -114,7 +115,10 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aContainerServiceElement().withUuid(serviceElement.getUuid()).build())
+          .addContextElement(aContainerServiceElement()
+                                 .withUuid(serviceElement.getUuid())
+                                 .withResizeStrategy(RESIZE_NEW_FIRST)
+                                 .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
@@ -246,7 +250,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                             .endStatus()
                             .build();
 
-    when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString())).thenReturn(kubernetesConfig);
+    when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString(), anyString()))
+        .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
@@ -293,7 +298,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     ExecutionResponse response = kubernetesReplicationControllerSetup.execute(context);
     assertThat(response).isNotNull();
-    verify(gkeClusterService).getCluster(any(SettingAttribute.class), anyString());
+    verify(gkeClusterService).getCluster(any(SettingAttribute.class), anyString(), anyString());
     verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(ReplicationController.class));
   }
 }

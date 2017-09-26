@@ -38,6 +38,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     String clusterName = context.getClusterName();
+    String namespace = context.getNamespace();
     List<ContainerServiceData> desiredCounts = context.getDesiredCounts();
     String region = context.getRegion();
 
@@ -48,7 +49,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     try {
       List<ContainerInfo> containerInfos = new ArrayList<>();
       desiredCounts.forEach(dc
-          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, clusterName, dc.getName(),
+          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, clusterName, namespace, dc.getName(),
               dc.getPreviousCount(), dc.getDesiredCount(), executionLogCallback)));
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       boolean allContainersSuccess =
@@ -64,6 +65,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   }
 
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, int previousCount, int desiredCount,
+      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
       ExecutionLogCallback executionLogCallback);
 }

@@ -398,13 +398,12 @@ public class ContainerInstanceHelper {
   private KubernetesConfig getKubernetesConfig(InfrastructureMapping infrastructureMapping) {
     KubernetesConfig kubernetesConfig;
 
-    String clusterName;
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-
+      GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+      kubernetesConfig = gkeClusterService.getCluster(
+          computeProviderSetting, gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }

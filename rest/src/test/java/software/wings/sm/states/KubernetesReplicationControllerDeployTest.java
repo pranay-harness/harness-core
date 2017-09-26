@@ -212,7 +212,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .withReplicas(2)
                                                       .endSpec()
                                                       .build();
-    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME)).thenReturn(kubernetesConfig);
+    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME, "default")).thenReturn(kubernetesConfig);
     when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
     when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
@@ -269,7 +269,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .withReplicas(2)
                                                       .endSpec()
                                                       .build();
-    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME)).thenReturn(kubernetesConfig);
+    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME, "default")).thenReturn(kubernetesConfig);
     when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
     when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
@@ -288,7 +288,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                    .withDesiredCount(0)
                                                    .build()))
             .withDownsize(false)
-            .withResizeStrategy(RESIZE_NEW_FIRST)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);

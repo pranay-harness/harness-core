@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -153,77 +154,90 @@ public class KubernetesReplicationControllerSetup extends State {
     String clusterName;
     KubernetesConfig kubernetesConfig;
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+      GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
+      clusterName = gcpInfraMapping.getClusterName();
       if (Constants.RUNTIME.equals(clusterName)) {
         clusterName = getClusterElement(context).getName();
       }
-      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+      kubernetesConfig =
+          gkeClusterService.getCluster(computeProviderSetting, clusterName, gcpInfraMapping.getNamespace());
     } else {
       clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }
 
-    String rcNamePrefix = isNotEmpty(replicationControllerName)
-        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
-    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
+    String evaluatedReplicationControllerName;
+    String kubernetesServiceName;
+    String serviceClusterIP;
+    String serviceLoadBalancerEndpoint;
+    try {
+      String rcNamePrefix = isNotEmpty(replicationControllerName)
+          ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
+          : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
+      String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
 
-    int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
-    String replicationControllerName = KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
+      int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
+      evaluatedReplicationControllerName = KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
 
-    Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
-                                            .put("app", KubernetesConvention.getLabelValue(app.getName()))
-                                            .put("service", KubernetesConvention.getLabelValue(serviceName))
-                                            .put("env", KubernetesConvention.getLabelValue(env))
-                                            .build();
+      Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
+                                              .put("app", KubernetesConvention.getLabelValue(app.getName()))
+                                              .put("service", KubernetesConvention.getLabelValue(serviceName))
+                                              .put("env", KubernetesConvention.getLabelValue(env))
+                                              .build();
 
-    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                               .putAll(serviceLabels)
-                                               .put("revision", Integer.toString(revision))
-                                               .build();
+      Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                                 .putAll(serviceLabels)
+                                                 .put("revision", Integer.toString(revision))
+                                                 .build();
 
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
+      kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
 
-    String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, createRegistrySecret(secretName, imageDetails));
-    kubernetesContainerService.createController(kubernetesConfig,
-        createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageDetails.name,
-            artifact.getBuildNo(), app, secretName));
+      String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
+      kubernetesContainerService.createOrReplaceSecret(
+          kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
+      kubernetesContainerService.createController(kubernetesConfig,
+          createReplicationControllerDefinition(evaluatedReplicationControllerName, controllerLabels, serviceId,
+              kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app, secretName));
 
-    String serviceClusterIP = null;
-    String serviceLoadBalancerEndpoint = null;
+      serviceClusterIP = null;
+      serviceLoadBalancerEndpoint = null;
 
-    Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
+      Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
-    if (serviceType != null && serviceType != ServiceType.None) {
-      Service serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
-      if (service != null) {
-        // Keep the previous load balancer IP if it exists and a new one was not specified
-        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-        if (serviceType == ServiceType.LoadBalancer && isEmpty(loadBalancerIP) && loadBalancer != null
-            && !loadBalancer.getIngress().isEmpty()) {
-          loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
-          serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+      if (serviceType != null && serviceType != ServiceType.None) {
+        Service serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+        if (service != null) {
+          // Keep the previous load balancer IP if it exists and a new one was not specified
+          LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+          if (serviceType == ServiceType.LoadBalancer && isEmpty(loadBalancerIP) && loadBalancer != null
+              && !loadBalancer.getIngress().isEmpty()) {
+            loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
+            serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+          }
         }
-      }
-      service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceDefinition);
-      serviceClusterIP = service.getSpec().getClusterIP();
+        service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceDefinition);
+        serviceClusterIP = service.getSpec().getClusterIP();
 
-      if (serviceType == ServiceType.LoadBalancer) {
-        serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(kubernetesConfig, service);
+        if (serviceType == ServiceType.LoadBalancer) {
+          serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(kubernetesConfig, service);
+        }
+      } else if (service != null) {
+        logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
+        kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
       }
-    } else if (service != null) {
-      logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
-      kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
+    } catch (KubernetesClientException e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
 
     ContainerServiceElement containerServiceElement =
         aContainerServiceElement()
             .withUuid(serviceId)
-            .withName(replicationControllerName)
+            .withName(evaluatedReplicationControllerName)
             .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
             .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
             .withClusterName(clusterName)
+            .withNamespace(kubernetesConfig.getNamespace())
             .withDeploymentType(DeploymentType.KUBERNETES)
             .withInfraMappingId(phaseElement.getInfraMappingId())
             .build();
@@ -235,7 +249,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .addNotifyElement(containerServiceElement)
         .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
                                     .withGkeClusterName(clusterName)
-                                    .withKubernetesReplicationControllerName(replicationControllerName)
+                                    .withKubernetesReplicationControllerName(evaluatedReplicationControllerName)
                                     .withKubernetesServiceName(kubernetesServiceName)
                                     .withKubernetesServiceClusterIP(serviceClusterIP)
                                     .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
@@ -244,7 +258,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .build();
   }
 
-  private Secret createRegistrySecret(String secretName, ImageDetails imageDetails) {
+  private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails) {
     String credentialData = String.format(
         DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.registryUrl, imageDetails.username, imageDetails.password);
     logger.info("Setting secret [{}]", secretName);
@@ -252,7 +266,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
         .withNewMetadata()
         .withName(secretName)
-        .withNamespace("default")
+        .withNamespace(namespace)
         .endMetadata()
         .withType("kubernetes.io/dockercfg")
         .withKind("Secret")
@@ -319,8 +333,8 @@ public class KubernetesReplicationControllerSetup extends State {
    * Creates replication controller definition
    */
   private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
-      Map<String, String> controllerLabels, String serviceId, String imageName, String tag, Application app,
-      String secretName) {
+      Map<String, String> controllerLabels, String serviceId, String namespace, String imageName, String tag,
+      Application app, String secretName) {
     KubernetesContainerTask kubernetesContainerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
@@ -354,6 +368,7 @@ public class KubernetesReplicationControllerSetup extends State {
           type == JSON ? (ReplicationController) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
 
       KubernetesHelper.setName(rc, replicationControllerName);
+      KubernetesHelper.setNamespace(rc, namespace);
       KubernetesHelper.getOrCreateLabels(rc).putAll(controllerLabels);
       rc.getSpec().setSelector(controllerLabels);
       Map<String, String> labels = rc.getSpec().getTemplate().getMetadata().getLabels();
