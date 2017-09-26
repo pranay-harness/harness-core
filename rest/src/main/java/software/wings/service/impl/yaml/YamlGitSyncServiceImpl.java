@@ -316,106 +316,22 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
       case GIT_SYNC_UPDATE:
         YamlGitSync ygs = get(entityId, accountId, appId);
-
-        logger.info("*************** ygs: " + ygs);
-
-        //---------------------
-        // annoying that we need to write the sshKey to a file, because the addIdentity method in createDefaultJSch of
-        // the CustomJschConfigSessionFactory requires a path and won't take the key directly!
-
-        File sshKeyPath = null;
-
-        try {
-          sshKeyPath = File.createTempFile("sync-keys_" + entityId, "");
-
-          Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-          perms.add(PosixFilePermission.OWNER_READ);
-          perms.add(PosixFilePermission.OWNER_WRITE);
-          Files.setPosixFilePermissions(Paths.get(sshKeyPath.getAbsolutePath()), perms);
-
-          FileWriter fw = new FileWriter(sshKeyPath);
-          BufferedWriter bw = new BufferedWriter(fw);
-          bw.write(ygs.getSshKey());
-
-          if (bw != null) {
-            bw.close();
-          }
-
-          if (fw != null) {
-            fw.close();
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-        //---------------------
-
+        File sshKeyPath = getSshKeyPath(ygs.getSshKey(), entityId);
         GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
 
         try {
-          //---------------------
           File repoPath = File.createTempFile("sync-repos_" + entityId, "");
-
           repoPath.delete();
           repoPath.mkdirs();
 
-          // prints absolute path
-          logger.info("Absolute path: " + repoPath.getAbsolutePath());
-          //---------------------
-
           Git git = gsh.clone(ygs.getUrl(), repoPath);
-
-          logger.info("*************** klass.getCanonicalName(): " + klass.getCanonicalName());
 
           switch (klass.getCanonicalName()) {
             // TODO - this (idea) needs to be used (in some form)
           }
 
-          String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
-
-          if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-            String fileName = name + ".yaml";
-
-            // we need a rootPath WITHOUT leading or trailing slashes
-            String rootPath = cleanRootPath(ygs.getRootPath());
-
-            File newFile = new File(repoPath + "/" + rootPath, fileName);
-            // we need to do this, as per:
-            // https://stackoverflow.com/questions/6666303/javas-createnewfile-will-it-also-create-directories
-            newFile.getParentFile().mkdirs();
-            newFile.createNewFile();
-            FileWriter writer = new FileWriter(newFile);
-            writer.write(yaml);
-            writer.close();
-
-            try {
-              DirCache dirCache = git.add().addFilepattern(rootPath).call();
-
-            } catch (GitAPIException e) {
-              e.printStackTrace();
-            }
-
-            // commit
-            RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
-
-            // push the change
-            Iterable<PushResult> pushResults = gsh.push("origin");
-          }
-
-          // close down git
-          git.close();
-
-          //-------------------
-          // clean up TEMP files
-          sshKeyPath.delete();
-
-          Path cleanupPath = Paths.get(repoPath.getPath());
-          Files.walk(cleanupPath, FileVisitOption.FOLLOW_LINKS)
-              .sorted(Comparator.reverseOrder())
-              .map(Path::toFile)
-              /* .peek(System.out::println) */
-              .forEach(File::delete);
-          //-------------------
-
+          writeAddCommitPush(name, yaml, ygs, gsh, git, repoPath);
+          cleanup(sshKeyPath, repoPath);
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -432,6 +348,100 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     }
 
     return false;
+  }
+
+  private void writeAddCommitPush(
+      String name, String content, YamlGitSync ygs, GitSyncHelper gsh, Git git, File repoPath) {
+    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+
+    if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
+      String fileName = name + ".yaml";
+
+      // we need a rootPath WITHOUT leading or trailing slashes
+      String rootPath = cleanRootPath(ygs.getRootPath());
+
+      File newFile = new File(repoPath + "/" + rootPath, fileName);
+      writeToRepoFile(newFile, content);
+
+      try {
+        // add new/changed files within the rootPath
+        DirCache dirCache = git.add().addFilepattern(rootPath).call();
+
+      } catch (GitAPIException e) {
+        e.printStackTrace();
+      }
+
+      // commit
+      RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
+
+      // push the change
+      Iterable<PushResult> pushResults = gsh.push("origin");
+    }
+
+    // close down git
+    git.close();
+  }
+
+  private void cleanup(File sshKeyPath, File repoPath) {
+    try {
+      // clean up TEMP files
+      sshKeyPath.delete();
+
+      Path cleanupPath = Paths.get(repoPath.getPath());
+      Files.walk(cleanupPath, FileVisitOption.FOLLOW_LINKS)
+          .sorted(Comparator.reverseOrder())
+          .map(Path::toFile)
+          /* .peek(System.out::println) */
+          .forEach(File::delete);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void writeToRepoFile(File newFile, String yaml) {
+    try {
+      // we need to do this, as per:
+      // https://stackoverflow.com/questions/6666303/javas-createnewfile-will-it-also-create-directories
+      newFile.getParentFile().mkdirs();
+      newFile.createNewFile();
+      FileWriter writer = new FileWriter(newFile);
+      writer.write(yaml);
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  // annoying that we need to write the sshKey to a file, because the addIdentity method in createDefaultJSch
+  // of the CustomJschConfigSessionFactory requires a path and won't take the key directly!
+  private File getSshKeyPath(String sshKey, String entityId) {
+    try {
+      File sshKeyPath = File.createTempFile("sync-keys_" + entityId, "");
+
+      Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+      perms.add(PosixFilePermission.OWNER_READ);
+      perms.add(PosixFilePermission.OWNER_WRITE);
+      Files.setPosixFilePermissions(Paths.get(sshKeyPath.getAbsolutePath()), perms);
+
+      FileWriter fw = new FileWriter(sshKeyPath);
+      BufferedWriter bw = new BufferedWriter(fw);
+      bw.write(sshKey);
+
+      if (bw != null) {
+        bw.close();
+      }
+
+      if (fw != null) {
+        fw.close();
+      }
+
+      return sshKeyPath;
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return null;
   }
 
   // strips off leading and triling slashes
