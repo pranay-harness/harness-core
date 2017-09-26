@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.beans.AppDynamicsConfig.Builder;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
@@ -261,12 +261,12 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withCategory(Category.CONNECTOR)
             .withName("AppDynamics")
             .withAccountId(accountId)
-            .withValue(Builder.anAppDynamicsConfig()
-                           .withAccountId(accountId)
-                           .withControllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
-                           .withUsername("wingsnfr")
-                           .withAccountname("wingsnfr")
-                           .withPassword("cbm411sjesma".toCharArray())
+            .withValue(AppDynamicsConfig.builder()
+                           .accountId(accountId)
+                           .controllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
+                           .username("wingsnfr")
+                           .accountname("wingsnfr")
+                           .password("cbm411sjesma".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);

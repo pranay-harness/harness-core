@@ -54,8 +54,15 @@ public class NewRelicMetricDataRecord extends Base {
 
   @Indexed private ClusterLevel level;
 
+  private double error = -1;
+
+  // new relic metrics
   private double throughput = -1;
   private double averageResponseTime = -1;
-  private double error = -1;
   private double apdexScore = -1;
+
+  // appdynamics metrics
+  private double response95th = -1;
+  private double stalls = -1;
+  private double slowCalls = -1;
 }

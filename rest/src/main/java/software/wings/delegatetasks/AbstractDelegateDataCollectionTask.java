@@ -19,6 +19,8 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractDelegateDataCollectionTask
     extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
+  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
+
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);
   protected ScheduledExecutorService collectionService;
