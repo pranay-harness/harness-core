@@ -3,6 +3,7 @@ package software.wings.service.impl.elk;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -18,9 +19,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +35,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Override
   public void validateConfig(ElkConfig elkConfig) {
     try {
+      if (!StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
+        throw new WingsException("User name is given but password is empty");
+      }
+
+      if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
+        throw new WingsException("User name is empty but password is given");
+      }
+
       final Call<ElkAuthenticationResponse> request =
           getElkRestClient(elkConfig).authenticate(getHeaderWithCredentials(elkConfig));
       final Response<ElkAuthenticationResponse> response = request.execute();
@@ -117,12 +124,18 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         .addInterceptor(chain -> {
           Request original = chain.request();
 
-          Request request = original.newBuilder()
-                                .header("Accept", "application/json")
-                                .header("Content-Type", "application/json")
-                                .header("Authorization", getHeaderWithCredentials(elkConfig))
-                                .method(original.method(), original.body())
-                                .build();
+          boolean shouldAuthenticate = !StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
+          Request request = shouldAuthenticate ? original.newBuilder()
+                                                     .header("Accept", "application/json")
+                                                     .header("Content-Type", "application/json")
+                                                     .header("Authorization", getHeaderWithCredentials(elkConfig))
+                                                     .method(original.method(), original.body())
+                                                     .build()
+                                               : original.newBuilder()
+                                                     .header("Accept", "application/json")
+                                                     .header("Content-Type", "application/json")
+                                                     .method(original.method(), original.body())
+                                                     .build();
 
           return chain.proceed(request);
         })
