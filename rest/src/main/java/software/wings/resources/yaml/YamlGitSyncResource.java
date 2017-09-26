@@ -127,4 +127,21 @@ public class YamlGitSyncResource {
     yamlGitSync.setType(type);
     return new RestResponse<>(yamlGitSyncService.update(entityId, accountId, appId, yamlGitSync));
   }
+
+  /**
+   * Catch call from GitHub repo webhook
+   *
+   * @param accountId the account id
+   *
+   * @return the rest response
+   */
+  @POST
+  @Path("/webhook")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlGitSync> webhookCatcher(@QueryParam("accountId") String accountId, String rawJson) {
+    System.out.println(rawJson);
+
+    return null;
+  }
 }

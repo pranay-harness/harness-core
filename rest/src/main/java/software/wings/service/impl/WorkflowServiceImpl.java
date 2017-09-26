@@ -119,6 +119,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
@@ -188,6 +189,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PipelineService pipelineService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -526,6 +528,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .field(ID_KEY)
                                 .equal(workflow.getUuid()),
         ops);
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.workflowUpdate(workflow);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
@@ -1277,6 +1282,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = readWorkflow(appId, workflowId, null);
     wingsPersistence.update(
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.workflowUpdate(workflow);
+
     return readWorkflow(appId, workflowId, defaultVersion);
   }
 

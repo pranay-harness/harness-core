@@ -12,6 +12,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.CommandService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -22,6 +23,7 @@ import javax.inject.Inject;
 @Singleton
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private EntityUpdateService entityUpdateService;
 
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
@@ -59,6 +61,14 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public Command update(Command command) {
+    //-----------------
+    // see if we need to perform any Git Sync operations
+    String serviceCommandId = command.getOriginEntityId();
+    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+
+    entityUpdateService.serviceCommandUpdate(serviceCommand);
+    //-----------------
+
     return wingsPersistence.saveAndGet(Command.class, command);
   }
 }

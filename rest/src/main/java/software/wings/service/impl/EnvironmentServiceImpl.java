@@ -50,6 +50,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
 
@@ -82,6 +83,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ConfigService configService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -185,6 +187,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.environmentUpdate(environment);
+
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
   }
 
