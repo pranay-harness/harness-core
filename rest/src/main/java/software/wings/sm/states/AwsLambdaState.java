@@ -239,7 +239,9 @@ public class AwsLambdaState extends State {
               .withHandler(handler)
               .withRole(role)
               .withCode(new FunctionCode().withS3Bucket(bucket).withS3Key(key))
-              .withPublish(true);
+              .withPublish(true)
+              .withTimeout(timeout)
+              .withMemorySize(memorySize);
 
       VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
 
