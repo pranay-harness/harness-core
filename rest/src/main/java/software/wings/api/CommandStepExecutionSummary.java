@@ -1,10 +1,9 @@
 package software.wings.api;
 
-import software.wings.beans.ResizeStrategy;
-import software.wings.beans.command.CodeDeployParams;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.command.CodeDeployParams;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.ArrayList;
@@ -20,7 +19,6 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
-  private ResizeStrategy resizeStrategy;
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;

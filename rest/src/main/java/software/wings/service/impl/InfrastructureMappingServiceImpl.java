@@ -246,6 +246,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+      updateOperations.set("namespace", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       updateOperations.set("region", awsInfrastructureMapping.getRegion());

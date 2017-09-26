@@ -13,6 +13,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -103,7 +104,10 @@ public class EcsServiceSetupTest extends WingsBaseTest {
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aContainerServiceElement().withUuid(serviceElement.getUuid()).build())
+          .addContextElement(aContainerServiceElement()
+                                 .withUuid(serviceElement.getUuid())
+                                 .withResizeStrategy(RESIZE_NEW_FIRST)
+                                 .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);

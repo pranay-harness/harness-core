@@ -84,8 +84,6 @@ public interface KubernetesContainerService {
    */
   Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
-  Service createOrReplaceService(KubernetesConfig kubernetesConfig, String yaml);
-
   /**
    * Gets a service.
    *

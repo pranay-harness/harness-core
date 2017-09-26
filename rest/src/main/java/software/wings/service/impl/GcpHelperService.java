@@ -5,7 +5,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
-import com.google.api.services.container.Container.Builder;
 import com.google.api.services.container.ContainerScopes;
 import com.google.inject.Singleton;
 
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -59,8 +57,7 @@ public class GcpHelperService {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
       GoogleCredential credential = getGoogleCredential(credentials);
-      Container container = new Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
-      return container;
+      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service", e);
       throw new WingsException(

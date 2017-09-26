@@ -44,6 +44,7 @@ public class CommandExecutionContext {
   private ArtifactStreamAttributes artifactStreamAttributes;
   private SettingAttribute cloudProviderSetting;
   private String clusterName;
+  private String namespace;
   private String serviceName;
   private String region;
   private CodeDeployParams codeDeployParams;
@@ -78,6 +79,7 @@ public class CommandExecutionContext {
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.cloudProviderSetting = other.cloudProviderSetting;
     this.clusterName = other.clusterName;
+    this.namespace = other.namespace;
     this.serviceName = other.serviceName;
     this.region = other.region;
     this.codeDeployParams = other.codeDeployParams;
@@ -135,6 +137,7 @@ public class CommandExecutionContext {
     private ArtifactStreamAttributes artifactStreamAttributes;
     private SettingAttribute cloudProviderSetting;
     private String clusterName;
+    private String namespace;
     private String serviceName;
     private String region;
     private CodeDeployParams codeDeployParams;
@@ -243,6 +246,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withNamespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
     public Builder withServiceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
@@ -294,6 +302,7 @@ public class CommandExecutionContext {
           .withArtifactStreamAttributes(artifactStreamAttributes)
           .withCloudProviderSetting(cloudProviderSetting)
           .withClusterName(clusterName)
+          .withNamespace(namespace)
           .withServiceName(serviceName)
           .withRegion(region)
           .withCodeDeployParams(codeDeployParams)
@@ -323,6 +332,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
       commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
       commandExecutionContext.setClusterName(clusterName);
+      commandExecutionContext.setNamespace(namespace);
       commandExecutionContext.setServiceName(serviceName);
       commandExecutionContext.setRegion(region);
       commandExecutionContext.setCodeDeployParams(codeDeployParams);

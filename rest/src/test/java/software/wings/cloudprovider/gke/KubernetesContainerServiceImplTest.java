@@ -5,7 +5,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.KubernetesConfig.Builder.aKubernetesConfig;
+import static software.wings.beans.KubernetesConfig.KubernetesConfigBuilder.aKubernetesConfig;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 
 import com.google.common.collect.ImmutableList;

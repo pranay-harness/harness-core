@@ -1,8 +1,10 @@
 package software.wings.cloudprovider.gke;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.KubernetesConfig.KubernetesConfigBuilder.aKubernetesConfig;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -51,7 +53,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig createCluster(
-      SettingAttribute computeProviderSetting, String zoneClusterName, Map<String, String> params) {
+      SettingAttribute computeProviderSetting, String zoneClusterName, String namespace, Map<String, String> params) {
     String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
@@ -62,7 +64,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     try {
       Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
       logger.info("Cluster {} already exists in zone {} for project {}", clusterName, zone, projectId);
-      return configFromCluster(cluster);
+      return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "getting");
     }
@@ -84,7 +86,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
         Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
         logger.info("Cluster status: " + cluster.getStatus());
         logger.info("Master endpoint: " + cluster.getEndpoint());
-        return configFromCluster(cluster);
+        return configFromCluster(cluster, namespace);
       }
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "creating");
@@ -92,19 +94,19 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return null;
   }
 
-  private KubernetesConfig configFromCluster(Cluster cluster) {
-    String user = cluster.getMasterAuth().getUsername();
-    String password = cluster.getMasterAuth().getPassword();
-    if (user == null || password == null) {
-      String msg = "Could not get kubernetes credentials from cluster.";
-      logger.warn(msg);
-      throw new WingsException(INVALID_ARGUMENT, "args", msg);
+  private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
+    KubernetesConfig.KubernetesConfigBuilder kubernetesConfigBuilder =
+        aKubernetesConfig()
+            .withMasterUrl("https://" + cluster.getEndpoint() + "/")
+            .withUsername(cluster.getMasterAuth().getUsername())
+            .withClientKey(cluster.getMasterAuth().getClientKey())
+            .withClientCert(cluster.getMasterAuth().getClientCertificate())
+            .withCaCert(cluster.getMasterAuth().getClusterCaCertificate())
+            .withNamespace(isNotEmpty(namespace) ? namespace : "default");
+    if (cluster.getMasterAuth().getPassword() != null) {
+      kubernetesConfigBuilder.withPassword(cluster.getMasterAuth().getPassword().toCharArray());
     }
-    return KubernetesConfig.Builder.aKubernetesConfig()
-        .withMasterUrl("https://" + cluster.getEndpoint() + "/")
-        .withUsername(user)
-        .withPassword(password.toCharArray())
-        .build();
+    return kubernetesConfigBuilder.build();
   }
 
   private String validateAndGetCredentials(SettingAttribute computeProviderSetting) {
@@ -174,7 +176,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public KubernetesConfig getCluster(SettingAttribute computeProviderSetting, String zoneClusterName) {
+  public KubernetesConfig getCluster(
+      SettingAttribute computeProviderSetting, String zoneClusterName, String namespace) {
     String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
@@ -186,7 +189,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       logger.info("Found cluster {} in zone {} for project {}", clusterName, zone, projectId);
       logger.info("Cluster status: " + cluster.getStatus());
       logger.info("Master endpoint: " + cluster.getEndpoint());
-      return configFromCluster(cluster);
+      return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "getting");
     }

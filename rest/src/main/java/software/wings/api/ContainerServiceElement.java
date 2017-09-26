@@ -18,6 +18,7 @@ public class ContainerServiceElement implements ContextElement {
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
   private String clusterName;
+  private String namespace;
   private DeploymentType deploymentType;
   private String infraMappingId;
 
@@ -73,6 +74,14 @@ public class ContainerServiceElement implements ContextElement {
     this.clusterName = clusterName;
   }
 
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public void setNamespace(String namespace) {
+    this.namespace = namespace;
+  }
+
   public DeploymentType getDeploymentType() {
     return deploymentType;
   }
@@ -95,6 +104,7 @@ public class ContainerServiceElement implements ContextElement {
     private int maxInstances;
     private ResizeStrategy resizeStrategy;
     private String clusterName;
+    private String namespace;
     private DeploymentType deploymentType;
     private String infraMappingId;
 
@@ -129,6 +139,11 @@ public class ContainerServiceElement implements ContextElement {
       return this;
     }
 
+    public ContainerServiceElementBuilder withNamespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
     public ContainerServiceElementBuilder withDeploymentType(DeploymentType deploymentType) {
       this.deploymentType = deploymentType;
       return this;
@@ -146,6 +161,7 @@ public class ContainerServiceElement implements ContextElement {
       containerServiceElement.setMaxInstances(maxInstances);
       containerServiceElement.setResizeStrategy(resizeStrategy);
       containerServiceElement.setClusterName(clusterName);
+      containerServiceElement.setNamespace(namespace);
       containerServiceElement.setDeploymentType(deploymentType);
       containerServiceElement.setInfraMappingId(infraMappingId);
       return containerServiceElement;

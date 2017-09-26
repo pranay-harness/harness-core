@@ -24,6 +24,7 @@ import com.google.api.services.container.model.NodePoolAutoscaling;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.Service;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class KubernetesYamlIntegrationTest {
     //            .put("masterPwd", "foo!!bar$$")
     //            .build());
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
 
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 4, 8);
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, false, 4, 8);
@@ -188,7 +189,11 @@ public class KubernetesYamlIntegrationTest {
         + "  selector:\n"
         + "    app: \"testApp\"\n"
         + "    tier: \"backend\"\n";
-    kubernetesService.createOrReplaceService(config, yaml);
+    try {
+      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     yaml = "---\n"
         + "apiVersion: \"v1\"\n"
@@ -261,7 +266,11 @@ public class KubernetesYamlIntegrationTest {
         + "    app: \"testApp\"\n"
         + "    tier: \"backend\"\n"
         + "  type: \"LoadBalancer\"";
-    kubernetesService.createOrReplaceService(config, yaml);
+    try {
+      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
 
