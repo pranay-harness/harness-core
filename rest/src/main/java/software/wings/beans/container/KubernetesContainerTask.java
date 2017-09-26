@@ -304,8 +304,12 @@ public class KubernetesContainerTask extends ContainerTask {
         + "#   - Replaced with the name of the generated image pull\n"
         + "#     secret when pulling from a private Docker registry\n"
         + "#\n"
-        + "# Harness will also set the replication controller name,\n"
+        + "# Harness will set the replication controller name,\n"
         + "# namespace, selector labels, and number of replicas.\n"
+        + "#\n"
+        + "# Service variables will be merged into environment\n"
+        + "# variables for all containers, overriding values if\n"
+        + "# the name is the same.\n"
         + "#\n";
 
     setAdvancedType(AdvancedType.YAML);
