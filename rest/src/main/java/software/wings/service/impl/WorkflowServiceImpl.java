@@ -37,6 +37,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.*;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
@@ -71,7 +72,6 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -238,19 +238,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Workflow workflow = readWorkflow(appId, workflowId);
       if (filterForPhase) {
         WorkflowPhase workflowPhase = null;
-        OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-        } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
-          workflowPhase = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-        } else if (orchestrationWorkflow instanceof MultiServiceOrchestrationWorkflow) {
-          workflowPhase =
-              ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-        }
-        if (workflowPhase.getInfraMappingId() != null) {
-          InfrastructureMapping infrastructureMapping =
-              infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-          predicate = stencil -> stencil.matches(infrastructureMapping);
+        if (workflow != null) {
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+            workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+          } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
+            workflowPhase = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+          } else if (orchestrationWorkflow instanceof MultiServiceOrchestrationWorkflow) {
+            workflowPhase =
+                ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+          }
+          if (workflowPhase.getInfraMappingId() != null) {
+            InfrastructureMapping infrastructureMapping =
+                infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+            predicate = stencil -> stencil.matches(infrastructureMapping);
+          }
         }
       } else {
         predicate = stencil
@@ -552,7 +554,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             setTemplateExpresssions(templateExpressions, phase);
             validateServiceCompatibility(appId, serviceId, phase.getServiceId());
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
+            setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
             if (inframappingChanged || envChanged) {
               resetNodeSelection(phase);
             }
@@ -563,7 +565,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (rollbackWorkflowPhaseIdMap != null) {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             setServiceId(serviceId, phase);
-            resetInframapping(appId, inframappingId, phase, envChanged, inframappingChanged);
+            setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
           });
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
@@ -574,9 +576,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (workflowPhases != null) {
           for (WorkflowPhase phase : workflowPhases) {
             if (envChanged) {
-              phase.setComputeProviderId(null);
-              phase.setInfraMappingId(null);
-              phase.setInfraMappingName(null);
+              unsetInfraMappingDetails(phase);
               resetNodeSelection(phase);
             }
             if (inframappingChanged) {
@@ -588,9 +588,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.values() != null) {
             rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
               if (envChanged) {
-                phase.setComputeProviderId(null);
-                phase.setInfraMappingId(null);
-                phase.setInfraMappingName(null);
+                unsetInfraMappingDetails(phase);
                 resetNodeSelection(phase);
               }
               if (inframappingChanged) {
@@ -606,9 +604,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (canaryOrchestrationWorkflow.getWorkflowPhases() != null) {
           for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
             if (envChanged) {
-              phase.setComputeProviderId(null);
-              phase.setInfraMappingId(null);
-              phase.setInfraMappingName(null);
+              unsetInfraMappingDetails(phase);
               resetNodeSelection(phase);
             }
           }
@@ -618,9 +614,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (rollbackWorkflowPhaseIdMap != null) {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             if (envChanged) {
-              phase.setComputeProviderId(null);
-              phase.setInfraMappingId(null);
-              phase.setInfraMappingName(null);
+              unsetInfraMappingDetails(phase);
               resetNodeSelection(phase);
             }
           });
@@ -628,6 +622,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     return orchestrationWorkflow;
+  }
+
+  private void unsetInfraMappingDetails(WorkflowPhase phase) {
+    phase.setComputeProviderId(null);
+    phase.setInfraMappingId(null);
+    phase.setInfraMappingName(null);
+    phase.setDeploymentType(null);
   }
 
   /**
@@ -682,12 +683,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   /**
-   * Resets inframapping and cloud provider details along with deployment type
+   * sets inframapping and cloud provider details along with deployment type
    * @param inframappingId
    * @param phase
    */
-  private void resetInframapping(
-      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean inframappingChanged) {
+  private void setInframappingDetails(
+      String appId, String inframappingId, WorkflowPhase phase, boolean envChanged, boolean infraChanged) {
     if (inframappingId != null) {
       if (!inframappingId.equals(phase.getInfraMappingId())) {
         phase.setInfraMappingId(inframappingId);
@@ -699,10 +700,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         phase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
         resetNodeSelection(phase);
       }
-    } else if (envChanged || inframappingChanged) {
-      phase.setInfraMappingName(null);
-      phase.setComputeProviderId(null);
-      phase.setInfraMappingId(null);
+    } else if (envChanged && !infraChanged) {
+      unsetInfraMappingDetails(phase);
     }
   }
 
@@ -721,7 +720,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         List<Node> steps = phaseStep.getSteps();
         if (steps != null) {
           for (Node step : steps) {
-            if (step.getType().equals(StateType.DC_NODE_SELECT.name())) {
+            if (step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name())) {
               Map<String, Object> properties = step.getProperties();
               if ((Boolean) properties.get("specificHosts")) {
                 properties.put("specificHosts", new Boolean(false));
@@ -1009,7 +1008,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           WorkflowPhase existingPhase = canaryOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
           if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
               && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-              && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
+              && (existingPhase.getInfraMappingId() != null
+                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
             serviceRepeat = true;
             break;
           }
@@ -1036,7 +1036,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           WorkflowPhase existingPhase = multiServiceOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
           if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
               && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
-              && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
+              && (existingPhase.getInfraMappingId() != null
+                     && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId()))) {
             serviceRepeat = true;
             break;
           }
@@ -1418,17 +1419,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String envId, WorkflowPhase workflowPhase, boolean serviceRepeat) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
-      generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, !serviceRepeat);
+      generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == DeploymentType.KUBERNETES) {
-      generateNewWorkflowPhaseStepsForKubernetes(appId, envId, workflowPhase, !serviceRepeat);
+      generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
-      generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, envId, workflowPhase);
+      generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
     } else {
-      generateNewWorkflowPhaseStepsForSSH(appId, envId, workflowPhase);
+      generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase);
     }
   }
 
-  private void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, String envId, WorkflowPhase workflowPhase) {
+  private void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -1451,7 +1452,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void generateNewWorkflowPhaseStepsForECS(
-      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -1459,18 +1460,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof EcsInfrastructureMapping
           && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aNode()
-                                                    .withId(getUuid())
-                                                    .withType(StateType.AWS_CLUSTER_SETUP.name())
-                                                    .withName("AWS Cluster Setup")
-                                                    .build())
-                                       .build());
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(AWS_CLUSTER_SETUP.name()).withName("AWS Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(StateType.ECS_SERVICE_SETUP.name())
+                                                  .withType(ECS_SERVICE_SETUP.name())
                                                   .withName(Constants.ECS_SERVICE_SETUP)
                                                   .build())
                                      .build());
@@ -1491,7 +1490,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void generateNewWorkflowPhaseStepsForKubernetes(
-      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -1499,18 +1498,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aNode()
-                                                    .withId(getUuid())
-                                                    .withType(StateType.GCP_CLUSTER_SETUP.name())
-                                                    .withName("GCP Cluster Setup")
-                                                    .build())
-                                       .build());
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(GCP_CLUSTER_SETUP.name()).withName("GCP Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
+                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
@@ -1530,7 +1527,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
-  private void generateNewWorkflowPhaseStepsForSSH(String appId, String envId, WorkflowPhase workflowPhase) {
+  private void generateNewWorkflowPhaseStepsForSSH(String appId, WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
 
     InfrastructureMapping infrastructureMapping =

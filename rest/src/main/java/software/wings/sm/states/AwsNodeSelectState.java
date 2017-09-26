@@ -23,7 +23,9 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -107,6 +109,16 @@ public class AwsNodeSelectState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFieldMessages = new HashMap<>();
+    if (isSpecificHosts()) {
+      if (hostNames == null || hostNames.isEmpty()) {
+        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames must be specified");
+      }
+    }
+    return invalidFieldMessages;
+  }
   /**
    * Gets instance count.
    *
