@@ -28,7 +28,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -105,7 +104,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     return fileBucketHelper.getOrCreateFileBucket(fileBucket)
-        .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("info.version", version)))
+        .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
         .limit(1)
         .first()
         .getId()
@@ -175,11 +174,11 @@ public class FileServiceImpl implements FileService {
   public boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket) {
     DBCollection collection = wingsPersistence.getDatastore().getDB().getCollection(fileBucket.getName() + ".files");
     collection.createIndex(
-        new BasicDBObject(of("metadata.entityId", 1, "info.version", 1)), new BasicDBObject("background", true));
+        new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
     return collection
                .update(new BasicDBObject("_id", new ObjectId(fileId)),
                    new BasicDBObject(
-                       "$set", new BasicDBObject(of("metadata.entityId", entityId, "info.version", version))))
+                       "$set", new BasicDBObject(of("metadata.entityId", entityId, "metadata.version", version))))
                .getN()
         > 0;
   }
