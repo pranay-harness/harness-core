@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
@@ -22,10 +23,12 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,25 +49,44 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public void validateConfig(SettingAttribute settingAttribute) {
+  public void validateConfig(SettingAttribute settingAttribute, StateType stateType) {
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .validateConfig((NewRelicConfig) settingAttribute.getValue());
+      switch (stateType) {
+        case NEW_RELIC:
+          delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+              .validateConfig((NewRelicConfig) settingAttribute.getValue());
+          break;
+        case APP_DYNAMICS:
+          delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+              .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
+          break;
+        default:
+          throw new IllegalStateException("Invalid state" + stateType);
+      }
     } catch (Exception e) {
       throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, "reason", e.getMessage());
     }
   }
 
   @Override
-  public List<NewRelicApplication> getApplications(String settingId) {
+  public List<NewRelicApplication> getApplications(String settingId, StateType stateType) {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .getAllApplications((NewRelicConfig) settingAttribute.getValue());
+      switch (stateType) {
+        case NEW_RELIC:
+          return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+              .getAllApplications((NewRelicConfig) settingAttribute.getValue());
+        case APP_DYNAMICS:
+          return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+              .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
+        default:
+          throw new IllegalStateException("Invalid state" + stateType);
+      }
+
     } catch (Exception e) {
       throw new WingsException(
           ErrorCode.NEWRELIC_ERROR, "message", "Error in getting new relic applications. " + e.getMessage());
@@ -96,9 +118,11 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public List<NewRelicMetricDataRecord> getRecords(String workflowExecutionId, String stateExecutionId,
-      String workflowId, String serviceId, Set<String> nodes, int analysisMinute) {
+  public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId,
+      String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("stateType")
+                                                .equal(stateType)
                                                 .field("workflowId")
                                                 .equal(workflowId)
                                                 .field("workflowExecutionId")
@@ -116,10 +140,12 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
-      String workflowId, String serviceId, int analysisMinute) {
+      StateType stateType, String workflowId, String serviceId, int analysisMinute) {
     final String astSuccessfulWorkflowExecutionIdWithData =
-        getLastSuccessfulWorkflowExecutionIdWithData(workflowId, serviceId);
+        getLastSuccessfulWorkflowExecutionIdWithData(stateType, workflowId, serviceId);
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("stateType")
+                                                .equal(stateType)
                                                 .field("workflowId")
                                                 .equal(workflowId)
                                                 .field("workflowExecutionId")
@@ -131,11 +157,14 @@ public class NewRelicServiceImpl implements NewRelicService {
     return query.asList();
   }
 
-  private String getLastSuccessfulWorkflowExecutionIdWithData(String workflowId, String serviceId) {
+  private String getLastSuccessfulWorkflowExecutionIdWithData(
+      StateType stateType, String workflowId, String serviceId) {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(workflowId);
     for (String successfulExecution : successfulExecutions) {
       Query<NewRelicMetricDataRecord> lastSuccessfulRecordQuery =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+              .field("stateType")
+              .equal(stateType)
               .field("workflowId")
               .equal(workflowId)
               .field("workflowExecutionId")
@@ -173,9 +202,12 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
+  public NewRelicMetricAnalysisRecord getMetricsAnalysis(
+      StateType stateType, String stateExecutionId, String workflowExecutionId) {
     Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
         wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+            .field("stateType")
+            .equal(stateType)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("workflowExecutionId")
@@ -232,8 +264,11 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public int getCollectionMinuteToProcess(String stateExecutionId, String workflowExecutionId, String serviceId) {
+  public int getCollectionMinuteToProcess(
+      StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("stateType")
+                                                .equal(stateType)
                                                 .field("workflowExecutionId")
                                                 .equal(workflowExecutionId)
                                                 .field("stateExecutionId")
@@ -257,8 +292,10 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public void bumpCollectionMinuteToProcess(
-      String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute) {
+      StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("stateType")
+                                                .equal(stateType)
                                                 .field("workflowExecutionId")
                                                 .equal(workflowExecutionId)
                                                 .field("stateExecutionId")

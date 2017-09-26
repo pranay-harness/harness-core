@@ -28,7 +28,6 @@ import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.rules.RepeatRule.Repeat;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
@@ -36,6 +35,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -91,13 +91,13 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
     Assert.assertTrue(restResponse.getResource().size() > 0);
 
-    for (AppdynamicsApplication app : restResponse.getResource()) {
+    for (NewRelicApplication app : restResponse.getResource()) {
       Assert.assertTrue(app.getId() > 0);
       Assert.assertFalse(StringUtils.isBlank(app.getName()));
     }
@@ -113,12 +113,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     long appId = 0;
 
-    for (AppdynamicsApplication application : restResponse.getResource()) {
+    for (NewRelicApplication application : restResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;
@@ -151,12 +151,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     long appId = 0;
 
-    for (AppdynamicsApplication application : restResponse.getResource()) {
+    for (NewRelicApplication application : restResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;
@@ -214,12 +214,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     long appId = 0;
 
-    for (AppdynamicsApplication application : restResponse.getResource()) {
+    for (NewRelicApplication application : restResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;
@@ -254,12 +254,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     long appId = 0;
 
-    for (AppdynamicsApplication application : restResponse.getResource()) {
+    for (NewRelicApplication application : restResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;
@@ -307,12 +307,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // get all applications
     WebTarget target = client.target(API_BASE
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
     long appId = 0;
 
-    for (AppdynamicsApplication application : restResponse.getResource()) {
+    for (NewRelicApplication application : restResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;
@@ -362,10 +362,10 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     String settingId = appdynamicsSettings.get(0).getUuid();
     WebTarget appTarget =
         client.target(API_BASE + "/appdynamics/applications?settingId=" + settingId + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<AppdynamicsApplication>> appRestResponse = getRequestBuilderWithAuthHeader(appTarget).get(
-        new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+    RestResponse<List<NewRelicApplication>> appRestResponse =
+        getRequestBuilderWithAuthHeader(appTarget).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
     long appId = 0;
-    for (AppdynamicsApplication application : appRestResponse.getResource()) {
+    for (NewRelicApplication application : appRestResponse.getResource()) {
       if (application.getName().equalsIgnoreCase("MyApp")) {
         appId = application.getId();
         break;

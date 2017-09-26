@@ -29,10 +29,10 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -329,11 +329,11 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   private String resolveAppDynamicsAppId(String analysisServerConfigId, String appDAppName) {
     try {
-      List<AppdynamicsApplication> apps = appdynamicsService.getApplications(analysisServerConfigId);
+      List<NewRelicApplication> apps = appdynamicsService.getApplications(analysisServerConfigId);
       if (apps == null || apps.isEmpty()) {
         return null;
       }
-      Optional<AppdynamicsApplication> app =
+      Optional<NewRelicApplication> app =
           apps.stream()
               .filter(appdynamicsApplication -> appdynamicsApplication.getName().equals(appDAppName))
               .findFirst();

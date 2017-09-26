@@ -13,6 +13,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,7 +39,7 @@ public class NewRelicResource {
   @ExceptionMetered
   public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    return new RestResponse<>(newRelicService.getApplications(settingId));
+    return new RestResponse<>(newRelicService.getApplications(settingId, StateType.NEW_RELIC));
   }
 
   @POST
@@ -59,6 +60,7 @@ public class NewRelicResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
-    return new RestResponse<>(newRelicService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
+    return new RestResponse<>(
+        newRelicService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId));
   }
 }

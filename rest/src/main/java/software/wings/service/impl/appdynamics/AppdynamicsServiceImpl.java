@@ -24,6 +24,7 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.MetricCalculator;
 import software.wings.metrics.MetricDefinition;
 import software.wings.metrics.MetricSummary;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -56,7 +57,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public List<AppdynamicsApplication> getApplications(final String settingId) throws IOException {
+  public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();

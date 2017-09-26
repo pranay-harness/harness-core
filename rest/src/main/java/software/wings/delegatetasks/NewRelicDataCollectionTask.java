@@ -112,6 +112,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           // HeartBeat
           records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
               NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
                   .name(HARNESS_HEARTEAT_METRIC_NAME)
                   .applicationId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
@@ -141,6 +142,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
                   metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
                   metricDataRecord.setDataCollectionMinute(dataCollectionMinute);
+                  metricDataRecord.setStateType(getStateType());
 
                   // set from time to the timestamp
                   long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
