@@ -1,67 +1,40 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.AppDynamicsExecutionData;
-import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
-import software.wings.metrics.MetricSummary;
-import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.appdynamics.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
-import software.wings.service.impl.appdynamics.AppdynamicsTier;
-import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.waitnotify.NotifyResponseData;
+import software.wings.time.WingsTimeUtils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/4/16.
  */
-public class AppDynamicsState extends AbstractAnalysisState {
+public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
@@ -72,19 +45,32 @@ public class AppDynamicsState extends AbstractAnalysisState {
 
   @Attributes(required = true, title = "Tier Name") private String tierId;
 
-  @Attributes(title = "Ignore verification failure") private Boolean ignoreVerificationFailure = false;
-
-  @Inject @Transient private AppdynamicsService appdynamicsService;
-
-  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
-
   /**
    * Create a new Http State with given name.
    *
    * @param name name of the state.
    */
   public AppDynamicsState(String name) {
-    super(name, StateType.APP_DYNAMICS.getType());
+    super(name, StateType.APP_DYNAMICS);
+  }
+
+  @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
+  @Attributes(required = true, title = "Baseline for Risk Analysis")
+  @DefaultValue("COMPARE_WITH_PREVIOUS")
+  public AnalysisComparisonStrategy getComparisonStrategy() {
+    if (StringUtils.isBlank(comparisonStrategy)) {
+      return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+    }
+    return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (StringUtils.isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
   }
 
   /**
@@ -113,152 +99,32 @@ public class AppDynamicsState extends AbstractAnalysisState {
     this.tierId = tierId;
   }
 
-  public Boolean getIgnoreVerificationFailure() {
-    return ignoreVerificationFailure;
-  }
-
-  public void setIgnoreVerificationFailure(Boolean ignoreVerificationFailure) {
-    this.ignoreVerificationFailure = ignoreVerificationFailure;
-  }
-
-  @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    logger.debug("Executing AppDynamics state");
-    String correlationId = UUID.randomUUID().toString();
-    triggerAnalysisDataCollection(context, correlationId, null);
-    final Set<String> canaryNewHostNames = getCanaryNewHostNames(context);
-    final List<String> btNames = getBtNames();
-    final AppDynamicsExecutionData executionData =
-        AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withCanaryNewHostNames(canaryNewHostNames)
-            .withBtNames(btNames)
-            .withAppDynamicsConfigID(analysisServerConfigId)
-            .withAppDynamicsApplicationId(Long.parseLong(applicationId))
-            .withAppdynamicsTierId(Long.parseLong(tierId))
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCorrelationId(correlationId)
-            .build();
-    final MetricDataAnalysisResponse response =
-        MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.RUNNING);
-    final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.schedule(() -> {
-      waitNotifyEngine.notify(executionData.getCorrelationId(), response);
-    }, Long.parseLong(timeDuration), TimeUnit.MINUTES);
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.RUNNING)
-        .withErrorMessage("Appdynamics Verification running")
-        .withStateExecutionData(executionData)
-        .build();
-  }
-
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Application app = workflowStandardParams.getApp();
-    MetricSummary finalMetrics =
-        appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
-    if (finalMetrics == null) {
-      logger.error("No data for appdynamics verification was generated");
-      if (!ignoreVerificationFailure) {
-        executionStatus = ExecutionStatus.FAILED;
-      }
-    } else {
-      finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
-      try {
-        wingsPersistence.save(finalMetrics);
-      } catch (Exception e) {
-        logger.error("Could not save analysis report", e);
-        executionStatus = ExecutionStatus.FAILED;
-        executionResponse.getStateExecutionData().setErrorMsg("Could not save analysis report, Please contact support");
-      }
-    }
-
-    if (!ignoreVerificationFailure && finalMetrics != null && finalMetrics.getRiskLevel() == RiskLevel.HIGH) {
-      executionStatus = ExecutionStatus.FAILED;
-    }
-    executionResponse.getStateExecutionData().setStatus(executionStatus);
-    return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
-        .withStateExecutionData(executionResponse.getStateExecutionData())
-        .build();
-  }
-
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
-    List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    String analysisServerConfigIdExpression = null;
-    String applicationIdExpression = null;
-    String tierIdExpression = null;
-    if (templateExpressions != null && !templateExpressions.isEmpty()) {
-      for (TemplateExpression templateExpression : templateExpressions) {
-        String fieldName = templateExpression.getFieldName();
-        if (fieldName != null) {
-          if (fieldName.equals("analysisServerConfigId")) {
-            analysisServerConfigIdExpression = templateExpression.getExpression();
-          } else if (fieldName.equals("applicationId")) {
-            applicationIdExpression = templateExpression.getExpression();
-          } else if (fieldName.equals("tierId")) {
-            tierIdExpression = templateExpression.getExpression();
-          }
-        }
-      }
-    }
-    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
-    AppDynamicsConfig appDynamicsConfig = null;
-    String finalApplicationId = applicationId;
-    String finalServerConfigId = analysisServerConfigId;
-    String finalTierId = tierId;
-    if (analysisServerConfigIdExpression != null) {
-      SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttribute(
-          context, accountId, analysisServerConfigIdExpression, CONNECTOR);
-      if (settingAttribute == null) {
-        throw new WingsException("No appdynamics server with id: " + analysisServerConfigIdExpression + " found");
-      }
-      finalServerConfigId = settingAttribute.getUuid();
-      if (settingAttribute.getValue() instanceof AppDynamicsConfig) {
-        appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-      }
-    } else {
-      final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
-      if (settingAttribute == null) {
-        throw new WingsException("No appdynamics setting with id: " + finalServerConfigId + " found");
-      }
-      appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    }
-
-    if (applicationIdExpression != null) {
-      String appDAppName = context.renderExpression(applicationIdExpression);
-      String resolveAppDynamicsAppId = resolveAppDynamicsAppId(finalServerConfigId, appDAppName);
-      if (resolveAppDynamicsAppId == null) {
-        throw new WingsException("No AppDynamic App exists  with name : " + appDAppName + " found");
-      }
-      finalApplicationId = resolveAppDynamicsAppId;
-    }
-
-    if (tierIdExpression != null) {
-      String appDTierName = context.renderExpression(applicationIdExpression);
-      String resolveAppDynamicsTierId = resolveAppDynamicsTierId(finalServerConfigId, finalApplicationId, appDTierName);
-      if (resolveAppDynamicsTierId == null) {
-        throw new WingsException(
-            "No AppDynamic Tier exist for app " + finalApplicationId + "with name : " + appDTierName + " found");
-      }
-      finalTierId = resolveAppDynamicsTierId;
-    }
-
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    if (settingAttribute == null) {
+      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
+    }
 
+    final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+
+    final long dataCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
-        new AppdynamicsDataCollectionInfo(appDynamicsConfig, context.getAppId(), context.getStateExecutionInstanceId(),
-            Long.parseLong(finalApplicationId), Long.parseLong(finalTierId), Integer.parseInt(timeDuration));
+        AppdynamicsDataCollectionInfo.builder()
+            .appDynamicsConfig(appDynamicsConfig)
+            .applicationId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .workflowId(getWorkflowId(context))
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .serviceId(getPhaseServiceId(context))
+            .startTime(dataCollectionStartTimeStamp)
+            .collectionTime(Integer.parseInt(timeDuration))
+            .appId(Long.parseLong(applicationId))
+            .tierId(Long.parseLong(tierId))
+            .dataCollectionMinute(0)
+            .build();
 
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -275,26 +141,6 @@ public class AppDynamicsState extends AbstractAnalysisState {
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
     return delegateService.queueTask(delegateTask);
   }
-
-  private List<String> getBtNames() {
-    try {
-      final List<AppdynamicsMetric> appdynamicsMetrics = appdynamicsService.getTierBTMetrics(
-          analysisServerConfigId, Long.parseLong(applicationId), Long.parseLong(tierId));
-      final List<String> btNames = new ArrayList<>();
-      for (AppdynamicsMetric appdynamicsMetric : appdynamicsMetrics) {
-        btNames.add(appdynamicsMetric.getName());
-      }
-      logger.debug("AppDynamics BT names: " + String.join(", ", btNames));
-
-      return btNames;
-    } catch (Exception e) {
-      logger.error("error fetching Appdynamics BTs", e);
-      throw new WingsException("error fetching Appdynamics BTs", e);
-    }
-  }
-
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
   @SchemaIgnore
@@ -313,57 +159,7 @@ public class AppDynamicsState extends AbstractAnalysisState {
   }
 
   @Override
-  @SchemaIgnore
-  public AnalysisComparisonStrategy getComparisonStrategy() {
-    throw new NotImplementedException();
-  }
-
-  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
-  @DefaultValue("15")
-  public String getTimeDuration() {
-    if (StringUtils.isBlank(timeDuration)) {
-      return String.valueOf(15);
-    }
-    return timeDuration;
-  }
-
-  private String resolveAppDynamicsAppId(String analysisServerConfigId, String appDAppName) {
-    try {
-      List<NewRelicApplication> apps = appdynamicsService.getApplications(analysisServerConfigId);
-      if (apps == null || apps.isEmpty()) {
-        return null;
-      }
-      Optional<NewRelicApplication> app =
-          apps.stream()
-              .filter(appdynamicsApplication -> appdynamicsApplication.getName().equals(appDAppName))
-              .findFirst();
-      if (app.isPresent()) {
-        return String.valueOf(app.get().getId());
-      }
-    } catch (IOException e) {
-      logger.error("Error fetching Appdynamics Applications", e);
-      throw new WingsException("Error fetching Appdynamics Applications", e);
-    }
-    return null;
-  }
-
-  private String resolveAppDynamicsTierId(String analysisServerConfigId, String appId, String appdTierName) {
-    try {
-      List<AppdynamicsTier> appdynamicsTiers =
-          appdynamicsService.getTiers(analysisServerConfigId, Integer.parseInt(appId));
-      if (appdynamicsTiers == null || appdynamicsTiers.isEmpty()) {
-        return null;
-      }
-      Optional<AppdynamicsTier> app = appdynamicsTiers.stream()
-                                          .filter(appdynamicsTier -> appdynamicsTier.getName().equals(appdTierName))
-                                          .findFirst();
-      if (app.isPresent()) {
-        return String.valueOf(app.get().getId());
-      }
-    } catch (IOException e) {
-      logger.error("Error fetching Appdynamics tiers", e);
-      throw new WingsException("Error fetching Appdynamics tiers", e);
-    }
-    return null;
+  protected String getStateBaseUrl() {
+    return "appdynamics";
   }
 }

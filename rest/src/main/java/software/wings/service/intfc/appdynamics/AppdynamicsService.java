@@ -1,17 +1,12 @@
 package software.wings.service.intfc.appdynamics;
 
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
-import software.wings.metrics.MetricSummary;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
-import software.wings.service.impl.appdynamics.AppdynamicsDataRequest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
-import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,13 +33,4 @@ public interface AppdynamicsService {
 
   List<AppdynamicsMetricData> getTierBTMetricData(@NotNull String settingId, int appdynamicsAppId, int tierId,
       @NotNull String btName, int durantionInMinutes) throws IOException;
-
-  @ValidationGroups(Create.class)
-  Boolean saveMetricData(@NotNull String accountId, String applicationId, String stateExecutionId,
-      @Valid long appdynamicsAppId, @Valid long tierId, @Valid List<AppdynamicsMetricData> metricData)
-      throws IOException;
-
-  MetricSummary generateMetrics(@NotNull String stateExecutionInstanceId, @NotNull String accountId, String appId);
-
-  List<AppdynamicsMetricDataRecord> getMetricData(AppdynamicsDataRequest dataRequest);
 }

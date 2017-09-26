@@ -1098,12 +1098,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (AppDynamicsConfig) settingAttribute.getValue();
             settingAttribute.setName(appDynamicsYaml.getName());
-            config = AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                         .withAccountId(accountId)
-                         .withAccountname(appDynamicsYaml.getAccountname())
-                         .withControllerUrl(appDynamicsYaml.getUrl())
-                         .withPassword(((AppDynamicsConfig) beforeConfig).getPassword())
-                         .withUsername(appDynamicsYaml.getUsername())
+            config = AppDynamicsConfig.builder()
+                         .accountId(accountId)
+                         .accountname(appDynamicsYaml.getAccountname())
+                         .controllerUrl(appDynamicsYaml.getUrl())
+                         .password(((AppDynamicsConfig) beforeConfig).getPassword())
+                         .username(appDynamicsYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;

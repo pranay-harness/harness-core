@@ -16,9 +16,9 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisJob;
+import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
-import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -46,7 +46,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Transient @SchemaIgnore private ScheduledExecutorService analysisExecutorService;
 
-  @Transient @Inject private NewRelicService metricAnalysisService;
+  @Transient @Inject private MetricDataAnalysisService metricAnalysisService;
 
   public AbstractMetricAnalysisState(String name, StateType stateType) {
     super(name, stateType.name());
@@ -84,6 +84,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     final MetricAnalysisExecutionData executionData =
         MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
+            .withWorkflowExecutionId(context.getWorkflowExecutionId())
             .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
             .withServerConfigID(getAnalysisServerConfigId())
             .withAnalysisDuration(Integer.parseInt(timeDuration))
@@ -111,7 +112,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     Date startDate =
         new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
     JobDetail job =
-        JobBuilder.newJob(NewRelicMetricAnalysisJob.class)
+        JobBuilder.newJob(MetricAnalysisJob.class)
             .withIdentity(context.getStateExecutionId(), getStateType().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
             .usingJobData("jobParams", JsonUtils.asJson(context))
             .usingJobData("timestamp", System.currentTimeMillis())

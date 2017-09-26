@@ -42,7 +42,6 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 3;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
