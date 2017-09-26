@@ -96,13 +96,16 @@ public class ConfigResource {
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setFileName(new File(fileDetail.getFileName()).getName());
-    try {
-      Map<String, EntityVersion> envIdVersionMap =
-          JsonUtils.asObject(configFile.getEnvIdVersionMapString(), new TypeReference<Map<String, EntityVersion>>() {});
-      configFile.setEnvIdVersionMap(envIdVersionMap);
-    } catch (Exception e) {
-      // Ignore
+    if (configFile.getEnvIdVersionMapString() != null) {
+      try {
+        Map<String, EntityVersion> envIdVersionMap = JsonUtils.asObject(
+            configFile.getEnvIdVersionMapString(), new TypeReference<Map<String, EntityVersion>>() {});
+        configFile.setEnvIdVersionMap(envIdVersionMap);
+      } catch (Exception e) {
+        // Ignore
+      }
     }
+
     String fileId = Validator.duplicateCheck(
         ()
             -> configService.save(configFile,
