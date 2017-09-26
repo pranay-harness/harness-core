@@ -35,10 +35,6 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Override
   public void validateConfig(ElkConfig elkConfig) {
     try {
-      if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
-        return;
-      }
-
       if (!StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
         throw new WingsException("User name is given but password is empty");
       }
