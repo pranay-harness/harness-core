@@ -137,6 +137,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
           .addContextElement(aContainerServiceElement()
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
+                                 .withNamespace("default")
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                  .withResizeStrategy(RESIZE_NEW_FIRST)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
