@@ -21,6 +21,9 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -86,6 +89,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -197,9 +201,14 @@ public class KubernetesReplicationControllerSetup extends State {
       String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
       kubernetesContainerService.createOrReplaceSecret(
           kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
-      kubernetesContainerService.createController(kubernetesConfig,
-          createReplicationControllerDefinition(evaluatedReplicationControllerName, controllerLabels, serviceId,
-              kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app, secretName));
+
+      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
+          Collectors.toMap(Map.Entry::getKey, entry -> context.renderExpression(entry.getValue())));
+
+      ReplicationController rcDefinition = createReplicationControllerDefinition(evaluatedReplicationControllerName,
+          controllerLabels, serviceId, kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app,
+          secretName, serviceVariables);
+      kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
 
       serviceClusterIP = null;
       serviceLoadBalancerEndpoint = null;
@@ -338,7 +347,7 @@ public class KubernetesReplicationControllerSetup extends State {
    */
   private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
       Map<String, String> controllerLabels, String serviceId, String namespace, String imageName, String tag,
-      Application app, String secretName) {
+      Application app, String secretName, Map<String, String> serviceVariables) {
     KubernetesContainerTask kubernetesContainerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
@@ -382,6 +391,23 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       rc.getSpec().getTemplate().getMetadata().getLabels().putAll(controllerLabels);
       rc.getSpec().setReplicas(0);
+
+      // Set service variables as environment variables
+      for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
+        Map<String, String> envVars =
+            container.getEnv().stream().collect(Collectors.toMap(EnvVar::getName, EnvVar::getValue));
+        if (envVars == null) {
+          envVars = new HashMap<>();
+        }
+        envVars.putAll(serviceVariables);
+        List<EnvVar> mergedEnvVars =
+            envVars.entrySet()
+                .stream()
+                .map(entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build())
+                .collect(Collectors.toList());
+        container.setEnv(mergedEnvVars);
+      }
+
       return rc;
     } catch (IOException e) {
       logger.error(e.getMessage(), e);

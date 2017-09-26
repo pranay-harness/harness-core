@@ -7,14 +7,21 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowType;
+import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.ExpressionEvaluator;
@@ -24,6 +31,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,6 +48,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private VariableProcessor variableProcessor;
   @Inject @Transient private SettingsService settingsService;
+  @Inject @Transient private ServiceTemplateService serviceTemplateService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -74,7 +83,7 @@ public class ExecutionContextImpl implements ExecutionContext {
       });
     }
     if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
-      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> { injector.injectMembers(advisor); });
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(injector::injectMembers);
     }
   }
 
@@ -376,7 +385,28 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   @Override
   public Map<String, String> getServiceVariables() {
-    return variableProcessor.getVariables(stateExecutionInstance.getContextElements());
+    Map<String, String> variables = new HashMap<>();
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    if (phaseElement == null || phaseElement.getServiceElement() == null
+        || phaseElement.getServiceElement().getUuid() == null) {
+      return variables;
+    }
+    String envId = getEnv().getUuid();
+    Optional<Key<ServiceTemplate>> serviceTemplateKey =
+        serviceTemplateService
+            .getTemplateRefKeysByService(getAppId(), phaseElement.getServiceElement().getUuid(), envId)
+            .stream()
+            .findFirst();
+    if (!serviceTemplateKey.isPresent()) {
+      return variables;
+    }
+    ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
+    List<ServiceVariable> serviceVariables =
+        serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid());
+    serviceVariables.forEach(
+        serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+
+    return variables;
   }
 
   @Override
@@ -385,7 +415,7 @@ public class ExecutionContextImpl implements ExecutionContext {
         .stream()
         .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), id))
         .findFirst()
-        .map(settingAttribute -> settingAttribute.getValue())
+        .map(SettingAttribute::getValue)
         .orElse(null);
   }
 }
