@@ -205,14 +205,16 @@ public class KubernetesReplicationControllerSetup extends State {
       Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
       if (serviceType != null && serviceType != ServiceType.None) {
-        Service serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+        Service serviceDefinition =
+            createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels);
         if (service != null) {
           // Keep the previous load balancer IP if it exists and a new one was not specified
           LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
           if (serviceType == ServiceType.LoadBalancer && isEmpty(loadBalancerIP) && loadBalancer != null
               && !loadBalancer.getIngress().isEmpty()) {
             loadBalancerIP = loadBalancer.getIngress().get(0).getIp();
-            serviceDefinition = createServiceDefinition(kubernetesServiceName, serviceLabels);
+            serviceDefinition =
+                createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels);
           }
         }
         service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceDefinition);
@@ -389,7 +391,7 @@ public class KubernetesReplicationControllerSetup extends State {
    * Creates service definition
    */
   private io.fabric8.kubernetes.api.model.Service createServiceDefinition(
-      String serviceName, Map<String, String> serviceLabels) {
+      String serviceName, String namespace, Map<String, String> serviceLabels) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().addToSelector(serviceLabels).withType(serviceType.name());
 
     if (serviceType != ServiceType.ExternalName) {
@@ -423,7 +425,7 @@ public class KubernetesReplicationControllerSetup extends State {
         .withApiVersion("v1")
         .withNewMetadata()
         .withName(serviceName)
-        .withNamespace("default")
+        .withNamespace(namespace)
         .addToLabels(serviceLabels)
         .endMetadata()
         .withSpec(spec.build())
