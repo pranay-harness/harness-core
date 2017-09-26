@@ -193,7 +193,7 @@ public class ExecutionResource {
    * @return the rest response
    */
   @PUT
-  @Path("executions/{workflowExecutionId}/approval")
+  @Path("{workflowExecutionId}/approval")
   @Timed
   @ExceptionMetered
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
