@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 8/4/16.
  */
 @Data
-public class NewRelicExecutionData extends StateExecutionData {
+public class MetricAnalysisExecutionData extends StateExecutionData {
   private String correlationId;
   private String stateExecutionInstanceId;
   private String serverConfigId;
@@ -45,6 +45,8 @@ public class NewRelicExecutionData extends StateExecutionData {
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
     if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
       elapsedMinutes = 0;
+    } else {
+      elapsedMinutes = elapsedMinutes - (SplunkDataCollectionTask.DELAY_MINUTES + 1);
     }
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
@@ -194,20 +196,20 @@ public class NewRelicExecutionData extends StateExecutionData {
      *
      * @return the app dynamics execution data
      */
-    public NewRelicExecutionData build() {
-      NewRelicExecutionData newRelicExecutionData = new NewRelicExecutionData();
-      newRelicExecutionData.setCorrelationId(correlationId);
-      newRelicExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
-      newRelicExecutionData.setServerConfigId(serverConfigId);
-      newRelicExecutionData.setTimeDuration(timeDuration);
-      newRelicExecutionData.setStateName(stateName);
-      newRelicExecutionData.setStartTs(startTs);
-      newRelicExecutionData.setEndTs(endTs);
-      newRelicExecutionData.setStatus(status);
-      newRelicExecutionData.setErrorMsg(errorMsg);
-      newRelicExecutionData.setCanaryNewHostNames(canaryNewHostNames);
-      newRelicExecutionData.setLastExecutionNodes(lastExecutionNodes);
-      return newRelicExecutionData;
+    public MetricAnalysisExecutionData build() {
+      MetricAnalysisExecutionData metricAnalysisExecutionData = new MetricAnalysisExecutionData();
+      metricAnalysisExecutionData.setCorrelationId(correlationId);
+      metricAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
+      metricAnalysisExecutionData.setServerConfigId(serverConfigId);
+      metricAnalysisExecutionData.setTimeDuration(timeDuration);
+      metricAnalysisExecutionData.setStateName(stateName);
+      metricAnalysisExecutionData.setStartTs(startTs);
+      metricAnalysisExecutionData.setEndTs(endTs);
+      metricAnalysisExecutionData.setStatus(status);
+      metricAnalysisExecutionData.setErrorMsg(errorMsg);
+      metricAnalysisExecutionData.setCanaryNewHostNames(canaryNewHostNames);
+      metricAnalysisExecutionData.setLastExecutionNodes(lastExecutionNodes);
+      return metricAnalysisExecutionData;
     }
   }
 }

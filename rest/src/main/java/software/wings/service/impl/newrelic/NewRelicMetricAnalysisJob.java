@@ -18,6 +18,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -107,7 +108,7 @@ public class NewRelicMetricAnalysisJob implements Job {
           return;
         }
 
-        final int analysisMinute = newRelicService.getCollectionMinuteToProcess(
+        final int analysisMinute = newRelicService.getCollectionMinuteToProcess(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
 
         if (analysisMinute > context.getTimeDuration() - 1) {
@@ -119,18 +120,20 @@ public class NewRelicMetricAnalysisJob implements Job {
         final List<NewRelicMetricDataRecord> controlRecords =
             context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
             ? newRelicService.getPreviousSuccessfulRecords(
-                  context.getWorkflowId(), context.getServiceId(), analysisMinute)
-            : newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                  context.getWorkflowId(), context.getServiceId(), context.getControlNodes(), analysisMinute);
+                  context.getStateType(), context.getWorkflowId(), context.getServiceId(), analysisMinute)
+            : newRelicService.getRecords(context.getStateType(), context.getWorkflowExecutionId(),
+                  context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
+                  context.getControlNodes(), analysisMinute);
 
-        final List<NewRelicMetricDataRecord> testRecords =
-            newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), analysisMinute);
+        final List<NewRelicMetricDataRecord> testRecords = newRelicService.getRecords(context.getStateType(),
+            context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
+            context.getServiceId(), context.getTestNodes(), analysisMinute);
 
         Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
         Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
         NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                          .stateType(context.getStateType())
                                                           .stateExecutionId(context.getStateExecutionId())
                                                           .workflowExecutionId(context.getWorkflowExecutionId())
                                                           .workflowId(context.getWorkflowId())
@@ -172,8 +175,8 @@ public class NewRelicMetricAnalysisJob implements Job {
 
         analysisRecord.setAnalysisMinute(analysisMinute);
         newRelicService.saveAnalysisRecords(analysisRecord);
-        newRelicService.bumpCollectionMinuteToProcess(
-            context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
+        newRelicService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
+            context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
       } catch (Exception ex) {
         completeCron = true;
         logger.warn("analysis failed", ex);
@@ -218,8 +221,8 @@ public class NewRelicMetricAnalysisJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context) {
-      final NewRelicExecutionData executionData =
-          NewRelicExecutionData.Builder.anAnanlysisExecutionData()
+      final MetricAnalysisExecutionData executionData =
+          MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
               .withStateExecutionInstanceId(context.getStateExecutionId())
               .withServerConfigID(context.getAnalysisServerConfigId())
               .withAnalysisDuration(context.getTimeDuration())

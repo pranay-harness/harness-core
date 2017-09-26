@@ -35,7 +35,7 @@ public abstract class AbstractDelegateDataCollectionTask
         lockObject.wait();
       } catch (InterruptedException e) {
         completed.set(true);
-        getLogger().info("Splunk data collection interrupted");
+        getLogger().info("{} data collection interrupted", getStateType());
       }
     }
   }

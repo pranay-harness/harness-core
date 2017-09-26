@@ -3,12 +3,12 @@ package software.wings.service.intfc.appdynamics;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_APP_TASK)
-  List<AppdynamicsApplication> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
+  List<NewRelicApplication> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
   List<AppdynamicsTier> getTiers(AppDynamicsConfig value, int appdynamicsAppId) throws IOException;

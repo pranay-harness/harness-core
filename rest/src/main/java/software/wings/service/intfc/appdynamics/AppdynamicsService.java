@@ -3,7 +3,6 @@ package software.wings.service.intfc.appdynamics;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
 import software.wings.metrics.MetricSummary;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsDataRequest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -11,6 +10,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.utils.validation.Create;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 4/17/17.
  */
 public interface AppdynamicsService {
-  List<AppdynamicsApplication> getApplications(@NotNull String settingId) throws IOException;
+  List<NewRelicApplication> getApplications(@NotNull String settingId) throws IOException;
 
   List<AppdynamicsTier> getTiers(String settingId, int appdynamicsAppId) throws IOException;
 

@@ -5,14 +5,12 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import retrofit2.http.Query;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.MetricSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsDataRequest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -20,6 +18,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ public class AppdynamicsResource {
   @Path("/applications")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<AppdynamicsApplication>> getAllApplications(
+  public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     return new RestResponse<>(appdynamicsService.getApplications(settingId));
   }
