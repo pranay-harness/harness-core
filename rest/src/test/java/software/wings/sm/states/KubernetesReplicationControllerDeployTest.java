@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -20,6 +21,7 @@ import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
@@ -74,7 +76,6 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.common.VariableProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -92,7 +93,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,7 +112,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
-  @Mock private VariableProcessor variableProcessor;
   @Mock private KubernetesConfig kubernetesConfig;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private LogService logService;
@@ -194,7 +193,10 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(Arrays.asList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
 
     when(logService.save(any(Log.class))).thenReturn(null);
   }
@@ -202,7 +204,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Test
   public void shouldExecute() {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("serviceTemplateService", serviceTemplateService);
 
     ReplicationController replicationController = new ReplicationControllerBuilder()
                                                       .withApiVersion("v1")
@@ -230,7 +232,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   public void shouldExecuteThrowInvalidRequest() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      on(context).set("variableProcessor", variableProcessor);
+      on(context).set("serviceTemplateService", serviceTemplateService);
       kubernetesReplicationControllerDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
