@@ -57,6 +57,14 @@ import javax.inject.Inject;
 public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  private final String COMMIT_AUTHOR = "bsollish";
+  private final String COMMIT_EMAIL = "bob@harness.io";
+  private final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
+  private final String YAML_EXTENSION = ".yaml";
+  private final String DEFAULT_COMMIT_BRANCH = "origin";
+  private final String TEMP_REPO_PREFIX = "sync-repos_";
+  private final String TEMP_KEY_PREFIX = "sync-keys_";
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
   @Inject private AppService appService;
@@ -307,6 +315,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       return false;
     }
 
+    YamlGitSync ygs = get(entityId, accountId, appId);
+    File sshKeyPath = getSshKeyPath(ygs.getSshKey(), entityId);
+    GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
+
     switch (sourceType) {
       case ENTITY_CREATE:
         // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
@@ -315,27 +327,11 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       case ENTITY_UPDATE:
         // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
       case GIT_SYNC_UPDATE:
-        YamlGitSync ygs = get(entityId, accountId, appId);
-        File sshKeyPath = getSshKeyPath(ygs.getSshKey(), entityId);
-        GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
-
-        try {
-          File repoPath = File.createTempFile("sync-repos_" + entityId, "");
-          repoPath.delete();
-          repoPath.mkdirs();
-
-          Git git = gsh.clone(ygs.getUrl(), repoPath);
-
-          switch (klass.getCanonicalName()) {
-            // TODO - this (idea) needs to be used (in some form)
-          }
-
-          writeAddCommitPush(name, yaml, ygs, gsh, git, repoPath);
-          cleanup(sshKeyPath, repoPath);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-
+        File repoPath = getTempRepoPath(entityId);
+        // clone the repo
+        Git git = gsh.clone(ygs.getUrl(), repoPath);
+        writeAddCommitPush(name, yaml, ygs, gsh, git, repoPath, sourceType, klass);
+        cleanupTempFiles(sshKeyPath, repoPath);
         break;
       case GIT_SYNC_DELETE:
         // TODO - needs implementation!
@@ -350,12 +346,30 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     return false;
   }
 
-  private void writeAddCommitPush(
-      String name, String content, YamlGitSync ygs, GitSyncHelper gsh, Git git, File repoPath) {
-    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+  private File getTempRepoPath(String entityId) {
+    try {
+      File repoPath = File.createTempFile(TEMP_REPO_PREFIX + entityId, "");
+      repoPath.delete();
+      repoPath.mkdirs();
+
+      return repoPath;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
+
+  private void writeAddCommitPush(String name, String content, YamlGitSync ygs, GitSyncHelper gsh, Git git,
+      File repoPath, SourceType sourceType, Class klass) {
+    String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
+
+    switch (klass.getCanonicalName()) {
+      // TODO - we may need this (in some form)
+    }
 
     if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-      String fileName = name + ".yaml";
+      String fileName = name + YAML_EXTENSION;
 
       // we need a rootPath WITHOUT leading or trailing slashes
       String rootPath = cleanRootPath(ygs.getRootPath());
@@ -372,17 +386,18 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       }
 
       // commit
-      RevCommit rev = gsh.commit("bsollish", "bob@harness.io", "Another test commit (" + timestamp + ")");
+      RevCommit rev = gsh.commit(
+          COMMIT_AUTHOR, COMMIT_EMAIL, sourceType.name() + ": " + klass.getCanonicalName() + " (" + timestamp + ")");
 
       // push the change
-      Iterable<PushResult> pushResults = gsh.push("origin");
+      Iterable<PushResult> pushResults = gsh.push(DEFAULT_COMMIT_BRANCH);
     }
 
     // close down git
     git.close();
   }
 
-  private void cleanup(File sshKeyPath, File repoPath) {
+  private void cleanupTempFiles(File sshKeyPath, File repoPath) {
     try {
       // clean up TEMP files
       sshKeyPath.delete();
@@ -416,7 +431,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   // of the CustomJschConfigSessionFactory requires a path and won't take the key directly!
   private File getSshKeyPath(String sshKey, String entityId) {
     try {
-      File sshKeyPath = File.createTempFile("sync-keys_" + entityId, "");
+      File sshKeyPath = File.createTempFile(TEMP_KEY_PREFIX + entityId, "");
 
       Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
       perms.add(PosixFilePermission.OWNER_READ);
