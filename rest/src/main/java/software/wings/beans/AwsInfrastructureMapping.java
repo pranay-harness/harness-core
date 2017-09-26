@@ -15,7 +15,9 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
@@ -39,6 +41,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   private String hostConnectionAttrs;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
+
+  @Attributes(title = "VPC") private String vpcId;
+  @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
+  @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -188,6 +194,30 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
                      .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
                      .get(regions.getName())));
     }
+  }
+
+  public String getVpcId() {
+    return vpcId;
+  }
+
+  public void setVpcId(String vpcId) {
+    this.vpcId = vpcId;
+  }
+
+  public List<String> getSubnetIds() {
+    return subnetIds;
+  }
+
+  public void setSubnetIds(List<String> subnetIds) {
+    this.subnetIds = subnetIds;
+  }
+
+  public List<String> getSecurityGroupIds() {
+    return securityGroupIds;
+  }
+
+  public void setSecurityGroupIds(List<String> securityGroupIds) {
+    this.securityGroupIds = securityGroupIds;
   }
 
   /**
