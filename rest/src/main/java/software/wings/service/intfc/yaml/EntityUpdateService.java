@@ -1,5 +1,6 @@
 package software.wings.service.intfc.yaml;
 
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -15,6 +16,8 @@ import software.wings.beans.command.ServiceCommand;
  * @author bsollish
  */
 public interface EntityUpdateService {
+  public void setupUpdate(Account account);
+
   public void appUpdate(Application app);
 
   public void serviceUpdate(Service service);

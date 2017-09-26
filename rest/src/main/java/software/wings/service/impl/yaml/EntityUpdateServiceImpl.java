@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -14,6 +15,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.yaml.YamlHelper;
@@ -35,6 +37,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private SetupYamlResourceService setupYamlResourceService;
 
   @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
@@ -51,6 +54,28 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
                                               .withYaml(yaml)
                                               .build();
     entityUpdateEventQueue.send(entityUpdateEvent);
+  }
+
+  public void setupUpdate(Account account) {
+    if (account == null) {
+      // TODO - handle missing app
+      return;
+    }
+
+    String appId = account.getAppId();
+    String accountId = account.getUuid();
+
+    YamlGitSync ygs = yamlGitSyncService.get(appId, accountId, appId);
+
+    // is it synced
+    if (ygs != null) {
+      // is it enabled
+      if (ygs.isEnabled()) {
+        String yaml = setupYamlResourceService.getSetup(accountId).getResource().getYaml();
+        yaml = YamlHelper.cleanupYaml(yaml);
+        queueEntityUpdateEvent(account.getUuid(), "setup", accountId, appId, Account.class, yaml);
+      }
+    }
   }
 
   public void appUpdate(Application app) {

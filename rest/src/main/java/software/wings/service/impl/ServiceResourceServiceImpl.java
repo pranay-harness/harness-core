@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
@@ -60,6 +61,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -116,6 +118,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WorkflowService workflowService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AppService appService;
 
   /**
    * {@inheritDoc}
@@ -174,6 +177,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
+
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(service.getAppId());
+    entityUpdateService.appUpdate(app);
+
+    // see if we need to perform any Git Sync operations for the service
+    entityUpdateService.serviceUpdate(service);
+
     return savedService;
   }
 
@@ -342,7 +353,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                      service.getUuid(), savedService.getName(), service.getName().trim()));
     }
 
-    // see if we need to perform any Git Sync operations
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(service.getAppId());
+    entityUpdateService.appUpdate(app);
+
+    // see if we need to perform any Git Sync operations for the service
     entityUpdateService.serviceUpdate(service);
 
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());

@@ -10,7 +10,6 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -19,20 +18,24 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import javax.validation.Valid;
 
 /**
@@ -42,6 +45,8 @@ import javax.validation.Valid;
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -74,6 +79,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
 
     serviceVariable.setEnvId(envId);
+
+    // see if we need to perform any Git Sync operations
+    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+    entityUpdateService.serviceUpdate(service);
+
     return Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
   }
@@ -103,6 +113,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
         ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()),
         serviceVariable.getAccountId());
+
+    // see if we need to perform any Git Sync operations
+    Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+    entityUpdateService.serviceUpdate(service);
 
     return get(serviceVariable.getAppId(), serviceVariable.getUuid());
   }
