@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
@@ -110,4 +111,12 @@ public interface EnvironmentService {
    * @return
    */
   Environment cloneEnvironment(@NotEmpty String appId, @NotEmpty String envId, CloneMetadata cloneMetadata);
+
+  /**
+   *
+   * @param appId
+   * @param envId
+   * @return
+   */
+  List<Service> getServicesWithOverrides(@NotEmpty String appId, @NotEmpty String envId);
 }
