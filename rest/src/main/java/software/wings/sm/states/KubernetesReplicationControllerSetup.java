@@ -192,6 +192,8 @@ public class KubernetesReplicationControllerSetup extends State {
 
       kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
 
+      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig);
+
       String secretName = KubernetesConvention.getKubernetesSecretName(kubernetesServiceName, imageDetails.sourceName);
       kubernetesContainerService.createOrReplaceSecret(
           kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));

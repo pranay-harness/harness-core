@@ -111,6 +111,7 @@ public interface KubernetesContainerService {
    */
   void deleteService(KubernetesConfig kubernetesConfig, String name);
 
+  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig);
   /**
    * Gets secret.
    *

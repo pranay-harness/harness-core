@@ -54,8 +54,12 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   public static final String MASTER_URL = "masterUrl";
   public static final String USERNAME = "username";
 
-  private static final KubernetesConfig KUBERNETES_CONFIG =
-      aKubernetesConfig().withMasterUrl(MASTER_URL).withUsername(USERNAME).withPassword(PASSWORD).build();
+  private static final KubernetesConfig KUBERNETES_CONFIG = aKubernetesConfig()
+                                                                .withMasterUrl(MASTER_URL)
+                                                                .withUsername(USERNAME)
+                                                                .withPassword(PASSWORD)
+                                                                .withNamespace("default")
+                                                                .build();
 
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private KubernetesClient kubernetesClient;
@@ -64,14 +68,18 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
       RollableScalableResource<ReplicationController, DoneableReplicationController>> replicationControllers;
   @Mock
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
-      RollableScalableResource<ReplicationController, DoneableReplicationController>> defaultNamespace;
+      RollableScalableResource<ReplicationController, DoneableReplicationController>> namespacedControllers;
   @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> services;
+  @Mock
+  private NonNamespaceOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>>
+      namespacedServices;
   @Mock
   private RollableScalableResource<ReplicationController, DoneableReplicationController> scalableReplicationController;
   @Mock private ReplicationController replicationController;
   @Mock private Resource<Service, DoneableService> serviceResource;
   @Mock private ObjectMeta replicationControllerMetadata;
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> pods;
+  @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> namespacedPods;
   @Mock private FilterWatchListDeletable<Pod, PodList, Boolean, Watch, Watcher<Pod>> podsWithLabels;
   @Mock private PodList podList;
   @Mock private Pod pod;
@@ -85,16 +93,18 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(kubernetesClient);
     when(kubernetesClient.replicationControllers()).thenReturn(replicationControllers);
-    when(replicationControllers.inNamespace("default")).thenReturn(defaultNamespace);
+    when(replicationControllers.inNamespace("default")).thenReturn(namespacedControllers);
     when(kubernetesClient.services()).thenReturn(services);
-    when(services.createOrReplaceWithNew()).thenReturn(new DoneableService(item -> item));
-    when(replicationControllers.withName(anyString())).thenReturn(scalableReplicationController);
-    when(services.withName(anyString())).thenReturn(serviceResource);
+    when(services.inNamespace("default")).thenReturn(namespacedServices);
+    when(namespacedServices.createOrReplaceWithNew()).thenReturn(new DoneableService(item -> item));
+    when(namespacedControllers.withName(anyString())).thenReturn(scalableReplicationController);
+    when(namespacedServices.withName(anyString())).thenReturn(serviceResource);
     when(scalableReplicationController.get()).thenReturn(replicationController);
     when(replicationController.getMetadata()).thenReturn(replicationControllerMetadata);
     when(replicationControllerMetadata.getLabels()).thenReturn(ImmutableMap.of("app", "appname"));
     when(kubernetesClient.pods()).thenReturn(pods);
-    when(pods.withLabels(anyMap())).thenReturn(podsWithLabels);
+    when(pods.inNamespace("default")).thenReturn(namespacedPods);
+    when(namespacedPods.withLabels(anyMap())).thenReturn(podsWithLabels);
     when(podsWithLabels.list()).thenReturn(podList);
     when(podList.getItems()).thenReturn(ImmutableList.of(pod, pod, pod));
     when(pod.getStatus()).thenReturn(podStatus);
@@ -116,7 +126,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(replicationControllers).withName(args.capture());
+    verify(namespacedControllers).withName(args.capture());
     assertThat(args.getValue().equals("ctrl"));
     verify(scalableReplicationController).delete();
   }
@@ -132,7 +142,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     kubernetesContainerService.deleteService(KUBERNETES_CONFIG, "service");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(services).withName(args.capture());
+    verify(namespacedServices).withName(args.capture());
     assertThat(args.getValue().equals("service"));
     verify(serviceResource).delete();
   }

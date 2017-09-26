@@ -10,6 +10,8 @@ import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
@@ -185,6 +187,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig) {
+    NamespaceList namespaces = kubernetesHelperService.getKubernetesClient(kubernetesConfig).namespaces().list();
+    if (namespaces.getItems().stream().noneMatch(
+            namespace -> namespace.getMetadata().getName().equals(kubernetesConfig.getNamespace()))) {
+      logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
+      kubernetesHelperService.getKubernetesClient(kubernetesConfig)
+          .namespaces()
+          .create(
+              new NamespaceBuilder().withNewMetadata().withName(kubernetesConfig.getNamespace()).endMetadata().build());
+    }
+  }
+
+  @Override
   public Service getService(KubernetesConfig kubernetesConfig, String name) {
     return name != null ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                               .services()
@@ -271,7 +286,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .pods()
-        .inNamespace(kubernetesClient.getNamespace())
+        .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
         .list()
         .getItems();
