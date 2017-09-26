@@ -98,8 +98,14 @@ public class ContainerInstanceHelper {
       if (phaseStepExecutionSummaryMap != null) {
         for (String stepName : phaseStepExecutionSummaryMap.keySet()) {
           if (stepName.equals(Constants.DEPLOY_CONTAINERS) && phaseStepExecutionSummaryMap.containsKey(stepName)) {
+            PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(stepName);
+            if (phaseStepExecutionSummary == null) {
+              logger.debug(
+                  "PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+              continue;
+            }
             List<StepExecutionSummary> stepExecutionSummaryList =
-                phaseStepExecutionSummaryMap.get(stepName).getStepExecutionSummaryList();
+                phaseStepExecutionSummary.getStepExecutionSummaryList();
             // This was observed when the "deploy containers" step was executed in rollback and no commands were
             // executed since setup failed.
             if (stepExecutionSummaryList == null) {
