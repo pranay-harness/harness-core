@@ -7,11 +7,13 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Singleton;
 
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.CommandService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 
 import java.util.List;
@@ -24,6 +26,7 @@ import javax.inject.Inject;
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject ServiceResourceService serviceResourceService;
 
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
@@ -56,6 +59,12 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public Command save(Command command) {
+    // see if we need to perform any Git Sync operations
+    String serviceCommandId = command.getOriginEntityId();
+    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+    Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+    entityUpdateService.serviceUpdate(service);
+
     return wingsPersistence.saveAndGet(Command.class, command);
   }
 
@@ -65,6 +74,9 @@ public class CommandServiceImpl implements CommandService {
     // see if we need to perform any Git Sync operations
     String serviceCommandId = command.getOriginEntityId();
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+
+    Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+    entityUpdateService.serviceUpdate(service);
 
     entityUpdateService.serviceCommandUpdate(serviceCommand);
     //-----------------

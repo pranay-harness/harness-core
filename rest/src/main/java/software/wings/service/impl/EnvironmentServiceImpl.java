@@ -23,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -41,6 +42,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -84,6 +86,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ConfigService configService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AppService appService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -174,6 +177,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
             .build());
+
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(environment.getAppId());
+    entityUpdateService.appUpdate(app);
+
+    // see if we need to perform any Git Sync operations for the environment
+    entityUpdateService.environmentUpdate(environment);
+
     return environment;
   }
 
@@ -188,7 +199,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
 
-    // see if we need to perform any Git Sync operations
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(environment.getAppId());
+    entityUpdateService.appUpdate(app);
+
+    // see if we need to perform any Git Sync operations for the environment
     entityUpdateService.environmentUpdate(environment);
 
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());

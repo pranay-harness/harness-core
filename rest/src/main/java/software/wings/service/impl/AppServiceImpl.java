@@ -25,6 +25,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -42,6 +43,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -103,6 +105,7 @@ public class AppServiceImpl implements AppService {
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AccountService accountService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -125,6 +128,14 @@ public class AppServiceImpl implements AppService {
             .build());
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
+
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(app.getAccountId());
+    entityUpdateService.setupUpdate(account);
+
+    // see if we need to perform any Git Sync operations for the app
+    entityUpdateService.appUpdate(app);
+
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -288,7 +299,11 @@ public class AppServiceImpl implements AppService {
                                                    .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
 
-    // see if we need to perform any Git Sync operations
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(app.getAccountId());
+    entityUpdateService.setupUpdate(account);
+
+    // see if we need to perform any Git Sync operations for the app
     entityUpdateService.appUpdate(app);
 
     return wingsPersistence.get(Application.class, app.getUuid());

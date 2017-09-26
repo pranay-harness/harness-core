@@ -18,6 +18,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +29,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.Encryptable;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -54,6 +56,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AccountService accountService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -74,6 +77,14 @@ public class SettingsServiceImpl implements SettingsService {
         ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
       }
     }
+
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(settingAttribute.getAccountId());
+    entityUpdateService.setupUpdate(account);
+
+    // see if we need to perform any Git Sync operations for the settingAttribute
+    entityUpdateService.settingAttributeUpdate(settingAttribute);
+
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
         "name", settingAttribute.getName());
@@ -124,7 +135,11 @@ public class SettingsServiceImpl implements SettingsService {
     }
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
 
-    // see if we need to perform any Git Sync operations
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(settingAttribute.getAccountId());
+    entityUpdateService.setupUpdate(account);
+
+    // see if we need to perform any Git Sync operations for the settingAttribute
     entityUpdateService.settingAttributeUpdate(settingAttribute);
 
     return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
