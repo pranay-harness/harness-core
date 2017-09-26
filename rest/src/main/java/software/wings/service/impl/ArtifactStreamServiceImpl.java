@@ -70,6 +70,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -112,6 +113,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -176,6 +178,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (!artifactStream.isAutoDownload()) {
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.triggerUpdate(artifactStream);
+
     return artifactStream;
   }
 

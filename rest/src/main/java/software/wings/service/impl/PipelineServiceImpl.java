@@ -80,6 +80,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -116,6 +117,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -341,6 +343,9 @@ public class PipelineServiceImpl implements PipelineService {
                                 .field(ID_KEY)
                                 .equal(pipeline.getUuid()),
         ops);
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.pipelineUpdate(pipeline);
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;

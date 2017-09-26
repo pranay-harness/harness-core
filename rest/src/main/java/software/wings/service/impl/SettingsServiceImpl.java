@@ -32,6 +32,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
@@ -52,6 +53,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -121,6 +123,10 @@ public class SettingsServiceImpl implements SettingsService {
       fields.put("value", settingAttribute.getValue());
     }
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
+
+    // see if we need to perform any Git Sync operations
+    entityUpdateService.settingAttributeUpdate(settingAttribute);
+
     return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
   }
 

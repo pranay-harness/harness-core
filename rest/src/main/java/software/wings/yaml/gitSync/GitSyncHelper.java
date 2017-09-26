@@ -162,8 +162,14 @@ public class GitSyncHelper {
       writeToRepoFile(newFile, content);
 
       try {
-        // add new/changed files within the rootPath
-        DirCache dirCache = this.git.add().addFilepattern(rootPath).call();
+        DirCache dirCache = null;
+        if (rootPath != null && !rootPath.isEmpty()) {
+          // add new/changed files within the rootPath
+          dirCache = this.git.add().addFilepattern(rootPath).call();
+        } else {
+          // add file by fileName
+          dirCache = this.git.add().addFilepattern(fileName).call();
+        }
 
       } catch (GitAPIException e) {
         e.printStackTrace();
