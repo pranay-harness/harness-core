@@ -306,7 +306,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                 Map<String, WorkflowPhase> workflowPhaseIdMap =
                     ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
                 return workflowPhaseIdMap.values().stream().anyMatch(
-                    workflowPhase -> workflowPhase.getInfraMappingId().equals(infrastructureMapping.getUuid()));
+                    workflowPhase -> infrastructureMapping.getUuid().equals(workflowPhase.getInfraMappingId()));
               }
               return false;
             })

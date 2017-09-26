@@ -3,14 +3,12 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.PhaseStep.PhaseStepBuilder.*;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
-
-import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
@@ -283,14 +281,11 @@ public class PhaseStep {
         }
         Node clonedStep = step.clone();
         if (clonedPhaseStep.getPhaseStepType() != null && clonedPhaseStep.getPhaseStepType().equals(PROVISION_NODE)) {
-          if (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())) {
+          if (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
+              || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name())) {
             Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
             if ((Boolean) properties.get("specificHosts")) {
               properties.remove("hostNames");
-              Map<String, String> invalidFieldMessages = new HashMap<>();
-              invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames are not copied from the original phase");
-              clonedStep.setValid(false);
-              clonedStep.setInValidFieldMessages(invalidFieldMessages);
               clonedStep.setProperties(properties);
             }
           }
