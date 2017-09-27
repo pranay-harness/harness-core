@@ -40,9 +40,10 @@ public class DirectoryNode {
   }
 
   public DirectoryNode(
-      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
+      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService, String type) {
     this(name, theClass);
     this.directoryPath = directoryPath;
+    this.type = type;
 
     determineSyncMode(yamlGitSyncService);
   }

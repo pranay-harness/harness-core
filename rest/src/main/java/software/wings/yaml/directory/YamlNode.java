@@ -23,8 +23,7 @@ public class YamlNode extends DirectoryNode {
 
   public YamlNode(
       String uuid, String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
-    super(name, theClass, directoryPath, yamlGitSyncService);
-    this.setType("yaml");
+    super(name, theClass, directoryPath, yamlGitSyncService, "yaml");
     this.uuid = uuid;
   }
 
