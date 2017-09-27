@@ -239,11 +239,11 @@ public interface InfrastructureMappingService {
    * @param appId             the app id
    * @param computeProviderId the compute provider id
    * @param region            the region
-   * @param vpcId             the vpc id
+   * @param vpcIds            the vpc ids
    * @return the list
    */
-  List<String> listSecurityGroups(
-      @NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region, @NotEmpty String vpcId);
+  List<String> listSecurityGroups(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
+      @NotNull List<String> vpcIds);
 
   /**
    * List subnets list.
@@ -251,11 +251,11 @@ public interface InfrastructureMappingService {
    * @param appId             the app id
    * @param computeProviderId the compute provider id
    * @param region            the region
-   * @param vpcId             the vpc id
+   * @param vpcIds            the vpc ids
    * @return the list
    */
-  List<String> listSubnets(
-      @NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region, @NotEmpty String vpcId);
+  List<String> listSubnets(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
+      @NotNull List<String> vpcIds);
 
   /**
    * List load balancers map.

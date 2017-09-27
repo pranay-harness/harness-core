@@ -480,27 +480,27 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listSecurityGroups(String appId, String computeProviderId, String region, String vpcId) {
+  public List<String> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcId);
+      return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcIds);
     }
     return Collections.emptyList();
   }
 
   @Override
-  public List<String> listSubnets(String appId, String computeProviderId, String region, String vpcId) {
+  public List<String> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcId);
+      return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcIds);
     }
     return Collections.emptyList();
   }
