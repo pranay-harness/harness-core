@@ -35,8 +35,9 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s (GCP/Kubernetes::%s)", this.getClusterName(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
+    return String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        Optional.ofNullable(this.getNamespace()).orElse("default"));
   }
 
   /**
