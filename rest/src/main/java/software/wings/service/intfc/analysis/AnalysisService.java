@@ -1,8 +1,8 @@
 package software.wings.service.intfc.analysis;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -57,8 +57,6 @@ public interface AnalysisService {
 
   void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
-
-  int getLastAnalysisMinute(String stateExecutionId, String applicationId, StateType stateType);
 
   boolean isStateValid(String appdId, String stateExecutionID);
 
