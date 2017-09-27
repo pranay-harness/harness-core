@@ -67,7 +67,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.Log;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -82,7 +81,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -114,7 +112,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private KubernetesConfig kubernetesConfig;
   @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private LogService logService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -180,7 +177,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     on(kubernetesReplicationControllerDeploy).set("gkeClusterService", gkeClusterService);
     on(kubernetesReplicationControllerDeploy).set("kubernetesContainerService", kubernetesContainerService);
     on(kubernetesReplicationControllerDeploy).set("serviceTemplateService", serviceTemplateService);
-    on(kubernetesReplicationControllerDeploy).set("logService", logService);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
@@ -198,8 +194,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
-
-    when(logService.save(any(Log.class))).thenReturn(null);
   }
 
   @Test
