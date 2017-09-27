@@ -10,9 +10,7 @@ import static software.wings.api.InstanceElementListParam.InstanceElementListPar
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.Log.LogLevel.WARN;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -42,7 +40,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.Log;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -128,7 +125,7 @@ public abstract class ContainerServiceDeploy extends State {
     if (!isRollback()) {
       logger.info("Executing resize");
       List<ContainerServiceData> newInstanceDataList = new ArrayList<>();
-      ContainerServiceData newInstanceData = getNewInstanceData(contextData, activityId);
+      ContainerServiceData newInstanceData = getNewInstanceData(contextData);
       newInstanceDataList.add(newInstanceData);
       executionDataBuilder.withNewInstanceData(newInstanceDataList);
       executionDataBuilder.withOldInstanceData(getOldInstanceData(contextData, newInstanceData));
@@ -141,28 +138,29 @@ public abstract class ContainerServiceDeploy extends State {
     return executionDataBuilder.build();
   }
 
-  private ContainerServiceData getNewInstanceData(ContextData contextData, String activityId) {
+  private ContainerServiceData getNewInstanceData(ContextData contextData) {
     Optional<Integer> previousDesiredCount =
         getServiceDesiredCount(contextData.settingAttribute, contextData.region, contextData.containerElement);
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "Service setup not done, serviceName: " + contextData.containerElement.getName());
+          "Service setup not done, service name: " + contextData.containerElement.getName());
     }
+
     int previousCount = previousDesiredCount.get();
-    int desiredCount = getInstanceUnitType() == InstanceUnitType.PERCENTAGE
-        ? Math.max((Math.min(getInstanceCount(), 100) * contextData.containerElement.getMaxInstances()) / 100, 1)
-        : Math.min(getInstanceCount(), contextData.containerElement.getMaxInstances());
+    int maxInstances = getMaxInstances(contextData);
+    int desiredCount = getNewInstancesDesiredCount(maxInstances);
 
     if (desiredCount <= previousCount) {
-      logToExecutionConsole(WARN, contextData, activityId,
-          "Desired instance count is less than or equal to the current instance count: {current: " + previousCount
-              + ", desired: " + desiredCount + "}");
+      String msg = "Desired instance count must be greater than the current instance count: {current: " + previousCount
+          + ", desired: " + desiredCount + "}";
+      logger.error(msg);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
     }
 
-    if (desiredCount > contextData.containerElement.getMaxInstances()) {
-      String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
-          + contextData.containerElement.getMaxInstances() + ", desired: " + desiredCount + "}";
-      logToExecutionConsole(ERROR, contextData, activityId, msg);
+    if (desiredCount > maxInstances) {
+      String msg = "Desired instance count is greater than the maximum instance count: {maximum: " + maxInstances
+          + ", desired: " + desiredCount + "}";
+      logger.error(msg);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
     }
 
@@ -171,6 +169,30 @@ public abstract class ContainerServiceDeploy extends State {
         .withPreviousCount(previousCount)
         .withDesiredCount(desiredCount)
         .build();
+  }
+
+  private int getNewInstancesDesiredCount(int maxInstances) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      int percent = Math.min(getInstanceCount(), 100);
+      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      return Math.max(instanceCount, 1);
+    } else {
+      return getInstanceCount();
+    }
+  }
+
+  private int getMaxInstances(ContextData contextData) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      int activeInstances =
+          getActiveServiceCounts(contextData.settingAttribute, contextData.region, contextData.containerElement)
+              .values()
+              .stream()
+              .mapToInt(Integer::intValue)
+              .sum();
+      return Math.max(contextData.containerElement.getMaxInstances(), activeInstances);
+    } else {
+      return contextData.containerElement.getMaxInstances();
+    }
   }
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
@@ -286,21 +308,6 @@ public abstract class ContainerServiceDeploy extends State {
     logger.info("Cleaning up old versions");
     cleanup(contextData.settingAttribute, contextData.region, contextData.containerElement);
     return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
-  }
-
-  private void logToExecutionConsole(Log.LogLevel logLevel, ContextData contextData, String activityId, String msg) {
-    if (logLevel == Log.LogLevel.ERROR) {
-      logger.error(msg);
-    } else {
-      logger.warn(msg);
-    }
-    logService.save(aLog()
-                        .withAppId(contextData.appId)
-                        .withActivityId(activityId)
-                        .withCommandUnitName(contextData.commandUnitName)
-                        .withLogLine(msg)
-                        .withLogLevel(logLevel)
-                        .build());
   }
 
   @Override

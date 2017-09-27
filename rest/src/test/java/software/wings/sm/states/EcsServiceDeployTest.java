@@ -219,7 +219,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, service name:");
     }
   }
 
