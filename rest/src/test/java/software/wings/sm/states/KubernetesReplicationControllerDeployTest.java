@@ -135,6 +135,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
           .addContextElement(phaseElement)
           .addContextElement(aContainerServiceElement()
                                  .withUuid(serviceElement.getUuid())
+                                 .withMaxInstances(10)
                                  .withClusterName(CLUSTER_NAME)
                                  .withNamespace("default")
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
@@ -212,7 +213,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                                       .endMetadata()
                                                       .withNewSpec()
-                                                      .withReplicas(2)
+                                                      .withReplicas(0)
                                                       .endSpec()
                                                       .build();
     when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME, "default")).thenReturn(kubernetesConfig);

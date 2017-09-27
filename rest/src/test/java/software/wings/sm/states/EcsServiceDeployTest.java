@@ -128,6 +128,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(ECS_SERVICE_NAME)
+                                 .withMaxInstances(10)
                                  .withDeploymentType(DeploymentType.ECS)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withResizeStrategy(RESIZE_NEW_FIRST)
