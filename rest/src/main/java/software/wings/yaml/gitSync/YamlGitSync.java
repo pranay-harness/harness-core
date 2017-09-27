@@ -203,6 +203,8 @@ public class YamlGitSync extends Base {
         return Type.PIPELINE;
       case "triggers":
         return Type.TRIGGER;
+      case "folders":
+        return Type.FOLDER;
       default:
         // do nothing
     }
