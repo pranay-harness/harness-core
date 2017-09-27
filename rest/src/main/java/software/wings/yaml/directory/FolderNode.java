@@ -23,16 +23,14 @@ public class FolderNode extends DirectoryNode {
   }
 
   public FolderNode(String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
-    super(name, theClass, directoryPath, yamlGitSyncService);
-    this.setType("folder");
+    super(name, theClass, directoryPath, yamlGitSyncService, "folder");
     this.setRestName("folders");
   }
 
   public FolderNode(
       String name, Class theClass, DirectoryPath directoryPath, String appId, YamlGitSyncService yamlGitSyncService) {
-    super(name, theClass, directoryPath, yamlGitSyncService);
+    super(name, theClass, directoryPath, yamlGitSyncService, "folder");
     this.appId = appId;
-    this.setType("folder");
     this.setRestName("folders");
   }
 

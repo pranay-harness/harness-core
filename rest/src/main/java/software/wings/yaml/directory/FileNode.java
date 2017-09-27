@@ -14,7 +14,6 @@ public class FileNode extends DirectoryNode {
   }
 
   public FileNode(String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
-    super(name, theClass, directoryPath, yamlGitSyncService);
-    this.setType("file");
+    super(name, theClass, directoryPath, yamlGitSyncService, "file");
   }
 }
