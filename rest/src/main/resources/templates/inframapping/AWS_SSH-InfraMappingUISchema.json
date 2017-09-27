@@ -5,5 +5,5 @@
   "restrictionType": { "ui:widget": "hidden" },
   "restrictionExpression": { "ui:widget": "hidden" },
   "ui:order": [  "deploymentType","computeProviderSettingId", "hostConnectionAttrs",
-    "region", "loadBalancerId","infraMappingType","computeProviderType", "vpcIds", "subnetIds", "securityGroupIds"]
+    "region", "loadBalancerId","infraMappingType","computeProviderType", "awsInstanceFilter"]
 }
