@@ -37,14 +37,28 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public List<NewRelicApplication> getAllApplications(NewRelicConfig newRelicConfig) throws IOException {
-    final Call<NewRelicApplicationsResponse> request = getNewRelicRestClient(newRelicConfig).listAllApplications();
-    final Response<NewRelicApplicationsResponse> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body().getApplications();
+    List<NewRelicApplication> rv = new ArrayList<>();
+    int pageCount = 1;
+    while (true) {
+      final Call<NewRelicApplicationsResponse> request =
+          getNewRelicRestClient(newRelicConfig).listAllApplications(pageCount);
+      final Response<NewRelicApplicationsResponse> response = request.execute();
+      if (response.isSuccessful()) {
+        List<NewRelicApplication> applications = response.body().getApplications();
+        if (applications == null || applications.isEmpty()) {
+          break;
+        } else {
+          rv.addAll(applications);
+        }
+      } else {
+        JSONObject errorObject = new JSONObject(response.errorBody().string());
+        throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+      }
+
+      pageCount++;
     }
 
-    JSONObject errorObject = new JSONObject(response.errorBody().string());
-    throw new WingsException(errorObject.getJSONObject("error").getString("title"));
+    return rv;
   }
 
   @Override
