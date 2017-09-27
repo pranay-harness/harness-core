@@ -35,6 +35,7 @@ import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
 import java.io.File;
+import java.util.List;
 import javax.inject.Inject;
 
 public class YamlGitSyncServiceImpl implements YamlGitSyncService {
@@ -264,6 +265,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     entityUpdateEventQueue.send(entityUpdateEvent);
   }
 
+  public boolean handleEntityUpdateEvent(List<EntityUpdateEvent> entityUpdateEvents) {
+    return false;
+  }
+
   public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
     logger.info("*************** handleEntityUpdateEvent: " + entityUpdateEvent);
 
@@ -291,6 +296,12 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     }
 
     YamlGitSync ygs = get(entityId, accountId, appId);
+
+    if (ygs == null) {
+      // no git sync found for this entity
+      return false;
+    }
+
     File sshKeyPath = GitSyncHelper.getSshKeyPath(ygs.getSshKey(), entityId);
     GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
 
@@ -307,7 +318,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         gsh.clone(ygs.getUrl(), repoPath);
         gsh.writeAddCommitPush(name, yaml, ygs, repoPath, sourceType, klass);
         gsh.cleanupTempFiles(sshKeyPath, repoPath);
-        break;
+        gsh.shutdown();
+
+        return true;
       case GIT_SYNC_DELETE:
         // TODO - needs implementation!
         break;

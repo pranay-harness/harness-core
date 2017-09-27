@@ -28,7 +28,7 @@ public class EntityUpdateEventListener extends AbstractQueueListener<EntityUpdat
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.error("Exception while processing entity update event.", ex);
+      logger.error("*********************************** Exception while processing entity update event.", ex);
     }
   }
 }

@@ -42,7 +42,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
   public void queueEntityUpdateEvent(
-      String entityId, String name, String accountId, String appId, Class klass, String yaml) {
+      String entityId, String name, String accountId, String appId, Class klass, String yaml, SourceType sourceType) {
     // queue an entity update event
     EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
                                               .withEntityId(entityId)
@@ -50,13 +50,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
                                               .withAccountId(accountId)
                                               .withAppId(appId)
                                               .withClass(klass)
-                                              .withSourceType(SourceType.ENTITY_UPDATE)
+                                              .withSourceType(sourceType)
                                               .withYaml(yaml)
                                               .build();
     entityUpdateEventQueue.send(entityUpdateEvent);
   }
 
-  public void setupUpdate(Account account) {
+  public void setupUpdate(Account account, SourceType sourceType) {
     if (account == null) {
       // TODO - handle missing app
       return;
@@ -73,12 +73,12 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = setupYamlResourceService.getSetup(accountId).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(account.getUuid(), "setup", accountId, appId, Account.class, yaml);
+        queueEntityUpdateEvent(account.getUuid(), "setup", accountId, appId, Account.class, yaml, sourceType);
       }
     }
   }
 
-  public void appUpdate(Application app) {
+  public void appUpdate(Application app, SourceType sourceType) {
     if (app == null) {
       // TODO - handle missing app
       return;
@@ -95,12 +95,12 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = appYamlResourceService.getApp(appId).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(app.getUuid(), app.getName(), accountId, appId, Application.class, yaml);
+        queueEntityUpdateEvent(app.getUuid(), app.getName(), accountId, appId, Application.class, yaml, sourceType);
       }
     }
   }
 
-  public void serviceUpdate(Service service) {
+  public void serviceUpdate(Service service, SourceType sourceType) {
     if (service == null) {
       // TODO - handle missing service
       return;
@@ -121,12 +121,12 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = serviceYamlResourceService.getServiceYaml(service);
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(service.getUuid(), service.getName(), accountId, appId, Service.class, yaml);
+        queueEntityUpdateEvent(service.getUuid(), service.getName(), accountId, appId, Service.class, yaml, sourceType);
       }
     }
   }
 
-  public void serviceCommandUpdate(ServiceCommand serviceCommand) {
+  public void serviceCommandUpdate(ServiceCommand serviceCommand, SourceType sourceType) {
     if (serviceCommand == null) {
       // TODO - handle missing command
       return;
@@ -143,13 +143,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = yamlResourceService.getServiceCommand(appId, serviceCommand.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(
-            serviceCommand.getUuid(), serviceCommand.getName(), accountId, appId, ServiceCommand.class, yaml);
+        queueEntityUpdateEvent(serviceCommand.getUuid(), serviceCommand.getName(), accountId, appId,
+            ServiceCommand.class, yaml, sourceType);
       }
     }
   }
 
-  public void environmentUpdate(Environment environment) {
+  public void environmentUpdate(Environment environment, SourceType sourceType) {
     if (environment == null) {
       // TODO - handle missing environment
       return;
@@ -166,12 +166,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = yamlResourceService.getEnvironment(appId, environment.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(environment.getUuid(), environment.getName(), accountId, appId, Environment.class, yaml);
+        queueEntityUpdateEvent(
+            environment.getUuid(), environment.getName(), accountId, appId, Environment.class, yaml, sourceType);
       }
     }
   }
 
-  public void workflowUpdate(Workflow workflow) {
+  public void workflowUpdate(Workflow workflow, SourceType sourceType) {
     if (workflow == null) {
       // TODO - handle missing workflow
       return;
@@ -188,12 +189,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = yamlResourceService.getWorkflow(appId, workflow.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(workflow.getUuid(), workflow.getName(), accountId, appId, Workflow.class, yaml);
+        queueEntityUpdateEvent(
+            workflow.getUuid(), workflow.getName(), accountId, appId, Workflow.class, yaml, sourceType);
       }
     }
   }
 
-  public void pipelineUpdate(Pipeline pipeline) {
+  public void pipelineUpdate(Pipeline pipeline, SourceType sourceType) {
     if (pipeline == null) {
       // TODO - handle missing pipeline
       return;
@@ -210,12 +212,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = yamlResourceService.getPipeline(appId, pipeline.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(pipeline.getUuid(), pipeline.getName(), accountId, appId, Pipeline.class, yaml);
+        queueEntityUpdateEvent(
+            pipeline.getUuid(), pipeline.getName(), accountId, appId, Pipeline.class, yaml, sourceType);
       }
     }
   }
 
-  public void triggerUpdate(ArtifactStream artifactStream) {
+  public void triggerUpdate(ArtifactStream artifactStream, SourceType sourceType) {
     if (artifactStream == null) {
       // TODO - handle missing artfifactStream
       return;
@@ -232,13 +235,13 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       if (ygs.isEnabled()) {
         String yaml = yamlResourceService.getTrigger(appId, artifactStream.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(
-            artifactStream.getUuid(), artifactStream.getSourceName(), accountId, appId, ArtifactStream.class, yaml);
+        queueEntityUpdateEvent(artifactStream.getUuid(), artifactStream.getSourceName(), accountId, appId,
+            ArtifactStream.class, yaml, sourceType);
       }
     }
   }
 
-  public void settingAttributeUpdate(SettingAttribute settingAttribute) {
+  public void settingAttributeUpdate(SettingAttribute settingAttribute, SourceType sourceType) {
     if (settingAttribute == null) {
       // TODO - handle missing settingAttribute
       return;
@@ -256,8 +259,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
         String yaml =
             yamlResourceService.getSettingAttribute(appId, settingAttribute.getUuid()).getResource().getYaml();
         yaml = YamlHelper.cleanupYaml(yaml);
-        queueEntityUpdateEvent(
-            settingAttribute.getUuid(), settingAttribute.getName(), accountId, appId, SettingAttribute.class, yaml);
+        queueEntityUpdateEvent(settingAttribute.getUuid(), settingAttribute.getName(), accountId, appId,
+            SettingAttribute.class, yaml, sourceType);
       }
     }
   }
