@@ -394,17 +394,17 @@ public class KubernetesReplicationControllerSetup extends State {
 
       // Set service variables as environment variables
       for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
-        Map<String, String> envVars =
-            container.getEnv().stream().collect(Collectors.toMap(EnvVar::getName, EnvVar::getValue));
-        if (envVars == null) {
-          envVars = new HashMap<>();
-        }
-        envVars.putAll(serviceVariables);
+        List<EnvVar> envVars = container.getEnv();
+        Map<String, String> envVarsMap = new HashMap<>();
+        envVarsMap.putAll(serviceVariables);
         List<EnvVar> mergedEnvVars =
-            envVars.entrySet()
+            envVarsMap.entrySet()
                 .stream()
                 .map(entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build())
                 .collect(Collectors.toList());
+        if (envVars != null) {
+          mergedEnvVars.addAll(envVars);
+        }
         container.setEnv(mergedEnvVars);
       }
 
