@@ -11,6 +11,8 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -152,18 +154,15 @@ public abstract class ContainerServiceDeploy extends State {
         : Math.min(getInstanceCount(), contextData.containerElement.getMaxInstances());
 
     if (desiredCount <= previousCount) {
-      String msg = "Desired instance count is less than or equal to the current instance count: {current: "
-          + previousCount + ", desired: " + desiredCount + "}";
-      logger.warn(msg);
-      logToExecutionConsole(contextData, activityId, msg);
+      logToExecutionConsole(WARN, contextData, activityId,
+          "Desired instance count is less than or equal to the current instance count: {current: " + previousCount
+              + ", desired: " + desiredCount + "}");
     }
 
     if (desiredCount > contextData.containerElement.getMaxInstances()) {
       String msg = "Desired instance count is greater than the maximum instance count: {maximum: "
           + contextData.containerElement.getMaxInstances() + ", desired: " + desiredCount + "}";
-      logger.error(msg);
-      logToExecutionConsole(contextData, activityId, msg);
-
+      logToExecutionConsole(ERROR, contextData, activityId, msg);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
     }
 
@@ -289,13 +288,18 @@ public abstract class ContainerServiceDeploy extends State {
     return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
   }
 
-  private void logToExecutionConsole(ContextData contextData, String activityId, String msg) {
+  private void logToExecutionConsole(Log.LogLevel logLevel, ContextData contextData, String activityId, String msg) {
+    if (logLevel == Log.LogLevel.ERROR) {
+      logger.error(msg);
+    } else {
+      logger.warn(msg);
+    }
     logService.save(aLog()
                         .withAppId(contextData.appId)
                         .withActivityId(activityId)
                         .withCommandUnitName(contextData.commandUnitName)
                         .withLogLine(msg)
-                        .withLogLevel(Log.LogLevel.WARN)
+                        .withLogLevel(logLevel)
                         .build());
   }
 
