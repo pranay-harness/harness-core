@@ -16,6 +16,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -60,27 +61,42 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public Command save(Command command) {
-    // see if we need to perform any Git Sync operations
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the service
     String serviceCommandId = command.getOriginEntityId();
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the service command
+    eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return wingsPersistence.saveAndGet(Command.class, command);
   }
 
   @Override
   public Command update(Command command) {
-    //-----------------
-    // see if we need to perform any Git Sync operations
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the service
     String serviceCommandId = command.getOriginEntityId();
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
 
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
 
-    entityUpdateService.serviceCommandUpdate(serviceCommand, SourceType.ENTITY_CREATE);
-    //-----------------
+    // see if we need to perform any Git Sync operations for the service command
+    eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return wingsPersistence.saveAndGet(Command.class, command);
   }

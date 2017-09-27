@@ -23,6 +23,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
@@ -54,7 +55,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
-  //@Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
+  @Inject private EntityUpdateService entityUpdateService;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -257,19 +258,20 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         // nothing to do
     }
 
-    // TODO - this needs to be replaced to use the EntityUpdateListEvent
-    /*
     // queue an entity update event
     EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
-        .withEntityId(ygs.getEntityId())
-        .withName(name)
-        .withAccountId(accountId)
-        .withAppId(appId)
-        .withClass(klass)
-        .withSourceType(sourceType)
-        .build();
-    entityUpdateEventQueue.send(entityUpdateEvent);
-    */
+                                              .withEntityId(ygs.getEntityId())
+                                              .withName(name)
+                                              .withAccountId(accountId)
+                                              .withAppId(appId)
+                                              .withClass(klass)
+                                              .withSourceType(sourceType)
+                                              .build();
+
+    // create an EntityUpdateListEvent and queue it
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    eule.addEntityUpdateEvent(entityUpdateEvent);
+    entityUpdateService.queueEntityUpdateList(eule);
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {

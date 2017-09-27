@@ -32,6 +32,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -81,9 +82,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     serviceVariable.setEnvId(envId);
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations
     Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
@@ -115,9 +122,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()),
         serviceVariable.getAccountId());
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations
     Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return get(serviceVariable.getAppId(), serviceVariable.getUuid());
   }

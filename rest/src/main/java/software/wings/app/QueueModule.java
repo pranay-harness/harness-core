@@ -47,10 +47,6 @@ public class QueueModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
     bind(new TypeLiteral<Queue<ContainerDeploymentEvent>>() {})
         .toInstance(new MongoQueueImpl<>(ContainerDeploymentEvent.class, datastore, 60));
-    /*
-    bind(new TypeLiteral<Queue<EntityUpdateEvent>>() {
-    }).toInstance(new MongoQueueImpl<>(EntityUpdateEvent.class, datastore, 60));
-    */
     bind(new TypeLiteral<Queue<EntityUpdateListEvent>>() {})
         .toInstance(new MongoQueueImpl<>(EntityUpdateListEvent.class, datastore, 60));
 
@@ -60,10 +56,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<InstanceChangeEvent>>() {}).to(InstanceChangeEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ContainerDeploymentEvent>>() {})
         .to(ContainerDeploymentEventListener.class);
-    /*
-    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateEvent>>() {
-    }).to(EntityUpdateEventListener.class);
-    */
     bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
   }
 }

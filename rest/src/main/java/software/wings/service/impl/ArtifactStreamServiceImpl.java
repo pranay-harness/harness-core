@@ -81,6 +81,7 @@ import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -180,8 +181,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
 
-    // see if we need to perform any Git Sync operations
-    entityUpdateService.triggerUpdate(artifactStream, SourceType.ENTITY_UPDATE);
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the trigger (artifactStream)
+    eule.addEntityUpdateEvent(entityUpdateService.triggerListUpdate(artifactStream, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return artifactStream;
   }

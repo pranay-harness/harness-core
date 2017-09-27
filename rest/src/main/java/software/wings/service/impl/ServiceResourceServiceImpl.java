@@ -180,12 +180,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(service.getAppId());
-    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
 
     // see if we need to perform any Git Sync operations for the service
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_CREATE);
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return savedService;
   }
@@ -356,15 +362,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     //-------------------
-    /*
-    // see if we need to perform any Git Sync operations for the app
-    Application app = appService.get(service.getAppId());
-    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
-
-    // see if we need to perform any Git Sync operations for the service
-    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
-    */
-
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the app
