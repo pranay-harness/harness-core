@@ -57,7 +57,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -92,7 +91,6 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-  @Inject @Transient protected transient LogService logService;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
