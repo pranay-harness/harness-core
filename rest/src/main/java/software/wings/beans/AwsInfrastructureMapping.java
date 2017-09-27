@@ -42,7 +42,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
-  @Attributes(title = "VPC") private String vpcId;
+  @Attributes(title = "VPC") private List<String> vpcIds;
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
 
@@ -89,10 +89,20 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.restrictionExpression = restrictionExpression;
   }
 
+  /**
+   * Gets load balancer id.
+   *
+   * @return the load balancer id
+   */
   public String getLoadBalancerId() {
     return loadBalancerId;
   }
 
+  /**
+   * Sets load balancer id.
+   *
+   * @param loadBalancerId the load balancer id
+   */
   public void setLoadBalancerId(String loadBalancerId) {
     this.loadBalancerId = loadBalancerId;
   }
@@ -110,22 +120,47 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         this.getRegion());
   }
 
+  /**
+   * Gets region.
+   *
+   * @return the region
+   */
   public String getRegion() {
     return region;
   }
 
+  /**
+   * Sets region.
+   *
+   * @param region the region
+   */
   public void setRegion(String region) {
     this.region = region;
   }
 
+  /**
+   * Sets host connection attrs.
+   *
+   * @param hostConnectionAttrs the host connection attrs
+   */
   public void setHostConnectionAttrs(String hostConnectionAttrs) {
     this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
+  /**
+   * Gets load balancer name.
+   *
+   * @return the load balancer name
+   */
   public String getLoadBalancerName() {
     return loadBalancerName;
   }
 
+  /**
+   * Sets load balancer name.
+   *
+   * @param loadBalancerName the load balancer name
+   */
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
   }
@@ -181,6 +216,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
+  /**
+   * The type Aws region data provider.
+   */
   public static class AwsRegionDataProvider implements DataProvider {
     @Inject private MainConfiguration mainConfiguration;
 
@@ -196,26 +234,56 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
-  public String getVpcId() {
-    return vpcId;
+  /**
+   * Gets vpc ids.
+   *
+   * @return the vpc ids
+   */
+  public List<String> getVpcIds() {
+    return vpcIds;
   }
 
-  public void setVpcId(String vpcId) {
-    this.vpcId = vpcId;
+  /**
+   * Sets vpc ids.
+   *
+   * @param vpcIds the vpc ids
+   */
+  public void setVpcIds(List<String> vpcIds) {
+    this.vpcIds = vpcIds;
   }
 
+  /**
+   * Gets subnet ids.
+   *
+   * @return the subnet ids
+   */
   public List<String> getSubnetIds() {
     return subnetIds;
   }
 
+  /**
+   * Sets subnet ids.
+   *
+   * @param subnetIds the subnet ids
+   */
   public void setSubnetIds(List<String> subnetIds) {
     this.subnetIds = subnetIds;
   }
 
+  /**
+   * Gets security group ids.
+   *
+   * @return the security group ids
+   */
   public List<String> getSecurityGroupIds() {
     return securityGroupIds;
   }
 
+  /**
+   * Sets security group ids.
+   *
+   * @param securityGroupIds the security group ids
+   */
   public void setSecurityGroupIds(List<String> securityGroupIds) {
     this.securityGroupIds = securityGroupIds;
   }
@@ -363,6 +431,12 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    /**
+     * With region builder.
+     *
+     * @param region the region
+     * @return the builder
+     */
     public Builder withRegion(String region) {
       this.region = region;
       return this;

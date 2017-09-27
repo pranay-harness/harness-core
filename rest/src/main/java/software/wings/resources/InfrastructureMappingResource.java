@@ -212,9 +212,10 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
-      @QueryParam("region") String region, @QueryParam("vpcId") String vpcId,
+      @QueryParam("region") String region, @QueryParam("vpcIds") List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcId));
+    return new RestResponse<>(
+        infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
   }
 
   @GET

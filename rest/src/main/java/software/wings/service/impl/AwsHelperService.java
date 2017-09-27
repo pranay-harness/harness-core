@@ -662,12 +662,12 @@ public class AwsHelperService {
     return Lists.newArrayList();
   }
 
-  public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, String vpcId) {
+  public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return amazonEC2Client
-          .describeSecurityGroups(
-              new DescribeSecurityGroupsRequest().withFilters(new Filter().withName("vpc-id").withValues(vpcId)))
+      List<Filter> filters =
+          vpcIds.stream().map(vpcId -> new Filter().withName("vpc-id").withValues(vpcId)).collect(Collectors.toList());
+      return amazonEC2Client.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(filters))
           .getSecurityGroups()
           .stream()
           .map(SecurityGroup::getGroupId)
@@ -678,13 +678,13 @@ public class AwsHelperService {
     return Lists.newArrayList();
   }
 
-  public List<String> listSubnetIds(AwsConfig awsConfig, String region, String vpcId) {
+  public List<String> listSubnetIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return amazonEC2Client
-          .describeSubnets(
-              new DescribeSubnetsRequest().withFilters(new Filter().withName("state").withValues("available"),
-                  new Filter().withName("vpc-id").withValues(vpcId)))
+      List<Filter> filters =
+          vpcIds.stream().map(vpcId -> new Filter().withName("vpc-id").withValues(vpcId)).collect(Collectors.toList());
+      filters.add(new Filter().withName("state").withValues("available"));
+      return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
           .getSubnets()
           .stream()
           .map(Subnet::getSubnetId)
