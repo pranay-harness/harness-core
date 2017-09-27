@@ -175,10 +175,8 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      ExecutionInterrupt executionInterrupt) {
+      @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
-    executionInterrupt.setEnvId(envId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
 
     return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
