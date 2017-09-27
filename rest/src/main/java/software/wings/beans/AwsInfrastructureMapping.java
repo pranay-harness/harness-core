@@ -40,7 +40,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
+  @Attributes(title = "Use Private DNS for SSH connection") private boolean usePrivateDns;
+
+  @Attributes(title = "Provision Instances") private boolean provisionInstances;
+
   @Attributes(title = "Instance Filter") private AwsInstanceFilter awsInstanceFilter;
+
+  @Attributes(title = "AutoScaling group") private String autoScalingGroupName;
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -177,6 +183,30 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public void setAwsInstanceFilter(AwsInstanceFilter awsInstanceFilter) {
     this.awsInstanceFilter = awsInstanceFilter;
+  }
+
+  public boolean isProvisionInstances() {
+    return provisionInstances;
+  }
+
+  public void setProvisionInstances(boolean provisionInstances) {
+    this.provisionInstances = provisionInstances;
+  }
+
+  public boolean isUsePrivateDns() {
+    return usePrivateDns;
+  }
+
+  public void setUsePrivateDns(boolean usePrivateDns) {
+    this.usePrivateDns = usePrivateDns;
+  }
+
+  public String getAutoScalingGroupName() {
+    return autoScalingGroupName;
+  }
+
+  public void setAutoScalingGroupName(String autoScalingGroupName) {
+    this.autoScalingGroupName = autoScalingGroupName;
   }
 
   /**

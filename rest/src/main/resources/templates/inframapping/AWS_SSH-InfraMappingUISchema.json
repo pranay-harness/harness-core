@@ -4,6 +4,6 @@
   "deploymentType": { "ui:widget": "hidden" },
   "restrictionType": { "ui:widget": "hidden" },
   "restrictionExpression": { "ui:widget": "hidden" },
-  "ui:order": [  "deploymentType","computeProviderSettingId", "hostConnectionAttrs",
-    "region", "loadBalancerId","infraMappingType","computeProviderType", "awsInstanceFilter"]
+  "ui:order": [  "deploymentType","computeProviderSettingId", "region", "hostConnectionAttrs", "usePrivateDns",
+    "infraMappingType","computeProviderType", "provisionInstances", "loadBalancerId", "awsInstanceFilter", "autoScalingGroupName"]
 }
