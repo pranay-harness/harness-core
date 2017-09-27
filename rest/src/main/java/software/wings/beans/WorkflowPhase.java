@@ -3,8 +3,8 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.*;
-import static software.wings.sm.StateType.*;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.sm.StateType.PHASE;
 
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
@@ -12,7 +12,6 @@ import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
@@ -258,7 +257,10 @@ public class WorkflowPhase implements UuidAware {
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
     if (phaseSteps != null) {
       for (PhaseStep phaseStep : phaseSteps) {
-        clonedPhaseSteps.add(phaseStep.clone());
+        PhaseStep phaseStepClone = phaseStep.clone();
+        if (phaseStepClone != null) {
+          clonedPhaseSteps.add(phaseStepClone);
+        }
       }
     }
     clonedWorkflowPhase.setPhaseSteps(clonedPhaseSteps);
