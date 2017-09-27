@@ -1,5 +1,7 @@
 package software.wings.yaml.directory;
 
+import software.wings.service.intfc.yaml.YamlGitSyncService;
+
 public class FileNode extends DirectoryNode {
   public FileNode() {
     super();
@@ -11,8 +13,8 @@ public class FileNode extends DirectoryNode {
     this.setType("file");
   }
 
-  public FileNode(String name, Class theClass, DirectoryPath directoryPath) {
-    super(name, theClass, directoryPath);
+  public FileNode(String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
+    super(name, theClass, directoryPath, yamlGitSyncService);
     this.setType("file");
   }
 }

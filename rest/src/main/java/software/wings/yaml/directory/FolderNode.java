@@ -1,5 +1,7 @@
 package software.wings.yaml.directory;
 
+import software.wings.service.intfc.yaml.YamlGitSyncService;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +22,15 @@ public class FolderNode extends DirectoryNode {
     this.setRestName("folder");
   }
 
-  public FolderNode(String name, Class theClass, DirectoryPath directoryPath) {
-    super(name, theClass, directoryPath);
+  public FolderNode(String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
+    super(name, theClass, directoryPath, yamlGitSyncService);
     this.setType("folder");
     this.setRestName("folders");
   }
 
-  public FolderNode(String name, Class theClass, DirectoryPath directoryPath, String appId) {
-    super(name, theClass, directoryPath);
+  public FolderNode(
+      String name, Class theClass, DirectoryPath directoryPath, String appId, YamlGitSyncService yamlGitSyncService) {
+    super(name, theClass, directoryPath, yamlGitSyncService);
     this.appId = appId;
     this.setType("folder");
     this.setRestName("folders");

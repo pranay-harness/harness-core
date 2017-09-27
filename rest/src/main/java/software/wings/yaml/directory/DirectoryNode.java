@@ -1,8 +1,11 @@
 package software.wings.yaml.directory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 
-public abstract class DirectoryNode {
+public class DirectoryNode {
   private String type;
   private String name;
   @JsonIgnore private Class theClass;
@@ -10,6 +13,7 @@ public abstract class DirectoryNode {
   private String shortClassName;
   private String restName;
   private DirectoryPath directoryPath;
+  private SyncMode syncMode;
 
   public DirectoryNode() {}
 
@@ -35,9 +39,37 @@ public abstract class DirectoryNode {
     }
   }
 
-  public DirectoryNode(String name, Class theClass, DirectoryPath directoryPath) {
+  public DirectoryNode(
+      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
     this(name, theClass);
     this.directoryPath = directoryPath;
+
+    determineSyncMode(yamlGitSyncService);
+  }
+
+  private void determineSyncMode(YamlGitSyncService yamlGitSyncService) {
+    // we need to check YamlGitSync by using the directoryPath as the EntityId for a folder, or the last part of the
+    // path for everything else
+    String path = this.directoryPath.getPath();
+    String[] pathParts = path.split("/");
+
+    if (pathParts == null || pathParts.length == 0) {
+      this.syncMode = SyncMode.NONE;
+    } else {
+      String entityId = pathParts[pathParts.length - 1];
+
+      if (type == "folder") {
+        entityId = this.directoryPath.getPath();
+      }
+
+      YamlGitSync ygs = yamlGitSyncService.get(entityId);
+
+      if (ygs != null) {
+        this.syncMode = ygs.getSyncMode();
+      } else {
+        this.syncMode = SyncMode.NONE;
+      }
+    }
   }
 
   public String getType() {
@@ -94,5 +126,13 @@ public abstract class DirectoryNode {
 
   public void setDirectoryPath(DirectoryPath directoryPath) {
     this.directoryPath = directoryPath;
+  }
+
+  public SyncMode getSyncMode() {
+    return syncMode;
+  }
+
+  public void setSyncMode(SyncMode syncMode) {
+    this.syncMode = syncMode;
   }
 }
