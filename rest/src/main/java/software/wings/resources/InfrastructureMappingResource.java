@@ -20,6 +20,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -212,7 +213,7 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
-      @QueryParam("region") String region, @QueryParam("vpcIds") List<String> vpcIds,
+      @QueryParam("region") String region, @QueryParam("vpcId") @NotNull List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
         infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
@@ -223,7 +224,7 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
-      @QueryParam("vpcIds") List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
+      @QueryParam("vpcId") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
   }
 
