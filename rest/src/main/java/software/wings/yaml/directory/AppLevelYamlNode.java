@@ -1,5 +1,7 @@
 package software.wings.yaml.directory;
 
+import software.wings.service.intfc.yaml.YamlGitSyncService;
+
 public class AppLevelYamlNode extends YamlNode {
   private String appId;
 
@@ -16,8 +18,9 @@ public class AppLevelYamlNode extends YamlNode {
     this.appId = appId;
   }
 
-  public AppLevelYamlNode(String uuid, String appId, String name, Class theClass, DirectoryPath directoryPath) {
-    super(uuid, name, theClass, directoryPath);
+  public AppLevelYamlNode(String uuid, String appId, String name, Class theClass, DirectoryPath directoryPath,
+      YamlGitSyncService yamlGitSyncService) {
+    super(uuid, name, theClass, directoryPath, yamlGitSyncService);
     this.appId = appId;
   }
 
