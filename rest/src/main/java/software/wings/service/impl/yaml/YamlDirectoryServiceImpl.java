@@ -86,7 +86,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // iterate over applications
     for (Application app : apps) {
       DirectoryPath appPath = directoryPath.clone();
-      FolderNode appFolder = new FolderNode(app.getName(), Application.class, appPath.add(app.getUuid()));
+      FolderNode appFolder =
+          new FolderNode(app.getName(), Application.class, appPath.add(app.getUuid()), app.getUuid());
       applicationsFolder.addChild(appFolder);
       appFolder.addChild(new YamlNode(app.getUuid(), app.getName() + ".yaml", Application.class, appPath));
 
@@ -99,7 +100,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private void doServices(FolderNode theFolder, Application app, DirectoryPath directoryPath) {
-    FolderNode servicesFolder = new FolderNode("Services", Service.class, directoryPath.add("services"));
+    FolderNode servicesFolder = new FolderNode("Services", Service.class, directoryPath.add("services"), app.getUuid());
     theFolder.addChild(servicesFolder);
 
     List<Service> services = serviceResourceService.findServicesByApp(app.getAppId());
@@ -108,12 +109,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over services
       for (Service service : services) {
         DirectoryPath servicePath = directoryPath.clone();
-        FolderNode serviceFolder = new FolderNode(service.getName(), Service.class, servicePath.add(service.getUuid()));
+        FolderNode serviceFolder =
+            new FolderNode(service.getName(), Service.class, servicePath.add(service.getUuid()), service.getAppId());
         servicesFolder.addChild(serviceFolder);
         serviceFolder.addChild(new AppLevelYamlNode(
             service.getUuid(), service.getAppId(), service.getName() + ".yaml", Service.class, servicePath));
         DirectoryPath serviceCommandPath = servicePath.clone().add("service_commands");
-        FolderNode serviceCommandsFolder = new FolderNode("Commands", ServiceCommand.class, serviceCommandPath);
+        FolderNode serviceCommandsFolder =
+            new FolderNode("Commands", ServiceCommand.class, serviceCommandPath, service.getAppId());
         serviceFolder.addChild(serviceCommandsFolder);
 
         // ------------------- SERVICE COMMANDS SECTION -----------------------
@@ -132,7 +135,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void doEnvironments(FolderNode theFolder, Application app, DirectoryPath directoryPath) {
     FolderNode environmentsFolder =
-        new FolderNode("Environments", Environment.class, directoryPath.add("environments"));
+        new FolderNode("Environments", Environment.class, directoryPath.add("environments"), app.getUuid());
     theFolder.addChild(environmentsFolder);
 
     List<Environment> environments = environmentService.getEnvByApp(app.getAppId());
@@ -148,7 +151,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private void doWorkflows(FolderNode theFolder, Application app, DirectoryPath directoryPath) {
-    FolderNode workflowsFolder = new FolderNode("Workflows", Workflow.class, directoryPath.add("workflows"));
+    FolderNode workflowsFolder =
+        new FolderNode("Workflows", Workflow.class, directoryPath.add("workflows"), app.getUuid());
     theFolder.addChild(workflowsFolder);
 
     PageRequest<Workflow> pageRequest =
@@ -166,7 +170,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private void doPipelines(FolderNode theFolder, Application app, DirectoryPath directoryPath) {
-    FolderNode pipelinesFolder = new FolderNode("Pipelines", Pipeline.class, directoryPath.add("pipelines"));
+    FolderNode pipelinesFolder =
+        new FolderNode("Pipelines", Pipeline.class, directoryPath.add("pipelines"), app.getUuid());
     theFolder.addChild(pipelinesFolder);
 
     PageRequest<Pipeline> pageRequest =
@@ -184,7 +189,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private void doTriggers(FolderNode theFolder, Application app, DirectoryPath directoryPath) {
-    FolderNode triggersFolder = new FolderNode("Triggers", Trigger.class, directoryPath.add("triggers"));
+    FolderNode triggersFolder = new FolderNode("Triggers", Trigger.class, directoryPath.add("triggers"), app.getUuid());
     theFolder.addChild(triggersFolder);
 
     PageRequest<ArtifactStream> pageRequest =

@@ -12,6 +12,8 @@ import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -125,6 +127,15 @@ public class YamlGitSyncResource {
     yamlGitSync.setAppId(appId);
     Type type = YamlGitSync.convertRestNameToType(restName);
     yamlGitSync.setType(type);
+
+    if (type == Type.FOLDER) {
+      try {
+        entityId = URLDecoder.decode(entityId, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+      }
+    }
+
     return new RestResponse<>(yamlGitSyncService.update(entityId, accountId, appId, yamlGitSync));
   }
 
