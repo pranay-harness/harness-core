@@ -95,7 +95,7 @@ public class EntityUpdateEvent extends Queuable {
   public boolean equals(Object o) {
     if (o == this)
       return true;
-    if (!(o instanceof YamlGitSync)) {
+    if (!(o instanceof EntityUpdateEvent)) {
       return false;
     }
     EntityUpdateEvent eue = (EntityUpdateEvent) o;

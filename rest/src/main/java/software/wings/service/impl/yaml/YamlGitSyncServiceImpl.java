@@ -29,13 +29,18 @@ import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.yaml.gitSync.GitSyncFile;
 import software.wings.yaml.gitSync.GitSyncHelper;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 
 public class YamlGitSyncServiceImpl implements YamlGitSyncService {
@@ -265,10 +270,93 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     entityUpdateEventQueue.send(entityUpdateEvent);
   }
 
-  public boolean handleEntityUpdateEvent(List<EntityUpdateEvent> entityUpdateEvents) {
-    return false;
+  public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
+    // TODO - needs implementation
+
+    // we need to sort the list of entity update events by the git repo they are synced to
+    // map key = git sync URL
+    Map<String, List<EntityUpdateEvent>> gitSyncUpdateMap = new HashMap<String, List<EntityUpdateEvent>>();
+
+    for (EntityUpdateEvent eue : entityUpdateListEvent.getEntityUpdateEvents()) {
+      YamlGitSync ygs = get(eue.getEntityId(), eue.getAccountId(), eue.getAppId());
+
+      if (ygs != null) {
+        String url = ygs.getUrl();
+
+        if (gitSyncUpdateMap.containsKey(url)) {
+          gitSyncUpdateMap.get(url).add(eue);
+        } else {
+          gitSyncUpdateMap.put(url, new ArrayList<EntityUpdateEvent>());
+        }
+      } else {
+        // not a problem (error) - just means this entity is NOT git synced
+      }
+    }
+
+    // now we can process each homogeneous list separately
+    for (Map.Entry<String, List<EntityUpdateEvent>> entry : gitSyncUpdateMap.entrySet()) {
+      System.out.println(entry.getKey() + ":" + entry.getValue());
+      handleHomogeneousEntityUpdateList(entry.getValue());
+    }
+
+    return true;
   }
 
+  public boolean handleHomogeneousEntityUpdateList(List<EntityUpdateEvent> entityUpdateEvents) {
+    logger.info("*************** handleHomogeneousEntityUpdateList: " + entityUpdateEvents);
+
+    if (entityUpdateEvents == null) {
+      logger.info("ERROR: entityUpdateEvents are null!");
+      return false;
+    }
+
+    if (entityUpdateEvents.size() == 0) {
+      logger.info("ERROR: entityUpdateEvents are empty!");
+      return false;
+    }
+
+    EntityUpdateEvent firstEue = entityUpdateEvents.get(0);
+    String entityId = firstEue.getEntityId();
+    YamlGitSync ygs = get(entityId, firstEue.getAccountId(), firstEue.getAppId());
+
+    if (ygs == null) {
+      // no git sync found for this entity
+      return false;
+    }
+
+    File sshKeyPath = GitSyncHelper.getSshKeyPath(ygs.getSshKey(), entityId);
+    GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
+    File repoPath = gsh.getTempRepoPath(entityId);
+    // clone the repo
+    gsh.clone(ygs.getUrl(), repoPath);
+
+    List<GitSyncFile> gitSyncFiles = new ArrayList<GitSyncFile>();
+
+    for (EntityUpdateEvent eue : entityUpdateEvents) {
+      YamlGitSync eueYgs = get(eue.getEntityId(), eue.getAccountId(), eue.getAppId());
+
+      if (eueYgs != null) {
+        gitSyncFiles.add(GitSyncFile.Builder.aGitSyncFile()
+                             .withName(eue.getName())
+                             .withYaml(eue.getYaml())
+                             .withSourceType(eue.getSourceType())
+                             .withClass(eue.getKlass())
+                             .withRootPath(eueYgs.getRootPath())
+                             .build());
+      } else {
+        // TODO - handle missing eueYgs
+      }
+    }
+
+    gsh.writeAddCommitPush(ygs, repoPath, gitSyncFiles);
+    gsh.cleanupTempFiles(sshKeyPath, repoPath);
+    gsh.shutdown();
+
+    return true;
+  }
+
+  // TODO - when done adding support for EntityUpdateListEvent, we shouldn't need this - a "singleton" EntityUpdateEvent
+  // will just be handled as a List with one item
   public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
     logger.info("*************** handleEntityUpdateEvent: " + entityUpdateEvent);
 
