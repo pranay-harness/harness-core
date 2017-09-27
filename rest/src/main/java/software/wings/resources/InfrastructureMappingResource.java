@@ -223,8 +223,8 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
-      @QueryParam("vpcId") String vpcId, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcId));
+      @QueryParam("vpcIds") List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
   }
 
   @GET
