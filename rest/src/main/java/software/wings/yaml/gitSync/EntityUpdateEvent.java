@@ -2,9 +2,6 @@ package software.wings.yaml.gitSync;
 
 import com.google.common.base.MoreObjects;
 
-import org.mongodb.morphia.annotations.Entity;
-import software.wings.core.queue.Queuable;
-
 import java.util.Objects;
 
 /**
@@ -12,8 +9,10 @@ import java.util.Objects;
  * @author bsollish 9/20/17
  *
  */
-@Entity(value = "entityUpdateQueue", noClassnameStored = true)
-public class EntityUpdateEvent extends Queuable {
+// TODO - we should no longer need to persist this as a Queuable
+//@Entity(value = "entityUpdateQueue", noClassnameStored = true)
+// public class EntityUpdateEvent extends Queuable {
+public class EntityUpdateEvent {
   private String entityId;
   private String name;
   private String accountId;

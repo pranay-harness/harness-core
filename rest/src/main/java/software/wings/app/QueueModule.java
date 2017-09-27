@@ -17,8 +17,6 @@ import software.wings.service.impl.instance.ContainerDeploymentEventListener;
 import software.wings.service.impl.instance.InstanceChangeEventListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
-import software.wings.yaml.gitSync.EntityUpdateEvent;
-import software.wings.yaml.gitSync.EntityUpdateEventListener;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
 import software.wings.yaml.gitSync.EntityUpdateListEventListener;
 
@@ -49,8 +47,12 @@ public class QueueModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
     bind(new TypeLiteral<Queue<ContainerDeploymentEvent>>() {})
         .toInstance(new MongoQueueImpl<>(ContainerDeploymentEvent.class, datastore, 60));
-    bind(new TypeLiteral<Queue<EntityUpdateEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(EntityUpdateEvent.class, datastore, 60));
+    /*
+    bind(new TypeLiteral<Queue<EntityUpdateEvent>>() {
+    }).toInstance(new MongoQueueImpl<>(EntityUpdateEvent.class, datastore, 60));
+    */
+    bind(new TypeLiteral<Queue<EntityUpdateListEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(EntityUpdateListEvent.class, datastore, 60));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
@@ -58,7 +60,10 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<InstanceChangeEvent>>() {}).to(InstanceChangeEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<ContainerDeploymentEvent>>() {})
         .to(ContainerDeploymentEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateEvent>>() {}).to(EntityUpdateEventListener.class);
+    /*
+    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateEvent>>() {
+    }).to(EntityUpdateEventListener.class);
+    */
     bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
   }
 }

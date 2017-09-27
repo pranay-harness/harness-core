@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,11 +16,13 @@ import java.util.Objects;
  */
 @Entity(value = "entityUpdateListQueue", noClassnameStored = true)
 public class EntityUpdateListEvent extends Queuable {
-  private List<EntityUpdateEvent> entityUpdateEvents;
+  private List<EntityUpdateEvent> entityUpdateEvents = new ArrayList<EntityUpdateEvent>();
   private String accountId;
 
   public void addEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
-    this.entityUpdateEvents.add(entityUpdateEvent);
+    if (entityUpdateEvent != null) {
+      this.entityUpdateEvents.add(entityUpdateEvent);
+    }
   }
 
   public List<EntityUpdateEvent> getEntityUpdateEvents() {

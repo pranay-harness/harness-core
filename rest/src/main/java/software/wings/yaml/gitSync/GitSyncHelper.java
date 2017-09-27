@@ -152,7 +152,7 @@ public class GitSyncHelper {
 
   public void writeAddCommitPush(YamlGitSync ygs, File repoPath, List<GitSyncFile> gitSyncFiles) {
     String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
-    StringBuilder commitMessage = new StringBuilder("(" + timestamp + ")");
+    StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync (" + timestamp + ")");
 
     if (gitSyncFiles == null) {
       return;

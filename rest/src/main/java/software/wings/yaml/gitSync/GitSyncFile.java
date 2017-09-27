@@ -102,7 +102,7 @@ public class GitSyncFile {
     }
 
     public GitSyncFile.Builder withSourceType(SourceType sourceType) {
-      this.name = name;
+      this.sourceType = sourceType;
       return this;
     }
 

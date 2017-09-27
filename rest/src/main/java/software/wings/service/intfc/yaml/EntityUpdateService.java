@@ -9,7 +9,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 /**
  * Entity Update Service.
@@ -34,4 +36,12 @@ public interface EntityUpdateService {
   public void triggerUpdate(ArtifactStream artfifactStream, SourceType sourceType);
 
   public void settingAttributeUpdate(SettingAttribute settingAttribute, SourceType sourceType);
+
+  //------------------------
+
+  public void queueEntityUpdateList(EntityUpdateListEvent entityUpdateListEvent);
+
+  public EntityUpdateEvent appListUpdate(Application app, SourceType sourceType);
+
+  public EntityUpdateEvent serviceListUpdate(Service service, SourceType sourceType);
 }

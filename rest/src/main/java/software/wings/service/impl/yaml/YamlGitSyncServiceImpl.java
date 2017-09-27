@@ -15,7 +15,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -55,7 +54,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
+  //@Inject private Queue<EntityUpdateEvent> entityUpdateEventQueue;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -258,16 +257,19 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         // nothing to do
     }
 
+    // TODO - this needs to be replaced to use the EntityUpdateListEvent
+    /*
     // queue an entity update event
     EntityUpdateEvent entityUpdateEvent = EntityUpdateEvent.Builder.anEntityUpdateEvent()
-                                              .withEntityId(ygs.getEntityId())
-                                              .withName(name)
-                                              .withAccountId(accountId)
-                                              .withAppId(appId)
-                                              .withClass(klass)
-                                              .withSourceType(sourceType)
-                                              .build();
+        .withEntityId(ygs.getEntityId())
+        .withName(name)
+        .withAccountId(accountId)
+        .withAppId(appId)
+        .withClass(klass)
+        .withSourceType(sourceType)
+        .build();
     entityUpdateEventQueue.send(entityUpdateEvent);
+    */
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
@@ -277,7 +279,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     // map key = git sync URL
     Map<String, List<EntityUpdateEvent>> gitSyncUpdateMap = new HashMap<String, List<EntityUpdateEvent>>();
 
-    for (EntityUpdateEvent eue : entityUpdateListEvent.getEntityUpdateEvents()) {
+    List<EntityUpdateEvent> entityUpdateEvents = entityUpdateListEvent.getEntityUpdateEvents();
+
+    for (EntityUpdateEvent eue : entityUpdateEvents) {
       YamlGitSync ygs = get(eue.getEntityId(), eue.getAccountId(), eue.getAppId());
 
       if (ygs != null) {
@@ -286,7 +290,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
         if (gitSyncUpdateMap.containsKey(url)) {
           gitSyncUpdateMap.get(url).add(eue);
         } else {
-          gitSyncUpdateMap.put(url, new ArrayList<EntityUpdateEvent>());
+          List<EntityUpdateEvent> tempList = new ArrayList<EntityUpdateEvent>();
+          tempList.add(eue);
+          gitSyncUpdateMap.put(url, tempList);
         }
       } else {
         // not a problem (error) - just means this entity is NOT git synced

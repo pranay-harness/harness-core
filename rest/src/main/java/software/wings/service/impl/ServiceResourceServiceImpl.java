@@ -80,6 +80,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -354,19 +355,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                      service.getUuid(), savedService.getName(), service.getName().trim()));
     }
 
+    //-------------------
+    /*
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(service.getAppId());
     entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
 
-    /*
-    // we could try have these add update calls happen in a separate thread with a sufficient sleep,
-    // but that seems less desirable than catching the failure and throwing an Exception so the second (failing) aevent
-    gets retried try { Thread.sleep(20000); } catch (InterruptedException e) { e.printStackTrace();
-    }
-    */
-
     // see if we need to perform any Git Sync operations for the service
     entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
+    */
+
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(service.getAppId());
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the service
+    eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }

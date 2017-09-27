@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.utils.Validator;
 
@@ -13,14 +12,16 @@ import software.wings.utils.Validator;
  * @author bsollish on 09/20/17
  *
  */
-public class EntityUpdateEventListener extends AbstractQueueListener<EntityUpdateEvent> {
+// TODO - we should no longer need this class
+// public class EntityUpdateEventListener extends AbstractQueueListener<EntityUpdateEvent> {
+public class EntityUpdateEventListener {
   private static final Logger logger = LoggerFactory.getLogger(EntityUpdateEventListener.class);
   @Inject private YamlGitSyncService yamlGitSyncService;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
    */
-  @Override
+  //@Override
   protected void onMessage(EntityUpdateEvent entityUpdateEvent) throws Exception {
     try {
       Validator.notNullCheck("EntityUpdateEvent", entityUpdateEvent);
