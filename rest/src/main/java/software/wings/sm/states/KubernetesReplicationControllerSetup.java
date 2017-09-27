@@ -85,7 +85,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -395,21 +395,22 @@ public class KubernetesReplicationControllerSetup extends State {
       // Set service variables as environment variables
       for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
         List<EnvVar> envVars = container.getEnv();
-        Map<String, String> envVarsMap = new HashMap<>();
-        envVarsMap.putAll(serviceVariables);
-        List<EnvVar> mergedEnvVars =
-            envVarsMap.entrySet()
-                .stream()
-                .map(entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build())
-                .collect(Collectors.toList());
+        Map<String, EnvVar> envVarsMap = new HashMap<>();
         if (envVars != null) {
-          mergedEnvVars.addAll(envVars);
+          for (EnvVar envVar : envVars) {
+            envVarsMap.put(envVar.getName(), envVar);
+          }
         }
-        container.setEnv(mergedEnvVars);
+        if (serviceVariables != null) {
+          for (String name : serviceVariables.keySet()) {
+            envVarsMap.put(name, new EnvVarBuilder().withName(name).withValue(serviceVariables.get(name)).build());
+          }
+        }
+        container.setEnv(new ArrayList<>(envVarsMap.values()));
       }
-
       return rc;
-    } catch (IOException e) {
+
+    } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
