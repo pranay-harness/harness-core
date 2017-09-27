@@ -27,6 +27,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class GitSyncHelper {
@@ -149,6 +150,67 @@ public class GitSyncHelper {
     return null;
   }
 
+  public void writeAddCommitPush(YamlGitSync ygs, File repoPath, List<GitSyncFile> gitSyncFiles) {
+    String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
+    StringBuilder commitMessage = new StringBuilder("(" + timestamp + ")");
+
+    if (gitSyncFiles == null) {
+      return;
+    }
+
+    if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
+      for (GitSyncFile gsf : gitSyncFiles) {
+        String name = gsf.getName();
+        String yaml = gsf.getYaml();
+        SourceType sourceType = gsf.getSourceType();
+        Class klass = gsf.getKlass();
+        String rootPath = gsf.getRootPath();
+
+        switch (klass.getCanonicalName()) {
+          // TODO - we may need this (in some form)
+        }
+
+        String fileName = name + YAML_EXTENSION;
+
+        // we need a rootPath WITHOUT leading or trailing slashes
+        rootPath = cleanRootPath(rootPath);
+
+        File newFile = new File(repoPath + "/" + rootPath, fileName);
+        writeToRepoFile(newFile, yaml);
+
+        try {
+          DirCache dirCache = null;
+          if (rootPath != null && !rootPath.isEmpty()) {
+            // add new/changed files within the rootPath
+            dirCache = this.git.add().addFilepattern(rootPath).call();
+          } else {
+            // add file by fileName
+            dirCache = this.git.add().addFilepattern(fileName).call();
+          }
+
+        } catch (GitAPIException e) {
+          e.printStackTrace();
+        }
+
+        commitMessage.append("\n" + sourceType.name() + ": " + klass.getCanonicalName());
+      }
+    }
+
+    // commit
+    RevCommit rev = this.commit(COMMIT_AUTHOR, COMMIT_EMAIL, commitMessage.toString());
+
+    // push the change
+    Iterable<PushResult> pushResults = this.push(DEFAULT_COMMIT_BRANCH);
+
+    logger.info("*************** rev.getFullMessage(): " + rev.getFullMessage());
+
+    for (PushResult pr : pushResults) {
+      logger.info("*************** pr.getMessages(): " + pr.getMessages());
+    }
+  }
+
+  // TODO - when done adding support for EntityUpdateListEvent, we shouldn't need this - a "singleton" will just be
+  // handled as a gitSyncFiles list with one item
   public void writeAddCommitPush(
       String name, String content, YamlGitSync ygs, File repoPath, SourceType sourceType, Class klass) {
     String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());

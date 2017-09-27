@@ -19,6 +19,8 @@ import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEventListener;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.yaml.gitSync.EntityUpdateListEventListener;
 
 /**
  * Created by peeyushaggarwal on 5/25/16.
@@ -57,5 +59,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<ContainerDeploymentEvent>>() {})
         .to(ContainerDeploymentEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<EntityUpdateEvent>>() {}).to(EntityUpdateEventListener.class);
+    bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
   }
 }

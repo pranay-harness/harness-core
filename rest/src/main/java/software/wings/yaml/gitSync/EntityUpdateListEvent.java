@@ -13,10 +13,14 @@ import java.util.Objects;
  * @author bsollish 9/26/17
  *
  */
-@Entity(value = "entityUpdateQueue", noClassnameStored = true)
+@Entity(value = "entityUpdateListQueue", noClassnameStored = true)
 public class EntityUpdateListEvent extends Queuable {
   private List<EntityUpdateEvent> entityUpdateEvents;
   private String accountId;
+
+  public void addEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
+    this.entityUpdateEvents.add(entityUpdateEvent);
+  }
 
   public List<EntityUpdateEvent> getEntityUpdateEvents() {
     return entityUpdateEvents;
@@ -38,7 +42,7 @@ public class EntityUpdateListEvent extends Queuable {
   public boolean equals(Object o) {
     if (o == this)
       return true;
-    if (!(o instanceof YamlGitSync)) {
+    if (!(o instanceof EntityUpdateListEvent)) {
       return false;
     }
     EntityUpdateListEvent eule = (EntityUpdateListEvent) o;
