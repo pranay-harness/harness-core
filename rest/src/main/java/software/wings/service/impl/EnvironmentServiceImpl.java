@@ -56,6 +56,8 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -178,12 +180,18 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
             .build());
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(environment.getAppId());
-    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
 
     // see if we need to perform any Git Sync operations for the environment
-    entityUpdateService.environmentUpdate(environment, SourceType.ENTITY_CREATE);
+    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return environment;
   }
@@ -199,12 +207,18 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(environment.getAppId());
-    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
 
     // see if we need to perform any Git Sync operations for the environment
-    entityUpdateService.environmentUpdate(environment, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
   }

@@ -91,6 +91,7 @@ import software.wings.utils.KryoUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -345,8 +346,14 @@ public class PipelineServiceImpl implements PipelineService {
                                 .equal(pipeline.getUuid()),
         ops);
 
-    // see if we need to perform any Git Sync operations
-    entityUpdateService.pipelineUpdate(pipeline, SourceType.ENTITY_UPDATE);
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the pipeline
+    eule.addEntityUpdateEvent(entityUpdateService.pipelineListUpdate(pipeline, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;

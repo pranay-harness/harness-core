@@ -134,6 +134,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -530,8 +531,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .equal(workflow.getUuid()),
         ops);
 
-    // see if we need to perform any Git Sync operations
-    entityUpdateService.workflowUpdate(workflow, SourceType.ENTITY_UPDATE);
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the workflow
+    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
@@ -1284,8 +1291,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     wingsPersistence.update(
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
 
-    // see if we need to perform any Git Sync operations
-    entityUpdateService.workflowUpdate(workflow, SourceType.ENTITY_UPDATE);
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the workflow
+    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return readWorkflow(appId, workflowId, defaultVersion);
   }

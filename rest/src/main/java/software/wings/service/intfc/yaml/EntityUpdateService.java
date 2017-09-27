@@ -19,29 +19,23 @@ import software.wings.yaml.gitSync.EntityUpdateListEvent;
  * @author bsollish
  */
 public interface EntityUpdateService {
-  public void setupUpdate(Account account, SourceType sourceType);
-
-  public void appUpdate(Application app, SourceType sourceType);
-
-  public void serviceUpdate(Service service, SourceType sourceType);
-
-  public void serviceCommandUpdate(ServiceCommand serviceCommand, SourceType sourceType);
-
-  public void environmentUpdate(Environment environment, SourceType sourceType);
-
-  public void workflowUpdate(Workflow workflow, SourceType sourceType);
-
-  public void pipelineUpdate(Pipeline pipeline, SourceType sourceType);
-
-  public void triggerUpdate(ArtifactStream artfifactStream, SourceType sourceType);
-
-  public void settingAttributeUpdate(SettingAttribute settingAttribute, SourceType sourceType);
-
-  //------------------------
-
   public void queueEntityUpdateList(EntityUpdateListEvent entityUpdateListEvent);
+
+  public EntityUpdateEvent setupListUpdate(Account account, SourceType sourceType);
 
   public EntityUpdateEvent appListUpdate(Application app, SourceType sourceType);
 
   public EntityUpdateEvent serviceListUpdate(Service service, SourceType sourceType);
+
+  public EntityUpdateEvent serviceCommandListUpdate(ServiceCommand serviceCommand, SourceType sourceType);
+
+  public EntityUpdateEvent environmentListUpdate(Environment environment, SourceType sourceType);
+
+  public EntityUpdateEvent workflowListUpdate(Workflow workflow, SourceType sourceType);
+
+  public EntityUpdateEvent pipelineListUpdate(Pipeline pipeline, SourceType sourceType);
+
+  public EntityUpdateEvent triggerListUpdate(ArtifactStream artifactStream, SourceType sourceType);
+
+  public EntityUpdateEvent settingAttributeListUpdate(SettingAttribute settingAttribute, SourceType sourceType);
 }

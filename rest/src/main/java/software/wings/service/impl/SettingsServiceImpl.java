@@ -38,6 +38,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,12 +80,19 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(settingAttribute.getAccountId());
-    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
-    // see if we need to perform any Git Sync operations for the settingAttribute
-    entityUpdateService.settingAttributeUpdate(settingAttribute, SourceType.ENTITY_CREATE);
+    // see if we need to perform any Git Sync operations for the setting attribute
+    eule.addEntityUpdateEvent(
+        entityUpdateService.settingAttributeListUpdate(settingAttribute, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
@@ -136,12 +144,19 @@ public class SettingsServiceImpl implements SettingsService {
     }
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
 
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(settingAttribute.getAccountId());
-    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
+    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
-    // see if we need to perform any Git Sync operations for the settingAttribute
-    entityUpdateService.settingAttributeUpdate(settingAttribute, SourceType.ENTITY_UPDATE);
+    // see if we need to perform any Git Sync operations for the setting attribute
+    eule.addEntityUpdateEvent(
+        entityUpdateService.settingAttributeListUpdate(settingAttribute, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
   }
