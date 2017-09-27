@@ -19,7 +19,8 @@ public interface NewRelicRestClient {
    *
    * @return the call
    */
-  @GET("v2/applications.json") Call<NewRelicApplicationsResponse> listAllApplications();
+  @GET("v2/applications.json")
+  Call<NewRelicApplicationsResponse> listAllApplications(@Query("page") int durantionInMinutes);
 
   @GET("v2/applications/{applicationId}/instances.json")
   Call<NewRelicApplicationInstancesResponse> listAppInstances(@Path("applicationId") long newRelicAppId);
