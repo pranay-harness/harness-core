@@ -37,6 +37,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,10 +81,10 @@ public class SettingsServiceImpl implements SettingsService {
 
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(settingAttribute.getAccountId());
-    entityUpdateService.setupUpdate(account);
+    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the settingAttribute
-    entityUpdateService.settingAttributeUpdate(settingAttribute);
+    entityUpdateService.settingAttributeUpdate(settingAttribute, SourceType.ENTITY_CREATE);
 
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
@@ -137,10 +138,10 @@ public class SettingsServiceImpl implements SettingsService {
 
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(settingAttribute.getAccountId());
-    entityUpdateService.setupUpdate(account);
+    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the settingAttribute
-    entityUpdateService.settingAttributeUpdate(settingAttribute);
+    entityUpdateService.settingAttributeUpdate(settingAttribute, SourceType.ENTITY_UPDATE);
 
     return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
   }

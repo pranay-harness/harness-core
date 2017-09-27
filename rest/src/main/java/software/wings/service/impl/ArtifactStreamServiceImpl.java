@@ -80,6 +80,7 @@ import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -180,7 +181,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     // see if we need to perform any Git Sync operations
-    entityUpdateService.triggerUpdate(artifactStream);
+    entityUpdateService.triggerUpdate(artifactStream, SourceType.ENTITY_UPDATE);
 
     return artifactStream;
   }

@@ -15,6 +15,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -63,7 +64,7 @@ public class CommandServiceImpl implements CommandService {
     String serviceCommandId = command.getOriginEntityId();
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
 
     return wingsPersistence.saveAndGet(Command.class, command);
   }
@@ -76,9 +77,9 @@ public class CommandServiceImpl implements CommandService {
     ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
 
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
 
-    entityUpdateService.serviceCommandUpdate(serviceCommand);
+    entityUpdateService.serviceCommandUpdate(serviceCommand, SourceType.ENTITY_CREATE);
     //-----------------
 
     return wingsPersistence.saveAndGet(Command.class, command);

@@ -79,6 +79,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -180,10 +181,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(service.getAppId());
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the service
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_CREATE);
 
     return savedService;
   }
@@ -355,10 +356,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(service.getAppId());
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
+
+    /*
+    // we could try have these add update calls happen in a separate thread with a sufficient sleep,
+    // but that seems less desirable than catching the failure and throwing an Exception so the second (failing) aevent
+    gets retried try { Thread.sleep(20000); } catch (InterruptedException e) { e.printStackTrace();
+    }
+    */
 
     // see if we need to perform any Git Sync operations for the service
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
 
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }

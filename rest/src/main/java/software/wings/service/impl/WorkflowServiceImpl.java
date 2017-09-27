@@ -133,6 +133,7 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -530,7 +531,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ops);
 
     // see if we need to perform any Git Sync operations
-    entityUpdateService.workflowUpdate(workflow);
+    entityUpdateService.workflowUpdate(workflow, SourceType.ENTITY_UPDATE);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
@@ -1284,7 +1285,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
 
     // see if we need to perform any Git Sync operations
-    entityUpdateService.workflowUpdate(workflow);
+    entityUpdateService.workflowUpdate(workflow, SourceType.ENTITY_UPDATE);
 
     return readWorkflow(appId, workflowId, defaultVersion);
   }

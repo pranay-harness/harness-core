@@ -114,6 +114,7 @@ public class GitSyncHelper {
       try {
         Status status = git.status().call();
 
+        logger.info("***********************************");
         logger.info("Added: " + status.getAdded());
         logger.info("Changed: " + status.getChanged());
         logger.info("Conflicting: " + status.getConflicting());
@@ -124,6 +125,10 @@ public class GitSyncHelper {
         logger.info("Removed: " + status.getRemoved());
         logger.info("Untracked: " + status.getUntracked());
         logger.info("UntrackedFolders: " + status.getUntrackedFolders());
+        logger.info("HasUncommittedChanges: " + status.hasUncommittedChanges());
+        logger.info("UncommittedChanges: " + status.getUncommittedChanges());
+        logger.info("IsClean: " + status.isClean());
+        logger.info("***********************************");
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -181,9 +186,22 @@ public class GitSyncHelper {
 
       // push the change
       Iterable<PushResult> pushResults = this.push(DEFAULT_COMMIT_BRANCH);
+
+      logger.info("*************** rev.getFullMessage(): " + rev.getFullMessage());
+
+      for (PushResult pr : pushResults) {
+        logger.info("*************** pr.getMessages(): " + pr.getMessages());
+      }
     }
+  }
+
+  public void shutdown() {
+    spitOutStatus();
 
     // close down git
+
+    logger.info("*************** this.git: " + this.git);
+
     this.git.close();
   }
 

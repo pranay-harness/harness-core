@@ -31,6 +31,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -82,7 +83,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     // see if we need to perform any Git Sync operations
     Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
 
     return Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
@@ -116,7 +117,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     // see if we need to perform any Git Sync operations
     Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-    entityUpdateService.serviceUpdate(service);
+    entityUpdateService.serviceUpdate(service, SourceType.ENTITY_UPDATE);
 
     return get(serviceVariable.getAppId(), serviceVariable.getUuid());
   }

@@ -61,6 +61,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,10 +132,10 @@ public class AppServiceImpl implements AppService {
 
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(app.getAccountId());
-    entityUpdateService.setupUpdate(account);
+    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the app
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_CREATE);
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
@@ -301,10 +302,10 @@ public class AppServiceImpl implements AppService {
 
     // see if we need to perform any Git Sync operations for the account (setup)
     Account account = accountService.get(app.getAccountId());
-    entityUpdateService.setupUpdate(account);
+    entityUpdateService.setupUpdate(account, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the app
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
 
     return wingsPersistence.get(Application.class, app.getUuid());
   }

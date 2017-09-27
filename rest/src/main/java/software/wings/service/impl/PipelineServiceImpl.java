@@ -90,6 +90,7 @@ import software.wings.stencils.Stencil;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -345,7 +346,7 @@ public class PipelineServiceImpl implements PipelineService {
         ops);
 
     // see if we need to perform any Git Sync operations
-    entityUpdateService.pipelineUpdate(pipeline);
+    entityUpdateService.pipelineUpdate(pipeline, SourceType.ENTITY_UPDATE);
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;

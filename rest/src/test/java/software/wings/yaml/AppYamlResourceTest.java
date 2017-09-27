@@ -8,11 +8,9 @@ import static software.wings.beans.Service.Builder.aService;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

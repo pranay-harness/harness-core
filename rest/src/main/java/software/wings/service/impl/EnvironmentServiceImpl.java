@@ -55,7 +55,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
-
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -180,10 +180,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(environment.getAppId());
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the environment
-    entityUpdateService.environmentUpdate(environment);
+    entityUpdateService.environmentUpdate(environment, SourceType.ENTITY_CREATE);
 
     return environment;
   }
@@ -201,10 +201,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     // see if we need to perform any Git Sync operations for the app
     Application app = appService.get(environment.getAppId());
-    entityUpdateService.appUpdate(app);
+    entityUpdateService.appUpdate(app, SourceType.ENTITY_UPDATE);
 
     // see if we need to perform any Git Sync operations for the environment
-    entityUpdateService.environmentUpdate(environment);
+    entityUpdateService.environmentUpdate(environment, SourceType.ENTITY_UPDATE);
 
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
   }
