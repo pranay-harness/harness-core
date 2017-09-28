@@ -229,6 +229,24 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("compute-providers/{computeProviderId}/tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listTags(appId, computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/auto-scaling-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listAutoScalingGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listAutoScalingGroups(appId, computeProviderId, region));
+  }
+
+  @GET
   @Path("{infraMappingId}/iam-roles")
   @Timed
   @ExceptionMetered

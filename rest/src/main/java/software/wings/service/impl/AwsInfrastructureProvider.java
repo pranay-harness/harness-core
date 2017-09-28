@@ -319,4 +319,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     logger.error("Unhandled aws exception");
     throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
   }
+
+  public List<String> listTags(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listTags(awsConfig, region);
+  }
+
+  public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listAutoScalingGroups(awsConfig, region);
+  }
 }
