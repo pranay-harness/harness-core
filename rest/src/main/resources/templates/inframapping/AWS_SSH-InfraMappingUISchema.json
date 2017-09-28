@@ -4,6 +4,9 @@
   "deploymentType": { "ui:widget": "hidden" },
   "restrictionType": { "ui:widget": "hidden" },
   "restrictionExpression": { "ui:widget": "hidden" },
+  "awsInstanceFilter":{
+    "ui:order":["vpcIds","subnetIds","securityGroupIds"]
+  },
   "ui:order": [  "deploymentType","computeProviderSettingId", "region", "hostConnectionAttrs", "usePrivateDns",
-    "infraMappingType","computeProviderType", "provisionInstances", "loadBalancerId", "awsInstanceFilter", "autoScalingGroupName"]
+    "infraMappingType","computeProviderType", "loadBalancerId", "provisionInstances", "awsInstanceFilter", "autoScalingGroupName"]
 }
