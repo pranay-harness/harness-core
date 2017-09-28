@@ -83,6 +83,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -455,7 +456,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listTags(String appId, String computeProviderId, String region) {
+  public Set<String> listTags(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
@@ -464,7 +465,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listTags(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return Collections.emptySet();
   }
 
   @Override
