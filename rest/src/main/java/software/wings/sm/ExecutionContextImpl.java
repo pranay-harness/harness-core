@@ -403,8 +403,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
     List<ServiceVariable> serviceVariables =
         serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid());
-    serviceVariables.forEach(
-        serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+    serviceVariables.forEach(serviceVariable
+        -> variables.put(
+            renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));
 
     return variables;
   }

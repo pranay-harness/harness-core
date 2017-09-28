@@ -5,7 +5,6 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -55,8 +54,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -66,10 +63,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class AnalysisServiceImpl implements AnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
-  private static int NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS =
-      StringUtils.isBlank(System.getProperty("clustering.threads"))
-      ? 10
-      : Integer.parseInt(System.getProperty("clustering.threads"));
   private final Random random = new Random();
 
   public static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
@@ -80,9 +73,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected MainConfiguration configuration;
   @Inject protected DelegateServiceImpl delegateService;
-
-  private ExecutorService firstLevelClusteringService =
-      Executors.newFixedThreadPool(NUM_OF_FIRSTL_LEVEL_CLUSTERING_THREADS, r -> new Thread(r, "clustering_thread"));
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -345,25 +335,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                                .fetch(new FindOptions().limit(1));
 
     return iteratorAnalysisRecord.hasNext() ? iteratorAnalysisRecord.next() : null;
-  }
-
-  @Override
-  public int getLastAnalysisMinute(String stateExecutionId, String applicationId, StateType stateType) {
-    Iterator<LogMLAnalysisRecord> iteratorAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                                               .field("stateExecutionId")
-                                                               .equal(stateExecutionId)
-                                                               .field("applicationId")
-                                                               .equal(applicationId)
-                                                               .field("stateType")
-                                                               .equal(stateType)
-                                                               .order("-logCollectionMinute")
-                                                               .fetch(new FindOptions().limit(1));
-
-    if (!iteratorAnalysisRecord.hasNext()) {
-      return -1;
-    }
-
-    return iteratorAnalysisRecord.next().getLogCollectionMinute();
   }
 
   @Override
