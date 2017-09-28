@@ -24,7 +24,8 @@ public interface AwsClusterService {
    * Resize cluster.
    */
   List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, int previousCount, int desiredSize, ExecutionLogCallback executionLogCallback);
+      String serviceName, int previousCount, int desiredSize, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback);
 
   /**
    * Delete service.

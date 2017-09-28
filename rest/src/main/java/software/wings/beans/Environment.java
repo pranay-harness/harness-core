@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.Environment.Builder.*;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -31,6 +31,7 @@ public class Environment extends Base {
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
+  @Transient private List<Service> servicesWithOverrides;
 
   /**
    * Gets name.
@@ -138,6 +139,23 @@ public class Environment extends Base {
    */
   public void setSetup(Setup setup) {
     this.setup = setup;
+  }
+
+  /**
+   * Return services that have overrides
+   *
+   * @return
+   */
+  public List<Service> getServicesWithOverrides() {
+    return servicesWithOverrides;
+  }
+
+  /***
+   *
+   * @param servicesWithOverrides
+   */
+  public void setServicesWithOverrides(List<Service> servicesWithOverrides) {
+    this.servicesWithOverrides = servicesWithOverrides;
   }
 
   public Environment clone() {

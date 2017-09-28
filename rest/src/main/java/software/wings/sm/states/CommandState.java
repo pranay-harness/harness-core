@@ -82,7 +82,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
@@ -236,11 +235,7 @@ public class CommandState extends State {
       Application application = appService.get(serviceInstance.getAppId());
 
       Map<String, String> serviceVariables = context.getServiceVariables();
-      if (serviceVariables != null) {
-        for (Entry<String, String> entry : serviceVariables.entrySet()) {
-          entry.setValue(context.renderExpression(entry.getValue()));
-        }
-      }
+
       Activity.Builder activityBuilder =
           anActivity()
               .withAppId(application.getUuid())

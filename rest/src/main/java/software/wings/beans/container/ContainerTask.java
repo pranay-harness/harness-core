@@ -19,6 +19,13 @@ import software.wings.beans.EmbeddedUser;
                            , @Field("deploymentType") }, options = @IndexOptions(unique = true)))
 @Entity("containerTasks")
 public abstract class ContainerTask extends Base {
+  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
+  public static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
+  public static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
+
+  static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
+  static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
+  static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
   @NotEmpty private String deploymentType;
   @SchemaIgnore @NotEmpty private String serviceId;
 

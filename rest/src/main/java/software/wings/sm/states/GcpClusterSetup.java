@@ -72,8 +72,8 @@ public class GcpClusterSetup extends State {
     if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
-
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
+    SettingAttribute computeProviderSetting = settingsService.get(gcpInfraMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
     if (StringUtils.isEmpty(zone)) {
@@ -89,7 +89,7 @@ public class GcpClusterSetup extends State {
         + KubernetesConvention.getKubernetesServiceName(
               KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
     String zoneCluster = zone + "/" + clusterName;
-    gkeClusterService.createCluster(computeProviderSetting, zoneCluster,
+    gkeClusterService.createCluster(computeProviderSetting, zoneCluster, gcpInfraMapping.getNamespace(),
         ImmutableMap.<String, String>builder()
             .put("nodeCount", Integer.toString(nodeCount))
             .put("machineType", machineType)

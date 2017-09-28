@@ -538,10 +538,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
     }
+    ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
     if (advanced) {
-      return containerTask.convertToAdvanced();
+      return persistedContainerTask.convertToAdvanced();
     }
-    return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
+    return persistedContainerTask;
   }
 
   @Override

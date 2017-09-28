@@ -48,12 +48,13 @@ public class AwsClusterServiceImpl implements AwsClusterService {
 
   @Override
   public List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, int previousCount, int desiredSize, ExecutionLogCallback executionLogCallback) {
+      String serviceName, int previousCount, int desiredSize, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
                                               serviceName, clusterName, previousCount, desiredSize),
         LogLevel.INFO);
-    List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(
-        region, cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
+    List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(region, cloudProviderSetting, clusterName,
+        serviceName, desiredSize, serviceSteadyStateTimeout, executionLogCallback);
     executionLogCallback.saveExecutionLog(
         String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInfos;

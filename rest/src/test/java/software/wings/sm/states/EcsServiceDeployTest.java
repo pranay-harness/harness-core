@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -17,6 +18,7 @@ import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrast
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
@@ -61,7 +63,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.Log;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -69,14 +70,12 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.common.VariableProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -87,7 +86,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,9 +102,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private AwsClusterService awsClusterService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
-  @Mock private VariableProcessor variableProcessor;
   @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private LogService logService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -129,6 +125,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(ECS_SERVICE_NAME)
+                                 .withMaxInstances(10)
                                  .withDeploymentType(DeploymentType.ECS)
                                  .withInfraMappingId(INFRA_MAPPING_ID)
                                  .withResizeStrategy(RESIZE_NEW_FIRST)
@@ -168,7 +165,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(ecsServiceDeploy).set("infrastructureMappingService", infrastructureMappingService);
     on(ecsServiceDeploy).set("awsClusterService", awsClusterService);
     on(ecsServiceDeploy).set("serviceTemplateService", serviceTemplateService);
-    on(ecsServiceDeploy).set("logService", logService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withRegion(Regions.US_EAST_1.getName())
@@ -183,15 +179,16 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(Arrays.asList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
-    when(logService.save(any(Log.class))).thenReturn(null);
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
   }
 
   @Test
   public void shouldExecute() {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("serviceTemplateService", serviceTemplateService);
 
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);
@@ -211,13 +208,13 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void shouldExecuteThrowInvalidRequest() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      on(context).set("variableProcessor", variableProcessor);
+      on(context).set("serviceTemplateService", serviceTemplateService);
       ecsServiceDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, service name:");
     }
   }
 
@@ -259,7 +256,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                                    .withPreviousCount(1)
                                                    .withDesiredCount(0)
                                                    .build()))
-            .withResizeStrategy(RESIZE_NEW_FIRST)
             .withDownsize(false)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);

@@ -34,6 +34,7 @@ import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
@@ -66,6 +67,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by anubhaw on 12/28/16.
@@ -855,11 +857,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public String deployService(String region, SettingAttribute connectorConfig, String serviceDefinition) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
-    CreateServiceRequest createServiceRequest = null;
+    CreateServiceRequest createServiceRequest;
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult = awsHelperService.createService(region, awsConfig, createServiceRequest);
@@ -918,17 +920,28 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   @Override
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig, String clusterName,
-      String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback) {
+      String serviceName, Integer desiredCount, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
+    List<ServiceEvent> events = updateServiceResult.getService().getEvents();
+
+    String latestExcludedEventId = null;
+    if (events.size() > 0) {
+      latestExcludedEventId = events.get(0).getId();
+    }
+
     waitForServiceUpdateToComplete(
         updateServiceResult, region, awsConfig, clusterName, serviceName, desiredCount, executionLogCallback);
     executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
     waitForTasksToBeInRunningStateButDontThrowException(
         region, awsConfig, clusterName, serviceName, executionLogCallback);
+
+    waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
+        serviceSteadyStateTimeout, executionLogCallback);
 
     List<String> taskArns =
         awsHelperService
@@ -993,6 +1006,45 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     });
     logger.info("Docker container ids = " + containerInfos);
     return containerInfos;
+  }
+
+  private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
+      String clusterName, String serviceName, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback) {
+    try {
+      final String[] excludedEventId = {latestExcludedEventId};
+
+      int retryCount = (serviceSteadyStateTimeout * 60 * 1000) / SLEEP_INTERVAL;
+      do {
+        executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
+        Service service = awsHelperService
+                              .describeServices(region, awsConfig,
+                                  new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                              .getServices()
+                              .get(0);
+        List<ServiceEvent> events = service.getEvents();
+        int excludedEndIndex = IntStream.range(0, events.size())
+                                   .filter(idx -> events.get(idx).getId().equals(excludedEventId[0]))
+                                   .findFirst()
+                                   .orElse(0);
+
+        for (int i = excludedEndIndex - 1; i >= 0; i--) {
+          executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
+          if (events.get(i).getMessage().endsWith("has reached a steady state.")) {
+            executionLogCallback.saveExecutionLog("Service reached in steady state", LogLevel.INFO);
+            return;
+          }
+        }
+        excludedEventId[0] = events.get(0).getId();
+
+        Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      } while (retryCount-- > 0);
+    } catch (Exception ex) {
+      logger.error("Wait for service steady state failed with exception ", ex);
+      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage());
+    }
+    executionLogCallback.saveExecutionLog(String.format("Service failed to reach to steady state"), LogLevel.ERROR);
+    throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach to steady state");
   }
 
   private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,

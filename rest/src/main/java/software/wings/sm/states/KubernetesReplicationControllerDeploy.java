@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.utils.KubernetesConvention.getReplicationControllerNamePrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
@@ -8,10 +9,10 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ContainerServiceElement;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
@@ -29,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /**
  * Created by brett on 3/1/17
@@ -59,16 +59,10 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
-    if (StringUtils.isNotEmpty(serviceName)) {
-      KubernetesConfig kubernetesConfig;
-      if (settingAttribute.getValue() instanceof GcpConfig) {
-        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
-      } else {
-        kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
-      }
-      ReplicationController replicationController =
-          kubernetesContainerService.getController(kubernetesConfig, serviceName);
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+    if (isNotEmpty(containerServiceElement.getName())) {
+      ReplicationController replicationController = kubernetesContainerService.getController(
+          getKubernetesConfig(settingAttribute, containerServiceElement), containerServiceElement.getName());
       if (replicationController != null) {
         return Optional.of(replicationController.getSpec().getReplicas());
       }
@@ -78,14 +72,13 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
 
   @Override
   protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    KubernetesConfig kubernetesConfig = settingAttribute.getValue() instanceof GcpConfig
-        ? gkeClusterService.getCluster(settingAttribute, clusterName)
-        : (KubernetesConfig) settingAttribute.getValue();
-    ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+    ReplicationControllerList replicationControllers =
+        kubernetesContainerService.listControllers(getKubernetesConfig(settingAttribute, containerServiceElement));
     if (replicationControllers != null) {
-      String controllerNamePrefix = getReplicationControllerNamePrefixFromControllerName(serviceName);
+      String controllerNamePrefix =
+          getReplicationControllerNamePrefixFromControllerName(containerServiceElement.getName());
       List<ReplicationController> activeOldReplicationControllers =
           replicationControllers.getItems()
               .stream()
@@ -99,16 +92,15 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
-  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
-    int revision = getRevisionFromControllerName(serviceName);
+  protected void cleanup(
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+    int revision = getRevisionFromControllerName(containerServiceElement.getName());
     if (revision >= ContainerServiceDeploy.KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS + 1;
-      KubernetesConfig kubernetesConfig = settingAttribute.getValue() instanceof GcpConfig
-          ? gkeClusterService.getCluster(settingAttribute, clusterName)
-          : (KubernetesConfig) settingAttribute.getValue();
-      String controllerNamePrefix =
-          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(serviceName);
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(settingAttribute, containerServiceElement);
       ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+      String controllerNamePrefix =
+          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(containerServiceElement.getName());
       if (replicationControllers != null) {
         replicationControllers.getItems()
             .stream()
@@ -123,6 +115,14 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
             });
       }
     }
+  }
+
+  private KubernetesConfig getKubernetesConfig(
+      SettingAttribute settingAttribute, ContainerServiceElement containerServiceElement) {
+    return settingAttribute.getValue() instanceof GcpConfig
+        ? gkeClusterService.getCluster(
+              settingAttribute, containerServiceElement.getClusterName(), containerServiceElement.getNamespace())
+        : (KubernetesConfig) settingAttribute.getValue();
   }
 
   @Override

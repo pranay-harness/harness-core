@@ -4,5 +4,6 @@
   "deploymentType": { "ui:widget": "hidden" },
   "password":{"ui:widget":"password"},
   "custom:encryptedFields": [ "password" ],
-  "ui:order": ["deploymentType", "computeProviderSettingId", "masterUrl", "username", "password", "clusterName","infraMappingType","computeProviderType"]
+  "namespace":{"ui:placeholder": "default"},
+  "ui:order": ["deploymentType", "computeProviderSettingId", "masterUrl", "username", "password","namespace","clusterName","infraMappingType","computeProviderType"]
 }

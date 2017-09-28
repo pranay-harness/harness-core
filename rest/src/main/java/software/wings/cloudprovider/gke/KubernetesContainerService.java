@@ -84,8 +84,6 @@ public interface KubernetesContainerService {
    */
   Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
-  Service createOrReplaceService(KubernetesConfig kubernetesConfig, String yaml);
-
   /**
    * Gets a service.
    *
@@ -113,6 +111,7 @@ public interface KubernetesContainerService {
    */
   void deleteService(KubernetesConfig kubernetesConfig, String name);
 
+  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig);
   /**
    * Gets secret.
    *
