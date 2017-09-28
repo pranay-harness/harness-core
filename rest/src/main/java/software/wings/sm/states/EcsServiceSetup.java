@@ -1,14 +1,12 @@
 package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -18,17 +16,11 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
-import com.amazonaws.services.ecs.model.HostVolumeProperties;
 import com.amazonaws.services.ecs.model.KeyValuePair;
-import com.amazonaws.services.ecs.model.LogConfiguration;
-import com.amazonaws.services.ecs.model.MountPoint;
-import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.amazonaws.services.ecs.model.TransportProtocol;
-import com.amazonaws.services.ecs.model.Volume;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +37,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
-import software.wings.beans.Service;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -56,7 +46,6 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsContainerTask.StorageConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -76,12 +65,14 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -132,8 +123,6 @@ public class EcsServiceSetup extends State {
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
-    Map<String, String> serviceVariables = getResolvedServiceVariables(
-        context, app.getAppId(), env.getUuid(), infrastructureMapping.getServiceTemplateId());
 
     EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
     String region = ecsInfrastructureMapping.getRegion();
@@ -143,7 +132,7 @@ public class EcsServiceSetup extends State {
       clusterName = regionCluster.split("/")[1];
     }
 
-    Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
@@ -158,40 +147,12 @@ public class EcsServiceSetup extends State {
     }
 
     String containerName = EcsConvention.getContainerName(imageName);
-
-    Map<String, Volume> volumeMap = new HashMap<>();
-    for (EcsContainerTask.ContainerDefinition containerDefinition : ecsContainerTask.getContainerDefinitions()) {
-      if (isNotEmpty(containerDefinition.getStorageConfigurations())) {
-        for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
-          Volume volume = new Volume();
-          String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
-          volume.setName(volumeName);
-          HostVolumeProperties hostVolumeProperties = new HostVolumeProperties();
-          hostVolumeProperties.setSourcePath(strip(storageConfiguration.getHostSourcePath()));
-          volume.setHost(hostVolumeProperties);
-          volumeMap.put(volume.getName(), volume);
-        }
-      }
-    }
-
-    List<ContainerDefinition> containerDefinitions =
-        ecsContainerTask.getContainerDefinitions()
-            .stream()
-            .map(containerDefinition
-                -> createContainerDefinition(imageName, containerName, containerDefinition, serviceVariables))
-            .collect(toList());
-
     String taskFamily = isNotEmpty(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
-        : EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName());
-    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = new RegisterTaskDefinitionRequest()
-                                                                      .withContainerDefinitions(containerDefinitions)
-                                                                      .withFamily(taskFamily)
-                                                                      .withVolumes(volumeMap.values());
+        : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
 
-    logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
-    TaskDefinition taskDefinition =
-        awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
+    TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily, region,
+        computeProviderSetting, context.getServiceVariables());
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
@@ -252,100 +213,53 @@ public class EcsServiceSetup extends State {
         .build();
   }
 
-  private Map<String, String> getResolvedServiceVariables(
-      ExecutionContext context, String appId, String envId, String serviceTemplateId) {
-    Map<String, String> variables = new HashMap<>();
+  private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName, String imageName,
+      String taskFamily, String region, SettingAttribute computeProviderSetting, Map<String, String> serviceVariables) {
+    String configTemplate;
+    if (StringUtils.isNotEmpty(ecsContainerTask.getAdvancedConfig())) {
+      configTemplate = ecsContainerTask.fetchAdvancedConfigNoComments();
+    } else {
+      configTemplate = ecsContainerTask.fetchJsonConfig();
+    }
+
+    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+
     try {
-      List<ServiceVariable> serviceVariables =
-          serviceTemplateService.computeServiceVariables(appId, envId, serviceTemplateId);
-      serviceVariables.forEach(serviceVariable -> {
-        String key = context.renderExpression(serviceVariable.getName());
-        String value = context.renderExpression(new String(serviceVariable.getValue()));
-        variables.put(key, value);
-      });
-    } catch (Exception ex) {
-      logger.error("Exception occurred in processing service variables ", ex);
-    }
-    return variables;
-  }
+      TaskDefinition taskDefinition = JsonUtils.asObject(config, TaskDefinition.class);
 
-  /**
-   * Create container definition container definition.
-   *
-   * @param imageName                the image name
-   * @param containerName            the container name
-   * @param harnessContainerDefinition the harness container definition
-   * @param serviceVariables
-   * @return the container definition
-   */
-  private ContainerDefinition createContainerDefinition(String imageName, String containerName,
-      EcsContainerTask.ContainerDefinition harnessContainerDefinition, Map<String, String> serviceVariables) {
-    ContainerDefinition containerDefinition =
-        new ContainerDefinition().withName(strip(containerName)).withImage(strip(imageName));
+      taskDefinition.setFamily(taskFamily);
 
-    if (harnessContainerDefinition.getCpu() != null && harnessContainerDefinition.getMemory() > 0) {
-      containerDefinition.setCpu(harnessContainerDefinition.getCpu());
-    }
-
-    if (harnessContainerDefinition.getMemory() != null && harnessContainerDefinition.getMemory() > 0) {
-      containerDefinition.setMemory(harnessContainerDefinition.getMemory());
-    }
-
-    if (harnessContainerDefinition.getPortMappings() != null) {
-      List<PortMapping> portMappings = harnessContainerDefinition.getPortMappings()
-                                           .stream()
-                                           .map(portMapping
-                                               -> new PortMapping()
-                                                      .withContainerPort(portMapping.getContainerPort())
-                                                      .withHostPort(portMapping.getHostPort())
-                                                      .withProtocol(TransportProtocol.Tcp))
-                                           .collect(toList());
-      containerDefinition.setPortMappings(portMappings);
-    }
-
-    List<String> commands = Optional.ofNullable(harnessContainerDefinition.getCommands())
-                                .orElse(emptyList())
-                                .stream()
-                                .filter(StringUtils::isNotBlank)
-                                .map(StringUtils::strip)
-                                .collect(toList());
-    containerDefinition.setCommand(commands);
-
-    if (harnessContainerDefinition.getLogConfiguration() != null) {
-      EcsContainerTask.LogConfiguration harnessLogConfiguration = harnessContainerDefinition.getLogConfiguration();
-      if (isNotBlank(harnessLogConfiguration.getLogDriver())) {
-        LogConfiguration logConfiguration =
-            new LogConfiguration().withLogDriver(strip(harnessLogConfiguration.getLogDriver()));
-        Optional.ofNullable(harnessLogConfiguration.getOptions())
-            .orElse(emptyList())
-            .forEach(
-                logOption -> logConfiguration.addOptionsEntry(strip(logOption.getKey()), strip(logOption.getValue())));
-        containerDefinition.setLogConfiguration(logConfiguration);
+      // Set service variables as environment variables
+      if (serviceVariables != null && !serviceVariables.isEmpty()) {
+        Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
+        for (ContainerDefinition containerDefinition : taskDefinition.getContainerDefinitions()) {
+          Map<String, KeyValuePair> valuePairsMap = new HashMap<>();
+          if (containerDefinition.getEnvironment() != null) {
+            containerDefinition.getEnvironment().forEach(
+                keyValuePair -> valuePairsMap.put(keyValuePair.getName(), keyValuePair));
+          }
+          valuePairsMap.putAll(serviceValuePairs);
+          containerDefinition.setEnvironment(new ArrayList<>(valuePairsMap.values()));
+        }
       }
-    }
 
-    if (isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
-      List<StorageConfiguration> harnessStorageConfigurations = harnessContainerDefinition.getStorageConfigurations();
-      containerDefinition.setMountPoints(
-          harnessStorageConfigurations.stream()
-              .map(storageConfiguration
-                  -> new MountPoint()
-                         .withContainerPath(strip(storageConfiguration.getContainerPath()))
-                         .withSourceVolume(EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath())))
-                         .withReadOnly(storageConfiguration.isReadonly()))
-              .collect(toList()));
-    }
+      RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+          new RegisterTaskDefinitionRequest()
+              .withContainerDefinitions(taskDefinition.getContainerDefinitions())
+              .withFamily(taskDefinition.getFamily())
+              .withTaskRoleArn(taskDefinition.getTaskRoleArn())
+              .withNetworkMode(taskDefinition.getNetworkMode())
+              .withPlacementConstraints(taskDefinition.getPlacementConstraints())
+              .withVolumes(taskDefinition.getVolumes());
 
-    if (serviceVariables != null) {
-      List<KeyValuePair> valuePairs =
-          serviceVariables.entrySet()
-              .stream()
-              .map(entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue()))
-              .collect(toList());
-      containerDefinition.setEnvironment(valuePairs);
+      logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
+      return awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
-
-    return containerDefinition;
   }
 
   /**
@@ -359,17 +273,17 @@ public class EcsServiceSetup extends State {
 
     if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-      return dockerArtifactStream.getImageName();
+      return dockerArtifactStream.getImageName() + ":" + artifact.getBuildNo();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
       String imageUrl = getImageUrl(ecrArtifactStream);
       return imageUrl + ":" + artifact.getBuildNo();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
-      return gcrArtifactStream.getDockerImageName();
+      return gcrArtifactStream.getDockerImageName() + ":" + artifact.getBuildNo();
     } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
-      return artifactoryArtifactStream.getImageName();
+      return artifactoryArtifactStream.getImageName() + ":" + artifact.getBuildNo();
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");

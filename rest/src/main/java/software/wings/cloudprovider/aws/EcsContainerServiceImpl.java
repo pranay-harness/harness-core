@@ -855,11 +855,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public String deployService(String region, SettingAttribute connectorConfig, String serviceDefinition) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
-    CreateServiceRequest createServiceRequest = null;
+    CreateServiceRequest createServiceRequest;
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult = awsHelperService.createService(region, awsConfig, createServiceRequest);

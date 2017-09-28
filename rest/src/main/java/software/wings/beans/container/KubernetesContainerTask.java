@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.strip;
+import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -33,14 +34,6 @@ import java.util.stream.Collectors;
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
-  public static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
-  public static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
-  public static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
-
-  private static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
-  private static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
-  private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
-
   @Attributes(title = "LABELS") List<Label> labels;
   private List<ContainerDefinition> containerDefinitions;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
@@ -292,7 +285,9 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    String preamble = "# Placeholders:\n"
+    String preamble = "# Enter your Replication Controller spec below.\n"
+        + "#\n"
+        + "# Placeholders:\n"
         + "#\n"
         + "# Required: ${DOCKER_IMAGE_NAME}\n"
         + "#   - Replaced with the Docker image name and tag\n"
@@ -312,7 +307,7 @@ public class KubernetesContainerTask extends ContainerTask {
         + "# the name is the same.\n"
         + "#\n";
 
-    setAdvancedType(AdvancedType.YAML);
+    setAdvancedType(YAML);
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
   }
@@ -344,7 +339,7 @@ public class KubernetesContainerTask extends ContainerTask {
                                     .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
                                     .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME);
         ReplicationController rc;
-        if (getAdvancedType() == AdvancedType.YAML) {
+        if (getAdvancedType() == YAML) {
           rc = KubernetesHelper.loadYaml(advancedConfig);
         } else {
           rc = (ReplicationController) KubernetesHelper.loadJson(advancedConfig);
