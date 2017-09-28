@@ -9,6 +9,7 @@ public class AwsInstanceFilter {
   @Attributes(title = "VPC") private List<String> vpcIds;
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
+  @Attributes(title = "Tags") private List<Tag> tags = new ArrayList<>();
 
   /**
    * Gets vpc ids.
@@ -62,5 +63,34 @@ public class AwsInstanceFilter {
    */
   public void setSecurityGroupIds(List<String> securityGroupIds) {
     this.securityGroupIds = securityGroupIds;
+  }
+
+  public List<Tag> getTags() {
+    return tags;
+  }
+
+  public void setTags(List<Tag> tags) {
+    this.tags = tags;
+  }
+
+  public static class Tag {
+    private String key;
+    private String value;
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
   }
 }
