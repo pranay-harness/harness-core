@@ -247,6 +247,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+      updateOperations.set("namespace", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       updateOperations.set("region", awsInfrastructureMapping.getRegion());
@@ -306,7 +307,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                 Map<String, WorkflowPhase> workflowPhaseIdMap =
                     ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
                 return workflowPhaseIdMap.values().stream().anyMatch(
-                    workflowPhase -> workflowPhase.getInfraMappingId().equals(infrastructureMapping.getUuid()));
+                    workflowPhase -> infrastructureMapping.getUuid().equals(workflowPhase.getInfraMappingId()));
               }
               return false;
             })

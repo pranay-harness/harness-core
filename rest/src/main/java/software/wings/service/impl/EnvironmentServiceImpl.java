@@ -12,6 +12,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -39,6 +40,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -51,6 +53,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +81,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ConfigService configService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -87,6 +91,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary) {
     PageResponse<Environment> pageResponse = wingsPersistence.query(Environment.class, request);
+    if (pageResponse == null || pageResponse.getResponse() == null) {
+      return pageResponse;
+    }
     if (withSummary) {
       pageResponse.getResponse().forEach(environment -> {
         try {
@@ -192,6 +199,57 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
     ensureEnvironmentSafeToDelete(environment);
     delete(environment);
+  }
+
+  @Override
+  public List<Service> getServicesWithOverrides(String appId, String envId) {
+    List<Service> services = new ArrayList<>();
+    Environment environment = get(appId, envId, true);
+    if (environment == null) {
+      return services;
+    }
+    List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
+    if (serviceTemplates == null || serviceTemplates.isEmpty()) {
+      return services;
+    }
+    List<String> serviceIds = new ArrayList<>();
+    for (ServiceTemplate serviceTemplate : serviceTemplates) {
+      boolean includeServiceId = false;
+      // For each service template id check if it has service or config overrides
+      List<ServiceVariable> serviceVariableOverrides = serviceVariableService.getServiceVariablesByTemplate(
+          environment.getAppId(), environment.getUuid(), serviceTemplate, true);
+      if (serviceVariableOverrides != null) {
+        if (serviceVariableOverrides.size() > 0) {
+          // This service template has at least on service overrides
+          includeServiceId = true;
+        }
+      }
+      if (!includeServiceId) {
+        // For each service template id check if it has service or config overrides
+        List<ConfigFile> overrideConfigFiles =
+            configService.getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
+        if (overrideConfigFiles != null) {
+          if (overrideConfigFiles.size() > 0) {
+            // This service template has at least on service overrides
+            includeServiceId = true;
+          }
+        }
+      }
+      if (includeServiceId) {
+        serviceIds.add(serviceTemplate.getServiceId());
+      }
+    }
+    if (!serviceIds.isEmpty()) {
+      PageRequest<Service> pageRequest = aPageRequest()
+                                             .withLimit(PageRequest.UNLIMITED)
+                                             .addFilter("appId", EQ, environment.getAppId())
+                                             .addFilter("uuid", IN, serviceIds.toArray())
+                                             .addFieldsExcluded("serviceCommands")
+                                             .addFieldsExcluded("appContainer")
+                                             .build();
+      services = serviceResourceService.list(pageRequest, false, false);
+    }
+    return services;
   }
 
   private void ensureEnvironmentSafeToDelete(Environment environment) {

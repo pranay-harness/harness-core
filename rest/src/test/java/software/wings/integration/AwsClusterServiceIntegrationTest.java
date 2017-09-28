@@ -86,7 +86,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(
-        Regions.US_EAST_1.getName(), awsConnectorSetting, "demo_v1", "Account_v1", 0, 3, null);
+        Regions.US_EAST_1.getName(), awsConnectorSetting, "demo_v1", "Account_v1", 0, 3, 10, null);
   }
 
   @Test

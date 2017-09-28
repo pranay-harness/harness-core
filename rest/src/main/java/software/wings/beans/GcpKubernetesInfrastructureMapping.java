@@ -3,6 +3,8 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Optional;
 
@@ -10,32 +12,17 @@ import java.util.Optional;
  * Created by brett on 2/27/17
  */
 @JsonTypeName("GCP_KUBERNETES")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster Name") private String clusterName;
+  @Attributes(title = "Cluster Name", required = true) private String clusterName;
+  @Attributes(title = "Namespace") private String namespace;
 
   /**
    * Instantiates a new Infrastructure mapping.
    */
   public GcpKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
-  }
-
-  /**
-   * Gets cluster name.
-   *
-   * @return the cluster name
-   */
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  /**
-   * Sets cluster name.
-   *
-   * @param clusterName the cluster name
-   */
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
   }
 
   @SchemaIgnore
@@ -48,8 +35,9 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s (GCP/Kubernetes::%s)", this.getClusterName(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
+    return String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        Optional.ofNullable(this.getNamespace()).orElse("default"));
   }
 
   /**
@@ -57,6 +45,7 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
    */
   public static final class Builder {
     private String clusterName;
+    private String namespace;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
@@ -90,6 +79,11 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
+      return this;
+    }
+
+    public Builder withNamespace(String namespace) {
+      this.namespace = namespace;
       return this;
     }
 
@@ -244,6 +238,7 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
     public Builder but() {
       return aGcpKubernetesInfrastructureMapping()
           .withClusterName(clusterName)
+          .withNamespace(namespace)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
@@ -267,6 +262,7 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
     public GcpKubernetesInfrastructureMapping build() {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping = new GcpKubernetesInfrastructureMapping();
       gcpKubernetesInfrastructureMapping.setClusterName(clusterName);
+      gcpKubernetesInfrastructureMapping.setNamespace(namespace);
       gcpKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       gcpKubernetesInfrastructureMapping.setEnvId(envId);
       gcpKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);

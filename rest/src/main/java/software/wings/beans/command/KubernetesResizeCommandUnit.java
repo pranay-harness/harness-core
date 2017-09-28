@@ -27,13 +27,13 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback) {
+      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
     } else {
-      kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
+      kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName, namespace);
     }
     return kubernetesContainerService.setControllerPodCount(
         kubernetesConfig, clusterName, serviceName, previousCount, desiredCount, executionLogCallback);

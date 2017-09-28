@@ -90,6 +90,7 @@ public class KubernetesIntegrationTest {
           .build();
 
   private static final String ZONE_CLUSTER = "us-central1-a" + ZONE_DELIMITER + "brett-test";
+  private static final String NAMESPACE = "default";
 
   public static void main(String[] args) throws InterruptedException {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
@@ -106,7 +107,7 @@ public class KubernetesIntegrationTest {
     //            .put("masterPwd", "foo!!bar$$")
     //            .build());
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, NAMESPACE);
 
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 4, 8);
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, false, 4, 8);

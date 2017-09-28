@@ -2,10 +2,13 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.EntityType.*;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.OrchestrationWorkflowType.*;
+import static software.wings.beans.OrchestrationWorkflowType.BASIC;
+import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
@@ -18,7 +21,6 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.validator.Var;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -466,7 +468,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       List<String> invalidInfraPhaseIds = new ArrayList<>();
       for (WorkflowPhase phase : workflowPhases) {
         if (phase != null) {
-          if (phase.getInfraMappingId() == null) {
+          if (phase.getInfraMappingId() == null || phase.getInfraMappingId().isEmpty()) {
             invalidInfraPhaseIds.add(phase.getName());
           }
         }

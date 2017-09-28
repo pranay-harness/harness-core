@@ -16,8 +16,10 @@ public class ContainerServiceElement implements ContextElement {
   private String uuid;
   private String name;
   private int maxInstances;
+  private int serviceSteadyStateTimeout;
   private ResizeStrategy resizeStrategy;
   private String clusterName;
+  private String namespace;
   private DeploymentType deploymentType;
   private String infraMappingId;
 
@@ -73,6 +75,14 @@ public class ContainerServiceElement implements ContextElement {
     this.clusterName = clusterName;
   }
 
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public void setNamespace(String namespace) {
+    this.namespace = namespace;
+  }
+
   public DeploymentType getDeploymentType() {
     return deploymentType;
   }
@@ -89,65 +99,84 @@ public class ContainerServiceElement implements ContextElement {
     this.infraMappingId = infraMappingId;
   }
 
-  public static final class ContainerServiceElementBuilder {
-    private String uuid;
-    private String name;
-    private int maxInstances;
-    private ResizeStrategy resizeStrategy;
-    private String clusterName;
-    private DeploymentType deploymentType;
-    private String infraMappingId;
+  public int getServiceSteadyStateTimeout() {
+    return serviceSteadyStateTimeout;
+  }
 
-    private ContainerServiceElementBuilder() {}
+  public void setServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+    this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+  }
+
+  public static final class ContainerServiceElementBuilder {
+    private ContainerServiceElement containerServiceElement;
+
+    private ContainerServiceElementBuilder() {
+      containerServiceElement = new ContainerServiceElement();
+    }
 
     public static ContainerServiceElementBuilder aContainerServiceElement() {
       return new ContainerServiceElementBuilder();
     }
 
     public ContainerServiceElementBuilder withUuid(String uuid) {
-      this.uuid = uuid;
+      containerServiceElement.setUuid(uuid);
       return this;
     }
 
     public ContainerServiceElementBuilder withName(String name) {
-      this.name = name;
+      containerServiceElement.setName(name);
       return this;
     }
 
     public ContainerServiceElementBuilder withMaxInstances(int maxInstances) {
-      this.maxInstances = maxInstances;
+      containerServiceElement.setMaxInstances(maxInstances);
+      return this;
+    }
+
+    public ContainerServiceElementBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      containerServiceElement.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       return this;
     }
 
     public ContainerServiceElementBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
+      containerServiceElement.setResizeStrategy(resizeStrategy);
       return this;
     }
 
     public ContainerServiceElementBuilder withClusterName(String clusterName) {
-      this.clusterName = clusterName;
+      containerServiceElement.setClusterName(clusterName);
+      return this;
+    }
+
+    public ContainerServiceElementBuilder withNamespace(String namespace) {
+      containerServiceElement.setNamespace(namespace);
       return this;
     }
 
     public ContainerServiceElementBuilder withDeploymentType(DeploymentType deploymentType) {
-      this.deploymentType = deploymentType;
+      containerServiceElement.setDeploymentType(deploymentType);
       return this;
     }
 
     public ContainerServiceElementBuilder withInfraMappingId(String infraMappingId) {
-      this.infraMappingId = infraMappingId;
+      containerServiceElement.setInfraMappingId(infraMappingId);
       return this;
     }
 
+    public ContainerServiceElementBuilder but() {
+      return aContainerServiceElement()
+          .withUuid(containerServiceElement.getUuid())
+          .withName(containerServiceElement.getName())
+          .withMaxInstances(containerServiceElement.getMaxInstances())
+          .withServiceSteadyStateTimeout(containerServiceElement.getServiceSteadyStateTimeout())
+          .withResizeStrategy(containerServiceElement.getResizeStrategy())
+          .withClusterName(containerServiceElement.getClusterName())
+          .withNamespace(containerServiceElement.getNamespace())
+          .withDeploymentType(containerServiceElement.getDeploymentType())
+          .withInfraMappingId(containerServiceElement.getInfraMappingId());
+    }
+
     public ContainerServiceElement build() {
-      ContainerServiceElement containerServiceElement = new ContainerServiceElement();
-      containerServiceElement.setUuid(uuid);
-      containerServiceElement.setName(name);
-      containerServiceElement.setMaxInstances(maxInstances);
-      containerServiceElement.setResizeStrategy(resizeStrategy);
-      containerServiceElement.setClusterName(clusterName);
-      containerServiceElement.setDeploymentType(deploymentType);
-      containerServiceElement.setInfraMappingId(infraMappingId);
       return containerServiceElement;
     }
   }

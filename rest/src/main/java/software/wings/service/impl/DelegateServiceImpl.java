@@ -537,10 +537,9 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("accountId", IN, task.getAccountId(), GLOBAL_ACCOUNT_ID)
             .addFilter(ID_KEY, EQ, delegateId)
             .addFilter("status", EQ, Status.ENABLED)
-            .addFilter("supportedTaskTypes", EQ, task.getTaskType())
             .build());
 
-    if (delegate != null) {
+    if (delegate != null && delegate.getSupportedTaskTypes().contains(task.getTaskType())) {
       qualifies = true;
     }
 

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -14,7 +15,6 @@ import software.wings.stencils.EnumData;
 
 import java.util.LinkedHashMap;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * Created by brett on 4/24/17
@@ -35,13 +35,13 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
     return Optional.empty();
   }
 
   @Override
   protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
     return new LinkedHashMap<>();
   }
 

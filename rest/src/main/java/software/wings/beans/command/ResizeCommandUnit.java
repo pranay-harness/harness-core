@@ -23,9 +23,9 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String serviceName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback) {
-    return awsClusterService.resizeCluster(
-        region, cloudProviderSetting, clusterName, serviceName, previousCount, desiredCount, executionLogCallback);
+      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    return awsClusterService.resizeCluster(region, cloudProviderSetting, clusterName, serviceName, previousCount,
+        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }
 }

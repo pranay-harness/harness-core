@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
@@ -13,7 +15,9 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
@@ -35,6 +39,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -45,6 +50,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -54,6 +60,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -65,6 +72,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -81,6 +89,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private AwsClusterService awsClusterService;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
@@ -103,7 +112,10 @@ public class EcsServiceSetupTest extends WingsBaseTest {
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aContainerServiceElement().withUuid(serviceElement.getUuid()).build())
+          .addContextElement(aContainerServiceElement()
+                                 .withUuid(serviceElement.getUuid())
+                                 .withResizeStrategy(RESIZE_NEW_FIRST)
+                                 .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
@@ -152,6 +164,12 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     when(awsClusterService.createTask(
              eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class)))
         .thenReturn(taskDefinition);
+
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
   }
 
   @Test
@@ -168,6 +186,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteWithLastService() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withRegion(Regions.US_EAST_1.getName())

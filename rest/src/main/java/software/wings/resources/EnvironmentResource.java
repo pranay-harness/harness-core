@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
@@ -19,6 +20,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -91,6 +93,22 @@ public class EnvironmentResource {
       status = SetupStatus.COMPLETE;
     }
     return new RestResponse<>(envService.get(appId, envId, status));
+  }
+
+  /**
+   * List.
+   *
+   * @param appId  the app id
+   * @param envId  the env id
+   * @return the rest response
+   */
+  @GET
+  @Path("{envId}/services")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<Service>> getServicesWithOverrides(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return new RestResponse(envService.getServicesWithOverrides(appId, envId));
   }
 
   /**

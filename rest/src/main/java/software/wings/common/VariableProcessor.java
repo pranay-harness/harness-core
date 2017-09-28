@@ -4,7 +4,6 @@
 
 package software.wings.common;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.annotations.Transient;
@@ -16,6 +15,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class VariableProcessor {
    * @return the variables
    */
   public Map<String, String> getVariables(ArrayDeque<ContextElement> contextElements) {
-    Map<String, String> variables = Maps.newHashMap();
+    Map<String, String> variables = new HashMap<>();
     Optional<ContextElement> instanceElement =
         contextElements.stream()
             .filter(contextElement -> contextElement.getElementType() == ContextElementType.INSTANCE)

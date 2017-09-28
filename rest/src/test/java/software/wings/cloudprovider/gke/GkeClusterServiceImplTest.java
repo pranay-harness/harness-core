@@ -144,7 +144,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(operationsGet.execute()).thenReturn(doneOperation);
 
     KubernetesConfig config =
-        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default", CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -156,7 +156,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotCreateClusterIfExists() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
     KubernetesConfig config =
-        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default", CREATE_CLUSTER_PARAMS);
 
     verify(clusters, times(0)).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -170,7 +170,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersCreate.execute()).thenThrow(new IOException());
 
     KubernetesConfig config =
-        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default", CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config).isNull();
@@ -184,7 +184,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(operationsGet.execute()).thenThrow(new IOException());
 
     KubernetesConfig config =
-        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default", CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config).isNull();
@@ -242,7 +242,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldGetCluster() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -254,7 +254,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetClusterIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();
@@ -264,7 +264,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetClusterIfError() throws Exception {
     when(clustersGet.execute()).thenThrow(new IOException());
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();
@@ -279,7 +279,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
             new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_FORBIDDEN, "forbidden", httpHeaders),
             googleJsonError));
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();

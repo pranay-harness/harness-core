@@ -44,8 +44,10 @@ public class CommandExecutionContext {
   private ArtifactStreamAttributes artifactStreamAttributes;
   private SettingAttribute cloudProviderSetting;
   private String clusterName;
+  private String namespace;
   private String serviceName;
   private String region;
+  private int ecsServiceSteadyStateTimeout;
   private CodeDeployParams codeDeployParams;
   private Map<String, String> metadata = Maps.newHashMap();
   private List<ContainerServiceData> desiredCounts = new ArrayList<>();
@@ -78,12 +80,14 @@ public class CommandExecutionContext {
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.cloudProviderSetting = other.cloudProviderSetting;
     this.clusterName = other.clusterName;
+    this.namespace = other.namespace;
     this.serviceName = other.serviceName;
     this.region = other.region;
     this.codeDeployParams = other.codeDeployParams;
     this.metadata = other.metadata;
     this.desiredCounts = other.desiredCounts;
     this.commandExecutionData = other.commandExecutionData;
+    this.ecsServiceSteadyStateTimeout = other.ecsServiceSteadyStateTimeout;
   }
 
   /**
@@ -135,8 +139,10 @@ public class CommandExecutionContext {
     private ArtifactStreamAttributes artifactStreamAttributes;
     private SettingAttribute cloudProviderSetting;
     private String clusterName;
+    private String namespace;
     private String serviceName;
     private String region;
+    private int ecsServiceSteadyStateTimeout;
     private CodeDeployParams codeDeployParams;
     private Map<String, String> metadata = Maps.newHashMap();
     private List<ContainerServiceData> desiredCounts = new ArrayList<>();
@@ -243,8 +249,18 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withNamespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
     public Builder withServiceName(String serviceName) {
       this.serviceName = serviceName;
+      return this;
+    }
+
+    public Builder withEcsServiceSteadyStateTimeout(int ecsServiceSteadyStateTimeout) {
+      this.ecsServiceSteadyStateTimeout = ecsServiceSteadyStateTimeout;
       return this;
     }
 
@@ -294,12 +310,14 @@ public class CommandExecutionContext {
           .withArtifactStreamAttributes(artifactStreamAttributes)
           .withCloudProviderSetting(cloudProviderSetting)
           .withClusterName(clusterName)
+          .withNamespace(namespace)
           .withServiceName(serviceName)
           .withRegion(region)
           .withCodeDeployParams(codeDeployParams)
           .withMetadata(metadata)
           .withDesiredCounts(desiredCounts)
-          .withCommandExecutionData(commandExecutionData);
+          .withCommandExecutionData(commandExecutionData)
+          .withEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout);
     }
 
     public CommandExecutionContext build() {
@@ -323,12 +341,14 @@ public class CommandExecutionContext {
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
       commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
       commandExecutionContext.setClusterName(clusterName);
+      commandExecutionContext.setNamespace(namespace);
       commandExecutionContext.setServiceName(serviceName);
       commandExecutionContext.setRegion(region);
       commandExecutionContext.setCodeDeployParams(codeDeployParams);
       commandExecutionContext.setMetadata(metadata);
       commandExecutionContext.setDesiredCounts(desiredCounts);
       commandExecutionContext.setCommandExecutionData(commandExecutionData);
+      commandExecutionContext.setEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout);
       return commandExecutionContext;
     }
   }
