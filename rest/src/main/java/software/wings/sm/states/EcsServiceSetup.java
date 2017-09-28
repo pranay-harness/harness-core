@@ -214,8 +214,10 @@ public class EcsServiceSetup extends State {
           .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
           .build();
     } catch (Exception e) {
+      if (e instanceof WingsException)
+        throw e;
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
   }
 

@@ -110,8 +110,10 @@ public abstract class ContainerServiceDeploy extends State {
         return downsizeOldInstances(contextData, executionData);
       }
     } catch (Exception e) {
+      if (e instanceof WingsException)
+        throw e;
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
   }
 
@@ -288,8 +290,10 @@ public abstract class ContainerServiceDeploy extends State {
         return handleOldInstancesDownsized(contextData, executionData);
       }
     } catch (Exception e) {
+      if (e instanceof WingsException)
+        throw e;
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
   }
 
