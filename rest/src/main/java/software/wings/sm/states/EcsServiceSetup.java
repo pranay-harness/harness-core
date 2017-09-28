@@ -108,109 +108,115 @@ public class EcsServiceSetup extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String serviceId = phaseElement.getServiceElement().getUuid();
+    try {
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String serviceId = phaseElement.getServiceElement().getUuid();
 
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-    String imageName = fetchArtifactImageName(artifact);
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+      String imageName = fetchArtifactImageName(artifact);
 
-    Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
+      Application app = workflowStandardParams.getApp();
+      Environment env = workflowStandardParams.getEnv();
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+      if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
+      }
+
+      EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+      String region = ecsInfrastructureMapping.getRegion();
+      String clusterName = ecsInfrastructureMapping.getClusterName();
+      if (Constants.RUNTIME.equals(clusterName)) {
+        String regionCluster = getClusterElement(context).getName();
+        clusterName = regionCluster.split("/")[1];
+      }
+
+      String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+      SettingAttribute computeProviderSetting =
+          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
+      EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+          app.getAppId(), serviceId, DeploymentType.ECS.name());
+
+      if (ecsContainerTask == null) {
+        ecsContainerTask = new EcsContainerTask();
+        EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
+        containerDefinition.setMemory(256);
+        containerDefinition.setPortMappings(emptyList());
+        ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+      }
+
+      String containerName = EcsConvention.getContainerName(imageName);
+      String taskFamily = isNotEmpty(ecsServiceName)
+          ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
+          : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
+
+      TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily,
+          region, computeProviderSetting, context.getServiceVariables());
+
+      String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
+
+      CreateServiceRequest createServiceRequest =
+          new CreateServiceRequest()
+              .withServiceName(ecsServiceName)
+              .withCluster(clusterName)
+              .withDesiredCount(0)
+              .withDeploymentConfiguration(
+                  new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
+              .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
+
+      EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
+                                                                           .withEcsClusterName(clusterName)
+                                                                           .withEcsServiceName(ecsServiceName)
+                                                                           .withDockerImageName(imageName);
+
+      int portToExpose =
+          ecsContainerTask.getContainerDefinitions()
+              .stream()
+              .flatMap(containerDefinition
+                  -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
+              .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
+              .findFirst()
+              .map(EcsContainerTask.PortMapping::getContainerPort)
+              .orElse(0);
+      if (useLoadBalancer && portToExpose != 0) {
+        createServiceRequest
+            .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
+                                   .withContainerName(containerName)
+                                   .withContainerPort(portToExpose)
+                                   .withTargetGroupArn(targetGroupArn))
+            .withRole(roleArn);
+        ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
+            .withRoleArn(roleArn)
+            .withTargetGroupArn(targetGroupArn);
+      }
+
+      logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
+      awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
+
+      ContainerServiceElement containerServiceElement =
+          aContainerServiceElement()
+              .withUuid(serviceId)
+              .withName(ecsServiceName)
+              .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
+              .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+              .withClusterName(clusterName)
+              .withDeploymentType(DeploymentType.ECS)
+              .withInfraMappingId(phaseElement.getInfraMappingId())
+              .build();
+
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .addContextElement(containerServiceElement)
+          .addNotifyElement(containerServiceElement)
+          .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
+          .build();
+    } catch (Exception e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
-
-    EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-    String region = ecsInfrastructureMapping.getRegion();
-    String clusterName = ecsInfrastructureMapping.getClusterName();
-    if (Constants.RUNTIME.equals(clusterName)) {
-      String regionCluster = getClusterElement(context).getName();
-      clusterName = regionCluster.split("/")[1];
-    }
-
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-
-    EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-        app.getAppId(), serviceId, DeploymentType.ECS.name());
-
-    if (ecsContainerTask == null) {
-      ecsContainerTask = new EcsContainerTask();
-      EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
-      containerDefinition.setMemory(256);
-      containerDefinition.setPortMappings(emptyList());
-      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    }
-
-    String containerName = EcsConvention.getContainerName(imageName);
-    String taskFamily = isNotEmpty(ecsServiceName)
-        ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
-        : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
-
-    TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily, region,
-        computeProviderSetting, context.getServiceVariables());
-
-    String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
-
-    CreateServiceRequest createServiceRequest =
-        new CreateServiceRequest()
-            .withServiceName(ecsServiceName)
-            .withCluster(clusterName)
-            .withDesiredCount(0)
-            .withDeploymentConfiguration(
-                new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
-
-    EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
-                                                                         .withEcsClusterName(clusterName)
-                                                                         .withEcsServiceName(ecsServiceName)
-                                                                         .withDockerImageName(imageName);
-
-    int portToExpose =
-        ecsContainerTask.getContainerDefinitions()
-            .stream()
-            .flatMap(containerDefinition
-                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
-            .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
-            .findFirst()
-            .map(EcsContainerTask.PortMapping::getContainerPort)
-            .orElse(0);
-    if (useLoadBalancer && portToExpose != 0) {
-      createServiceRequest
-          .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
-                                 .withContainerName(containerName)
-                                 .withContainerPort(portToExpose)
-                                 .withTargetGroupArn(targetGroupArn))
-          .withRole(roleArn);
-      ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
-          .withRoleArn(roleArn)
-          .withTargetGroupArn(targetGroupArn);
-    }
-
-    logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
-    awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
-
-    ContainerServiceElement containerServiceElement =
-        aContainerServiceElement()
-            .withUuid(serviceId)
-            .withName(ecsServiceName)
-            .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-            .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
-            .withClusterName(clusterName)
-            .withDeploymentType(DeploymentType.ECS)
-            .withInfraMappingId(phaseElement.getInfraMappingId())
-            .build();
-
-    return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(containerServiceElement)
-        .addNotifyElement(containerServiceElement)
-        .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
-        .build();
   }
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName, String imageName,
@@ -225,41 +231,36 @@ public class EcsServiceSetup extends State {
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
                         .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
 
-    try {
-      TaskDefinition taskDefinition = JsonUtils.asObject(config, TaskDefinition.class);
+    TaskDefinition taskDefinition = JsonUtils.asObject(config, TaskDefinition.class);
 
-      taskDefinition.setFamily(taskFamily);
+    taskDefinition.setFamily(taskFamily);
 
-      // Set service variables as environment variables
-      if (serviceVariables != null && !serviceVariables.isEmpty()) {
-        Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
-            Map.Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
-        for (ContainerDefinition containerDefinition : taskDefinition.getContainerDefinitions()) {
-          Map<String, KeyValuePair> valuePairsMap = new HashMap<>();
-          if (containerDefinition.getEnvironment() != null) {
-            containerDefinition.getEnvironment().forEach(
-                keyValuePair -> valuePairsMap.put(keyValuePair.getName(), keyValuePair));
-          }
-          valuePairsMap.putAll(serviceValuePairs);
-          containerDefinition.setEnvironment(new ArrayList<>(valuePairsMap.values()));
+    // Set service variables as environment variables
+    if (serviceVariables != null && !serviceVariables.isEmpty()) {
+      Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
+          Map.Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
+      for (ContainerDefinition containerDefinition : taskDefinition.getContainerDefinitions()) {
+        Map<String, KeyValuePair> valuePairsMap = new HashMap<>();
+        if (containerDefinition.getEnvironment() != null) {
+          containerDefinition.getEnvironment().forEach(
+              keyValuePair -> valuePairsMap.put(keyValuePair.getName(), keyValuePair));
         }
+        valuePairsMap.putAll(serviceValuePairs);
+        containerDefinition.setEnvironment(new ArrayList<>(valuePairsMap.values()));
       }
-
-      RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
-          new RegisterTaskDefinitionRequest()
-              .withContainerDefinitions(taskDefinition.getContainerDefinitions())
-              .withFamily(taskDefinition.getFamily())
-              .withTaskRoleArn(taskDefinition.getTaskRoleArn())
-              .withNetworkMode(taskDefinition.getNetworkMode())
-              .withPlacementConstraints(taskDefinition.getPlacementConstraints())
-              .withVolumes(taskDefinition.getVolumes());
-
-      logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
-      return awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
+
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+        new RegisterTaskDefinitionRequest()
+            .withContainerDefinitions(taskDefinition.getContainerDefinitions())
+            .withFamily(taskDefinition.getFamily())
+            .withTaskRoleArn(taskDefinition.getTaskRoleArn())
+            .withNetworkMode(taskDefinition.getNetworkMode())
+            .withPlacementConstraints(taskDefinition.getPlacementConstraints())
+            .withVolumes(taskDefinition.getVolumes());
+
+    logger.info("Creating task definition {} with container image {}", taskFamily, imageName);
+    return awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
   }
 
   /**

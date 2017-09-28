@@ -98,15 +98,20 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    logger.info("Executing container service deploy");
-    ContextData contextData = buildContextData(context);
-    Activity activity = buildActivity(context, contextData);
-    CommandStateExecutionData executionData = buildStateExecutionData(contextData, activity.getUuid());
+    try {
+      logger.info("Executing container service deploy");
+      ContextData contextData = buildContextData(context);
+      Activity activity = buildActivity(context, contextData);
+      CommandStateExecutionData executionData = buildStateExecutionData(contextData, activity.getUuid());
 
-    if (contextData.containerElement.getResizeStrategy() == RESIZE_NEW_FIRST) {
-      return addNewInstances(contextData, executionData);
-    } else {
-      return downsizeOldInstances(contextData, executionData);
+      if (contextData.containerElement.getResizeStrategy() == RESIZE_NEW_FIRST) {
+        return addNewInstances(contextData, executionData);
+      } else {
+        return downsizeOldInstances(contextData, executionData);
+      }
+    } catch (Exception e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
   }
 
@@ -265,21 +270,26 @@ public abstract class ContainerServiceDeploy extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    logger.info("Received async response");
-    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
-    CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
+    try {
+      logger.info("Received async response");
+      CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
+      CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 
-    if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
-      return buildEndStateExecution(executionData, ExecutionStatus.FAILED);
-    }
+      if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
+        return buildEndStateExecution(executionData, ExecutionStatus.FAILED);
+      }
 
-    ContextData contextData = buildContextData(context);
+      ContextData contextData = buildContextData(context);
 
-    if (!executionData.isDownsize()) {
-      executionData.setNewInstanceStatusSummaries(buildInstanceStatusSummaries(contextData, response));
-      return handleNewInstancesAdded(contextData, executionData);
-    } else {
-      return handleOldInstancesDownsized(contextData, executionData);
+      if (!executionData.isDownsize()) {
+        executionData.setNewInstanceStatusSummaries(buildInstanceStatusSummaries(contextData, response));
+        return handleNewInstancesAdded(contextData, executionData);
+      } else {
+        return handleOldInstancesDownsized(contextData, executionData);
+      }
+    } catch (Exception e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
   }
 
