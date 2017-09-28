@@ -51,19 +51,12 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
-import software.wings.helpers.ext.ecr.EcrClassicService;
-import software.wings.helpers.ext.ecr.EcrService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
@@ -79,28 +72,18 @@ import java.util.stream.Collectors;
  * Created by peeyushaggarwal on 2/3/17.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EcsServiceSetup extends State {
-  private static final int KEEP_N_REVISIONS = 3;
-
+public class EcsServiceSetup extends ContainerServiceSetup {
   @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
 
   private String ecsServiceName;
-  private int maxInstances;
-  private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout = 10; // Minutes
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
   private String roleArn;
   @Inject @Transient private transient AwsClusterService awsClusterService;
-  @Inject @Transient private transient EcrService ecrService;
-  @Inject @Transient private transient EcrClassicService ecrClassicService;
-  @Inject @Transient private transient SettingsService settingsService;
-  @Inject @Transient private transient ServiceResourceService serviceResourceService;
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   /**
    * Instantiates a new state.
@@ -207,8 +190,8 @@ public class EcsServiceSetup extends State {
           aContainerServiceElement()
               .withUuid(serviceId)
               .withName(ecsServiceName)
-              .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-              .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+              .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+              .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
               .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
               .withClusterName(clusterName)
               .withDeploymentType(DeploymentType.ECS)
@@ -340,9 +323,6 @@ public class EcsServiceSetup extends State {
     }
   }
 
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {}
-
   /**
    * Gets load balancer setting id.
    *
@@ -421,22 +401,6 @@ public class EcsServiceSetup extends State {
 
   public void setEcsServiceName(String ecsServiceName) {
     this.ecsServiceName = ecsServiceName;
-  }
-
-  public int getMaxInstances() {
-    return maxInstances;
-  }
-
-  public void setMaxInstances(int maxInstances) {
-    this.maxInstances = maxInstances;
-  }
-
-  public ResizeStrategy getResizeStrategy() {
-    return resizeStrategy;
-  }
-
-  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
-    this.resizeStrategy = resizeStrategy;
   }
 
   public long getServiceSteadyStateTimeout() {
