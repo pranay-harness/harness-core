@@ -209,54 +209,6 @@ public class GitSyncHelper {
     }
   }
 
-  // TODO - when done adding support for EntityUpdateListEvent, we shouldn't need this - a "singleton" will just be
-  // handled as a gitSyncFiles list with one item
-  public void writeAddCommitPush(
-      String name, String content, YamlGitSync ygs, File repoPath, SourceType sourceType, Class klass) {
-    String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
-
-    switch (klass.getCanonicalName()) {
-      // TODO - we may need this (in some form)
-    }
-
-    if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-      String fileName = name + YAML_EXTENSION;
-
-      // we need a rootPath WITHOUT leading or trailing slashes
-      String rootPath = cleanRootPath(ygs.getRootPath());
-
-      File newFile = new File(repoPath + "/" + rootPath, fileName);
-      writeToRepoFile(newFile, content);
-
-      try {
-        DirCache dirCache = null;
-        if (rootPath != null && !rootPath.isEmpty()) {
-          // add new/changed files within the rootPath
-          dirCache = this.git.add().addFilepattern(rootPath).call();
-        } else {
-          // add file by fileName
-          dirCache = this.git.add().addFilepattern(fileName).call();
-        }
-
-      } catch (GitAPIException e) {
-        e.printStackTrace();
-      }
-
-      // commit
-      RevCommit rev = this.commit(
-          COMMIT_AUTHOR, COMMIT_EMAIL, sourceType.name() + ": " + klass.getCanonicalName() + " (" + timestamp + ")");
-
-      // push the change
-      Iterable<PushResult> pushResults = this.push(DEFAULT_COMMIT_BRANCH);
-
-      logger.info("*************** rev.getFullMessage(): " + rev.getFullMessage());
-
-      for (PushResult pr : pushResults) {
-        logger.info("*************** pr.getMessages(): " + pr.getMessages());
-      }
-    }
-  }
-
   public void shutdown() {
     spitOutStatus();
 

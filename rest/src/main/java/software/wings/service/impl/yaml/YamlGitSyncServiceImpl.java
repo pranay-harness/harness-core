@@ -15,18 +15,24 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.utils.Validator;
+import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
@@ -56,6 +62,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private SetupYamlResourceService setupYamlResourceService;
+  @Inject private AppYamlResourceService appYamlResourceService;
+  @Inject private YamlResourceService yamlResourceService;
+  @Inject private CommandService commandService;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -159,7 +169,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
     // check to see if we need to push the initial yaml for this entity to synced Git repo
     if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-      createEntityUpdateEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
+      createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
     }
 
     return getByUuid(yamlGitSync.getUuid(), accountId, appId);
@@ -194,7 +204,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       // check to see if sync mode has changed such that we need to push the yaml to synced Git repo
       if (yamlGitSync.getSyncMode() == SyncMode.GIT_TO_HARNESS || yamlGitSync.getSyncMode() == null) {
         if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-          createEntityUpdateEvent(accountId, appId, ygs, SourceType.GIT_SYNC_UPDATE);
+          createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_UPDATE);
         }
       }
 
@@ -204,55 +214,71 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     return null;
   }
 
-  public void createEntityUpdateEvent(String accountId, String appId, YamlGitSync ygs, SourceType sourceType) {
+  public void createEntityUpdateListEvent(String accountId, String appId, YamlGitSync ygs, SourceType sourceType) {
     String name = "";
     Class klass = null;
+    String yaml = "";
 
     switch (ygs.getType()) {
       case SETUP:
         name = "setup";
         klass = Account.class;
+        yaml = setupYamlResourceService.getSetup(accountId).getResource().getYaml();
         break;
       case APP:
         Application app = appService.get(appId);
         name = app.getName();
         klass = Application.class;
+        yaml = appYamlResourceService.getApp(appId).getResource().getYaml();
         break;
       case SERVICE:
         Service service = serviceResourceService.get(appId, ygs.getEntityId());
         name = service.getName();
         klass = Service.class;
+        yaml = serviceYamlResourceService.getServiceYaml(service);
         break;
       case SERVICE_COMMAND:
+        ServiceCommand serviceCommand = commandService.getServiceCommand(appId, ygs.getEntityId());
+        name = serviceCommand.getName();
+        klass = ServiceCommand.class;
+        yaml = yamlResourceService.getServiceCommand(appId, serviceCommand.getUuid()).getResource().getYaml();
         break;
       case ENVIRONMENT:
         Environment environment = environmentService.get(appId, ygs.getEntityId(), false);
         name = environment.getName();
         klass = Environment.class;
+        yaml = yamlResourceService.getEnvironment(appId, environment.getUuid()).getResource().getYaml();
         break;
       case SETTING:
         SettingAttribute settingAttribute = settingsService.get(appId, ygs.getEntityId());
         name = settingAttribute.getName();
         klass = SettingAttribute.class;
+        yaml = yamlResourceService.getSettingAttribute(accountId, settingAttribute.getUuid()).getResource().getYaml();
         break;
       case WORKFLOW:
         Workflow workflow = workflowService.readWorkflow(appId, ygs.getEntityId());
         name = workflow.getName();
         klass = Workflow.class;
+        yaml = yamlResourceService.getWorkflow(appId, workflow.getUuid()).getResource().getYaml();
         break;
       case PIPELINE:
         Pipeline pipeline = pipelineService.readPipeline(appId, ygs.getEntityId(), false);
         name = pipeline.getName();
         klass = Pipeline.class;
+        yaml = yamlResourceService.getPipeline(appId, pipeline.getUuid()).getResource().getYaml();
         break;
       case TRIGGER:
         ArtifactStream artifactStream = artifactStreamService.get(appId, ygs.getEntityId());
         Service asService = serviceResourceService.get(appId, artifactStream.getServiceId());
         name = artifactStream.getSourceName() + "(" + asService.getName() + ")";
         klass = ArtifactStream.class;
+        yaml = yamlResourceService.getTrigger(appId, artifactStream.getUuid()).getResource().getYaml();
         break;
       case FOLDER:
-        // TODO - needs implementation
+        // TODO - not sure what is correct (ultimately) for this
+        name = ygs.getDirectoryPath();
+        klass = FolderNode.class;
+        yaml = "";
         break;
       default:
         // nothing to do
@@ -266,6 +292,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
                                               .withAppId(appId)
                                               .withClass(klass)
                                               .withSourceType(sourceType)
+                                              .withYaml(yaml)
                                               .build();
 
     // create an EntityUpdateListEvent and queue it
@@ -361,72 +388,5 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     gsh.shutdown();
 
     return true;
-  }
-
-  // TODO - when done adding support for EntityUpdateListEvent, we shouldn't need this - a "singleton" EntityUpdateEvent
-  // will just be handled as a List with one item
-  public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
-    logger.info("*************** handleEntityUpdateEvent: " + entityUpdateEvent);
-
-    String entityId = entityUpdateEvent.getEntityId();
-    String name = entityUpdateEvent.getName();
-    String accountId = entityUpdateEvent.getAccountId();
-    String appId = entityUpdateEvent.getAppId();
-    SourceType sourceType = entityUpdateEvent.getSourceType();
-    Class klass = entityUpdateEvent.getKlass();
-    String yaml = entityUpdateEvent.getYaml();
-
-    if (entityId == null || entityId.isEmpty()) {
-      logger.info("ERROR: EntityUpdateEvent entityId is missing!");
-      return false;
-    }
-
-    if (sourceType == null) {
-      logger.info("ERROR: EntityUpdateEvent sourceType is missing!");
-      return false;
-    }
-
-    if (klass == null) {
-      logger.info("ERROR: EntityUpdateEvent class is missing!");
-      return false;
-    }
-
-    YamlGitSync ygs = get(entityId, accountId, appId);
-
-    if (ygs == null) {
-      // no git sync found for this entity
-      return false;
-    }
-
-    File sshKeyPath = GitSyncHelper.getSshKeyPath(ygs.getSshKey(), entityId);
-    GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
-
-    switch (sourceType) {
-      case ENTITY_CREATE:
-        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-      case GIT_SYNC_CREATE:
-        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-      case ENTITY_UPDATE:
-        // may need separate implementation - for now it "falls through" to GIT_SYNC_UPDATE
-      case GIT_SYNC_UPDATE:
-        File repoPath = gsh.getTempRepoPath(entityId);
-        // clone the repo
-        gsh.clone(ygs.getUrl(), repoPath);
-        gsh.writeAddCommitPush(name, yaml, ygs, repoPath, sourceType, klass);
-        gsh.cleanupTempFiles(sshKeyPath, repoPath);
-        gsh.shutdown();
-
-        return true;
-      case GIT_SYNC_DELETE:
-        // TODO - needs implementation!
-        break;
-      case ENTITY_DELETE:
-        // TODO - needs implementation!
-        break;
-      default:
-        // do nothing
-    }
-
-    return false;
   }
 }

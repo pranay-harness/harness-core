@@ -1,6 +1,7 @@
 package software.wings.resources.yaml;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -99,9 +100,15 @@ public class YamlGitSyncResource {
     Type type = YamlGitSync.convertRestNameToType(restName);
     yamlGitSync.setType(type);
     yamlGitSync.setAccountId(accountId);
-    if ((appId == null || appId.isEmpty()) && type == Type.APP) {
-      appId = yamlGitSync.getEntityId();
+
+    if (appId == null || appId.isEmpty()) {
+      if (type == Type.APP) {
+        appId = yamlGitSync.getEntityId();
+      } else {
+        appId = GLOBAL_APP_ID;
+      }
     }
+
     yamlGitSync.setAppId(appId);
 
     return new RestResponse<>(yamlGitSyncService.save(accountId, appId, yamlGitSync));
@@ -124,6 +131,11 @@ public class YamlGitSyncResource {
   public RestResponse<YamlGitSync> update(@PathParam("type") String restName, @PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlGitSync yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
+
+    if (appId == null || appId.isEmpty()) {
+      appId = GLOBAL_APP_ID;
+    }
+
     yamlGitSync.setAppId(appId);
     Type type = YamlGitSync.convertRestNameToType(restName);
     yamlGitSync.setType(type);
