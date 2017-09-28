@@ -119,6 +119,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
@@ -132,6 +133,8 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -188,6 +191,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PipelineService pipelineService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -526,6 +530,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .field(ID_KEY)
                                 .equal(workflow.getUuid()),
         ops);
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the workflow
+    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
@@ -1277,6 +1290,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = readWorkflow(appId, workflowId, null);
     wingsPersistence.update(
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the workflow
+    eule.addEntityUpdateEvent(entityUpdateService.workflowListUpdate(workflow, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
+
     return readWorkflow(appId, workflowId, defaultVersion);
   }
 
