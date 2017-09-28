@@ -15,6 +15,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
@@ -57,6 +58,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
+import com.amazonaws.services.ec2.model.DescribeTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
@@ -65,6 +67,7 @@ import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
+import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ec2.model.Vpc;
@@ -688,6 +691,39 @@ public class AwsHelperService {
           .getSubnets()
           .stream()
           .map(Subnet::getSubnetId)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
+  }
+
+  public List<String> listTags(AwsConfig awsConfig, String region) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonEC2Client
+          .describeTags(new DescribeTagsRequest()
+                            .withFilters(new Filter().withName("resource-type").withValues("instance"))
+                            .withMaxResults(1000))
+          .getTags()
+          .stream()
+          .map(TagDescription::getKey)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
+  }
+
+  public List<String> listAutoScalingGroups(AwsConfig awsConfig, String region) {
+    try {
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.valueOf(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient
+          .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
+          .getAutoScalingGroups()
+          .stream()
+          .map(AutoScalingGroup::getAutoScalingGroupName)
           .collect(Collectors.toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
