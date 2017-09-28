@@ -84,7 +84,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -235,8 +234,7 @@ public class CommandState extends State {
 
       Application application = appService.get(serviceInstance.getAppId());
 
-      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
-          Collectors.toMap(Map.Entry::getKey, entry -> context.renderExpression(entry.getValue())));
+      Map<String, String> serviceVariables = context.getServiceVariables();
 
       Activity.Builder activityBuilder =
           anActivity()

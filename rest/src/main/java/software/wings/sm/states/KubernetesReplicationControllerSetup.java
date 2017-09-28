@@ -8,9 +8,9 @@ import static software.wings.api.KubernetesReplicationControllerExecutionData.Ku
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
-import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -89,7 +88,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -102,6 +100,8 @@ public class KubernetesReplicationControllerSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
+  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
   private String replicationControllerName;
   private int maxInstances;
@@ -134,47 +134,48 @@ public class KubernetesReplicationControllerSetup extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String serviceId = phaseElement.getServiceElement().getUuid();
-
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-    ImageDetails imageDetails = fetchArtifactDetails(artifact);
-
-    Application app = workflowStandardParams.getApp();
-    String env = workflowStandardParams.getEnv().getName();
-
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null
-        || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-               || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
-    }
-
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-
-    String clusterName;
-    KubernetesConfig kubernetesConfig;
-    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      clusterName = gcpInfraMapping.getClusterName();
-      if (Constants.RUNTIME.equals(clusterName)) {
-        clusterName = getClusterElement(context).getName();
-      }
-      kubernetesConfig =
-          gkeClusterService.getCluster(computeProviderSetting, clusterName, gcpInfraMapping.getNamespace());
-    } else {
-      clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
-    }
-
-    String evaluatedReplicationControllerName;
-    String kubernetesServiceName;
-    String serviceClusterIP;
-    String serviceLoadBalancerEndpoint;
     try {
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String serviceId = phaseElement.getServiceElement().getUuid();
+
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+      ImageDetails imageDetails = fetchArtifactDetails(artifact);
+
+      Application app = workflowStandardParams.getApp();
+      String env = workflowStandardParams.getEnv().getName();
+
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+      if (infrastructureMapping == null
+          || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+                 || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
+      }
+
+      SettingAttribute computeProviderSetting =
+          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+
+      String clusterName;
+      KubernetesConfig kubernetesConfig;
+      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+        GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
+        clusterName = gcpInfraMapping.getClusterName();
+        if (Constants.RUNTIME.equals(clusterName)) {
+          clusterName = getClusterElement(context).getName();
+        }
+        kubernetesConfig =
+            gkeClusterService.getCluster(computeProviderSetting, clusterName, gcpInfraMapping.getNamespace());
+      } else {
+        clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+        kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
+      }
+
+      String evaluatedReplicationControllerName;
+      String kubernetesServiceName;
+      String serviceClusterIP;
+      String serviceLoadBalancerEndpoint;
       String rcNamePrefix = isNotEmpty(replicationControllerName)
           ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
           : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
@@ -202,12 +203,9 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesContainerService.createOrReplaceSecret(
           kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
 
-      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
-          Collectors.toMap(Map.Entry::getKey, entry -> context.renderExpression(entry.getValue())));
-
       ReplicationController rcDefinition = createReplicationControllerDefinition(evaluatedReplicationControllerName,
           controllerLabels, serviceId, kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app,
-          secretName, serviceVariables);
+          secretName, context.getServiceVariables());
       kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
 
       serviceClusterIP = null;
@@ -238,37 +236,39 @@ public class KubernetesReplicationControllerSetup extends State {
         logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
         kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
       }
-    } catch (KubernetesClientException e) {
+
+      ContainerServiceElement containerServiceElement =
+          aContainerServiceElement()
+              .withUuid(serviceId)
+              .withName(evaluatedReplicationControllerName)
+              .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
+              .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+              .withClusterName(clusterName)
+              .withNamespace(kubernetesConfig.getNamespace())
+              .withDeploymentType(DeploymentType.KUBERNETES)
+              .withInfraMappingId(phaseElement.getInfraMappingId())
+              .build();
+
+      String dockerImageName = imageDetails.name + ":" + artifact.getBuildNo();
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .addContextElement(containerServiceElement)
+          .addNotifyElement(containerServiceElement)
+          .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
+                                      .withGkeClusterName(clusterName)
+                                      .withKubernetesReplicationControllerName(evaluatedReplicationControllerName)
+                                      .withKubernetesServiceName(kubernetesServiceName)
+                                      .withKubernetesServiceClusterIP(serviceClusterIP)
+                                      .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
+                                      .withDockerImageName(dockerImageName)
+                                      .build())
+          .build();
+    } catch (Exception e) {
+      if (e instanceof WingsException)
+        throw e;
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
-
-    ContainerServiceElement containerServiceElement =
-        aContainerServiceElement()
-            .withUuid(serviceId)
-            .withName(evaluatedReplicationControllerName)
-            .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-            .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
-            .withClusterName(clusterName)
-            .withNamespace(kubernetesConfig.getNamespace())
-            .withDeploymentType(DeploymentType.KUBERNETES)
-            .withInfraMappingId(phaseElement.getInfraMappingId())
-            .build();
-
-    String dockerImageName = imageDetails.name + ":" + artifact.getBuildNo();
-    return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(containerServiceElement)
-        .addNotifyElement(containerServiceElement)
-        .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
-                                    .withGkeClusterName(clusterName)
-                                    .withKubernetesReplicationControllerName(evaluatedReplicationControllerName)
-                                    .withKubernetesServiceName(kubernetesServiceName)
-                                    .withKubernetesServiceClusterIP(serviceClusterIP)
-                                    .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
-                                    .withDockerImageName(dockerImageName)
-                                    .build())
-        .build();
   }
 
   private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails) {
@@ -393,20 +393,18 @@ public class KubernetesReplicationControllerSetup extends State {
       rc.getSpec().setReplicas(0);
 
       // Set service variables as environment variables
-      for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
-        List<EnvVar> envVars = container.getEnv();
-        Map<String, EnvVar> envVarsMap = new HashMap<>();
-        if (envVars != null) {
-          for (EnvVar envVar : envVars) {
-            envVarsMap.put(envVar.getName(), envVar);
+      if (serviceVariables != null && !serviceVariables.isEmpty()) {
+        Map<String, EnvVar> serviceEnvVars =
+            serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));
+        for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
+          Map<String, EnvVar> envVarsMap = new HashMap<>();
+          if (container.getEnv() != null) {
+            container.getEnv().forEach(envVar -> envVarsMap.put(envVar.getName(), envVar));
           }
+          envVarsMap.putAll(serviceEnvVars);
+          container.setEnv(new ArrayList<>(envVarsMap.values()));
         }
-        if (serviceVariables != null) {
-          for (String name : serviceVariables.keySet()) {
-            envVarsMap.put(name, new EnvVarBuilder().withName(name).withValue(serviceVariables.get(name)).build());
-          }
-        }
-        container.setEnv(new ArrayList<>(envVarsMap.values()));
       }
       return rc;
 

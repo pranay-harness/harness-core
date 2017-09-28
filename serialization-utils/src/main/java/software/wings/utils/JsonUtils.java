@@ -6,6 +6,7 @@ import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -169,6 +170,10 @@ public class JsonUtils {
    */
   public static String asJson(Object obj) {
     return asJson(obj, mapper);
+  }
+
+  public static String asPrettyJson(Object obj) throws JsonProcessingException {
+    return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
   }
 
   /**
