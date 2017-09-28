@@ -53,6 +53,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 
 import java.util.Arrays;
 import javax.inject.Inject;
@@ -70,6 +71,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
   @Mock private BuildSourceService buildSourceService;
   @Mock private ArtifactService artifactService;
+  @Mock private EntityUpdateService entityUpdateService;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
 

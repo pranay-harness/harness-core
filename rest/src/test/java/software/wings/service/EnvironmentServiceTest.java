@@ -1,11 +1,9 @@
 package software.wings.service;
 
-import static java.util.Arrays.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
@@ -17,7 +15,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.ServiceTemplate.Builder.*;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
@@ -46,28 +44,26 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 
-import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -87,6 +83,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private NotificationService notificationService;
   @Mock private PipelineService pipelineService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private EntityUpdateService entityUpdateService;
+  @Mock private AppService appService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
