@@ -12,6 +12,7 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.core.queue.Queue;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 
@@ -29,8 +30,11 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 public class GitSyncHelper {
+  @Inject private Queue<EntityUpdateListEvent> entityUpdateListEventQueue;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final String COMMIT_AUTHOR = "bsollish";
@@ -45,9 +49,16 @@ public class GitSyncHelper {
   private TransportConfigCallback transportConfigCallback;
   private Git git;
 
+  public GitSyncHelper() {}
+
   public GitSyncHelper(String passphrase, String sshKeyPath) {
     this.sshSessionFactory = new CustomJschConfigSessionFactory(passphrase, sshKeyPath);
     this.transportConfigCallback = new CustomTransportConfigCallback(this.sshSessionFactory);
+  }
+
+  public void queueEntityUpdateList(EntityUpdateListEvent entityUpdateListEvent) {
+    // TODO - this Queue is not getting instantiated
+    entityUpdateListEventQueue.send(entityUpdateListEvent);
   }
 
   public Git clone(String Uri, File clonePath) {

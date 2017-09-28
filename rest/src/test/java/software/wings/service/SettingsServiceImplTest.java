@@ -54,6 +54,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -70,6 +71,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private Application application;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private EntityUpdateService entityUpdateService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
