@@ -64,7 +64,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
         10, new ExecutionLogCallback());
     verify(ecsContainerService)
         .provisionTasks(eq(Regions.US_EAST_1.getName()), eq(cloudProviderSetting), eq(CLUSTER_NAME), eq(SERVICE_NAME),
-            eq(5), 10, any(ExecutionLogCallback.class));
+            eq(5), eq(10), any(ExecutionLogCallback.class));
   }
 
   @Test
