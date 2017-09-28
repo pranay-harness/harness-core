@@ -81,6 +81,8 @@ import java.util.stream.Collectors;
 public class EcsServiceSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
+  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
+
   private String ecsServiceName;
   private int maxInstances;
   private ResizeStrategy resizeStrategy;

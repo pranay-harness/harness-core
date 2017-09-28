@@ -101,6 +101,8 @@ public class KubernetesReplicationControllerSetup extends State {
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
+  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
+
   private String replicationControllerName;
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
