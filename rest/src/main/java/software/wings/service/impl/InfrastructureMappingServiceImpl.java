@@ -455,6 +455,32 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public List<String> listTags(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listTags(computeProviderSetting, region);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listAutoScalingGroups(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
   public Map<String, String> listAllRoles(String appId, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);

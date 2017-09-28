@@ -371,4 +371,24 @@ public interface InfrastructureMappingService {
    * @return the map
    */
   Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
+
+  /**
+   * List tags list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
+  List<String> listTags(String appId, String computeProviderId, String region);
+
+  /**
+   * List auto scaling groups list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
+  List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
 }
