@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
@@ -713,7 +714,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Lists.newArrayList();
+    return Sets.newHashSet();
   }
 
   public List<String> listAutoScalingGroups(AwsConfig awsConfig, String region) {
