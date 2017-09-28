@@ -28,7 +28,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
       String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback) {
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
