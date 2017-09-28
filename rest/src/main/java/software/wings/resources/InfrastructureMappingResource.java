@@ -20,6 +20,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -232,7 +233,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/tags")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
+  public RestResponse<Set<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listTags(appId, computeProviderId, region));
   }

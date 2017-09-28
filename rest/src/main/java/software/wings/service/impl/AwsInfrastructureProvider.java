@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -320,7 +321,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
   }
 
-  public List<String> listTags(SettingAttribute computeProviderSetting, String region) {
+  public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listTags(awsConfig, region);
   }

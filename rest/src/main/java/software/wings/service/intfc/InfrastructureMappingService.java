@@ -17,6 +17,7 @@ import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -380,7 +381,7 @@ public interface InfrastructureMappingService {
    * @param region            the region
    * @return the list
    */
-  List<String> listTags(String appId, String computeProviderId, String region);
+  Set<String> listTags(String appId, String computeProviderId, String region);
 
   /**
    * List auto scaling groups list.

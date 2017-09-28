@@ -158,6 +158,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -698,7 +699,7 @@ public class AwsHelperService {
     return Lists.newArrayList();
   }
 
-  public List<String> listTags(AwsConfig awsConfig, String region) {
+  public Set<String> listTags(AwsConfig awsConfig, String region) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonEC2Client
@@ -708,7 +709,7 @@ public class AwsHelperService {
           .getTags()
           .stream()
           .map(TagDescription::getKey)
-          .collect(Collectors.toList());
+          .collect(Collectors.toSet());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
