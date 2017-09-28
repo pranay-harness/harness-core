@@ -104,15 +104,17 @@ public abstract class ContainerServiceDeploy extends State {
       Activity activity = buildActivity(context, contextData);
       CommandStateExecutionData executionData = buildStateExecutionData(contextData, activity.getUuid());
 
+      logger.info("Cleaning up old versions");
+      cleanup(contextData.settingAttribute, contextData.region, contextData.containerElement);
+
       if (contextData.containerElement.getResizeStrategy() == RESIZE_NEW_FIRST) {
         return addNewInstances(contextData, executionData);
       } else {
         return downsizeOldInstances(contextData, executionData);
       }
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -290,10 +292,9 @@ public abstract class ContainerServiceDeploy extends State {
       } else {
         return handleOldInstancesDownsized(contextData, executionData);
       }
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -304,7 +305,7 @@ public abstract class ContainerServiceDeploy extends State {
       // Done adding new instances, now downsize old instances
       return downsizeOldInstances(contextData, executionData);
     } else {
-      return cleanupAndReturnSuccess(contextData, executionData);
+      return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
     }
   }
 
@@ -314,14 +315,8 @@ public abstract class ContainerServiceDeploy extends State {
       // Done downsizing old instances, now add new instances
       return addNewInstances(contextData, executionData);
     } else {
-      return cleanupAndReturnSuccess(contextData, executionData);
+      return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
     }
-  }
-
-  private ExecutionResponse cleanupAndReturnSuccess(ContextData contextData, CommandStateExecutionData executionData) {
-    logger.info("Cleaning up old versions");
-    cleanup(contextData.settingAttribute, contextData.region, contextData.containerElement);
-    return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
   }
 
   @Override

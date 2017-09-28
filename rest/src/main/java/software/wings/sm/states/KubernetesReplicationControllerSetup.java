@@ -263,10 +263,9 @@ public class KubernetesReplicationControllerSetup extends State {
                                       .withDockerImageName(dockerImageName)
                                       .build())
           .build();
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
