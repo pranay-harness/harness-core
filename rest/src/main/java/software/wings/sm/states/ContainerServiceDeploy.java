@@ -81,8 +81,6 @@ import java.util.stream.Collectors;
  * Created by brett on 4/7/17
  */
 public abstract class ContainerServiceDeploy extends State {
-  static final int KEEP_N_REVISIONS = 3;
-
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
   @Inject @Transient protected transient SettingsService settingsService;
@@ -103,9 +101,6 @@ public abstract class ContainerServiceDeploy extends State {
       ContextData contextData = buildContextData(context);
       Activity activity = buildActivity(context, contextData);
       CommandStateExecutionData executionData = buildStateExecutionData(contextData, activity.getUuid());
-
-      logger.info("Cleaning up old versions");
-      cleanup(contextData.settingAttribute, contextData.region, contextData.containerElement);
 
       if (contextData.containerElement.getResizeStrategy() == RESIZE_NEW_FIRST) {
         return addNewInstances(contextData, executionData);
@@ -339,9 +334,6 @@ public abstract class ContainerServiceDeploy extends State {
   public abstract InstanceUnitType getInstanceUnitType();
 
   public abstract String getCommandName();
-
-  protected void cleanup(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {}
 
   protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement);
