@@ -718,7 +718,7 @@ public class AwsHelperService {
   public List<String> listAutoScalingGroups(AwsConfig awsConfig, String region) {
     try {
       AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.valueOf(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonAutoScalingClient
           .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
           .getAutoScalingGroups()
