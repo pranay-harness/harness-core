@@ -504,6 +504,9 @@ public class ConfigFile extends BaseFile implements Encryptable {
         .withRelativeFilePath(getRelativeFilePath())
         .withTargetToAllEnv(isTargetToAllEnv())
         .withEncrypted(isEncrypted())
+        .withAccountId(getAccountId())
+        .withConfigOverrideExpression(getConfigOverrideExpression())
+        .withConfigOverrideType(getConfigOverrideType())
         .build();
   }
 
