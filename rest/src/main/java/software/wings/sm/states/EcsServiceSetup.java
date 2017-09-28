@@ -54,7 +54,6 @@ import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -96,7 +95,6 @@ public class EcsServiceSetup extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   /**
