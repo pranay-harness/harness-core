@@ -217,8 +217,9 @@ public class EcsServiceSetup extends State {
           .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
           .build();
     } catch (Exception e) {
-      if (e instanceof WingsException)
+      if (e instanceof WingsException) {
         throw e;
+      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -235,9 +236,7 @@ public class EcsServiceSetup extends State {
 
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
                         .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
-
     TaskDefinition taskDefinition = JsonUtils.asObject(config, TaskDefinition.class);
-
     taskDefinition.setFamily(taskFamily);
 
     // Set service variables as environment variables

@@ -264,8 +264,9 @@ public class KubernetesReplicationControllerSetup extends State {
                                       .build())
           .build();
     } catch (Exception e) {
-      if (e instanceof WingsException)
+      if (e instanceof WingsException) {
         throw e;
+      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -372,6 +373,7 @@ public class KubernetesReplicationControllerSetup extends State {
       configTemplate = kubernetesContainerTask.fetchYamlConfig();
       type = YAML;
     }
+
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName + ":" + tag)
                         .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
                         .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
