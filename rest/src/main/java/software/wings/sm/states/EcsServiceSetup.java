@@ -9,6 +9,8 @@ import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEH
 import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
+import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -71,7 +73,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +80,8 @@ import java.util.stream.Collectors;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceSetup extends State {
+  private static final int KEEP_N_REVISIONS = 3;
+
   @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
@@ -86,7 +89,7 @@ public class EcsServiceSetup extends State {
   private String ecsServiceName;
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
-  private int serviceSteadyStateTimeout = (int) TimeUnit.MINUTES.toMinutes(10);
+  private int serviceSteadyStateTimeout = 10; // Minutes
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
@@ -136,8 +139,7 @@ public class EcsServiceSetup extends State {
       }
 
       String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-      SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
       EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
           app.getAppId(), serviceId, DeploymentType.ECS.name());
@@ -156,7 +158,7 @@ public class EcsServiceSetup extends State {
           : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
 
       TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily,
-          region, computeProviderSetting, context.getServiceVariables());
+          region, settingAttribute, context.getServiceVariables());
 
       String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
@@ -196,7 +198,10 @@ public class EcsServiceSetup extends State {
       }
 
       logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
-      awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
+      awsClusterService.createService(region, settingAttribute, createServiceRequest);
+
+      logger.info("Cleaning up old versions");
+      cleanup(settingAttribute, region, ecsServiceName, clusterName);
 
       ContainerServiceElement containerServiceElement =
           aContainerServiceElement()
@@ -216,10 +221,9 @@ public class EcsServiceSetup extends State {
           .addNotifyElement(containerServiceElement)
           .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
           .build();
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -315,6 +319,25 @@ public class EcsServiceSetup extends State {
         .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
         .findFirst()
         .orElse(null);
+  }
+
+  private void cleanup(SettingAttribute settingAttribute, String region, String ecsServiceName, String clusterName) {
+    int revision = getRevisionFromServiceName(ecsServiceName);
+    if (revision > KEEP_N_REVISIONS) {
+      int minRevisionToKeep = revision - KEEP_N_REVISIONS;
+      String serviceNamePrefix = getServiceNamePrefixFromServiceName(ecsServiceName);
+      awsClusterService.getServices(region, settingAttribute, clusterName)
+          .stream()
+          .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
+          .collect(Collectors.toList())
+          .forEach(s -> {
+            String oldServiceName = s.getServiceName();
+            if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
+              logger.info("Deleting old version: " + oldServiceName);
+              awsClusterService.deleteService(region, settingAttribute, clusterName, oldServiceName);
+            }
+          });
+    }
   }
 
   @Override

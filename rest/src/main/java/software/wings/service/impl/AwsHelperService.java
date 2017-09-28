@@ -495,19 +495,19 @@ public class AwsHelperService {
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
     logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getMessage()));
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;
       }
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
     }
   }
 

@@ -23,7 +23,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.KubernetesConvention;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -89,32 +88,6 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       activeOldReplicationControllers.forEach(rc -> result.put(rc.getMetadata().getName(), rc.getSpec().getReplicas()));
     }
     return result;
-  }
-
-  @Override
-  protected void cleanup(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
-    int revision = getRevisionFromControllerName(containerServiceElement.getName());
-    if (revision >= ContainerServiceDeploy.KEEP_N_REVISIONS) {
-      int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS + 1;
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(settingAttribute, containerServiceElement);
-      ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
-      String controllerNamePrefix =
-          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(containerServiceElement.getName());
-      if (replicationControllers != null) {
-        replicationControllers.getItems()
-            .stream()
-            .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
-            .collect(Collectors.toList())
-            .forEach(rc -> {
-              String controllerName = rc.getMetadata().getName();
-              if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
-                logger.info("Deleting old version: " + controllerName);
-                kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
-              }
-            });
-      }
-    }
   }
 
   private KubernetesConfig getKubernetesConfig(

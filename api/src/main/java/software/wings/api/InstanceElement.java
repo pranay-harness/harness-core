@@ -20,6 +20,7 @@ public class InstanceElement implements ContextElement {
   private String uuid;
   private String displayName;
   private String hostName;
+  private String dockerId;
   private HostElement host;
   private ServiceTemplateElement serviceTemplateElement;
 
@@ -85,6 +86,14 @@ public class InstanceElement implements ContextElement {
     this.hostName = hostName;
   }
 
+  public String getDockerId() {
+    return dockerId;
+  }
+
+  public void setDockerId(String dockerId) {
+    this.dockerId = dockerId;
+  }
+
   /**
    * Gets host element.
    *
@@ -128,44 +137,25 @@ public class InstanceElement implements ContextElement {
         + ", hostElement=" + host + ", serviceTemplateElement=" + serviceTemplateElement + '}';
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String uuid;
     private String displayName;
     private String hostName;
+    private String dockerId;
     private HostElement host;
     private ServiceTemplateElement serviceTemplateElement;
 
     private Builder() {}
 
-    /**
-     * An instance element builder.
-     *
-     * @return the builder
-     */
     public static Builder anInstanceElement() {
       return new Builder();
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With display name builder.
-     *
-     * @param displayName the display name
-     * @return the builder
-     */
     public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
@@ -176,38 +166,37 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
-    /**
-     * With host element builder.
-     *
-     * @param hostElement the host element
-     * @return the builder
-     */
-    public Builder withHostElement(HostElement hostElement) {
-      this.host = hostElement;
+    public Builder withDockerId(String dockerId) {
+      this.dockerId = dockerId;
       return this;
     }
 
-    /**
-     * With service template element builder.
-     *
-     * @param serviceTemplateElement the service template element
-     * @return the builder
-     */
+    public Builder withHost(HostElement host) {
+      this.host = host;
+      return this;
+    }
+
     public Builder withServiceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
       this.serviceTemplateElement = serviceTemplateElement;
       return this;
     }
 
-    /**
-     * Build instance element.
-     *
-     * @return the instance element
-     */
+    public Builder but() {
+      return anInstanceElement()
+          .withUuid(uuid)
+          .withDisplayName(displayName)
+          .withHostName(hostName)
+          .withDockerId(dockerId)
+          .withHost(host)
+          .withServiceTemplateElement(serviceTemplateElement);
+    }
+
     public InstanceElement build() {
       InstanceElement instanceElement = new InstanceElement();
       instanceElement.setUuid(uuid);
       instanceElement.setDisplayName(displayName);
       instanceElement.setHostName(hostName);
+      instanceElement.setDockerId(dockerId);
       instanceElement.setHost(host);
       instanceElement.setServiceTemplateElement(serviceTemplateElement);
       return instanceElement;
