@@ -41,6 +41,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     String namespace = context.getNamespace();
     List<ContainerServiceData> desiredCounts = context.getDesiredCounts();
     String region = context.getRegion();
+    int serviceSteadyStateTimeout = context.getEcsServiceSteadyStateTimeout();
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
@@ -50,7 +51,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
       List<ContainerInfo> containerInfos = new ArrayList<>();
       desiredCounts.forEach(dc
           -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, clusterName, namespace, dc.getName(),
-              dc.getPreviousCount(), dc.getDesiredCount(), executionLogCallback)));
+              dc.getPreviousCount(), dc.getDesiredCount(), serviceSteadyStateTimeout, executionLogCallback)));
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       boolean allContainersSuccess =
           containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -66,5 +67,5 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
 
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
       String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
-      ExecutionLogCallback executionLogCallback);
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 }

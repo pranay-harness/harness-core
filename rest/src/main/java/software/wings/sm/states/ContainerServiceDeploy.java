@@ -428,6 +428,7 @@ public abstract class ContainerServiceDeploy extends State {
         .withActivityId(activityId)
         .withCloudProviderSetting(contextData.settingAttribute)
         .withDesiredCounts(desiredCounts)
+        .withEcsServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .build();
   }
 

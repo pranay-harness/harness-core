@@ -82,6 +82,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -93,6 +94,7 @@ public class EcsServiceSetup extends State {
   private String ecsServiceName;
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
+  private int serviceSteadyStateTimeout = (int) TimeUnit.MINUTES.toMinutes(10);
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
@@ -239,6 +241,7 @@ public class EcsServiceSetup extends State {
             .withName(ecsServiceName)
             .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
             .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+            .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
             .withClusterName(clusterName)
             .withDeploymentType(DeploymentType.ECS)
             .withInfraMappingId(phaseElement.getInfraMappingId())
@@ -495,6 +498,14 @@ public class EcsServiceSetup extends State {
 
   public void setResizeStrategy(ResizeStrategy resizeStrategy) {
     this.resizeStrategy = resizeStrategy;
+  }
+
+  public long getServiceSteadyStateTimeout() {
+    return serviceSteadyStateTimeout;
+  }
+
+  public void setServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+    this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }
 
   public static final class EcsServiceSetupBuilder {
