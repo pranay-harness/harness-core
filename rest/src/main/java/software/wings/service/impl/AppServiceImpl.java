@@ -25,6 +25,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -42,6 +43,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -57,7 +59,10 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,6 +106,8 @@ public class AppServiceImpl implements AppService {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AccountService accountService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -123,6 +130,20 @@ public class AppServiceImpl implements AppService {
             .build());
     addCronForStateMachineExecutionCleanup(application);
     addCronForContainerSync(application);
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(app.getAccountId());
+    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the app
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
+
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -285,6 +306,20 @@ public class AppServiceImpl implements AppService {
                                                    .set("name", app.getName())
                                                    .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the account (setup)
+    Account account = accountService.get(app.getAccountId());
+    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the app
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
+
     return wingsPersistence.get(Application.class, app.getUuid());
   }
 

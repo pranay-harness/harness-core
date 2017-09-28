@@ -9,6 +9,7 @@ import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
@@ -28,6 +29,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.ConfigVarYaml;
@@ -47,6 +49,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Inject private YamlGitSyncService yamlGitSyncService;
 
   /**
    * Gets the yaml version of a service by serviceId
@@ -59,6 +62,19 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
     Service service = serviceResourceService.get(appId, serviceId, true);
 
     if (service != null) {
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, service.getUuid(), getServiceYamlObj(service), service.getName() + ".yaml");
+    }
+
+    RestResponse rr = new RestResponse<>();
+    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
+        "Service with this serviceId: '" + serviceId + "' was not found!");
+
+    return rr;
+  }
+
+  public ServiceYaml getServiceYamlObj(Service service) {
+    if (service != null) {
       List<ServiceCommand> serviceCommands = service.getServiceCommands();
 
       ServiceYaml serviceYaml = new ServiceYaml(service);
@@ -67,14 +83,15 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
       List<ServiceVariable> serviceVariables = service.getServiceVariables();
       serviceYaml.setConfigVariablesFromServiceVariables(serviceVariables);
 
-      return YamlHelper.getYamlRestResponse(serviceYaml, service.getName() + ".yaml");
+      return serviceYaml;
     }
 
-    RestResponse rr = new RestResponse<>();
-    YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
-        "Service with this serviceId: '" + serviceId + "' was not found!");
+    return null;
+  }
 
-    return rr;
+  public String getServiceYaml(Service service) {
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
+    return yaml.dump(getServiceYamlObj(service));
   }
 
   /**

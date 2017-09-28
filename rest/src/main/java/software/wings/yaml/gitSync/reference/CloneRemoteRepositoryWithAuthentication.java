@@ -1,4 +1,4 @@
-package software.wings.yaml.gitSync;
+package software.wings.yaml.gitSync.reference;
 
 /*
    Copyright 2015 Dominik Stadler

@@ -37,6 +37,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -90,6 +91,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
+  @Inject private YamlGitSyncService yamlGitSyncService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -189,7 +191,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return rr;
     }
 
-    return YamlHelper.getYamlRestResponse(serviceCommandYaml, serviceCommand.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, serviceCommand.getUuid(), serviceCommandYaml, serviceCommand.getName() + ".yaml");
   }
 
   /**
@@ -250,7 +253,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       }
     }
 
-    return YamlHelper.getYamlRestResponse(pipelineYaml, pipeline.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, pipeline.getUuid(), pipelineYaml, pipeline.getName() + ".yaml");
   }
 
   /**
@@ -343,7 +347,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
 
-    return YamlHelper.getYamlRestResponse(artifactStreamYaml, payLoadName + ".yaml");
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, artifactStream.getUuid(), artifactStreamYaml, payLoadName + ".yaml");
   }
 
   /**
@@ -420,7 +425,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             ... more phases
     */
 
-    return YamlHelper.getYamlRestResponse(workflowYaml, workflow.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, workflow.getUuid(), workflowYaml, workflow.getName() + ".yaml");
   }
 
   /**
@@ -520,7 +526,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     }
 
     if (settingAttributeYaml != null) {
-      return YamlHelper.getYamlRestResponse(settingAttributeYaml, settingAttribute.getName() + ".yaml");
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, settingAttribute.getUuid(), settingAttributeYaml, settingAttribute.getName() + ".yaml");
     }
 
     return null;
@@ -553,7 +560,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     Environment environment = environmentService.get(appId, envId, true);
     EnvironmentYaml environmentYaml = new EnvironmentYaml(environment);
 
-    return YamlHelper.getYamlRestResponse(environmentYaml, environment.getName() + ".yaml");
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, environment.getUuid(), environmentYaml, environment.getName() + ".yaml");
   }
 
   /**
