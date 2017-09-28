@@ -924,6 +924,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
+    List<Service> services = awsHelperService
+                                 .describeServices(region, awsConfig,
+                                     new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                                 .getServices();
+    int oldDesiredCount = services != null && services.size() > 0 ? services.get(0).getDesiredCount() : 0;
+
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
@@ -940,8 +946,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     waitForTasksToBeInRunningStateButDontThrowException(
         region, awsConfig, clusterName, serviceName, executionLogCallback);
 
-    waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
-        serviceSteadyStateTimeout, executionLogCallback);
+    if (oldDesiredCount < desiredCount) { // don't do it for downsize.
+      waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
+          serviceSteadyStateTimeout, executionLogCallback);
+    }
 
     List<String> taskArns =
         awsHelperService
@@ -1011,10 +1019,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
       String clusterName, String serviceName, int serviceSteadyStateTimeout,
       ExecutionLogCallback executionLogCallback) {
+    int retryCount = (serviceSteadyStateTimeout * 60 * 1000) / SLEEP_INTERVAL;
+
+    if (retryCount == 0) {
+      return;
+    }
+
     try {
       final String[] excludedEventId = {latestExcludedEventId};
-
-      int retryCount = (serviceSteadyStateTimeout * 60 * 1000) / SLEEP_INTERVAL;
       do {
         executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
         Service service = awsHelperService
