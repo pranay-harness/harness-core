@@ -81,8 +81,6 @@ import java.util.stream.Collectors;
  * Created by brett on 4/7/17
  */
 public abstract class ContainerServiceDeploy extends State {
-  static final int KEEP_N_REVISIONS = 3;
-
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
   @Inject @Transient protected transient SettingsService settingsService;
@@ -109,10 +107,9 @@ public abstract class ContainerServiceDeploy extends State {
       } else {
         return downsizeOldInstances(contextData, executionData);
       }
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -290,10 +287,9 @@ public abstract class ContainerServiceDeploy extends State {
       } else {
         return handleOldInstancesDownsized(contextData, executionData);
       }
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -304,7 +300,7 @@ public abstract class ContainerServiceDeploy extends State {
       // Done adding new instances, now downsize old instances
       return downsizeOldInstances(contextData, executionData);
     } else {
-      return cleanupAndReturnSuccess(contextData, executionData);
+      return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
     }
   }
 
@@ -314,14 +310,8 @@ public abstract class ContainerServiceDeploy extends State {
       // Done downsizing old instances, now add new instances
       return addNewInstances(contextData, executionData);
     } else {
-      return cleanupAndReturnSuccess(contextData, executionData);
+      return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
     }
-  }
-
-  private ExecutionResponse cleanupAndReturnSuccess(ContextData contextData, CommandStateExecutionData executionData) {
-    logger.info("Cleaning up old versions");
-    cleanup(contextData.settingAttribute, contextData.region, contextData.containerElement);
-    return buildEndStateExecution(executionData, ExecutionStatus.SUCCESS);
   }
 
   @Override
@@ -344,9 +334,6 @@ public abstract class ContainerServiceDeploy extends State {
   public abstract InstanceUnitType getInstanceUnitType();
 
   public abstract String getCommandName();
-
-  protected void cleanup(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {}
 
   protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement);
@@ -419,8 +406,12 @@ public abstract class ContainerServiceDeploy extends State {
                       .withInstanceElement(
                           anInstanceElement()
                               .withUuid(containerInfo.getContainerId())
+                              .withDockerId(containerInfo.getContainerId())
                               .withHostName(containerInfo.getHostName())
-                              .withHostElement(aHostElement().withHostName(containerInfo.getHostName()).build())
+                              .withHost(aHostElement()
+                                            .withHostName(containerInfo.getHostName())
+                                            .withEc2Instance(containerInfo.getEc2Instance())
+                                            .build())
                               .withServiceTemplateElement(aServiceTemplateElement()
                                                               .withUuid(serviceTemplateKey.getId().toString())
                                                               .withServiceElement(contextData.serviceElement)

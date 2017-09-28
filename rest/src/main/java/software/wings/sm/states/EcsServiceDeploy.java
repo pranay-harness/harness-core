@@ -82,28 +82,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected void cleanup(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
-    int revision = getRevisionFromServiceName(containerServiceElement.getName());
-    if (revision > ContainerServiceDeploy.KEEP_N_REVISIONS) {
-      int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS;
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceElement.getName());
-      awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
-          .stream()
-          .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
-          .collect(Collectors.toList())
-          .forEach(s -> {
-            String oldServiceName = s.getServiceName();
-            if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
-              logger.info("Deleting old version: " + oldServiceName);
-              awsClusterService.deleteService(
-                  region, settingAttribute, containerServiceElement.getClusterName(), oldServiceName);
-            }
-          });
-    }
-  }
-
-  @Override
   public String getCommandName() {
     return commandName;
   }

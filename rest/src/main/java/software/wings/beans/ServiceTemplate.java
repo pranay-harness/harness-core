@@ -43,6 +43,7 @@ public class ServiceTemplate extends Base {
         .withDescription(getDescription())
         .withServiceId(getServiceId())
         .withDefaultServiceTemplate(isDefaultServiceTemplate())
+        .withName(getName())
         .build();
   }
   /**

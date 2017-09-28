@@ -6,6 +6,7 @@ import static org.awaitility.Awaitility.with;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
@@ -13,6 +14,7 @@ import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLA
 import static software.wings.beans.container.ContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,9 +99,11 @@ import java.util.stream.Collectors;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesReplicationControllerSetup extends State {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
+  private static final int KEEP_N_REVISIONS = 3;
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
+  @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
 
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
@@ -153,8 +157,12 @@ public class KubernetesReplicationControllerSetup extends State {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
       }
 
-      SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+          ? aSettingAttribute()
+                .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
+                .build()
+          : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
       String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
       String clusterName;
@@ -165,8 +173,7 @@ public class KubernetesReplicationControllerSetup extends State {
         if (Constants.RUNTIME.equals(clusterName)) {
           clusterName = getClusterElement(context).getName();
         }
-        kubernetesConfig =
-            gkeClusterService.getCluster(computeProviderSetting, clusterName, gcpInfraMapping.getNamespace());
+        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName, gcpInfraMapping.getNamespace());
       } else {
         clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
         kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
@@ -237,6 +244,9 @@ public class KubernetesReplicationControllerSetup extends State {
         kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
       }
 
+      logger.info("Cleaning up old versions");
+      cleanup(kubernetesConfig, settingAttribute, evaluatedReplicationControllerName);
+
       ContainerServiceElement containerServiceElement =
           aContainerServiceElement()
               .withUuid(serviceId)
@@ -263,10 +273,9 @@ public class KubernetesReplicationControllerSetup extends State {
                                       .withDockerImageName(dockerImageName)
                                       .build())
           .build();
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      }
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
@@ -549,6 +558,28 @@ public class KubernetesReplicationControllerSetup extends State {
         .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
         .findFirst()
         .orElse(null);
+  }
+
+  private void cleanup(KubernetesConfig kubernetesConfig, SettingAttribute settingAttribute, String rcName) {
+    int revision = getRevisionFromControllerName(rcName);
+    if (revision >= KEEP_N_REVISIONS) {
+      int minRevisionToKeep = revision - KEEP_N_REVISIONS + 1;
+      ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+      String controllerNamePrefix = KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(rcName);
+      if (replicationControllers != null) {
+        replicationControllers.getItems()
+            .stream()
+            .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
+            .collect(Collectors.toList())
+            .forEach(rc -> {
+              String controllerName = rc.getMetadata().getName();
+              if (getRevisionFromControllerName(controllerName) < minRevisionToKeep) {
+                logger.info("Deleting old version: " + controllerName);
+                kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
+              }
+            });
+      }
+    }
   }
 
   @Override
