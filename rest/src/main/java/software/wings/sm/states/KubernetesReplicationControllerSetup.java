@@ -8,9 +8,9 @@ import static software.wings.api.KubernetesReplicationControllerExecutionData.Ku
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
-import static software.wings.beans.container.KubernetesContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.ContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -89,7 +88,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -202,12 +200,9 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesContainerService.createOrReplaceSecret(
           kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
 
-      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
-          Collectors.toMap(Map.Entry::getKey, entry -> context.renderExpression(entry.getValue())));
-
       ReplicationController rcDefinition = createReplicationControllerDefinition(evaluatedReplicationControllerName,
           controllerLabels, serviceId, kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app,
-          secretName, serviceVariables);
+          secretName, context.getServiceVariables());
       kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
 
       serviceClusterIP = null;
@@ -238,7 +233,7 @@ public class KubernetesReplicationControllerSetup extends State {
         logger.info("Kubernetes service type set to 'None'. Deleting existing service [{}]", kubernetesServiceName);
         kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
       }
-    } catch (KubernetesClientException e) {
+    } catch (Exception e) {
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", e.getMessage(), e);
     }
@@ -393,20 +388,18 @@ public class KubernetesReplicationControllerSetup extends State {
       rc.getSpec().setReplicas(0);
 
       // Set service variables as environment variables
-      for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
-        List<EnvVar> envVars = container.getEnv();
-        Map<String, EnvVar> envVarsMap = new HashMap<>();
-        if (envVars != null) {
-          for (EnvVar envVar : envVars) {
-            envVarsMap.put(envVar.getName(), envVar);
+      if (serviceVariables != null && !serviceVariables.isEmpty()) {
+        Map<String, EnvVar> serviceEnvVars =
+            serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));
+        for (Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
+          Map<String, EnvVar> envVarsMap = new HashMap<>();
+          if (container.getEnv() != null) {
+            container.getEnv().forEach(envVar -> envVarsMap.put(envVar.getName(), envVar));
           }
+          envVarsMap.putAll(serviceEnvVars);
+          container.setEnv(new ArrayList<>(envVarsMap.values()));
         }
-        if (serviceVariables != null) {
-          for (String name : serviceVariables.keySet()) {
-            envVarsMap.put(name, new EnvVarBuilder().withName(name).withValue(serviceVariables.get(name)).build());
-          }
-        }
-        container.setEnv(new ArrayList<>(envVarsMap.values()));
       }
       return rc;
 
