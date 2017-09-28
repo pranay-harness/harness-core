@@ -1,7 +1,6 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
@@ -59,7 +58,7 @@ public interface YamlGitSyncService {
    */
   public YamlGitSync update(String entityId, String accountId, String appId, YamlGitSync yamlGitSync);
 
-  public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent);
+  // public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent);
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent);
 }
