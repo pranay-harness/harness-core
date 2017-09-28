@@ -71,7 +71,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -86,7 +85,7 @@ public class EcsServiceSetup extends State {
   private String ecsServiceName;
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
-  private int serviceSteadyStateTimeout = (int) TimeUnit.MINUTES.toMinutes(10);
+  private int serviceSteadyStateTimeout = 10; // Minutes
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
