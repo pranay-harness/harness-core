@@ -341,9 +341,26 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       List<ServiceTemplate> serviceTemplates = sourceEnvironment.getServiceTemplates();
       if (serviceTemplates != null) {
         for (ServiceTemplate serviceTemplate : serviceTemplates) {
-          ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
-          clonedServiceTemplate.setEnvId(clonedEnvironment.getUuid());
-          clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
+          // Verify if the service template already exists in the target app
+          PageRequest<ServiceTemplate> serviceTemplatePageRequest =
+              aPageRequest()
+                  .withLimit(PageRequest.UNLIMITED)
+                  .addFilter("appId", EQ, appId)
+                  .addFilter("envId", EQ, clonedEnvironment.getUuid())
+                  .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
+                  .build();
+
+          List<ServiceTemplate> serviceTemplateList =
+              serviceTemplateService.list(serviceTemplatePageRequest, false, false);
+          ServiceTemplate clonedServiceTemplate = null;
+          if (serviceTemplateList != null && serviceTemplateList.size() > 0) {
+            clonedServiceTemplate = serviceTemplateList.get(0);
+          }
+          if (clonedServiceTemplate == null) {
+            clonedServiceTemplate = serviceTemplate.clone();
+            clonedServiceTemplate.setEnvId(clonedEnvironment.getUuid());
+            clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
+          }
           serviceTemplate =
               serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
           if (serviceTemplate != null) {
@@ -351,19 +368,25 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             List<InfrastructureMapping> infrastructureMappings = serviceTemplate.getInfrastructureMappings();
             if (infrastructureMappings != null) {
               for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
-                infrastructureMapping.setUuid(null);
-                infrastructureMapping.setEnvId(clonedEnvironment.getUuid());
-                infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
-                infrastructureMappingService.save(infrastructureMapping);
+                try {
+                  infrastructureMapping.setUuid(null);
+                  infrastructureMapping.setEnvId(clonedEnvironment.getUuid());
+                  infrastructureMapping.setServiceTemplateId(clonedServiceTemplate.getUuid());
+                  infrastructureMappingService.save(infrastructureMapping);
+                } catch (Exception e) {
+                  logger.error("Failed to clone infrastructure mapping name {}, id {} of environment {}",
+                      infrastructureMapping.getDisplayName(), infrastructureMapping.getUuid(),
+                      infrastructureMapping.getEnvId(), e);
+                }
               }
             }
-            // Clone Service Config Files
-            cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
-                clonedServiceTemplate.getUuid(), null, null);
-            // Clone Service Config File overrides
-            cloneConfigFiles(
-                clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
           }
+          // Clone Service Config Files
+          cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
+              clonedServiceTemplate.getUuid(), null, null);
+          // Clone Service Config File overrides
+          cloneConfigFiles(
+              clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
         }
       }
       // Clone ALL service variable overrides
@@ -398,13 +421,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         description =
             "Cloned from environment " + sourceEnvironment.getName() + " of application " + sourceApplication.getName();
       }
+
       Environment clonedEnvironment = sourceEnvironment.clone();
       clonedEnvironment.setName(envName);
       clonedEnvironment.setDescription(description);
       clonedEnvironment.setAppId(targetAppId);
 
       // Create environment
-      // TODO: Catch duplicate check and throw new message
       clonedEnvironment = save(clonedEnvironment);
 
       // Copy templates
@@ -456,14 +479,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
         }
         // Clone ALL service variable overrides
-        // TODO: It is not working
         PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                       .withLimit(PageRequest.UNLIMITED)
                                                                       .addFilter("appId", EQ, appId)
                                                                       .addFilter("entityId", EQ, envId)
                                                                       .build();
         List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, false);
-        cloneServiceVariables(clonedEnvironment, serviceVariables, null, null, null);
+        cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
         logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
       return clonedEnvironment;
