@@ -1031,7 +1031,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         for (int i = excludedEndIndex - 1; i >= 0; i--) {
           executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
           if (events.get(i).getMessage().endsWith("has reached a steady state.")) {
-            executionLogCallback.saveExecutionLog("Service reached in steady state", LogLevel.INFO);
+            executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
             return;
           }
         }
@@ -1043,8 +1043,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       logger.error("Wait for service steady state failed with exception ", ex);
       throw new WingsException(INVALID_REQUEST, "message", ex.getMessage());
     }
-    executionLogCallback.saveExecutionLog(String.format("Service failed to reach to steady state"), LogLevel.ERROR);
-    throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach to steady state");
+    executionLogCallback.saveExecutionLog(String.format("Service failed to reach a steady state"), LogLevel.ERROR);
+    throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");
   }
 
   private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,
