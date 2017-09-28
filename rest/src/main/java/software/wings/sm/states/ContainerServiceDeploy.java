@@ -419,8 +419,12 @@ public abstract class ContainerServiceDeploy extends State {
                       .withInstanceElement(
                           anInstanceElement()
                               .withUuid(containerInfo.getContainerId())
+                              .withDockerId(containerInfo.getContainerId())
                               .withHostName(containerInfo.getHostName())
-                              .withHostElement(aHostElement().withHostName(containerInfo.getHostName()).build())
+                              .withHost(aHostElement()
+                                            .withHostName(containerInfo.getHostName())
+                                            .withEc2Instance(containerInfo.getEc2Instance())
+                                            .build())
                               .withServiceTemplateElement(aServiceTemplateElement()
                                                               .withUuid(serviceTemplateKey.getId().toString())
                                                               .withServiceElement(contextData.serviceElement)

@@ -975,14 +975,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                         .getContainerInstances();
     List<ContainerInfo> containerInfos = new ArrayList<>();
     containerInstanceList.forEach(containerInstance -> {
-      String ipAddress = awsHelperService
-                             .describeEc2Instances(awsConfig, region,
-                                 new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
-                             .getReservations()
-                             .get(0)
-                             .getInstances()
-                             .get(0)
-                             .getPrivateIpAddress();
+      com.amazonaws.services.ec2.model.Instance ec2Instance =
+          awsHelperService
+              .describeEc2Instances(awsConfig, region,
+                  new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
+              .getReservations()
+              .get(0)
+              .getInstances()
+              .get(0);
+      String ipAddress = ec2Instance.getPrivateIpAddress();
       try {
         executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
         executionLogCallback.saveExecutionLog(
@@ -1000,16 +1001,32 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .stream()
             .filter(task -> taskArns.contains(task.getArn()))
             .findFirst()
-            .ifPresent(task
-                -> containerInfos.add(
-                    new ContainerInfo(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12),
-                        ContainerInfo.Status.SUCCESS)));
+            .ifPresent(task -> {
+              String containerId = StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12);
+              ContainerInfo containerInfo = ContainerInfo.builder()
+                                                .hostName(containerId)
+                                                .containerId(containerId)
+                                                .ec2Instance(ec2Instance)
+                                                .status(Status.SUCCESS)
+                                                .build();
+              containerInfos.add(containerInfo);
+              executionLogCallback.saveExecutionLog(
+                  ("Container docker ID: " + containerInfo.getContainerId()), LogLevel.INFO);
+            });
         logger.info("TaskMetadata = " + taskMetadata);
       } catch (IOException ex) {
         executionLogCallback.saveExecutionLog(
             "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
         logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
-        containerInfos.add(new ContainerInfo(ipAddress, Status.SUCCESS));
+        containerInfos.add(ContainerInfo.builder()
+                               .hostName(ipAddress)
+                               .containerId(ipAddress)
+                               .ec2Instance(ec2Instance)
+                               .status(Status.SUCCESS)
+                               .build());
+      } catch (Exception e) {
+        logger.error("Unknown error fetching meta info ", e);
+        throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
       }
     });
     logger.info("Docker container ids = " + containerInfos);
@@ -1053,7 +1070,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       } while (retryCount-- > 0);
     } catch (Exception ex) {
       logger.error("Wait for service steady state failed with exception ", ex);
-      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage());
+      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
     executionLogCallback.saveExecutionLog(String.format("Service failed to reach a steady state"), LogLevel.ERROR);
     throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");
