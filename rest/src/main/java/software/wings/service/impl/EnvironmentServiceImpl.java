@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -45,6 +46,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -54,9 +56,12 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -90,6 +95,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ConfigService configService;
+  @Inject private EntityUpdateService entityUpdateService;
   @Inject private AppService appService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -182,6 +188,20 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(environment.getAppId());
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the environment
+    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
+
     return savedEnvironment;
   }
 
@@ -195,6 +215,20 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the app
+    Application app = appService.get(environment.getAppId());
+    eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
+
+    // see if we need to perform any Git Sync operations for the environment
+    eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
+
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
   }
 

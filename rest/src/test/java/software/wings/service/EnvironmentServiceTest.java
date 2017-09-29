@@ -79,6 +79,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -99,11 +100,12 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private NotificationService notificationService;
   @Mock private PipelineService pipelineService;
+  @Mock private AppService appService;
   @Mock private ServiceVariableService serviceVariableService;
   @Mock private ConfigService configService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private AppService appService;
   @Mock private Application application;
+  @Mock private EntityUpdateService entityUpdateService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
