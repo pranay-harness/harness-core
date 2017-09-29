@@ -7,23 +7,23 @@ public class YamlNode extends DirectoryNode {
 
   public YamlNode() {
     super();
-    this.setType("yaml");
+    this.setType(NodeType.YAML);
   }
 
   public YamlNode(String name, Class theClass) {
     super(name, theClass);
-    this.setType("yaml");
+    this.setType(NodeType.YAML);
   }
 
   public YamlNode(String uuid, String name, Class theClass) {
     super(name, theClass);
-    this.setType("yaml");
+    this.setType(NodeType.YAML);
     this.uuid = uuid;
   }
 
   public YamlNode(
       String uuid, String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService) {
-    super(name, theClass, directoryPath, yamlGitSyncService, "yaml");
+    super(name, theClass, directoryPath, yamlGitSyncService, NodeType.YAML);
     this.uuid = uuid;
   }
 

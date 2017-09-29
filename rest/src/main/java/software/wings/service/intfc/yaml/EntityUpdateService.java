@@ -23,6 +23,8 @@ public interface EntityUpdateService {
 
   public EntityUpdateEvent setupListUpdate(Account account, SourceType sourceType);
 
+  // public EntityUpdateEvent folderListUpdate(String path, Account account, SourceType sourceType);
+
   public EntityUpdateEvent appListUpdate(Application app, SourceType sourceType);
 
   public EntityUpdateEvent serviceListUpdate(Service service, SourceType sourceType);

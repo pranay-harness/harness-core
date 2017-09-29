@@ -25,6 +25,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageRequest;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -32,6 +33,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -39,11 +41,15 @@ import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.directory.DirectoryNode.NodeType;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.ServiceLevelYamlNode;
 import software.wings.yaml.directory.SettingAttributeYamlNode;
 import software.wings.yaml.directory.YamlNode;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
 
 import java.util.List;
@@ -60,9 +66,44 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private YamlGitSyncService yamlGitSyncService;
+  @Inject private EntityUpdateService entityUpdateService;
+  @Inject private AccountService accountService;
+
+  @Override
+  public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
+    String setupEntityId = "setup";
+    DirectoryNode top = getDirectory(accountId, setupEntityId, filterCustomGitSync);
+
+    if (top.getType() != NodeType.FOLDER) {
+      // TODO - handle error
+      return null;
+    }
+
+    YamlGitSync ygs = yamlGitSyncService.get(setupEntityId);
+
+    if (ygs == null) {
+      // TODO - handle error
+      return null;
+    }
+
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    Account account = accountService.get(accountId);
+    // TODO - we may want to add a new SourceType (?)
+    eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+
+    return top;
+  }
 
   @Override
   public DirectoryNode getDirectory(@NotEmpty String accountId) {
+    return getDirectory(accountId, accountId, false);
+  }
+
+  @Override
+  public DirectoryNode getDirectory(@NotEmpty String accountId, String entityId, boolean filterCustomGitSync) {
     DirectoryPath directoryPath = new DirectoryPath("setup");
 
     FolderNode configFolder = new FolderNode("Setup", Account.class, directoryPath, yamlGitSyncService);
