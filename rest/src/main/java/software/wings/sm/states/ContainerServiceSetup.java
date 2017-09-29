@@ -4,15 +4,27 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
+import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.WorkflowStandardParams;
 
 /**
  * Created by brett on 9/29/17
@@ -20,6 +32,8 @@ import software.wings.sm.State;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ContainerServiceSetup extends State {
   protected static final int KEEP_N_REVISIONS = 3;
+
+  @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
   private int maxInstances;
   private ResizeStrategy resizeStrategy;
@@ -32,6 +46,29 @@ public abstract class ContainerServiceSetup extends State {
 
   public ContainerServiceSetup(String name, String type) {
     super(name, type);
+  }
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext context) {
+    try {
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String serviceId = phaseElement.getServiceElement().getUuid();
+
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+
+      Application app = workflowStandardParams.getApp();
+      String env = workflowStandardParams.getEnv().getName();
+
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+      return executeInternal(context, phaseElement, serviceId, artifact, app, env, infrastructureMapping);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+    }
   }
 
   public int getMaxInstances() {
@@ -52,4 +89,7 @@ public abstract class ContainerServiceSetup extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  protected abstract ExecutionResponse executeInternal(ExecutionContext context, PhaseElement phaseElement,
+      String serviceId, Artifact artifact, Application app, String env, InfrastructureMapping infrastructureMapping);
 }
