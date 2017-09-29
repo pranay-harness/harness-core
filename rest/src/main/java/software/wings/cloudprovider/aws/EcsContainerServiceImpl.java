@@ -1074,7 +1074,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             return;
           }
         }
-        excludedEventId[0] = events.get(0).getId();
+        if (!events.isEmpty()) {
+          excludedEventId[0] = events.get(0).getId();
+        }
 
         Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
       } while (retryCount-- > 0);
