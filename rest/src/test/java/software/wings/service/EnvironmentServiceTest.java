@@ -74,7 +74,6 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -106,6 +105,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private Application application;
+  @Mock private EntityUpdateService entityUpdateService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
