@@ -94,6 +94,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -620,6 +621,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setWorkflowId(pipelineId);
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
+
+    // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
+    pipeline.setUuid(UUIDGenerator.getUuid() + "_embedded");
+
     PipelineExecution pipelineExecution =
         aPipelineExecution().withPipelineId(pipelineId).withPipeline(pipeline).build();
     workflowExecution.setPipelineExecution(pipelineExecution);
