@@ -80,6 +80,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -89,6 +90,8 @@ import software.wings.stencils.Stencil;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -116,6 +119,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -341,6 +345,15 @@ public class PipelineServiceImpl implements PipelineService {
                                 .field(ID_KEY)
                                 .equal(pipeline.getUuid()),
         ops);
+
+    //-------------------
+    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+
+    // see if we need to perform any Git Sync operations for the pipeline
+    eule.addEntityUpdateEvent(entityUpdateService.pipelineListUpdate(pipeline, SourceType.ENTITY_UPDATE));
+
+    entityUpdateService.queueEntityUpdateList(eule);
+    //-------------------
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;
