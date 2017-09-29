@@ -68,20 +68,13 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
-import software.wings.helpers.ext.ecr.EcrClassicService;
-import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
 
@@ -97,8 +90,7 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesReplicationControllerSetup extends State {
-  private static final int KEEP_N_REVISIONS = 3;
+public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
 
@@ -107,8 +99,6 @@ public class KubernetesReplicationControllerSetup extends State {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
   private String replicationControllerName;
-  private int maxInstances;
-  private ResizeStrategy resizeStrategy;
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -120,13 +110,7 @@ public class KubernetesReplicationControllerSetup extends State {
   private String externalName;
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
-  @Inject @Transient private transient SettingsService settingsService;
-  @Inject @Transient private transient ServiceResourceService serviceResourceService;
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
-  @Inject @Transient private transient EcrService ecrService;
-  @Inject @Transient private transient EcrClassicService ecrClassicService;
 
   /**
    * Instantiates a new state.
@@ -246,8 +230,8 @@ public class KubernetesReplicationControllerSetup extends State {
           aContainerServiceElement()
               .withUuid(serviceId)
               .withName(evaluatedReplicationControllerName)
-              .withMaxInstances(maxInstances == 0 ? 10 : maxInstances)
-              .withResizeStrategy(resizeStrategy == null ? RESIZE_NEW_FIRST : resizeStrategy)
+              .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+              .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
               .withClusterName(clusterName)
               .withNamespace(kubernetesConfig.getNamespace())
               .withDeploymentType(DeploymentType.KUBERNETES)
@@ -577,31 +561,12 @@ public class KubernetesReplicationControllerSetup extends State {
     }
   }
 
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {}
-
   public String getReplicationControllerName() {
     return replicationControllerName;
   }
 
   public void setReplicationControllerName(String replicationControllerName) {
     this.replicationControllerName = replicationControllerName;
-  }
-
-  public int getMaxInstances() {
-    return maxInstances;
-  }
-
-  public void setMaxInstances(int maxInstances) {
-    this.maxInstances = maxInstances;
-  }
-
-  public ResizeStrategy getResizeStrategy() {
-    return resizeStrategy;
-  }
-
-  public void setResizeStrategy(ResizeStrategy resizeStrategy) {
-    this.resizeStrategy = resizeStrategy;
   }
 
   /**
