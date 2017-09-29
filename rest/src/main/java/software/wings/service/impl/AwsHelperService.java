@@ -468,7 +468,7 @@ public class AwsHelperService {
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
     logger.error("AWS API call exception", amazonServiceException);
     if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getMessage()));
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonECSException
