@@ -640,7 +640,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
           String accountId = appService.get(appId).getAccountId();
           YamlVersion beforeYamLVersion = aYamlVersion()
                                               .withAccountId(accountId)
-                                              .withEntityId(accountId)
+                                              .withEntityId(environment.getUuid())
                                               .withType(Type.ENVIRONMENT)
                                               .withYaml(beforeYaml)
                                               .build();
