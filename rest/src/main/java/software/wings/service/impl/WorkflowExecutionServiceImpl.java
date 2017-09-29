@@ -498,7 +498,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     for (Variable variable : orchestrationWorkflow.getUserVariables()) {
       if (variable.isFixed()) {
-        variables.put(variable.getName(), variable.getValue());
+        setVariables(variable.getName(), variable.getValue(), variables);
         continue;
       }
 
@@ -510,12 +510,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
               "Workflow variable " + variable.getName() + " is mandatory for execution");
         }
-        variables.put(variable.getName(), variable.getValue());
+        setVariables(variable.getName(), variable.getValue(), variables);
         continue;
       }
-      variables.put(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()));
+
+      setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
     }
     return variables;
+  }
+
+  private void setVariables(String key, Object value, Map<String, Object> variableMap) {
+    if (!isEmpty(key)) {
+      variableMap.put(key, value);
+    }
+  }
+
+  private boolean isEmpty(String string) {
+    return (string == null || string.isEmpty() || string.equals("null"));
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
