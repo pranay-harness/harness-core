@@ -15,6 +15,7 @@ public class DirectoryNode {
   private String restName;
   private DirectoryPath directoryPath;
   private SyncMode syncMode;
+  private boolean syncEnabled;
 
   public DirectoryNode() {}
 
@@ -85,6 +86,7 @@ public class DirectoryNode {
 
       if (ygs != null) {
         this.syncMode = ygs.getSyncMode();
+        this.syncEnabled = ygs.isEnabled();
       } else {
         this.syncMode = SyncMode.NONE;
       }
@@ -153,5 +155,13 @@ public class DirectoryNode {
 
   public void setSyncMode(SyncMode syncMode) {
     this.syncMode = syncMode;
+  }
+
+  public boolean isSyncEnabled() {
+    return syncEnabled;
+  }
+
+  public void setSyncEnabled(boolean syncEnabled) {
+    this.syncEnabled = syncEnabled;
   }
 }

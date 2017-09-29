@@ -18,10 +18,17 @@ import java.util.Objects;
 public class EntityUpdateListEvent extends Queuable {
   private List<EntityUpdateEvent> entityUpdateEvents = new ArrayList<EntityUpdateEvent>();
   private String accountId;
+  private List<GitSyncFile> gitSyncFiles;
 
   public void addEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
     if (entityUpdateEvent != null) {
       this.entityUpdateEvents.add(entityUpdateEvent);
+    }
+  }
+
+  public void addGitSyncFile(GitSyncFile gitSyncFile) {
+    if (gitSyncFile != null) {
+      this.gitSyncFiles.add(gitSyncFile);
     }
   }
 
@@ -39,6 +46,14 @@ public class EntityUpdateListEvent extends Queuable {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  public List<GitSyncFile> getGitSyncFiles() {
+    return gitSyncFiles;
+  }
+
+  public void setGitSyncFiles(List<GitSyncFile> gitSyncFiles) {
+    this.gitSyncFiles = gitSyncFiles;
   }
 
   @Override
@@ -64,6 +79,7 @@ public class EntityUpdateListEvent extends Queuable {
   public static final class Builder {
     private List<EntityUpdateEvent> entityUpdateEvents;
     private String accountId;
+    private List<GitSyncFile> gitSyncFiles;
 
     private Builder() {}
 
@@ -81,14 +97,23 @@ public class EntityUpdateListEvent extends Queuable {
       return this;
     }
 
+    public EntityUpdateListEvent.Builder withGitSyncFiles(List<GitSyncFile> gitSyncFiles) {
+      this.gitSyncFiles = gitSyncFiles;
+      return this;
+    }
+
     public EntityUpdateListEvent.Builder but() {
-      return anEntityUpdateListEvent().withEntityUpdateEvents(entityUpdateEvents).withAccountId(accountId);
+      return anEntityUpdateListEvent()
+          .withEntityUpdateEvents(entityUpdateEvents)
+          .withAccountId(accountId)
+          .withGitSyncFiles(gitSyncFiles);
     }
 
     public EntityUpdateListEvent build() {
       EntityUpdateListEvent entityUpdateListEvent = new EntityUpdateListEvent();
       entityUpdateListEvent.setEntityUpdateEvents(entityUpdateEvents);
       entityUpdateListEvent.setAccountId(accountId);
+      entityUpdateListEvent.setGitSyncFiles(gitSyncFiles);
       return entityUpdateListEvent;
     }
   }
