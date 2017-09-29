@@ -924,96 +924,123 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
 
-    List<Service> services = awsHelperService
-                                 .describeServices(region, awsConfig,
-                                     new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                                 .getServices();
-    int oldDesiredCount = services != null && services.size() > 0 ? services.get(0).getDesiredCount() : 0;
+    try {
+      List<Service> services = awsHelperService
+                                   .describeServices(region, awsConfig,
+                                       new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                                   .getServices();
+      int oldDesiredCount = services != null && services.size() > 0 ? services.get(0).getDesiredCount() : 0;
 
-    UpdateServiceRequest updateServiceRequest =
-        new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-    UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
-    List<ServiceEvent> events = updateServiceResult.getService().getEvents();
+      UpdateServiceRequest updateServiceRequest =
+          new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
+      UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
+      List<ServiceEvent> events = updateServiceResult.getService().getEvents();
 
-    String latestExcludedEventId = null;
-    if (events.size() > 0) {
-      latestExcludedEventId = events.get(0).getId();
-    }
-
-    waitForServiceUpdateToComplete(
-        updateServiceResult, region, awsConfig, clusterName, serviceName, desiredCount, executionLogCallback);
-    executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
-    waitForTasksToBeInRunningStateButDontThrowException(
-        region, awsConfig, clusterName, serviceName, executionLogCallback);
-
-    if (oldDesiredCount < desiredCount) { // don't do it for downsize.
-      waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
-          serviceSteadyStateTimeout, executionLogCallback);
-    }
-
-    List<String> taskArns =
-        awsHelperService
-            .listTasks(region, awsConfig, new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
-            .getTaskArns();
-    if (taskArns == null || taskArns.size() == 0) {
-      return Arrays.asList();
-    }
-
-    logger.info("Task arns = " + taskArns);
-    List<Task> tasks =
-        awsHelperService
-            .describeTasks(region, awsConfig, new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
-            .getTasks();
-    List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
-    logger.info("Container Instances = " + containerInstances);
-
-    List<ContainerInstance> containerInstanceList = awsHelperService
-                                                        .describeContainerInstances(region, awsConfig,
-                                                            new DescribeContainerInstancesRequest()
-                                                                .withCluster(clusterName)
-                                                                .withContainerInstances(containerInstances))
-                                                        .getContainerInstances();
-    List<ContainerInfo> containerInfos = new ArrayList<>();
-    containerInstanceList.forEach(containerInstance -> {
-      String ipAddress = awsHelperService
-                             .describeEc2Instances(awsConfig, region,
-                                 new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
-                             .getReservations()
-                             .get(0)
-                             .getInstances()
-                             .get(0)
-                             .getPrivateIpAddress();
-      try {
-        executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
-        executionLogCallback.saveExecutionLog(
-            "requesting data from http://" + ipAddress + ":51678/v1/tasks", LogLevel.INFO);
-        logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
-        TaskMetadata taskMetadata =
-            Request.Get("http://" + ipAddress + ":51678/v1/tasks")
-                .execute()
-                .handleResponse(response
-                    -> JsonUtils.asObject(
-                        CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
-                        TaskMetadata.class));
-
-        taskMetadata.getTasks()
-            .stream()
-            .filter(task -> taskArns.contains(task.getArn()))
-            .findFirst()
-            .ifPresent(task
-                -> containerInfos.add(
-                    new ContainerInfo(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12),
-                        ContainerInfo.Status.SUCCESS)));
-        logger.info("TaskMetadata = " + taskMetadata);
-      } catch (IOException ex) {
-        executionLogCallback.saveExecutionLog(
-            "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
-        logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
-        containerInfos.add(new ContainerInfo(ipAddress, Status.SUCCESS));
+      String latestExcludedEventId = null;
+      if (events.size() > 0) {
+        latestExcludedEventId = events.get(0).getId();
       }
-    });
-    logger.info("Docker container ids = " + containerInfos);
-    return containerInfos;
+
+      waitForServiceUpdateToComplete(
+          updateServiceResult, region, awsConfig, clusterName, serviceName, desiredCount, executionLogCallback);
+      executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
+      waitForTasksToBeInRunningStateButDontThrowException(
+          region, awsConfig, clusterName, serviceName, executionLogCallback);
+
+      if (oldDesiredCount < desiredCount) { // don't do it for downsize.
+        waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
+            serviceSteadyStateTimeout, executionLogCallback);
+      }
+
+      List<String> taskArns = awsHelperService
+                                  .listTasks(region, awsConfig,
+                                      new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
+                                  .getTaskArns();
+      if (taskArns == null || taskArns.size() == 0) {
+        return Arrays.asList();
+      }
+
+      logger.info("Task arns = " + taskArns);
+      List<Task> tasks =
+          awsHelperService
+              .describeTasks(region, awsConfig, new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+              .getTasks();
+      List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
+      logger.info("Container Instances = " + containerInstances);
+
+      List<ContainerInstance> containerInstanceList = awsHelperService
+                                                          .describeContainerInstances(region, awsConfig,
+                                                              new DescribeContainerInstancesRequest()
+                                                                  .withCluster(clusterName)
+                                                                  .withContainerInstances(containerInstances))
+                                                          .getContainerInstances();
+      List<ContainerInfo> containerInfos = new ArrayList<>();
+      containerInstanceList.forEach(containerInstance -> {
+        com.amazonaws.services.ec2.model.Instance ec2Instance =
+            awsHelperService
+                .describeEc2Instances(awsConfig, region,
+                    new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
+                .getReservations()
+                .get(0)
+                .getInstances()
+                .get(0);
+        String ipAddress = ec2Instance.getPrivateIpAddress();
+        try {
+          executionLogCallback.saveExecutionLog("Fetch container meta data.", LogLevel.INFO);
+          executionLogCallback.saveExecutionLog(
+              "requesting data from http://" + ipAddress + ":51678/v1/tasks", LogLevel.INFO);
+          logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
+          TaskMetadata taskMetadata =
+              Request.Get("http://" + ipAddress + ":51678/v1/tasks")
+                  .execute()
+                  .handleResponse(response
+                      -> JsonUtils.asObject(
+                          CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
+                          TaskMetadata.class));
+
+          taskMetadata.getTasks()
+              .stream()
+              .filter(task -> taskArns.contains(task.getArn()))
+              .findFirst()
+              .ifPresent(task -> {
+                String containerId = StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12);
+                ContainerInfo containerInfo = ContainerInfo.builder()
+                                                  .hostName(containerId)
+                                                  .containerId(containerId)
+                                                  .ec2Instance(ec2Instance)
+                                                  .status(Status.SUCCESS)
+                                                  .build();
+                containerInfos.add(containerInfo);
+                executionLogCallback.saveExecutionLog(
+                    ("Container docker ID: " + containerInfo.getContainerId()), LogLevel.INFO);
+              });
+          logger.info("TaskMetadata = " + taskMetadata);
+        } catch (IOException ex) {
+          executionLogCallback.saveExecutionLog(
+              "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
+          logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
+          containerInfos.add(ContainerInfo.builder()
+                                 .hostName(ipAddress)
+                                 .containerId(ipAddress)
+                                 .ec2Instance(ec2Instance)
+                                 .status(Status.SUCCESS)
+                                 .build());
+        } catch (Exception e) {
+          logger.error("Unknown error fetching meta info ", e);
+          throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
+        }
+      });
+      logger.info("Docker container ids = " + containerInfos);
+      return containerInfos;
+    } catch (WingsException e) {
+      executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
+      logger.error(e.getMessage(), e);
+      throw e;
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(e.getMessage(), LogLevel.ERROR);
+      logger.error(e.getMessage(), e);
+      throw new WingsException(INVALID_REQUEST, "message", e.getMessage(), e);
+    }
   }
 
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
@@ -1047,13 +1074,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             return;
           }
         }
-        excludedEventId[0] = events.get(0).getId();
+        if (!events.isEmpty()) {
+          excludedEventId[0] = events.get(0).getId();
+        }
 
         Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
       } while (retryCount-- > 0);
     } catch (Exception ex) {
       logger.error("Wait for service steady state failed with exception ", ex);
-      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage());
+      throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
     executionLogCallback.saveExecutionLog(String.format("Service failed to reach a steady state"), LogLevel.ERROR);
     throw new WingsException(INVALID_REQUEST, "message", "Service failed to reach a steady state");
