@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -302,8 +303,6 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
-    // TODO - needs implementation
-
     // we need to sort the list of entity update events by the git repo they are synced to
     // map key = git sync URL
     Map<String, List<EntityUpdateEvent>> gitSyncUpdateMap = new HashMap<String, List<EntityUpdateEvent>>();
@@ -312,6 +311,10 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
     for (EntityUpdateEvent eue : entityUpdateEvents) {
       YamlGitSync ygs = get(eue.getEntityId(), eue.getAccountId(), eue.getAppId());
+
+      if (eue.getAppId() == null || eue.getAppId().isEmpty() || eue.getAppId().equals(GLOBAL_APP_ID)) {
+        ygs = get(eue.getEntityId());
+      }
 
       if (ygs != null) {
         String url = ygs.getUrl();
@@ -338,7 +341,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   public boolean handleHomogeneousEntityUpdateList(List<EntityUpdateEvent> entityUpdateEvents) {
-    logger.info("*************** handleHomogeneousEntityUpdateList: " + entityUpdateEvents);
+    logger.info("*************** handleHomogeneousEntityUpdateList");
 
     if (entityUpdateEvents == null) {
       logger.info("ERROR: entityUpdateEvents are null!");
