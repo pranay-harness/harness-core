@@ -130,8 +130,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     kubernetesContainerService.createOrReplaceSecret(
         kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
 
-    String containerServiceName =
-        fetchContainerServiceName(infrastructureMapping, context, appName, serviceName, envName);
+    String containerServiceName = fetchContainerServiceName(kubernetesConfig, context, appName, serviceName, envName);
     ReplicationController rcDefinition = createReplicationControllerDefinition(containerTask, containerServiceName,
         controllerLabels, kubernetesConfig.getNamespace(), imageDetails, secretName, context.getServiceVariables());
     kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
@@ -180,13 +179,11 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .build();
   }
 
-  private String fetchContainerServiceName(ContainerInfrastructureMapping infrastructureMapping,
-      ExecutionContext context, String appName, String serviceName, String env) {
-    KubernetesConfig kubernetesConfig = fetchKubernetesConfig(infrastructureMapping);
-
+  private String fetchContainerServiceName(
+      KubernetesConfig kubernetesConfig, ExecutionContext context, String appName, String serviceName, String envName) {
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, env);
+        : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, envName);
     String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
