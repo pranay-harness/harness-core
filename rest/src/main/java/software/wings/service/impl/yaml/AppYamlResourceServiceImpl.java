@@ -285,7 +285,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
           String accountId = app.getAccountId();
           YamlVersion beforeYamLVersion = aYamlVersion()
                                               .withAccountId(accountId)
-                                              .withEntityId(accountId)
+                                              .withEntityId(appId)
                                               .withType(Type.APP)
                                               .withYaml(beforeYaml)
                                               .build();
