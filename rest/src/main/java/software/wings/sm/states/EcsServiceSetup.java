@@ -35,7 +35,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -57,7 +56,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
@@ -78,7 +76,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
 
   private String ecsServiceName;
-  private int serviceSteadyStateTimeout = 10; // Minutes
+  private int serviceSteadyStateTimeout; // Minutes
   private boolean useLoadBalancer;
   private String loadBalancerName;
   private String targetGroupArn;
@@ -95,121 +93,103 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   }
 
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      String serviceId = phaseElement.getServiceElement().getUuid();
-
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-      String imageName = fetchArtifactImageName(artifact);
-
-      Application app = workflowStandardParams.getApp();
-      Environment env = workflowStandardParams.getEnv();
-
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-      if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
-      }
-
-      EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      String region = ecsInfrastructureMapping.getRegion();
-      String clusterName = ecsInfrastructureMapping.getClusterName();
-      if (Constants.RUNTIME.equals(clusterName)) {
-        String regionCluster = getClusterElement(context).getName();
-        clusterName = regionCluster.split("/")[1];
-      }
-
-      String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-
-      EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-          app.getAppId(), serviceId, DeploymentType.ECS.name());
-
-      if (ecsContainerTask == null) {
-        ecsContainerTask = new EcsContainerTask();
-        EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
-        containerDefinition.setMemory(256);
-        containerDefinition.setPortMappings(emptyList());
-        ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-      }
-
-      String containerName = EcsConvention.getContainerName(imageName);
-      String taskFamily = isNotEmpty(ecsServiceName)
-          ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
-          : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());
-
-      TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily,
-          region, settingAttribute, context.getServiceVariables());
-
-      String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
-
-      CreateServiceRequest createServiceRequest =
-          new CreateServiceRequest()
-              .withServiceName(ecsServiceName)
-              .withCluster(clusterName)
-              .withDesiredCount(0)
-              .withDeploymentConfiguration(
-                  new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-              .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
-
-      EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
-                                                                           .withEcsClusterName(clusterName)
-                                                                           .withEcsServiceName(ecsServiceName)
-                                                                           .withDockerImageName(imageName);
-
-      int portToExpose =
-          ecsContainerTask.getContainerDefinitions()
-              .stream()
-              .flatMap(containerDefinition
-                  -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
-              .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
-              .findFirst()
-              .map(EcsContainerTask.PortMapping::getContainerPort)
-              .orElse(0);
-      if (useLoadBalancer && portToExpose != 0) {
-        createServiceRequest
-            .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
-                                   .withContainerName(containerName)
-                                   .withContainerPort(portToExpose)
-                                   .withTargetGroupArn(targetGroupArn))
-            .withRole(roleArn);
-        ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
-            .withRoleArn(roleArn)
-            .withTargetGroupArn(targetGroupArn);
-      }
-
-      logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
-      awsClusterService.createService(region, settingAttribute, createServiceRequest);
-
-      logger.info("Cleaning up old versions");
-      cleanup(settingAttribute, region, ecsServiceName, clusterName);
-
-      ContainerServiceElement containerServiceElement =
-          aContainerServiceElement()
-              .withUuid(serviceId)
-              .withName(ecsServiceName)
-              .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-              .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-              .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
-              .withClusterName(clusterName)
-              .withDeploymentType(DeploymentType.ECS)
-              .withInfraMappingId(phaseElement.getInfraMappingId())
-              .build();
-
-      return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.SUCCESS)
-          .addContextElement(containerServiceElement)
-          .addNotifyElement(containerServiceElement)
-          .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
-          .build();
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+  protected ExecutionResponse executeInternal(ExecutionContext context, PhaseElement phaseElement, String serviceId,
+      Artifact artifact, Application app, String env, InfrastructureMapping infrastructureMapping) {
+    if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
+
+    String imageName = fetchArtifactImageName(artifact);
+    EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+    String region = ecsInfrastructureMapping.getRegion();
+    String clusterName = ecsInfrastructureMapping.getClusterName();
+    if (Constants.RUNTIME.equals(clusterName)) {
+      String regionCluster = getClusterElement(context).getName();
+      clusterName = regionCluster.split("/")[1];
+    }
+
+    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
+    EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+        app.getAppId(), serviceId, DeploymentType.ECS.name());
+
+    if (ecsContainerTask == null) {
+      ecsContainerTask = new EcsContainerTask();
+      EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
+      containerDefinition.setMemory(256);
+      containerDefinition.setPortMappings(emptyList());
+      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
+    String containerName = EcsConvention.getContainerName(imageName);
+    String taskFamily = isNotEmpty(ecsServiceName) ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
+                                                   : EcsConvention.getTaskFamily(app.getName(), serviceName, env);
+
+    TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, imageName, taskFamily, region,
+        settingAttribute, context.getServiceVariables());
+
+    String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
+
+    CreateServiceRequest createServiceRequest =
+        new CreateServiceRequest()
+            .withServiceName(ecsServiceName)
+            .withCluster(clusterName)
+            .withDesiredCount(0)
+            .withDeploymentConfiguration(
+                new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
+
+    EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
+                                                                         .withEcsClusterName(clusterName)
+                                                                         .withEcsServiceName(ecsServiceName)
+                                                                         .withDockerImageName(imageName);
+
+    int portToExpose =
+        ecsContainerTask.getContainerDefinitions()
+            .stream()
+            .flatMap(containerDefinition
+                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
+            .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
+            .findFirst()
+            .map(EcsContainerTask.PortMapping::getContainerPort)
+            .orElse(0);
+    if (useLoadBalancer && portToExpose != 0) {
+      createServiceRequest
+          .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
+                                 .withContainerName(containerName)
+                                 .withContainerPort(portToExpose)
+                                 .withTargetGroupArn(targetGroupArn))
+          .withRole(roleArn);
+      ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
+          .withRoleArn(roleArn)
+          .withTargetGroupArn(targetGroupArn);
+    }
+
+    logger.info("Creating ECS service {} in cluster {}", ecsServiceName, clusterName);
+    awsClusterService.createService(region, settingAttribute, createServiceRequest);
+
+    logger.info("Cleaning up old versions");
+    cleanup(settingAttribute, region, ecsServiceName, clusterName);
+
+    ContainerServiceElement containerServiceElement =
+        aContainerServiceElement()
+            .withUuid(serviceId)
+            .withName(ecsServiceName)
+            .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+            .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+            .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
+            .withClusterName(clusterName)
+            .withDeploymentType(DeploymentType.ECS)
+            .withInfraMappingId(phaseElement.getInfraMappingId())
+            .build();
+
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .addContextElement(containerServiceElement)
+        .addNotifyElement(containerServiceElement)
+        .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
+        .build();
   }
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName, String imageName,
