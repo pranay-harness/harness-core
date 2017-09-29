@@ -767,6 +767,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
+      // TODO apply filters for aws instance filter
+      // TODO Based on config, use private or public dns as selected
       return infrastructureProvider
           .listHosts(((AwsInfrastructureMapping) infrastructureMapping).getRegion(), computeProviderSetting,
               new PageRequest<>())
@@ -840,6 +842,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(
               infrastructureMapping.getComputeProviderType());
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
+
+      String autoscalingGroupName = awsInfrastructureMapping.getAutoScalingGroupName();
 
       List<Host> hosts = awsInfrastructureProvider.provisionHosts(
           awsInfrastructureMapping.getRegion(), computeProviderSetting, launcherConfigName, instanceCount);

@@ -66,6 +66,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Override
   public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    // TODO apply all filters in the request
     DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(awsConfig, region,
         new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
     if (describeInstancesResult != null && describeInstancesResult.getReservations() != null) {
@@ -117,6 +118,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<Host> provisionHosts(
       String region, SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
+    // TODO throw it all away
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
     List<Instance> instances = awsHelperService.listRunInstances(awsConfig, region, launcherConfigName, instanceCount);
@@ -155,6 +157,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
     }
 
+    // TODO - Instead of using public dns name, use host resolver
     return awsHelperService
         .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instancesIds))
         .getReservations()

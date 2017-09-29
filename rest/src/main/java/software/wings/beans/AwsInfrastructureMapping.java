@@ -40,6 +40,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
+  // TODO - Flip to use public
   @Attributes(title = "Use Private DNS for SSH connection") private boolean usePrivateDns;
 
   @Attributes(title = "Provision Instances") private boolean provisionInstances;
