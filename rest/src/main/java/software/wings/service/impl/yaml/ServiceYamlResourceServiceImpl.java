@@ -316,7 +316,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
           String accountId = appService.get(appId).getAccountId();
           YamlVersion beforeYamLVersion = aYamlVersion()
                                               .withAccountId(accountId)
-                                              .withEntityId(accountId)
+                                              .withEntityId(serviceId)
                                               .withType(YamlVersion.Type.SERVICE)
                                               .withYaml(beforeYaml)
                                               .build();
