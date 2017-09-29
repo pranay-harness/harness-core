@@ -11,6 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.core.queue.Queue;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -23,7 +24,6 @@ import software.wings.yaml.YamlHelper;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
-import software.wings.yaml.gitSync.GitSyncHelper;
 import software.wings.yaml.gitSync.YamlGitSync;
 
 import javax.inject.Inject;
@@ -42,11 +42,10 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private YamlResourceService yamlResourceService;
   @Inject private SetupYamlResourceService setupYamlResourceService;
 
-  @Inject private GitSyncHelper gitSyncHelper;
+  @Inject Queue<EntityUpdateListEvent> entityUpdateListEventQueue;
 
-  // this method has to pass through to the gitSyncHelper to prevent a Guice "loop"
   public void queueEntityUpdateList(EntityUpdateListEvent entityUpdateListEvent) {
-    gitSyncHelper.queueEntityUpdateList(entityUpdateListEvent);
+    entityUpdateListEventQueue.send(entityUpdateListEvent);
   }
 
   public EntityUpdateEvent createEntityUpdateEvent(
