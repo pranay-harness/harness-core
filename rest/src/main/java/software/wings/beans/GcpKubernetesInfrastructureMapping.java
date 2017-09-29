@@ -14,8 +14,7 @@ import java.util.Optional;
 @JsonTypeName("GCP_KUBERNETES")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster Name", required = true) private String clusterName;
+public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") private String namespace;
 
   /**
@@ -23,13 +22,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
    */
   public GcpKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
-  }
-
-  @SchemaIgnore
-  @Override
-  @Attributes(title = "Connection Type")
-  public String getHostConnectionAttrs() {
-    return null;
   }
 
   @SchemaIgnore

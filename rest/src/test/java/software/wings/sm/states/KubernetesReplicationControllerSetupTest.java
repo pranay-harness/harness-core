@@ -8,6 +8,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
@@ -314,7 +315,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     ExecutionResponse response = kubernetesReplicationControllerSetup.execute(context);
     assertThat(response).isNotNull();
-    verify(gkeClusterService).getCluster(any(SettingAttribute.class), anyString(), anyString());
+    verify(gkeClusterService, times(2)).getCluster(any(SettingAttribute.class), anyString(), anyString());
     verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(ReplicationController.class));
   }
 }
