@@ -215,7 +215,7 @@ public abstract class ContainerServiceSetup extends State {
       imageDetails.password = new String(artifactoryConfig.getPassword());
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          artifactStream.getArtifactStreamType() + " artifact source can't be used for Kubernetes");
+          artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
     }
     return imageDetails;
   }
