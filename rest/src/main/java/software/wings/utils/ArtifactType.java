@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandUnitType.AWS_LAMBDA;
 import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -196,10 +195,9 @@ public enum ArtifactType {
                   .buildPipeline())
           .build();
     }
-  },
-  /**
-   * War artifact type.
-   */
+  }, /**
+      * War artifact type.
+      */
   WAR {
     public static final long serialVersionUID = 2932493038229748527L;
 
@@ -242,10 +240,9 @@ public enum ArtifactType {
                       .buildPipeline())
               .build());
     }
-  },
-  /**
-   * Tar artifact type.
-   */
+  }, /**
+      * Tar artifact type.
+      */
   TAR {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -391,18 +388,17 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  },
-  /**
-   * Zip artifact type.
-   */
+  }, /**
+      * Zip artifact type.
+      */
   ZIP {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(
-          getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand(), getAwsLambdaCommand());
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand());
     }
+
     /**
      * Gets start command graph.
      *
@@ -519,48 +515,9 @@ public enum ArtifactType {
                   .buildPipeline())
           .build();
     }
-
-    /**
-     * Get Code Deploy Command
-     * @return
-     */
-    private Command getCodeDeployCommand() {
-      return aCommand()
-          .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Amazon Code Deploy")
-                         .addNodes(aNode()
-                                       .withOrigin(true)
-                                       .withX(50)
-                                       .withY(50)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName("Amazon Code Deploy")
-                                       .withType(CODE_DEPLOY.name())
-                                       .build())
-                         .buildPipeline())
-          .build();
-    }
-
-    private Command getAwsLambdaCommand() {
-      return aCommand()
-          .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName(Constants.AWS_LAMBDA)
-                         .addNodes(aNode()
-                                       .withOrigin(true)
-                                       .withX(50)
-                                       .withY(50)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName(Constants.AWS_LAMBDA)
-                                       .withType(AWS_LAMBDA.name())
-                                       .build())
-                         .buildPipeline())
-          .build();
-    }
-  },
-  /**
-   * Docker artifact type.
-   */
+  }, /**
+      * Docker artifact type.
+      */
   DOCKER {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -595,10 +552,9 @@ public enum ArtifactType {
                              .buildPipeline())
               .build());
     }
-  },
-  /**
-   * RPM artifact type
-   */
+  }, /**
+      * RPM artifact type
+      */
   RPM {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -717,6 +673,68 @@ public enum ArtifactType {
                           .addProperty("commandString", "sudo yum install -y \"$ARTIFACT_FILE_NAME\"")
                           .build())
                   .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AWS_LAMBDA.
+   */
+  AWS_LAMBDA {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getAwsLambdaCommand());
+    }
+
+    private Command getAwsLambdaCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName(Constants.AWS_LAMBDA)
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName(Constants.AWS_LAMBDA)
+                                       .withType(AWS_LAMBDA.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AWS_CODEDEPLOY.
+   */
+  AWS_CODEDEPLOY {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getCodeDeployCommand());
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getCodeDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon Code Deploy")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon Code Deploy")
+                                       .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
           .build();
     }
   },
