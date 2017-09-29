@@ -11,7 +11,6 @@ import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 import static software.wings.beans.container.ContainerTask.CONTAINER_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.ContainerTask.DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.ContainerTask.SECRET_NAME_PLACEHOLDER_REGEX;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
@@ -39,42 +38,24 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
+import software.wings.api.KubernetesReplicationControllerExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.beans.Application;
-import software.wings.beans.AwsConfig;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResizeStrategy;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.ArtifactoryArtifactStream;
-import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.beans.artifact.EcrArtifactStream;
-import software.wings.beans.artifact.GcrArtifactStream;
-import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.common.Constants;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.AwsHelperService;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.ArrayList;
@@ -109,7 +90,6 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   private String externalName;
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
-  @Inject @Transient private transient AwsHelperService awsHelperService;
 
   /**
    * Instantiates a new state.
@@ -119,49 +99,22 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   }
 
   @Override
-  protected ExecutionResponse executeInternal(ExecutionContext context, PhaseElement phaseElement, String serviceId,
-      Artifact artifact, Application app, String env, InfrastructureMapping infrastructureMapping) {
-    if (infrastructureMapping == null
-        || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-               || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
-    }
+  protected StateExecutionData createService(ExecutionContext context, String serviceName, ImageDetails imageDetails,
+      String appName, String envName, String clusterName, ContainerInfrastructureMapping infrastructureMapping,
+      ContainerTask containerTask) {
+    KubernetesConfig kubernetesConfig = fetchKubernetesConfig(infrastructureMapping);
 
-    ImageDetails imageDetails = fetchArtifactDetails(artifact);
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-
-    String clusterName;
-    KubernetesConfig kubernetesConfig;
-    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      clusterName = gcpInfraMapping.getClusterName();
-      if (Constants.RUNTIME.equals(clusterName)) {
-        clusterName = getClusterElement(context).getName();
-      }
-      kubernetesConfig =
-          gkeClusterService.getCluster(settingsService.get(infrastructureMapping.getComputeProviderSettingId()),
-              clusterName, gcpInfraMapping.getNamespace());
-    } else {
-      clusterName = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-      kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
-    }
-
-    String evaluatedReplicationControllerName;
-    String kubernetesServiceName;
-    String serviceClusterIP;
-    String serviceLoadBalancerEndpoint;
     String rcNamePrefix = isNotEmpty(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env);
+        : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, envName);
     String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
-    evaluatedReplicationControllerName = KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
 
     Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
-                                            .put("app", KubernetesConvention.getLabelValue(app.getName()))
+                                            .put("app", KubernetesConvention.getLabelValue(appName))
                                             .put("service", KubernetesConvention.getLabelValue(serviceName))
-                                            .put("env", KubernetesConvention.getLabelValue(env))
+                                            .put("env", KubernetesConvention.getLabelValue(envName))
                                             .build();
 
     Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
@@ -169,7 +122,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
                                                .put("revision", Integer.toString(revision))
                                                .build();
 
-    kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(rcNamePrefix);
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig);
 
@@ -177,13 +130,14 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     kubernetesContainerService.createOrReplaceSecret(
         kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
 
-    ReplicationController rcDefinition = createReplicationControllerDefinition(evaluatedReplicationControllerName,
-        controllerLabels, serviceId, kubernetesConfig.getNamespace(), imageDetails.name, artifact.getBuildNo(), app,
-        secretName, context.getServiceVariables());
+    String containerServiceName =
+        fetchContainerServiceName(infrastructureMapping, context, appName, serviceName, envName);
+    ReplicationController rcDefinition = createReplicationControllerDefinition(containerTask, containerServiceName,
+        controllerLabels, kubernetesConfig.getNamespace(), imageDetails, secretName, context.getServiceVariables());
     kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
 
-    serviceClusterIP = null;
-    serviceLoadBalancerEndpoint = null;
+    String serviceClusterIP = null;
+    String serviceLoadBalancerEndpoint = null;
 
     Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
 
@@ -212,34 +166,72 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     }
 
     logger.info("Cleaning up old versions");
-    cleanup(kubernetesConfig, evaluatedReplicationControllerName);
+    cleanup(kubernetesConfig, containerServiceName);
 
-    ContainerServiceElement containerServiceElement =
-        aContainerServiceElement()
-            .withUuid(serviceId)
-            .withName(evaluatedReplicationControllerName)
-            .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
-            .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .withClusterName(clusterName)
-            .withNamespace(kubernetesConfig.getNamespace())
-            .withDeploymentType(DeploymentType.KUBERNETES)
-            .withInfraMappingId(phaseElement.getInfraMappingId())
-            .build();
+    String dockerImageName = imageDetails.name + ":" + imageDetails.tag;
 
-    String dockerImageName = imageDetails.name + ":" + artifact.getBuildNo();
-    return anExecutionResponse()
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(containerServiceElement)
-        .addNotifyElement(containerServiceElement)
-        .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
-                                    .withGkeClusterName(clusterName)
-                                    .withKubernetesReplicationControllerName(evaluatedReplicationControllerName)
-                                    .withKubernetesServiceName(kubernetesServiceName)
-                                    .withKubernetesServiceClusterIP(serviceClusterIP)
-                                    .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
-                                    .withDockerImageName(dockerImageName)
-                                    .build())
+    return aKubernetesReplicationControllerExecutionData()
+        .withGkeClusterName(clusterName)
+        .withKubernetesReplicationControllerName(containerServiceName)
+        .withKubernetesServiceName(kubernetesServiceName)
+        .withKubernetesServiceClusterIP(serviceClusterIP)
+        .withKubernetesServiceLoadBalancerEndpoint(serviceLoadBalancerEndpoint)
+        .withDockerImageName(dockerImageName)
         .build();
+  }
+
+  private String fetchContainerServiceName(ContainerInfrastructureMapping infrastructureMapping,
+      ExecutionContext context, String appName, String serviceName, String env) {
+    KubernetesConfig kubernetesConfig = fetchKubernetesConfig(infrastructureMapping);
+
+    String rcNamePrefix = isNotEmpty(replicationControllerName)
+        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
+        : KubernetesConvention.getReplicationControllerNamePrefix(appName, serviceName, env);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig, rcNamePrefix);
+
+    int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
+    return KubernetesConvention.getReplicationControllerName(rcNamePrefix, revision);
+  }
+
+  private KubernetesConfig fetchKubernetesConfig(ContainerInfrastructureMapping infrastructureMapping) {
+    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+      return gkeClusterService.getCluster(settingsService.get(infrastructureMapping.getComputeProviderSettingId()),
+          infrastructureMapping.getClusterName(),
+          ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
+    } else {
+      return ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
+    }
+  }
+
+  @Override
+  protected String getContainerServiceNameFromExecutionData(StateExecutionData executionData) {
+    return ((KubernetesReplicationControllerExecutionData) executionData).getKubernetesReplicationControllerName();
+  }
+
+  @Override
+  protected ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
+      ContainerInfrastructureMapping infrastructureMapping, String containerServiceName) {
+    return aContainerServiceElement()
+        .withUuid(serviceId)
+        .withName(containerServiceName)
+        .withMaxInstances(getMaxInstances() == 0 ? 10 : getMaxInstances())
+        .withResizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
+        .withClusterName(infrastructureMapping.getClusterName())
+        .withNamespace(fetchKubernetesConfig(infrastructureMapping).getNamespace())
+        .withDeploymentType(DeploymentType.KUBERNETES)
+        .withInfraMappingId(phaseElement.getInfraMappingId())
+        .build();
+  }
+
+  @Override
+  protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
+    return infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+        || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
+  }
+
+  @Override
+  protected String getDeploymentType() {
+    return DeploymentType.KUBERNETES.name();
   }
 
   private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails) {
@@ -316,13 +308,10 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
   /**
    * Creates replication controller definition
    */
-  private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
-      Map<String, String> controllerLabels, String serviceId, String namespace, String imageName, String tag,
-      Application app, String secretName, Map<String, String> serviceVariables) {
-    KubernetesContainerTask kubernetesContainerTask =
-        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-            app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
-
+  private ReplicationController createReplicationControllerDefinition(ContainerTask containerTask,
+      String replicationControllerName, Map<String, String> controllerLabels, String namespace,
+      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables) {
+    KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
     if (kubernetesContainerTask == null) {
       kubernetesContainerTask = new KubernetesContainerTask();
       KubernetesContainerTask.ContainerDefinition containerDefinition =
@@ -332,7 +321,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
-    String containerName = KubernetesConvention.getContainerName(imageName);
+    String containerName = KubernetesConvention.getContainerName(imageDetails.name);
 
     String configTemplate;
     ContainerTask.AdvancedType type;
@@ -344,9 +333,10 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
       type = YAML;
     }
 
-    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName + ":" + tag)
-                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-                        .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
+    String config =
+        configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageDetails.name + ":" + imageDetails.tag)
+            .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+            .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
 
     try {
       ReplicationController rc =
@@ -429,96 +419,6 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .endMetadata()
         .withSpec(spec.build())
         .build();
-  }
-
-  private class ImageDetails {
-    String name;
-    String sourceName;
-    String registryUrl;
-    String username;
-    String password;
-  }
-
-  /**
-   * Fetches artifact image details
-   */
-  private ImageDetails fetchArtifactDetails(Artifact artifact) {
-    ImageDetails imageDetails = new ImageDetails();
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-    String settingId = artifactStream.getSettingId();
-    if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
-      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-      imageDetails.name = dockerArtifactStream.getImageName();
-      imageDetails.sourceName = dockerArtifactStream.getSourceName();
-      DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
-      imageDetails.registryUrl = dockerConfig.getDockerRegistryUrl();
-      imageDetails.username = dockerConfig.getUsername();
-      imageDetails.password = new String(dockerConfig.getPassword());
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ECR.name())) {
-      EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
-      String imageUrl = getImageUrl(ecrArtifactStream);
-      imageDetails.name = imageUrl;
-      // sourceName should be todolist
-      imageDetails.sourceName = ecrArtifactStream.getSourceName();
-      // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-      imageDetails.registryUrl = "https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/");
-      imageDetails.username = "AWS";
-
-      SettingValue settingValue = settingsService.get(settingId).getValue();
-
-      // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
-      if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
-        AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
-            ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      } else {
-        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
-        // migration happens. The deployment code handles both the cases.
-        EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
-        imageDetails.password = awsHelperService.getAmazonEcrAuthToken(ecrConfig);
-      }
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.GCR.name())) {
-      GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
-      String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
-      imageDetails.name = imageName;
-      imageDetails.sourceName = imageName;
-      imageDetails.registryUrl = imageName;
-    } else if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.ARTIFACTORY.name())) {
-      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
-      imageDetails.name = artifactoryArtifactStream.getImageName();
-      imageDetails.sourceName = artifactoryArtifactStream.getSourceName();
-      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
-      imageDetails.registryUrl = artifactoryConfig.getArtifactoryUrl();
-      imageDetails.username = artifactoryConfig.getUsername();
-      imageDetails.password = new String(artifactoryConfig.getPassword());
-    } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          artifactStream.getArtifactStreamType() + " artifact source can't be used for Kubernetes");
-    }
-    return imageDetails;
-  }
-
-  private String getImageUrl(EcrArtifactStream ecrArtifactStream) {
-    SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
-    SettingValue value = settingAttribute.getValue();
-    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
-      AwsConfig awsConfig = (AwsConfig) value;
-      return ecrService.getEcrImageUrl(awsConfig, ecrArtifactStream.getRegion(), ecrArtifactStream);
-    } else {
-      EcrConfig ecrConfig = (EcrConfig) value;
-      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
-    }
-  }
-
-  private ClusterElement getClusterElement(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-
-    return context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
-        .stream()
-        .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
-        .findFirst()
-        .orElse(null);
   }
 
   private void cleanup(KubernetesConfig kubernetesConfig, String rcName) {
