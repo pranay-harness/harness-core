@@ -65,7 +65,7 @@ public class VariableProcessorTest {
     InstanceElement instanceElement =
         anInstanceElement()
             .withServiceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
-            .withHostElement(aHostElement().withUuid(HOST_ID).build())
+            .withHost(aHostElement().withUuid(HOST_ID).build())
             .build();
 
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement))))

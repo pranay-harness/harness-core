@@ -238,11 +238,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     });
 
     originalService.getConfigFiles().forEach(originalConfigFile -> {
-      File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
-      ConfigFile clonedConfigFile = originalConfigFile.clone();
-      clonedConfigFile.setEntityId(savedCloneService.getUuid());
-
       try {
+        File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
+        ConfigFile clonedConfigFile = originalConfigFile.clone();
+        clonedConfigFile.setEntityId(savedCloneService.getUuid());
         configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
       } catch (FileNotFoundException e) {
         logger.error("Error in cloning config file " + originalConfigFile.toString(), e);
@@ -251,8 +250,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     });
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
-      serviceVariableService.getServiceVariablesForEntity(originalServiceVariable.getAppId(),
-          originalServiceVariable.getTemplateId(), savedCloneService.getUuid(), false);
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
       clonedServiceVariable.setEntityId(savedCloneService.getUuid());
 
