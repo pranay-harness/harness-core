@@ -39,11 +39,8 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Mock private BambooService bambooService;
   @Inject @InjectMocks private BambooBuildService bambooBuildService;
 
-  private static final BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                                       .withBambooUrl("http://bamboo")
-                                                       .withUsername("username")
-                                                       .withPassword("password".toCharArray())
-                                                       .build();
+  private static final BambooConfig bambooConfig =
+      BambooConfig.builder().bambooUrl("http://bamboo").username("username").password("password".toCharArray()).build();
   private static final BambooArtifactStream bambooArtifactStream = BambooArtifactStream.Builder.aBambooArtifactStream()
                                                                        .withUuid(ARTIFACT_STREAM_ID)
                                                                        .withAppId(APP_ID)
@@ -91,11 +88,8 @@ public class BambooBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateInvalidUrl() {
-    BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                    .withBambooUrl("BAD_URL")
-                                    .withUsername("username")
-                                    .withPassword("password".toCharArray())
-                                    .build();
+    BambooConfig bambooConfig =
+        BambooConfig.builder().bambooUrl("BAD_URL").username("username").password("password".toCharArray()).build();
     try {
       bambooBuildService.validateArtifactServer(bambooConfig);
     } catch (WingsException e) {

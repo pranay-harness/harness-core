@@ -2,6 +2,7 @@ package software.wings.settings;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.github.reinert.jjschema.SchemaIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;
 
 /**
@@ -36,6 +37,11 @@ public abstract class SettingValue implements ExtensionPoint {
    */
   public void setType(String type) {
     this.type = type;
+  }
+
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.valueOf(type);
   }
 
   /**
@@ -163,11 +169,6 @@ public abstract class SettingValue implements ExtensionPoint {
     NEXUS("Nexus"),
 
     /**
-     * Encryption setting variable types.
-     */
-    ENCRYPTION,
-
-    /**
      * Artifactory setting variable types
      */
     ARTIFACTORY("Artifactory"),
@@ -175,7 +176,18 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Amazon S3 setting variable types
      */
-    AMAZON_S3("AmazonS3");
+    AMAZON_S3("AmazonS3"),
+
+    /**
+     * KMS setting variable types.
+     */
+    KMS,
+
+    SSH_SESSION_CONFIG,
+
+    SERVICE_VARIABLE,
+
+    CONFIG_FILE;
 
     private String displayName;
 

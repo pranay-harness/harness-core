@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
 import static software.wings.beans.TaskType.JENKINS_COLLECTION;
@@ -32,7 +30,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
@@ -85,11 +85,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Test
   public void shouldSendJenkinsTask() throws Exception {
     SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
-                                             .withValue(aJenkinsConfig()
-                                                            .withJenkinsUrl(JENKINS_URL)
-                                                            .withUsername(USER_NAME)
-                                                            .withPassword(PASSWORD)
-                                                            .withAccountId(ACCOUNT_ID)
+                                             .withValue(JenkinsConfig.builder()
+                                                            .jenkinsUrl(JENKINS_URL)
+                                                            .username(USER_NAME)
+                                                            .password(PASSWORD)
+                                                            .accountId(ACCOUNT_ID)
                                                             .build())
                                              .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
@@ -128,8 +128,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   public void shouldSendBambooTask() throws Exception {
     SettingAttribute SETTING_ATTRIBUTE =
         aSettingAttribute()
-            .withValue(
-                aBambooConfig().withBambooUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
+            .withValue(BambooConfig.builder().bambooUrl(JENKINS_URL).username(USER_NAME).password(PASSWORD).build())
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 

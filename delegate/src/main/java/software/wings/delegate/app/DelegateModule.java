@@ -73,6 +73,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
+import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -88,6 +89,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.kms.KmsDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
@@ -161,6 +163,7 @@ public class DelegateModule extends AbstractModule {
     bind(GcrService.class).to(GcrServiceImpl.class);
     bind(GcrBuildService.class).to(GcrBuildServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
+    bind(KmsDelegateService.class).to(KmsDelegateServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

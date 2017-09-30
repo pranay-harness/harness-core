@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -23,6 +24,7 @@ import software.wings.sm.StateType;
 @Data
 @Builder
 @ToString(exclude = "password")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;

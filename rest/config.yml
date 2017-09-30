@@ -84,6 +84,10 @@ portal:
   authTokenExpiryInMillis: 86400000
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
   jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
+  kmsConfig:
+    kmsArn: arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d
+    accessKey: ACCESS_KEY
+    secretKey: SECRET_KEY
 
 awsEcsAMIByRegion:
   us-east-1: ami-b2df2ca4

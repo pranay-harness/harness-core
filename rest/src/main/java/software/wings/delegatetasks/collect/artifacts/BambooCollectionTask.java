@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.collect.artifacts;
 
-import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
@@ -54,7 +53,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
 
     try {
       BambooConfig bambooConfig =
-          aBambooConfig().withBambooUrl(bambooUrl).withUsername(username).withPassword(password).build();
+          BambooConfig.builder().bambooUrl(bambooUrl).username(username).password(password).build();
 
       for (String artifactPath : artifactPaths) {
         Pair<String, InputStream> fileInfo =

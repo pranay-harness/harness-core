@@ -12,11 +12,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
-import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
-import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
@@ -41,13 +37,17 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageResponse;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -163,11 +163,11 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withName(HARNESS_JENKINS)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
-            .withValue(aJenkinsConfig()
-                           .withAccountId(accountId)
-                           .withJenkinsUrl("https://jenkins.wings.software")
-                           .withUsername("wingsbuild")
-                           .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+            .withValue(JenkinsConfig.builder()
+                           .accountId(accountId)
+                           .jenkinsUrl("https://jenkins.wings.software")
+                           .username("wingsbuild")
+                           .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
@@ -176,11 +176,11 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                  .withName(HARNESS_NEXUS)
                                                  .withCategory(Category.CONNECTOR)
                                                  .withAccountId(accountId)
-                                                 .withValue(aNexusConfig()
-                                                                .withAccountId(accountId)
-                                                                .withNexusUrl("https://nexus.wings.software")
-                                                                .withUsername("admin")
-                                                                .withPassword("wings123!".toCharArray())
+                                                 .withValue(NexusConfig.builder()
+                                                                .accountId(accountId)
+                                                                .nexusUrl("https://nexus.wings.software")
+                                                                .username("admin")
+                                                                .password("wings123!".toCharArray())
                                                                 .build())
                                                  .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
@@ -190,11 +190,11 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withName(HARNESS_ARTIFACTORY)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
-            .withValue(anArtifactoryConfig()
-                           .withAccountId(accountId)
-                           .withArtifactoryUrl("https://harness.jfrog.io/harness")
-                           .withUsername("admin")
-                           .withPassword("harness123!".toCharArray())
+            .withValue(ArtifactoryConfig.builder()
+                           .accountId(accountId)
+                           .artifactoryUrl("https://harness.jfrog.io/harness")
+                           .username("admin")
+                           .password("harness123!".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, artifactorySettingAttribute);
@@ -204,11 +204,11 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withName(HARNESS_BAMBOO_SERVICE)
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
-            .withValue(BambooConfig.Builder.aBambooConfig()
-                           .withAccountId(accountId)
-                           .withBambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
-                           .withUsername("wingsbuild")
-                           .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
+            .withValue(BambooConfig.builder()
+                           .accountId(accountId)
+                           .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
+                           .username("wingsbuild")
+                           .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
@@ -217,11 +217,11 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                   .withName(HARNESS_DOCKER_REGISTRY)
                                                   .withCategory(Category.CONNECTOR)
                                                   .withAccountId(accountId)
-                                                  .withValue(DockerConfig.Builder.aDockerConfig()
-                                                                 .withAccountId(accountId)
-                                                                 .withDockerRegistryUrl("https://index.docker.io/v1/")
-                                                                 .withUsername("wingsplugins")
-                                                                 .withPassword("W!ngs@DockerHub".toCharArray())
+                                                  .withValue(DockerConfig.builder()
+                                                                 .accountId(accountId)
+                                                                 .dockerRegistryUrl("https://index.docker.io/v1/")
+                                                                 .username("wingsplugins")
+                                                                 .password("W!ngs@DockerHub".toCharArray())
                                                                  .build())
                                                   .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, dockerSettingAttribute);
@@ -230,14 +230,14 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                 .withCategory(Category.CONNECTOR)
                                                 .withName("SMTP")
                                                 .withAccountId(accountId)
-                                                .withValue(aSmtpConfig()
-                                                               .withAccountId(accountId)
-                                                               .withFromAddress("support@harness.io")
-                                                               .withUsername("support@harness.io")
-                                                               .withHost("smtp.gmail.com")
-                                                               .withPassword("@wes0me@pp".toCharArray())
-                                                               .withPort(465)
-                                                               .withUseSSL(true)
+                                                .withValue(SmtpConfig.builder()
+                                                               .accountId(accountId)
+                                                               .fromAddress("support@harness.io")
+                                                               .username("support@harness.io")
+                                                               .host("smtp.gmail.com")
+                                                               .password("@wes0me@pp".toCharArray())
+                                                               .port(465)
+                                                               .useSSL(true)
                                                                .build())
                                                 .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, smtpSettingAttribute);

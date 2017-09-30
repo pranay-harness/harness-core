@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static software.wings.beans.KubernetesConfig.KubernetesConfigBuilder.aKubernetesConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -50,11 +49,11 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
   @SchemaIgnore
   public KubernetesConfig createKubernetesConfig() {
-    return aKubernetesConfig()
-        .withMasterUrl(masterUrl)
-        .withUsername(username)
-        .withPassword(password)
-        .withNamespace(isNotEmpty(namespace) ? namespace : "default")
+    return KubernetesConfig.builder()
+        .masterUrl(masterUrl)
+        .username(username)
+        .password(password)
+        .namespace(isNotEmpty(namespace) ? namespace : "default")
         .build();
   }
 }

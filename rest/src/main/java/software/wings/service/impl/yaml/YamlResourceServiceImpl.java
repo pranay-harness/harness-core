@@ -828,10 +828,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (AwsConfig) settingAttribute.getValue();
             settingAttribute.setName(awsYaml.getName());
-            config = AwsConfig.Builder.anAwsConfig()
-                         .withAccountId(accountId)
-                         .withAccessKey(awsYaml.getAccessKey())
-                         .withSecretKey(((AwsConfig) beforeConfig).getSecretKey())
+            config = AwsConfig.builder()
+                         .accountId(accountId)
+                         .accessKey(awsYaml.getAccessKey())
+                         .secretKey(((AwsConfig) beforeConfig).getSecretKey())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -892,11 +892,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (JenkinsConfig) settingAttribute.getValue();
             settingAttribute.setName(jenkinsYaml.getName());
-            config = JenkinsConfig.Builder.aJenkinsConfig()
-                         .withAccountId(accountId)
-                         .withJenkinsUrl(jenkinsYaml.getUrl())
-                         .withPassword(((JenkinsConfig) beforeConfig).getPassword())
-                         .withUsername(jenkinsYaml.getUsername())
+            config = JenkinsConfig.builder()
+                         .accountId(accountId)
+                         .jenkinsUrl(jenkinsYaml.getUrl())
+                         .password(((JenkinsConfig) beforeConfig).getPassword())
+                         .username(jenkinsYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -917,11 +917,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (BambooConfig) settingAttribute.getValue();
             settingAttribute.setName(bambooYaml.getName());
-            config = BambooConfig.Builder.aBambooConfig()
-                         .withAccountId(accountId)
-                         .withBambooUrl(bambooYaml.getUrl())
-                         .withPassword(((BambooConfig) beforeConfig).getPassword())
-                         .withUsername(bambooYaml.getUsername())
+            config = BambooConfig.builder()
+                         .accountId(accountId)
+                         .bambooUrl(bambooYaml.getUrl())
+                         .password(((BambooConfig) beforeConfig).getPassword())
+                         .username(bambooYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -942,11 +942,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (DockerConfig) settingAttribute.getValue();
             settingAttribute.setName(dockerYaml.getName());
-            config = DockerConfig.Builder.aDockerConfig()
-                         .withAccountId(accountId)
-                         .withDockerRegistryUrl(dockerYaml.getUrl())
-                         .withPassword(((DockerConfig) beforeConfig).getPassword())
-                         .withUsername(dockerYaml.getUsername())
+            config = DockerConfig.builder()
+                         .accountId(accountId)
+                         .dockerRegistryUrl(dockerYaml.getUrl())
+                         .password(((DockerConfig) beforeConfig).getPassword())
+                         .username(dockerYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -967,11 +967,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (NexusConfig) settingAttribute.getValue();
             settingAttribute.setName(nexusYaml.getName());
-            config = NexusConfig.Builder.aNexusConfig()
-                         .withAccountId(accountId)
-                         .withNexusUrl(nexusYaml.getUrl())
-                         .withPassword(((NexusConfig) beforeConfig).getPassword())
-                         .withUsername(nexusYaml.getUsername())
+            config = NexusConfig.builder()
+                         .accountId(accountId)
+                         .nexusUrl(nexusYaml.getUrl())
+                         .password(((NexusConfig) beforeConfig).getPassword())
+                         .username(nexusYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -992,11 +992,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (ArtifactoryConfig) settingAttribute.getValue();
             settingAttribute.setName(artifactoryYaml.getName());
-            config = ArtifactoryConfig.Builder.anArtifactoryConfig()
-                         .withAccountId(accountId)
-                         .withArtifactoryUrl(artifactoryYaml.getUrl())
-                         .withPassword(((ArtifactoryConfig) beforeConfig).getPassword())
-                         .withUsername(artifactoryYaml.getUsername())
+            config = ArtifactoryConfig.builder()
+                         .accountId(accountId)
+                         .artifactoryUrl(artifactoryYaml.getUrl())
+                         .password(((ArtifactoryConfig) beforeConfig).getPassword())
+                         .username(artifactoryYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -1019,14 +1019,14 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (SmtpConfig) settingAttribute.getValue();
             settingAttribute.setName(smtpYaml.getName());
-            config = SmtpConfig.Builder.aSmtpConfig()
-                         .withAccountId(accountId)
-                         .withFromAddress(smtpYaml.getFromAddress())
-                         .withHost(smtpYaml.getHost())
-                         .withPassword(((SmtpConfig) beforeConfig).getPassword())
-                         .withPort(smtpYaml.getPort())
-                         .withUsername(smtpYaml.getUsername())
-                         .withUseSSL(smtpYaml.isUseSSL())
+            config = SmtpConfig.builder()
+                         .accountId(accountId)
+                         .fromAddress(smtpYaml.getFromAddress())
+                         .host(smtpYaml.getHost())
+                         .password(((SmtpConfig) beforeConfig).getPassword())
+                         .port(smtpYaml.getPort())
+                         .username(smtpYaml.getUsername())
+                         .useSSL(smtpYaml.isUseSSL())
                          .build();
             settingAttribute.setValue(config);
             break;
@@ -1070,11 +1070,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
             beforeConfig = (ElasticLoadBalancerConfig) settingAttribute.getValue();
             settingAttribute.setName(elbYaml.getName());
-            config = ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig()
-                         .withAccountId(accountId)
-                         .withAccessKey(elbYaml.getAccessKey())
-                         .withLoadBalancerName(elbYaml.getLoadBalancerName())
-                         .withSecretKey(((ElasticLoadBalancerConfig) beforeConfig).getSecretKey())
+            config = ElasticLoadBalancerConfig.builder()
+                         .accountId(accountId)
+                         .accessKey(elbYaml.getAccessKey())
+                         .loadBalancerName(elbYaml.getLoadBalancerName())
+                         .secretKey(((ElasticLoadBalancerConfig) beforeConfig).getSecretKey())
                          .build();
             settingAttribute.setValue(config);
             break;

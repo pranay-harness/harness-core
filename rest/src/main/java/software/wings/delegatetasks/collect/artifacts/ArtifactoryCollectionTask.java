@@ -1,13 +1,10 @@
 package software.wings.delegatetasks.collect.artifacts;
 
-import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.waitnotify.ListNotifyResponseData;
 
@@ -24,8 +21,6 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
   private static final Logger logger = LoggerFactory.getLogger(ArtifactoryCollectionTask.class);
 
   @Inject private ArtifactoryService artifactoryService;
-
-  @Inject private DelegateFileManager delegateFileManager;
 
   public ArtifactoryCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
@@ -47,11 +42,8 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
   public ListNotifyResponseData run(String artifactoryUrl, String username, char[] password, String repoType,
       String groupId, List<String> artifactPaths, String artifactPattern, Map<String, String> metadata) {
     try {
-      ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
-                                                .withArtifactoryUrl(artifactoryUrl)
-                                                .withUsername(username)
-                                                .withPassword(password)
-                                                .build();
+      ArtifactoryConfig artifactoryConfig =
+          ArtifactoryConfig.builder().artifactoryUrl(artifactoryUrl).username(username).password(password).build();
       return artifactoryService.downloadArtifacts(artifactoryConfig, repoType, groupId, artifactPaths, artifactPattern,
           metadata, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {

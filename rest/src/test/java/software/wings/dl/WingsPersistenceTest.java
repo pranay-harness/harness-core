@@ -506,11 +506,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   public void shouldStoreAndRetrieveEncryptedPassword() {
     String rand = String.valueOf(Math.random());
-    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
-                                      .withJenkinsUrl("https://jenkins.wings.software")
-                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                      .withUsername("wingsbuild")
-                                      .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                      .jenkinsUrl("https://jenkins.wings.software")
+                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .username("wingsbuild")
+                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")
@@ -532,11 +532,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateEncryptedPassword() {
     String rand = String.valueOf(Math.random());
-    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
-                                      .withJenkinsUrl("https://jenkins.wings.software")
-                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                      .withUsername("wingsbuild")
-                                      .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                      .jenkinsUrl("https://jenkins.wings.software")
+                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .username("wingsbuild")
+                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")

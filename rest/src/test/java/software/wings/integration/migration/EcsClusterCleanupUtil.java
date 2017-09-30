@@ -1,6 +1,5 @@
 package software.wings.integration.migration;
 
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
@@ -10,6 +9,7 @@ import com.amazonaws.services.ecs.model.Service;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.rules.Integration;
@@ -37,7 +37,7 @@ public class EcsClusterCleanupUtil extends WingsBaseTest {
 
   private SettingAttribute connectorConfig =
       aSettingAttribute()
-          .withValue(anAwsConfig().withAccessKey(accessKey).withSecretKey(secretKey.toCharArray()).build())
+          .withValue(AwsConfig.builder().accessKey(accessKey).secretKey(secretKey.toCharArray()).build())
           .build();
 
   @Test
