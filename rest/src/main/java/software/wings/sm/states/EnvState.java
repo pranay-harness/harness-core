@@ -95,8 +95,8 @@ public class EnvState extends State {
     envStateExecutionData.setWorkflowId(workflowId);
     envStateExecutionData.setEnvId(envId);
 
-    WorkflowExecution execution =
-        executionService.triggerOrchestrationExecution(appId, envId, workflowId, executionArgs);
+    WorkflowExecution execution = executionService.triggerOrchestrationExecution(
+        appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs);
     envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
     pipelineService.refreshPipelineExecutionAsync(appId, context.getWorkflowExecutionId());
     return anExecutionResponse()
