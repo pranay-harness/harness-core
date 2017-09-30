@@ -1,4 +1,4 @@
-package software.wings.sm.states;
+package software.wings.sm.states.container;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,8 +14,8 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -42,18 +41,16 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
+import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
+import static software.wings.utils.WingsTestConstants.TASK_REVISION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -66,14 +63,12 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -87,16 +82,16 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.KubernetesConvention;
+import software.wings.sm.states.container.EcsServiceSetup;
+import software.wings.utils.EcsConvention;
 
 import java.util.Date;
 
 /**
- * Created by brett on 3/10/17
+ * Created by rishi on 2/27/17.
  */
-public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
-  @Mock private GkeClusterService gkeClusterService;
-  @Mock private KubernetesContainerService kubernetesContainerService;
+public class EcsServiceSetupTest extends WingsBaseTest {
+  @Mock private AwsClusterService awsClusterService;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -105,7 +100,6 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
-  @Mock private KubernetesConfig kubernetesConfig;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -131,8 +125,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
-  private KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
-      new KubernetesReplicationControllerSetup(STATE_NAME);
+  private EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(STATE_NAME);
 
   private Artifact artifact = anArtifact()
                                   .withAppId(APP_ID)
@@ -157,20 +150,13 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                                                                              .withAccountId(ACCOUNT_ID)
                                                                              .build())
                                                               .build();
-  private ReplicationController replicationController;
-  private Secret secret;
-  private io.fabric8.kubernetes.api.model.Service kubernetesService;
+  private TaskDefinition taskDefinition;
 
   /**
    * Set up.
    */
   @Before
   public void setup() {
-    kubernetesReplicationControllerSetup.setServiceType("ClusterIP");
-    kubernetesReplicationControllerSetup.setPort("80");
-    kubernetesReplicationControllerSetup.setTargetPort("8080");
-    kubernetesReplicationControllerSetup.setProtocol("TCP");
-
     when(appService.get(APP_ID)).thenReturn(app);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
@@ -180,93 +166,22 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    on(kubernetesReplicationControllerSetup).set("gkeClusterService", gkeClusterService);
-    on(kubernetesReplicationControllerSetup).set("kubernetesContainerService", kubernetesContainerService);
-    on(kubernetesReplicationControllerSetup).set("settingsService", settingsService);
-    on(kubernetesReplicationControllerSetup).set("serviceResourceService", serviceResourceService);
-    on(kubernetesReplicationControllerSetup).set("infrastructureMappingService", infrastructureMappingService);
-    on(kubernetesReplicationControllerSetup).set("artifactStreamService", artifactStreamService);
+    on(ecsServiceSetup).set("awsClusterService", awsClusterService);
+    on(ecsServiceSetup).set("settingsService", settingsService);
+    on(ecsServiceSetup).set("serviceResourceService", serviceResourceService);
+    on(ecsServiceSetup).set("infrastructureMappingService", infrastructureMappingService);
+    on(ecsServiceSetup).set("artifactStreamService", artifactStreamService);
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
     when(settingsService.get(SETTING_ID)).thenReturn(dockerConfigSettingAttribute);
 
-    replicationController =
-        new ReplicationControllerBuilder()
-            .withApiVersion("v1")
-            .withNewMetadata()
-            .withName("backend-ctrl")
-            .addToLabels("app", "testApp")
-            .addToLabels("tier", "backend")
-            .endMetadata()
-            .withNewSpec()
-            .withReplicas(2)
-            .withNewTemplate()
-            .withNewMetadata()
-            .addToLabels("app", "testApp")
-            .addToLabels("tier", "backend")
-            .endMetadata()
-            .withNewSpec()
-            .addNewContainer()
-            .withName("server")
-            .withImage("gcr.io/exploration-161417/todolist")
-            .withArgs("8080")
-            .withNewResources()
-            .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
-            .endResources()
-            .addNewPort()
-            .withContainerPort(8080)
-            .endPort()
-            .endContainer()
-            .endSpec()
-            .endTemplate()
-            .endSpec()
-            .build();
+    taskDefinition = new TaskDefinition();
+    taskDefinition.setFamily(TASK_FAMILY);
+    taskDefinition.setRevision(TASK_REVISION);
 
-    secret = new SecretBuilder()
-                 .withApiVersion("v1")
-                 .withKind("Secret")
-                 .withData(ImmutableMap.of(".dockercfg", "aaa"))
-                 .withNewMetadata()
-                 .withName("secret-name")
-                 .endMetadata()
-                 .build();
-
-    kubernetesService = new ServiceBuilder()
-                            .withApiVersion("v1")
-                            .withNewMetadata()
-                            .withName("backend-service")
-                            .addToLabels("app", "testApp")
-                            .addToLabels("tier", "backend")
-                            .endMetadata()
-                            .withNewSpec()
-                            .addNewPort()
-                            .withPort(80)
-                            .withNewTargetPort()
-                            .withIntVal(8080)
-                            .endTargetPort()
-                            .endPort()
-                            .addToSelector("app", "testApp")
-                            .addToSelector("tier", "backend")
-                            .withClusterIP("1.2.3.4")
-                            .endSpec()
-                            .withNewStatus()
-                            .withNewLoadBalancer()
-                            .addNewIngress()
-                            .withIp("5.6.7.8")
-                            .endIngress()
-                            .endLoadBalancer()
-                            .endStatus()
-                            .build();
-
-    when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString(), anyString()))
-        .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
-        .thenReturn(replicationController);
-    when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
-    when(kubernetesContainerService.createOrReplaceService(
-             eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
-        .thenReturn(kubernetesService);
-    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
+    when(awsClusterService.createTask(
+             eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class)))
+        .thenReturn(taskDefinition);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
@@ -278,7 +193,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Test
   public void shouldThrowInvalidRequest() {
     try {
-      kubernetesReplicationControllerSetup.execute(context);
+      ecsServiceSetup.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
@@ -291,30 +206,26 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   public void shouldExecuteWithLastService() {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
+    InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
+                                                      .withRegion(Regions.US_EAST_1.getName())
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
-    on(kubernetesReplicationControllerSetup).set("infrastructureMappingService", infrastructureMappingService);
+    on(ecsServiceSetup).set("infrastructureMappingService", infrastructureMappingService);
 
-    ReplicationController kubernetesReplicationController =
-        new ReplicationControllerBuilder()
-            .withNewMetadata()
-            .withName(KubernetesConvention.getReplicationControllerName(
-                KubernetesConvention.getReplicationControllerNamePrefix("app", "service", "env"), 1))
-            .withCreationTimestamp(new Date().toString())
-            .endMetadata()
-            .build();
+    com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
+    ecsService.setServiceName(EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()));
+    ecsService.setCreatedAt(new Date());
 
-    when(kubernetesContainerService.listControllers(kubernetesConfig))
-        .thenReturn(new ReplicationControllerListBuilder()
-                        .withItems(Lists.newArrayList(kubernetesReplicationController))
-                        .build());
-
-    ExecutionResponse response = kubernetesReplicationControllerSetup.execute(context);
+    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+        .thenReturn(Lists.newArrayList(ecsService));
+    ExecutionResponse response = ecsServiceSetup.execute(context);
     assertThat(response).isNotNull();
-    verify(gkeClusterService).getCluster(any(SettingAttribute.class), anyString(), anyString());
-    verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(ReplicationController.class));
+    verify(awsClusterService)
+        .createTask(
+            eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class));
+    verify(awsClusterService)
+        .createService(eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(CreateServiceRequest.class));
   }
 }

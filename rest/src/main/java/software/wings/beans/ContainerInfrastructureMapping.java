@@ -2,12 +2,13 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by rishi on 5/18/17.
  */
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster Name") private String clusterName;
+  @Attributes(title = "Cluster Name", required = true) @NotEmpty private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.

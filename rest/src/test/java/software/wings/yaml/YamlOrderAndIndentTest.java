@@ -1,11 +1,14 @@
 package software.wings.yaml;
 
+import static org.mockito.Mockito.mock;
+
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -16,6 +19,8 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 
 public class YamlOrderAndIndentTest {
+  private static final YamlGitSyncService yamlGitSyncService = mock(YamlGitSyncService.class);
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Test
@@ -53,7 +58,7 @@ public class YamlOrderAndIndentTest {
 
     oitYaml.setApplications(Arrays.asList(appYaml1, appYaml3, appYaml2));
 
-    RestResponse<YamlPayload> rr = YamlHelper.getYamlRestResponse(oitYaml, "testPayload");
+    RestResponse<YamlPayload> rr = YamlHelper.getYamlRestResponse(yamlGitSyncService, null, oitYaml, "testPayload");
 
     logger.info("\n" + rr.getResource().getYaml());
 
