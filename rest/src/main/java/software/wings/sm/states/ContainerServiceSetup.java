@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
