@@ -2,12 +2,13 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.command.CommandUnit;
-import software.wings.beans.container.ContainerAdvancedPayload;
-import software.wings.beans.container.ContainerTask;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerAdvancedPayload;
+import software.wings.beans.container.ContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;
@@ -116,9 +117,9 @@ public interface ServiceResourceService {
   /**
    * Delete command.
    *
-   * @param appId       the app id
-   * @param serviceId   the service id
-   * @param commandId   the command id
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param commandId the command id
    * @return the service
    */
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandId);
@@ -193,6 +194,13 @@ public interface ServiceResourceService {
    */
   Service get(String appId, String serviceId, SetupStatus status);
 
+  /**
+   * Create container task container task.
+   *
+   * @param containerTask the container task
+   * @param advanced      the advanced
+   * @return the container task
+   */
   ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced);
 
   /**
@@ -203,8 +211,25 @@ public interface ServiceResourceService {
    */
   void deleteContainerTask(String appId, String containerTaskId);
 
+  /**
+   * Update container task container task.
+   *
+   * @param containerTask the container task
+   * @param advanced      the advanced
+   * @return the container task
+   */
   ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced);
 
+  /**
+   * Update container task advanced container task.
+   *
+   * @param appId           the app id
+   * @param serviceId       the service id
+   * @param taskId          the task id
+   * @param advancedPayload the advanced payload
+   * @param reset           the reset
+   * @return the container task
+   */
   ContainerTask updateContainerTaskAdvanced(
       String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset);
 
@@ -249,11 +274,37 @@ public interface ServiceResourceService {
   /**
    * Gets flatten command unit list.
    *
-   * @param appId          the app id
-   * @param serviceId      the service id
-   * @param envId          the env id
-   * @param commandName    the command name
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param envId       the env id
+   * @param commandName the command name
    * @return the flatten command unit list
    */
   List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName);
+
+  /**
+   * Create lambda specification lambda specification.
+   *
+   * @param lambdaSpecification the lambda specification
+   * @return the lambda specification
+   */
+  @ValidationGroups(Create.class)
+  LambdaSpecification createLambdaSpecification(@Valid LambdaSpecification lambdaSpecification);
+
+  /**
+   * Update lambda specification lambda specification.
+   *
+   * @param lambdaSpecification the lambda specification
+   * @return the lambda specification
+   */
+  @ValidationGroups(Update.class)
+  LambdaSpecification updateLambdaSpecification(@Valid LambdaSpecification lambdaSpecification);
+
+  /**
+   * Gets lambda specification.
+   *
+   * @param pageRequest the page request
+   * @return the lambda specification
+   */
+  PageResponse<LambdaSpecification> listLambdaSpecification(PageRequest<LambdaSpecification> pageRequest);
 }
