@@ -276,7 +276,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
 
     String appId = settingAttribute.getAppId();
-    String accountId = appService.get(appId).getAccountId();
+    String accountId = settingAttribute.getAccountId();
 
     YamlGitSync ygs = yamlGitSyncService.get(settingAttribute.getUuid(), accountId, appId);
 

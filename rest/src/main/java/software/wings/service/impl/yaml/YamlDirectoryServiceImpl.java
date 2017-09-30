@@ -40,6 +40,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
@@ -77,6 +78,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AccountService accountService;
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
+  @Inject private YamlResourceService yamlResourceService;
 
   @Override
   public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
@@ -123,26 +125,31 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             yaml = appYamlResourceService.getApp(entityId).getResource().getYaml();
             break;
           case "Service":
-            // TODO - LEFT OFF HERE
-
-            /*
-            Service service = serviceResourceService.get((dn, entityId);
+            Service service = serviceResourceService.get(((AppLevelYamlNode) dn).getAppId(), entityId);
             if (service != null) {
               yaml = serviceYamlResourceService.getServiceYaml(service);
             }
-            */
+            break;
+          case "Environment":
+            yaml = yamlResourceService.getEnvironment(((AppLevelYamlNode) dn).getAppId(), entityId)
+                       .getResource()
+                       .getYaml();
             break;
           case "ServiceCommand":
-            // yaml =
+            yaml = yamlResourceService.getServiceCommand(((ServiceLevelYamlNode) dn).getAppId(), entityId)
+                       .getResource()
+                       .getYaml();
             break;
           case "Workflow":
-            // yaml =
+            yaml =
+                yamlResourceService.getWorkflow(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
             break;
           case "Pipeline":
-            // yaml =
+            yaml =
+                yamlResourceService.getPipeline(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
             break;
           case "Trigger":
-            // yaml =
+            yaml = yamlResourceService.getTrigger(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
             break;
           case "SettingAttribute":
             // yaml =
