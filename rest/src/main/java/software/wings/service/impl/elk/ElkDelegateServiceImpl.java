@@ -43,15 +43,19 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         throw new WingsException("User name is empty but password is given");
       }
 
-      final Call<ElkAuthenticationResponse> request =
-          getElkRestClient(elkConfig).authenticate(getHeaderWithCredentials(elkConfig));
-      final Response<ElkAuthenticationResponse> response = request.execute();
-      if (response.isSuccessful()) {
-        return;
-      }
+      if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
+        getIndices(elkConfig);
+      } else {
+        final Call<ElkAuthenticationResponse> request =
+            getElkRestClient(elkConfig).authenticate(getHeaderWithCredentials(elkConfig));
+        final Response<ElkAuthenticationResponse> response = request.execute();
+        if (response.isSuccessful()) {
+          return;
+        }
 
-      throw new WingsException(
-          JsonUtils.asObject(response.errorBody().string(), ElkAuthenticationResponse.class).getError().getReason());
+        throw new WingsException(
+            JsonUtils.asObject(response.errorBody().string(), ElkAuthenticationResponse.class).getError().getReason());
+      }
     } catch (Throwable t) {
       throw new WingsException(t.getMessage());
     }
