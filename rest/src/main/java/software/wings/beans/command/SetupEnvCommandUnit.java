@@ -12,6 +12,14 @@ import java.util.List;
  */
 @JsonTypeName("SETUP_ENV")
 public class SetupEnvCommandUnit extends ExecCommandUnit {
+  public static final String setupEnvCommandString = "# Execute as root and pass environment variables\n"
+      + "# su -p -\n\n"
+      + "# Execute as root via user credentials (with root privileges)\n"
+      + "# sudo -E su -p -\n\n"
+      + "mkdir -p \"$WINGS_RUNTIME_PATH\"\n"
+      + "mkdir -p \"$WINGS_BACKUP_PATH\"\n"
+      + "mkdir -p \"$WINGS_STAGING_PATH\"";
+
   /**
    * Instantiates a new Setup env command unit.
    */
@@ -27,7 +35,7 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue("mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+  @DefaultValue(setupEnvCommandString)
   @Override
   public String getCommandString() {
     return super.getCommandString();

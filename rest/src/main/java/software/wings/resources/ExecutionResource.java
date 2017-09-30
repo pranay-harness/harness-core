@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -7,6 +8,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
+import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
@@ -75,7 +77,8 @@ public class ExecutionResource {
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("envId") String envId,
       @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
-      @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph) {
+      @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph,
+      @QueryParam("workflowType") List<String> workflowTypes) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
 
@@ -95,11 +98,16 @@ public class ExecutionResource {
     filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
 
-    filter = new SearchFilter();
-    filter.setFieldName("workflowType");
-    filter.setFieldValues(WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE);
-    filter.setOp(Operator.IN);
-    pageRequest.addFilter(filter);
+    if (workflowTypes == null || workflowTypes.isEmpty()) {
+      pageRequest.addFilter(aSearchFilter()
+                                .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                                .build());
+    } else {
+      pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
+    }
+
+    // No need to show child executions
+    pageRequest.addFilter(aSearchFilter().withField("pipelineExecutionId", Operator.NOT_EXISTS).build());
 
     if (StringUtils.isNotBlank(orchestrationId)) {
       filter = new SearchFilter();
@@ -144,47 +152,12 @@ public class ExecutionResource {
   @Produces("application/json")
   @Timed
   @ExceptionMetered
-  public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
+  public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
+    if (pipelineId != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
+      executionArgs.setPipelineId(pipelineId);
+    }
     return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs));
-  }
-
-  /**
-   * Trigger orchestrated execution rest response.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param executionArgs the execution args
-   * @return the rest response
-   */
-  @POST
-  @Path("orchestrated")
-  @Produces("application/json")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
-    return triggerExecution(appId, envId, executionArgs);
-  }
-
-  /**
-   * Trigger simple execution rest response.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param executionArgs the execution args
-   * @return the rest response
-   */
-  @POST
-  @Path("simple")
-  @Produces("application/json")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<WorkflowExecution> triggerSimpleExecution(
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-    return triggerExecution(appId, envId, executionArgs);
   }
 
   /**
@@ -202,13 +175,29 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      ExecutionInterrupt executionInterrupt) {
+      @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
-    executionInterrupt.setEnvId(envId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
 
     return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
+  }
+
+  /**
+   * Trigger execution rest response.
+   *
+   * @param appId         the app id
+   * @param workflowExecutionId    the workflowExecutionId
+   * @param approvalDetails the Approval User details
+   * @return the rest response
+   */
+  @PUT
+  @Path("{workflowExecutionId}/approval")
+  @Timed
+  @ExceptionMetered
+  public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
+    return new RestResponse<>(
+        workflowExecutionService.approveOrRejectExecution(appId, workflowExecutionId, approvalDetails));
   }
 
   /**

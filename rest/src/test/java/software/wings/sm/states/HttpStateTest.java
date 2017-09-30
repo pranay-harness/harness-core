@@ -177,7 +177,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     context.pushContextElement(
         anInstanceElement()
-            .withHostElement(aHostElement().withHostName("localhost").build())
+            .withHost(aHostElement().withHostName("localhost").build())
             .withServiceTemplateElement(
                 aServiceTemplateElement()
                     .withName(TEMPLATE_NAME)

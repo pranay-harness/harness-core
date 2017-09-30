@@ -1,12 +1,13 @@
 package software.wings.yaml.directory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 
 public class DirectoryNode {
-  private String type;
+  private NodeType type;
   private String name;
   @JsonIgnore private Class theClass;
   private String className;
@@ -14,6 +15,7 @@ public class DirectoryNode {
   private String restName;
   private DirectoryPath directoryPath;
   private SyncMode syncMode;
+  private boolean syncEnabled;
 
   public DirectoryNode() {}
 
@@ -40,12 +42,29 @@ public class DirectoryNode {
   }
 
   public DirectoryNode(
-      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService, String type) {
+      String name, Class theClass, DirectoryPath directoryPath, YamlGitSyncService yamlGitSyncService, NodeType type) {
     this(name, theClass);
     this.directoryPath = directoryPath;
     this.type = type;
 
     determineSyncMode(yamlGitSyncService);
+  }
+
+  public enum NodeType {
+    FOLDER("folder"),
+    YAML("yaml"),
+    FILE("file");
+
+    private String displayName;
+
+    NodeType(String displayName) {
+      this.displayName = displayName;
+    }
+
+    @JsonValue
+    public String getDisplayName() {
+      return displayName;
+    }
   }
 
   private void determineSyncMode(YamlGitSyncService yamlGitSyncService) {
@@ -59,7 +78,7 @@ public class DirectoryNode {
     } else {
       String entityId = pathParts[pathParts.length - 1];
 
-      if (type == "folder") {
+      if (type == NodeType.FOLDER) {
         entityId = this.directoryPath.getPath();
       }
 
@@ -67,17 +86,18 @@ public class DirectoryNode {
 
       if (ygs != null) {
         this.syncMode = ygs.getSyncMode();
+        this.syncEnabled = ygs.isEnabled();
       } else {
         this.syncMode = SyncMode.NONE;
       }
     }
   }
 
-  public String getType() {
+  public NodeType getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(NodeType type) {
     this.type = type;
   }
 
@@ -135,5 +155,13 @@ public class DirectoryNode {
 
   public void setSyncMode(SyncMode syncMode) {
     this.syncMode = syncMode;
+  }
+
+  public boolean isSyncEnabled() {
+    return syncEnabled;
+  }
+
+  public void setSyncEnabled(boolean syncEnabled) {
+    this.syncEnabled = syncEnabled;
   }
 }

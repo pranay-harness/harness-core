@@ -91,7 +91,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
 
   public String getServiceYaml(Service service) {
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    return yaml.dump(getServiceYamlObj(service));
+    return YamlHelper.cleanupYaml(yaml.dump(getServiceYamlObj(service)));
   }
 
   /**
@@ -316,7 +316,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
           String accountId = appService.get(appId).getAccountId();
           YamlVersion beforeYamLVersion = aYamlVersion()
                                               .withAccountId(accountId)
-                                              .withEntityId(accountId)
+                                              .withEntityId(serviceId)
                                               .withType(YamlVersion.Type.SERVICE)
                                               .withYaml(beforeYaml)
                                               .build();
