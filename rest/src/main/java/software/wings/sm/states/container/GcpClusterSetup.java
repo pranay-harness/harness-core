@@ -1,4 +1,4 @@
-package software.wings.sm.states;
+package software.wings.sm.states.container;
 
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;

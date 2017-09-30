@@ -15,9 +15,11 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
+import software.wings.yaml.gitSync.YamlGitSync;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class YamlHelper {
+  //@Inject private static YamlGitSyncService yamlGitSyncService;
+
   public static void addResponseMessage(
       RestResponse rr, ErrorCode errorCode, ResponseTypeEnum responseType, String message) {
     ResponseMessage rm = new ResponseMessage();
@@ -100,26 +104,22 @@ public class YamlHelper {
     return dumpOpts;
   }
 
-  public static RestResponse<YamlPayload> getYamlRestResponse(GenericYaml theYaml, String payloadName) {
+  public static RestResponse<YamlPayload> getYamlRestResponse(
+      YamlGitSyncService yamlGitSyncService, String entityId, GenericYaml theYaml, String payloadName) {
     RestResponse rr = new RestResponse<>();
 
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
     String dumpedYaml = yaml.dump(theYaml);
-
-    // remove first line of Yaml:
-    // dumpedYaml = dumpedYaml.substring(dumpedYaml.indexOf('\n') + 1);
-
-    // instead of removing the first line - we should remove any line that starts with two exclamation points
-    dumpedYaml = cleanUpDoubleExclamationLines(dumpedYaml);
-
-    // remove empty arrays/lists:
-    dumpedYaml = dumpedYaml.replace("[]", "");
-
-    dumpedYaml = fixIndentSpaces(dumpedYaml);
-    // dumpedYaml = fixIndentSpaces2(dumpedYaml);
-
-    YamlPayload yp = new YamlPayload(dumpedYaml);
+    YamlPayload yp = new YamlPayload(cleanupYaml(dumpedYaml));
     yp.setName(payloadName);
+
+    // add the YamlGitSync instance (if found) to the payload
+    if (yamlGitSyncService != null) {
+      YamlGitSync ygs = yamlGitSyncService.get(entityId);
+      if (ygs != null) {
+        yp.setGitSync(ygs);
+      }
+    }
 
     rr.setResponseMessages(yp.getResponseMessages());
 
@@ -128,6 +128,18 @@ public class YamlHelper {
     }
 
     return rr;
+  }
+
+  public static String cleanupYaml(String yaml) {
+    // instead of removing the first line - we should remove any line that starts with two exclamation points
+    yaml = cleanUpDoubleExclamationLines(yaml);
+
+    // remove empty arrays/lists:
+    yaml = yaml.replace("[]", "");
+
+    yaml = fixIndentSpaces(yaml);
+
+    return yaml;
   }
 
   // added this while working on workflows
