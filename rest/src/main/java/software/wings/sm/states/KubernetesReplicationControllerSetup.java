@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
