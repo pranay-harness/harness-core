@@ -39,6 +39,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -817,5 +818,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           .filter(command -> !StringUtils.equals(command.getName(), params[1]))
           .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
     }
+  }
+
+  @Override
+  public LambdaSpecification createLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    return wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
+  }
+
+  @Override
+  public LambdaSpecification updateLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    return createLambdaSpecification(lambdaSpecification);
+  }
+
+  @Override
+  public PageResponse<LambdaSpecification> listLambdaSpecification(PageRequest<LambdaSpecification> pageRequest) {
+    return wingsPersistence.query(LambdaSpecification.class, pageRequest);
   }
 }
