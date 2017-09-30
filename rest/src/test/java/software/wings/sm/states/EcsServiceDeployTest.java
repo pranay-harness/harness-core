@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -26,7 +26,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
-import static software.wings.sm.states.container.EcsServiceDeploy.EcsServiceDeployBuilder.anEcsServiceDeploy;
+import static software.wings.sm.states.EcsServiceDeploy.EcsServiceDeployBuilder.anEcsServiceDeploy;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
