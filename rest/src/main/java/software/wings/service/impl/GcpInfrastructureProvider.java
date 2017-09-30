@@ -4,6 +4,7 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -31,13 +32,14 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
 
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
+      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
     return aPageResponse().withResponse(null).build();
   }
 
   @Override
-  public void deleteHost(String appId, String infraMappingId, String hostName) {
-    hostService.deleteByPublicDns(appId, infraMappingId, hostName);
+  public void deleteHost(String appId, String infraMappingId, String dnsName) {
+    hostService.deleteByDnsName(appId, infraMappingId, dnsName);
   }
 
   @Override

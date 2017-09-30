@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -28,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -64,11 +67,31 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private MainConfiguration mainConfiguration;
 
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
+      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    // TODO apply all filters in the request
-    DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(awsConfig, region,
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
+    List<Filter> filters = new ArrayList<>();
+    filters.add(new Filter("instance-state-name", singletonList("running")));
+    if (instanceFilter != null) {
+      if (isNotEmpty(instanceFilter.getVpcIds())) {
+        filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
+      }
+      if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
+        filters.add(new Filter("group-id", instanceFilter.getSecurityGroupIds()));
+      }
+      if (isNotEmpty(instanceFilter.getSubnetIds())) {
+        filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
+      }
+      if (isNotEmpty(instanceFilter.getTags())) {
+        filters.addAll(instanceFilter.getTags()
+                           .stream()
+                           .map(tag -> new Filter("tag:" + tag.getKey(), singletonList(tag.getValue())))
+                           .collect(Collectors.toList()));
+      }
+    }
+    DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
+    DescribeInstancesResult describeInstancesResult =
+        awsHelperService.describeEc2Instances(awsConfig, region, describeInstancesRequest);
     if (describeInstancesResult != null && describeInstancesResult.getReservations() != null) {
       List<Host> awsHosts =
           describeInstancesResult.getReservations()
@@ -77,8 +100,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .map(instance
                   -> aHost()
                          .withAppId(Base.GLOBAL_APP_ID)
-                         .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
-                         .withPublicDns(instance.getPublicDnsName())
+                         .withHostName(awsHelperService.getHostnameFromDnsName(
+                             usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName()))
+                         .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
                          .withEc2Instance(instance)
                          .build())
               .collect(toList());
@@ -88,8 +112,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public void deleteHost(String appId, String infraMappingId, String publicDns) {
-    hostService.deleteByPublicDns(appId, infraMappingId, publicDns);
+  public void deleteHost(String appId, String infraMappingId, String dnsName) {
+    hostService.deleteByDnsName(appId, infraMappingId, dnsName);
   }
 
   @Override
@@ -116,9 +140,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<Host> provisionHosts(
-      String region, SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
-    // TODO throw it all away
+  public List<Host> provisionHosts(String region, SettingAttribute computeProviderSetting, String autoscalingGroupName,
+      String launcherConfigName, boolean usePublicDns, int instanceCount) {
+    // TODO(brett): throw it all away
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
     List<Instance> instances = awsHelperService.listRunInstances(awsConfig, region, launcherConfigName, instanceCount);
@@ -157,7 +181,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
     }
 
-    // TODO - Instead of using public dns name, use host resolver
     return awsHelperService
         .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instancesIds))
         .getReservations()
@@ -165,7 +188,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> aHost()
-                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName()))
+                   .withHostName(awsHelperService.getHostnameFromDnsName(
+                       usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName()))
                    .withEc2Instance(instance)
                    .build())
         .collect(toList());
@@ -203,11 +227,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, List<String> instanceIds) {
     DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(
         awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
-    boolean allRunning = describeInstancesResult.getReservations()
-                             .stream()
-                             .flatMap(reservation -> reservation.getInstances().stream())
-                             .allMatch(instance -> instance.getState().getName().equals("running"));
-    return allRunning;
+    return describeInstancesResult.getReservations()
+        .stream()
+        .flatMap(reservation -> reservation.getInstances().stream())
+        .allMatch(instance -> instance.getState().getName().equals("running"));
   }
 
   public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting, String region) {

@@ -89,7 +89,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
     AtmosphereResponse res = r.getResponse();
 
     if (r.isSuspended()) {
-      Object message = event.getMessage() == null ? null : event.getMessage();
+      Object message = event.getMessage();
       if (message != null) {
         if (message instanceof String) {
           event.getResource().write((String) message);
