@@ -77,7 +77,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .thenReturn(describeInstancesResult);
 
     PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, new PageRequest<>());
+        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, null, false, new PageRequest<>());
 
     assertThat(hosts)
         .hasSize(2)
@@ -99,7 +99,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .thenReturn(describeInstancesResult);
 
     PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, new PageRequest<>());
+        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, null, false, new PageRequest<>());
 
     assertThat(hosts).hasSize(0);
     verify(awsHelperService).describeEc2Instances(awsConfig, Regions.US_EAST_1.getName(), instancesRequest);
@@ -120,7 +120,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Test
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
-    verify(hostService).deleteByPublicDns(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
+    verify(hostService).deleteByDnsName(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
   }
 
   @Test
@@ -153,7 +153,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
     when(awsHelperService.getHostnameFromDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
-    List<Host> hosts = infrastructureProvider.provisionHosts(region, awsSetting, "LAUNCH_CONFIG", 1);
+    List<Host> hosts =
+        infrastructureProvider.provisionHosts(region, awsSetting, "AUTOSCALING_GROUP", "LAUNCH_CONFIG", false, 1);
 
     assertThat(hosts)
         .hasSize(1)

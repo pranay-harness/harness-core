@@ -23,6 +23,7 @@ import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by anubhaw on 6/23/17.
@@ -72,8 +73,7 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
       executionLogCallback.saveExecutionLog(
           String.format("Deployment Group: [%s]", deploymentGroupName), LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
-          String.format("Deployment Configuration: [%s]",
-              deploymentConfigurationName == null ? "DEFAULT" : deploymentConfigurationName),
+          String.format("Deployment Configuration: [%s]", Optional.of(deploymentConfigurationName).orElse("DEFAULT")),
           LogLevel.INFO);
       executionLogCallback.saveExecutionLog(
           String.format("Enable Auto Rollback: [%s]", enableAutoRollback), LogLevel.INFO);

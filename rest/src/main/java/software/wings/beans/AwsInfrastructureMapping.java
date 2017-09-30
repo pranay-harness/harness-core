@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -11,6 +12,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
+import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -40,8 +42,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
-  // TODO - Flip to use public
-  @Attributes(title = "Use Private DNS for SSH connection") private boolean usePrivateDns;
+  @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
 
   @Attributes(title = "Provision Instances") private boolean provisionInstances;
 
@@ -54,6 +55,20 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public AwsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_SSH.name());
+  }
+
+  public void validate() {
+    if (provisionInstances) {
+      if (isEmpty(autoScalingGroupName)) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "Auto scaling group must not be empty when provision instances is true.");
+      }
+    } else {
+      if (awsInstanceFilter == null) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Instance filter must not be null when provision instances is false.");
+      }
+    }
   }
 
   /**
@@ -194,12 +209,12 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.provisionInstances = provisionInstances;
   }
 
-  public boolean isUsePrivateDns() {
-    return usePrivateDns;
+  public boolean isUsePublicDns() {
+    return usePublicDns;
   }
 
-  public void setUsePrivateDns(boolean usePrivateDns) {
-    this.usePrivateDns = usePrivateDns;
+  public void setUsePublicDns(boolean usePublicDns) {
+    this.usePublicDns = usePublicDns;
   }
 
   public String getAutoScalingGroupName() {
