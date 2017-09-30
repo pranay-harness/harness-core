@@ -726,8 +726,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     while (hostListIterator.hasNext()) {
       Host host = hostListIterator.next();
-      String dnsName =
-          awsInfrastructureMapping.isUsePublicDns() ? host.getPublicDns() : host.getEc2Instance().getPrivateDnsName();
+      String dnsName = awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
+                                                                 : host.getEc2Instance().getPrivateDnsName();
       if (existingDnsNames.contains(dnsName)) {
         hostListIterator.remove();
         existingDnsNames.remove(dnsName);
