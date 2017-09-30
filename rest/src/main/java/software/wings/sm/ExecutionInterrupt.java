@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 public class ExecutionInterrupt extends Base {
   @NotNull private ExecutionInterruptType executionInterruptType;
 
-  @NotNull private String envId;
+  private String envId;
   @NotNull private String executionUuid;
   private String stateExecutionInstanceId;
   private Map<String, Object> properties;
