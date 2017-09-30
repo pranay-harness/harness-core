@@ -5,6 +5,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
@@ -209,6 +210,13 @@ public class AwsLambdaState extends State {
     logService.save(logBuilder.but().withLogLine("Function Memory: " + this.memorySize).build());
     logService.save(logBuilder.but().withLogLine("Function Execution Timeout: " + this.timeout).build());
     logService.save(logBuilder.but().withLogLine("IAM Role Arn: " + this.role).build());
+    logService.save(logBuilder.but().withLogLine("VPC: " + infrastructureMapping.getVpcId()).build());
+    logService.save(
+        logBuilder.but().withLogLine("Subnet: " + Joiner.on(",").join(infrastructureMapping.getSubnetIds())).build());
+    logService.save(
+        logBuilder.but()
+            .withLogLine("Security Groups: " + Joiner.on(",").join(infrastructureMapping.getSecurityGroupIds()))
+            .build());
 
     AwsConfig value = (AwsConfig) cloudProviderSetting.getValue();
 
@@ -250,7 +258,11 @@ public class AwsLambdaState extends State {
       }
       CreateFunctionResult createFunctionResult =
           awsHelperService.createFunction(region, value.getAccessKey(), value.getSecretKey(), createFunctionRequest);
-
+      logService.save(logBuilder.but()
+                          .withLogLine(String.format("Function [%s] published with version [%s] successfully",
+                              functionName, createFunctionResult.getVersion()))
+                          .build());
+      logService.save(logBuilder.but().withLogLine("Function: " + createFunctionResult.toString()).build());
     } else {
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
       UpdateFunctionCodeResult updateFunctionCodeResult =
@@ -260,12 +272,12 @@ public class AwsLambdaState extends State {
                   .withPublish(true)
                   .withS3Bucket(bucket)
                   .withS3Key(key));
+      logService.save(logBuilder.but()
+                          .withLogLine(String.format("Function [%s] published with version [%s] successfully",
+                              functionName, updateFunctionCodeResult.getVersion()))
+                          .build());
+      logService.save(logBuilder.but().withLogLine("Function: " + updateFunctionCodeResult.toString()).build());
     }
-
-    //    ExecutionStatus status = commandExecutionResult != null &&
-    //    CommandExecutionStatus.SUCCESS.equals(commandExecutionResult.getStatus()) ?
-    //        ExecutionStatus.SUCCESS :
-    //        ExecutionStatus.FAILED;
 
     logService.save(logBuilder.but()
                         .withLogLine("Command execution finished with status:" + CommandExecutionStatus.SUCCESS)
