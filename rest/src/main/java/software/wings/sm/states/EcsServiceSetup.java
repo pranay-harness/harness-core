@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -18,6 +18,7 @@ import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
 import com.amazonaws.services.ecs.model.KeyValuePair;
+import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -127,7 +128,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
     if (exposePort) {
       createServiceRequest
-          .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
+          .withLoadBalancers(new LoadBalancer()
                                  .withContainerName(containerName)
                                  .withContainerPort(portToExpose)
                                  .withTargetGroupArn(targetGroupArn))
@@ -188,7 +189,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   }
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
-      String dockerImageName, String taskFamily, String region, SettingAttribute computeProviderSetting,
+      String dockerImageName, String taskFamily, String region, SettingAttribute settingAttribute,
       Map<String, String> serviceVariables) {
     String configTemplate;
     if (StringUtils.isNotEmpty(ecsContainerTask.getAdvancedConfig())) {
@@ -227,14 +228,15 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             .withVolumes(taskDefinition.getVolumes());
 
     logger.info("Creating task definition {} with container image {}", taskFamily, dockerImageName);
-    return awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
+    return awsClusterService.createTask(region, settingAttribute, registerTaskDefinitionRequest);
   }
 
-  private void cleanup(SettingAttribute settingAttribute, String region, String ecsServiceName, String clusterName) {
-    int revision = getRevisionFromServiceName(ecsServiceName);
+  private void cleanup(
+      SettingAttribute settingAttribute, String region, String containerServiceName, String clusterName) {
+    int revision = getRevisionFromServiceName(containerServiceName);
     if (revision > KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - KEEP_N_REVISIONS;
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(ecsServiceName);
+      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
       awsClusterService.getServices(region, settingAttribute, clusterName)
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
@@ -247,6 +249,10 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             }
           });
     }
+  }
+
+  protected String getClusterNameFromContextElement(ExecutionContext context) {
+    return super.getClusterNameFromContextElement(context).split("/")[1];
   }
 
   /**

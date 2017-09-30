@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -29,7 +29,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
-import static software.wings.sm.states.container.KubernetesReplicationControllerDeploy.KubernetesReplicationControllerDeployBuilder.aKubernetesReplicationControllerDeploy;
+import static software.wings.sm.states.KubernetesReplicationControllerDeploy.KubernetesReplicationControllerDeployBuilder.aKubernetesReplicationControllerDeploy;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -89,7 +89,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.container.KubernetesReplicationControllerDeploy;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
