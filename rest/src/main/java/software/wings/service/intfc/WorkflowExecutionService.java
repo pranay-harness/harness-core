@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.ApprovalDetails;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
@@ -82,6 +83,12 @@ public interface WorkflowExecutionService {
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, @NotNull String envId,
       @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
 
+  WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, @NotNull String envId,
+      @NotNull String orchestrationId, String pipelineExecutionId, @NotNull ExecutionArgs executionArgs);
+
+  WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
+      String pipelineExecutionId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
+
   /**
    * Gets the execution details.
    *
@@ -110,9 +117,6 @@ public interface WorkflowExecutionService {
    * @return the execution details without graph
    */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
-
-  WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
-      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
 
   /**
    * Trigger env execution workflow execution.
@@ -215,4 +219,6 @@ public interface WorkflowExecutionService {
       String appId, String executionUuid, String stateExecutionInstanceId);
 
   boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId);
+
+  boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails);
 }

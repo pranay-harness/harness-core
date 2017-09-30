@@ -38,8 +38,10 @@ public class WorkflowExecution extends Base {
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
 
-  @Transient private Graph.Node executionNode;
+  @Transient private Graph.Node executionNode; // used for workflow details.
+  private PipelineExecution pipelineExecution; // used for pipeline details.
 
+  @Indexed private String pipelineExecutionId;
   private ErrorStrategy errorStrategy;
 
   private String name;
@@ -109,6 +111,14 @@ public class WorkflowExecution extends Base {
    */
   public void setStateMachineId(String stateMachineId) {
     this.stateMachineId = stateMachineId;
+  }
+
+  public String getPipelineExecutionId() {
+    return pipelineExecutionId;
+  }
+
+  public void setPipelineExecutionId(String pipelineExecutionId) {
+    this.pipelineExecutionId = pipelineExecutionId;
   }
 
   /**
@@ -217,6 +227,14 @@ public class WorkflowExecution extends Base {
    */
   public void setTotal(int total) {
     this.total = total;
+  }
+
+  public PipelineExecution getPipelineExecution() {
+    return pipelineExecution;
+  }
+
+  public void setPipelineExecution(PipelineExecution pipelineExecution) {
+    this.pipelineExecution = pipelineExecution;
   }
 
   /**
