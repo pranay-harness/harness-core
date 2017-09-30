@@ -904,12 +904,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
-    } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
+    } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
-      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
-      if (artifactType == ArtifactType.ZIP) {
-        infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
-      }
+    } else if (artifactType == ArtifactType.AWS_LAMBDA) {
+      infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
