@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.CloudProvidersYaml;
@@ -39,6 +40,7 @@ public class SetupYamlResourceServiceImpl implements SetupYamlResourceService {
   @Inject private AppService appService;
   @Inject private YamlHistoryService yamlHistoryService;
   @Inject private SettingsService settingsService;
+  @Inject private YamlGitSyncService yamlGitSyncService;
 
   /**
    * Gets the setup yaml by accountId
@@ -106,7 +108,7 @@ public class SetupYamlResourceServiceImpl implements SetupYamlResourceService {
     setup.setVerificationProviders(verificationProvidersYaml);
     //------------- END VERIFICATION PROVIDERS SECTION ------------------
 
-    return YamlHelper.getYamlRestResponse(setup, "setup.yaml");
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, accountId, setup, "setup.yaml");
   }
 
   private void doCloudProviders(CloudProvidersYaml cloudProvidersYaml, SetupYaml setup, String accountId,
