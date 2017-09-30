@@ -4,7 +4,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.KubernetesConfig.KubernetesConfigBuilder.aKubernetesConfig;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -96,15 +95,15 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
     KubernetesConfig.KubernetesConfigBuilder kubernetesConfigBuilder =
-        aKubernetesConfig()
-            .withMasterUrl("https://" + cluster.getEndpoint() + "/")
-            .withUsername(cluster.getMasterAuth().getUsername())
-            .withClientKey(cluster.getMasterAuth().getClientKey())
-            .withClientCert(cluster.getMasterAuth().getClientCertificate())
-            .withCaCert(cluster.getMasterAuth().getClusterCaCertificate())
-            .withNamespace(isNotEmpty(namespace) ? namespace : "default");
+        KubernetesConfig.builder()
+            .masterUrl("https://" + cluster.getEndpoint() + "/")
+            .username(cluster.getMasterAuth().getUsername())
+            .clientKey(cluster.getMasterAuth().getClientKey())
+            .clientCert(cluster.getMasterAuth().getClientCertificate())
+            .caCert(cluster.getMasterAuth().getClusterCaCertificate())
+            .namespace(isNotEmpty(namespace) ? namespace : "default");
     if (cluster.getMasterAuth().getPassword() != null) {
-      kubernetesConfigBuilder.withPassword(cluster.getMasterAuth().getPassword().toCharArray());
+      kubernetesConfigBuilder.password(cluster.getMasterAuth().getPassword().toCharArray());
     }
     return kubernetesConfigBuilder.build();
   }

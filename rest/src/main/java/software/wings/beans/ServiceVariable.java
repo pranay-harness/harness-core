@@ -6,6 +6,7 @@ import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -15,6 +16,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 
 import java.util.Arrays;
@@ -271,6 +273,16 @@ public class ServiceVariable extends Base implements Encryptable {
    */
   public void setExpression(String expression) {
     this.expression = expression;
+  }
+
+  @Override
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.SERVICE_VARIABLE;
+  }
+
+  public void setSettingType(SettingVariableTypes type) {
+    //
   }
 
   @Override

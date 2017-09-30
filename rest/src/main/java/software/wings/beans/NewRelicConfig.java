@@ -49,7 +49,7 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
   }
 
   public NewRelicConfig(String newRelicUrl, char[] apiKey, String accountId) {
-    super(StateType.NEW_RELIC.name());
+    this();
     this.newRelicUrl = newRelicUrl;
     this.apiKey = apiKey;
     this.accountId = accountId;

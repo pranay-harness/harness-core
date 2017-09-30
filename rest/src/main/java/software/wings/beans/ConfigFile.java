@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -18,6 +19,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.encryption.Encryptable;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
@@ -38,6 +40,7 @@ import javax.ws.rs.DefaultValue;
     },
     options = @IndexOptions(
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
+@Data
 public class ConfigFile extends BaseFile implements Encryptable {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
@@ -508,6 +511,16 @@ public class ConfigFile extends BaseFile implements Encryptable {
         .withConfigOverrideExpression(getConfigOverrideExpression())
         .withConfigOverrideType(getConfigOverrideType())
         .build();
+  }
+
+  @Override
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.CONFIG_FILE;
+  }
+
+  public void setSettingType(SettingVariableTypes type) {
+    //
   }
 
   /**

@@ -2,7 +2,6 @@ package software.wings.helpers.ext.nexus;
 
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Singleton;
@@ -479,37 +478,5 @@ public class NexusServiceImpl implements NexusService {
     protected PasswordAuthentication getPasswordAuthentication() {
       return new PasswordAuthentication(username, password.toCharArray());
     }
-  }
-
-  public static void main(String... args) throws Exception {
-    String url = "https://nexus.wings.software/"; //"https://127.0.0.1:8000"; //;
-    NexusConfig nexusConfig =
-        aNexusConfig().withNexusUrl(url).withUsername("admin").withPassword("wings123ss!".toCharArray()).build();
-
-    NexusServiceImpl nexusService = new NexusServiceImpl();
-    nexusService.getRepositories(nexusConfig);
-    // nexusService.getGroupIdPaths(nexusConfig, "releases");
-    // List<String> names = nexusService.getArtifactNames(nexusConfig, "releases", null);
-
-    /*List<BuildDetails> details = nexusService
-        .getVersions(nexusConfig, "releases", "org.apache.maven", "maven-artifact");
-
-    details.forEach(name -> {
-      System.out.println(name.getNumber());
-    });
-
-    Project project = nexusService
-        .getPomModel(nexusConfig, "releases", "org.apache.maven", "maven-artifact", "LATEST");
-
-    System.out.println("Project package type " + project.getPackaging());
-
-    Pair<String, InputStream> map = nexusService
-        .downloadArtifact(nexusConfig, "releases", "org.apache.maven", "maven-artifact",
-            "LATEST");
-    System.out.println("Return inputstream " + map.getValue());*/
-
-    List<String> artifactPaths =
-        nexusService.getArtifactPaths(nexusConfig, "releases", "org/apache/maven/maven-artifact/3.0.5/");
-    artifactPaths.forEach(s -> System.out.println("s = " + s));
   }
 }

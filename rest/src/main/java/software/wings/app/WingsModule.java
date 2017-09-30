@@ -126,6 +126,7 @@ import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
 import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
+import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
 import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
@@ -168,6 +169,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.kms.KmsService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NexusBuildService;
@@ -320,6 +322,7 @@ public class WingsModule extends AbstractModule {
     bind(YamlGitSyncService.class).to(YamlGitSyncServiceImpl.class);
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+    bind(KmsService.class).to(KmsServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
