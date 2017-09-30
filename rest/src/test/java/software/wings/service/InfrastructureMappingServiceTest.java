@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.ec2.model.Instance;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -381,12 +382,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
-    List<Host> newHosts = asList(aHost().withHostName(HOST_NAME).build());
+    List<Host> newHosts = asList(aHost().withEc2Instance(new Instance().withPrivateDnsName(HOST_NAME)).build());
 
     when(awsInfrastructureProvider.listHosts(
              Regions.US_EAST_1.getName(), computeProviderSetting, null, false, new PageRequest<>()))
         .thenReturn(aPageResponse().withResponse(newHosts).build());
-    List<Host> existingHosts = asList(aHost().withHostName("OLD_HOST_NAME").build());
+    List<Host> existingHosts =
+        asList(aHost().withEc2Instance(new Instance().withPrivateDnsName("OLD_HOST_NAME")).build());
 
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(existingHosts).build());
     when(awsInfrastructureProvider.saveHost(newHosts.get(0))).thenReturn(newHosts.get(0));
@@ -451,6 +453,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
                                                             .withRegion(Regions.US_EAST_1.getName())
+                                                            .withUsePublicDns(true)
                                                             .build();
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
@@ -462,8 +465,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     when(awsInfrastructureProvider.listHosts(
-             Regions.US_EAST_1.getName(), computeProviderSetting, null, false, new PageRequest<>()))
-        .thenReturn(aPageResponse().withResponse(asList(aHost().withHostName(HOST_NAME).build())).build());
+             Regions.US_EAST_1.getName(), computeProviderSetting, null, true, new PageRequest<>()))
+        .thenReturn(
+            aPageResponse()
+                .withResponse(asList(aHost().withEc2Instance(new Instance().withPublicDnsName(HOST_NAME)).build()))
+                .build());
 
     List<String> hostNames =
         infrastructureMappingService.listComputeProviderHosts(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
@@ -472,7 +478,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider)
-        .listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, null, false, new PageRequest<>());
+        .listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, null, true, new PageRequest<>());
   }
 
   @Test
@@ -523,6 +529,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
                                                             .withRegion(Regions.US_EAST_1.getName())
+                                                            .withAutoScalingGroupName("AUTOSCALING_GROUP")
                                                             .build();
 
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
