@@ -119,6 +119,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -164,6 +165,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private Account account;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private PipelineService pipelineService;
+  @Mock private EntityUpdateService entityUpdateService;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override

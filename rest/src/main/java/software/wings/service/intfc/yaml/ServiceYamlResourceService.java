@@ -19,6 +19,8 @@ public interface ServiceYamlResourceService {
    */
   public RestResponse<YamlPayload> getService(String appId, String serviceId);
 
+  public String getServiceYaml(Service service);
+
   /**
    * Update a service that is sent as Yaml (in a JSON "wrapper")
    *

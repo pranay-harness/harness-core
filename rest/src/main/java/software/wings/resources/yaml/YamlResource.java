@@ -335,10 +335,10 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/setup/{accountId}")
+  @Path("/setup")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getSetup(@PathParam("accountId") String accountId) {
+  public RestResponse<YamlPayload> getSetup(@QueryParam("accountId") String accountId) {
     return setupYamlResourceService.getSetup(accountId);
   }
 
@@ -370,5 +370,17 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<DirectoryNode> getDirectory(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId));
+  }
+
+  //-------------------------------------
+  // TODO - I need an endpoint, at least temporarily that will allow me to kick off pushing the full setup directory
+  // "tree" to a synced git repo
+  @GET
+  @Path("/push-directory")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DirectoryNode> pushDirectory(
+      @QueryParam("accountId") String accountId, @QueryParam("filterCustomGitSync") boolean filterCustomGitSync) {
+    return new RestResponse<>(yamlDirectoryService.pushDirectory(accountId, filterCustomGitSync));
   }
 }
