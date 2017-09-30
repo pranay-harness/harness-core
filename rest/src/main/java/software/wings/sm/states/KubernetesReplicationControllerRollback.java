@@ -1,14 +1,9 @@
 package software.wings.sm.states;
 
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -24,10 +19,6 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
   private String commandName = "Resize Replication Controller";
-
-  @Inject @Transient private transient GkeClusterService gkeClusterService;
-
-  @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
 
   public KubernetesReplicationControllerRollback(String name) {
     super(name, StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
