@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -208,8 +209,8 @@ public class ServiceResource {
   /**
    * Delete command.
    *
-   * @param appId       the app id
-   * @param serviceId   the service id
+   * @param appId            the app id
+   * @param serviceId        the service id
    * @param serviceCommandId the command name
    * @return the rest response
    */
@@ -292,5 +293,40 @@ public class ServiceResource {
   public RestResponse<List<Stencil>> listTaskStencils(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));
+  }
+
+  @POST
+  @Path("{serviceId}/lambda-specifications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LambdaSpecification> createLambdaSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, LambdaSpecification lambdaSpecification) {
+    lambdaSpecification.setAppId(appId);
+    lambdaSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createLambdaSpecification(lambdaSpecification));
+  }
+
+  @PUT
+  @Path("{serviceId}/lambda-specifications/{lambdaSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LambdaSpecification> updateLambdaSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("lambdaSpecificationId") String lambdaSpecificationId,
+      LambdaSpecification lambdaSpecification) {
+    lambdaSpecification.setAppId(appId);
+    lambdaSpecification.setServiceId(serviceId);
+    lambdaSpecification.setUuid(lambdaSpecificationId);
+    return new RestResponse<>(serviceResourceService.updateLambdaSpecification(lambdaSpecification));
+  }
+
+  @GET
+  @Path("{serviceId}/lambda-specifications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<LambdaSpecification>> listLambdaSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<LambdaSpecification> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("serviceId", serviceId, EQ);
+    return new RestResponse<>(serviceResourceService.listLambdaSpecification(pageRequest));
   }
 }

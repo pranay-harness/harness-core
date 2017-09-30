@@ -27,8 +27,10 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
@@ -176,14 +178,14 @@ public class AwsLambdaState extends State {
 
     Activity activity = activityService.save(activityBuilder.build());
 
-    logService.save(aLog()
-                        .withAppId(activity.getAppId())
-                        .withActivityId(activity.getUuid())
-                        .withLogLevel(LogLevel.INFO)
-                        .withCommandUnitName(commandName)
-                        .withLogLine("Begin command execution.")
-                        .withExecutionResult(CommandExecutionStatus.RUNNING)
-                        .build());
+    Builder logBuilder = aLog()
+                             .withAppId(activity.getAppId())
+                             .withActivityId(activity.getUuid())
+                             .withLogLevel(LogLevel.INFO)
+                             .withCommandUnitName(commandName)
+                             .withExecutionResult(CommandExecutionStatus.RUNNING);
+
+    logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
 
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData()
                                                                  .withServiceId(service.getUuid())
@@ -191,18 +193,22 @@ public class AwsLambdaState extends State {
                                                                  .withAppId(app.getUuid())
                                                                  .withCommandName(getCommandName())
                                                                  .withActivityId(activity.getUuid());
+    logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
 
     String key = context.renderExpression(this.key);
     String bucket = context.renderExpression(this.bucket);
+    String functionName = context.renderExpression(this.functionName);
+    String handler = context.renderExpression(this.handler);
 
-    logService.save(aLog()
-                        .withAppId(activity.getAppId())
-                        .withActivityId(activity.getUuid())
-                        .withLogLevel(LogLevel.INFO)
-                        .withCommandUnitName(commandName)
-                        .withLogLine("Begin command execution.")
-                        .withExecutionResult(CommandExecutionStatus.RUNNING)
-                        .build());
+    logService.save(logBuilder.but().withLogLine("Deploying Lambda with following configuration.").build());
+    logService.save(logBuilder.but().withLogLine("Function Name: " + functionName).build());
+    logService.save(logBuilder.but().withLogLine("S3 Bucket: " + bucket).build());
+    logService.save(logBuilder.but().withLogLine("Bucket key: " + key).build());
+    logService.save(logBuilder.but().withLogLine("Function Handler: " + handler).build());
+    logService.save(logBuilder.but().withLogLine("Function Runtime: " + this.runtime).build());
+    logService.save(logBuilder.but().withLogLine("Function Memory: " + this.memorySize).build());
+    logService.save(logBuilder.but().withLogLine("Function Execution Timeout: " + this.timeout).build());
+    logService.save(logBuilder.but().withLogLine("IAM Role Arn: " + this.role).build());
 
     AwsConfig value = (AwsConfig) cloudProviderSetting.getValue();
 
@@ -210,7 +216,8 @@ public class AwsLambdaState extends State {
         serviceTemplateService
             .computeServiceVariables(app.getUuid(), envId, infrastructureMapping.getServiceTemplateId())
             .stream()
-            .collect(Collectors.toMap(sv -> sv.getName(), sv -> context.renderExpression(new String(sv.getValue()))));
+            .collect(
+                Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
 
     Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
     if (artifact == null) {
@@ -221,45 +228,31 @@ public class AwsLambdaState extends State {
         region, value.getAccessKey(), value.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
 
     if (getFunctionResult == null) { // function doesn't exist
-      logService.save(aLog()
-                          .withAppId(activity.getAppId())
-                          .withActivityId(activity.getUuid())
-                          .withLogLevel(LogLevel.INFO)
-                          .withCommandUnitName(commandName)
-                          .withLogLine("Function doesn't exist. Create and Publish")
-                          .withExecutionResult(CommandExecutionStatus.RUNNING)
-                          .build());
-      // create function
+      logService.save(
+          logBuilder.but().withLogLine(String.format("Function [%s] doesn't exist.", functionName)).build());
 
       CreateFunctionRequest createFunctionRequest =
           new CreateFunctionRequest()
               .withEnvironment(new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
-              .withRuntime(runtime)
+              .withRuntime(this.runtime)
               .withFunctionName(functionName)
               .withHandler(handler)
-              .withRole(role)
+              .withRole(this.role)
               .withCode(new FunctionCode().withS3Bucket(bucket).withS3Key(key))
               .withPublish(true)
-              .withTimeout(timeout)
-              .withMemorySize(memorySize);
+              .withTimeout(this.timeout)
+              .withMemorySize(this.memorySize);
 
       VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
 
       if (vpcConfig != null) {
         createFunctionRequest.setVpcConfig(vpcConfig);
       }
-      CreateFunctionResult function =
+      CreateFunctionResult createFunctionResult =
           awsHelperService.createFunction(region, value.getAccessKey(), value.getSecretKey(), createFunctionRequest);
-      System.out.println(function.toString());
+
     } else {
-      logService.save(aLog()
-                          .withAppId(activity.getAppId())
-                          .withActivityId(activity.getUuid())
-                          .withLogLevel(LogLevel.INFO)
-                          .withCommandUnitName(commandName)
-                          .withLogLine("Function exists. Update and Publish")
-                          .withExecutionResult(CommandExecutionStatus.RUNNING)
-                          .build());
+      logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
       UpdateFunctionCodeResult updateFunctionCodeResult =
           awsHelperService.updateFunction(region, value.getAccessKey(), value.getSecretKey(),
               new UpdateFunctionCodeRequest()
@@ -274,11 +267,7 @@ public class AwsLambdaState extends State {
     //        ExecutionStatus.SUCCESS :
     //        ExecutionStatus.FAILED;
 
-    logService.save(aLog()
-                        .withAppId(activity.getAppId())
-                        .withActivityId(activity.getUuid())
-                        .withLogLevel(LogLevel.INFO)
-                        .withCommandUnitName(commandName)
+    logService.save(logBuilder.but()
                         .withLogLine("Command execution finished with status:" + CommandExecutionStatus.SUCCESS)
                         .withExecutionResult(CommandExecutionStatus.SUCCESS)
                         .build());
