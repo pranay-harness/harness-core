@@ -139,7 +139,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Test
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();
-    when(awsHelperService.listRunInstances(awsConfig, region, "LAUNCH_CONFIG", 1))
+    when(awsHelperService.listRunInstancesFromLaunchConfig(awsConfig, region, "LAUNCH_CONFIG", 1))
         .thenReturn(asList(new Instance().withInstanceId("INSTANCE_ID")));
 
     when(awsHelperService.describeEc2Instances(
@@ -153,8 +153,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
     when(awsHelperService.getHostnameFromDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
-    List<Host> hosts =
-        infrastructureProvider.provisionHosts(region, awsSetting, "AUTOSCALING_GROUP", "LAUNCH_CONFIG", false, 1);
+    List<Host> hosts = infrastructureProvider.provisionHosts(region, awsSetting, "AUTOSCALING_GROUP", false, 1);
 
     assertThat(hosts)
         .hasSize(1)
@@ -163,7 +162,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
             aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
     verify(awsHelperService).canConnectToHost(HOST_NAME, 22, 30000);
-    verify(awsHelperService).listRunInstances(awsConfig, region, "LAUNCH_CONFIG", 1);
+    verify(awsHelperService).listRunInstancesFromLaunchConfig(awsConfig, region, "LAUNCH_CONFIG", 1);
     verify(awsHelperService, times(3))
         .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
   }
