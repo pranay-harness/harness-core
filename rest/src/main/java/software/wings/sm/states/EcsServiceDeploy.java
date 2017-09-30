@@ -1,4 +1,4 @@
-package software.wings.sm.states.container;
+package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
@@ -17,8 +17,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
-import software.wings.sm.states.CommandStateEnumDataProvider;
-import software.wings.sm.states.InstanceUnitTypeDataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
