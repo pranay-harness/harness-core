@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
@@ -404,7 +405,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -417,7 +418,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listAMIs(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -430,7 +431,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listRegions(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -443,7 +444,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listInstanceTypes(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -456,7 +457,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listIAMInstanceRoles(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -489,7 +490,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -515,7 +516,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listVPCs(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -528,7 +529,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcIds);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -541,7 +542,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcIds);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -601,7 +602,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -799,7 +800,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                            : host.getEc2Instance().getPrivateDnsName())
           .collect(Collectors.toList());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -823,7 +824,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listLaunchConfigurations(
           computeProviderSetting, ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
@@ -850,8 +851,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> provisionNodes(
-      String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount) {
+  public List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -865,12 +865,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               infrastructureMapping.getComputeProviderType());
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
-      String autoscalingGroupName = awsInfrastructureMapping.getAutoScalingGroupName();
-      // TODO(brett) pass autoscaling group name and private/public dns name flag
-      List<Host> hosts =
-          awsInfrastructureProvider.provisionHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting,
-              autoscalingGroupName, launcherConfigName, awsInfrastructureMapping.isUsePublicDns(), instanceCount);
-      updateHostsAndServiceInstances(infrastructureMapping, hosts, ImmutableList.of());
+      List<Host> hosts = awsInfrastructureProvider.provisionHosts(awsInfrastructureMapping.getRegion(),
+          computeProviderSetting, awsInfrastructureMapping.getAutoScalingGroupName(),
+          awsInfrastructureMapping.isUsePublicDns(), instanceCount);
+      updateHostsAndServiceInstances(infrastructureMapping, hosts, emptyList());
 
       return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
           infrastructureMapping.getUuid(),
@@ -880,7 +878,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               .build());
     } else {
       throw new WingsException(
-          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
+          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infrastructure mapping");
     }
   }
 

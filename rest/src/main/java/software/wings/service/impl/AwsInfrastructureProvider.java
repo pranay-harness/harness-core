@@ -140,12 +140,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<Host> provisionHosts(String region, SettingAttribute computeProviderSetting, String autoscalingGroupName,
-      String launcherConfigName, boolean usePublicDns, int instanceCount) {
-    // TODO(brett): throw it all away
+  public List<Host> provisionHosts(String region, SettingAttribute computeProviderSetting, String autoScalingGroupName,
+      boolean usePublicDns, int instanceCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    List<Instance> instances = awsHelperService.listRunInstances(awsConfig, region, launcherConfigName, instanceCount);
+    // TODO(brett): throw it all away?
+
+    List<Instance> instances =
+        awsHelperService.listRunInstancesFromAutoScalingGroup(awsConfig, region, autoScalingGroupName, instanceCount);
     List<String> instancesIds = instances.stream().map(Instance::getInstanceId).collect(toList());
     logger.info(
         "Provisioned hosts count = {} and provisioned hosts instance ids = {}", instancesIds.size(), instancesIds);
@@ -163,7 +165,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     for (Instance instance : readyInstances) {
       int retryCount = RETRY_COUNTER;
-      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName());
+      String hostname = awsHelperService.getHostnameFromDnsName(
+          usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName());
       while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
