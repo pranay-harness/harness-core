@@ -158,22 +158,22 @@ public class SetupYamlResourceTest {
   }
   */
 
+  /*
   @Test
   public void testUpdateFromYamlAddAndDeleteNotEnabled() {
-    RestResponse<SetupYaml> actual =
-        resources.client()
-            .target("/setupYaml/" + TEST_ACCOUNT_ID)
-            .request()
-            .put(Entity.entity(TEST_YP3, MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
+    RestResponse<SetupYaml>
+        actual = resources.client().target("/setupYaml/" + TEST_ACCOUNT_ID).request().put(Entity.entity(TEST_YP3,
+  MediaType.APPLICATION_JSON), new GenericType<RestResponse<SetupYaml>>() {});
 
     assertThat(actual.getResponseMessages().size()).isEqualTo(1);
 
     ResponseMessage rm = actual.getResponseMessages().get(0);
 
     assertThat(rm.getCode()).isEqualTo(ErrorCode.NON_EMPTY_DELETIONS);
-    assertThat(rm.getMessage())
-        .isEqualTo("WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
+    assertThat(rm.getMessage()).isEqualTo("WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you
+  want to proceed.");
   }
+  */
 
   /*
   @Test

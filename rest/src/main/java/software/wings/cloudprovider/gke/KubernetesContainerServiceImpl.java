@@ -91,7 +91,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     boolean hasErrors = false;
     for (Pod pod : pods) {
       String podName = pod.getMetadata().getName();
-      ContainerInfo containerInfo = new ContainerInfo();
+      ContainerInfo containerInfo = ContainerInfo.builder().build();
       containerInfo.setHostName(podName);
       containerInfo.setContainerId(!pod.getStatus().getContainerStatuses().isEmpty()
               ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)

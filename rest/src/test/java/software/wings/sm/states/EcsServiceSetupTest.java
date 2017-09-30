@@ -13,6 +13,7 @@ import static software.wings.api.ContainerServiceElement.ContainerServiceElement
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -24,6 +25,7 @@ import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDocker
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -31,11 +33,13 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.DOCKER_IMAGE;
+import static software.wings.utils.WingsTestConstants.DOCKER_SOURCE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
@@ -128,11 +132,23 @@ public class EcsServiceSetupTest extends WingsBaseTest {
                                   .withUuid(ARTIFACT_ID)
                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
-  private ArtifactStream artifactStream = aDockerArtifactStream().withImageName(DOCKER_IMAGE).build();
+  private ArtifactStream artifactStream = aDockerArtifactStream()
+                                              .withImageName(DOCKER_IMAGE)
+                                              .withSourceName(DOCKER_SOURCE)
+                                              .withSettingId(SETTING_ID)
+                                              .build();
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider = aSettingAttribute().build();
+  private SettingAttribute dockerConfigSettingAttribute = aSettingAttribute()
+                                                              .withValue(aDockerConfig()
+                                                                             .withDockerRegistryUrl("url")
+                                                                             .withUsername("name")
+                                                                             .withPassword("pass".toCharArray())
+                                                                             .withAccountId(ACCOUNT_ID)
+                                                                             .build())
+                                                              .build();
   private TaskDefinition taskDefinition;
 
   /**
@@ -156,6 +172,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(ecsServiceSetup).set("artifactStreamService", artifactStreamService);
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
+    when(settingsService.get(SETTING_ID)).thenReturn(dockerConfigSettingAttribute);
 
     taskDefinition = new TaskDefinition();
     taskDefinition.setFamily(TASK_FAMILY);

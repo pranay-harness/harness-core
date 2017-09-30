@@ -1,11 +1,9 @@
 package software.wings.service;
 
-import static java.util.Arrays.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
@@ -17,15 +15,26 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.ServiceTemplate.Builder.*;
+import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
+import static software.wings.beans.ServiceVariable.Type.TEXT;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
+import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -43,31 +52,36 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceTemplate.Builder;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 
-import java.util.Arrays;
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -86,7 +100,12 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private NotificationService notificationService;
   @Mock private PipelineService pipelineService;
-  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private AppService appService;
+  @Mock private ServiceVariableService serviceVariableService;
+  @Mock private ConfigService configService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private Application application;
+  @Mock private EntityUpdateService entityUpdateService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -217,6 +236,69 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).save(any(ServiceTemplate.class));
     verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
   }
+
+  /**
+   * Should clone environment.
+   */
+  @Test
+  public void shouldCloneEnvironmentAcrossApp() {
+    when(appService.get(APP_ID)).thenReturn(application);
+    Environment environment =
+        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    Environment clonedEnvironment = environment.clone();
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
+
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withDescription(TEMPLATE_DESCRIPTION)
+                                          .withServiceId(SERVICE_ID)
+                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
+                                          .build();
+
+    ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
+    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+        .thenReturn(serviceTemplate);
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+    when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
+        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+
+    CloneMetadata cloneMetadata = CloneMetadata.builder()
+                                      .environment(environment)
+                                      .serviceMapping(ImmutableMap.of(SERVICE_ID, TARGET_SERVICE_ID))
+                                      .targetAppId(TARGET_APP_ID)
+                                      .build();
+
+    environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
+    verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
+    verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
+    verify(serviceTemplateService).list(pageRequest, false, false);
+    verify(serviceTemplateService).save(any(ServiceTemplate.class));
+    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+  }
+
   /**
    * Should update environment.
    */
@@ -296,5 +378,111 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(environmentArgumentCaptor.getAllValues())
         .extracting(Environment::getName)
         .containsExactly(Constants.DEV_ENV, Constants.QA_ENV, Constants.PROD_ENV);
+  }
+
+  @Test
+  public void shouldGetServicesWithOverridesEmpty() {
+    Environment environment =
+        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
+
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withDescription(TEMPLATE_DESCRIPTION)
+                                          .withServiceId(SERVICE_ID)
+                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
+                                          .build();
+
+    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
+    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+        .thenReturn(serviceTemplate);
+
+    List<Service> services = environmentService.getServicesWithOverrides(APP_ID, ENV_ID);
+    assertThat(services).isNotNull().size().isEqualTo(0);
+
+    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
+    verify(configService).getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
+  }
+
+  @Test
+  public void shouldGetServicesWithOverrides() {
+    Environment environment =
+        anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
+
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withDescription(TEMPLATE_DESCRIPTION)
+                                          .withServiceId(SERVICE_ID)
+                                          .withEnvId(Base.GLOBAL_ENV_ID)
+                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
+                                          .build();
+
+    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
+    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+        .thenReturn(serviceTemplate);
+
+    ServiceVariable serviceVariable = aServiceVariable()
+                                          .withAppId(APP_ID)
+                                          .withEnvId(ENV_ID)
+                                          .withUuid(SERVICE_VARIABLE_ID)
+                                          .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                          .withEntityId(TEMPLATE_ID)
+                                          .withTemplateId(TEMPLATE_ID)
+                                          .withName(SERVICE_VARIABLE_NAME)
+                                          .withType(TEXT)
+                                          .withValue("8080".toCharArray())
+                                          .build();
+
+    PageResponse<ServiceVariable> serviceVariableResponse =
+        aPageResponse().withResponse(asList(serviceVariable)).build();
+    when(serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true))
+        .thenReturn(serviceVariableResponse);
+
+    Service service = Service.Builder.aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).withAppId(APP_ID).build();
+    PageRequest<Service> servicePageRequest = aPageRequest()
+                                                  .withLimit(PageRequest.UNLIMITED)
+                                                  .addFilter("appId", EQ, environment.getAppId())
+                                                  .addFilter("uuid", IN, asList(SERVICE_ID).toArray())
+                                                  .addFieldsExcluded("serviceCommands")
+                                                  .addFieldsExcluded("appContainer")
+                                                  .build();
+    PageResponse<Service> servicesResponse = aPageResponse().withResponse(asList(service)).build();
+
+    when(serviceResourceService.list(servicePageRequest, false, false)).thenReturn(servicesResponse);
+
+    List<Service> services = environmentService.getServicesWithOverrides(APP_ID, ENV_ID);
+
+    assertThat(services).isNotNull().size().isEqualTo(1);
+    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
+    verify(configService, times(0))
+        .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
   }
 }

@@ -45,6 +45,8 @@ public class GitSyncHelper {
   private TransportConfigCallback transportConfigCallback;
   private Git git;
 
+  public GitSyncHelper() {}
+
   public GitSyncHelper(String passphrase, String sshKeyPath) {
     this.sshSessionFactory = new CustomJschConfigSessionFactory(passphrase, sshKeyPath);
     this.transportConfigCallback = new CustomTransportConfigCallback(this.sshSessionFactory);

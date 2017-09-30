@@ -545,7 +545,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
@@ -840,7 +840,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        appId, env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
@@ -963,7 +963,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1074,7 +1074,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1232,7 +1232,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1336,7 +1336,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1464,8 +1464,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationWorkflowExecution(
-                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(app.getUuid(), env.getUuid(),
+                                          workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1657,7 +1657,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        app.getUuid(), env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1792,7 +1792,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
-        appId, env.getUuid(), workflow.getUuid(), executionArgs, callback);
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
