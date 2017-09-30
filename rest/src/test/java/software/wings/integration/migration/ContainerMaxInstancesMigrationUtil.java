@@ -14,10 +14,10 @@ import software.wings.rules.Integration;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.sm.states.EcsServiceDeploy;
-import software.wings.sm.states.EcsServiceSetup;
-import software.wings.sm.states.KubernetesReplicationControllerDeploy;
-import software.wings.sm.states.KubernetesReplicationControllerSetup;
+import software.wings.sm.states.container.EcsServiceDeploy;
+import software.wings.sm.states.container.EcsServiceSetup;
+import software.wings.sm.states.container.KubernetesReplicationControllerDeploy;
+import software.wings.sm.states.container.KubernetesReplicationControllerSetup;
 
 import java.util.ArrayList;
 import java.util.Comparator;
