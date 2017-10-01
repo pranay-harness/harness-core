@@ -725,23 +725,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                         .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
                                         .build();
     List<String> existingDnsNames =
-        hostService.list(pageRequest)
-            .getResponse()
-            .stream()
-            .map(host
-                -> awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
-                                                             : host.getEc2Instance().getPrivateDnsName())
-            .collect(Collectors.toList());
+        hostService.list(pageRequest).getResponse().stream().map(Host::getPublicDns).collect(Collectors.toList());
 
     ListIterator<Host> hostListIterator = hosts.listIterator();
 
     while (hostListIterator.hasNext()) {
       Host host = hostListIterator.next();
-      String dnsName = awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
-                                                                 : host.getEc2Instance().getPrivateDnsName();
-      if (existingDnsNames.contains(dnsName)) {
+      if (existingDnsNames.contains(host.getPublicDns())) {
         hostListIterator.remove();
-        existingDnsNames.remove(dnsName);
+        existingDnsNames.remove(host.getPublicDns());
       }
     }
     updateHostsAndServiceInstances(awsInfrastructureMapping, hosts, existingDnsNames);
@@ -806,9 +798,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               new PageRequest<>())
           .getResponse()
           .stream()
-          .map(host
-              -> awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
-                                                           : host.getEc2Instance().getPrivateDnsName())
+          .map(Host::getPublicDns)
           .collect(Collectors.toList());
     }
     return emptyList();
