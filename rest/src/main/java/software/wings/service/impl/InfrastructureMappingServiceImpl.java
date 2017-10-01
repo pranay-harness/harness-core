@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -84,7 +85,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -259,12 +259,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       awsInfrastructureMapping.validate();
       updateOperations.set("region", awsInfrastructureMapping.getRegion());
-      updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+      if (isNotEmpty(awsInfrastructureMapping.getLoadBalancerId())) {
+        updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+      } else {
+        updateOperations.unset("loadBalancerId");
+      }
       updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
       updateOperations.set("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
-      updateOperations.set("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
-      updateOperations.set(
-          "autoScalingGroupName", Optional.of(awsInfrastructureMapping.getAutoScalingGroupName()).orElse(""));
+      if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
+        updateOperations.set("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
+      } else {
+        updateOperations.unset("awsInstanceFilter");
+      }
+      if (isNotEmpty(awsInfrastructureMapping.getAutoScalingGroupName())) {
+        updateOperations.set("autoScalingGroupName", awsInfrastructureMapping.getAutoScalingGroupName());
+      } else {
+        updateOperations.unset("autoScalingGroupName");
+      }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
