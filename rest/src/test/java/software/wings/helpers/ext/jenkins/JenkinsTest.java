@@ -6,34 +6,43 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.delegatetasks.DelegateFile;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The Class JenkinsTest.
  */
-public class JenkinsTest {
+@Ignore
+public class JenkinsTest extends WingsBaseTest {
+  private DelegateFileManager delegateFileManager = mock(DelegateFileManager.class);
   /**
    * The Wire mock rule.
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
-  private Jenkins jenkins =
-      new JenkinsImpl("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray());
+  private Jenkins jenkins = new JenkinsImpl("http://localhost:8089", "wingsbuild",
+      "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray(), delegateFileManager);
 
   public JenkinsTest() throws URISyntaxException {}
 
@@ -89,10 +98,13 @@ public class JenkinsTest {
    */
   @Test
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
-    Pair<String, InputStream> fileInfo =
-        jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
-    assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
-    IOUtils.closeQuietly(fileInfo.getValue());
+    DelegateFile delegateFile = new DelegateFile();
+    delegateFile.setFileId(UUID.randomUUID().toString());
+    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+    ListNotifyResponseData listNotifyResponseData = jenkins.downloadArtifacts(
+        "scheduler", "57", Lists.newArrayList("build/libs/docker-scheduler-*.jar"), null, null, null);
+    ArtifactFile artifactFile = (ArtifactFile) listNotifyResponseData.getData().get(0);
+    assertThat(artifactFile.getName()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
   }
 
   /**
@@ -103,9 +115,13 @@ public class JenkinsTest {
    */
   @Test
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
-    Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
-    assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
-    IOUtils.closeQuietly(fileInfo.getValue());
+    DelegateFile delegateFile = new DelegateFile();
+    delegateFile.setFileId(UUID.randomUUID().toString());
+    when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+    ListNotifyResponseData listNotifyResponseData = jenkins.downloadArtifacts(
+        "scheduler", "57", Lists.newArrayList("build/libs/docker-scheduler-*.jar"), null, null, null);
+    ArtifactFile artifactFile = (ArtifactFile) listNotifyResponseData.getData().get(0);
+    assertThat(artifactFile.getName()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
   }
 
   /**
@@ -116,9 +132,9 @@ public class JenkinsTest {
    */
   @Test
   public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
-    Pair<String, InputStream> fileInfo =
-        jenkins.downloadArtifact("scheduler1", "57", "build/libs/docker-scheduler-*.jar");
-    assertThat(fileInfo).isNull();
+    ListNotifyResponseData listNotifyResponseData = jenkins.downloadArtifacts(
+        "scheduler1", "57", Lists.newArrayList("build/libs/docker-scheduler-*.jar"), null, null, null);
+    assertThat(listNotifyResponseData.getData()).isEmpty();
   }
 
   /**
@@ -129,9 +145,9 @@ public class JenkinsTest {
    */
   @Test
   public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
-    Pair<String, InputStream> fileInfo =
-        jenkins.downloadArtifact("scheduler", "-1", "build/libs/docker-scheduler-*.jar");
-    assertThat(fileInfo).isNull();
+    ListNotifyResponseData listNotifyResponseData = jenkins.downloadArtifacts(
+        "scheduler", "-1", Lists.newArrayList("build/libs/docker-scheduler-*.jar"), null, null, null);
+    assertThat(listNotifyResponseData.getData()).isEmpty();
   }
 
   /**
@@ -142,8 +158,9 @@ public class JenkinsTest {
    */
   @Test
   public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
-    Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
-    assertThat(fileInfo).isNull();
+    ListNotifyResponseData listNotifyResponseData =
+        jenkins.downloadArtifacts("scheduler", "57", Lists.newArrayList("build/libs/dummy-*.jar"), null, null, null);
+    assertThat(listNotifyResponseData.getData()).isEmpty();
   }
 
   /**

@@ -3,7 +3,6 @@ package software.wings.delegatetasks.collect.artifacts;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -39,7 +38,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNot
       return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
           (List<String>) parameters[4]);
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting artifact", e);
+      logger.error("Exception occurred while collecting S3 artifacts", e);
       return new ListNotifyResponseData();
     }
   }
@@ -48,17 +47,14 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNot
       String accountId, String accessKey, char[] secretKey, String bucketName, List<String> artifactPaths) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
+
     try {
       AwsConfig awsConfig =
           anAwsConfig().withAccountId(accountId).withAccessKey(accessKey).withSecretKey(secretKey).build();
-      for (String artifactPath : artifactPaths) {
-        logger.info("Collecting artifact {}  from Amazon S3 server", artifactPath);
-        Pair<String, InputStream> fileInfo = amazonS3Service.downloadArtifact(awsConfig, bucketName, artifactPath);
-        artifactCollectionTaskHelper.addDataToResponse(
-            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
-      }
+      amazonS3Service.downloadArtifacts(
+          awsConfig, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.error("Exception: " + e.getMessage(), e);
+      logger.error("Exception occurred while collecting S3 artifacts" + e.getMessage(), e);
       // TODO: Change list
     } finally {
       IOUtils.closeQuietly(in);
