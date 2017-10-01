@@ -42,7 +42,8 @@ import java.util.regex.Pattern;
  */
 public class ExecutionContextImpl implements ExecutionContext {
   private static final String CURRENT_STATE = "currentState";
-  private static Pattern nameWindCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+  private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
@@ -264,7 +265,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private String normalizeStateName(String name) {
-    Matcher matcher = nameWindCharPattern.matcher(name);
+    Matcher matcher = wildCharPattern.matcher(name);
     return matcher.replaceAll("__");
   }
 
@@ -311,9 +312,12 @@ public class ExecutionContextImpl implements ExecutionContext {
       String topObjectNameSuffix = null;
       int ind = variable.indexOf('.');
       if (ind > 0) {
-        topObjectName = normalizeStateName(variable.substring(0, ind));
-        topObjectNameSuffix = variable.substring(ind);
-        variable = topObjectName + topObjectNameSuffix;
+        String firstPart = variable.substring(0, ind);
+        if (!argsCharPattern.matcher(firstPart).find()) {
+          topObjectName = normalizeStateName(firstPart);
+          topObjectNameSuffix = variable.substring(ind);
+          variable = topObjectName + topObjectNameSuffix;
+        }
       }
 
       boolean unknownObject = false;
