@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.amazons3;
 
-import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -28,21 +28,31 @@ public interface AmazonS3Service {
   List<String> getArtifactPaths(AwsConfig awsConfig, String bucketName);
 
   /**
-   * Downloads the artifact from S3
-   *
-   * @param awsConfig aws cloud provider config
-   * @param bucketName s3 bucket name
-   * @param artifactPath s3 artifact path
-   * @return Returns a pair of artifact key and the input stream
+   * downloads artifacts from s3 based on the given inputs
+   * @param awsConfig aws config
+   * @param bucketName bucket name
+   * @param artifactPaths artifact paths
+   * @param delegateId delegate id
+   * @param taskId task id
+   * @param accountId account id
+   * @return
+   * @throws IOException
+   * @throws URISyntaxException
    */
-  Pair<String, InputStream> downloadArtifact(AwsConfig awsConfig, String bucketName, String artifactPath);
+  ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, String bucketName, List<String> artifactPaths,
+      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException;
 
   /**
    * Gets the artifact related information
    * @param config aws cloud provider config
-   * @param artifactStreamAttributes artifact stream attributes
-   * @param appId application id
-   * @return artifact info wrapped in build details
+   * @param bucketName bucket name
+   * @param key   artifact path / key
+   * @param isExpression is key an expression
+   * @return
    */
-  BuildDetails getArtifactMetadata(AwsConfig config, ArtifactStreamAttributes artifactStreamAttributes, String appId);
+  BuildDetails getArtifactBuildDetails(
+      AwsConfig config, String bucketName, String key, boolean isExpression, boolean versioningEnabledForBucket);
+
+  List<BuildDetails> getArtifactsBuildDetails(
+      AwsConfig awsConfig, String bucketName, List<String> artifactPaths, boolean isExpression);
 }
