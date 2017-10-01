@@ -100,8 +100,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .map(instance
                   -> aHost()
                          .withAppId(Base.GLOBAL_APP_ID)
-                         .withHostName(awsHelperService.getHostnameFromDnsName(
-                             usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName()))
+                         .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
                          .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
                          .withEc2Instance(instance)
                          .build())
@@ -192,8 +191,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> aHost()
-                   .withHostName(awsHelperService.getHostnameFromDnsName(
-                       usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName()))
+                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                   .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
                    .withEc2Instance(instance)
                    .build())
         .collect(toList());
