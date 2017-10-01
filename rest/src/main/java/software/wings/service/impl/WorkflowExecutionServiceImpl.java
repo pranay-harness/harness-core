@@ -10,6 +10,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
@@ -492,7 +493,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
-      refreshPipelineExecution(workflowExecution);
       return workflowExecution;
     }
     if (expandedGroupIds == null) {
@@ -533,8 +533,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest, false).getResponse());
       }
     }
-    refreshBreakdown(workflowExecution);
-    refreshSummaries(workflowExecution);
+
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    } else {
+      refreshBreakdown(workflowExecution);
+      refreshSummaries(workflowExecution);
+    }
     return workflowExecution;
   }
 
@@ -607,7 +612,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(
       String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
@@ -657,6 +662,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build());
     }
     workflowExecution.setExecutionArgs(executionArgs);
+
+    if (pipeline.getServices() != null) {
+      List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
+      pipeline.getServices().forEach(service -> {
+        serviceExecutionSummaries.add(
+            anElementExecutionSummary()
+                .withContextElement(aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build())
+                .build());
+      });
+      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
+    }
 
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
@@ -1357,7 +1373,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (services != null) {
         services.forEach(service -> {
           ServiceElement serviceElement =
-              ServiceElement.Builder.aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
+              aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
           serviceExecutionSummaries.add(elementSummary);

@@ -78,9 +78,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -96,9 +96,11 @@ import software.wings.yaml.gitSync.EntityUpdateListEvent;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -425,6 +427,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {
     List<Service> services = new ArrayList<>();
+    Set<String> serviceIds = new HashSet();
     List<WorkflowDetails> workflowDetails = new ArrayList<>();
     pipeline.getPipelineStages()
         .stream()
@@ -454,7 +457,12 @@ public class PipelineServiceImpl implements PipelineService {
                 workflowDetails.add(workflowDetail);
               }
             }
-            services.addAll(workflow.getServices());
+            workflow.getServices().forEach(service -> {
+              if (!serviceIds.contains(service.getUuid())) {
+                services.add(service);
+                serviceIds.add(service.getUuid());
+              }
+            });
           } catch (Exception ex) {
             logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
           }
