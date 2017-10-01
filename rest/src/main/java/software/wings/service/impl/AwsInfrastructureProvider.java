@@ -86,8 +86,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       }
       if (isNotEmpty(instanceFilter.getTags())) {
         Multimap<String, String> tags = ArrayListMultimap.create();
-        instanceFilter.getTags().forEach(tag -> tags.put("tag:" + tag.getKey(), tag.getValue()));
-        tags.keySet().forEach(key -> filters.add(new Filter(key, new ArrayList<>(tags.get(key)))));
+        instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
+        tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
     }
     DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
