@@ -387,8 +387,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(awsInfrastructureProvider.listHosts(
              Regions.US_EAST_1.getName(), computeProviderSetting, null, false, new PageRequest<>()))
         .thenReturn(aPageResponse().withResponse(newHosts).build());
-    List<Host> existingHosts =
-        asList(aHost().withEc2Instance(new Instance().withPrivateDnsName("OLD_HOST_NAME")).build());
+    List<Host> existingHosts = asList(aHost().withHostName("OLD_HOST_NAME").build());
 
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(existingHosts).build());
     when(awsInfrastructureProvider.saveHost(newHosts.get(0))).thenReturn(newHosts.get(0));
@@ -466,10 +465,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(awsInfrastructureProvider.listHosts(
              Regions.US_EAST_1.getName(), computeProviderSetting, null, true, new PageRequest<>()))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(aHost().withEc2Instance(new Instance().withPublicDnsName(HOST_NAME)).build()))
-                .build());
+        .thenReturn(aPageResponse().withResponse(asList(aHost().withHostName(HOST_NAME).build())).build());
 
     List<String> hostNames =
         infrastructureMappingService.listComputeProviderHosts(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
