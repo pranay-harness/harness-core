@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.LOG_ID;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -30,7 +32,10 @@ import software.wings.beans.Log.Builder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
+
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -46,6 +51,7 @@ public class LogServiceTest extends WingsBaseTest {
                                              .withExecutionResult(CommandExecutionStatus.RUNNING);
 
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private ActivityService activityService;
   @Inject @InjectMocks private LogService logService;
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
@@ -71,9 +77,10 @@ public class LogServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveLog() {
-    when(wingsPersistence.saveAndGet(eq(Log.class), eq(BUILDER.build()))).thenReturn(BUILDER.withUuid(LOG_ID).build());
-    logService.save(BUILDER.build());
-    verify(wingsPersistence).saveAndGet(eq(Log.class), eq(BUILDER.build()));
+    when(wingsPersistence.save(any(List.class))).thenReturn(ImmutableList.of(LOG_ID));
+    String id = logService.save(BUILDER.build());
+    assertThat(id).isEqualTo(LOG_ID);
+    verify(wingsPersistence).save(any(List.class));
   }
 
   /**

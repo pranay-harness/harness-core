@@ -144,7 +144,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       boolean usePublicDns, int instanceCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    // TODO(brett): throw it all away?
+    // TODO(brett): Check instanceCount cs autoscaling group size. Scale autoscale group capacity to match
+    // instanceCount, wait until it does, and return all instances from group.
 
     List<Instance> instances =
         awsHelperService.listRunInstancesFromAutoScalingGroup(awsConfig, region, autoScalingGroupName, instanceCount);

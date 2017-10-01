@@ -67,7 +67,6 @@ public class AwsNodeSelectState extends State {
     if (provisionNode) {
       logger.info("serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, launcherConfigName: {}",
           serviceId, envId, infraMappingId, instanceCount, launcherConfigName);
-      // TODO(brett) - use autoScalingGroupName from aws infra mapping. Check instanceCount vs autoscaling group size
       serviceInstances = infrastructureMappingService.provisionNodes(appId, envId, infraMappingId, instanceCount);
     } else {
       logger.info(
