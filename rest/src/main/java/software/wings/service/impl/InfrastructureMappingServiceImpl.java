@@ -1,8 +1,11 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -82,6 +85,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -150,6 +154,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setServiceId(serviceTemplate.getServiceId());
     if (computeProviderSetting != null) {
       infraMapping.setComputeProviderName(computeProviderSetting.getName());
+    }
+
+    if (infraMapping instanceof AwsInfrastructureMapping) {
+      ((AwsInfrastructureMapping) infraMapping).validate();
     }
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
@@ -249,8 +257,25 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("namespace", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
+      awsInfrastructureMapping.validate();
       updateOperations.set("region", awsInfrastructureMapping.getRegion());
-      updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+      if (isNotEmpty(awsInfrastructureMapping.getLoadBalancerId())) {
+        updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+      } else {
+        updateOperations.unset("loadBalancerId");
+      }
+      updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
+      updateOperations.set("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
+      if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
+        updateOperations.set("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
+      } else {
+        updateOperations.unset("awsInstanceFilter");
+      }
+      if (isNotEmpty(awsInfrastructureMapping.getAutoScalingGroupName())) {
+        updateOperations.set("autoScalingGroupName", awsInfrastructureMapping.getAutoScalingGroupName());
+      } else {
+        updateOperations.unset("autoScalingGroupName");
+      }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
@@ -391,7 +416,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -404,7 +429,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listAMIs(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -417,7 +442,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listRegions(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -430,7 +455,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listInstanceTypes(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -443,11 +468,44 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listIAMInstanceRoles(computeProviderSetting);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
-  public Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId) {
+  public Map<String, String> listAwsIamRoles(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    Validator.notNullCheck("Service Infrastructure", infrastructureMapping);
+    return listAllRoles(appId, infrastructureMapping.getComputeProviderSettingId());
+  }
+
+  @Override
+  public Set<String> listTags(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listTags(computeProviderSetting, region);
+    }
+    return Collections.emptySet();
+  }
+
+  @Override
+  public List<String> listAutoScalingGroups(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public Map<String, String> listAllRoles(String appId, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
@@ -460,16 +518,42 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region) {
+  public List<String> listVPC(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listVPCs(region, computeProviderSetting);
+      return infrastructureProvider.listVPCs(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
+  }
+
+  @Override
+  public List<String> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listSecurityGroups(computeProviderSetting, region, vpcIds);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public List<String> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listSubnets(computeProviderSetting, region, vpcIds);
+    }
+    return emptyList();
   }
 
   @Override
@@ -529,7 +613,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -631,36 +715,45 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
     AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
     List<Host> hosts = awsInfrastructureProvider
-                           .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting, new PageRequest<>())
+                           .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting,
+                               awsInfrastructureMapping.getAwsInstanceFilter(),
+                               awsInfrastructureMapping.isUsePublicDns(), new PageRequest<>())
                            .getResponse();
     PageRequest<Host> pageRequest = aPageRequest()
                                         .withLimit(UNLIMITED)
                                         .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
                                         .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
                                         .build();
-    List<String> existingPublicDnsNames =
-        hostService.list(pageRequest).getResponse().stream().map(Host::getPublicDns).collect(Collectors.toList());
+    List<String> existingDnsNames =
+        hostService.list(pageRequest)
+            .getResponse()
+            .stream()
+            .map(host
+                -> awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
+                                                             : host.getEc2Instance().getPrivateDnsName())
+            .collect(Collectors.toList());
 
     ListIterator<Host> hostListIterator = hosts.listIterator();
 
     while (hostListIterator.hasNext()) {
       Host host = hostListIterator.next();
-      if (existingPublicDnsNames.contains(host.getPublicDns())) {
+      String dnsName = awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
+                                                                 : host.getEc2Instance().getPrivateDnsName();
+      if (existingDnsNames.contains(dnsName)) {
         hostListIterator.remove();
-        existingPublicDnsNames.remove(host.getPublicDns());
+        existingDnsNames.remove(dnsName);
       }
     }
-    updateHostsAndServiceInstances(infrastructureMapping, hosts, existingPublicDnsNames);
+    updateHostsAndServiceInstances(awsInfrastructureMapping, hosts, existingDnsNames);
   }
 
   private void updateHostsAndServiceInstances(
-      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedPublicDnsNames) {
+      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedDnsNames) {
     InfrastructureProvider awsInfrastructureProvider =
         getInfrastructureProviderByComputeProviderType(infraMapping.getComputeProviderType());
 
-    deletedPublicDnsNames.forEach(publicDns -> {
-      awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), publicDns);
-    });
+    deletedDnsNames.forEach(
+        dnsName -> awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), dnsName));
 
     List<Host> savedHosts = activeHosts.stream()
                                 .map(host -> {
@@ -675,7 +768,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedPublicDnsNames);
+    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedDnsNames);
   }
 
   @Override
@@ -701,20 +794,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+          settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
-          .listHosts(((AwsInfrastructureMapping) infrastructureMapping).getRegion(), computeProviderSetting,
+          .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting,
+              awsInfrastructureMapping.getAwsInstanceFilter(), awsInfrastructureMapping.isUsePublicDns(),
               new PageRequest<>())
           .getResponse()
           .stream()
-          .map(Host::getPublicDns)
+          .map(host
+              -> awsInfrastructureMapping.isUsePublicDns() ? host.getEc2Instance().getPublicDnsName()
+                                                           : host.getEc2Instance().getPrivateDnsName())
           .collect(Collectors.toList());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override
@@ -738,7 +835,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listLaunchConfigurations(
           computeProviderSetting, ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
@@ -765,8 +862,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> provisionNodes(
-      String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount) {
+  public List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -780,9 +876,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               infrastructureMapping.getComputeProviderType());
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
-      List<Host> hosts = awsInfrastructureProvider.provisionHosts(
-          awsInfrastructureMapping.getRegion(), computeProviderSetting, launcherConfigName, instanceCount);
-      updateHostsAndServiceInstances(infrastructureMapping, hosts, ImmutableList.of());
+      List<Host> hosts = awsInfrastructureProvider.provisionHosts(awsInfrastructureMapping.getRegion(),
+          computeProviderSetting, awsInfrastructureMapping.getAutoScalingGroupName(),
+          awsInfrastructureMapping.isUsePublicDns(), instanceCount);
+      updateHostsAndServiceInstances(infrastructureMapping, hosts, emptyList());
 
       return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
           infrastructureMapping.getUuid(),
@@ -792,7 +889,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               .build());
     } else {
       throw new WingsException(
-          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
+          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infrastructure mapping");
     }
   }
 
@@ -846,6 +943,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+      if (artifactType == ArtifactType.ZIP) {
+        infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
+      }
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }

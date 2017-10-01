@@ -197,14 +197,14 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void deleteByPublicDns(String appId, String infraMappingId, String publicDns) {
+  public void deleteByDnsName(String appId, String infraMappingId, String dnsName) {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
                                 .field("appId")
                                 .equal(appId)
                                 .field("infraMappingId")
                                 .equal(infraMappingId)
                                 .field("publicDns")
-                                .equal(publicDns));
+                                .equal(dnsName));
   }
 
   @Override

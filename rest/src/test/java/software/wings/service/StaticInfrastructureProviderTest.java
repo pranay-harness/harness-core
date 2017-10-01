@@ -47,7 +47,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
     SettingAttribute computeProviderSettingAttribute =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build();
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
-        Regions.US_EAST_1.getName(), computeProviderSettingAttribute, new PageRequest<>());
+        Regions.US_EAST_1.getName(), computeProviderSettingAttribute, null, false, new PageRequest<>());
     assertThat(hosts).hasSize(1).containsExactly(host);
     verify(hostService).list(any(PageRequest.class));
   }
@@ -67,7 +67,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   @Test
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
-    verify(hostService).deleteByPublicDns(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
+    verify(hostService).deleteByDnsName(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
   }
 
   @Test

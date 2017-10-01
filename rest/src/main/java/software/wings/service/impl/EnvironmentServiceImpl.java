@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -46,7 +45,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -69,6 +67,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -210,7 +209,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment update(Environment environment) {
-    String description = environment.getDescription() == null ? "" : environment.getDescription();
+    String description = Optional.of(environment.getDescription()).orElse("");
     ImmutableMap<String, Object> paramMap = ImmutableMap.of(
         "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
 

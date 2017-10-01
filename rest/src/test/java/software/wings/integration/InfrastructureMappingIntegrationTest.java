@@ -252,7 +252,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
 
     List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(
-        app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(), "DemoTargetHosts", 5);
+        app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(), 5);
 
     System.out.println(serviceInstances.size());
     //    serviceInstances = infrastructureMappingService

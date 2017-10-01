@@ -30,7 +30,7 @@ public interface LogService {
    * @param log the log
    * @return the log
    */
-  @ValidationGroups(Create.class) Log save(@Valid Log log);
+  @ValidationGroups(Create.class) String save(@Valid Log log);
 
   /**
    * Gets unit execution result.

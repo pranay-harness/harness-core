@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -254,8 +255,7 @@ public class PageRequest<T> {
       } else if (key.startsWith("sort") && key.endsWith("[field]")) {
         orderCount++;
       } else if (key.equals("searchLogic")) {
-        String searchLogic = map.getFirst("searchLogic");
-        searchLogic = searchLogic == null ? "" : searchLogic.trim();
+        String searchLogic = Optional.of(map.getFirst("searchLogic")).orElse("").trim();
         if (searchLogic.equals("OR")) {
           isOr = true;
         }
