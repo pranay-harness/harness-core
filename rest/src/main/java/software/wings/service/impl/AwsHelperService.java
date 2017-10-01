@@ -134,11 +134,15 @@ import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.ListFunctionsRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
+import com.amazonaws.services.lambda.model.ListVersionsByFunctionRequest;
+import com.amazonaws.services.lambda.model.ListVersionsByFunctionResult;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.apache.commons.io.IOUtils;
@@ -1236,6 +1240,16 @@ public class AwsHelperService {
     return new GetFunctionResult();
   }
 
+  public ListVersionsByFunctionResult listVersionsByFunction(
+      String region, String accessKey, char[] secretKey, ListVersionsByFunctionRequest listVersionsByFunctionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).listVersionsByFunction(listVersionsByFunctionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListVersionsByFunctionResult();
+  }
+
   public CreateFunctionResult createFunction(
       String region, String accessKey, char[] secretKey, CreateFunctionRequest createFunctionRequest) {
     try {
@@ -1246,7 +1260,7 @@ public class AwsHelperService {
     return new CreateFunctionResult();
   }
 
-  public UpdateFunctionCodeResult updateFunction(
+  public UpdateFunctionCodeResult updateFunctionCode(
       String region, String accessKey, char[] secretKey, UpdateFunctionCodeRequest updateFunctionCodeRequest) {
     try {
       return getAmazonLambdaClient(region, accessKey, secretKey).updateFunctionCode(updateFunctionCodeRequest);
@@ -1254,6 +1268,17 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new UpdateFunctionCodeResult();
+  }
+
+  public UpdateFunctionConfigurationResult updateFunctionConfiguration(String region, String accessKey,
+      char[] secretKey, UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey)
+          .updateFunctionConfiguration(updateFunctionConfigurationRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new UpdateFunctionConfigurationResult();
   }
 
   public PublishVersionResult publishVersion(

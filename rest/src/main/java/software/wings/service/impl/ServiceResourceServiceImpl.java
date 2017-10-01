@@ -31,8 +31,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
@@ -833,5 +833,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public PageResponse<LambdaSpecification> listLambdaSpecification(PageRequest<LambdaSpecification> pageRequest) {
     return wingsPersistence.query(LambdaSpecification.class, pageRequest);
+  }
+
+  @Override
+  public LambdaSpecification getLambdaSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(LambdaSpecification.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .get();
   }
 }
