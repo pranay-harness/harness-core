@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -21,6 +20,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -200,14 +201,59 @@ public class InfrastructureMappingResource {
   }
 
   @GET
-  @Path("compute-providers/{computeProviderId}/networks")
+  @Path("compute-providers/{computeProviderId}/vpcs")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> getNetworks(@QueryParam("appId") String appId,
-      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    // TODO(brett): Pass region as query param
-    return new RestResponse<>(infrastructureMappingService.listNetworks(
-        appId, deploymentType, computeProviderId, Regions.US_EAST_1.getName()));
+  public RestResponse<List<String>> listVpcs(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listVPC(appId, computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/security-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @QueryParam("vpcId") @NotNull List<String> vpcIds,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/subnets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @QueryParam("vpcId") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listTags(appId, computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/auto-scaling-groups")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listAutoScalingGroups(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listAutoScalingGroups(appId, computeProviderId, region));
+  }
+
+  @GET
+  @Path("{infraMappingId}/iam-roles")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, String>> getInstanceRoles(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listAwsIamRoles(appId, infraMappingId));
   }
 
   @GET
@@ -216,7 +262,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> getRoles(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, deploymentType, computeProviderId));
+    return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, computeProviderId));
   }
 
   @GET

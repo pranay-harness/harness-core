@@ -35,7 +35,7 @@ public class LogResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<Log> save(Log log) {
+  public RestResponse<String> save(Log log) {
     return new RestResponse<>(logService.save(log));
   }
 

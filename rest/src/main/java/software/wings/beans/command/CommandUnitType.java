@@ -87,7 +87,11 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * The Code deploy.
    */
-  CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
+  CODE_DEPLOY(CodeDeployCommandUnit.class, "Amazon Code Deploy", StencilCategory.COMMANDS,
+      DEFAULT_DISPLAY_ORDER), /**
+                               * The Aws lambda.
+                               */
+  AWS_LAMBDA(AwsLambdaCommandUnit.class, "AWS Lambda", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
 
   /**
    * The Install.

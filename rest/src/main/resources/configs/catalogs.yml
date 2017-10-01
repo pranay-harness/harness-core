@@ -21,6 +21,10 @@ ARTIFACT_TYPE:
       value: RPM
     - name: Other
       value: OTHER
+    - name: AWS Lambda
+      value: AWS_LAMBDA
+    - name: AWS Code Deploy
+      value: AWS_CODEDEPLOY
 
 ARTIFACT_SOURCE_TYPE:
     - name: Jenkins Server
@@ -161,6 +165,8 @@ DEPLOYMENT_TYPE:
       value: ECS
     - name: Kubernetes
       value: KUBERNETES
+    - name: AWS Lambda
+      value: AWS_LAMBDA
 
 ENVIRONMENT_TYPE:
     - name: Production
