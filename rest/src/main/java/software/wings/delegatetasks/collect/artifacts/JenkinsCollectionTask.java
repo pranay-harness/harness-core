@@ -1,16 +1,24 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -25,6 +33,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
 
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private DelegateFileManager delegateFileManager;
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   public JenkinsCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
@@ -39,12 +48,17 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
 
   public ListNotifyResponseData run(String jenkinsUrl, String username, char[] password, String jobName,
       List<String> artifactPaths, Map<String, String> arguments) {
+    InputStream in = null;
+    ListNotifyResponseData res = new ListNotifyResponseData();
+
     try {
       Jenkins jenkins = jenkinsFactory.create(jenkinsUrl, username, password);
 
-      return jenkins.downloadArtifacts(
-          jobName, arguments.get(BUILD_NO), artifactPaths, getDelegateId(), getTaskId(), getAccountId());
-
+      for (String artifactPath : artifactPaths) {
+        Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(jobName, arguments.get(BUILD_NO), artifactPath);
+        artifactCollectionTaskHelper.addDataToResponse(
+            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
+      }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
       // TODO: better error handling
@@ -60,7 +74,10 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
       //      }
       //      executionStatus = executionStatus.FAILED;
       //      jenkinsExecutionResponse.setErrorMessage(errorMessage);
+    } finally {
+      IOUtils.closeQuietly(in);
     }
-    return new ListNotifyResponseData();
+
+    return res;
   }
 }
