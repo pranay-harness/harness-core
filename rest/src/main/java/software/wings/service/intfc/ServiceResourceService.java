@@ -307,4 +307,13 @@ public interface ServiceResourceService {
    * @return the lambda specification
    */
   PageResponse<LambdaSpecification> listLambdaSpecification(PageRequest<LambdaSpecification> pageRequest);
+
+  /**
+   * Gets lambda specification.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the lambda specification
+   */
+  LambdaSpecification getLambdaSpecification(String appId, String serviceId);
 }
