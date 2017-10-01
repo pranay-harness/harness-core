@@ -36,6 +36,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -81,6 +82,7 @@ public class LogServiceTest extends WingsBaseTest {
     String id = logService.save(BUILDER.build());
     assertThat(id).isEqualTo(LOG_ID);
     verify(wingsPersistence).save(any(List.class));
+    verify(activityService).updateCommandUnitStatus(any(Map.class));
   }
 
   /**
