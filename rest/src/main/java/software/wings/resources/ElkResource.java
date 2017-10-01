@@ -5,11 +5,14 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -23,6 +26,8 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.GET;
@@ -39,6 +44,8 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
 public class ElkResource implements LogAnalysisResource {
+  private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
+
   @Inject private ElkAnalysisService analysisService;
 
   @POST
@@ -111,7 +118,15 @@ public class ElkResource implements LogAnalysisResource {
   public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String analysisServerConfigId, @QueryParam("index") String index)
       throws IOException {
-    return new RestResponse<>(analysisService.getLogSample(accountId, analysisServerConfigId, index, StateType.ELK));
+    LinkedHashMap<String, LinkedHashMap<String, ArrayList<LinkedHashMap>>> result = null;
+    try {
+      result = (LinkedHashMap<String, LinkedHashMap<String, ArrayList<LinkedHashMap>>>) analysisService.getLogSample(
+          accountId, analysisServerConfigId, index, StateType.ELK);
+      return new RestResponse<>(result.get("hits").get("hits").get(0).get("_source"));
+    } catch (Exception ex) {
+      logger.warn("Failed to get elk sample record " + result, ex);
+    }
+    return new RestResponse<>();
   }
 
   @GET

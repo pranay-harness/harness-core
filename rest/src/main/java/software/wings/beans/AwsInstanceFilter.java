@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AwsInstanceFilter {
-  @Attributes(title = "VPC") private List<String> vpcIds;
+  @Attributes(title = "VPC") private List<String> vpcIds = new ArrayList<>();
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
   @Attributes(title = "Tags") private List<Tag> tags = new ArrayList<>();

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import com.google.inject.Singleton;
 
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -20,7 +21,8 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
 
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
+      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
     return hostService.list(req);
   }
 
@@ -30,8 +32,8 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public void deleteHost(String appId, String infraMappingId, String hostName) {
-    hostService.deleteByPublicDns(appId, infraMappingId, hostName);
+  public void deleteHost(String appId, String infraMappingId, String dnsName) {
+    hostService.deleteByDnsName(appId, infraMappingId, dnsName);
   }
 
   @Override

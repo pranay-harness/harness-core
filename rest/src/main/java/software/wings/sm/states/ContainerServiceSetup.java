@@ -17,7 +17,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -106,9 +105,6 @@ public abstract class ContainerServiceSetup extends State {
       if (!(infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)
           && Constants.RUNTIME.equals(clusterName)) {
         clusterName = getClusterNameFromContextElement(context);
-        if (infrastructureMapping instanceof EcsInfrastructureMapping) {
-          clusterName = clusterName.split("/")[1];
-        }
       }
 
       StateExecutionData executionData = createService(context, serviceName, imageDetails, app.getName(), envName,
@@ -232,7 +228,7 @@ public abstract class ContainerServiceSetup extends State {
     }
   }
 
-  private String getClusterNameFromContextElement(ExecutionContext context) {
+  protected String getClusterNameFromContextElement(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
     Optional<ClusterElement> contextElement =
