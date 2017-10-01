@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
@@ -73,7 +72,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     List<Filter> filters = new ArrayList<>();
-    filters.add(new Filter("instance-state-name", singletonList("running")));
+    filters.add(new Filter("instance-state-name").withValues("running"));
     if (instanceFilter != null) {
       if (isNotEmpty(instanceFilter.getVpcIds())) {
         filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
@@ -259,17 +258,17 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     try {
       List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
-      imageIds.addAll(Lists
-                          .newArrayList(awsHelperService
-                                            .decribeEc2Images(awsConfig, region,
-                                                new DescribeImagesRequest().withFilters(
-                                                    new Filter().withName("is-public").withValues("false"),
-                                                    new Filter().withName("state").withValues("available"),
-                                                    new Filter().withName("virtualization-type").withValues("hvm")))
-                                            .getImages())
-                          .stream()
-                          .map(Image::getImageId)
-                          .collect(toList()));
+      imageIds.addAll(
+          Lists
+              .newArrayList(awsHelperService
+                                .decribeEc2Images(awsConfig, region,
+                                    new DescribeImagesRequest().withFilters(new Filter("is-public").withValues("false"),
+                                        new Filter("state").withValues("available"),
+                                        new Filter("virtualization-type").withValues("hvm")))
+                                .getImages())
+              .stream()
+              .map(Image::getImageId)
+              .collect(toList()));
       return imageIds;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
