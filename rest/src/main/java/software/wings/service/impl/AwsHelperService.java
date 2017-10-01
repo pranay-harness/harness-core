@@ -4,6 +4,7 @@ import static com.google.api.client.repackaged.com.google.common.base.Strings.is
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
@@ -409,9 +410,8 @@ public class AwsHelperService {
     AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region.getName(), accessKey, secretKey);
 
     String instanceId;
-    DescribeInstancesResult describeInstancesResult =
-        amazonEC2Client.describeInstances(new DescribeInstancesRequest().withFilters(
-            new Filter().withName("private-dns-name").withValues(hostName + "*")));
+    DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
+        new DescribeInstancesRequest().withFilters(new Filter("private-dns-name").withValues(hostName + "*")));
     instanceId = describeInstancesResult.getReservations()
                      .stream()
                      .flatMap(reservation -> reservation.getInstances().stream())
@@ -421,7 +421,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("private-ip-address").withValues(hostName)));
+          new DescribeInstancesRequest().withFilters(new Filter("private-ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -432,7 +432,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("dns-name").withValues(hostName + "*")));
+          new DescribeInstancesRequest().withFilters(new Filter("dns-name").withValues(hostName + "*")));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -443,7 +443,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("ip-address").withValues(hostName)));
+          new DescribeInstancesRequest().withFilters(new Filter("ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -634,30 +634,11 @@ public class AwsHelperService {
     return Arrays.asList();
   }
 
-  //  public List<String> listVPCs(AwsConfig awsConfig, String region) {
-  //    List<String> results = Lists.newArrayList();
-  //    try {
-  //      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(),
-  //      awsConfig.getSecretKey()); results.addAll(amazonEC2Client.describeVpcs(
-  //          new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"), new
-  //          Filter().withName("isDefault").withValues("true")))
-  //          .getVpcs().stream().map(Vpc::getVpcId).collect(toList()));
-  //      results.addAll(amazonEC2Client.describeVpcs(
-  //          new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"), new
-  //          Filter().withName("isDefault").withValues("false")))
-  //          .getVpcs().stream().map(Vpc::getVpcId).collect(toList()));
-  //      return results;
-  //    } catch (AmazonServiceException amazonServiceException) {
-  //      handleAmazonServiceException(amazonServiceException);
-  //    }
-  //    return results;
-  //  }
-
   public List<String> listVPCs(AwsConfig awsConfig, String region) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonEC2Client
-          .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available")))
+          .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
           .stream()
           .map(Vpc::getVpcId)
@@ -671,8 +652,10 @@ public class AwsHelperService {
   public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      List<Filter> filters =
-          vpcIds.stream().map(vpcId -> new Filter().withName("vpc-id").withValues(vpcId)).collect(Collectors.toList());
+      List<Filter> filters = new ArrayList<>();
+      if (isNotEmpty(vpcIds)) {
+        filters.add(new Filter("vpc-id", vpcIds));
+      }
       return amazonEC2Client.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(filters))
           .getSecurityGroups()
           .stream()
@@ -687,9 +670,11 @@ public class AwsHelperService {
   public List<String> listSubnetIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      List<Filter> filters =
-          vpcIds.stream().map(vpcId -> new Filter().withName("vpc-id").withValues(vpcId)).collect(Collectors.toList());
-      filters.add(new Filter().withName("state").withValues("available"));
+      List<Filter> filters = new ArrayList<>();
+      if (isNotEmpty(vpcIds)) {
+        filters.add(new Filter("vpc-id", vpcIds));
+      }
+      filters.add(new Filter("state").withValues("available"));
       return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
           .getSubnets()
           .stream()
@@ -706,7 +691,7 @@ public class AwsHelperService {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonEC2Client
           .describeTags(new DescribeTagsRequest()
-                            .withFilters(new Filter().withName("resource-type").withValues("instance"))
+                            .withFilters(new Filter("resource-type").withValues("instance"))
                             .withMaxResults(1000))
           .getTags()
           .stream()
