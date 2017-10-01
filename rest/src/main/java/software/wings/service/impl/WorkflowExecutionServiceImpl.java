@@ -226,10 +226,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (res == null || res.size() == 0) {
       return res;
     }
-    for (WorkflowExecution workflowExecution : res) {
+    for (int i = 0; i < res.size(); i++) {
+      WorkflowExecution workflowExecution = res.get(i);
       if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
         // pipeline
         refreshPipelineExecution(workflowExecution);
+        PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+
+        // Done to ignore inconsistent pipeline executions with mismatch from setup
+        if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
+            || pipelineExecution.getPipeline() == null || pipelineExecution.getPipeline().getPipelineStages() == null
+            || pipelineExecution.getPipelineStageExecutions().size()
+                != pipelineExecution.getPipeline().getPipelineStages().size()) {
+          res.remove(i);
+          i--;
+        }
         continue;
       }
       if (withBreakdownAndSummary) {
@@ -480,6 +491,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+      return workflowExecution;
+    }
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }

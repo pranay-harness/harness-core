@@ -123,12 +123,10 @@ public interface InfrastructureMappingService {
    * @param appId              the app id
    * @param envId              the env id
    * @param infraMappingId     the infra mapping id
-   * @param launcherConfigName the launcher config name
    * @param instanceCount      the instance count
    * @return the list
    */
-  List<ServiceInstance> provisionNodes(
-      String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount);
+  List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount);
 
   /**
    * De provision nodes.
