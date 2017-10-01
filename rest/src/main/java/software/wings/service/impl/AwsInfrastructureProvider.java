@@ -9,8 +9,10 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -83,10 +85,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
       }
       if (isNotEmpty(instanceFilter.getTags())) {
-        filters.addAll(instanceFilter.getTags()
-                           .stream()
-                           .map(tag -> new Filter("tag:" + tag.getKey(), singletonList(tag.getValue())))
-                           .collect(Collectors.toList()));
+        Multimap<String, String> tags = ArrayListMultimap.create();
+        instanceFilter.getTags().forEach(tag -> tags.put("tag:" + tag.getKey(), tag.getValue()));
+        tags.keySet().forEach(key -> filters.add(new Filter(key, new ArrayList<>(tags.get(key)))));
       }
     }
     DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
