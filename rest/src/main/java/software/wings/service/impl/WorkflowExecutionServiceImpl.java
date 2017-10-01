@@ -502,9 +502,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       populateNodeHierarchyWithGraph(workflowExecution);
       workflowExecution.setExpandedGroupIds(expandedGroupIds);
     }
-    if (workflowExecution.getWorkflowType() == PIPELINE) {
-      refreshPipelineExecution(workflowExecution);
-    }
     return workflowExecution;
   }
 

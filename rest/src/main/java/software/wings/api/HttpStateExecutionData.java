@@ -181,7 +181,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Notify
    * @param path the path
    * @return the string
    */
-  public String xpath(String path) {
+  public Object xpath(String path) {
     try {
       return XmlUtils.xpath(document(), path);
     } catch (Exception e) {
@@ -195,7 +195,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Notify
    * @param path the path
    * @return the string
    */
-  public String jsonpath(String path) {
+  public Object jsonpath(String path) {
     try {
       return JsonUtils.jsonPath(httpResponseBody, path);
     } catch (Exception e) {
