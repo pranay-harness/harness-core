@@ -4,7 +4,6 @@
 
 package software.wings.sm;
 
-import static software.wings.beans.ErrorCode.ABORT_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
@@ -107,9 +106,9 @@ public class ExecutionInterruptManager {
 
     PageResponse<ExecutionInterrupt> res = listExecutionInterrupts(executionInterrupt);
 
-    if (isPresent(res, ABORT_ALL)) {
-      throw new WingsException(ABORT_ALL_ALREADY);
-    }
+    //    if (isPresent(res, ABORT_ALL)) {
+    //      throw new WingsException(ABORT_ALL_ALREADY);
+    //    }
 
     if (executionInterruptType == ROLLBACK) {
       if (isPresent(res, ROLLBACK)) {
