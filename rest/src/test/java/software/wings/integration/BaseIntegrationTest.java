@@ -113,7 +113,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final String NEXUS_URL = "https://nexus.wings.software";
   protected static final String NEXUS_USERNAME = "admin";
   protected static final char[] NEXUS_PASSWORD = "wings123!".toCharArray();
-  protected static final String BAMBOO_URL = "http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/";
+  protected static final String BAMBOO_URL = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/";
   protected static final String BAMBOO_USERNAME = "wingsbuild";
   protected static final char[] BAMBOO_PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray();
   protected static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
