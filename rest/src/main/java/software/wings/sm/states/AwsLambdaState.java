@@ -13,8 +13,12 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.PublishVersionRequest;
+import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -28,6 +32,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.Service;
@@ -102,20 +107,8 @@ public class AwsLambdaState extends State {
   @SchemaIgnore
   private String commandName = AWS_LAMBDA;
 
-  @Attributes(title = "S3 Bucket", required = true) private String bucket;
-  @Attributes(title = "Key", required = true) private String key;
-  @EnumData(enumDataProvider = LambdaRuntimeProvider.class)
-  @DefaultValue("nodejs4.3")
-  @Attributes(title = "Runtime", required = true)
-  private String runtime;
-  @Attributes(title = "Memory Size", required = true)
-  @EnumData(enumDataProvider = LambdaMemorySizePrvider.class)
-  @DefaultValue("128")
-  private Integer memorySize;
-  @Attributes(title = "Execution Timeout", required = true) @DefaultValue("3") private Integer timeout;
-  @Attributes(title = "Function Name", required = true) private String functionName;
-  @Attributes(title = "Handler", required = true) private String handler;
-  @Attributes(title = "Role", required = true) private String role;
+  //  @Attributes(title = "Role", required = true)
+  //  private String role;
 
   /**
    * Instantiates a new Aws lambda state.
@@ -149,6 +142,9 @@ public class AwsLambdaState extends State {
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
+
+    LambdaSpecification lambdaSpecification =
+        serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
 
     AwsLambdaInfraStructureMapping infrastructureMapping =
         (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
@@ -194,22 +190,25 @@ public class AwsLambdaState extends State {
                                                                  .withAppId(app.getUuid())
                                                                  .withCommandName(getCommandName())
                                                                  .withActivityId(activity.getUuid());
-    logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
 
-    String key = context.renderExpression(this.key);
-    String bucket = context.renderExpression(this.bucket);
-    String functionName = context.renderExpression(this.functionName);
-    String handler = context.renderExpression(this.handler);
+    String key = context.renderExpression(lambdaSpecification.getKey());
+    String bucket = context.renderExpression(lambdaSpecification.getBucket());
+    String functionName = context.renderExpression(lambdaSpecification.getFunctionName());
+    String handler = context.renderExpression(lambdaSpecification.getHandler());
+    String runtime = context.renderExpression(lambdaSpecification.getRuntime());
+    Integer memory = lambdaSpecification.getMemorySize();
+    Integer timeout = lambdaSpecification.getTimeout();
+    String roleArn = lambdaSpecification.getRole();
 
     logService.save(logBuilder.but().withLogLine("Deploying Lambda with following configuration.").build());
     logService.save(logBuilder.but().withLogLine("Function Name: " + functionName).build());
     logService.save(logBuilder.but().withLogLine("S3 Bucket: " + bucket).build());
     logService.save(logBuilder.but().withLogLine("Bucket key: " + key).build());
     logService.save(logBuilder.but().withLogLine("Function Handler: " + handler).build());
-    logService.save(logBuilder.but().withLogLine("Function Runtime: " + this.runtime).build());
-    logService.save(logBuilder.but().withLogLine("Function Memory: " + this.memorySize).build());
-    logService.save(logBuilder.but().withLogLine("Function Execution Timeout: " + this.timeout).build());
-    logService.save(logBuilder.but().withLogLine("IAM Role Arn: " + this.role).build());
+    logService.save(logBuilder.but().withLogLine("Function Runtime: " + runtime).build());
+    logService.save(logBuilder.but().withLogLine("Function Memory: " + memory).build());
+    logService.save(logBuilder.but().withLogLine("Function Execution Timeout: " + timeout).build());
+    logService.save(logBuilder.but().withLogLine("IAM Role Arn: " + roleArn).build());
     logService.save(logBuilder.but().withLogLine("VPC: " + infrastructureMapping.getVpcId()).build());
     logService.save(
         logBuilder.but().withLogLine("Subnet: " + Joiner.on(",").join(infrastructureMapping.getSubnetIds())).build());
@@ -218,7 +217,7 @@ public class AwsLambdaState extends State {
             .withLogLine("Security Groups: " + Joiner.on(",").join(infrastructureMapping.getSecurityGroupIds()))
             .build());
 
-    AwsConfig value = (AwsConfig) cloudProviderSetting.getValue();
+    AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
     Map<String, String> serviceVariables =
         serviceTemplateService
@@ -232,32 +231,32 @@ public class AwsLambdaState extends State {
       throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
     }
 
-    GetFunctionResult getFunctionResult = awsHelperService.getFunction(
-        region, value.getAccessKey(), value.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
+    GetFunctionResult functionResult = awsHelperService.getFunction(region, awsConfig.getAccessKey(),
+        awsConfig.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
 
-    if (getFunctionResult == null) { // function doesn't exist
+    if (functionResult == null) { // function doesn't exist
       logService.save(
           logBuilder.but().withLogLine(String.format("Function [%s] doesn't exist.", functionName)).build());
 
       CreateFunctionRequest createFunctionRequest =
           new CreateFunctionRequest()
               .withEnvironment(new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
-              .withRuntime(this.runtime)
+              .withRuntime(runtime)
               .withFunctionName(functionName)
               .withHandler(handler)
-              .withRole(this.role)
+              .withRole(roleArn)
               .withCode(new FunctionCode().withS3Bucket(bucket).withS3Key(key))
               .withPublish(true)
-              .withTimeout(this.timeout)
-              .withMemorySize(this.memorySize);
+              .withTimeout(timeout)
+              .withMemorySize(memory);
 
       VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
 
       if (vpcConfig != null) {
         createFunctionRequest.setVpcConfig(vpcConfig);
       }
-      CreateFunctionResult createFunctionResult =
-          awsHelperService.createFunction(region, value.getAccessKey(), value.getSecretKey(), createFunctionRequest);
+      CreateFunctionResult createFunctionResult = awsHelperService.createFunction(
+          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), createFunctionRequest);
       logService.save(logBuilder.but()
                           .withLogLine(String.format("Function [%s] published with version [%s] successfully",
                               functionName, createFunctionResult.getVersion()))
@@ -265,18 +264,54 @@ public class AwsLambdaState extends State {
       logService.save(logBuilder.but().withLogLine("Function: " + createFunctionResult.toString()).build());
     } else {
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
-      UpdateFunctionCodeResult updateFunctionCodeResult =
-          awsHelperService.updateFunction(region, value.getAccessKey(), value.getSecretKey(),
+      logService.save(
+          logBuilder.but()
+              .withLogLine("Existing Lambda Function Code Sha256: " + functionResult.getConfiguration().getCodeSha256())
+              .build());
+      UpdateFunctionCodeResult updateFunctionCodeResultDryRun =
+          awsHelperService.updateFunctionCode(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
               new UpdateFunctionCodeRequest()
                   .withFunctionName(functionName)
                   .withPublish(true)
                   .withS3Bucket(bucket)
                   .withS3Key(key));
-      logService.save(logBuilder.but()
-                          .withLogLine(String.format("Function [%s] published with version [%s] successfully",
-                              functionName, updateFunctionCodeResult.getVersion()))
-                          .build());
-      logService.save(logBuilder.but().withLogLine("Function: " + updateFunctionCodeResult.toString()).build());
+      logService.save(
+          logBuilder.but()
+              .withLogLine("New Lambda Function Code Sha256: " + updateFunctionCodeResultDryRun.getCodeSha256())
+              .build());
+
+      if (updateFunctionCodeResultDryRun.getCodeSha256().equals(functionResult.getConfiguration().getCodeSha256())) {
+        logService.save(logBuilder.but().withLogLine("Function code didn't change. Skip function code update").build());
+      } else {
+        UpdateFunctionCodeResult updateFunctionCodeResult =
+            awsHelperService.updateFunctionCode(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+                new UpdateFunctionCodeRequest().withFunctionName(functionName).withS3Bucket(bucket).withS3Key(key));
+        logService.save(logBuilder.but().withLogLine("Function code updated successfully").build());
+        logService.save(logBuilder.but()
+                            .withLogLine("Updated Function Code Sha256: " + updateFunctionCodeResult.getCodeSha256())
+                            .build());
+      }
+      logService.save(logBuilder.but().withLogLine("Updating function configuration").build());
+      UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
+          awsHelperService.updateFunctionConfiguration(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+              new UpdateFunctionConfigurationRequest()
+                  .withEnvironment(
+                      new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
+                  .withRuntime(runtime)
+                  .withFunctionName(functionName)
+                  .withHandler(handler)
+                  .withRole(roleArn)
+                  .withTimeout(timeout)
+                  .withMemorySize(memory));
+      logService.save(logBuilder.but().withLogLine("Function configuration updated successfully").build());
+      logService.save(logBuilder.but().withLogLine("Publishing new version").build());
+      PublishVersionResult publishVersionResult =
+          awsHelperService.publishVersion(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+              new PublishVersionRequest()
+                  .withFunctionName(updateFunctionConfigurationResult.getFunctionName())
+                  .withCodeSha256(updateFunctionConfigurationResult.getCodeSha256()));
+      logService.save(
+          logBuilder.but().withLogLine("Published new version: " + publishVersionResult.getVersion()).build());
     }
 
     logService.save(logBuilder.but()
@@ -301,7 +336,7 @@ public class AwsLambdaState extends State {
         vpcConfig = new VpcConfig().withSecurityGroupIds(securityGroupIds).withSubnetIds(subnetIds);
       } else {
         throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "Atleast one sercurity group and one subnet must be provided");
+            ErrorCode.INVALID_REQUEST, "message", "At least one security group and one subnet must be provided");
       }
     }
     return vpcConfig;
@@ -321,42 +356,6 @@ public class AwsLambdaState extends State {
   }
 
   /**
-   * Gets bucket.
-   *
-   * @return the bucket
-   */
-  public String getBucket() {
-    return bucket;
-  }
-
-  /**
-   * Sets bucket.
-   *
-   * @param bucket the bucket
-   */
-  public void setBucket(String bucket) {
-    this.bucket = bucket;
-  }
-
-  /**
-   * Gets key.
-   *
-   * @return the key
-   */
-  public String getKey() {
-    return key;
-  }
-
-  /**
-   * Sets key.
-   *
-   * @param key the key
-   */
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  /**
    * Sets command name.
    *
    * @param commandName the command name
@@ -365,93 +364,23 @@ public class AwsLambdaState extends State {
     this.commandName = commandName;
   }
 
-  /**
-   * Gets runtime.
-   *
-   * @return the runtime
-   */
-  public String getRuntime() {
-    return runtime;
-  }
-
-  /**
-   * Sets runtime.
-   *
-   * @param runtime the runtime
-   */
-  public void setRuntime(String runtime) {
-    this.runtime = runtime;
-  }
-
-  /**
-   * Gets function name.
-   *
-   * @return the function name
-   */
-  public String getFunctionName() {
-    return functionName;
-  }
-
-  /**
-   * Sets function name.
-   *
-   * @param functionName the function name
-   */
-  public void setFunctionName(String functionName) {
-    this.functionName = functionName;
-  }
-
-  /**
-   * Gets handler.
-   *
-   * @return the handler
-   */
-  public String getHandler() {
-    return handler;
-  }
-
-  /**
-   * Sets handler.
-   *
-   * @param handler the handler
-   */
-  public void setHandler(String handler) {
-    this.handler = handler;
-  }
-
-  /**
-   * Gets role.
-   *
-   * @return the role
-   */
-  public String getRole() {
-    return role;
-  }
-
-  /**
-   * Sets role.
-   *
-   * @param role the role
-   */
-  public void setRole(String role) {
-    this.role = role;
-  }
-
-  public Integer getMemorySize() {
-    return memorySize;
-  }
-
-  public void setMemorySize(Integer memorySize) {
-    this.memorySize = memorySize;
-  }
-
-  public Integer getTimeout() {
-    return timeout;
-  }
-
-  public void setTimeout(Integer timeout) {
-    this.timeout = timeout;
-  }
+  //  /**
+  //   * Gets role.
+  //   *
+  //   * @return the role
+  //   */
+  //  public String getRole() {
+  //    return role;
+  //  }
+  //
+  //  /**
+  //   * Sets role.
+  //   *
+  //   * @param role the role
+  //   */
+  //  public void setRole(String role) {
+  //    this.role = role;
+  //  }
 
   /**
    * The type Lambda runtime provider.
