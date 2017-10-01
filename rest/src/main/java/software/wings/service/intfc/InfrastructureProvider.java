@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -17,7 +18,8 @@ public interface InfrastructureProvider {
    * @param req                    the req
    * @return the all host
    */
-  PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req);
+  PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, AwsInstanceFilter instanceFilter,
+      boolean usePublicDns, PageRequest<Host> req);
 
   /**
    * Save host host.
@@ -32,9 +34,9 @@ public interface InfrastructureProvider {
    *
    * @param appId          the app id
    * @param infraMappingId the infra mapping id
-   * @param publicDns       the public dns
+   * @param dnsName        the dns name
    */
-  void deleteHost(String appId, String infraMappingId, String publicDns);
+  void deleteHost(String appId, String infraMappingId, String dnsName);
 
   /**
    * Update host conn attrs.

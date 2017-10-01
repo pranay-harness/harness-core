@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.api.client.repackaged.com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -986,19 +987,20 @@ public class AwsHelperService {
     return Maps.newHashMap();
   }
 
-  public List<Instance> listRunInstances(
-      AwsConfig awsConfig, String region, String launcherConfigName, int instanceCount) {
+  public List<Instance> listRunInstancesFromLaunchConfig(
+      AwsConfig awsConfig, String region, String launchConfigName, int instanceCount) {
     try {
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-      List<LaunchConfiguration> launchConfigurations =
+      LaunchConfiguration launchConfiguration =
           amazonAutoScalingClient
               .describeLaunchConfigurations(
-                  new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launcherConfigName))
-              .getLaunchConfigurations();
-      LaunchConfiguration launchConfiguration = launchConfigurations.get(0);
+                  new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
+              .getLaunchConfigurations()
+              .iterator()
+              .next();
 
       RunInstancesRequest runInstancesRequest =
           new RunInstancesRequest()
@@ -1012,12 +1014,53 @@ public class AwsHelperService {
               .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
               .withUserData(launchConfiguration.getUserData());
 
-      List<Instance> instances = amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
-      return instances;
+      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
+  }
+
+  public List<Instance> listRunInstancesFromAutoScalingGroup(
+      AwsConfig awsConfig, String region, String autoScalingGroupName, int instanceCount) {
+    try {
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+      AutoScalingGroup autoScalingGroup =
+          amazonAutoScalingClient
+              .describeAutoScalingGroups(
+                  new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName))
+              .getAutoScalingGroups()
+              .iterator()
+              .next();
+
+      LaunchConfiguration launchConfiguration =
+          amazonAutoScalingClient
+              .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(
+                  autoScalingGroup.getLaunchConfigurationName()))
+              .getLaunchConfigurations()
+              .iterator()
+              .next();
+
+      RunInstancesRequest runInstancesRequest =
+          new RunInstancesRequest()
+              .withImageId(launchConfiguration.getImageId())
+              .withInstanceType(launchConfiguration.getInstanceType())
+              .withMinCount(instanceCount)
+              .withMaxCount(instanceCount)
+              .withKeyName(launchConfiguration.getKeyName())
+              .withIamInstanceProfile(
+                  new IamInstanceProfileSpecification().withName(launchConfiguration.getIamInstanceProfile()))
+              .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
+              .withUserData(launchConfiguration.getUserData());
+
+      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
   }
 
   public List<String> listIAMInstanceRoles(AwsConfig awsConfig) {

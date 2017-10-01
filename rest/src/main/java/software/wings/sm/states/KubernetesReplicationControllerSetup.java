@@ -131,6 +131,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         kubernetesConfig, createRegistrySecret(secretName, kubernetesConfig.getNamespace(), imageDetails));
 
     String containerServiceName = fetchContainerServiceName(kubernetesConfig, context, appName, serviceName, envName);
+
     ReplicationController rcDefinition = createReplicationControllerDefinition(containerTask, containerServiceName,
         controllerLabels, kubernetesConfig.getNamespace(), imageDetails, secretName, context.getServiceVariables());
     kubernetesContainerService.createController(kubernetesConfig, rcDefinition);
@@ -418,12 +419,13 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
         .build();
   }
 
-  private void cleanup(KubernetesConfig kubernetesConfig, String rcName) {
-    int revision = getRevisionFromControllerName(rcName);
+  private void cleanup(KubernetesConfig kubernetesConfig, String containerServiceName) {
+    int revision = getRevisionFromControllerName(containerServiceName);
     if (revision >= KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - KEEP_N_REVISIONS + 1;
       ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
-      String controllerNamePrefix = KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(rcName);
+      String controllerNamePrefix =
+          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(containerServiceName);
       if (replicationControllers != null) {
         replicationControllers.getItems()
             .stream()

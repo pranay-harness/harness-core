@@ -1,13 +1,9 @@
 package software.wings.sm.states;
 
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -23,8 +19,6 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
   private String commandName = "Resize Service Cluster";
-
-  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   public EcsServiceRollback(String name) {
     super(name, StateType.ECS_SERVICE_ROLLBACK.name());
