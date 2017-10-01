@@ -3,8 +3,11 @@ package software.wings.service.impl;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
@@ -26,7 +29,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +60,7 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public String save(Log log) {
-    return batchedSave(Arrays.asList(log)).get(0);
+    return batchedSave(singletonList(log)).get(0);
   }
 
   @Override
@@ -108,8 +110,8 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public List<String> batchedSave(List<Log> logs) {
-    if (logs == null || logs.isEmpty()) {
-      return Arrays.asList();
+    if (isEmpty(logs)) {
+      return emptyList();
     }
     List<String> savedLogIds = wingsPersistence.save(logs);
     // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
