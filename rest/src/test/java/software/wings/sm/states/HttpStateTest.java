@@ -188,7 +188,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldExecuteAndEvaluateResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -222,7 +222,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -275,7 +275,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -302,7 +302,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnSocketTimeout() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -336,7 +336,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnEmptyResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
@@ -365,7 +365,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
@@ -393,7 +393,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnRandomData() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
