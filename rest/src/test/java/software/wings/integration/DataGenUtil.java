@@ -206,7 +206,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(BambooConfig.Builder.aBambooConfig()
                            .withAccountId(accountId)
-                           .withBambooUrl("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/")
+                           .withBambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
                            .withUsername("wingsbuild")
                            .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
                            .build())
