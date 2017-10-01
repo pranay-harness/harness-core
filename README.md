@@ -68,6 +68,9 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 1) Install IntelliJ community edition
 2) Import wings portal as maven project
 3) Import Code Style tools/src/main/resources/do-not-use/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
+4) Install Lombok Plugin: https://projectlombok.org/setup/intellij
+5) Change settings to mark injected fields as assigned. (Settings->Editor ->Inspections ->Java ->Declaration Redundancy->Unused Declarations->Entry Points->
+Annotations->Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
 
 ### Run from IntelliJ
 1) Create the API Server application - "WingsApplication":  
