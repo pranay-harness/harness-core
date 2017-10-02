@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Joiner;
@@ -101,7 +100,10 @@ public class AwsLambdaState extends State {
 
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
-  @Attributes(title = "Command") @SchemaIgnore private String commandName = AWS_LAMBDA;
+  @Attributes(title = "Command")
+  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
+  private String commandName = Constants.AWS_LAMBDA_COMMAND_NAME;
 
   //  @Attributes(title = "Role", required = true)
   //  private String role;
@@ -242,7 +244,7 @@ public class AwsLambdaState extends State {
 
     VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
 
-    if (functionResult == null) { // function doesn't exist
+    if (functionResult == null) {
       logService.save(
           logBuilder.but().withLogLine(String.format("Function [%s] doesn't exist.", functionName)).build());
 
@@ -265,7 +267,11 @@ public class AwsLambdaState extends State {
                           .withLogLine(String.format("Function [%s] published with version [%s] successfully",
                               functionName, createFunctionResult.getVersion()))
                           .build());
-      logService.save(logBuilder.but().withLogLine("Function: " + createFunctionResult.toString()).build());
+      logService.save(logBuilder.but()
+                          .withLogLine("Created Function Code Sha256: " + createFunctionResult.getCodeSha256())
+                          .build());
+      logService.save(
+          logBuilder.but().withLogLine("Created Function ARN: " + createFunctionResult.getFunctionArn()).build());
     } else {
       // Update code
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
@@ -297,9 +303,12 @@ public class AwsLambdaState extends State {
         logService.save(logBuilder.but()
                             .withLogLine("Updated Function Code Sha256: " + updateFunctionCodeResult.getCodeSha256())
                             .build());
+        logService.save(
+            logBuilder.but().withLogLine("Updated Function ARN: " + updateFunctionCodeResult.getFunctionArn()).build());
       }
 
-      // update function configuration
+      // update function configurationxx \
+
       logService.save(logBuilder.but().withLogLine("Updating function configuration").build());
       UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
           new UpdateFunctionConfigurationRequest()
