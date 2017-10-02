@@ -39,6 +39,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.AwsLambdaService;
@@ -46,6 +47,7 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -96,6 +98,8 @@ public class AwsLambdaState extends State {
   @Inject @Transient private transient AwsLambdaService awsLambdaService;
 
   @Inject @Transient private transient LogService logService;
+
+  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -169,6 +173,18 @@ public class AwsLambdaState extends State {
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 
+    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+    if (artifact == null) {
+      throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+    }
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+
+    activityBuilder.withArtifactStreamId(artifactStream.getUuid())
+        .withArtifactStreamName(artifactStream.getSourceName())
+        .withArtifactName(artifact.getDisplayName())
+        .withArtifactId(artifact.getUuid());
+    activityBuilder.withArtifactId(artifact.getUuid()).withArtifactName(artifact.getDisplayName());
+
     Activity activity = activityService.save(activityBuilder.build());
 
     Builder logBuilder = aLog()
@@ -187,8 +203,11 @@ public class AwsLambdaState extends State {
                                                                  .withCommandName(getCommandName())
                                                                  .withActivityId(activity.getUuid());
 
-    String key = context.renderExpression(lambdaSpecification.getKey());
-    String bucket = context.renderExpression(lambdaSpecification.getBucket());
+    //    String key = context.renderExpression(lambdaSpecification.getKey());
+    //    String bucket = context.renderExpression(lambdaSpecification.getBucket());
+    String key = context.renderExpression(artifact.getMetadata().get("key"));
+    String bucket = context.renderExpression(artifact.getMetadata().get("bucketName"));
+
     String functionName = context.renderExpression(lambdaSpecification.getFunctionName());
     String handler = context.renderExpression(lambdaSpecification.getHandler());
     String runtime = context.renderExpression(lambdaSpecification.getRuntime());
@@ -221,11 +240,6 @@ public class AwsLambdaState extends State {
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
-
-    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-    if (artifact == null) {
-      throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
-    }
 
     GetFunctionResult functionResult = awsHelperService.getFunction(region, awsConfig.getAccessKey(),
         awsConfig.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
