@@ -191,6 +191,11 @@ public interface Constants {
   String AWS_LAMBDA = "AWS Lambda";
 
   /**
+   * The constant AWS_LAMBDA_COMMAND_NAME.
+   */
+  String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
+
+  /**
    * The constant ROLLBACK_AWS_LAMBDA.
    */
   String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";

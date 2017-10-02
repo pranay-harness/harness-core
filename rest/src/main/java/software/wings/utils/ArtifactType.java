@@ -678,7 +678,7 @@ public enum ArtifactType {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
           .withGraph(aGraph()
-                         .withGraphName(Constants.AWS_LAMBDA)
+                         .withGraphName(Constants.AWS_LAMBDA_COMMAND_NAME)
                          .addNodes(aNode()
                                        .withOrigin(true)
                                        .withX(50)
