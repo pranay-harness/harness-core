@@ -264,6 +264,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         updateOperations.unset("loadBalancerId");
       }
+      if (isNotEmpty(awsInfrastructureMapping.getCustomName())) {
+        updateOperations.set("customName", awsInfrastructureMapping.getCustomName());
+      } else {
+        updateOperations.unset("customName");
+      }
       updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
       updateOperations.set("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
       if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
