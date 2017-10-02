@@ -684,7 +684,7 @@ public enum ArtifactType {
                                        .withX(50)
                                        .withY(50)
                                        .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName(Constants.AWS_LAMBDA)
+                                       .withName(Constants.AWS_LAMBDA_COMMAND_NAME)
                                        .withType(AWS_LAMBDA.name())
                                        .build())
                          .buildPipeline())

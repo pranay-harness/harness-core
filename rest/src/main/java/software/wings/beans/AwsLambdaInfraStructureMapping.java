@@ -30,10 +30,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   @Attributes(title = "VPC") private String vpcId;
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
-  @Attributes(title = " IAM role",
-      description =
-          "IAM role that Lambda assumes when it executes your function to access any other Amazon Web Services (AWS) resources")
-  private String role;
+  @Attributes(title = " IAM role") @NotEmpty private String role;
 
   @SchemaIgnore
   @Override

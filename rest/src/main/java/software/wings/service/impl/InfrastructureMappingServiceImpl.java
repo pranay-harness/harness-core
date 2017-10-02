@@ -293,6 +293,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         updateOperations.set("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
         updateOperations.set("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
       }
+      updateOperations.set("role", lambdaInfraStructureMapping.getRole());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());

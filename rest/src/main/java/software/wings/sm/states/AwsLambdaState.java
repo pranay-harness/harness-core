@@ -7,19 +7,26 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.lambda.model.CreateAliasRequest;
+import com.amazonaws.services.lambda.model.CreateAliasResult;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.ListAliasesRequest;
+import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
+import com.amazonaws.services.lambda.model.UpdateAliasRequest;
+import com.amazonaws.services.lambda.model.UpdateAliasResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
@@ -40,6 +47,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CommandUnit;
 import software.wings.cloudprovider.aws.AwsLambdaService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -62,6 +70,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,6 +89,9 @@ public class AwsLambdaState extends State {
    */
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
 
+  /**
+   * The Service template service.
+   */
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
   /**
    * The Activity service.
@@ -104,8 +116,10 @@ public class AwsLambdaState extends State {
   @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
   private String commandName = Constants.AWS_LAMBDA_COMMAND_NAME;
 
-  //  @Attributes(title = "Role", required = true)
-  //  private String role;
+  @Attributes(title = "Lambda Function Alias", required = true)
+  @DefaultValue("${env.name}")
+  @SchemaIgnore
+  private List<String> aliases = new ArrayList<>();
 
   /**
    * Instantiates a new Aws lambda state.
@@ -150,6 +164,8 @@ public class AwsLambdaState extends State {
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String region = infrastructureMapping.getRegion();
 
+    List<CommandUnit> commandUnitList =
+        serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
     Activity.Builder activityBuilder = Activity.Builder.anActivity()
                                            .withAppId(app.getUuid())
                                            .withApplicationName(app.getName())
@@ -165,8 +181,7 @@ public class AwsLambdaState extends State {
                                            .withWorkflowExecutionName(context.getWorkflowExecutionName())
                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                            .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                           .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
-                                               app.getUuid(), serviceId, envId, command.getName()))
+                                           .withCommandUnits(commandUnitList)
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 
@@ -188,7 +203,7 @@ public class AwsLambdaState extends State {
                              .withAppId(activity.getAppId())
                              .withActivityId(activity.getUuid())
                              .withLogLevel(LogLevel.INFO)
-                             .withCommandUnitName(commandName)
+                             .withCommandUnitName(commandUnitList.get(0).getName())
                              .withExecutionResult(CommandExecutionStatus.RUNNING);
 
     logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
@@ -209,6 +224,10 @@ public class AwsLambdaState extends State {
     Integer memory = lambdaSpecification.getMemorySize();
     Integer timeout = lambdaSpecification.getTimeout();
     String roleArn = infrastructureMapping.getRole();
+    List<String> evaluatedAliases = new ArrayList<>();
+    if (aliases != null && aliases.size() > 0) {
+      evaluatedAliases = aliases.stream().map(context::renderExpression).collect(Collectors.toList());
+    }
 
     logService.save(logBuilder.but().withLogLine("Deploying Lambda with following configuration.").build());
     logService.save(logBuilder.but().withLogLine("Function Name: " + functionName).build());
@@ -226,6 +245,7 @@ public class AwsLambdaState extends State {
         logBuilder.but()
             .withLogLine("Security Groups: " + Joiner.on(",").join(infrastructureMapping.getSecurityGroupIds()))
             .build());
+    logService.save(logBuilder.but().withLogLine("Function Aliases: " + Joiner.on(",").join(evaluatedAliases)).build());
 
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
@@ -236,8 +256,10 @@ public class AwsLambdaState extends State {
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
 
-    GetFunctionResult functionResult = awsHelperService.getFunction(region, awsConfig.getAccessKey(),
-        awsConfig.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
+    String accessKey = awsConfig.getAccessKey();
+    char[] secretKey = awsConfig.getSecretKey();
+    GetFunctionResult functionResult = awsHelperService.getFunction(
+        region, accessKey, secretKey, new GetFunctionRequest().withFunctionName(functionName));
 
     VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
 
@@ -258,8 +280,8 @@ public class AwsLambdaState extends State {
               .withMemorySize(memory)
               .withVpcConfig(vpcConfig);
 
-      CreateFunctionResult createFunctionResult = awsHelperService.createFunction(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), createFunctionRequest);
+      CreateFunctionResult createFunctionResult =
+          awsHelperService.createFunction(region, accessKey, secretKey, createFunctionRequest);
       logService.save(logBuilder.but()
                           .withLogLine(String.format("Function [%s] published with version [%s] successfully",
                               functionName, createFunctionResult.getVersion()))
@@ -269,6 +291,9 @@ public class AwsLambdaState extends State {
                           .build());
       logService.save(
           logBuilder.but().withLogLine("Created Function ARN: " + createFunctionResult.getFunctionArn()).build());
+
+      createFunctionAlias(
+          region, accessKey, secretKey, functionName, createFunctionResult.getVersion(), evaluatedAliases, logBuilder);
     } else {
       // Update code
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
@@ -278,7 +303,7 @@ public class AwsLambdaState extends State {
               .withLogLine("Existing Lambda Function Code Sha256: " + functionResult.getConfiguration().getCodeSha256())
               .build());
       UpdateFunctionCodeResult updateFunctionCodeResultDryRun =
-          awsHelperService.updateFunctionCode(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+          awsHelperService.updateFunctionCode(region, accessKey, secretKey,
               new UpdateFunctionCodeRequest()
                   .withFunctionName(functionName)
                   .withPublish(true)
@@ -294,8 +319,8 @@ public class AwsLambdaState extends State {
       } else {
         UpdateFunctionCodeRequest updateFunctionCodeRequest =
             new UpdateFunctionCodeRequest().withFunctionName(functionName).withS3Bucket(bucket).withS3Key(key);
-        UpdateFunctionCodeResult updateFunctionCodeResult = awsHelperService.updateFunctionCode(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), updateFunctionCodeRequest);
+        UpdateFunctionCodeResult updateFunctionCodeResult =
+            awsHelperService.updateFunctionCode(region, accessKey, secretKey, updateFunctionCodeRequest);
         logService.save(logBuilder.but().withLogLine("Function code updated successfully").build());
         logService.save(logBuilder.but()
                             .withLogLine("Updated Function Code Sha256: " + updateFunctionCodeResult.getCodeSha256())
@@ -303,9 +328,7 @@ public class AwsLambdaState extends State {
         logService.save(
             logBuilder.but().withLogLine("Updated Function ARN: " + updateFunctionCodeResult.getFunctionArn()).build());
       }
-
-      // update function configurationxx \
-
+      // update function configuration
       logService.save(logBuilder.but().withLogLine("Updating function configuration").build());
       UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
           new UpdateFunctionConfigurationRequest()
@@ -319,7 +342,7 @@ public class AwsLambdaState extends State {
               .withVpcConfig(vpcConfig);
       UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
           awsHelperService.updateFunctionConfiguration(
-              region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), updateFunctionConfigurationRequest);
+              region, accessKey, secretKey, updateFunctionConfigurationRequest);
       logService.save(logBuilder.but().withLogLine("Function configuration updated successfully").build());
 
       // publish version
@@ -328,10 +351,32 @@ public class AwsLambdaState extends State {
           new PublishVersionRequest()
               .withFunctionName(updateFunctionConfigurationResult.getFunctionName())
               .withCodeSha256(updateFunctionConfigurationResult.getCodeSha256());
-      PublishVersionResult publishVersionResult = awsHelperService.publishVersion(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), publishVersionRequest);
+      PublishVersionResult publishVersionResult =
+          awsHelperService.publishVersion(region, accessKey, secretKey, publishVersionRequest);
       logService.save(
           logBuilder.but().withLogLine("Published new version: " + publishVersionResult.getVersion()).build());
+      logService.save(
+          logBuilder.but().withLogLine("Published Function ARN: " + publishVersionResult.getFunctionArn()).build());
+
+      ListAliasesResult listAliasesResult = awsHelperService.listAliases(
+          region, accessKey, secretKey, new ListAliasesRequest().withFunctionName(functionName));
+      List<String> newAliases = evaluatedAliases.stream()
+                                    .filter(alias
+                                        -> listAliasesResult.getAliases().stream().noneMatch(
+                                            aliasConfiguration -> aliasConfiguration.getName().equals(alias)))
+                                    .collect(Collectors.toList());
+      if (newAliases != null) {
+        createFunctionAlias(
+            region, accessKey, secretKey, functionName, publishVersionResult.getVersion(), newAliases, logBuilder);
+      }
+      List<String> updateAlias =
+          evaluatedAliases.stream()
+              .filter(alias -> newAliases != null && newAliases.stream().noneMatch(s -> s.equals(alias)))
+              .collect(Collectors.toList());
+      if (updateAlias != null) {
+        updateFunctionAlias(
+            region, accessKey, secretKey, functionName, publishVersionResult.getVersion(), updateAlias, logBuilder);
+      }
     }
 
     logService.save(logBuilder.but()
@@ -346,6 +391,41 @@ public class AwsLambdaState extends State {
         .build();
   }
 
+  private void updateFunctionAlias(String region, String accessKey, char[] secretKey, String functionName,
+      String functionArn, List<String> updateAlias, Builder logBuilder) {
+    updateAlias.forEach(alias -> {
+      logService.save(logBuilder.but().withLogLine("Updating Function Alias: " + alias).build());
+      UpdateAliasResult updateAliasResult = awsHelperService.updateAlias(region, accessKey, secretKey,
+          new UpdateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionArn).withName(alias));
+      logService.save(logBuilder.but()
+                          .withLogLine(String.format("Updated Function Alias with name:[%s], arn:[%s]",
+                              updateAliasResult.getName(), updateAliasResult.getAliasArn()))
+                          .build());
+    });
+  }
+
+  private void createFunctionAlias(String region, String accessKey, char[] secretKey, String functionName,
+      String functionVersion, List<String> evaluatedAliases, Builder logBuilder) {
+    evaluatedAliases.forEach(alias -> {
+      logService.save(logBuilder.but().withLogLine("Creating Function Alias: " + alias).build());
+      CreateAliasResult createAliasResult = awsHelperService.createAlias(region, accessKey, secretKey,
+          new CreateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionVersion).withName(alias));
+      logService.save(logBuilder.but()
+                          .withLogLine(String.format("Created Function Alias with name:[%s], arn:[%s]",
+                              createAliasResult.getName(), createAliasResult.getAliasArn()))
+                          .build());
+    });
+  }
+
+  /**
+   * Gets artifact.
+   *
+   * @param appId                  the app id
+   * @param serviceId              the service id
+   * @param workflowExecutionId    the workflow execution id
+   * @param workflowStandardParams the workflow standard params
+   * @return the artifact
+   */
   protected Artifact getArtifact(
       String appId, String serviceId, String workflowExecutionId, WorkflowStandardParams workflowStandardParams) {
     return workflowStandardParams.getArtifactForService(serviceId);
@@ -389,6 +469,24 @@ public class AwsLambdaState extends State {
     this.commandName = commandName;
   }
 
+  /**
+   * Gets aliases.
+   *
+   * @return the aliases
+   */
+  @SchemaIgnore
+  public List<String> getAliases() {
+    return aliases;
+  }
+
+  /**
+   * Sets aliases.
+   *
+   * @param aliases the aliases
+   */
+  public void setAliases(List<String> aliases) {
+    this.aliases = aliases;
+  }
   //  /**
   //   * Gets role.
   //   *

@@ -7,6 +7,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Activity;
 import software.wings.beans.artifact.Artifact;
@@ -15,6 +16,8 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+
+import java.util.List;
 
 public class AwsLambdaRollback extends AwsLambdaState {
   @Inject @Transient protected transient ArtifactService artifactService;
@@ -39,5 +42,15 @@ public class AwsLambdaRollback extends AwsLambdaState {
       return artifactService.get(appId, pageResponse.getResponse().get(0).getArtifactId());
     }
     return null;
+  }
+
+  @SchemaIgnore
+  public List<String> getAliases() {
+    return super.getAliases();
+  }
+
+  @SchemaIgnore
+  public String getCommandName() {
+    return super.getCommandName();
   }
 }
