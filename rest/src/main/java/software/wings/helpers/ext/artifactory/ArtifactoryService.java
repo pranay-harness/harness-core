@@ -3,6 +3,7 @@ package software.wings.helpers.ext.artifactory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public interface ArtifactoryService {
   /**
-   * Gets builds.
+   * Gets docker images
    *
    * @param artifactoryConfig  the artifactory config
    * @param repoKey     the repo key
@@ -22,17 +23,6 @@ public interface ArtifactoryService {
    */
   List<BuildDetails> getBuilds(
       ArtifactoryConfig artifactoryConfig, String repoKey, String imageName, int maxNumberOfBuilds);
-
-  /**
-   * Get versions
-   * @param artifactoryConfig
-   * @param repoKey
-   * @param artifactName
-   * @param artifactType
-   * @return
-   */
-  List<BuildDetails> getVersions(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
-      String artifactName, ArtifactType artifactType, int maxVersions);
 
   /**
    * Get versions
@@ -84,4 +74,36 @@ public interface ArtifactoryService {
    * @return List of Repo paths or docker images
    */
   List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey);
+
+  /***
+   * Get all artifact ids
+   * @param artifactoryConfig
+   * @param repoId the repoId
+   * @param path the path
+   * @return
+   */
+  List<String> getArtifactIds(ArtifactoryConfig artifactoryConfig, String repoId, String path);
+
+  /**
+   * Gets the latest version of the given artifact
+   * @param artifactoryConfig
+   * @param repoId
+   * @param groupId
+   * @param artifactName
+   * @return
+   */
+  BuildDetails getLatestVersion(
+      ArtifactoryConfig artifactoryConfig, String repoId, String groupId, String artifactName);
+
+  /**
+   * Download artifacts
+   * @param repoType
+   * @param groupId
+   * @param artifactIds
+   * @param artifactPattern Artifact Pattern
+   * @return Input stream
+   */
+  ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig, String repoType, String groupId,
+      List<String> artifactIds, String artifactPattern, Map<String, String> metadata, String delegateId, String taskId,
+      String accountId);
 }
