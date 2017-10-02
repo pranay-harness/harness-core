@@ -54,7 +54,10 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     // in descending order. The most recent one comes first
     Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
 
-    return objectSummaryList.stream().map(S3ObjectSummary::getKey).collect(Collectors.toList());
+    return objectSummaryList.stream()
+        .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
+        .map(S3ObjectSummary::getKey)
+        .collect(Collectors.toList());
   }
 
   @Override
