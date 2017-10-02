@@ -68,6 +68,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -838,14 +839,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     User user = UserThreadLocal.get();
     if (user != null) {
-      workflowExecution.setTriggeredBy(
-          anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build());
+      EmbeddedUser triggeredBy =
+          anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build();
+      workflowExecution.setTriggeredBy(triggeredBy);
+      workflowExecution.setCreatedBy(triggeredBy);
     } else if (workflowExecution.getExecutionArgs() != null
         && workflowExecution.getExecutionArgs().getTriggeredBy() != null) {
       workflowExecution.setTriggeredBy(workflowExecution.getExecutionArgs().getTriggeredBy());
+      workflowExecution.setCreatedBy(workflowExecution.getExecutionArgs().getTriggeredBy());
     } else {
       // Triggered by Auto Trigger
       workflowExecution.setTriggeredBy(anEmbeddedUser().withName("Deployment trigger").build());
+      workflowExecution.setCreatedBy(anEmbeddedUser().withName("Deployment trigger").build());
     }
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
     if (executionArgs != null) {

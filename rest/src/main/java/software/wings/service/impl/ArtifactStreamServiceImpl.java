@@ -523,6 +523,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
         logger.info("Triggering Workflow execution of appId {}  with workflow id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
+        executionArgs.setWorkflowType(ORCHESTRATION);
         workflowExecution = workflowExecutionService.triggerEnvExecution(
             artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
         logger.info("Workflow execution of appId {} with workflow id {} triggered", artifact.getAppId(),
@@ -530,8 +531,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       } else {
         logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
-        workflowExecution =
-            pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+        executionArgs.setWorkflowType(PIPELINE);
+        workflowExecution = workflowExecutionService.triggerPipelineExecution(
+            artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
         logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered",
             artifact.getAppId(), artifactStreamAction.getWorkflowId());
       }
