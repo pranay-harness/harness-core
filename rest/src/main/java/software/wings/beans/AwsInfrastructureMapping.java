@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -41,6 +42,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   private String hostConnectionAttrs;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
+
+  @Attributes(title = "Display Name") private String customName;
 
   @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
 
@@ -133,7 +136,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s (AWS/SSH) %s",
+    return String.format("%s%s (AWS/SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion());
   }
@@ -223,6 +226,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   public void setAutoScalingGroupName(String autoScalingGroupName) {
     this.autoScalingGroupName = autoScalingGroupName;
+  }
+
+  public String getCustomName() {
+    return customName;
+  }
+
+  public void setCustomName(String customName) {
+    this.customName = customName;
   }
 
   /**

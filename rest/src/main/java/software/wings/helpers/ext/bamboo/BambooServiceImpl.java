@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,12 +24,15 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.HttpUtil;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -50,6 +54,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class BambooServiceImpl implements BambooService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig) {
     try {
@@ -369,23 +374,45 @@ public class BambooServiceImpl implements BambooService {
   //  }
 
   @Override
-  public Pair<String, InputStream> downloadArtifact(
-      BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
+  public ListNotifyResponseData downloadArtifacts(BambooConfig bambooConfig, String planKey, String buildNumber,
+      List<String> artifactPaths, String delegateId, String taskId, String accountId)
+      throws IOException, URISyntaxException {
+    ListNotifyResponseData res = new ListNotifyResponseData();
+
+    for (String artifactPath : artifactPaths) {
+      downloadArtifactFromABuild(bambooConfig, planKey, buildNumber, artifactPath, res, delegateId, taskId, accountId);
+    }
+    return res;
+  }
+
+  private void downloadArtifactFromABuild(BambooConfig bambooConfig, String planKey, String buildNumber,
+      String artifactPathRegex, ListNotifyResponseData res, String delegateId, String taskId, String accountId)
+      throws IOException, URISyntaxException {
     logger.info("Downloading artifact for plan {} and build number {} and artifact path {}", planKey, buildNumber,
         artifactPathRegex);
     Map<String, Artifact> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
-    String artifactSourcePath = artifactPathRegex;
     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
     Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
-    Entry<String, Artifact> artifactPath =
+    Set<Entry<String, Artifact>> artifactSet =
         artifactPathSet.stream()
             .filter(entry
                 -> extractRelativePath(entry.getValue().getLink()) != null
                     && pattern.matcher(extractRelativePath(entry.getValue().getLink())).find())
-            .findFirst()
-            .orElse(null);
-    if (artifactPath != null) {
-      Artifact value = artifactPath.getValue();
+            .collect(Collectors.toSet());
+
+    for (Entry<String, Artifact> artifactEntry : artifactSet) {
+      Pair<String, InputStream> stringInputStreamPair =
+          downloadArtifact(bambooConfig, planKey, buildNumber, artifactPathRegex, artifactPathMap, artifactEntry);
+      artifactCollectionTaskHelper.addDataToResponse(
+          stringInputStreamPair, artifactPathRegex, res, delegateId, taskId, accountId);
+    }
+  }
+
+  private Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig, String planKey, String buildNumber,
+      String artifactPathRegex, Map<String, Artifact> artifactPathMap, Entry<String, Artifact> artifactEntry) {
+    String artifactSourcePath = artifactPathRegex;
+    if (artifactEntry != null) {
+      Artifact value = artifactEntry.getValue();
       logger.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
       String link = value.getLink();
       try {
