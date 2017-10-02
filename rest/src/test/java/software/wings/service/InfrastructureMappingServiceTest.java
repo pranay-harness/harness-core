@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -427,11 +428,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
             .withUuid(INFRA_MAPPING_ID)
             .withServiceTemplateId(TEMPLATE_ID)
-            .withHostNames(asList(HOST_NAME))
+            .withHostNames(singletonList(HOST_NAME))
             .build();
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(asList(new Key<ServiceTemplate>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+        .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(query.get()).thenReturn(physicalInfrastructureMapping);
 
     List<String> hostNames =
