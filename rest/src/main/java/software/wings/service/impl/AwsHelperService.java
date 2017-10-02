@@ -147,6 +147,12 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -162,6 +168,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -280,7 +287,7 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon s3 client
    */
-  public AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
+  private AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
     return (AmazonS3Client) AmazonS3ClientBuilder.standard()
         .withRegion("us-east-1")
         .withCredentials(
@@ -489,6 +496,44 @@ public class AwsHelperService {
     } finally {
       IOUtils.closeQuietly(client);
     }
+  }
+
+  public List<Bucket> listS3Buckets(AwsConfig awsConfig) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).listBuckets();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Collections.emptyList();
+  }
+
+  public S3Object getObjectFromS3(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObject(bucketName, key);
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public ObjectMetadata getObjectMetadataFromS3(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObjectMetadata(bucketName, key);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public ListObjectsV2Result listObjectsInS3(AwsConfig awsConfig, ListObjectsV2Request listObjectsV2Request) {
+    try {
+      AmazonS3Client amazonS3Client = getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonS3Client.listObjectsV2(listObjectsV2Request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListObjectsV2Result();
   }
 
   public AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
@@ -1317,5 +1362,26 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new PublishVersionResult();
+  }
+
+  public String getResourceUrl(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getResourceUrl(bucketName, key);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public boolean isVersioningEnabledForBucket(AwsConfig awsConfig, String bucketName) {
+    try {
+      BucketVersioningConfiguration bucketVersioningConfiguration =
+          getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey())
+              .getBucketVersioningConfiguration(bucketName);
+      return "ENABLED".equals(bucketVersioningConfiguration.getStatus());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return false;
   }
 }

@@ -23,7 +23,7 @@ public class AwsInfrastructureMappingPublicDnsMigrationUtil extends WingsBaseTes
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  public void removePrefixFromWorkflowName() {
+  public void setAwsInfraMappingsUsePublicDns() {
     List<InfrastructureMapping> awsInfraMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                        .field("infraMappingType")
                                                        .equal(InfrastructureMappingType.AWS_SSH.name())

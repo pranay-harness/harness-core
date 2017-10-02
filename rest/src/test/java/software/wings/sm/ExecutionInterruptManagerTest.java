@@ -3,6 +3,7 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -214,6 +215,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw abort all already.
    */
   @Test
+  @Ignore
   public void shouldThrowAbortAllAlready() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());

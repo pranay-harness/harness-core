@@ -26,7 +26,6 @@ import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.awaitility.Duration;
@@ -34,9 +33,12 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.WingsException;
 import software.wings.utils.HttpUtil;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +52,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -65,12 +68,12 @@ import javax.net.ssl.HostnameVerifier;
  */
 public class JenkinsImpl implements Jenkins {
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
-  private final int MAX_FOLDER_DEPTH = 10;
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
   private String jenkinsBaseUrl;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject ExecutorService executorService;
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   /**
    * Instantiates a new jenkins impl.
@@ -100,6 +103,15 @@ public class JenkinsImpl implements Jenkins {
         new HarnessJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder());
     jenkinsServer = new JenkinsServer(jenkinsHttpClient);
     this.jenkinsBaseUrl = jenkinsUrl;
+  }
+
+  public JenkinsImpl(String jenkinsUrl, String username, char[] password, DelegateFileManager delegateFileManager)
+      throws URISyntaxException {
+    jenkinsHttpClient =
+        new HarnessJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder());
+    jenkinsServer = new JenkinsServer(jenkinsHttpClient);
+    this.jenkinsBaseUrl = jenkinsUrl;
+    artifactCollectionTaskHelper = new ArtifactCollectionTaskHelper(delegateFileManager);
   }
 
   /* (non-Javadoc)
@@ -408,33 +420,46 @@ public class JenkinsImpl implements Jenkins {
     throw new NotImplementedException();
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String)
-   */
   @Override
-  public Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
-      throws IOException, URISyntaxException {
-    JobWithDetails jobDetails = getJob(jobname);
+  public ListNotifyResponseData downloadArtifacts(String jobName, String buildNo, List<String> artifactPaths,
+      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException {
+    ListNotifyResponseData res = new ListNotifyResponseData();
+    JobWithDetails jobDetails = getJob(jobName);
     if (jobDetails == null) {
-      return null;
+      return res;
     }
-    Build build = jobDetails.getLastCompletedBuild();
-    return downloadArtifactFromABuild(build, artifactpathRegex);
+
+    Build build;
+    if (buildNo == null) {
+      build = jobDetails.getLastCompletedBuild();
+    } else {
+      build = jobDetails.getBuildByNumber(Integer.parseInt(buildNo));
+    }
+
+    for (String artifactPath : artifactPaths) {
+      downloadArtifactFromABuild(build, artifactPath, res, delegateId, taskId, accountId);
+    }
+    return res;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String,
-   * java.lang.String)
-   */
-  @Override
-  public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
-      throws IOException, URISyntaxException {
-    JobWithDetails jobDetails = getJob(jobname);
-    if (jobDetails == null) {
-      return null;
+  private void downloadArtifactFromABuild(Build build, String artifactpathRegex, ListNotifyResponseData res,
+      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException {
+    if (build == null) {
+      return;
     }
-    Build build = jobDetails.getBuildByNumber(Integer.parseInt(buildNo));
-    return downloadArtifactFromABuild(build, artifactpathRegex);
+    Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    BuildWithDetails buildWithDetails = build.details();
+
+    Set<Artifact> artifactSet = buildWithDetails.getArtifacts()
+                                    .stream()
+                                    .filter(artifact -> pattern.matcher(artifact.getRelativePath()).find())
+                                    .collect(Collectors.toSet());
+
+    for (Artifact artifact : artifactSet) {
+      InputStream inputStream = buildWithDetails.downloadArtifact(artifact);
+      artifactCollectionTaskHelper.addDataToResponse(
+          ImmutablePair.of(artifact.getFileName(), inputStream), artifactpathRegex, res, delegateId, taskId, accountId);
+    }
   }
 
   @Override
@@ -477,24 +502,6 @@ public class JenkinsImpl implements Jenkins {
       throw wingsException;
     } else {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
-    }
-  }
-
-  private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)
-      throws IOException, URISyntaxException {
-    if (build == null) {
-      return null;
-    }
-    Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-    BuildWithDetails buildWithDetails = build.details();
-    Optional<Artifact> artifactOpt = buildWithDetails.getArtifacts()
-                                         .stream()
-                                         .filter(artifact -> pattern.matcher(artifact.getRelativePath()).find())
-                                         .findFirst();
-    if (artifactOpt.isPresent()) {
-      return ImmutablePair.of(artifactOpt.get().getFileName(), buildWithDetails.downloadArtifact(artifactOpt.get()));
-    } else {
-      return null;
     }
   }
 

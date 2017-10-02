@@ -214,7 +214,7 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
-      @QueryParam("region") String region, @QueryParam("vpcId") @NotNull List<String> vpcIds,
+      @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
         infrastructureMappingService.listSecurityGroups(appId, computeProviderId, region, vpcIds));
@@ -225,7 +225,7 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
-      @QueryParam("vpcId") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
+      @QueryParam("vpcIds") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
   }
 
