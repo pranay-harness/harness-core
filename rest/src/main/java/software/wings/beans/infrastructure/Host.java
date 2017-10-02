@@ -29,6 +29,8 @@ public class Host extends Base {
   private String infraMappingId;
   private String computeProviderId;
   @NotEmpty private String hostName;
+  // publicDns may be either publicDnsName or privateDnsName, depending on settings in inframapping. Leaving the name to
+  // avoid migration.
   private String publicDns;
   @NotNull private String hostConnAttr;
   private String bastionConnAttr;

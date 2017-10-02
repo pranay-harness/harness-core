@@ -123,9 +123,9 @@ public interface HostService {
    *
    * @param appId          the app id
    * @param infraMappingId the infra mapping id
-   * @param publicDns      the public dns
+   * @param dnsName        the dns name
    */
-  void deleteByPublicDns(String appId, String infraMappingId, String publicDns);
+  void deleteByDnsName(String appId, String infraMappingId, String dnsName);
 
   /**
    * Update host connection attr by infra mapping id.

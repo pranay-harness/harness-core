@@ -93,8 +93,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
-    return getBuildService(settingAttribute, appId)
-        .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
+      return getBuildService(settingAttribute, appId, artifactStreamType)
+          .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
+    } else {
+      return getBuildService(settingAttribute, appId)
+          .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
+    }
   }
 
   @Override

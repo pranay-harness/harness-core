@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.CurrentThreadExecutor;
+import software.wings.WingsTestModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
@@ -210,7 +211,7 @@ public class WingsRule implements MethodRule {
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
         new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
-        new ExecutorModule(executorService));
+        new ExecutorModule(executorService), new WingsTestModule());
 
     if (fakeMongo) {
       modules.add(new QueueModuleTest(datastore));

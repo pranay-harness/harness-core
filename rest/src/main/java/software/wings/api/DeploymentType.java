@@ -7,7 +7,8 @@ public enum DeploymentType {
   SSH("Secure Shell (SSH)"),
   AWS_CODEDEPLOY("AWS CodeDeploy"),
   ECS("Amazon EC2 Container Services (ECS)"),
-  KUBERNETES("Kubernetes");
+  KUBERNETES("Kubernetes"),
+  AWS_LAMBDA("AWS Lambda");
 
   private String displayName;
 

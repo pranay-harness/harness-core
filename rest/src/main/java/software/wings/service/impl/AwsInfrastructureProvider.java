@@ -1,14 +1,17 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -28,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -45,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -63,10 +68,30 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private MainConfiguration mainConfiguration;
 
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
+      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(awsConfig, region,
-        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
+    List<Filter> filters = new ArrayList<>();
+    filters.add(new Filter("instance-state-name").withValues("running"));
+    if (instanceFilter != null) {
+      if (isNotEmpty(instanceFilter.getVpcIds())) {
+        filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
+      }
+      if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
+        filters.add(new Filter("group-id", instanceFilter.getSecurityGroupIds()));
+      }
+      if (isNotEmpty(instanceFilter.getSubnetIds())) {
+        filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
+      }
+      if (isNotEmpty(instanceFilter.getTags())) {
+        Multimap<String, String> tags = ArrayListMultimap.create();
+        instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
+        tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
+      }
+    }
+    DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
+    DescribeInstancesResult describeInstancesResult =
+        awsHelperService.describeEc2Instances(awsConfig, region, describeInstancesRequest);
     if (describeInstancesResult != null && describeInstancesResult.getReservations() != null) {
       List<Host> awsHosts =
           describeInstancesResult.getReservations()
@@ -76,7 +101,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                   -> aHost()
                          .withAppId(Base.GLOBAL_APP_ID)
                          .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
-                         .withPublicDns(instance.getPublicDnsName())
+                         .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
                          .withEc2Instance(instance)
                          .build())
               .collect(toList());
@@ -86,8 +111,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public void deleteHost(String appId, String infraMappingId, String publicDns) {
-    hostService.deleteByPublicDns(appId, infraMappingId, publicDns);
+  public void deleteHost(String appId, String infraMappingId, String dnsName) {
+    hostService.deleteByDnsName(appId, infraMappingId, dnsName);
   }
 
   @Override
@@ -114,11 +139,15 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<Host> provisionHosts(
-      String region, SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
+  public List<Host> provisionHosts(String region, SettingAttribute computeProviderSetting, String autoScalingGroupName,
+      boolean usePublicDns, int instanceCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    List<Instance> instances = awsHelperService.listRunInstances(awsConfig, region, launcherConfigName, instanceCount);
+    // TODO(brett): Check instanceCount cs autoscaling group size. Scale autoscale group capacity to match
+    // instanceCount, wait until it does, and return all instances from group.
+
+    List<Instance> instances =
+        awsHelperService.listRunInstancesFromAutoScalingGroup(awsConfig, region, autoScalingGroupName, instanceCount);
     List<String> instancesIds = instances.stream().map(Instance::getInstanceId).collect(toList());
     logger.info(
         "Provisioned hosts count = {} and provisioned hosts instance ids = {}", instancesIds.size(), instancesIds);
@@ -136,7 +165,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     for (Instance instance : readyInstances) {
       int retryCount = RETRY_COUNTER;
-      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName());
+      String hostname = awsHelperService.getHostnameFromDnsName(
+          usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName());
       while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
@@ -161,7 +191,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> aHost()
-                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName()))
+                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                   .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
                    .withEc2Instance(instance)
                    .build())
         .collect(toList());
@@ -199,11 +230,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, List<String> instanceIds) {
     DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(
         awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
-    boolean allRunning = describeInstancesResult.getReservations()
-                             .stream()
-                             .flatMap(reservation -> reservation.getInstances().stream())
-                             .allMatch(instance -> instance.getState().getName().equals("running"));
-    return allRunning;
+    return describeInstancesResult.getReservations()
+        .stream()
+        .flatMap(reservation -> reservation.getInstances().stream())
+        .allMatch(instance -> instance.getState().getName().equals("running"));
   }
 
   public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting, String region) {
@@ -227,17 +257,17 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     try {
       List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
-      imageIds.addAll(Lists
-                          .newArrayList(awsHelperService
-                                            .decribeEc2Images(awsConfig, region,
-                                                new DescribeImagesRequest().withFilters(
-                                                    new Filter().withName("is-public").withValues("false"),
-                                                    new Filter().withName("state").withValues("available"),
-                                                    new Filter().withName("virtualization-type").withValues("hvm")))
-                                            .getImages())
-                          .stream()
-                          .map(Image::getImageId)
-                          .collect(toList()));
+      imageIds.addAll(
+          Lists
+              .newArrayList(awsHelperService
+                                .decribeEc2Images(awsConfig, region,
+                                    new DescribeImagesRequest().withFilters(new Filter("is-public").withValues("false"),
+                                        new Filter("state").withValues("available"),
+                                        new Filter("virtualization-type").withValues("hvm")))
+                                .getImages())
+              .stream()
+              .map(Image::getImageId)
+              .collect(toList()));
       return imageIds;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -264,9 +294,19 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return awsHelperService.listIAMRoles(awsConfig);
   }
 
-  public List<String> listVPCs(String region, SettingAttribute computeProviderSetting) {
+  public List<String> listVPCs(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsHelperService.listVPCs(awsConfig, region);
+  }
+
+  public List<String> listSecurityGroups(SettingAttribute computeProviderSetting, String region, List<String> vpcIds) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listSecurityGroupIds(awsConfig, region, vpcIds);
+  }
+
+  public List<String> listSubnets(SettingAttribute computeProviderSetting, String region, List<String> vpcIds) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listSubnetIds(awsConfig, region, vpcIds);
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
@@ -308,5 +348,15 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     }
     logger.error("Unhandled aws exception");
     throw new WingsException(ErrorCode.ACCESS_DENIED, "message", amazonServiceException.getErrorMessage());
+  }
+
+  public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listTags(awsConfig, region);
+  }
+
+  public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsHelperService.listAutoScalingGroups(awsConfig, region);
   }
 }

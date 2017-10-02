@@ -20,6 +20,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 
 import java.util.List;
@@ -192,10 +193,9 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  },
-  /**
-   * War artifact type.
-   */
+  }, /**
+      * War artifact type.
+      */
   WAR {
     public static final long serialVersionUID = 2932493038229748527L;
 
@@ -235,10 +235,9 @@ public enum ArtifactType {
                              .buildPipeline())
               .build());
     }
-  },
-  /**
-   * Tar artifact type.
-   */
+  }, /**
+      * Tar artifact type.
+      */
   TAR {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -381,17 +380,17 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-  },
-  /**
-   * Zip artifact type.
-   */
+  }, /**
+      * Zip artifact type.
+      */
   ZIP {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand());
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand());
     }
+
     /**
      * Gets start command graph.
      *
@@ -505,31 +504,9 @@ public enum ArtifactType {
                          .buildPipeline())
           .build();
     }
-
-    /**
-     * Get Code Deploy Command
-     * @return
-     */
-    private Command getCodeDeployCommand() {
-      return aCommand()
-          .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Amazon Code Deploy")
-                         .addNodes(aNode()
-                                       .withOrigin(true)
-                                       .withX(50)
-                                       .withY(50)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName("Amazon Code Deploy")
-                                       .withType(CODE_DEPLOY.name())
-                                       .build())
-                         .buildPipeline())
-          .build();
-    }
-  },
-  /**
-   * Docker artifact type.
-   */
+  }, /**
+      * Docker artifact type.
+      */
   DOCKER {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -564,10 +541,9 @@ public enum ArtifactType {
                              .buildPipeline())
               .build());
     }
-  },
-  /**
-   * RPM artifact type
-   */
+  }, /**
+      * RPM artifact type
+      */
   RPM {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -682,6 +658,68 @@ public enum ArtifactType {
                                  .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                                  .addProperty("commandString", "sudo yum install -y \"$ARTIFACT_FILE_NAME\"")
                                  .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AWS_LAMBDA.
+   */
+  AWS_LAMBDA {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getAwsLambdaCommand());
+    }
+
+    private Command getAwsLambdaCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName(Constants.AWS_LAMBDA)
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName(Constants.AWS_LAMBDA)
+                                       .withType(AWS_LAMBDA.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AWS_CODEDEPLOY.
+   */
+  AWS_CODEDEPLOY {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getCodeDeployCommand());
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getCodeDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Amazon Code Deploy")
+                         .addNodes(aNode()
+                                       .withOrigin(true)
+                                       .withX(50)
+                                       .withY(50)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName("Amazon Code Deploy")
+                                       .withType(CODE_DEPLOY.name())
+                                       .build())
                          .buildPipeline())
           .build();
     }

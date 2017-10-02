@@ -1,12 +1,15 @@
 package software.wings.service.impl;
 
 import static com.google.api.client.repackaged.com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
@@ -15,6 +18,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
@@ -55,12 +59,18 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
+import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
+import com.amazonaws.services.ec2.model.DescribeTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.SecurityGroup;
+import com.amazonaws.services.ec2.model.Subnet;
+import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ec2.model.Vpc;
@@ -118,8 +128,27 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
+import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.CreateFunctionRequest;
+import com.amazonaws.services.lambda.model.CreateFunctionResult;
+import com.amazonaws.services.lambda.model.GetFunctionRequest;
+import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.ListFunctionsRequest;
+import com.amazonaws.services.lambda.model.ListFunctionsResult;
+import com.amazonaws.services.lambda.model.PublishVersionRequest;
+import com.amazonaws.services.lambda.model.PublishVersionResult;
+import com.amazonaws.services.lambda.model.ResourceNotFoundException;
+import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
+import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -135,9 +164,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -182,6 +213,13 @@ public class AwsHelperService {
    */
   private AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey) {
     return (AmazonECSClient) AmazonECSClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
+  }
+
+  private AWSLambdaClient getAmazonLambdaClient(String region, String accessKey, char[] secretKey) {
+    return (AWSLambdaClient) AWSLambdaClientBuilder.standard()
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
@@ -245,7 +283,7 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon s3 client
    */
-  public AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
+  private AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
     return (AmazonS3Client) AmazonS3ClientBuilder.standard()
         .withRegion("us-east-1")
         .withCredentials(
@@ -379,9 +417,8 @@ public class AwsHelperService {
     AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region.getName(), accessKey, secretKey);
 
     String instanceId;
-    DescribeInstancesResult describeInstancesResult =
-        amazonEC2Client.describeInstances(new DescribeInstancesRequest().withFilters(
-            new Filter().withName("private-dns-name").withValues(hostName + "*")));
+    DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
+        new DescribeInstancesRequest().withFilters(new Filter("private-dns-name").withValues(hostName + "*")));
     instanceId = describeInstancesResult.getReservations()
                      .stream()
                      .flatMap(reservation -> reservation.getInstances().stream())
@@ -391,7 +428,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("private-ip-address").withValues(hostName)));
+          new DescribeInstancesRequest().withFilters(new Filter("private-ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -402,7 +439,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("dns-name").withValues(hostName + "*")));
+          new DescribeInstancesRequest().withFilters(new Filter("dns-name").withValues(hostName + "*")));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -413,7 +450,7 @@ public class AwsHelperService {
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("ip-address").withValues(hostName)));
+          new DescribeInstancesRequest().withFilters(new Filter("ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
@@ -455,6 +492,44 @@ public class AwsHelperService {
     } finally {
       IOUtils.closeQuietly(client);
     }
+  }
+
+  public List<Bucket> listS3Buckets(AwsConfig awsConfig) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).listBuckets();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Collections.emptyList();
+  }
+
+  public S3Object getObjectFromS3(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObject(bucketName, key);
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public ObjectMetadata getObjectMetadataFromS3(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObjectMetadata(bucketName, key);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public ListObjectsV2Result listObjectsInS3(AwsConfig awsConfig, ListObjectsV2Request listObjectsV2Request) {
+    try {
+      AmazonS3Client amazonS3Client = getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonS3Client.listObjectsV2(listObjectsV2Request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListObjectsV2Result();
   }
 
   public AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
@@ -571,6 +646,7 @@ public class AwsHelperService {
     }
     return new DescribeInstancesResult();
   }
+
   public TerminateInstancesResult terminateEc2Instances(AwsConfig awsConfig, String region, List<String> instancesIds) {
     try {
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -604,30 +680,88 @@ public class AwsHelperService {
   }
 
   public List<String> listVPCs(AwsConfig awsConfig, String region) {
-    List<String> results = Lists.newArrayList();
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      results.addAll(amazonEC2Client
-                         .describeVpcs(new DescribeVpcsRequest().withFilters(
-                             new Filter().withName("state").withValues("available"),
-                             new Filter().withName("isDefault").withValues("true")))
-                         .getVpcs()
-                         .stream()
-                         .map(Vpc::getVpcId)
-                         .collect(toList()));
-      results.addAll(amazonEC2Client
-                         .describeVpcs(new DescribeVpcsRequest().withFilters(
-                             new Filter().withName("state").withValues("available"),
-                             new Filter().withName("isDefault").withValues("false")))
-                         .getVpcs()
-                         .stream()
-                         .map(Vpc::getVpcId)
-                         .collect(toList()));
-      return results;
+      return amazonEC2Client
+          .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
+          .getVpcs()
+          .stream()
+          .map(Vpc::getVpcId)
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return results;
+    return Lists.newArrayList();
+  }
+
+  public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      List<Filter> filters = new ArrayList<>();
+      if (isNotEmpty(vpcIds)) {
+        filters.add(new Filter("vpc-id", vpcIds));
+      }
+      return amazonEC2Client.describeSecurityGroups(new DescribeSecurityGroupsRequest().withFilters(filters))
+          .getSecurityGroups()
+          .stream()
+          .map(SecurityGroup::getGroupId)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
+  }
+
+  public List<String> listSubnetIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      List<Filter> filters = new ArrayList<>();
+      if (isNotEmpty(vpcIds)) {
+        filters.add(new Filter("vpc-id", vpcIds));
+      }
+      filters.add(new Filter("state").withValues("available"));
+      return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
+          .getSubnets()
+          .stream()
+          .map(Subnet::getSubnetId)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
+  }
+
+  public Set<String> listTags(AwsConfig awsConfig, String region) {
+    try {
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonEC2Client
+          .describeTags(new DescribeTagsRequest()
+                            .withFilters(new Filter("resource-type").withValues("instance"))
+                            .withMaxResults(1000))
+          .getTags()
+          .stream()
+          .map(TagDescription::getKey)
+          .collect(Collectors.toSet());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Sets.newHashSet();
+  }
+
+  public List<String> listAutoScalingGroups(AwsConfig awsConfig, String region) {
+    try {
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return amazonAutoScalingClient
+          .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
+          .getAutoScalingGroups()
+          .stream()
+          .map(AutoScalingGroup::getAutoScalingGroupName)
+          .collect(Collectors.toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return Lists.newArrayList();
   }
 
   public CreateClusterResult createCluster(
@@ -640,6 +774,7 @@ public class AwsHelperService {
     }
     return new CreateClusterResult();
   }
+
   public DescribeClustersResult describeClusters(
       String region, AwsConfig awsConfig, DescribeClustersRequest describeClustersRequest) {
     try {
@@ -650,6 +785,7 @@ public class AwsHelperService {
     }
     return new DescribeClustersResult();
   }
+
   public ListClustersResult listClusters(String region, AwsConfig awsConfig, ListClustersRequest listClustersRequest) {
     try {
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
@@ -670,6 +806,7 @@ public class AwsHelperService {
     }
     return new RegisterTaskDefinitionResult();
   }
+
   public ListServicesResult listServices(String region, AwsConfig awsConfig, ListServicesRequest listServicesRequest) {
     try {
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
@@ -679,6 +816,7 @@ public class AwsHelperService {
     }
     return new ListServicesResult();
   }
+
   public DescribeServicesResult describeServices(
       String region, AwsConfig awsConfig, DescribeServicesRequest describeServicesRequest) {
     try {
@@ -689,6 +827,7 @@ public class AwsHelperService {
     }
     return new DescribeServicesResult();
   }
+
   public CreateServiceResult createService(
       String region, AwsConfig awsConfig, CreateServiceRequest createServiceRequest) {
     try {
@@ -699,6 +838,7 @@ public class AwsHelperService {
     }
     return new CreateServiceResult();
   }
+
   public UpdateServiceResult updateService(
       String region, AwsConfig awsConfig, UpdateServiceRequest updateServiceRequest) {
     try {
@@ -873,19 +1013,20 @@ public class AwsHelperService {
     return Maps.newHashMap();
   }
 
-  public List<Instance> listRunInstances(
-      AwsConfig awsConfig, String region, String launcherConfigName, int instanceCount) {
+  public List<Instance> listRunInstancesFromLaunchConfig(
+      AwsConfig awsConfig, String region, String launchConfigName, int instanceCount) {
     try {
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-      List<LaunchConfiguration> launchConfigurations =
+      LaunchConfiguration launchConfiguration =
           amazonAutoScalingClient
               .describeLaunchConfigurations(
-                  new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launcherConfigName))
-              .getLaunchConfigurations();
-      LaunchConfiguration launchConfiguration = launchConfigurations.get(0);
+                  new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
+              .getLaunchConfigurations()
+              .iterator()
+              .next();
 
       RunInstancesRequest runInstancesRequest =
           new RunInstancesRequest()
@@ -899,12 +1040,53 @@ public class AwsHelperService {
               .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
               .withUserData(launchConfiguration.getUserData());
 
-      List<Instance> instances = amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
-      return instances;
+      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
+  }
+
+  public List<Instance> listRunInstancesFromAutoScalingGroup(
+      AwsConfig awsConfig, String region, String autoScalingGroupName, int instanceCount) {
+    try {
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+      AutoScalingGroup autoScalingGroup =
+          amazonAutoScalingClient
+              .describeAutoScalingGroups(
+                  new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName))
+              .getAutoScalingGroups()
+              .iterator()
+              .next();
+
+      LaunchConfiguration launchConfiguration =
+          amazonAutoScalingClient
+              .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(
+                  autoScalingGroup.getLaunchConfigurationName()))
+              .getLaunchConfigurations()
+              .iterator()
+              .next();
+
+      RunInstancesRequest runInstancesRequest =
+          new RunInstancesRequest()
+              .withImageId(launchConfiguration.getImageId())
+              .withInstanceType(launchConfiguration.getInstanceType())
+              .withMinCount(instanceCount)
+              .withMaxCount(instanceCount)
+              .withKeyName(launchConfiguration.getKeyName())
+              .withIamInstanceProfile(
+                  new IamInstanceProfileSpecification().withName(launchConfiguration.getIamInstanceProfile()))
+              .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
+              .withUserData(launchConfiguration.getUserData());
+
+      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
   }
 
   public List<String> listIAMInstanceRoles(AwsConfig awsConfig) {
@@ -1032,6 +1214,7 @@ public class AwsHelperService {
     }
     return Arrays.asList();
   }
+
   public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, ListMetricsRequest listMetricsRequest) {
     try {
       AmazonCloudWatchClient cloudWatchClient =
@@ -1101,5 +1284,79 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeStacksResult();
+  }
+
+  public ListFunctionsResult listFunctions(
+      String region, String accessKey, char[] secretKey, ListFunctionsRequest listFunctionsRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).listFunctions(listFunctionsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListFunctionsResult();
+  }
+
+  public GetFunctionResult getFunction(
+      String region, String accessKey, char[] secretKey, GetFunctionRequest getFunctionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).getFunction(getFunctionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      if (amazonServiceException instanceof ResourceNotFoundException) {
+        return null;
+      }
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new GetFunctionResult();
+  }
+
+  public CreateFunctionResult createFunction(
+      String region, String accessKey, char[] secretKey, CreateFunctionRequest createFunctionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).createFunction(createFunctionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new CreateFunctionResult();
+  }
+
+  public UpdateFunctionCodeResult updateFunction(
+      String region, String accessKey, char[] secretKey, UpdateFunctionCodeRequest updateFunctionCodeRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).updateFunctionCode(updateFunctionCodeRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new UpdateFunctionCodeResult();
+  }
+
+  public PublishVersionResult publishVersion(
+      String region, String accessKey, char[] secretKey, PublishVersionRequest publishVersionRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).publishVersion(publishVersionRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new PublishVersionResult();
+  }
+
+  public String getResourceUrl(AwsConfig awsConfig, String bucketName, String key) {
+    try {
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getResourceUrl(bucketName, key);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
+  }
+
+  public boolean isVersioningEnabledForBucket(AwsConfig awsConfig, String bucketName) {
+    try {
+      BucketVersioningConfiguration bucketVersioningConfiguration =
+          getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey())
+              .getBucketVersioningConfiguration(bucketName);
+      return "ENABLED".equals(bucketVersioningConfiguration.getStatus());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return false;
   }
 }

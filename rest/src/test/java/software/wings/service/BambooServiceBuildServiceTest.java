@@ -1,8 +1,8 @@
 package software.wings.service;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -13,8 +13,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * Created by anubhaw on 11/28/16.
@@ -57,9 +60,10 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetBuildArtifacts() {
-    Pair<String, InputStream> stringInputStreamPair =
-        bambooService.downloadArtifact(bambooConfig, "TOD-TOD-JOB1", "11", "*");
-    System.out.println(stringInputStreamPair.getKey());
+  public void shouldGetBuildArtifacts() throws IOException, URISyntaxException {
+    ListNotifyResponseData listNotifyResponseData = bambooService.downloadArtifacts(
+        bambooConfig, "TOD-TOD-JOB1", "11", Lists.newArrayList("*"), "DELEGATE_ID", "TASK_ID", "ACCOUNT_ID");
+    List data = listNotifyResponseData.getData();
+    assert data.size() > 0;
   }
 }

@@ -184,6 +184,11 @@ public interface Constants {
    * The constant AWS_CODE_DEPLOY.
    */
   String AWS_CODE_DEPLOY = "AWS CodeDeploy";
+
+  /**
+   * The constant AWS_LAMBDA.
+   */
+  String AWS_LAMBDA = "AWS Lambda";
   /**
    * The constant UPGRADE_CONTAINERS.
    */
@@ -316,6 +321,11 @@ public interface Constants {
    * The constant BUILD_NO.
    */
   String BUILD_NO = "buildNo";
+
+  String BUCKET_NAME = "bucketName";
+
+  String KEY = "key";
+
   /**
    * The constant URL.
    */
@@ -341,8 +351,17 @@ public interface Constants {
    * Template expression constants
    */
   String ENTITY_TYPE = "entityType";
+  /**
+   * The constant ARTIFACT_TYPE.
+   */
   String ARTIFACT_TYPE = "artifactType";
+  /**
+   * The constant RELATED_FIELD.
+   */
   String RELATED_FIELD = "relatedField";
+  /**
+   * The constant STATE_TYPE.
+   */
   String STATE_TYPE = "stateType";
 
   /**

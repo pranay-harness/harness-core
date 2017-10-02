@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -11,6 +13,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
+import software.wings.exception.WingsException;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -40,11 +43,35 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Load Balancer") private String loadBalancerId;
   @Transient @SchemaIgnore private String loadBalancerName;
 
+  @Attributes(title = "Display Name") private String customName;
+
+  @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
+
+  @Attributes(title = "Provision Instances") private boolean provisionInstances;
+
+  @Attributes(title = "Instance Filter") private AwsInstanceFilter awsInstanceFilter;
+
+  @Attributes(title = "AutoScaling group") private String autoScalingGroupName;
+
   /**
    * Instantiates a new Aws infrastructure mapping.
    */
   public AwsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_SSH.name());
+  }
+
+  public void validate() {
+    if (provisionInstances) {
+      if (isEmpty(autoScalingGroupName)) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
+            "Auto scaling group must not be empty when provision instances is true.");
+      }
+    } else {
+      if (awsInstanceFilter == null) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Instance filter must not be null when provision instances is false.");
+      }
+    }
   }
 
   /**
@@ -83,10 +110,20 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.restrictionExpression = restrictionExpression;
   }
 
+  /**
+   * Gets load balancer id.
+   *
+   * @return the load balancer id
+   */
   public String getLoadBalancerId() {
     return loadBalancerId;
   }
 
+  /**
+   * Sets load balancer id.
+   *
+   * @param loadBalancerId the load balancer id
+   */
   public void setLoadBalancerId(String loadBalancerId) {
     this.loadBalancerId = loadBalancerId;
   }
@@ -99,29 +136,104 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDisplayName() {
-    return String.format("%s (AWS/SSH) %s",
+    return String.format("%s%s (AWS/SSH) %s", isNotEmpty(customName) ? (customName + " - ") : "",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion());
   }
 
+  /**
+   * Gets region.
+   *
+   * @return the region
+   */
   public String getRegion() {
     return region;
   }
 
+  /**
+   * Sets region.
+   *
+   * @param region the region
+   */
   public void setRegion(String region) {
     this.region = region;
   }
 
+  /**
+   * Sets host connection attrs.
+   *
+   * @param hostConnectionAttrs the host connection attrs
+   */
   public void setHostConnectionAttrs(String hostConnectionAttrs) {
     this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
+  /**
+   * Gets load balancer name.
+   *
+   * @return the load balancer name
+   */
   public String getLoadBalancerName() {
     return loadBalancerName;
   }
 
+  /**
+   * Sets load balancer name.
+   *
+   * @param loadBalancerName the load balancer name
+   */
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
+  }
+
+  /**
+   * Gets aws instance filter.
+   *
+   * @return the aws instance filter
+   */
+  public AwsInstanceFilter getAwsInstanceFilter() {
+    return awsInstanceFilter;
+  }
+
+  /**
+   * Sets aws instance filter.
+   *
+   * @param awsInstanceFilter the aws instance filter
+   */
+  public void setAwsInstanceFilter(AwsInstanceFilter awsInstanceFilter) {
+    this.awsInstanceFilter = awsInstanceFilter;
+  }
+
+  public boolean isProvisionInstances() {
+    return provisionInstances;
+  }
+
+  public void setProvisionInstances(boolean provisionInstances) {
+    this.provisionInstances = provisionInstances;
+  }
+
+  public boolean isUsePublicDns() {
+    return usePublicDns;
+  }
+
+  public void setUsePublicDns(boolean usePublicDns) {
+    this.usePublicDns = usePublicDns;
+  }
+
+  public String getAutoScalingGroupName() {
+    return autoScalingGroupName;
+  }
+
+  public void setAutoScalingGroupName(String autoScalingGroupName) {
+    this.autoScalingGroupName = autoScalingGroupName;
+  }
+
+  public String getCustomName() {
+    return customName;
+  }
+
+  public void setCustomName(String customName) {
+    this.customName = customName;
   }
 
   /**
@@ -175,6 +287,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
+  /**
+   * The type Aws region data provider.
+   */
   public static class AwsRegionDataProvider implements DataProvider {
     @Inject private MainConfiguration mainConfiguration;
 
@@ -190,146 +305,46 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
+    protected String appId;
     private String restrictionType;
     private String restrictionExpression;
-    private String computeProviderSettingId;
-    private String envId;
-    private String serviceTemplateId;
-    private String serviceId;
-    private String computeProviderType;
-    private String deploymentType;
-    private String hostConnectionAttrs;
-    private String computeProviderName;
     private String region;
     private String uuid;
-    private String appId;
+    private String hostConnectionAttrs;
     private EmbeddedUser createdBy;
+    private String loadBalancerId;
     private long createdAt;
+    private String loadBalancerName;
     private EmbeddedUser lastUpdatedBy;
+    private String computeProviderSettingId;
     private long lastUpdatedAt;
+    private String envId;
+    private boolean usePublicDns;
+    private String serviceTemplateId;
+    private boolean provisionInstances;
+    private String serviceId;
+    private String computeProviderType;
+    private AwsInstanceFilter awsInstanceFilter;
+    private String infraMappingType;
+    private String autoScalingGroupName;
+    private String deploymentType;
+    private String computeProviderName;
+    private String displayName;
 
     private Builder() {}
 
-    /**
-     * An aws infrastructure mapping builder.
-     *
-     * @return the builder
-     */
     public static Builder anAwsInfrastructureMapping() {
       return new Builder();
     }
 
-    /**
-     * With restriction type builder.
-     *
-     * @param restrictionType the restriction type
-     * @return the builder
-     */
     public Builder withRestrictionType(String restrictionType) {
       this.restrictionType = restrictionType;
       return this;
     }
 
-    /**
-     * With restriction expression builder.
-     *
-     * @param restrictionExpression the restriction expression
-     * @return the builder
-     */
     public Builder withRestrictionExpression(String restrictionExpression) {
       this.restrictionExpression = restrictionExpression;
-      return this;
-    }
-
-    /**
-     * With compute provider setting id builder.
-     *
-     * @param computeProviderSettingId the compute provider setting id
-     * @return the builder
-     */
-    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
-      this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
-    /**
-     * With service template id builder.
-     *
-     * @param serviceTemplateId the service template id
-     * @return the builder
-     */
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
-      return this;
-    }
-
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With compute provider type builder.
-     *
-     * @param computeProviderType the compute provider type
-     * @return the builder
-     */
-    public Builder withComputeProviderType(String computeProviderType) {
-      this.computeProviderType = computeProviderType;
-      return this;
-    }
-
-    /**
-     * With deployment type builder.
-     *
-     * @param deploymentType the deployment type
-     * @return the builder
-     */
-    public Builder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
-      return this;
-    }
-
-    /**
-     * With host connection attrs builder.
-     *
-     * @param hostConnectionAttrs the host connection attrs
-     * @return the builder
-     */
-    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      return this;
-    }
-
-    /**
-     * With compute provider name name builder.
-     *
-     * @param computeProviderName the display name
-     * @return the builder
-     */
-    public Builder withComputeProviderName(String computeProviderName) {
-      this.computeProviderName = computeProviderName;
       return this;
     }
 
@@ -338,122 +353,171 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withLoadBalancerId(String loadBalancerId) {
+      this.loadBalancerId = loadBalancerId;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withLoadBalancerName(String loadBalancerName) {
+      this.loadBalancerName = loadBalancerName;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
+      this.computeProviderSettingId = computeProviderSettingId;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withUsePublicDns(boolean usePublicDns) {
+      this.usePublicDns = usePublicDns;
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withProvisionInstances(boolean provisionInstances) {
+      this.provisionInstances = provisionInstances;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withComputeProviderType(String computeProviderType) {
+      this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    public Builder withAwsInstanceFilter(AwsInstanceFilter awsInstanceFilter) {
+      this.awsInstanceFilter = awsInstanceFilter;
+      return this;
+    }
+
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
+    public Builder withAutoScalingGroupName(String autoScalingGroupName) {
+      this.autoScalingGroupName = autoScalingGroupName;
+      return this;
+    }
+
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
+      return this;
+    }
+
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
     public Builder but() {
       return anAwsInfrastructureMapping()
           .withRestrictionType(restrictionType)
           .withRestrictionExpression(restrictionExpression)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withDeploymentType(deploymentType)
-          .withHostConnectionAttrs(hostConnectionAttrs)
-          .withComputeProviderName(computeProviderName)
+          .withRegion(region)
           .withUuid(uuid)
           .withAppId(appId)
+          .withHostConnectionAttrs(hostConnectionAttrs)
           .withCreatedBy(createdBy)
+          .withLoadBalancerId(loadBalancerId)
           .withCreatedAt(createdAt)
-          .withRegion(region)
+          .withLoadBalancerName(loadBalancerName)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withComputeProviderSettingId(computeProviderSettingId)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withEnvId(envId)
+          .withUsePublicDns(usePublicDns)
+          .withServiceTemplateId(serviceTemplateId)
+          .withProvisionInstances(provisionInstances)
+          .withServiceId(serviceId)
+          .withComputeProviderType(computeProviderType)
+          .withAwsInstanceFilter(awsInstanceFilter)
+          .withInfraMappingType(infraMappingType)
+          .withAutoScalingGroupName(autoScalingGroupName)
+          .withDeploymentType(deploymentType)
+          .withComputeProviderName(computeProviderName)
+          .withDisplayName(displayName);
     }
 
-    /**
-     * Build aws infrastructure mapping.
-     *
-     * @return the aws infrastructure mapping
-     */
     public AwsInfrastructureMapping build() {
       AwsInfrastructureMapping awsInfrastructureMapping = new AwsInfrastructureMapping();
       awsInfrastructureMapping.setRestrictionType(restrictionType);
       awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
-      awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      awsInfrastructureMapping.setEnvId(envId);
-      awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      awsInfrastructureMapping.setServiceId(serviceId);
-      awsInfrastructureMapping.setComputeProviderType(computeProviderType);
-      awsInfrastructureMapping.setDeploymentType(deploymentType);
-      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setRegion(region);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
+      awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsInfrastructureMapping.setCreatedBy(createdBy);
+      awsInfrastructureMapping.setLoadBalancerId(loadBalancerId);
       awsInfrastructureMapping.setCreatedAt(createdAt);
+      awsInfrastructureMapping.setLoadBalancerName(loadBalancerName);
       awsInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      awsInfrastructureMapping.setEnvId(envId);
+      awsInfrastructureMapping.setUsePublicDns(usePublicDns);
+      awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsInfrastructureMapping.setProvisionInstances(provisionInstances);
+      awsInfrastructureMapping.setServiceId(serviceId);
+      awsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
+      awsInfrastructureMapping.setAutoScalingGroupName(autoScalingGroupName);
+      awsInfrastructureMapping.setDeploymentType(deploymentType);
+      awsInfrastructureMapping.setComputeProviderName(computeProviderName);
+      awsInfrastructureMapping.setDisplayName(displayName);
       return awsInfrastructureMapping;
     }
   }

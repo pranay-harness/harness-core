@@ -67,6 +67,7 @@ public enum TaskType {
   AMAZON_S3_COLLECTION(TaskGroup.S3, AmazonS3CollectionTask.class),
   AMAZON_S3_GET_ARTIFACT_PATHS(TaskGroup.S3, ServiceImplDelegateTask.class),
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class),
+  AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class),
   AMAZON_S3_GET_ARTIFACT_NAMES(TaskGroup.S3, ServiceImplDelegateTask.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class),
   AMAZON_S3_VALIDATE_ARTIFACT_SERVER(TaskGroup.S3, ServiceImplDelegateTask.class),

@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.HostValidationRequest;
@@ -16,6 +17,7 @@ import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -121,12 +123,10 @@ public interface InfrastructureMappingService {
    * @param appId              the app id
    * @param envId              the env id
    * @param infraMappingId     the infra mapping id
-   * @param launcherConfigName the launcher config name
    * @param instanceCount      the instance count
    * @return the list
    */
-  List<ServiceInstance> provisionNodes(
-      String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount);
+  List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount);
 
   /**
    * De provision nodes.
@@ -217,22 +217,44 @@ public interface InfrastructureMappingService {
    * List all roles map.
    *
    * @param appId             the app id
-   * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
    * @return the map
    */
-  Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId);
+  Map<String, String> listAllRoles(String appId, String computeProviderId);
 
   /**
    * List networks list.
    *
    * @param appId             the app id
-   * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
    * @param region            the region
    * @return the list
    */
-  List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region);
+  List<String> listVPC(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region);
+
+  /**
+   * List security groups list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @param vpcIds            the vpc ids
+   * @return the list
+   */
+  List<String> listSecurityGroups(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
+      @NotNull List<String> vpcIds);
+
+  /**
+   * List subnets list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @param vpcIds            the vpc ids
+   * @return the list
+   */
+  List<String> listSubnets(@NotEmpty String appId, @NotEmpty String computeProviderId, @NotEmpty String region,
+      @NotNull List<String> vpcIds);
 
   /**
    * List load balancers map.
@@ -339,4 +361,33 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listHosts(String appId, String infraMappingId);
+
+  /**
+   * List aws iam roles map.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @return the map
+   */
+  Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
+
+  /**
+   * List tags list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
+  Set<String> listTags(String appId, String computeProviderId, String region);
+
+  /**
+   * List auto scaling groups list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
+  List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
 }
