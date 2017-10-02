@@ -7,6 +7,7 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -582,11 +583,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
           ARTIFACTORY.name(), ARTIFACTORY.name());
+    } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
+      return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
-          ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMAZON_S3.name());
+          AMAZON_S3.name(), AMAZON_S3.name());
     }
   }
 
