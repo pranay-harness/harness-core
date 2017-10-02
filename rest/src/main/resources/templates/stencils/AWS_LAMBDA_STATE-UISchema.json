@@ -1,4 +1,3 @@
 {
-  "commandName": { "ui:widget": "hidden" },
-  "ui:order": []
+    "ui:order": ["commandName"]
 }
