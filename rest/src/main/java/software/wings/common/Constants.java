@@ -189,6 +189,11 @@ public interface Constants {
    * The constant AWS_LAMBDA.
    */
   String AWS_LAMBDA = "AWS Lambda";
+
+  /**
+   * The constant ROLLBACK_AWS_LAMBDA.
+   */
+  String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";
   /**
    * The constant UPGRADE_CONTAINERS.
    */
@@ -322,8 +327,14 @@ public interface Constants {
    */
   String BUILD_NO = "buildNo";
 
+  /**
+   * The constant BUCKET_NAME.
+   */
   String BUCKET_NAME = "bucketName";
 
+  /**
+   * The constant KEY.
+   */
   String KEY = "key";
 
   /**

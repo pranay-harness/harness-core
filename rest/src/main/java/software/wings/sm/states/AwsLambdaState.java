@@ -101,11 +101,7 @@ public class AwsLambdaState extends State {
 
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
-  @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue(AWS_LAMBDA)
-  @SchemaIgnore
-  private String commandName = AWS_LAMBDA;
+  @Attributes(title = "Command") @SchemaIgnore private String commandName = AWS_LAMBDA;
 
   //  @Attributes(title = "Role", required = true)
   //  private String role;
@@ -173,7 +169,7 @@ public class AwsLambdaState extends State {
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 
-    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+    Artifact artifact = getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), workflowStandardParams);
     if (artifact == null) {
       throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
     }
@@ -342,6 +338,11 @@ public class AwsLambdaState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .build();
+  }
+
+  protected Artifact getArtifact(
+      String appId, String serviceId, String workflowExecutionId, WorkflowStandardParams workflowStandardParams) {
+    return workflowStandardParams.getArtifactForService(serviceId);
   }
 
   private VpcConfig constructVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {

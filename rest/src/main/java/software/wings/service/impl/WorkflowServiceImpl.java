@@ -1664,10 +1664,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
-      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_LAMBDA_ROLLBACK.name());
+      return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase, AWS_LAMBDA_ROLLBACK.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(
+      WorkflowPhase workflowPhase, String containerServiceType) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+                          .addStep(aNode()
+                                       .withId(getUuid())
+                                       .withType(containerServiceType)
+                                       .withName(Constants.ROLLBACK_AWS_LAMBDA)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForContainerService(
