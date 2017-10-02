@@ -12,10 +12,13 @@ import java.util.List;
  */
 @JsonTypeName("SETUP_ENV")
 public class SetupEnvCommandUnit extends ExecCommandUnit {
-  public static final String setupEnvCommandString = "# Execute as root and pass environment variables\n"
+  public static final String setupEnvCommandString = "\n"
+      + "# Execute as root and pass environment variables\n"
       + "# su -p -\n\n"
       + "# Execute as root via user credentials (with root privileges)\n"
       + "# sudo -E su -p -\n\n"
+      + "# The following variables are absolute paths defined as:\n"
+      + "# ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]\n\n"
       + "mkdir -p \"$WINGS_RUNTIME_PATH\"\n"
       + "mkdir -p \"$WINGS_BACKUP_PATH\"\n"
       + "mkdir -p \"$WINGS_STAGING_PATH\"";
