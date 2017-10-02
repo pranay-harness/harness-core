@@ -18,7 +18,6 @@ public class LambdaSpecification extends Base {
   private Integer timeout = 3;
   @NotEmpty private String functionName;
   @NotEmpty private String handler;
-  @NotEmpty private String role;
 
   public String getRuntime() {
     return Misc.trim(runtime);
@@ -30,9 +29,5 @@ public class LambdaSpecification extends Base {
 
   public String getHandler() {
     return Misc.trim(handler);
-  }
-
-  public String getRole() {
-    return Misc.trim(role);
   }
 }

@@ -30,6 +30,10 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   @Attributes(title = "VPC") private String vpcId;
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
+  @Attributes(title = " IAM role",
+      description =
+          "IAM role that Lambda assumes when it executes your function to access any other Amazon Web Services (AWS) resources")
+  private String role;
 
   @SchemaIgnore
   @Override
@@ -116,5 +120,13 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
    */
   public void setSecurityGroupIds(List<String> securityGroupIds) {
     this.securityGroupIds = securityGroupIds;
+  }
+
+  public String getRole() {
+    return role;
+  }
+
+  public void setRole(String role) {
+    this.role = role;
   }
 }

@@ -20,7 +20,6 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
@@ -201,8 +200,6 @@ public class AwsLambdaState extends State {
                                                                  .withCommandName(getCommandName())
                                                                  .withActivityId(activity.getUuid());
 
-    //    String key = context.renderExpression(lambdaSpecification.getKey());
-    //    String bucket = context.renderExpression(lambdaSpecification.getBucket());
     String key = context.renderExpression(artifact.getMetadata().get("key"));
     String bucket = context.renderExpression(artifact.getMetadata().get("bucketName"));
 
@@ -211,7 +208,7 @@ public class AwsLambdaState extends State {
     String runtime = context.renderExpression(lambdaSpecification.getRuntime());
     Integer memory = lambdaSpecification.getMemorySize();
     Integer timeout = lambdaSpecification.getTimeout();
-    String roleArn = lambdaSpecification.getRole();
+    String roleArn = infrastructureMapping.getRole();
 
     logService.save(logBuilder.but().withLogLine("Deploying Lambda with following configuration.").build());
     logService.save(logBuilder.but().withLogLine("Function Name: " + functionName).build());
@@ -379,7 +376,6 @@ public class AwsLambdaState extends State {
    *
    * @return the command name
    */
-  @SchemaIgnore
   public String getCommandName() {
     return commandName;
   }
