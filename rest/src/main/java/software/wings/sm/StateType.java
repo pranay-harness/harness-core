@@ -45,6 +45,7 @@ import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
+import software.wings.sm.states.AwsLambdaRollback;
 import software.wings.sm.states.AwsLambdaState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.BambooState;
@@ -241,6 +242,9 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
+      asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
+
+  AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
       asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
