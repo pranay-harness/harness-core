@@ -130,10 +130,14 @@ import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
 import com.amazonaws.services.identitymanagement.model.Role;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.CreateAliasRequest;
+import com.amazonaws.services.lambda.model.CreateAliasResult;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.ListAliasesRequest;
+import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.ListFunctionsRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
 import com.amazonaws.services.lambda.model.ListVersionsByFunctionRequest;
@@ -141,6 +145,8 @@ import com.amazonaws.services.lambda.model.ListVersionsByFunctionResult;
 import com.amazonaws.services.lambda.model.PublishVersionRequest;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
+import com.amazonaws.services.lambda.model.UpdateAliasRequest;
+import com.amazonaws.services.lambda.model.UpdateAliasResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
@@ -1362,6 +1368,36 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new PublishVersionResult();
+  }
+
+  public ListAliasesResult listAliases(
+      String region, String accessKey, char[] secretKey, ListAliasesRequest listAliasesRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).listAliases(listAliasesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new ListAliasesResult();
+  }
+
+  public CreateAliasResult createAlias(
+      String region, String accessKey, char[] secretKey, CreateAliasRequest createAliasRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).createAlias(createAliasRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new CreateAliasResult();
+  }
+
+  public UpdateAliasResult updateAlias(
+      String region, String accessKey, char[] secretKey, UpdateAliasRequest updateAliasRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).updateAlias(updateAliasRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new UpdateAliasResult();
   }
 
   public String getResourceUrl(AwsConfig awsConfig, String bucketName, String key) {
