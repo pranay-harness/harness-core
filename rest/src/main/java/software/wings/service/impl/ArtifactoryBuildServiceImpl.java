@@ -4,6 +4,7 @@ import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -49,15 +50,18 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config) {
-    return artifactoryService.getRepoPaths(config, jobName);
+    if (StringUtils.isEmpty(groupId)) {
+      return artifactoryService.getRepoPaths(config, jobName);
+    } else {
+      return artifactoryService.getArtifactIds(config, jobName, groupId);
+    }
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
-    return artifactoryService.getLatestFilePath(artifactoryConfig, artifactStreamAttributes.getJobName(),
-        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactPattern(),
-        artifactStreamAttributes.getArtifactType());
+    return artifactoryService.getLatestVersion(artifactoryConfig, artifactStreamAttributes.getJobName(),
+        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
   }
 
   @Override

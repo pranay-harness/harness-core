@@ -92,6 +92,8 @@ public class ArtifactCollectionJob implements Job {
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
         || artifactStream.getArtifactStreamType().equals(ECR.name())
         || artifactStream.getArtifactStreamType().equals(GCR.name())) {
+      logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
+          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
       List<Artifact> artifacts = artifactService
                                      .list(aPageRequest()
@@ -122,7 +124,8 @@ public class ArtifactCollectionJob implements Job {
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      logger.info("Collecting Artifact for artifact stream {} ", NEXUS.name());
+      logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       BuildDetails latestVersion =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       logger.info("Latest version in Nexus server {}", latestVersion);
@@ -151,10 +154,12 @@ public class ArtifactCollectionJob implements Job {
         }
       }
     } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
-      Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
-      if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
-            service.getArtifactType());
+      Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
+      Validator.notNullCheck("Service", service);
+      ArtifactType artifactType = service.getArtifactType();
+      if (artifactType.equals(ArtifactType.DOCKER)) {
+        logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+            artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
         List<BuildDetails> builds =
             buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
         List<Artifact> artifacts = artifactService
@@ -183,9 +188,9 @@ public class ArtifactCollectionJob implements Job {
             newArtifacts.add(artifactService.create(artifact));
           }
         });
-      } else if (service.getArtifactType().equals(ArtifactType.RPM)) {
-        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
-            service.getArtifactType());
+      } else if (artifactType.equals(ArtifactType.RPM)) {
+        logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+            artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
         List<BuildDetails> builds =
             buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
         List<Artifact> artifacts = artifactService
@@ -213,33 +218,34 @@ public class ArtifactCollectionJob implements Job {
           }
         });
       } else {
-        logger.info("Collecting Artifact for artifact stream {} and artifact type {} ", ARTIFACTORY.name(),
-            service.getArtifactType());
-        BuildDetails lastSuccessfulBuild =
+        logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+            artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+        BuildDetails latestVersion =
             buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-        if (lastSuccessfulBuild != null) {
+        logger.info("Latest version in artifactory server {}", latestVersion);
+        if (latestVersion != null) {
           Artifact lastCollectedArtifact =
               artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-          String artifactPath = (lastCollectedArtifact != null
-                                    && lastCollectedArtifact.getMetadata().get(Constants.ARTIFACT_PATH) != null)
-              ? lastCollectedArtifact.getMetadata().get(Constants.ARTIFACT_PATH)
+          String buildNo =
+              (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
+              ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
               : "";
-          if (artifactPath.compareTo(lastSuccessfulBuild.getArtifactPath()) >= 0) {
-            logger.info("Latest artifact path {} already collected.", artifactPath);
-          } else {
+          logger.info("Last collected artifactory maven artifact version {} ", buildNo);
+          if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
             logger.info(
-                "Existing artifact path {} is older than new artifact path {}. Collect new Artifact for ArtifactStream {}",
-                artifactPath, lastSuccessfulBuild.getArtifactPath(), artifactStreamId);
-            Artifact artifact =
-                anArtifact()
-                    .withAppId(appId)
-                    .withArtifactStreamId(artifactStreamId)
-                    .withArtifactSourceName(artifactStream.getSourceName())
-                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
-                    .withMetadata(ImmutableMap.of(Constants.ARTIFACT_PATH, lastSuccessfulBuild.getArtifactPath(),
-                        Constants.BUILD_NO, lastSuccessfulBuild.getNumber()))
-                    .build();
-            newArtifacts.add(artifactService.create(artifact));
+                "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
+                buildNo, latestVersion.getNumber(), artifactStreamId);
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
+                                    .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
+                                    .withRevision(latestVersion.getRevision())
+                                    .build();
+            newArtifacts.add(artifactService.create(artifact, artifactType));
+          } else {
+            logger.info("Artifact of the version {} already collected.", buildNo);
           }
         }
       }
@@ -281,7 +287,6 @@ public class ArtifactCollectionJob implements Job {
     } else {
       BuildDetails lastSuccessfulBuild =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-
       if (lastSuccessfulBuild != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
         int buildNo =
