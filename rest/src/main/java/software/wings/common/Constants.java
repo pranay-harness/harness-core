@@ -321,6 +321,11 @@ public interface Constants {
    * The constant BUILD_NO.
    */
   String BUILD_NO = "buildNo";
+
+  String BUCKET_NAME = "bucketName";
+
+  String KEY = "key";
+
   /**
    * The constant URL.
    */
