@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.common.collect.Lists;
-
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -30,10 +28,8 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
 
   @Override
   public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig) {
-    String artifactName = artifactStreamAttributes.getArtifactName();
-    return amazonS3Service.getArtifactsBuildDetails(
-        awsConfig, artifactStreamAttributes.getJobName(), Lists.newArrayList(artifactName), artifactName.contains("*"));
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig config) {
+    return null;
   }
 
   @Override
@@ -49,7 +45,7 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig config) {
-    return null;
+    return amazonS3Service.getArtifactMetadata(config, artifactStreamAttributes, appId);
   }
 
   @Override
