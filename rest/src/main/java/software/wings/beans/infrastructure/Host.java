@@ -29,8 +29,8 @@ public class Host extends Base {
   private String infraMappingId;
   private String computeProviderId;
   @NotEmpty private String hostName;
-  // publicDns may be either publicDnsName or privateDnsName, depending on settings in inframapping. Leaving the name to
-  // avoid migration.
+  // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
+  // infrastructure mapping.
   private String publicDns;
   @NotNull private String hostConnAttr;
   private String bastionConnAttr;
@@ -109,6 +109,12 @@ public class Host extends Base {
     this.hostName = hostName;
   }
 
+  /**
+   * In the case of EC2, this could be either the public or private DNS name, depending on the setting in AWS_SSH
+   * infrastructure mapping.
+   *
+   * @return the DNS name of the host.
+   */
   public String getPublicDns() {
     if (publicDns == null) {
       return hostName;
@@ -116,6 +122,10 @@ public class Host extends Base {
     return publicDns;
   }
 
+  /**
+   * In the case of EC2, this could be either the public or private DNS name, depending on the setting in AWS_SSH
+   * infrastructure mapping.
+   */
   public void setPublicDns(String publicDns) {
     this.publicDns = publicDns;
   }
