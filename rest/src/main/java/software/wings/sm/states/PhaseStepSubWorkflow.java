@@ -188,20 +188,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .build();
       return singletonList(deployRequestElement);
     } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
-      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                 .stream()
-                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
-                                                 .findFirst();
-      if (!first.isPresent()) {
-        return null;
-      }
-      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      AwsCodeDeployRequestElement deployRequestElement =
-          anAwsCodeDeployRequestElement()
-              .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
-              .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
-              .build();
-      return singletonList(deployRequestElement);
+      return new ArrayList<>();
     }
     return null;
   }
