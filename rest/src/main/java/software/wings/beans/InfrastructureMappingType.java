@@ -43,7 +43,8 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Gcp kubernetes infra mapping type.
    */
-  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 6);
+  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 6),
+  AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

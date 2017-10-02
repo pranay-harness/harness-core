@@ -18,6 +18,9 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.states.HttpState.Builder.aHttpState;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -59,6 +62,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -72,7 +76,7 @@ public class HttpStateTest extends WingsBaseTest {
           .withName("healthCheck1")
           .withMethod("GET")
           .withUrl("http://${host.hostName}:8088/health/status")
-          .withHeader("Content-Type: application/json, Accept: */*")
+          .withHeader("Content-Type: application/xml, Accept: */*")
           .withAssertion(
               "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
 
@@ -129,12 +133,62 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   /**
+   * Should execute and evaluate JSON response.
+   */
+  @Test
+  public void shouldExecuteAndEvaluateJsonResponse() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/health/status"))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("Accept", equalTo("*/*"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/json")
+                    .withBody(
+                        "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")));
+
+    Map<String, Object> map = ImmutableMap.of(
+        ARTIFACT, anArtifact().withMetadata(ImmutableMap.of(BUILD_NO, "2.31.0-MASTER-SNAPSHOT")).build());
+    when(workflowStandardParams.paramMap(context)).thenReturn(map);
+
+    HttpState.Builder jsonHttpStateBuilder =
+        aHttpState()
+            .withName("healthCheck1")
+            .withMethod("GET")
+            .withUrl("http://${host.hostName}:8088/health/status")
+            .withHeader("Content-Type: application/json, Accept: */*")
+            .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${artifact.buildNo}");
+    ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
+
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
+
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(HttpStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(
+            aHttpStateExecutionData()
+                .withHttpUrl("http://localhost:8088/health/status")
+                .withAssertionStatus("SUCCESS")
+                .withHttpResponseCode(200)
+                .withHttpResponseBody(
+                    "{\"status\":{\"code\":\"SUCCESS\"},\"data\":{\"title\":\"Some server\",\"version\":\"2.31.0-MASTER-SNAPSHOT\",\"buildTimestamp\":1506086747259}}")
+                .build(),
+            "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
+
+    verify(activityService).save(activityBuilder.build());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+  }
+
+  /**
    * Should execute and evaluate response.
    */
   @Test
   public void shouldExecuteAndEvaluateResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -168,7 +222,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -221,7 +275,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -248,7 +302,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnSocketTimeout() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -282,7 +336,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnEmptyResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
@@ -311,7 +365,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
@@ -339,7 +393,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldFailOnRandomData() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
-                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 

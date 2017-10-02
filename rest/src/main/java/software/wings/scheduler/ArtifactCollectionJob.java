@@ -14,6 +14,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -244,31 +245,39 @@ public class ArtifactCollectionJob implements Job {
       }
     } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
       logger.info("Collecting Artifact for artifact stream {} ", AMAZON_S3.name());
-      BuildDetails latestVersion =
-          buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-      if (latestVersion != null) {
-        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-        String buildNo =
-            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-            ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
-            : "";
-        if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
-          logger.info(
-              "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
-              buildNo, latestVersion.getNumber(), artifactStreamId);
+      List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+      List<Artifact> artifacts = artifactService
+                                     .list(aPageRequest()
+                                               .addFilter("appId", EQ, appId)
+                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
+                                               .withLimit(UNLIMITED)
+                                               .build(),
+                                         false)
+                                     .getResponse();
+      Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
+          Collectors.toMap(Artifact::getArtifactPath, Artifact::getUuid, (s, s2) -> s));
+      builds.forEach(buildDetails -> {
+        if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
+          Map<String, String> buildParameters = buildDetails.getBuildParameters();
+          Map<String, String> map = Maps.newHashMap();
+          map.put(Constants.ARTIFACT_PATH, buildParameters.get(Constants.ARTIFACT_PATH));
+          map.put(Constants.ARTIFACT_FILE_NAME, buildParameters.get(Constants.ARTIFACT_PATH));
+          map.put(Constants.BUILD_NO, buildParameters.get(Constants.BUILD_NO));
+          map.put(Constants.BUCKET_NAME, buildParameters.get(Constants.BUCKET_NAME));
+          map.put(Constants.KEY, buildParameters.get(Constants.KEY));
+          map.put(Constants.URL, buildParameters.get(Constants.URL));
+
           Artifact artifact = anArtifact()
                                   .withAppId(appId)
                                   .withArtifactStreamId(artifactStreamId)
                                   .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
-                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
-                                  .withRevision(latestVersion.getRevision())
+                                  .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                                  .withMetadata(map)
                                   .build();
-          artifactService.create(artifact);
-        } else {
-          logger.info("Artifact of the version {} already collected.", buildNo);
+          newArtifacts.add(artifactService.create(artifact));
         }
-      }
+      });
+
     } else {
       BuildDetails lastSuccessfulBuild =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());

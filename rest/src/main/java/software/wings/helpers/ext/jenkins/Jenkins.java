@@ -1,13 +1,11 @@
 package software.wings.helpers.ext.jenkins;
 
 import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.apache.commons.lang3.tuple.Pair;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -100,31 +98,6 @@ public interface Jenkins {
   String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex);
 
   /**
-   * Download artifact.
-   *
-   * @param jobname           the jobname
-   * @param artifactpathRegex the artifactpath regex
-   * @return the pair
-   * @throws IOException        Signals that an I/O exception has occurred.
-   * @throws URISyntaxException the URI syntax exception
-   */
-  Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
-      throws IOException, URISyntaxException;
-
-  /**
-   * Download artifact.
-   *
-   * @param jobname           the jobname
-   * @param buildNo           the build no
-   * @param artifactpathRegex the artifactpath regex
-   * @return the pair
-   * @throws IOException        Signals that an I/O exception has occurred.
-   * @throws URISyntaxException the URI syntax exception
-   */
-  Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
-      throws IOException, URISyntaxException;
-
-  /**
    * Gets build.
    *
    * @param queueItem the queue item
@@ -134,4 +107,19 @@ public interface Jenkins {
   Build getBuild(QueueReference queueItem) throws IOException;
 
   boolean isRunning();
+
+  /**
+   * downloads the artifacts from the jenkins server
+   * @param jobName       the jenkins job name
+   * @param buildNo       the build number
+   * @param artifactPaths list of artifact paths configured in the artifact source / stream
+   * @param delegateId    delegate id
+   * @param taskId        task id
+   * @param accountId     account id
+   * @return list notify response data
+   * @throws IOException
+   * @throws URISyntaxException
+   */
+  ListNotifyResponseData downloadArtifacts(String jobName, String buildNo, List<String> artifactPaths,
+      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException;
 }
