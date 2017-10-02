@@ -59,16 +59,12 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * The type Aws lambda state.
@@ -234,6 +230,8 @@ public class AwsLambdaState extends State {
     GetFunctionResult functionResult = awsHelperService.getFunction(region, awsConfig.getAccessKey(),
         awsConfig.getSecretKey(), new GetFunctionRequest().withFunctionName(functionName));
 
+    VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
+
     if (functionResult == null) { // function doesn't exist
       logService.save(
           logBuilder.but().withLogLine(String.format("Function [%s] doesn't exist.", functionName)).build());
@@ -248,13 +246,9 @@ public class AwsLambdaState extends State {
               .withCode(new FunctionCode().withS3Bucket(bucket).withS3Key(key))
               .withPublish(true)
               .withTimeout(timeout)
-              .withMemorySize(memory);
+              .withMemorySize(memory)
+              .withVpcConfig(vpcConfig);
 
-      VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
-
-      if (vpcConfig != null) {
-        createFunctionRequest.setVpcConfig(vpcConfig);
-      }
       CreateFunctionResult createFunctionResult = awsHelperService.createFunction(
           region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), createFunctionRequest);
       logService.save(logBuilder.but()
@@ -263,7 +257,9 @@ public class AwsLambdaState extends State {
                           .build());
       logService.save(logBuilder.but().withLogLine("Function: " + createFunctionResult.toString()).build());
     } else {
+      // Update code
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
+      // dry run
       logService.save(
           logBuilder.but()
               .withLogLine("Existing Lambda Function Code Sha256: " + functionResult.getConfiguration().getCodeSha256())
@@ -283,33 +279,41 @@ public class AwsLambdaState extends State {
       if (updateFunctionCodeResultDryRun.getCodeSha256().equals(functionResult.getConfiguration().getCodeSha256())) {
         logService.save(logBuilder.but().withLogLine("Function code didn't change. Skip function code update").build());
       } else {
-        UpdateFunctionCodeResult updateFunctionCodeResult =
-            awsHelperService.updateFunctionCode(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-                new UpdateFunctionCodeRequest().withFunctionName(functionName).withS3Bucket(bucket).withS3Key(key));
+        UpdateFunctionCodeRequest updateFunctionCodeRequest =
+            new UpdateFunctionCodeRequest().withFunctionName(functionName).withS3Bucket(bucket).withS3Key(key);
+        UpdateFunctionCodeResult updateFunctionCodeResult = awsHelperService.updateFunctionCode(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), updateFunctionCodeRequest);
         logService.save(logBuilder.but().withLogLine("Function code updated successfully").build());
         logService.save(logBuilder.but()
                             .withLogLine("Updated Function Code Sha256: " + updateFunctionCodeResult.getCodeSha256())
                             .build());
       }
+
+      // update function configuration
       logService.save(logBuilder.but().withLogLine("Updating function configuration").build());
+      UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
+          new UpdateFunctionConfigurationRequest()
+              .withEnvironment(new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
+              .withRuntime(runtime)
+              .withFunctionName(functionName)
+              .withHandler(handler)
+              .withRole(roleArn)
+              .withTimeout(timeout)
+              .withMemorySize(memory)
+              .withVpcConfig(vpcConfig);
       UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
-          awsHelperService.updateFunctionConfiguration(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-              new UpdateFunctionConfigurationRequest()
-                  .withEnvironment(
-                      new com.amazonaws.services.lambda.model.Environment().withVariables(serviceVariables))
-                  .withRuntime(runtime)
-                  .withFunctionName(functionName)
-                  .withHandler(handler)
-                  .withRole(roleArn)
-                  .withTimeout(timeout)
-                  .withMemorySize(memory));
+          awsHelperService.updateFunctionConfiguration(
+              region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), updateFunctionConfigurationRequest);
       logService.save(logBuilder.but().withLogLine("Function configuration updated successfully").build());
+
+      // publish version
       logService.save(logBuilder.but().withLogLine("Publishing new version").build());
-      PublishVersionResult publishVersionResult =
-          awsHelperService.publishVersion(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-              new PublishVersionRequest()
-                  .withFunctionName(updateFunctionConfigurationResult.getFunctionName())
-                  .withCodeSha256(updateFunctionConfigurationResult.getCodeSha256()));
+      PublishVersionRequest publishVersionRequest =
+          new PublishVersionRequest()
+              .withFunctionName(updateFunctionConfigurationResult.getFunctionName())
+              .withCodeSha256(updateFunctionConfigurationResult.getCodeSha256());
+      PublishVersionResult publishVersionResult = awsHelperService.publishVersion(
+          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), publishVersionRequest);
       logService.save(
           logBuilder.but().withLogLine("Published new version: " + publishVersionResult.getVersion()).build());
     }
@@ -326,14 +330,15 @@ public class AwsLambdaState extends State {
         .build();
   }
 
-  public VpcConfig constructVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {
+  private VpcConfig constructVpcConfig(AwsLambdaInfraStructureMapping infrastructureMapping) {
     String vpcId = infrastructureMapping.getVpcId();
-    VpcConfig vpcConfig = null;
+    VpcConfig vpcConfig = new VpcConfig();
     if (vpcId != null) {
       List<String> subnetIds = infrastructureMapping.getSubnetIds();
       List<String> securityGroupIds = infrastructureMapping.getSecurityGroupIds();
       if (securityGroupIds.size() > 0 && subnetIds.size() > 0) {
-        vpcConfig = new VpcConfig().withSecurityGroupIds(securityGroupIds).withSubnetIds(subnetIds);
+        vpcConfig.setSubnetIds(subnetIds);
+        vpcConfig.setSecurityGroupIds(securityGroupIds);
       } else {
         throw new WingsException(
             ErrorCode.INVALID_REQUEST, "message", "At least one security group and one subnet must be provided");
@@ -381,24 +386,4 @@ public class AwsLambdaState extends State {
   //  public void setRole(String role) {
   //    this.role = role;
   //  }
-
-  /**
-   * The type Lambda runtime provider.
-   */
-  public static class LambdaRuntimeProvider implements DataProvider {
-    @Override
-    public Map<String, String> getData(String appId, String... params) {
-      return Stream.of("nodejs4.3", "nodejs4.3-edge", "nodejs6.10", "python2.7", "python3.6", "java8", "dotnetcore1.0")
-          .collect(Collectors.toMap(o -> o, o -> o, (o1, o2) -> o1, LinkedHashMap::new));
-    }
-  }
-
-  public static class LambdaMemorySizePrvider implements DataProvider {
-    @Override
-    public Map<String, String> getData(String appId, String... params) {
-      return IntStream.range(2, 48)
-          .mapToObj(m -> String.valueOf(m * 64))
-          .collect(Collectors.toMap(v -> v, v -> v + " MB", (p, q) -> p, LinkedHashMap::new));
-    }
-  }
 }

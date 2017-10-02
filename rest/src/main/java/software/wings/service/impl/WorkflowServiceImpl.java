@@ -41,6 +41,7 @@ import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredE
 import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
+import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
@@ -1411,9 +1412,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (workflowPhase.getDeploymentType() == DeploymentType.ECS
-        || workflowPhase.getDeploymentType() == DeploymentType.KUBERNETES
-        || workflowPhase.getDeploymentType() == DeploymentType.AWS_CODEDEPLOY) {
+    if (Arrays
+            .asList(
+                DeploymentType.ECS, DeploymentType.KUBERNETES, DeploymentType.AWS_CODEDEPLOY, DeploymentType.AWS_LAMBDA)
+            .contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(EntityType.ARTIFACT);
       return requiredEntityTypes;
     }
@@ -1661,6 +1663,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
+    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_LAMBDA_ROLLBACK.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }

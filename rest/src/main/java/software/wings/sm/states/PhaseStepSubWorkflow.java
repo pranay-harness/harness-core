@@ -7,6 +7,7 @@ import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBu
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
@@ -172,6 +173,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
                                .build());
     } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      AwsCodeDeployRequestElement deployRequestElement =
+          anAwsCodeDeployRequestElement()
+              .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
+              .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
+              .build();
+      return singletonList(deployRequestElement);
+    } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
       Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                  .stream()
                                                  .filter(s -> s instanceof CommandStepExecutionSummary)
