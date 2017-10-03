@@ -157,11 +157,6 @@ public class AwsLambdaState extends State {
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
 
-    //    LambdaSpecification lambdaSpecification = serviceResourceService.getLambdaSpecification(app.getUuid(),
-    //    service.getUuid());
-    LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
-    FunctionSpecification lambdaSpecification = specification.getFunctions().get(0);
-
     AwsLambdaInfraStructureMapping infrastructureMapping =
         (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
@@ -214,6 +209,7 @@ public class AwsLambdaState extends State {
     logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
 
     List<FunctionMeta> functionArns = new ArrayList<>();
+
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
                                                           .withAwsConfig((AwsConfig) cloudProviderSetting.getValue())
                                                           .withRegion(region)
@@ -226,6 +222,42 @@ public class AwsLambdaState extends State {
                                                                  .withAppId(app.getUuid())
                                                                  .withCommandName(getCommandName())
                                                                  .withActivityId(activity.getUuid());
+
+    LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
+    if (specification.getFunctions() == null || specification.getFunctions().size() == 0) {
+      logService.save(logBuilder.but().withLogLine("No Lambda function to deploy.").build());
+    } else {
+      for (FunctionSpecification functionSpecification : specification.getFunctions()) {
+        FunctionMeta functionMeta = DeployOneLambdaFunction(context, app.getUuid(), envId, infrastructureMapping,
+            cloudProviderSetting, artifact, logBuilder, functionSpecification);
+        functionArns.add(functionMeta);
+        logService.save(
+            logBuilder.but()
+                .withLogLine("Successfully deployed Lambda Function: " + functionSpecification.getFunctionName())
+                .build());
+        logService.save(logBuilder.but().withLogLine("").build());
+        logService.save(logBuilder.but().withLogLine("=================").build());
+
+        logService.save(logBuilder.but()
+                            .withLogLine("Command execution finished with status:" + CommandExecutionStatus.SUCCESS)
+                            .withExecutionResult(CommandExecutionStatus.SUCCESS)
+                            .build());
+      }
+    }
+
+    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
+    return anExecutionResponse()
+        .withStateExecutionData(executionDataBuilder.build())
+        .addContextElement(awsLambdaContextElement)
+        .addNotifyElement(awsLambdaContextElement)
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .build();
+  }
+
+  private FunctionMeta DeployOneLambdaFunction(ExecutionContext context, String appId, String envId,
+      AwsLambdaInfraStructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting, Artifact artifact,
+      Builder logBuilder, FunctionSpecification lambdaSpecification) {
+    String region = infrastructureMapping.getRegion();
 
     String key = context.renderExpression(artifact.getMetadata().get("key"));
     String bucket = context.renderExpression(artifact.getMetadata().get("bucketName"));
@@ -262,8 +294,7 @@ public class AwsLambdaState extends State {
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
     Map<String, String> serviceVariables =
-        serviceTemplateService
-            .computeServiceVariables(app.getUuid(), envId, infrastructureMapping.getServiceTemplateId())
+        serviceTemplateService.computeServiceVariables(appId, envId, infrastructureMapping.getServiceTemplateId())
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));
@@ -274,6 +305,8 @@ public class AwsLambdaState extends State {
         region, accessKey, secretKey, new GetFunctionRequest().withFunctionName(functionName));
 
     VpcConfig vpcConfig = constructVpcConfig(infrastructureMapping);
+
+    FunctionMeta functionMeta = null;
 
     if (functionResult == null) {
       logService.save(
@@ -306,10 +339,10 @@ public class AwsLambdaState extends State {
 
       createFunctionAlias(
           region, accessKey, secretKey, functionName, createFunctionResult.getVersion(), evaluatedAliases, logBuilder);
-      functionArns.add(FunctionMeta.newBuilder()
-                           .withFunctionArn(createFunctionResult.getFunctionArn())
-                           .withVersion(createFunctionResult.getVersion())
-                           .build());
+      functionMeta = FunctionMeta.newBuilder()
+                         .withFunctionArn(createFunctionResult.getFunctionArn())
+                         .withVersion(createFunctionResult.getVersion())
+                         .build();
     } else {
       // Update code
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
@@ -373,10 +406,10 @@ public class AwsLambdaState extends State {
           logBuilder.but().withLogLine("Published new version: " + publishVersionResult.getVersion()).build());
       logService.save(
           logBuilder.but().withLogLine("Published Function ARN: " + publishVersionResult.getFunctionArn()).build());
-      functionArns.add(FunctionMeta.newBuilder()
-                           .withFunctionArn(publishVersionResult.getFunctionArn())
-                           .withVersion(publishVersionResult.getVersion())
-                           .build());
+      functionMeta = FunctionMeta.newBuilder()
+                         .withFunctionArn(publishVersionResult.getFunctionArn())
+                         .withVersion(publishVersionResult.getVersion())
+                         .build();
       ListAliasesResult listAliasesResult = awsHelperService.listAliases(
           region, accessKey, secretKey, new ListAliasesRequest().withFunctionName(functionName));
       List<String> newAliases = evaluatedAliases.stream()
@@ -397,19 +430,7 @@ public class AwsLambdaState extends State {
             region, accessKey, secretKey, functionName, publishVersionResult.getVersion(), updateAlias, logBuilder);
       }
     }
-
-    logService.save(logBuilder.but()
-                        .withLogLine("Command execution finished with status:" + CommandExecutionStatus.SUCCESS)
-                        .withExecutionResult(CommandExecutionStatus.SUCCESS)
-                        .build());
-
-    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
-    return anExecutionResponse()
-        .withStateExecutionData(executionDataBuilder.build())
-        .addContextElement(awsLambdaContextElement)
-        .addNotifyElement(awsLambdaContextElement)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .build();
+    return functionMeta;
   }
 
   private void updateFunctionAlias(String region, String accessKey, char[] secretKey, String functionName,
@@ -508,21 +529,4 @@ public class AwsLambdaState extends State {
   public void setAliases(List<String> aliases) {
     this.aliases = aliases;
   }
-  //  /**
-  //   * Gets role.
-  //   *
-  //   * @return the role
-  //   */
-  //  public String getRole() {
-  //    return role;
-  //  }
-  //
-  //  /**
-  //   * Sets role.
-  //   *
-  //   * @param role the role
-  //   */
-  //  public void setRole(String role) {
-  //    this.role = role;
-  //  }
 }
