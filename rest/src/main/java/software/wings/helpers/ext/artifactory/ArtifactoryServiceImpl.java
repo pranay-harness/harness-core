@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.JSON;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.TEXT;
@@ -98,6 +99,14 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
     } catch (Exception e) {
       logger.error("Error occurred while retrieving Repositories from Artifactory server " + artifactory.getUri(), e);
+      if (e instanceof HttpResponseException) {
+        HttpResponseException httpResponseException = (HttpResponseException) e;
+        if (httpResponseException.getStatusCode() == 404) {
+          logger.warn("User not authorized to perform deep level search. Trying with different search api");
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+              "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl());
+        }
+      }
       handleException(e);
     }
     return repositories;
@@ -297,14 +306,25 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     if (paths != null) {
       for (String path : paths) {
         // strip out the file
-        String groupId = path.substring(0, path.lastIndexOf("/"));
-        // strip out the artifact id
-        if (groupId.contains("/")) {
-          groupId = path.substring(1, groupId.lastIndexOf("/"));
+        logger.info("Repo path {}", path);
+        if (path.length() == 1) {
+          continue;
         }
-        groupId = groupId.replace("/", ".");
-        if (groupIds.add(groupId)) {
-          groupIdList.add(groupId);
+        // Path must contain at least three elements: Group, Artifact, and Version
+        String[] pathElems = path.substring(1).split("/");
+        if (pathElems.length >= 3) {
+          StringBuilder groupIdBuilder = new StringBuilder();
+          for (int i = 0; i < pathElems.length - 2; i++) {
+            groupIdBuilder.append(pathElems[i]);
+            if (i != pathElems.length - 3) {
+              groupIdBuilder.append(".");
+            }
+          }
+          String groupId = groupIdBuilder.toString();
+          if (groupIds.add(groupId)) {
+            logger.info("Group Id {}", groupId);
+            groupIdList.add(groupId);
+          }
         }
       }
     }
@@ -325,32 +345,27 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (response == null) {
         return groupIds;
       }
-      if (response != null) {
-        List<LinkedHashMap<String, Object>> results = (List<LinkedHashMap<String, Object>>) response.get("children");
-        if (results == null || results.size() == 0) {
-          return groupIds;
-        }
-        if (results != null) {
-          String path = (String) response.get("path");
-          for (LinkedHashMap<String, Object> result : results) {
-            String uri = (String) result.get("uri");
-            boolean folder = (boolean) result.get("folder");
-            if (uri != null) {
-              if (!folder) {
-                groupIds.add(path);
-                return groupIds;
-              }
-              if (path.endsWith("/")) {
-                getGroupIdPaths(artifactory, repoKey, uri, groupIds);
-              } else {
-                getGroupIdPaths(artifactory, repoKey, path + uri, groupIds);
-              }
-            }
+      List<LinkedHashMap<String, Object>> results = (List<LinkedHashMap<String, Object>>) response.get("children");
+      if (isEmpty(results)) {
+        return groupIds;
+      }
+      String path = (String) response.get("path");
+      for (LinkedHashMap<String, Object> result : results) {
+        String uri = (String) result.get("uri");
+        boolean folder = (boolean) result.get("folder");
+        if (uri != null) {
+          if (!folder) {
+            groupIds.add(path.endsWith("/") ? path : path + "/");
+            return groupIds;
+          }
+          if (path.endsWith("/")) {
+            getGroupIdPaths(artifactory, repoKey, uri, groupIds);
+          } else {
+            getGroupIdPaths(artifactory, repoKey, path + uri, groupIds);
           }
         }
       }
     } catch (Exception e) {
-      // logger.error("Error occurred while retrieving File Paths from artifactory server " + artifactory.getUri(), e);
       handleException(e);
     }
     return groupIds;
@@ -536,9 +551,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      String msg = "Failed to download the latest artifact  of repo [" + repoType + "] groupId [" + groupId;
+      String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
       throw new WingsException(
-          ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
+          ErrorCode.ARTIFACT_SERVER_ERROR, "message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     return res;
   }
@@ -601,6 +616,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     }
     throw new WingsException(
-        ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Reason:" + ExceptionUtils.getRootCauseMessage(e), e);
+        ErrorCode.ARTIFACT_SERVER_ERROR, "message", "Reason:" + ExceptionUtils.getRootCauseMessage(e));
   }
 }
