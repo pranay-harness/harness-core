@@ -31,14 +31,15 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -817,5 +818,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           .filter(command -> !StringUtils.equals(command.getName(), params[1]))
           .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
     }
+  }
+
+  @Override
+  public LambdaSpecification createLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    return wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
+  }
+
+  @Override
+  public LambdaSpecification updateLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    return createLambdaSpecification(lambdaSpecification);
+  }
+
+  @Override
+  public PageResponse<LambdaSpecification> listLambdaSpecification(PageRequest<LambdaSpecification> pageRequest) {
+    return wingsPersistence.query(LambdaSpecification.class, pageRequest);
+  }
+
+  @Override
+  public LambdaSpecification getLambdaSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(LambdaSpecification.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .get();
   }
 }

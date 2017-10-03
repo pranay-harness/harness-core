@@ -1,4 +1,3 @@
 {
-  "commandName": { "ui:widget": "hidden" },
-  "ui:order": ["bucket", "key", "runtime", "functionName", "handler", "role", "timeout", "memorySize"]
+    "ui:order": ["commandName"]
 }
