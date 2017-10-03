@@ -40,6 +40,7 @@ import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.Service;
@@ -156,8 +157,10 @@ public class AwsLambdaState extends State {
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
 
-    LambdaSpecification lambdaSpecification =
-        serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
+    //    LambdaSpecification lambdaSpecification = serviceResourceService.getLambdaSpecification(app.getUuid(),
+    //    service.getUuid());
+    LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
+    FunctionSpecification lambdaSpecification = specification.getFunctions().get(0);
 
     AwsLambdaInfraStructureMapping infrastructureMapping =
         (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
