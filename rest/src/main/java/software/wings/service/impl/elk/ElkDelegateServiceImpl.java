@@ -5,6 +5,8 @@ import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -14,6 +16,7 @@ import software.wings.beans.KibanaConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
+import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -34,6 +37,8 @@ import javax.net.ssl.X509TrustManager;
  * Created by rsingh on 8/01/17.
  */
 public class ElkDelegateServiceImpl implements ElkDelegateService {
+  private static final Logger logger = LoggerFactory.getLogger(ElkDelegateServiceImpl.class);
+
   @Override
   public void validateConfig(ElkConfig elkConfig) {
     try {
@@ -113,6 +118,22 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       return response.body();
     }
     throw new WingsException(response.errorBody().string());
+  }
+
+  @Override
+  public String getVersion(ElkConfig elkConfig) throws IOException {
+    if (SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA) {
+      try {
+        final Call<Object> request = getKibanaRestClient(elkConfig).version();
+        final Response<Object> response = request.execute();
+        return response.headers().get("kbn-version");
+      } catch (Exception ex) {
+        logger.warn("Unable to get Kibana version", ex);
+        return "Unable to get version. Check url";
+      }
+    } else {
+      return "Get version is supported only for the Kibana connector";
+    }
   }
 
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig) {

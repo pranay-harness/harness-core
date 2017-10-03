@@ -2,6 +2,7 @@ package software.wings.helpers.ext.elk;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
@@ -13,6 +14,8 @@ import java.util.Map;
 public interface KibanaRestClient {
   String searchPathPattern = "%%2F%s%%2F_search%%3Fsize=%s";
   String searchMethod = "POST";
+
+  @GET("app/kibana") Call<Object> version();
 
   @POST("api/console/proxy?path=_template&method=GET") Call<Map<String, Map<String, Object>>> template();
 
