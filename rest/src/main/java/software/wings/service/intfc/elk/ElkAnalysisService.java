@@ -11,4 +11,5 @@ import java.util.Map;
  */
 public interface ElkAnalysisService extends AnalysisService {
   Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException;
+  String getVersion(String accountId, String url) throws IOException;
 }
