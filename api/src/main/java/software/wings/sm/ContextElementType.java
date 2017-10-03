@@ -65,4 +65,6 @@ public enum ContextElementType {
    * Cluster context element type.
    */
   CLUSTER,
+
+  AWS_LAMBDA_FUNCTION;
 }

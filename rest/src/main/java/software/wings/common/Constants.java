@@ -72,6 +72,11 @@ public interface Constants {
   String AWS_LAMBDA_REQUEST_PARAM = "AWS_LAMBDA_REQUEST_PARAM";
 
   /**
+   * The constant AWS_LAMBDA_REQUEST_PARAM.
+   */
+  String AWS_LAMBDA_FUNCTION_PARAM = "AWS_LAMBDA_FUNCTION_PARAM";
+
+  /**
    * The constant INSTANCE_LIST_PARAMS.
    */
   String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";

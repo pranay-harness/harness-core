@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.KibanaConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
@@ -35,5 +36,14 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     SyncTaskContext elkTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext).getIndices(elkConfig);
+  }
+
+  @Override
+  public String getVersion(String accountId, String url) throws IOException {
+    final KibanaConfig config = new KibanaConfig();
+    config.setElkUrl(url);
+    config.setKibanaVersion("0");
+    SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext).getVersion(config);
   }
 }
