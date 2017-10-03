@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
-import static com.google.api.client.repackaged.com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -411,9 +411,7 @@ public class AwsHelperService {
    * @return the hostname from dns name
    */
   public String getHostnameFromDnsName(String dnsName) {
-    return (!isNullOrEmpty(dnsName) && dnsName.endsWith(".ec2.internal"))
-        ? dnsName.substring(0, dnsName.length() - ".ec2.internal".length())
-        : dnsName;
+    return (isNotEmpty(dnsName) && dnsName.contains(".")) ? dnsName.substring(0, dnsName.indexOf(".")) : dnsName;
   }
 
   /**
