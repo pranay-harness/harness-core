@@ -136,6 +136,8 @@ import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ListAliasesRequest;
 import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.ListFunctionsRequest;
@@ -1398,6 +1400,15 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new UpdateAliasResult();
+  }
+
+  public InvokeResult invokeFunction(String region, String accessKey, char[] secretKey, InvokeRequest invokeRequest) {
+    try {
+      return getAmazonLambdaClient(region, accessKey, secretKey).invoke(invokeRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new InvokeResult();
   }
 
   public String getResourceUrl(AwsConfig awsConfig, String bucketName, String key) {
