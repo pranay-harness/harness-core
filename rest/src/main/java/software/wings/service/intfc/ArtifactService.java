@@ -4,6 +4,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.ArtifactType;
 
 import java.io.File;
 import java.util.List;
@@ -29,6 +30,15 @@ public interface ArtifactService {
    * @return the artifact
    */
   Artifact create(@Valid Artifact artifact);
+
+  /**
+   * Creates the artifact and validates artifact type
+   *
+   * @param artifact the artifact
+   *
+   * @return the artifact
+   */
+  Artifact create(@Valid Artifact artifact, ArtifactType artifactType);
 
   /**
    * Update.

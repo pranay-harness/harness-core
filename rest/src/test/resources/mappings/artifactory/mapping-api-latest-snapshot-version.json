@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/artifactory/api/search/latestVersion",
+    "queryParameters": {
+      "repos": {
+        "contains": "harness-maven-snapshots"
+      }
+    }
+    },
+
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-latest-snapshot-version-api.json",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}
