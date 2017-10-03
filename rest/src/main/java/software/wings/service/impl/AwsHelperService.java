@@ -411,7 +411,7 @@ public class AwsHelperService {
    * @return the hostname from dns name
    */
   public String getHostnameFromDnsName(String dnsName) {
-    return (isNotEmpty(dnsName) && dnsName.contains(".")) ? dnsName.substring(0, dnsName.indexOf(".")) : dnsName;
+    return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
   }
 
   /**
