@@ -2,17 +2,23 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.bamboo.BambooService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -44,13 +50,18 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
   public ListNotifyResponseData run(String bambooUrl, String username, char[] password, String planKey,
       List<String> artifactPaths, Map<String, String> arguments) {
     InputStream in = null;
+    ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
       BambooConfig bambooConfig =
           aBambooConfig().withBambooUrl(bambooUrl).withUsername(username).withPassword(password).build();
-      return bambooService.downloadArtifacts(
-          bambooConfig, planKey, arguments.get(BUILD_NO), artifactPaths, getDelegateId(), getTaskId(), getAccountId());
 
+      for (String artifactPath : artifactPaths) {
+        Pair<String, InputStream> fileInfo =
+            bambooService.downloadArtifact(bambooConfig, planKey, arguments.get(BUILD_NO), artifactPath);
+        artifactCollectionTaskHelper.addDataToResponse(
+            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
+      }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
       // TODO: better error handling
@@ -70,6 +81,6 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
       IOUtils.closeQuietly(in);
     }
 
-    return new ListNotifyResponseData();
+    return res;
   }
 }

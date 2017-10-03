@@ -34,11 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
@@ -281,6 +283,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         updateOperations.unset("autoScalingGroupName");
       }
+    } else if (infrastructureMapping instanceof AwsLambdaInfraStructureMapping) {
+      AwsLambdaInfraStructureMapping lambdaInfraStructureMapping =
+          (AwsLambdaInfraStructureMapping) infrastructureMapping;
+      validateAwsLambdaInfrastructureMapping(lambdaInfraStructureMapping);
+      updateOperations.set("region", lambdaInfraStructureMapping.getRegion());
+      if (lambdaInfraStructureMapping.getVpcId() != null) {
+        updateOperations.set("vpcId", lambdaInfraStructureMapping.getVpcId());
+        updateOperations.set("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
+        updateOperations.set("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
+      }
+      updateOperations.set("role", lambdaInfraStructureMapping.getRole());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
@@ -303,6 +316,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infrastructureMapping, serviceTemplate, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
     }
     return get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+  }
+
+  public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
+    if (lambdaInfraStructureMapping.getVpcId() != null) {
+      if (lambdaInfraStructureMapping.getSubnetIds().size() == 0) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one subnet must be provided");
+      }
+      if (lambdaInfraStructureMapping.getSecurityGroupIds().size() == 0) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one security group must be provided");
+      }
+    }
   }
 
   @Override
@@ -935,12 +959,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
-    } else if (artifactType == ArtifactType.TAR || artifactType == ArtifactType.ZIP) {
+    } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
-      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
-      if (artifactType == ArtifactType.ZIP) {
-        infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
-      }
+    } else if (artifactType == ArtifactType.AWS_LAMBDA) {
+      infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }

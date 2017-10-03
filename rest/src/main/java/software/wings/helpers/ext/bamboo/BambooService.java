@@ -2,10 +2,8 @@ package software.wings.helpers.ext.bamboo;
 
 import software.wings.beans.BambooConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -59,21 +57,16 @@ public interface BambooService {
   List<String> getArtifactPath(BambooConfig bambooConfig, String planKey);
 
   /**
-   * Downloads the artifacts from bamboo server
-   * @param bambooConfig    bamboo config
-   * @param planKey         plan key
-   * @param buildNumber     build number
-   * @param artifactPaths   artifact paths from the artifact source
-   * @param delegateId      delegate id
-   * @param taskId          task id
-   * @param accountId       account id
-   * @return ListNotifyResponseData
-   * @throws IOException
-   * @throws URISyntaxException
+   * Download artifact pair.
+   *
+   * @param bambooConfig      the bamboo config
+   * @param planKey           the jobname
+   * @param buildNumber       the build number
+   * @param artifactPathRegex the artifact path regex
+   * @return the pair
    */
-  ListNotifyResponseData downloadArtifacts(BambooConfig bambooConfig, String planKey, String buildNumber,
-      List<String> artifactPaths, String delegateId, String taskId, String accountId)
-      throws IOException, URISyntaxException;
+  org.apache.commons.lang3.tuple.Pair<String, InputStream> downloadArtifact(
+      BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex);
 
   /**
    * Is running boolean.

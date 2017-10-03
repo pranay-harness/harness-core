@@ -159,6 +159,10 @@ public class Misc {
     return false;
   }
 
+  public static String trim(String key) {
+    return key != null ? key.trim() : key;
+  }
+
   /**
    * The Interface ThrowingCallable.
    */

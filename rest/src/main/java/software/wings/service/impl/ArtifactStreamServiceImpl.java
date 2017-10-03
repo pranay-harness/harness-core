@@ -7,6 +7,7 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -523,6 +524,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
         logger.info("Triggering Workflow execution of appId {}  with workflow id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
+        executionArgs.setWorkflowType(ORCHESTRATION);
         workflowExecution = workflowExecutionService.triggerEnvExecution(
             artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
         logger.info("Workflow execution of appId {} with workflow id {} triggered", artifact.getAppId(),
@@ -530,8 +532,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       } else {
         logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", artifact.getAppId(),
             artifactStreamAction.getWorkflowId());
-        workflowExecution =
-            pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+        executionArgs.setWorkflowType(PIPELINE);
+        workflowExecution = workflowExecutionService.triggerPipelineExecution(
+            artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
         logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered",
             artifact.getAppId(), artifactStreamAction.getWorkflowId());
       }
@@ -582,11 +585,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
           ARTIFACTORY.name(), ARTIFACTORY.name());
+    } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
+      return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
           ArtifactStreamType.NEXUS.name(), ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name(),
-          ArtifactStreamType.AMAZON_S3.name(), ArtifactStreamType.AMAZON_S3.name());
+          AMAZON_S3.name(), AMAZON_S3.name());
     }
   }
 
