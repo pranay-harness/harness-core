@@ -67,6 +67,8 @@ public class AwsLambdaContextElement implements ContextElement {
     private String functionArn;
     private String version;
 
+    private FunctionMeta() {}
+
     private FunctionMeta(Builder builder) {
       setFunctionArn(builder.functionArn);
       setVersion(builder.version);
