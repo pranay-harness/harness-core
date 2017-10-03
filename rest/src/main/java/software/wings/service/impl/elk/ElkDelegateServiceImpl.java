@@ -10,10 +10,12 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.KibanaConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.elk.ElkRestClient;
+import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.service.intfc.elk.ElkDelegateService;
-import software.wings.utils.JsonUtils;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -43,19 +45,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         throw new WingsException("User name is empty but password is given");
       }
 
-      if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
-        getIndices(elkConfig);
-      } else {
-        final Call<ElkAuthenticationResponse> request =
-            getElkRestClient(elkConfig).authenticate(getHeaderWithCredentials(elkConfig));
-        final Response<ElkAuthenticationResponse> response = request.execute();
-        if (response.isSuccessful()) {
-          return;
-        }
-
-        throw new WingsException(
-            JsonUtils.asObject(response.errorBody().string(), ElkAuthenticationResponse.class).getError().getReason());
-      }
+      getIndices(elkConfig);
     } catch (Throwable t) {
       throw new WingsException(t.getMessage());
     }
@@ -63,8 +53,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request =
-        getElkRestClient(elkConfig, logFetchRequest.getIndices()).search(logFetchRequest.toElasticSearchJsonObject());
+    final Call<Object> request = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+        ? getKibanaRestClient(elkConfig).getLogSample(
+              String.format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
+              KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
+        : getElkRestClient(elkConfig).search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -75,7 +68,10 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig) throws IOException {
-    final Call<Map<String, Map<String, Object>>> request = getElkRestClient(elkConfig).template();
+    final Call<Map<String, Map<String, Object>>> request =
+        SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+        ? getKibanaRestClient(elkConfig).template()
+        : getElkRestClient(elkConfig).template();
     final Response<Map<String, Map<String, Object>>> response = request.execute();
 
     if (!response.isSuccessful()) {
@@ -108,8 +104,10 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object getLogSample(ElkConfig elkConfig, String index) throws IOException {
-    final Call<Object> request =
-        getElkRestClient(elkConfig, index).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
+    final Call<Object> request = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+        ? getKibanaRestClient(elkConfig).getLogSample(String.format(KibanaRestClient.searchPathPattern, index, 1),
+              KibanaRestClient.searchMethod, ElkLogFetchRequest.lastInsertedRecordObject())
+        : getElkRestClient(elkConfig).getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -118,10 +116,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   private ElkRestClient getElkRestClient(final ElkConfig elkConfig) {
-    return getElkRestClient(elkConfig, "");
+    return createRetrofit(elkConfig).create(ElkRestClient.class);
   }
 
-  private ElkRestClient getElkRestClient(final ElkConfig elkConfig, String indices) {
+  private KibanaRestClient getKibanaRestClient(final ElkConfig elkConfig) {
+    return createRetrofit(elkConfig).create(KibanaRestClient.class);
+  }
+
+  private Retrofit createRetrofit(ElkConfig elkConfig) {
     OkHttpClient.Builder httpClient =
         elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
     httpClient
@@ -129,17 +131,19 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
           Request original = chain.request();
 
           boolean shouldAuthenticate = !StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
-          Request request = shouldAuthenticate ? original.newBuilder()
-                                                     .header("Accept", "application/json")
-                                                     .header("Content-Type", "application/json")
-                                                     .header("Authorization", getHeaderWithCredentials(elkConfig))
-                                                     .method(original.method(), original.body())
-                                                     .build()
-                                               : original.newBuilder()
-                                                     .header("Accept", "application/json")
-                                                     .header("Content-Type", "application/json")
-                                                     .method(original.method(), original.body())
-                                                     .build();
+          boolean isKibana = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA;
+          Request.Builder builder = shouldAuthenticate
+              ? original.newBuilder()
+                    .header("Accept", "application/json")
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", getHeaderWithCredentials(elkConfig))
+              : original.newBuilder().header("Accept", "application/json").header("Content-Type", "application/json");
+
+          if (isKibana) {
+            builder.addHeader("kbn-version", ((KibanaConfig) elkConfig).getKibanaVersion());
+          }
+
+          Request request = builder.method(original.method(), original.body()).build();
 
           return chain.proceed(request);
         })
@@ -150,14 +154,12 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     if (baseUrl.charAt(baseUrl.length() - 1) != '/') {
       baseUrl = baseUrl + "/";
     }
-    baseUrl = !indices.isEmpty() ? baseUrl + indices + "/" : baseUrl;
 
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(baseUrl)
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(httpClient.build())
-                                  .build();
-    return retrofit.create(ElkRestClient.class);
+    return new Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .addConverterFactory(JacksonConverterFactory.create())
+        .client(httpClient.build())
+        .build();
   }
 
   private String getHeaderWithCredentials(ElkConfig elkConfig) {
