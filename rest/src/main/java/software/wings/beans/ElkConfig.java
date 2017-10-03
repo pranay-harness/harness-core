@@ -33,4 +33,8 @@ public class ElkConfig extends SettingValue implements Encryptable {
   public ElkConfig() {
     super(SettingVariableTypes.ELK.name());
   }
+
+  public ElkConfig(SettingVariableTypes type) {
+    super(type.name());
+  }
 }
