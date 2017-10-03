@@ -1,0 +1,27 @@
+{
+  "uri": "http://localhost:8881/artifactory/api/storage/harness-maven",
+  "created": "2017-10-02T16:38:54.193Z",
+  "files": [
+    {
+      "uri": "/io/harness/todolist/1.0/todolist-1.0.jar",
+      "size": 92414283,
+      "lastModified": "2017-06-28T21:45:28.000Z",
+      "folder": false,
+      "sha1": "d4f0026f13be2678217bfaee780f6ccacfae5f41"
+    },
+    {
+      "uri": "/io/harness/todolist/1.1/todolist-1.1.jar",
+      "size": 92414283,
+      "lastModified": "2017-06-28T21:45:28.000Z",
+      "folder": false,
+      "sha1": "d4f0026f13be2678217bfaee780f6ccacfae5f41"
+    },
+    {
+      "uri": "/io/harness/portal/rest/1.0/rest-1.0.jar",
+      "size": 92414283,
+      "lastModified": "2017-06-28T21:45:28.000Z",
+      "folder": false,
+      "sha1": "d4f0026f13be2678217bfaee780f6ccacfae5f41"
+    }
+  ]
+}

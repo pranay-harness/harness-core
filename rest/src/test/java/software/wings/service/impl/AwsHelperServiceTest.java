@@ -14,6 +14,6 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AwsHelperService awsHelperService = new AwsHelperService();
     assertThat(awsHelperService.getHostnameFromDnsName("ip-172-31-18-241.ec2.internal")).isEqualTo("ip-172-31-18-241");
     assertThat(awsHelperService.getHostnameFromDnsName("ec2-184-73-35-194.compute-1.amazonaws.com"))
-        .isEqualTo("ec2-184-73-35-194.compute-1.amazonaws.com");
+        .isEqualTo("ec2-184-73-35-194");
   }
 }

@@ -1,0 +1,16 @@
+{
+  "repo": "harness-maven-snapshots",
+  "path": "/io",
+  "created": "2017-09-30T18:30:57.789Z",
+  "createdBy": "admin",
+  "lastModified": "2017-09-30T18:30:57.789Z",
+  "modifiedBy": "admin",
+  "lastUpdated": "2017-09-30T18:30:57.789Z",
+  "children": [
+    {
+      "uri": "/harness",
+      "folder": true
+    }
+  ],
+  "uri": "https://harness.jfrog.io/harness/api/storage/harness-maven-snapshots/io"
+}

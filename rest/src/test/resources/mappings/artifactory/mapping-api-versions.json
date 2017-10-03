@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/artifactory/api/search/versions",
+    "queryParameters": {
+      "a": {
+        "contains": "snapshot"
+      }
+    }
+    },
+
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-maven-versions-api.json",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}
