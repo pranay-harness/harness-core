@@ -404,6 +404,7 @@ public class AwsLambdaState extends State {
     return anExecutionResponse()
         .withStateExecutionData(executionDataBuilder.build())
         .addContextElement(awsLambdaContextElement)
+        .addNotifyElement(awsLambdaContextElement)
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .build();
   }
