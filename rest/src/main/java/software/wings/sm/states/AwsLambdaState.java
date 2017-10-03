@@ -341,6 +341,7 @@ public class AwsLambdaState extends State {
           region, accessKey, secretKey, functionName, createFunctionResult.getVersion(), evaluatedAliases, logBuilder);
       functionMeta = FunctionMeta.newBuilder()
                          .withFunctionArn(createFunctionResult.getFunctionArn())
+                         .withFunctionName(createFunctionResult.getFunctionName())
                          .withVersion(createFunctionResult.getVersion())
                          .build();
     } else {
@@ -408,6 +409,7 @@ public class AwsLambdaState extends State {
           logBuilder.but().withLogLine("Published Function ARN: " + publishVersionResult.getFunctionArn()).build());
       functionMeta = FunctionMeta.newBuilder()
                          .withFunctionArn(publishVersionResult.getFunctionArn())
+                         .withFunctionName(publishVersionResult.getFunctionName())
                          .withVersion(publishVersionResult.getVersion())
                          .build();
       ListAliasesResult listAliasesResult = awsHelperService.listAliases(

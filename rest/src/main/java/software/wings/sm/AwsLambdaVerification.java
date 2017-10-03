@@ -58,6 +58,7 @@ public class AwsLambdaVerification extends State {
       FunctionMeta functionMeta = awsLambdaFunctionElement.getFunctionArn();
 
       awsLambdaExecutionData.setFunctionArn(functionMeta.getFunctionArn());
+      awsLambdaExecutionData.setFunctionName(functionMeta.getFunctionName());
       awsLambdaExecutionData.setFunctionVersion(functionMeta.getVersion());
 
       InvokeResult invokeResult = awsHelperService.invokeFunction(awsLambdaFunctionElement.getRegion(),
