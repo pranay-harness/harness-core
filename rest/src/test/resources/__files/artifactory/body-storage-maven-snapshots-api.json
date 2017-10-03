@@ -6,10 +6,6 @@
   "lastUpdated": "2017-09-30T18:30:08.796Z",
   "children": [
     {
-      "uri": "/com",
-      "folder": true
-    },
-    {
       "uri": "/io",
       "folder": true
     }

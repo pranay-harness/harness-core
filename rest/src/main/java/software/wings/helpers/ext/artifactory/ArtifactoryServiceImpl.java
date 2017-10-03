@@ -316,7 +316,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       String apiStorageQuery = "api/storage/";
       apiStorageQuery = apiStorageQuery + repoKey;
-      if (repoPath != null) {
+      if (repoPath != null && !repoPath.isEmpty()) {
         apiStorageQuery = apiStorageQuery + repoPath;
       }
       ArtifactoryRequest repositoryRequest =
@@ -338,6 +338,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             if (uri != null) {
               if (!folder) {
                 groupIds.add(path);
+                return groupIds;
               }
               if (path.endsWith("/")) {
                 getGroupIdPaths(artifactory, repoKey, uri, groupIds);
@@ -377,15 +378,18 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public BuildDetails getLatestVersion(
       ArtifactoryConfig artifactoryConfig, String repoId, String groupId, String artifactId) {
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
     try {
-      Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+      String msg = "latest version for artifactory server [" + artifactoryConfig.getArtifactoryUrl() + "] repoId ["
+          + repoId + "] groupId [" + groupId + "] artifactId [" + artifactId + "]";
+      logger.info("Fetching the {}", msg);
       String latestVersion = artifactory.searches()
                                  .artifactsLatestVersion()
                                  .groupId(groupId)
                                  .artifactId(artifactId)
                                  .repositories(repoId)
                                  .doRawSearch();
-      if (latestVersion == null || latestVersion.isEmpty()) {
+      if (StringUtils.isBlank(latestVersion)) {
         // Fetch all the versions
         logger.info("No latest release or integration version found for artifactory server ["
             + artifactoryConfig.getArtifactoryUrl() + "] repoId [" + repoId + "] groupId [" + groupId + "] artifactId ["
@@ -399,27 +403,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
       if (latestVersion == null || latestVersion.isEmpty()) {
-        String msg = "Failed to fetch the latest version for artifactory server ["
-            + artifactoryConfig.getArtifactoryUrl() + "] repoId [" + repoId + "] groupId [" + groupId + "] artifactId ["
-            + artifactId + "]";
-
-        logger.error(msg);
+        logger.error("Failed to {}", msg);
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", msg);
       }
+      logger.info("Latest version {} found", latestVersion);
       return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
     } catch (Exception e) {
       logger.error("Failed to fetch the latest version for url {}  " + artifactoryConfig.getArtifactoryUrl(), e);
-      if (e instanceof HttpResponseException) {
-        HttpResponseException httpResponseException = (HttpResponseException) e;
-        if (httpResponseException.getStatusCode() == 401) {
-          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Artifactory credentials");
-        } else if (httpResponseException.getStatusCode() == 403) {
-          throw new WingsException(
-              ErrorCode.INVALID_ARTIFACT_SERVER, "message", "User not authorized to access artifactory");
-        }
-      }
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+      handleException(e);
     }
+    return null;
   }
 
   private BuildDetails getLatestSnapshotVersion(
@@ -451,7 +444,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.error("Failed to fetch the latest version for url {}  " + artifactory.getUri(), e);
       handleException(e);
     }
-
     return null;
   }
 
@@ -496,12 +488,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       List<String> artifactPaths, String artifactPattern, Map<String, String> metadata, String delegateId,
       String taskId, String accountId) {
     ListNotifyResponseData res = new ListNotifyResponseData();
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
     try {
       if (artifactPaths != null) {
         logger.info("Downloading artifacts from artifactory for maven type");
         for (String artifactId : artifactPaths) {
           Set<String> artifactNames = new HashSet<>();
-          Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
           String latestVersion;
           if (metadata.get("buildNo") == null) {
             latestVersion = artifactory.searches()
@@ -526,6 +518,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               String itemPath = searchItem.getItemPath();
               String artifactName = itemPath.substring(itemPath.lastIndexOf("/") + 1);
               try {
+                if (artifactName.endsWith("pom")) {
+                  continue;
+                }
                 if (artifactNames.add(artifactName)) {
                   logger.info("Downloading file {} ", searchItem.getItemPath());
                   InputStream inputStream = artifactory.repository(repoKey).download(itemPath).doDownload();

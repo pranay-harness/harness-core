@@ -10,6 +10,8 @@ import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactor
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,11 +20,11 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-// import javax.inject.Inject;
 
 /**
  * Created by sgurubelli on 9/29/17.
@@ -104,10 +106,40 @@ public class ArtifactoryServiceTest {
     stubFor(get(urlPathEqualTo("/artifactory/api/storage/harness-maven-snapshots"))
                 .withQueryParam("deep", containing("1"))
                 .willReturn(aResponse().withStatus(403)));
-    // stubFor(get(urlPathEqualTo("/artifactory/api/storage/harness-maven-snapshots/io/")).willReturn(aResponse().withBody().withStatus(403)));
     List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, "harness-maven-snapshots");
     assertThat(groupIds).isNotNull();
     assertThat(groupIds).contains("io.harness");
-    assertThat(groupIds).contains("io.harness.portal");
+    assertThat(groupIds).contains("io.harness");
+  }
+
+  @Test
+  public void shouldGetArtifactIds() {
+    List<String> groupIds =
+        artifactoryService.getArtifactIds(artifactoryConfig, "harness-maven-snapshots", "io.harness");
+    assertThat(groupIds).isEmpty();
+  }
+
+  @Test
+  public void shouldGetLatestVersion() {
+    BuildDetails buildDetails =
+        artifactoryService.getLatestVersion(artifactoryConfig, "harness-maven", "io.harness.todolist", "todolist");
+    assertThat(buildDetails).isNotNull();
+    assertThat(buildDetails.getNumber()).isEqualTo("1.1");
+  }
+
+  @Test
+  public void shouldGetLatestSnapshotVersion() {
+    BuildDetails buildDetails = artifactoryService.getLatestVersion(
+        artifactoryConfig, "harness-maven-snapshots", "io.harness.todolist", "snapshot");
+    assertThat(buildDetails).isNotNull();
+    assertThat(buildDetails.getNumber()).isEqualTo("1.1");
+  }
+
+  @Test
+  public void shouldDownloadArtifacts() {
+    ListNotifyResponseData listNotifyResponseData =
+        artifactoryService.downloadArtifacts(artifactoryConfig, "harness-maven-snapshots", "io.harness.todolist",
+            Arrays.asList("todolist"), null, ImmutableMap.of("buildNo", "1.1"), "delegateId", "taskId", "ACCOUNT_ID");
+    assertThat(listNotifyResponseData).isNotNull();
   }
 }
