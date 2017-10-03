@@ -50,6 +50,11 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
       return processor;
     }
 
+    processor = new AwsLambdaFunctionProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
+
     return null;
   }
 
