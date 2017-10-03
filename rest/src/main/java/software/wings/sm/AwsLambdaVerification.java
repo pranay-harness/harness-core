@@ -16,7 +16,6 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
-import software.wings.common.Constants;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
@@ -53,8 +52,7 @@ public class AwsLambdaVerification extends State {
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
 
     try {
-      ContextElement contextElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.AWS_LAMBDA_REQUEST_PARAM);
+      ContextElement contextElement = context.getContextElement(ContextElementType.AWS_LAMBDA_FUNCTION);
       AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) contextElement;
       AwsConfig awsConfig = awsLambdaContextElement.getAwsConfig();
       List<FunctionMeta> functionArns = awsLambdaContextElement.getFunctionArns();
@@ -117,6 +115,11 @@ public class AwsLambdaVerification extends State {
             .withCommandType(getStateType())
             .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
     return activityService.save(activityBuilder.build()).getUuid();
+  }
+
+  @Override
+  public ContextElementType getRequiredContextElementType() {
+    return ContextElementType.AWS_LAMBDA_FUNCTION;
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
