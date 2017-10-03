@@ -52,6 +52,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -118,6 +119,12 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
+    return create(artifact, null);
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public Artifact create(@Valid Artifact artifact, ArtifactType artifactType) {
     if (!appService.exist(artifact.getAppId())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
@@ -127,6 +134,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
+    if (artifactType != null) {
+      status = getArtifactStatus(artifactStream, artifactType);
+    }
     artifact.setStatus(status);
 
     String key = wingsPersistence.save(artifact);
@@ -155,6 +165,18 @@ public class ArtifactServiceImpl implements ArtifactService {
                || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType()))
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
         : QUEUED;
+  }
+
+  private Status getArtifactStatus(ArtifactStream artifactStream, ArtifactType artifactType) {
+    if (artifactStream.isMetadataOnly()) {
+      return APPROVED;
+    }
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      if (artifactType.equals(ArtifactType.DOCKER)) {
+        return APPROVED;
+      }
+    }
+    return QUEUED;
   }
 
   /* (non-Javadoc)

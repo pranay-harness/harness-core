@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory/api/search/gavc",
+    "queryParameters": {
+      "deep": {
+        "contains": "1"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-storage-maven-snapshots-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
