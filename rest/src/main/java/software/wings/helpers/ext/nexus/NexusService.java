@@ -1,11 +1,12 @@
 package software.wings.helpers.ext.nexus;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by srinivas on 3/28/17.

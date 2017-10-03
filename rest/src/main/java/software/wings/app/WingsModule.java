@@ -301,8 +301,6 @@ public class WingsModule extends AbstractModule {
     bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);
-    bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
-    bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
     bind(EcrClassicBuildService.class).to(EcrClassicBuildServiceImpl.class);
     bind(EcrService.class).to(EcrServiceImpl.class);
