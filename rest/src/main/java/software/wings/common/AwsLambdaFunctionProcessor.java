@@ -1,6 +1,6 @@
 package software.wings.common;
 
-import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaContextElement;
+import static software.wings.api.AwsLambdaFunctionElement.Builder.anAwsLambdaFunctionElement;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,9 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
     }
     List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();
     awsLambdaContextElement.getFunctionArns().forEach(functionMeta -> {
-      awsLambdaFunctionElementList.add(anAwsLambdaContextElement()
+      awsLambdaFunctionElementList.add(anAwsLambdaFunctionElement()
+                                           .withUuid(functionMeta.getFunctionArn())
+                                           .withName(functionMeta.getFunctionArn())
                                            .withAwsConfig(awsLambdaContextElement.getAwsConfig())
                                            .withFunctionArn(functionMeta)
                                            .withRegion(awsLambdaContextElement.getRegion())

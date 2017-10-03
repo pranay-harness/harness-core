@@ -72,39 +72,50 @@ public class AwsLambdaFunctionElement implements ContextElement {
   }
 
   public static final class Builder {
-    private AwsLambdaFunctionElement awsLambdaFunctionElement;
+    private String uuid;
+    private String name;
+    private AwsConfig awsConfig;
+    private String region;
+    private FunctionMeta functionArn;
 
-    private Builder() {
-      awsLambdaFunctionElement = new AwsLambdaFunctionElement();
-    }
+    private Builder() {}
 
-    public static Builder anAwsLambdaContextElement() {
+    public static Builder anAwsLambdaFunctionElement() {
       return new Builder();
     }
 
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public Builder withAwsConfig(AwsConfig awsConfig) {
-      awsLambdaFunctionElement.setAwsConfig(awsConfig);
+      this.awsConfig = awsConfig;
       return this;
     }
 
     public Builder withRegion(String region) {
-      awsLambdaFunctionElement.setRegion(region);
+      this.region = region;
       return this;
     }
 
     public Builder withFunctionArn(FunctionMeta functionArn) {
-      awsLambdaFunctionElement.setFunctionArn(functionArn);
+      this.functionArn = functionArn;
       return this;
     }
 
-    public Builder but() {
-      return anAwsLambdaContextElement()
-          .withAwsConfig(awsLambdaFunctionElement.getAwsConfig())
-          .withRegion(awsLambdaFunctionElement.getRegion())
-          .withFunctionArn(awsLambdaFunctionElement.getFunctionArn());
-    }
-
     public AwsLambdaFunctionElement build() {
+      AwsLambdaFunctionElement awsLambdaFunctionElement = new AwsLambdaFunctionElement();
+      awsLambdaFunctionElement.setUuid(uuid);
+      awsLambdaFunctionElement.setName(name);
+      awsLambdaFunctionElement.setAwsConfig(awsConfig);
+      awsLambdaFunctionElement.setRegion(region);
+      awsLambdaFunctionElement.setFunctionArn(functionArn);
       return awsLambdaFunctionElement;
     }
   }
