@@ -92,6 +92,7 @@ public enum TaskType {
   ELK_COLLECT_LOG_DATA(TaskGroup.ELK, ElkLogzDataCollectionTask.class),
   ELK_COLLECT_INDICES(TaskGroup.ELK, ServiceImplDelegateTask.class),
   ELK_GET_LOG_SAMPLE(TaskGroup.ELK, ServiceImplDelegateTask.class),
+  KIBANA_GET_VERSION(TaskGroup.ELK, ServiceImplDelegateTask.class),
   LOGZ_CONFIGURATION_VALIDATE_TASK(TaskGroup.LOGZ, ServiceImplDelegateTask.class),
   LOGZ_COLLECT_LOG_DATA(TaskGroup.LOGZ, ElkLogzDataCollectionTask.class),
   LOGZ_GET_LOG_SAMPLE(TaskGroup.LOGZ, ServiceImplDelegateTask.class),
