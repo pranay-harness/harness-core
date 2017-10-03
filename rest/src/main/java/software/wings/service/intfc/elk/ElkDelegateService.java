@@ -25,4 +25,6 @@ public interface ElkDelegateService {
 
   @DelegateTaskType(TaskType.ELK_GET_LOG_SAMPLE)
   Object getLogSample(ElkConfig elkConfig, String index) throws IOException;
+
+  @DelegateTaskType(TaskType.KIBANA_GET_VERSION) String getVersion(ElkConfig elkConfig) throws IOException;
 }

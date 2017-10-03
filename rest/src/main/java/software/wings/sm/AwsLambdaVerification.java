@@ -5,25 +5,24 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
+import software.wings.api.AwsLambdaFunctionElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
-import software.wings.common.Constants;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.stencils.EnumData;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import javax.inject.Inject;
 
 public class AwsLambdaVerification extends State {
@@ -53,19 +52,17 @@ public class AwsLambdaVerification extends State {
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
 
     try {
-      ContextElement contextElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.AWS_LAMBDA_REQUEST_PARAM);
-      AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) contextElement;
-      AwsConfig awsConfig = awsLambdaContextElement.getAwsConfig();
-      List<FunctionMeta> functionArns = awsLambdaContextElement.getFunctionArns();
-      String region = awsLambdaContextElement.getRegion();
-      FunctionMeta functionMeta = functionArns.get(0);
+      AwsLambdaFunctionElement awsLambdaFunctionElement =
+          context.getContextElement(ContextElementType.AWS_LAMBDA_FUNCTION);
+      AwsConfig awsConfig = awsLambdaFunctionElement.getAwsConfig();
+      FunctionMeta functionMeta = awsLambdaFunctionElement.getFunctionArn();
 
       awsLambdaExecutionData.setFunctionArn(functionMeta.getFunctionArn());
+      awsLambdaExecutionData.setFunctionName(functionMeta.getFunctionName());
       awsLambdaExecutionData.setFunctionVersion(functionMeta.getVersion());
 
-      InvokeResult invokeResult = awsHelperService.invokeFunction(region, awsConfig.getAccessKey(),
-          awsConfig.getSecretKey(),
+      InvokeResult invokeResult = awsHelperService.invokeFunction(awsLambdaFunctionElement.getRegion(),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(),
           new InvokeRequest().withFunctionName(functionMeta.getFunctionArn()).withQualifier(functionMeta.getVersion()));
       awsLambdaExecutionData.setStatusCode(invokeResult.getStatusCode());
       awsLambdaExecutionData.setFunctionError(invokeResult.getFunctionError());
@@ -117,6 +114,12 @@ public class AwsLambdaVerification extends State {
             .withCommandType(getStateType())
             .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
     return activityService.save(activityBuilder.build()).getUuid();
+  }
+
+  @Override
+  @SchemaIgnore
+  public ContextElementType getRequiredContextElementType() {
+    return ContextElementType.AWS_LAMBDA_FUNCTION;
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {

@@ -4,8 +4,6 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
-import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -62,18 +60,18 @@ public class HttpUtil {
       HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
 
       HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-      connection.setRequestMethod("HEAD");
+      connection.setRequestMethod(
+          "GET"); // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
       connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
       connection.setReadTimeout(15000);
       int responseCode = connection.getResponseCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403
-          || responseCode == 404) {
+      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
         logger.info("Url {} is connectable", url);
         return true;
       }
     } catch (Exception e) {
       logger.warn("Error occurred while validating url {} connectivity.", url, e);
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", e.getMessage());
+      return false;
     }
     return false;
   }

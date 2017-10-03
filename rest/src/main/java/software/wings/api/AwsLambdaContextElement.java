@@ -64,12 +64,14 @@ public class AwsLambdaContextElement implements ContextElement {
   }
 
   public static class FunctionMeta {
+    private String functionName;
     private String functionArn;
     private String version;
 
     private FunctionMeta() {}
 
     private FunctionMeta(Builder builder) {
+      setFunctionName(builder.functionName);
       setFunctionArn(builder.functionArn);
       setVersion(builder.version);
     }
@@ -80,9 +82,18 @@ public class AwsLambdaContextElement implements ContextElement {
 
     public static Builder newBuilder(FunctionMeta copy) {
       Builder builder = new Builder();
+      builder.functionName = copy.functionName;
       builder.functionArn = copy.functionArn;
       builder.version = copy.version;
       return builder;
+    }
+
+    public String getFunctionName() {
+      return functionName;
+    }
+
+    public void setFunctionName(String functionName) {
+      this.functionName = functionName;
     }
 
     public String getFunctionArn() {
@@ -102,10 +113,16 @@ public class AwsLambdaContextElement implements ContextElement {
     }
 
     public static final class Builder {
+      private String functionName;
       private String functionArn;
       private String version;
 
       private Builder() {}
+
+      public Builder withFunctionName(String functionName) {
+        this.functionName = functionName;
+        return this;
+      }
 
       public Builder withFunctionArn(String functionArn) {
         this.functionArn = functionArn;
