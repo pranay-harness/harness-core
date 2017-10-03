@@ -28,6 +28,8 @@ import com.amazonaws.services.lambda.model.VpcConfig;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.AwsLambdaContextElement;
+import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -208,6 +210,13 @@ public class AwsLambdaState extends State {
 
     logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
 
+    List<FunctionMeta> functionArns = new ArrayList<>();
+    AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
+                                                          .withAwsConfig((AwsConfig) cloudProviderSetting.getValue())
+                                                          .withRegion(region)
+                                                          .withFunctionArns(functionArns)
+                                                          .build();
+
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData()
                                                                  .withServiceId(service.getUuid())
                                                                  .withServiceName(service.getName())
@@ -294,6 +303,10 @@ public class AwsLambdaState extends State {
 
       createFunctionAlias(
           region, accessKey, secretKey, functionName, createFunctionResult.getVersion(), evaluatedAliases, logBuilder);
+      functionArns.add(FunctionMeta.newBuilder()
+                           .withFunctionArn(createFunctionResult.getFunctionArn())
+                           .withVersion(createFunctionResult.getVersion())
+                           .build());
     } else {
       // Update code
       logService.save(logBuilder.but().withLogLine("Function exists. Update and Publish").build());
@@ -357,7 +370,10 @@ public class AwsLambdaState extends State {
           logBuilder.but().withLogLine("Published new version: " + publishVersionResult.getVersion()).build());
       logService.save(
           logBuilder.but().withLogLine("Published Function ARN: " + publishVersionResult.getFunctionArn()).build());
-
+      functionArns.add(FunctionMeta.newBuilder()
+                           .withFunctionArn(publishVersionResult.getFunctionArn())
+                           .withVersion(publishVersionResult.getVersion())
+                           .build());
       ListAliasesResult listAliasesResult = awsHelperService.listAliases(
           region, accessKey, secretKey, new ListAliasesRequest().withFunctionName(functionName));
       List<String> newAliases = evaluatedAliases.stream()
@@ -387,6 +403,8 @@ public class AwsLambdaState extends State {
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
     return anExecutionResponse()
         .withStateExecutionData(executionDataBuilder.build())
+        .addContextElement(awsLambdaContextElement)
+        .addNotifyElement(awsLambdaContextElement)
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .build();
   }

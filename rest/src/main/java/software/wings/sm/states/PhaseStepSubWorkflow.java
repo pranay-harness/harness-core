@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsCodeDeployRequestElement;
+import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -299,7 +300,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
       String deploymentType = phaseElement.getDeploymentType();
-      if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
+      if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name()) && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
+        AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
+            elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
+        executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
+      } else if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
         ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
             elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 

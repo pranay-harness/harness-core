@@ -165,6 +165,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
 
+  AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
   /**
    * Email state type.
    */
