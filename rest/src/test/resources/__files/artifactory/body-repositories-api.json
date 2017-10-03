@@ -18,5 +18,5 @@
     "key": "harness-maven-snapshots",
     "type": "LOCAL",
     "url": "http://harness.jfrog.io/harness/harness-maven-snapshots"
-  },
+  }
 ]

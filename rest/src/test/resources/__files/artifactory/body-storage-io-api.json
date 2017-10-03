@@ -8,9 +8,9 @@
   "lastUpdated": "2017-09-30T18:30:57.789Z",
   "children": [
     {
-      "uri": "/1.0-SNAPSHOT",
+      "uri": "/harness",
       "folder": true
-    },
+    }
   ],
   "uri": "https://harness.jfrog.io/harness/api/storage/harness-maven-snapshots/io"
 }
