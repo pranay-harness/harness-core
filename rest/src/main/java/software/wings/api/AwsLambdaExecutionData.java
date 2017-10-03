@@ -10,6 +10,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Map;
 
 public class AwsLambdaExecutionData extends StateExecutionData implements NotifyResponseData {
+  private String functionName;
   private String functionArn;
   private String functionVersion;
   private Integer statusCode;
@@ -74,6 +75,8 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
 
   public Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    putNotNull(executionDetails, "functionName",
+        anExecutionDataValue().withValue(functionName).withDisplayName("Function Name").build());
     putNotNull(executionDetails, "functionArn",
         anExecutionDataValue().withValue(functionArn).withDisplayName("Function ARN").build());
     putNotNull(executionDetails, "functionVersion",
@@ -92,5 +95,13 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     return getInternalExecutionDetails();
+  }
+
+  public String getFunctionName() {
+    return functionName;
+  }
+
+  public void setFunctionName(String functionName) {
+    this.functionName = functionName;
   }
 }

@@ -87,7 +87,7 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
     awsLambdaContextElement.getFunctionArns().forEach(functionMeta -> {
       awsLambdaFunctionElementList.add(anAwsLambdaFunctionElement()
                                            .withUuid(functionMeta.getFunctionArn())
-                                           .withName(functionMeta.getFunctionArn())
+                                           .withName(functionMeta.getFunctionName())
                                            .withAwsConfig(awsLambdaContextElement.getAwsConfig())
                                            .withFunctionArn(functionMeta)
                                            .withRegion(awsLambdaContextElement.getRegion())
