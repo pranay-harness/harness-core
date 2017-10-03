@@ -67,6 +67,8 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
         return HostExpressionProcessor.DEFAULT_EXPRESSION;
       case INSTANCE:
         return InstanceExpressionProcessor.DEFAULT_EXPRESSION;
+      case AWS_LAMBDA_FUNCTION:
+        return AwsLambdaFunctionProcessor.DEFAULT_EXPRESSION;
       default:
         return "";
     }
