@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -53,6 +54,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+
+  @Inject ExecutorService executorService;
 
   @Override
   public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
@@ -301,9 +304,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    */
   private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
     List<String> groupIdList = new ArrayList<>();
+    logger.info("Retrieving groupId paths recursev");
     List<String> paths = getGroupIdPaths(artifactory, repoKey, "", new ArrayList<>());
     Set<String> groupIds = new HashSet<>();
     if (paths != null) {
+      logger.info("Retrieved  groupId paths success. Size {}", paths.size());
       for (String path : paths) {
         // strip out the file
         logger.info("Repo path {}", path);
@@ -328,6 +333,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     }
+    logger.info("Retrieved unique groupIds size {}", groupIdList.size());
     return groupIdList;
   }
 
