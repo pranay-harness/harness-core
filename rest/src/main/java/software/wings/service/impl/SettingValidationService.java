@@ -8,6 +8,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KibanaConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -57,7 +58,7 @@ public class SettingValidationService {
       kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
-    } else if (settingValue instanceof ElkConfig) {
+    } else if (settingValue instanceof ElkConfig || settingValue instanceof KibanaConfig) {
       analysisService.validateConfig(settingAttribute, StateType.ELK);
     } else if (settingValue instanceof LogzConfig) {
       analysisService.validateConfig(settingAttribute, StateType.LOGZ);

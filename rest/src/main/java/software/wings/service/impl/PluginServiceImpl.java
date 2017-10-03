@@ -26,6 +26,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KibanaConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -135,6 +136,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.ELK.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.ELK.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(KibanaConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.KIBANA.name())
+            .withType(SettingVariableTypes.KIBANA.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.KIBANA.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(LogzConfig.class)
