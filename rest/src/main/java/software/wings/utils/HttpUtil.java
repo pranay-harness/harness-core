@@ -66,7 +66,8 @@ public class HttpUtil {
       connection.setConnectTimeout(15000); // 20ms otherwise delegate times out
       connection.setReadTimeout(15000);
       int responseCode = connection.getResponseCode();
-      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403) {
+      if ((responseCode >= 200 && responseCode <= 399) || responseCode == 401 || responseCode == 403
+          || responseCode == 404) {
         logger.info("Url {} is connectable", url);
         return true;
       }

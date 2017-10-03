@@ -46,7 +46,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     if (StringUtils.isBlank(getImageName())) {
       return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
     }
-    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
+    return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
@@ -157,6 +157,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withArtifactStreamType(getArtifactStreamType())
         .withJobName(jobname)
         .withImageName(imageName)
+        .withGroupId(getGroupId())
         .withArtifactPattern(artifactPattern)
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .build();
