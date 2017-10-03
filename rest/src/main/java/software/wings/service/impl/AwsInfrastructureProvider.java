@@ -165,8 +165,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     for (Instance instance : readyInstances) {
       int retryCount = RETRY_COUNTER;
-      String hostname = awsHelperService.getHostnameFromDnsName(
-          usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName());
+      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
       while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
