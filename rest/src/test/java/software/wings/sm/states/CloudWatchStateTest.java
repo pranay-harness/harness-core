@@ -8,6 +8,7 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,7 +85,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(context.evaluateExpression(eq(ASSERTION), any(Datapoint.class))).thenReturn(true);
     ArgumentCaptor<GetMetricStatisticsRequest> argumentCaptor =
         ArgumentCaptor.forClass(GetMetricStatisticsRequest.class);
-    when(awsHelperService.getCloudWatchMetricStatistics(any(AwsConfig.class), argumentCaptor.capture()))
+    when(awsHelperService.getCloudWatchMetricStatistics(any(AwsConfig.class), anyString(), argumentCaptor.capture()))
         .thenReturn(new Datapoint());
 
     cloudWatchState.setAwsCredentialsConfigId(SETTING_ID);
