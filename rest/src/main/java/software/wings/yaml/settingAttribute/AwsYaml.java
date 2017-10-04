@@ -1,12 +1,14 @@
 package software.wings.yaml.settingAttribute;
 
+import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.yaml.YamlSerialize;
 
 public class AwsYaml extends SettingAttributeYaml {
   @YamlSerialize private String accessKey;
-  @YamlSerialize private String secretKey;
+  @YamlSerialize private String secretKey = ENCRYPTED_VALUE_STR;
 
   public AwsYaml() {
     super();
@@ -17,7 +19,6 @@ public class AwsYaml extends SettingAttributeYaml {
 
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     this.accessKey = awsConfig.getAccessKey();
-    this.secretKey = awsConfig.getSecretKey().toString();
   }
 
   public String getAccessKey() {

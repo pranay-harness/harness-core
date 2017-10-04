@@ -12,6 +12,11 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.intfc.yaml.AppYamlResourceService;
+import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.yaml.YamlPayload;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 
@@ -152,6 +157,99 @@ public class GitSyncHelper {
     return null;
   }
 
+  /*
+  public void writeAndAdd(File repoPath, List<GitSyncFile> gitSyncFiles) {
+    for (GitSyncFile gsf : gitSyncFiles) {
+      String fileName = gsf.getName();
+      String rootPath = gsf.getRootPath();
+
+      // we need a rootPath WITHOUT leading or trailing slashes
+      rootPath = cleanRootPath(rootPath);
+
+      File newFile = new File(repoPath + "/" + rootPath, fileName);
+      writeToRepoFile(newFile, gsf.getYaml());
+
+      try {
+        DirCache dirCache = null;
+        if (rootPath != null && !rootPath.isEmpty()) {
+          // add new/changed files within the rootPath
+          dirCache = this.git.add().addFilepattern(rootPath).call();
+        } else {
+          // add file by fileName
+          dirCache = this.git.add().addFilepattern(fileName).call();
+        }
+
+      } catch (GitAPIException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+  */
+
+  public void compareAndSaveChanges(File repoPath, List<GitSyncFile> gitSyncFiles,
+      YamlResourceService yamlResourceService, SetupYamlResourceService setupYamlResourceService,
+      AppYamlResourceService appYamlResourceService, ServiceYamlResourceService serviceYamlResourceService) {
+    for (GitSyncFile gsf : gitSyncFiles) {
+      String fileName = gsf.getName();
+      String rootPath = gsf.getRootPath();
+
+      // we need a rootPath WITHOUT leading or trailing slashes
+      rootPath = cleanRootPath(rootPath);
+
+      try {
+        String yaml = new String(Files.readAllBytes(Paths.get(repoPath + "/" + rootPath + "/" + fileName)));
+
+        if (!yaml.equals(gsf.getYaml())) {
+          logger.info("************* CHANGE FOUND: " + yaml);
+          logger.info("************* Class: " + gsf.getKlass().getSimpleName());
+
+          String shortClass = gsf.getKlass().getSimpleName();
+          String entityId = gsf.getEntityId();
+          String accountId = gsf.getAccountId();
+          String appId = gsf.getAppId();
+          YamlPayload yamlPayload = new YamlPayload(yaml);
+          String settingVariableType = "";
+
+          boolean deleteEnabled = false;
+
+          switch (shortClass) {
+            case "Account":
+              setupYamlResourceService.updateSetup(accountId, yamlPayload, deleteEnabled);
+              break;
+            case "Application":
+              appYamlResourceService.updateApp(appId, yamlPayload, deleteEnabled);
+              break;
+            case "Service":
+              serviceYamlResourceService.updateService(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "ServiceCommand":
+              yamlResourceService.updateServiceCommand(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "Environment":
+              yamlResourceService.updateEnvironment(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "Workflow":
+              // TODO - updateWorkflow needs to be added
+              // yamlResourceService.updateWorkflow(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "Pipeline":
+              yamlResourceService.updatePipeline(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "Trigger":
+              yamlResourceService.updateTrigger(appId, entityId, yamlPayload, deleteEnabled);
+              break;
+            case "SettingAttribute":
+              yamlResourceService.updateSettingAttribute(
+                  accountId, entityId, settingVariableType, yamlPayload, deleteEnabled);
+              break;
+          }
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
   public void writeAddCommitPush(YamlGitSync ygs, File repoPath, List<GitSyncFile> gitSyncFiles) {
     String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
     StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync (" + timestamp + ")");
@@ -172,7 +270,8 @@ public class GitSyncHelper {
           // TODO - we may need this (in some form)
         }
 
-        String fileName = name + YAML_EXTENSION;
+        // String fileName = name + YAML_EXTENSION;
+        String fileName = name;
 
         // we need a rootPath WITHOUT leading or trailing slashes
         rootPath = cleanRootPath(rootPath);
@@ -226,6 +325,19 @@ public class GitSyncHelper {
       // clean up TEMP files
       sshKeyPath.delete();
 
+      Path cleanupPath = Paths.get(repoPath.getPath());
+      Files.walk(cleanupPath, FileVisitOption.FOLLOW_LINKS)
+          .sorted(Comparator.reverseOrder())
+          .map(Path::toFile)
+          /* .peek(System.out::println) */
+          .forEach(File::delete);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void cleanupTempRepoFiles(File repoPath) {
+    try {
       Path cleanupPath = Paths.get(repoPath.getPath());
       Files.walk(cleanupPath, FileVisitOption.FOLLOW_LINKS)
           .sorted(Comparator.reverseOrder())

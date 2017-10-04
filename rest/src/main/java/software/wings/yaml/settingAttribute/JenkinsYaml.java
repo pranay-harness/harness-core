@@ -14,6 +14,5 @@ public class JenkinsYaml extends ArtifactServerYaml {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
     this.setUrl(jenkinsConfig.getJenkinsUrl());
     this.setUsername(jenkinsConfig.getUsername());
-    this.setPassword(jenkinsConfig.getPassword().toString());
   }
 }

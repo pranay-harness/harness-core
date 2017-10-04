@@ -14,6 +14,5 @@ public class ElkYaml extends VerificationProviderYaml {
     ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     this.setUrl(elkConfig.getElkUrl());
     this.setUsername(elkConfig.getUsername());
-    this.setPassword(elkConfig.getPassword().toString());
   }
 }

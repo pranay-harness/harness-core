@@ -1,7 +1,9 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.RestResponse;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
@@ -61,4 +63,8 @@ public interface YamlGitSyncService {
   // public boolean handleEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent);
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent);
+
+  public RestResponse processWebhookPost(String accountId, String webhookToken, String rawJson);
+
+  public GitSyncWebhook getWebhook(String entityId, String accountId);
 }

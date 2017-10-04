@@ -17,7 +17,6 @@ public class AppDynamicsYaml extends VerificationProviderYaml {
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     this.setUrl(appDynamicsConfig.getControllerUrl());
     this.setUsername(appDynamicsConfig.getUsername());
-    this.setPassword(appDynamicsConfig.getPassword().toString());
 
     this.accountname = appDynamicsConfig.getAccountname();
   }

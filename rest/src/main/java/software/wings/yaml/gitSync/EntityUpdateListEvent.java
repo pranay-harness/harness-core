@@ -16,18 +16,27 @@ import java.util.Objects;
  */
 @Entity(value = "entityUpdateListQueue", noClassnameStored = true)
 public class EntityUpdateListEvent extends Queuable {
-  private List<EntityUpdateEvent> entityUpdateEvents = new ArrayList<EntityUpdateEvent>();
+  private List<EntityUpdateEvent> entityUpdateEvents;
   private String accountId;
   private List<GitSyncFile> gitSyncFiles;
+  private boolean treeSync = false;
 
   public void addEntityUpdateEvent(EntityUpdateEvent entityUpdateEvent) {
     if (entityUpdateEvent != null) {
+      if (this.entityUpdateEvents == null) {
+        this.entityUpdateEvents = new ArrayList<EntityUpdateEvent>();
+      }
+
       this.entityUpdateEvents.add(entityUpdateEvent);
     }
   }
 
   public void addGitSyncFile(GitSyncFile gitSyncFile) {
     if (gitSyncFile != null) {
+      if (this.gitSyncFiles == null) {
+        this.gitSyncFiles = new ArrayList<GitSyncFile>();
+      }
+
       this.gitSyncFiles.add(gitSyncFile);
     }
   }
@@ -56,6 +65,14 @@ public class EntityUpdateListEvent extends Queuable {
     this.gitSyncFiles = gitSyncFiles;
   }
 
+  public boolean isTreeSync() {
+    return treeSync;
+  }
+
+  public void setTreeSync(boolean treeSync) {
+    this.treeSync = treeSync;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == this)
@@ -73,6 +90,7 @@ public class EntityUpdateListEvent extends Queuable {
     return MoreObjects.toStringHelper(this)
         .add("accountId", getAccountId())
         .add("entityUpdateEvents", getEntityUpdateEvents())
+        .add("treeSync", isTreeSync())
         .toString();
   }
 
@@ -80,6 +98,7 @@ public class EntityUpdateListEvent extends Queuable {
     private List<EntityUpdateEvent> entityUpdateEvents;
     private String accountId;
     private List<GitSyncFile> gitSyncFiles;
+    private boolean treeSync;
 
     private Builder() {}
 
@@ -102,11 +121,17 @@ public class EntityUpdateListEvent extends Queuable {
       return this;
     }
 
+    public EntityUpdateListEvent.Builder withTreeSync(boolean treeSync) {
+      this.treeSync = treeSync;
+      return this;
+    }
+
     public EntityUpdateListEvent.Builder but() {
       return anEntityUpdateListEvent()
           .withEntityUpdateEvents(entityUpdateEvents)
           .withAccountId(accountId)
-          .withGitSyncFiles(gitSyncFiles);
+          .withGitSyncFiles(gitSyncFiles)
+          .withTreeSync(treeSync);
     }
 
     public EntityUpdateListEvent build() {
@@ -114,6 +139,7 @@ public class EntityUpdateListEvent extends Queuable {
       entityUpdateListEvent.setEntityUpdateEvents(entityUpdateEvents);
       entityUpdateListEvent.setAccountId(accountId);
       entityUpdateListEvent.setGitSyncFiles(gitSyncFiles);
+      entityUpdateListEvent.setTreeSync(treeSync);
       return entityUpdateListEvent;
     }
   }

@@ -48,6 +48,17 @@ public class RestResponse<T> extends RestRequest<T> {
     this.responseMessages = responseMessages;
   }
 
+  /**
+   * Adds a response message.
+   *
+   * @param responseMessage the response message
+   */
+  public void addResponseMessage(ResponseMessage responseMessage) {
+    if (responseMessage != null) {
+      this.responseMessages.add(responseMessage);
+    }
+  }
+
   /* (non-Javadoc)
    * @see software.wings.beans.RestRequest#toString()
    */

@@ -1,24 +1,35 @@
 package software.wings.yaml;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup;
+import software.wings.beans.Workflow;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
+import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitSync;
 
 import java.io.BufferedReader;
@@ -28,6 +39,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class YamlHelper {
+  public static final String ENCRYPTED_VALUE_STR = "<ENCRYPTED VALUE>";
+
   //@Inject private static YamlGitSyncService yamlGitSyncService;
 
   public static void addResponseMessage(
@@ -355,5 +368,67 @@ public class YamlHelper {
       YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
       return Optional.empty();
     }
+  }
+
+  public static long getEntityCreatedAt(WingsPersistence wingsPersistence, YamlVersion yv) {
+    String entityId = yv.getEntityId();
+    Type type = yv.getType();
+
+    switch (type) {
+      case SETUP:
+        return wingsPersistence.createQuery(Account.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case APP:
+        return wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case SERVICE:
+        return wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case SERVICE_COMMAND:
+        return wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case ENVIRONMENT:
+        return wingsPersistence.createQuery(Environment.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case SETTING:
+        return wingsPersistence.createQuery(SettingAttribute.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case WORKFLOW:
+        return wingsPersistence.createQuery(Workflow.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case PIPELINE:
+        return wingsPersistence.createQuery(Pipeline.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      case TRIGGER:
+        return wingsPersistence.createQuery(ArtifactStream.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+      default:
+        // nothing to do
+    }
+
+    return 0;
+  }
+
+  public static GitSyncWebhook verifyWebhookToken(
+      WingsPersistence wingsPersistence, String accountId, String webhookToken) {
+    GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
+                             .field("webhookToken")
+                             .equal(webhookToken)
+                             .field("accountId")
+                             .equal(accountId)
+                             .get();
+
+    if (gsw != null) {
+      return gsw;
+    }
+
+    return null;
+  }
+
+  public static GitSyncWebhook checkForWebhookToken(
+      WingsPersistence wingsPersistence, String accountId, String entityId) {
+    GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
+                             .field("entityId")
+                             .equal(entityId)
+                             .field("accountId")
+                             .equal(accountId)
+                             .get();
+
+    if (gsw != null) {
+      return gsw;
+    }
+
+    return null;
   }
 }

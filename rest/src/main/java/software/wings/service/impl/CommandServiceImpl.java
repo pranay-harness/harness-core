@@ -6,17 +6,17 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
+import software.wings.beans.Application;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -28,7 +28,9 @@ import javax.inject.Inject;
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EntityUpdateService entityUpdateService;
-  @Inject ServiceResourceService serviceResourceService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppService appService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
@@ -62,6 +64,8 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public Command save(Command command) {
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the service
@@ -75,6 +79,10 @@ public class CommandServiceImpl implements CommandService {
     eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(command.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.saveAndGet(Command.class, command);
@@ -83,6 +91,8 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public Command update(Command command) {
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the service
@@ -96,6 +106,10 @@ public class CommandServiceImpl implements CommandService {
     eule.addEntityUpdateEvent(entityUpdateService.serviceCommandListUpdate(serviceCommand, SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(command.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.saveAndGet(Command.class, command);

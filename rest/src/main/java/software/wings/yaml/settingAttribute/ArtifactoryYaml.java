@@ -14,6 +14,5 @@ public class ArtifactoryYaml extends ArtifactServerYaml {
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
     this.setUrl(artifactoryConfig.getArtifactoryUrl());
     this.setUsername(artifactoryConfig.getUsername());
-    this.setPassword(artifactoryConfig.getPassword().toString());
   }
 }
