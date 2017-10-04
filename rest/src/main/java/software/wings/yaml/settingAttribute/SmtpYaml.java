@@ -1,5 +1,7 @@
 package software.wings.yaml.settingAttribute;
 
+import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.yaml.YamlSerialize;
@@ -10,7 +12,7 @@ public class SmtpYaml extends SettingAttributeYaml {
   @YamlSerialize private String fromAddress;
   @YamlSerialize private boolean useSSL;
   @YamlSerialize private String username;
-  @YamlSerialize private String password;
+  @YamlSerialize private String password = ENCRYPTED_VALUE_STR;
 
   public SmtpYaml() {
     super();
@@ -25,6 +27,5 @@ public class SmtpYaml extends SettingAttributeYaml {
     this.fromAddress = smtpConfig.getFromAddress();
     this.useSSL = smtpConfig.isUseSSL();
     this.username = smtpConfig.getUsername();
-    this.password = smtpConfig.getPassword().toString();
   }
 }

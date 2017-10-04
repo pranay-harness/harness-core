@@ -55,11 +55,10 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -96,6 +95,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ConfigService configService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private AppService appService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -189,6 +189,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .build());
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the app
@@ -199,6 +201,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(environment.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return savedEnvironment;
@@ -216,6 +222,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the app
@@ -226,6 +234,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     eule.addEntityUpdateEvent(entityUpdateService.environmentListUpdate(environment, SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(environment.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());

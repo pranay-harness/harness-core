@@ -34,11 +34,11 @@ public class YamlVersion extends Base implements YamlHistory {
   public YamlVersion() {}
 
   public String getYamlVersionId() {
-    return yamlVersionId;
+    return getUuid();
   }
 
   public void setYamlVersionId(String yamlVersionId) {
-    this.yamlVersionId = yamlVersionId;
+    this.yamlVersionId = getUuid();
   }
 
   public int getVersion() {

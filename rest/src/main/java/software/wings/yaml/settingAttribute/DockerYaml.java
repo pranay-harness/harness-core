@@ -14,6 +14,5 @@ public class DockerYaml extends ArtifactServerYaml {
     DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
     this.setUrl(dockerConfig.getDockerRegistryUrl());
     this.setUsername(dockerConfig.getUsername());
-    this.setPassword(dockerConfig.getPassword().toString());
   }
 }

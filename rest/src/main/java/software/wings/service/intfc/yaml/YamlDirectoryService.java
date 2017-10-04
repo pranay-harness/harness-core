@@ -2,6 +2,9 @@ package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.directory.FolderNode;
+import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
+import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 /**
  * Yaml Directory Service.
@@ -26,7 +29,10 @@ public interface YamlDirectoryService {
    * @param filterCustomGitSync flag for whether it or not it should filter/"prune" custom git sync "branches"
    * @return the directory node (top of the requested "tree")
    */
-  public DirectoryNode getDirectory(@NotEmpty String accountId, String entityId, boolean filterCustomGitSync);
+  public FolderNode getDirectory(@NotEmpty String accountId, String entityId, boolean filterCustomGitSync);
 
   public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync);
+
+  public EntityUpdateListEvent traverseDirectory(
+      EntityUpdateListEvent eule, FolderNode fn, String path, SourceType sourceType);
 }
