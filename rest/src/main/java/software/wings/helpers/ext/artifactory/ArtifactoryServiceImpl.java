@@ -539,7 +539,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to fetch the latest version for url {}  " + artifactory.getUri(), e);
+      logger.error("Failed to fetch the latest snap version for url {} repoId {} groupId {} and artifactId {} ",
+          artifactory.getUri(), groupId, artifactId, e);
       handleException(e);
     }
     return null;
