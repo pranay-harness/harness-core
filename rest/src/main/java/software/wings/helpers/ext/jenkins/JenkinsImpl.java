@@ -197,8 +197,8 @@ public class JenkinsImpl implements Jenkins {
   }
 
   private List<JobDetails> getJobDetails(String parentJob) {
+    List<JobDetails> result = new ArrayList<>(); // TODO:: extend jobDetails to keep track of prefix.
     try {
-      List<JobDetails> result = new ArrayList<>(); // TODO:: extend jobDetails to keep track of prefix.
       Stack<Job> jobs = new Stack<>();
       Queue<Future> futures = new ConcurrentLinkedQueue<>();
       if (Misc.isNullOrEmpty(parentJob)) {
@@ -232,8 +232,8 @@ public class JenkinsImpl implements Jenkins {
       return result;
     } catch (Exception ex) {
       logger.error("Error in fetching job lists ", ex);
-      jenkinsExceptionHandler(ex);
-      return Collections.emptyList();
+      // jenkinsExceptionHandler(ex);
+      return result;
     }
   }
 

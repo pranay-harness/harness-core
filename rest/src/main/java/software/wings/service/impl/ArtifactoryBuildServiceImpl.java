@@ -55,7 +55,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config) {
     if (StringUtils.isEmpty(groupId)) {
-      logger.info("Retrieving {} repo paths.");
+      logger.info("Retrieving {} repo paths.", jobName);
       List<String> repoPaths = artifactoryService.getRepoPaths(config, jobName);
       logger.info("Retrieved {} repo paths.", repoPaths.size());
       return repoPaths;
@@ -82,7 +82,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public List<String> getGroupIds(String repoType, ArtifactoryConfig config) {
-    logger.info("Retrieving {} Group Ids.");
+    logger.info("Retrieving {} Group Ids.", repoType);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, repoType);
     logger.info("Retrieved {} Group Ids.", repoPaths.size());
     return repoPaths;
