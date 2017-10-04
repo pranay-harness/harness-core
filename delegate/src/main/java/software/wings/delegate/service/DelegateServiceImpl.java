@@ -8,7 +8,6 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -32,8 +31,6 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
@@ -51,21 +48,13 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.Misc;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,7 +76,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 100;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
-  Object waiter = new Object();
+  private final Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -104,7 +93,7 @@ public class DelegateServiceImpl implements DelegateService {
   private RequestBuilder request;
 
   @Override
-  public void run(boolean upgrade) {
+  public void run(boolean upgrade, boolean restart) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
@@ -127,6 +116,8 @@ public class DelegateServiceImpl implements DelegateService {
           logger.info("Message received [{}]", line);
           line = it.nextLine();
         }
+      } else if (restart) {
+        logger.info("Received Delegate restart request");
       }
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
@@ -305,7 +296,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
-    writeRestartScript();
     try {
       return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
@@ -338,41 +328,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void writeRestartScript() {
-    String filename = "restart.sh";
-    String script = "#!/bin/bash -e\n\nif ./stop.sh; then ./run.sh; fi\n";
-
-    try {
-      Files.deleteIfExists(Paths.get(filename));
-      File scriptFile = new File(filename);
-      try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
-        writer.write(script, 0, script.length());
-        writer.flush();
-      }
-      logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
-      Files.setPosixFilePermissions(scriptFile.toPath(),
-          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-      logger.info("Done setting file permissions");
-    } catch (IOException e) {
-      logger.error("Couldn't write restart script.", e);
-    }
-  }
-
   private void restartDelegate() {
     try {
       logger.info("Restarting delegate");
-      new ProcessExecutor()
-          .timeout(1, TimeUnit.MINUTES)
-          .command("./restart.sh")
-          .redirectError(Slf4jStream.of("RestartScript").asError())
-          .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
-          .redirectOutputAlsoTo(new PipedOutputStream(new PipedInputStream()))
-          .readOutput(true)
-          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-          .start();
+      upgradeService.doRestart();
     } catch (Exception ex) {
-      ex.printStackTrace();
       logger.error("Exception while restarting", ex);
     }
   }
