@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.yaml.gitSync.YamlGitSync.Type.SETUP;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -12,6 +13,8 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
+import software.wings.beans.ResponseMessage;
+import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -30,15 +33,19 @@ import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
 import software.wings.service.intfc.yaml.SetupYamlResourceService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.gitSync.EntityUpdateEvent;
 import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
 import software.wings.yaml.gitSync.GitSyncFile;
 import software.wings.yaml.gitSync.GitSyncHelper;
+import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
@@ -67,6 +74,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private CommandService commandService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   /**
    * Gets the yaml git sync info by uuid
@@ -170,7 +178,12 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
     // check to see if we need to push the initial yaml for this entity to synced Git repo
     if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-      createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
+      // createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
+
+      // if it is Setup - we need to pushDirectory
+      if (ygs.getType() == SETUP) {
+        yamlDirectoryService.pushDirectory(accountId, false);
+      }
     }
 
     return getByUuid(yamlGitSync.getUuid(), accountId, appId);
@@ -205,7 +218,12 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       // check to see if sync mode has changed such that we need to push the yaml to synced Git repo
       if (yamlGitSync.getSyncMode() == SyncMode.GIT_TO_HARNESS || yamlGitSync.getSyncMode() == null) {
         if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
-          createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_UPDATE);
+          // createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_UPDATE);
+
+          // if it is Setup - we need to pushDirectory
+          if (ygs.getType() == SETUP) {
+            yamlDirectoryService.pushDirectory(accountId, false);
+          }
         }
       }
 
@@ -303,6 +321,14 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
+    if (entityUpdateListEvent.isTreeSync()) {
+      if (entityUpdateListEvent.getEntityUpdateEvents().size() == 1) {
+        return handleTreeSync(entityUpdateListEvent);
+      } else {
+        // TODO - treeSyncs should only have one EntityUpdateEvent!
+      }
+    }
+
     // we need to sort the list of entity update events by the git repo they are synced to
     // map key = git sync URL
     Map<String, List<EntityUpdateEvent>> gitSyncUpdateMap = new HashMap<String, List<EntityUpdateEvent>>();
@@ -336,6 +362,35 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       System.out.println(entry.getKey() + ":" + entry.getValue());
       handleHomogeneousEntityUpdateList(entry.getValue());
     }
+
+    return true;
+  }
+
+  public boolean handleTreeSync(EntityUpdateListEvent entityUpdateListEvent) {
+    logger.info("*************** handleTreeSync");
+
+    List<EntityUpdateEvent> entityUpdateEvents = entityUpdateListEvent.getEntityUpdateEvents();
+
+    EntityUpdateEvent eue = entityUpdateEvents.get(0);
+    String entityId = eue.getEntityId();
+    YamlGitSync ygs = get(entityId, eue.getAccountId(), eue.getAppId());
+
+    if (ygs == null) {
+      // no git sync found for this entity
+      return false;
+    }
+
+    File sshKeyPath = GitSyncHelper.getSshKeyPath(ygs.getSshKey(), entityId);
+    GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
+    File repoPath = gsh.getTempRepoPath(entityId);
+    // clone the repo
+    gsh.clone(ygs.getUrl(), repoPath);
+
+    List<GitSyncFile> gitSyncFiles = entityUpdateListEvent.getGitSyncFiles();
+
+    gsh.writeAddCommitPush(ygs, repoPath, gitSyncFiles);
+    gsh.cleanupTempFiles(sshKeyPath, repoPath);
+    gsh.shutdown();
 
     return true;
   }
@@ -391,5 +446,172 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     gsh.shutdown();
 
     return true;
+  }
+
+  public RestResponse processWebhookPost(String accountId, String webhookToken, String rawJson) {
+    RestResponse rr = new RestResponse();
+
+    logger.info("********** accountId: " + accountId + ", webhookToken: " + webhookToken);
+    // logger.info("********** rawJson: " + rawJson);
+
+    GitSyncWebhook gsw = YamlHelper.verifyWebhookToken(wingsPersistence, accountId, webhookToken);
+    String entityId = gsw.getEntityId();
+
+    logger.info("********** entityId: " + entityId);
+
+    if (rawJson.contains("hook_id") && (!rawJson.contains("head_commit") && !rawJson.contains("forced"))) {
+      logger.info("********** Looks like a GitHub Webhook initial setup POST.");
+
+      return processInitialGitHubWebhookPost(gsw, rawJson);
+    } else {
+      if ((rawJson.contains("head_commit") && rawJson.contains("forced")) && !rawJson.contains("hook_id")) {
+        logger.info("********** Looks like a GitHub Webhook commit (push) event POST.");
+
+        return processGitHubPushWebhookPost(gsw, rawJson);
+      } else {
+        logger.info("********** ERROR: GitHub Webhook POST not recognized!");
+
+        rr.addResponseMessage(
+            ResponseMessage.Builder.aResponseMessage().withMessage("This webhook payload is not recognized.").build());
+      }
+    }
+
+    return rr;
+  }
+
+  public GitSyncWebhook getWebhook(String entityId, String accountId) {
+    GitSyncWebhook gsw = YamlHelper.checkForWebhookToken(wingsPersistence, accountId, entityId);
+
+    if (gsw != null) {
+      return gsw;
+    } else {
+      // create a new GitSyncWebhook, save to Mongo and return it
+      String newWebhookToken = CryptoUtil.secureRandAlphaNumString(40);
+      gsw = GitSyncWebhook.builder().accountId(accountId).entityId(entityId).webhookToken(newWebhookToken).build();
+      return wingsPersistence.saveAndGet(GitSyncWebhook.class, gsw);
+    }
+  }
+
+  private RestResponse processInitialGitHubWebhookPost(GitSyncWebhook gsw, String rawJson) {
+    RestResponse rr = new RestResponse();
+
+    // we should (attempt to) pushDirectory now that the webhook has been setup/initialized (on the GutHub side)
+    yamlDirectoryService.pushDirectory(gsw.getAccountId(), false);
+
+    return rr;
+  }
+
+  private RestResponse processGitHubPushWebhookPost(GitSyncWebhook gsw, String rawJson) {
+    logger.info("************* processGitHubPushWebhookPost");
+
+    RestResponse rr = new RestResponse();
+
+    /*
+    Object webhookPost = null;
+
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      webhookPost = mapper.readValue(rawJson, Object.class);
+
+      //logger.info("********** webhookPost: " + webhookPost);
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    */
+
+    // we need to get the Setup (account level) yaml git sync info for this account
+    YamlGitSync ygs = get(gsw.getEntityId(), gsw.getAccountId(), GLOBAL_APP_ID);
+
+    if (ygs == null) {
+      rr.addResponseMessage(
+          ResponseMessage.Builder.aResponseMessage().withMessage("Git Sync info for this webhook not found.").build());
+      return rr;
+    }
+
+    // if the the SyncMode is GIT_TO_HARNESS or BOTH and enabled == true then we can proceed
+    SyncMode syncMode = ygs.getSyncMode();
+    if (syncMode != SyncMode.GIT_TO_HARNESS && syncMode != SyncMode.BOTH) {
+      // nothing to do
+      return rr;
+    }
+
+    if (!ygs.isEnabled()) {
+      // nothing to do
+      return rr;
+    }
+
+    //------------------------------
+    // we need to use the YamlGitSync info to clone the remote git synced repo
+    String entityId = gsw.getEntityId();
+    File sshKeyPath = GitSyncHelper.getSshKeyPath(ygs.getSshKey(), entityId);
+    GitSyncHelper gsh = new GitSyncHelper(ygs.getPassphrase(), sshKeyPath.getAbsolutePath());
+    File repoPath = gsh.getTempRepoPath(entityId);
+    // clone the repo
+    gsh.clone(ygs.getUrl(), repoPath);
+
+    logger.info("************* repoPath: " + repoPath);
+    //------------------------------
+
+    //------------------------------
+    // we need to write the current yaml directory to the location where we cloned
+    String accountId = gsw.getAccountId();
+    EntityUpdateListEvent eule =
+        EntityUpdateListEvent.Builder.anEntityUpdateListEvent().withAccountId(accountId).withTreeSync(true).build();
+
+    String setupEntityId = "setup";
+    FolderNode top = yamlDirectoryService.getDirectory(accountId, setupEntityId, true);
+
+    // traverse the directory and add all the files
+    eule = yamlDirectoryService.traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
+    List<GitSyncFile> gitSyncFiles = eule.getGitSyncFiles();
+
+    // gsh.writeAndAdd(repoPath, gitSyncFiles);
+    gsh.compareAndSaveChanges(repoPath, gitSyncFiles, yamlResourceService, setupYamlResourceService,
+        appYamlResourceService, serviceYamlResourceService);
+    //------------------------------
+
+    /*
+    gsh.spitOutStatus();
+
+    Git git = gsh.getGit();
+    Status status = null;
+    try {
+      status = git.status().call();
+      Set<String> changeSet = status.getChanged();
+
+      // TODO - this is inefficient, but it should work (for now)
+      // clone again
+      gsh.cleanupTempRepoFiles(repoPath);
+      gsh.clone(ygs.getUrl(), repoPath);
+
+      for (String change : changeSet) {
+        logger.info("************* change: " + change);
+
+        String yaml = new String(Files.readAllBytes(Paths.get(repoPath + "/" + change)));
+
+        logger.info("************* yaml: " + yaml);
+
+        // for every changed file, we need to the update or save (create) or delete the same way it would be done from
+    editing the yaml in the UI
+        // NOTE - initially, we will not support deletes, because it would be too easy to blow out test data (dev data)
+    accidently!
+
+        // TODO - we have a problem - we don't have any of the required Ids - appId, serviceId, etc. to be able to
+    update the yaml!
+
+      }
+
+    } catch (GitAPIException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    */
+
+    gsh.cleanupTempFiles(sshKeyPath, repoPath);
+    gsh.shutdown();
+
+    return rr;
   }
 }

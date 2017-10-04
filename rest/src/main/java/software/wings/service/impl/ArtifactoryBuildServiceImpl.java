@@ -5,6 +5,8 @@ import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -27,6 +29,8 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private ArtifactoryService artifactoryService;
 
   @Override
@@ -51,7 +55,10 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config) {
     if (StringUtils.isEmpty(groupId)) {
-      return artifactoryService.getRepoPaths(config, jobName);
+      logger.info("Retrieving {} repo paths.", jobName);
+      List<String> repoPaths = artifactoryService.getRepoPaths(config, jobName);
+      logger.info("Retrieved {} repo paths.", repoPaths.size());
+      return repoPaths;
     } else {
       return artifactoryService.getArtifactIds(config, jobName, groupId);
     }
@@ -75,7 +82,10 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public List<String> getGroupIds(String repoType, ArtifactoryConfig config) {
-    return artifactoryService.getRepoPaths(config, repoType);
+    logger.info("Retrieving {} Group Ids.", repoType);
+    List<String> repoPaths = artifactoryService.getRepoPaths(config, repoType);
+    logger.info("Retrieved {} Group Ids.", repoPaths.size());
+    return repoPaths;
   }
 
   @Override

@@ -14,6 +14,5 @@ public class NexusYaml extends ArtifactServerYaml {
     NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
     this.setUrl(nexusConfig.getNexusUrl());
     this.setUsername(nexusConfig.getUsername());
-    this.setPassword(nexusConfig.getPassword().toString());
   }
 }

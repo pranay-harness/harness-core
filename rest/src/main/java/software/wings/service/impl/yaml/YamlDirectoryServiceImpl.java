@@ -38,6 +38,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
+import software.wings.service.intfc.yaml.SetupYamlResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlResourceService;
@@ -79,6 +80,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private SetupYamlResourceService setupYamlResourceService;
 
   @Override
   public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
@@ -97,14 +99,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return null;
     }
 
-    EntityUpdateListEvent eule = new EntityUpdateListEvent();
+    EntityUpdateListEvent eule =
+        EntityUpdateListEvent.Builder.anEntityUpdateListEvent().withAccountId(accountId).withTreeSync(true).build();
 
     Account account = accountService.get(accountId);
-    // TODO - we may want to add a new SourceType (?)
+    // TODO - we may want to add a new SourceType for this scenario (?)
     eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
-    // TODO - traverse the directory and add all the files
-    traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
+    // traverse the directory and add all the files
+    eule = traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
 
     entityUpdateService.queueEntityUpdateList(eule);
 
@@ -113,46 +116,56 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   public EntityUpdateListEvent traverseDirectory(
       EntityUpdateListEvent eule, FolderNode fn, String path, SourceType sourceType) {
-    for (DirectoryNode dn : fn.getChildren()) {
-      logger.info(path + " :: " + dn);
+    path = path + "/" + fn.getName();
 
-      if ((YamlNode) dn instanceof YamlNode) {
+    for (DirectoryNode dn : fn.getChildren()) {
+      logger.info(path + " :: " + dn.getName());
+
+      if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
+        String accountId = eule.getAccountId();
+        String appId = "";
+        String settingVariableType = "";
 
         switch (dn.getShortClassName()) {
+          case "Account":
+            yaml = setupYamlResourceService.getSetup(accountId).getResource().getYaml();
+            break;
           case "Application":
+            appId = entityId;
             yaml = appYamlResourceService.getApp(entityId).getResource().getYaml();
             break;
           case "Service":
-            Service service = serviceResourceService.get(((AppLevelYamlNode) dn).getAppId(), entityId);
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            Service service = serviceResourceService.get(appId, entityId);
             if (service != null) {
               yaml = serviceYamlResourceService.getServiceYaml(service);
             }
             break;
           case "Environment":
-            yaml = yamlResourceService.getEnvironment(((AppLevelYamlNode) dn).getAppId(), entityId)
-                       .getResource()
-                       .getYaml();
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getEnvironment(appId, entityId).getResource().getYaml();
             break;
           case "ServiceCommand":
-            yaml = yamlResourceService.getServiceCommand(((ServiceLevelYamlNode) dn).getAppId(), entityId)
-                       .getResource()
-                       .getYaml();
+            appId = ((ServiceLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
             break;
           case "Workflow":
-            yaml =
-                yamlResourceService.getWorkflow(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
             break;
           case "Pipeline":
-            yaml =
-                yamlResourceService.getPipeline(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getPipeline(appId, entityId).getResource().getYaml();
             break;
           case "Trigger":
-            yaml = yamlResourceService.getTrigger(((AppLevelYamlNode) dn).getAppId(), entityId).getResource().getYaml();
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getTrigger(appId, entityId).getResource().getYaml();
             break;
           case "SettingAttribute":
-            // yaml =
+            yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
+            settingVariableType = ((SettingAttributeYamlNode) dn).getSettingVariableType();
             break;
           default:
             // nothing to do
@@ -164,11 +177,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                                 .withSourceType(sourceType)
                                 .withClass(dn.getTheClass())
                                 .withRootPath(path)
+                                .withEntityId(entityId)
+                                .withAccountId(accountId)
+                                .withAppId(appId)
+                                .withSettingVariableType(settingVariableType)
                                 .build());
       }
 
       if (dn instanceof FolderNode) {
-        traverseDirectory(eule, (FolderNode) dn, path + "/" + fn.getName(), sourceType);
+        traverseDirectory(eule, (FolderNode) dn, path, sourceType);
       }
     }
 

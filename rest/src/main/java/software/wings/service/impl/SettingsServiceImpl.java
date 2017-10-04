@@ -18,7 +18,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -35,10 +34,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,6 +57,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private AccountService accountService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -81,6 +80,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the account (setup)
@@ -88,10 +89,13 @@ public class SettingsServiceImpl implements SettingsService {
     eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
     // see if we need to perform any Git Sync operations for the setting attribute
-    eule.addEntityUpdateEvent(
-        entityUpdateService.settingAttributeListUpdate(settingAttribute, SourceType.ENTITY_CREATE));
+    eule.addEntityUpdateEvent(entityUpdateService.settingAttributeListUpdate(settingAttribute,
+    SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    yamlDirectoryService.pushDirectory(settingAttribute.getAccountId(), false);
     //-------------------
 
     return Validator.duplicateCheck(()
@@ -145,6 +149,8 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the account (setup)
@@ -152,10 +158,13 @@ public class SettingsServiceImpl implements SettingsService {
     eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
     // see if we need to perform any Git Sync operations for the setting attribute
-    eule.addEntityUpdateEvent(
-        entityUpdateService.settingAttributeListUpdate(settingAttribute, SourceType.ENTITY_UPDATE));
+    eule.addEntityUpdateEvent(entityUpdateService.settingAttributeListUpdate(settingAttribute,
+    SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    yamlDirectoryService.pushDirectory(settingAttribute.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());

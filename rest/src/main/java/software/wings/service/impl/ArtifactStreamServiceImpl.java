@@ -37,6 +37,7 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
@@ -63,6 +64,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.ArtifactStreamActionJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -81,8 +84,6 @@ import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -117,6 +118,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private AppService appService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -183,12 +186,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the trigger (artifactStream)
     eule.addEntityUpdateEvent(entityUpdateService.triggerListUpdate(artifactStream, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(artifactStream.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return artifactStream;

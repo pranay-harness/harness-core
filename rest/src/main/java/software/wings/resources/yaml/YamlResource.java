@@ -373,7 +373,7 @@ public class YamlResource {
   }
 
   //-------------------------------------
-  // TODO - I need an endpoint, at least temporarily that will allow me to kick off pushing the full setup directory
+  // TODO - I need an endpoint, at least temporarily, that will allow me to kick off pushing the full setup directory
   // "tree" to a synced git repo
   @GET
   @Path("/push-directory")

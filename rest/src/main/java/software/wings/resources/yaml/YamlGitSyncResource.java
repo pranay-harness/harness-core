@@ -9,7 +9,9 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
+import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitSync;
 import software.wings.yaml.gitSync.YamlGitSync.Type;
 
@@ -151,13 +153,7 @@ public class YamlGitSyncResource {
     return new RestResponse<>(yamlGitSyncService.update(entityId, accountId, appId, yamlGitSync));
   }
 
-  /**
-   * Catch call from GitHub repo webhook
-   *
-   * @param accountId the account id
-   *
-   * @return the rest response
-   */
+  /*
   @POST
   @Path("/webhook")
   @Timed
@@ -166,5 +162,45 @@ public class YamlGitSyncResource {
     System.out.println(rawJson);
 
     return null;
+  }
+  */
+
+  /**
+   * Catch call from GitHub repo webhook
+   *
+   * @param accountId the account id
+   * @param entityToken the hashed token for the entity id
+   *
+   * @return the rest response
+   */
+  @POST
+  @Path("/webhook/{entityToken}")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse webhookCatcher(
+      @QueryParam("accountId") String accountId, @PathParam("entityToken") String entityToken, String rawJson) {
+    return yamlGitSyncService.processWebhookPost(accountId, entityToken, rawJson);
+  }
+
+  /**
+   * Gets existing or new webhook
+   *
+   * @param entityId the uuid of the entity
+   * @param accountId the account id
+   * @return the git sync webhook
+   */
+  @GET
+  @Path("/webhook/{entityId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<GitSyncWebhook> getWebhook(
+      @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
+    try {
+      entityId = URLDecoder.decode(entityId, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+    return new RestResponse<>(yamlGitSyncService.getWebhook(entityId, accountId));
   }
 }

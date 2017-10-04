@@ -2,6 +2,8 @@ package software.wings.helpers.ext.artifactory;
 
 import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.awaitility.Awaitility.with;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.JSON;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.TEXT;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.GET;
@@ -17,6 +19,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
@@ -33,6 +37,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelp
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -43,7 +48,14 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -53,6 +65,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+
+  @Inject ExecutorService executorService;
 
   @Override
   public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
@@ -102,7 +116,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 404) {
-          logger.warn("User not authorized to perform deep level search. Trying with different search api");
           throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
               "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl());
         }
@@ -190,6 +203,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
       String artifactPath, ArtifactType artifactType, int maxVersions) {
+    logger.info("Retrieving file paths for repoKey {} arthifactPath {}", repoKey, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
     try {
@@ -241,6 +255,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   public List<String> getGroupIds(Artifactory artifactory, String repoKey) {
+    logger.info("Retrieving groupIds for repoKey {}", repoKey);
     List<String> groupIdList = new ArrayList<>();
     try {
       String apiStorageQuery = "api/storage/";
@@ -290,6 +305,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           artifactory.getUri(), repoKey, e);
       handleException(e);
     }
+    logger.info("Retrieving groupIds for repoKey {} success", repoKey);
     return groupIdList;
   }
 
@@ -301,12 +317,14 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    */
   private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
     List<String> groupIdList = new ArrayList<>();
-    List<String> paths = getGroupIdPaths(artifactory, repoKey, "", new ArrayList<>());
+    logger.info("Retrieving groupIds with anonymous user access");
+    // List<String> paths  = getGroupIdPaths(artifactory, repoKey, "", new ArrayList<>());
+    List<String> paths = gerGroupIdPathsAsync(artifactory, repoKey);
     Set<String> groupIds = new HashSet<>();
     if (paths != null) {
+      logger.info("Retrieved  groupId paths success. Size {}", paths.size());
       for (String path : paths) {
         // strip out the file
-        logger.info("Repo path {}", path);
         if (path.length() == 1) {
           continue;
         }
@@ -322,13 +340,79 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           }
           String groupId = groupIdBuilder.toString();
           if (groupIds.add(groupId)) {
-            logger.info("Group Id {}", groupId);
             groupIdList.add(groupId);
           }
         }
       }
     }
+    logger.info("Retrieved unique groupIds size {}", groupIdList.size());
     return groupIdList;
+  }
+
+  private List<String> gerGroupIdPathsAsync(Artifactory artifactory, String repoKey) {
+    List<String> groupIdList = new ArrayList<>();
+    try {
+      return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
+        try {
+          Queue<Future> futures = new ConcurrentLinkedQueue<>();
+          Stack<FolderPath> paths = new Stack<>();
+          paths.addAll(getFolderPaths(artifactory, repoKey, ""));
+          while (!paths.empty() || !futures.isEmpty()) {
+            while (!paths.empty()) {
+              FolderPath folderPath = paths.pop();
+              if (folderPath.isFolder()) {
+                futures.add(executorService.submit((Callable<Void>) () -> {
+                  paths.addAll(getFolderPaths(artifactory, repoKey, folderPath.getPath() + folderPath.getUri()));
+                  return null;
+                }));
+              } else {
+                groupIdList.add(folderPath.getPath().endsWith("/") ? folderPath.getPath() : folderPath.getPath() + "/");
+              }
+            }
+            while (!futures.isEmpty() && futures.peek().isDone()) {
+              futures.poll().get();
+            }
+            Misc.quietSleep(10, TimeUnit.MILLISECONDS); // avoid busy wait
+          }
+        } catch (Exception e) {
+          logger.error("Failed to fetch all the groupIds in time. Sending the groupIds collected so far", e);
+        }
+        return groupIdList;
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      logger.warn("Failed to fetch all groupId within 20 secs. Returning all groupIds collected so far", e);
+      return groupIdList;
+    }
+  }
+
+  private List<FolderPath> getFolderPaths(Artifactory artifactory, String repoKey, String repoPath) {
+    // Add first level paths
+    List<FolderPath> folderPaths = new ArrayList<>();
+    try {
+      String apiStorageQuery = "api/storage/";
+      apiStorageQuery = apiStorageQuery + repoKey + repoPath;
+
+      ArtifactoryRequest repositoryRequest =
+          new ArtifactoryRequestImpl().apiUrl(apiStorageQuery).method(GET).responseType(JSON);
+      LinkedHashMap<String, Object> response = artifactory.restCall(repositoryRequest);
+      if (response == null) {
+        return folderPaths;
+      }
+      List<LinkedHashMap<String, Object>> results = (List<LinkedHashMap<String, Object>>) response.get("children");
+      if (isEmpty(results)) {
+        return folderPaths;
+      }
+      for (LinkedHashMap<String, Object> result : results) {
+        folderPaths.add(FolderPath.builder()
+                            .path((String) response.get("path"))
+                            .uri((String) result.get("uri"))
+                            .folder((boolean) result.get("folder"))
+                            .build());
+      }
+    } catch (Exception e) {
+      logger.error("Exception occurred in retrieving folder paths", e);
+    }
+    return folderPaths;
   }
 
   private List<String> getGroupIdPaths(
@@ -414,6 +498,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         if (buildDetails == null || StringUtils.isBlank(buildDetails.getNumber())) {
           latestVersion = null;
         } else {
+          logger.info("Latest integration version {} found", buildDetails.getNumber());
           return buildDetails;
         }
       }
@@ -424,7 +509,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Latest version {} found", latestVersion);
       return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
     } catch (Exception e) {
-      logger.error("Failed to fetch the latest version for url {}  " + artifactoryConfig.getArtifactoryUrl(), e);
+      logger.error("Failed to fetch the latest version for url {}  ", artifactoryConfig.getArtifactoryUrl(), e);
       handleException(e);
     }
     return null;
@@ -446,12 +531,14 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         List<LinkedHashMap<String, String>> results = (List<LinkedHashMap<String, String>>) response.get("results");
         for (LinkedHashMap<String, String> result : results) {
           String version = result.get("version");
+          logger.info("Latest version {}", version);
           if (version == null) {
             return null;
           }
           if (version.contains("-")) {
             version = version.split("-")[0] + "-SNAPSHOT";
           }
+          logger.info("Appending snapshot to the latest version ");
           return aBuildDetails().withNumber(version).withRevision(version).build();
         }
       }
@@ -506,7 +593,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
     try {
       if (artifactPaths != null) {
-        logger.info("Downloading artifacts from artifactory for maven type");
         for (String artifactId : artifactPaths) {
           Set<String> artifactNames = new HashSet<>();
           String latestVersion;
@@ -521,6 +607,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             latestVersion = metadata.get("buildNo");
           }
           if (latestVersion != null) {
+            logger.info(
+                "Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {}",
+                repoType, groupId, artifactId, latestVersion);
             List<RepoPath> results = artifactory.searches()
                                          .artifactsByGavc()
                                          .groupId(groupId)
@@ -533,7 +622,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               String itemPath = searchItem.getItemPath();
               String artifactName = itemPath.substring(itemPath.lastIndexOf("/") + 1);
               try {
-                if (artifactName.endsWith("pom")) {
+                logger.info("Artifact name {}", artifactName);
+                if (artifactName.endsWith("pom") || artifactName.equals("maven-metadata.xml")) {
                   continue;
                 }
                 if (artifactNames.add(artifactName)) {
@@ -547,6 +637,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                 logger.error("Failed to download the artifact from path {}", itemPath, e);
               }
             }
+            logger.info(
+                "Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {} success",
+                repoType, groupId, artifactId, latestVersion);
+          } else {
+            logger.error("No version found so not collecting any artifacts");
           }
         }
       }

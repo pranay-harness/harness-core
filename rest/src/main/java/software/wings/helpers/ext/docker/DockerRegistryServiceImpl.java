@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.docker;
 
+import static java.util.Collections.emptyList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Singleton;
@@ -18,7 +20,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -66,7 +67,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error(e.getMessage(), e);
     }
     return null;
   }
@@ -81,10 +82,19 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   private List<BuildDetails> processBuildResponse(DockerImageTagResponse dockerImageTagResponse) {
-    return dockerImageTagResponse.getTags()
-        .stream()
-        .map(s -> aBuildDetails().withNumber(s).build())
-        .collect(Collectors.toList());
+    if (dockerImageTagResponse != null && isNotEmpty(dockerImageTagResponse.getTags())) {
+      return dockerImageTagResponse.getTags()
+          .stream()
+          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .collect(Collectors.toList());
+    } else {
+      if (dockerImageTagResponse == null) {
+        logger.warn("Docker image tag response was null.");
+      } else {
+        logger.warn("Docker image tag response had an empty or missing tag list.");
+      }
+      return emptyList();
+    }
   }
 
   @Override

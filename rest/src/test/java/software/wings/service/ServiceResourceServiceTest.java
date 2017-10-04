@@ -35,12 +35,14 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
+import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +65,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -99,6 +102,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.Stencil;
 import software.wings.utils.BoundedInputStream;
 
@@ -154,6 +158,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private AppService appService;
+  @Mock private YamlDirectoryService yamlDirectoryService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -179,6 +184,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createUpdateOperations(Service.class))
         .thenReturn(datastore.createUpdateOperations(Service.class));
+    when(appService.get(TARGET_APP_ID))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
   }
 
   /**
