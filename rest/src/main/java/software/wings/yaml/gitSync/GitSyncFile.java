@@ -12,6 +12,10 @@ public class GitSyncFile {
   private SourceType sourceType;
   private Class klass;
   private String rootPath;
+  private String entityId;
+  private String accountId;
+  private String appId;
+  private String settingVariableType;
 
   public String getName() {
     return name;
@@ -53,6 +57,38 @@ public class GitSyncFile {
     this.rootPath = rootPath;
   }
 
+  public String getEntityId() {
+    return entityId;
+  }
+
+  public void setEntityId(String entityId) {
+    this.entityId = entityId;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
+  public String getSettingVariableType() {
+    return settingVariableType;
+  }
+
+  public void setSettingVariableType(String settingVariableType) {
+    this.settingVariableType = settingVariableType;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == this)
@@ -75,6 +111,10 @@ public class GitSyncFile {
         .add("sourceType", getSourceType())
         .add("klass", getKlass())
         .add("rootPath", getRootPath())
+        .add("entityId", getEntityId())
+        .add("accountId", getAccountId())
+        .add("appId", getAppId())
+        .add("settingVariableType", getSettingVariableType())
         .toString();
   }
 
@@ -84,6 +124,10 @@ public class GitSyncFile {
     private SourceType sourceType;
     private Class klass;
     private String rootPath;
+    private String entityId;
+    private String accountId;
+    private String appId;
+    private String settingVariableType;
 
     private Builder() {}
 
@@ -116,13 +160,37 @@ public class GitSyncFile {
       return this;
     }
 
+    public GitSyncFile.Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
+    public GitSyncFile.Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public GitSyncFile.Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public GitSyncFile.Builder withSettingVariableType(String settingVariableType) {
+      this.settingVariableType = settingVariableType;
+      return this;
+    }
+
     public GitSyncFile.Builder but() {
       return aGitSyncFile()
           .withName(name)
           .withYaml(yaml)
           .withSourceType(sourceType)
           .withClass(klass)
-          .withRootPath(rootPath);
+          .withRootPath(rootPath)
+          .withEntityId(entityId)
+          .withAccountId(accountId)
+          .withAppId(appId)
+          .withSettingVariableType(settingVariableType);
     }
 
     public GitSyncFile build() {
@@ -132,6 +200,10 @@ public class GitSyncFile {
       gitSyncFile.setSourceType(sourceType);
       gitSyncFile.setKlass(klass);
       gitSyncFile.setRootPath(rootPath);
+      gitSyncFile.setEntityId(entityId);
+      gitSyncFile.setAccountId(accountId);
+      gitSyncFile.setAppId(appId);
+      gitSyncFile.setSettingVariableType(settingVariableType);
       return gitSyncFile;
     }
   }

@@ -8,6 +8,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.utils.Validator;
+import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 
@@ -51,6 +52,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
       }
     } else { // if no previous version - assume this is the first
       yv.setVersion(1);
+      yv.setInEffectStart(YamlHelper.getEntityCreatedAt(wingsPersistence, yv));
     }
 
     // set the inEffectStart of the new one
@@ -90,7 +92,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                    .equal(entityId)
                    .field("type")
                    .equal(type)
-                   .order("version")
+                   .order("-version")
                    .asList();
 
     return versions;
@@ -104,7 +106,6 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
                                      .field("type")
                                      .equal(type)
                                      .order("-version")
-                                     .limit(1)
                                      .asList();
 
     if (versions.size() > 0) {

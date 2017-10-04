@@ -79,6 +79,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
@@ -90,8 +91,6 @@ import software.wings.stencils.Stencil;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -122,6 +121,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private EntityUpdateService entityUpdateService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -349,12 +349,18 @@ public class PipelineServiceImpl implements PipelineService {
         ops);
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the pipeline
     eule.addEntityUpdateEvent(entityUpdateService.pipelineListUpdate(pipeline, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(pipeline.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));

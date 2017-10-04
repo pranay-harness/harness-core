@@ -74,14 +74,13 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,6 +121,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private AppService appService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   /**
    * {@inheritDoc}
@@ -182,6 +182,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .build());
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the app
@@ -192,6 +194,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(service.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return savedService;
@@ -360,6 +366,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the app
@@ -370,6 +378,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(service.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());

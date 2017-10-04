@@ -14,6 +14,5 @@ public class BambooYaml extends ArtifactServerYaml {
     BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
     this.setUrl(bambooConfig.getBambooUrl());
     this.setUsername(bambooConfig.getUsername());
-    this.setPassword(bambooConfig.getPassword().toString());
   }
 }

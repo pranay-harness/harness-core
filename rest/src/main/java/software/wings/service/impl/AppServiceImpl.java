@@ -25,7 +25,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -60,9 +59,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,6 +106,7 @@ public class AppServiceImpl implements AppService {
   @Inject private InstanceService instanceService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private AccountService accountService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -132,6 +131,8 @@ public class AppServiceImpl implements AppService {
     addCronForContainerSync(application);
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the account (setup)
@@ -142,6 +143,9 @@ public class AppServiceImpl implements AppService {
     eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_CREATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
@@ -308,6 +312,8 @@ public class AppServiceImpl implements AppService {
     wingsPersistence.update(query, operations);
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations for the account (setup)
@@ -318,6 +324,9 @@ public class AppServiceImpl implements AppService {
     eule.addEntityUpdateEvent(entityUpdateService.appListUpdate(app, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return wingsPersistence.get(Application.class, app.getUuid());

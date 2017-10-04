@@ -23,6 +23,7 @@ import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.ArtifactType.WAR;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -80,6 +81,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -106,6 +108,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private Application application;
   @Mock private EntityUpdateService entityUpdateService;
+  @Mock private YamlDirectoryService yamlDirectoryService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -123,6 +126,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
+    when(appService.get(TARGET_APP_ID))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
   }
 
   /**

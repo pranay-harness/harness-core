@@ -16,23 +16,23 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
-import software.wings.yaml.gitSync.EntityUpdateListEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +49,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private AppService appService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -83,6 +85,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     serviceVariable.setEnvId(envId);
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations
@@ -90,6 +94,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(serviceVariable.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return Validator.duplicateCheck(
@@ -123,6 +131,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         serviceVariable.getAccountId());
 
     //-------------------
+    // we need this method if we are supporting individual file or sub-directory git sync
+    /*
     EntityUpdateListEvent eule = new EntityUpdateListEvent();
 
     // see if we need to perform any Git Sync operations
@@ -130,6 +140,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     eule.addEntityUpdateEvent(entityUpdateService.serviceListUpdate(service, SourceType.ENTITY_UPDATE));
 
     entityUpdateService.queueEntityUpdateList(eule);
+    */
+
+    Application app = appService.get(serviceVariable.getAppId());
+    yamlDirectoryService.pushDirectory(app.getAccountId(), false);
     //-------------------
 
     return get(serviceVariable.getAppId(), serviceVariable.getUuid());

@@ -14,6 +14,5 @@ public class SplunkYaml extends VerificationProviderYaml {
     SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     this.setUrl(splunkConfig.getSplunkUrl());
     this.setUsername(splunkConfig.getUsername());
-    this.setPassword(splunkConfig.getPassword().toString());
   }
 }

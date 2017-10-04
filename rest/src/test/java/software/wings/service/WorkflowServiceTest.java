@@ -44,6 +44,7 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -120,6 +121,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -166,6 +168,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private PipelineService pipelineService;
   @Mock private EntityUpdateService entityUpdateService;
+  @Mock private YamlDirectoryService yamlDirectoryService;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
@@ -197,6 +200,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(accountService.get(anyString())).thenReturn(account);
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, WORKFLOW_ID))
         .thenReturn(false);
+    when(appService.get(TARGET_APP_ID))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
   }
 
   /**

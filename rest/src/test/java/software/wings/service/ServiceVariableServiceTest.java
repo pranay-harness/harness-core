@@ -12,10 +12,12 @@ import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
+import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +30,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
@@ -36,8 +39,10 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -81,6 +86,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private AppService appService;
+  @Mock private YamlDirectoryService yamlDirectoryService;
   @Inject @InjectMocks private ServiceVariableService serviceVariableService;
 
   /**
@@ -93,6 +100,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
+    when(appService.get(TARGET_APP_ID))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
   }
 
   /**

@@ -1,12 +1,14 @@
 package software.wings.yaml.settingAttribute;
 
+import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.LogzConfig;
 import software.wings.yaml.YamlSerialize;
 
 public class LogzYaml extends SettingAttributeYaml {
   @YamlSerialize private String url;
-  @YamlSerialize private String token;
+  @YamlSerialize private String token = ENCRYPTED_VALUE_STR;
 
   public LogzYaml() {
     super();
@@ -17,7 +19,6 @@ public class LogzYaml extends SettingAttributeYaml {
 
     LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
     this.url = logzConfig.getLogzUrl();
-    this.token = logzConfig.getToken().toString();
   }
 
   public String getUrl() {

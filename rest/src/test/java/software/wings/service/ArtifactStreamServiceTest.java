@@ -12,12 +12,14 @@ import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtif
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowType;
@@ -48,12 +51,14 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.Arrays;
 import javax.inject.Inject;
@@ -72,6 +77,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private BuildSourceService buildSourceService;
   @Mock private ArtifactService artifactService;
   @Mock private EntityUpdateService entityUpdateService;
+  @Mock private AppService appService;
+  @Mock private YamlDirectoryService yamlDirectoryService;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
 
@@ -104,6 +111,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
     when(updateOperations.add(any(), any())).thenReturn(updateOperations);
     when(updateOperations.removeAll(any(String.class), any(ArtifactStreamAction.class))).thenReturn(updateOperations);
+    when(appService.get(TARGET_APP_ID))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
   }
 
   @Test
