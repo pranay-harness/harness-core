@@ -39,6 +39,6 @@ public class SumoConfig extends SettingValue implements Encryptable {
    * Instantiates a new setting value.
    **/
   public SumoConfig() {
-    super(SettingVariableTypes.SUMO.getDisplayName());
+    super(SettingVariableTypes.SUMO.name());
   }
 }
