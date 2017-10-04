@@ -99,7 +99,7 @@ public class NewRelicMetricValueDefinition {
     if (controlValue < 0.0 || testValue < 0.0) {
       return NewRelicMetricAnalysisValue.builder()
           .name(metricValueName)
-          .riskLevel(RiskLevel.LOW)
+          .riskLevel(RiskLevel.NA)
           .controlValue(controlValue)
           .testValue(testValue)
           .build();
