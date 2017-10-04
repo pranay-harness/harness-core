@@ -47,8 +47,12 @@ public class DelegateApplication {
   public static void main(String... args) throws Exception {
     String configFile = args[0];
     boolean upgrade = false;
+    boolean restart = false;
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
+    }
+    if (args.length > 1 && StringUtils.equals(args[1], "restart")) {
+      restart = true;
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       logger.info("Log manager shutdown hook executing.");
@@ -58,10 +62,11 @@ public class DelegateApplication {
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
     delegateApplication.run(
-        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade);
+        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade,
+        restart);
   }
 
-  private void run(DelegateConfiguration configuration, boolean upgrade) throws Exception {
+  private void run(DelegateConfiguration configuration, boolean upgrade, boolean restart) throws Exception {
     Injector injector = Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -73,7 +78,7 @@ public class DelegateApplication {
             configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
         new DelegateModule());
     DelegateService delegateService = injector.getInstance(DelegateService.class);
-    delegateService.run(upgrade);
+    delegateService.run(upgrade, restart);
 
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();

@@ -10,6 +10,7 @@ import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import software.wings.beans.AppContainer;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
@@ -24,6 +25,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -50,6 +52,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private YamlGitSyncService yamlGitSyncService;
+  @Inject private WingsPersistence wingsPersistence;
 
   /**
    * Gets the yaml version of a service by serviceId
@@ -127,6 +130,7 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
     // what are the config variable changes? Which are additions and which are deletions?
     List<ConfigVarYaml> configVarsToAdd = new ArrayList<ConfigVarYaml>();
     List<ConfigVarYaml> configVarsToDelete = new ArrayList<ConfigVarYaml>();
+    List<ConfigVarYaml> configVarsToUpdate = new ArrayList<ConfigVarYaml>();
 
     ServiceYaml beforeServiceYaml = null;
 
@@ -225,6 +229,11 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
 
         // ----------- START CONFIG VARIABLE SECTION ---------------
         List<ConfigVarYaml> configVars = serviceYaml.getConfigVariables();
+        List<ConfigVarYaml> beforeConfigVars = null;
+
+        if (beforeServiceYaml != null) {
+          beforeConfigVars = beforeServiceYaml.getConfigVariables();
+        }
 
         if (configVars != null) {
           // initialize the config vars to add from the after
@@ -233,16 +242,12 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
           }
         }
 
-        if (beforeServiceYaml != null) {
-          List<ConfigVarYaml> beforeConfigVars = beforeServiceYaml.getConfigVariables();
-
-          if (beforeConfigVars != null) {
-            // initialize the config vars to delete from the before, and remove the befores from the config vars to add
-            // list
-            for (ConfigVarYaml cv : beforeConfigVars) {
-              configVarsToDelete.add(cv);
-              configVarsToAdd.remove(cv);
-            }
+        if (beforeConfigVars != null) {
+          // initialize the config vars to delete from the before, and remove the befores from the config vars to add
+          // list
+          for (ConfigVarYaml cv : beforeConfigVars) {
+            configVarsToDelete.add(cv);
+            configVarsToAdd.remove(cv);
           }
         }
 
@@ -250,6 +255,19 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
           // remove the afters from the config vars to delete list
           for (ConfigVarYaml cv : configVars) {
             configVarsToDelete.remove(cv);
+
+            if (beforeConfigVars.contains(cv)) {
+              ConfigVarYaml beforeCV = null;
+              for (ConfigVarYaml bcv : beforeConfigVars) {
+                if (bcv.equals(cv)) {
+                  beforeCV = bcv;
+                  break;
+                }
+              }
+              if (!cv.getValue().equals(beforeCV.getValue())) {
+                configVarsToUpdate.add(cv);
+              }
+            }
           }
         }
 
@@ -291,6 +309,23 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
                 serviceVariableService.save(createNewServiceVariable(appId, service.getUuid(), cv));
           }
         }
+
+        if (configVarsToUpdate != null) {
+          // do updates
+          for (ConfigVarYaml cv : configVarsToUpdate) {
+            // we need to get by appId and serviceId = entityId
+            ServiceVariable sv = wingsPersistence.createQuery(ServiceVariable.class)
+                                     .field("appId")
+                                     .equal(appId)
+                                     .field("entityId")
+                                     .equal(serviceId)
+                                     .field("name")
+                                     .equal(cv.getName())
+                                     .get();
+            sv.setValue(cv.getValue().toCharArray());
+            ServiceVariable updatedServiceVariable = serviceVariableService.update(sv);
+          }
+        }
         // ----------- END CONFIG VARIABLE SECTION ---------------
 
         // save the changes
@@ -306,6 +341,10 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
           YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_ERROR, ResponseTypeEnum.ERROR,
               "The ArtifactType: '" + artifactTypeStr + "' is not found in the ArtifactType Enum!");
           return rr;
+        }
+
+        if (service.getAppContainer() == null) {
+          service.setAppContainer(new AppContainer());
         }
 
         service = serviceResourceService.update(service);
