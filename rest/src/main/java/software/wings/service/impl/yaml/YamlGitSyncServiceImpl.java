@@ -181,7 +181,7 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
       // createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
 
       // if it is Setup - we need to pushDirectory
-      if (ygs.getType() == SETUP) {
+      if (ygs.getEntityId().equals("setup")) {
         yamlDirectoryService.pushDirectory(accountId, false);
       }
     }
