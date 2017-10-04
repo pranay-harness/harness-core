@@ -57,6 +57,7 @@ import software.wings.yaml.gitSync.EntityUpdateEvent.SourceType;
 import software.wings.yaml.gitSync.EntityUpdateListEvent;
 import software.wings.yaml.gitSync.GitSyncFile;
 import software.wings.yaml.gitSync.YamlGitSync;
+import software.wings.yaml.gitSync.YamlGitSync.SyncMode;
 import software.wings.yaml.settingAttribute.PhysicalDataCenterYaml;
 
 import java.util.List;
@@ -99,6 +100,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return null;
     }
 
+    // it needs to be HARNESS_TO_GIT or BOTH for us to proceed
+    if (ygs.getSyncMode() == SyncMode.GIT_TO_HARNESS) {
+      return null;
+    }
+
     EntityUpdateListEvent eule =
         EntityUpdateListEvent.Builder.anEntityUpdateListEvent().withAccountId(accountId).withTreeSync(true).build();
 
@@ -119,7 +125,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     path = path + "/" + fn.getName();
 
     for (DirectoryNode dn : fn.getChildren()) {
-      logger.info(path + " :: " + dn.getName());
+      // logger.info(path + " :: " + dn.getName());
 
       if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();

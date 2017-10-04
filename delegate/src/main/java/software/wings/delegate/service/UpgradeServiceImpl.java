@@ -110,6 +110,57 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
+  @Override
+  public void doRestart() throws IOException, TimeoutException, InterruptedException {
+    StartedProcess process = null;
+    try {
+      logger.info("Restarting the delegate.");
+      signalService.pause();
+      logger.info("Previous delegate paused.");
+      PipedInputStream pipedInputStream = new PipedInputStream();
+      process = new ProcessExecutor()
+                    .timeout(5, TimeUnit.MINUTES)
+                    .command("./run.sh", "restart")
+                    .redirectError(Slf4jStream.of("RestartScript").asError())
+                    .redirectOutput(Slf4jStream.of("RestartScript").asInfo())
+                    .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))
+                    .readOutput(true)
+                    .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                    .start();
+      try {
+        if (process.getProcess().isAlive()) {
+          logger.info("Delegate restarted. Stopping previous delegate.");
+          signalService.stop();
+        } else {
+          logger.error("Failed to restart delegate.");
+        }
+      } finally {
+        signalService.resume();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error("Exception while restarting", e);
+      if (process != null) {
+        try {
+          process.getProcess().destroy();
+          process.getProcess().waitFor();
+        } catch (Exception ex) {
+          // ignore
+        }
+        try {
+          if (process.getProcess().isAlive()) {
+            process.getProcess().destroyForcibly();
+            if (process.getProcess() != null) {
+              process.getProcess().waitFor();
+            }
+          }
+        } catch (Exception ex) {
+          logger.error("ALERT: Couldn't kill forcibly.", ex);
+        }
+      }
+    }
+  }
+
   private void cleanupOldDelegateVersionFromBackup(DelegateScripts delegateScripts, String version) {
     try {
       cleanup(new File(System.getProperty("user.dir")), version, delegateScripts.getVersion(), "backup.");
