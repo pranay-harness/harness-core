@@ -24,13 +24,13 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CloudWatchExecutionData;
-import software.wings.api.CloudWatchExecutionData.Builder;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.AwsHelperService;
@@ -46,8 +46,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,6 +68,11 @@ public class CloudWatchState extends State {
   @EnumData(enumDataProvider = AwsSettingProvider.class)
   @Attributes(required = true, title = "AWS account")
   private String awsCredentialsConfigId;
+
+  @Attributes(title = "Region")
+  @DefaultValue("us-east-1")
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private String region = "us-east-1";
 
   @Attributes(required = true, title = "Namespace") private String namespace;
 
@@ -94,12 +99,12 @@ public class CloudWatchState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
 
-    CloudWatchExecutionData stateExecutionData = Builder.aCloudWatchExecutionData()
-                                                     .withNamespace(namespace)
-                                                     .withMetricName(metricName)
-                                                     .withPercentile(percentile)
-                                                     .withDimensions(dimensions)
-                                                     .withAssertionStatement(assertion)
+    CloudWatchExecutionData stateExecutionData = CloudWatchExecutionData.builder()
+                                                     .namespace(namespace)
+                                                     .metricName(metricName)
+                                                     .percentile(percentile)
+                                                     .dimensions(dimensions)
+                                                     .assertionStatement(assertion)
                                                      .build();
 
     SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, awsCredentialsConfigId);
@@ -150,7 +155,7 @@ public class CloudWatchState extends State {
     getMetricRequest.setStartTime(new Date(startEpoch));
     getMetricRequest.setEndTime(new Date(endEpoch));
 
-    Datapoint datapoint = awsHelperService.getCloudWatchMetricStatistics(awsConfig, getMetricRequest);
+    Datapoint datapoint = awsHelperService.getCloudWatchMetricStatistics(awsConfig, region, getMetricRequest);
 
     stateExecutionData.setDatapoint(datapoint);
 
@@ -356,5 +361,13 @@ public class CloudWatchState extends State {
    */
   private void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 }

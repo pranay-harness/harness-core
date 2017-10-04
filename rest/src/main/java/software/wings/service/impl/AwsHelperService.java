@@ -31,6 +31,7 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
@@ -211,8 +212,12 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the aws cloud watch client
    */
-  private AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, char[] secretKey) {
-    return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
+  private AmazonCloudWatchClient getAwsCloudWatchClient(String region, String accessKey, char[] secretKey) {
+    return (AmazonCloudWatchClient) AmazonCloudWatchClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(
+            new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, String.valueOf(secretKey))))
+        .build();
   }
 
   /**
@@ -1197,10 +1202,10 @@ public class AwsHelperService {
   }
 
   public Datapoint getCloudWatchMetricStatistics(
-      AwsConfig awsConfig, GetMetricStatisticsRequest metricStatisticsRequest) {
+      AwsConfig awsConfig, String region, GetMetricStatisticsRequest metricStatisticsRequest) {
     try {
       AmazonCloudWatchClient cloudWatchClient =
-          getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+          getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       Datapoint datapoint = cloudWatchClient.getMetricStatistics(metricStatisticsRequest)
                                 .getDatapoints()
                                 .stream()
@@ -1213,10 +1218,10 @@ public class AwsHelperService {
     return new Datapoint();
   }
 
-  public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig) {
+  public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, String region) {
     try {
       AmazonCloudWatchClient cloudWatchClient =
-          getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+          getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return cloudWatchClient.listMetrics().getMetrics();
 
     } catch (AmazonServiceException amazonServiceException) {
@@ -1225,10 +1230,10 @@ public class AwsHelperService {
     return Arrays.asList();
   }
 
-  public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, ListMetricsRequest listMetricsRequest) {
+  public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, String region, ListMetricsRequest listMetricsRequest) {
     try {
       AmazonCloudWatchClient cloudWatchClient =
-          getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+          getAwsCloudWatchClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return cloudWatchClient.listMetrics(listMetricsRequest).getMetrics();
 
     } catch (AmazonServiceException amazonServiceException) {
