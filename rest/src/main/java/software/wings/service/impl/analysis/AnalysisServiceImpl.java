@@ -648,6 +648,10 @@ public class AnalysisServiceImpl implements AnalysisService {
         nodes.remove(node);
       }
 
+      if (!nodes.isEmpty()) {
+        logger.warn("Still waiting for data for " + Arrays.toString(nodes.toArray()) + " for " + stateExecutionId);
+      }
+
       return nodes.isEmpty() ? logCollectionMinute : -1;
 
       // logCollectionMinute =  nodes.isEmpty() ? logCollectionMinute : -1;
