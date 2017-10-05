@@ -45,6 +45,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.AmazonWebServicesYaml;
 import software.wings.yaml.GoogleCloudPlatformYaml;
+import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryNode.NodeType;
@@ -85,6 +86,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
+    logger.info("******* pushDirectory");
+
     String setupEntityId = "setup";
     FolderNode top = getDirectory(accountId, setupEntityId, filterCustomGitSync);
 
@@ -114,6 +117,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     // traverse the directory and add all the files
     eule = traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
+
+    logger.info("******* about to queue EntityUpdateList");
 
     entityUpdateService.queueEntityUpdateList(eule);
 
@@ -208,8 +213,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     DirectoryPath directoryPath = new DirectoryPath("setup");
 
     FolderNode configFolder = new FolderNode("Setup", Account.class, directoryPath, yamlGitSyncService);
-    configFolder.addChild(
-        new YamlNode(accountId, "setup.yaml", Account.class, directoryPath.clone().add(accountId), yamlGitSyncService));
+    configFolder.addChild(new YamlNode(
+        accountId, "setup.yaml", Account.class, directoryPath.clone().add(accountId), yamlGitSyncService, Type.SETUP));
 
     doApplications(configFolder, accountId, directoryPath.clone());
     doCloudProviders(configFolder, accountId, directoryPath.clone());
@@ -234,8 +239,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       FolderNode appFolder = new FolderNode(
           app.getName(), Application.class, appPath.add(app.getUuid()), app.getUuid(), yamlGitSyncService);
       applicationsFolder.addChild(appFolder);
-      appFolder.addChild(
-          new YamlNode(app.getUuid(), app.getName() + ".yaml", Application.class, appPath, yamlGitSyncService));
+      appFolder.addChild(new YamlNode(
+          app.getUuid(), app.getName() + ".yaml", Application.class, appPath, yamlGitSyncService, Type.APP));
 
       doServices(appFolder, app, appPath.clone());
       doEnvironments(appFolder, app, appPath.clone());
@@ -260,7 +265,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             service.getAppId(), yamlGitSyncService);
         servicesFolder.addChild(serviceFolder);
         serviceFolder.addChild(new AppLevelYamlNode(service.getUuid(), service.getAppId(), service.getName() + ".yaml",
-            Service.class, servicePath, yamlGitSyncService));
+            Service.class, servicePath, yamlGitSyncService, Type.SERVICE));
         DirectoryPath serviceCommandPath = servicePath.clone().add("service_commands");
         FolderNode serviceCommandsFolder = new FolderNode(
             "Commands", ServiceCommand.class, serviceCommandPath, service.getAppId(), yamlGitSyncService);
@@ -273,7 +278,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         for (ServiceCommand serviceCommand : serviceCommands) {
           serviceCommandsFolder.addChild(new ServiceLevelYamlNode(serviceCommand.getUuid(), serviceCommand.getAppId(),
               serviceCommand.getServiceId(), serviceCommand.getName() + ".yaml", ServiceCommand.class,
-              serviceCommandPath.clone().add(serviceCommand.getUuid()), yamlGitSyncService));
+              serviceCommandPath.clone().add(serviceCommand.getUuid()), yamlGitSyncService, Type.SERVICE_COMMAND));
         }
         // ------------------- END SERVICE COMMANDS SECTION -----------------------
       }
@@ -293,7 +298,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         DirectoryPath envPath = directoryPath.clone();
         environmentsFolder.addChild(
             new AppLevelYamlNode(environment.getUuid(), environment.getAppId(), environment.getName() + ".yaml",
-                Environment.class, envPath.add(environment.getUuid()), yamlGitSyncService));
+                Environment.class, envPath.add(environment.getUuid()), yamlGitSyncService, Type.ENVIRONMENT));
       }
     }
   }
@@ -311,8 +316,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over workflows
       for (Workflow workflow : workflows) {
         DirectoryPath workflowPath = directoryPath.clone();
-        workflowsFolder.addChild(new AppLevelYamlNode(workflow.getUuid(), workflow.getAppId(),
-            workflow.getName() + ".yaml", Workflow.class, workflowPath.add(workflow.getUuid()), yamlGitSyncService));
+        workflowsFolder.addChild(
+            new AppLevelYamlNode(workflow.getUuid(), workflow.getAppId(), workflow.getName() + ".yaml", Workflow.class,
+                workflowPath.add(workflow.getUuid()), yamlGitSyncService, Type.WORKFLOW));
       }
     }
   }
@@ -330,8 +336,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // iterate over pipelines
       for (Pipeline pipeline : pipelines) {
         DirectoryPath pipelinePath = directoryPath.clone();
-        pipelinesFolder.addChild(new AppLevelYamlNode(pipeline.getUuid(), pipeline.getAppId(),
-            pipeline.getName() + ".yaml", Pipeline.class, pipelinePath.add(pipeline.getUuid()), yamlGitSyncService));
+        pipelinesFolder.addChild(
+            new AppLevelYamlNode(pipeline.getUuid(), pipeline.getAppId(), pipeline.getName() + ".yaml", Pipeline.class,
+                pipelinePath.add(pipeline.getUuid()), yamlGitSyncService, Type.PIPELINE));
       }
     }
   }
@@ -358,7 +365,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         triggersFolder.addChild(new AppLevelYamlNode(as.getUuid(), as.getAppId(), name + ".yaml", ArtifactStream.class,
-            asPath.add(as.getUuid()), yamlGitSyncService));
+            asPath.add(as.getUuid()), yamlGitSyncService, Type.TRIGGER));
       }
     }
   }
