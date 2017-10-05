@@ -60,14 +60,17 @@ public class LogAnalysisManagerJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
       if (!LogAnalysisTask.stateExecutionLocks.contains(context.getStateExecutionId())) {
         UUID id = UUID.randomUUID();
         if (LogAnalysisTask.stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
+          logger.info("Submitting log analysis job to queue " + context.getStateExecutionId());
           // TODO unbounded task queue
           executorService.submit(new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine,
               delegateService, context, jobExecutionContext, delegateTaskId, id));
         }
       }
+      logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
       try {
@@ -125,6 +128,7 @@ public class LogAnalysisManagerJob implements Job {
       boolean completeCron = false;
 
       try {
+        logger.info("running log ml analysis for " + context.getStateExecutionId());
         UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
         if (!uuid.equals(this.uuid)) {
           logger.error(" UUIDs dont match " + JsonUtils.asJson(context));
@@ -135,6 +139,7 @@ public class LogAnalysisManagerJob implements Job {
          * exit immediately
          */
         if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           return;
         }
 
@@ -158,6 +163,8 @@ public class LogAnalysisManagerJob implements Job {
             analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
                 context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
                 ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getFinal());
+          } else {
+            logger.warn("No data for log ml analysis " + context.getStateExecutionId());
           }
         }
 
