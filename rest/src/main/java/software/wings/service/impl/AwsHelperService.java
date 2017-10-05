@@ -204,10 +204,6 @@ public class AwsHelperService {
     }
   }
 
-  public void validateAwsAccountCredential(EcrConfig ecrConfig) {
-    validateAwsAccountCredential(ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
-  }
-
   /**
    * Gets aws cloud watch client.
    *
