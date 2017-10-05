@@ -39,7 +39,7 @@ public class ArtifactoryServiceTest {
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(9881);
 
-  String url = "http://localhost:8881/artifactory/";
+  String url = "http://localhost:9881/artifactory/";
 
   private ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
                                                     .withArtifactoryUrl(url)
