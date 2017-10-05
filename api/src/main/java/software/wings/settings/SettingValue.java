@@ -182,11 +182,6 @@ public abstract class SettingValue implements ExtensionPoint {
      */
     AMAZON_S3("AmazonS3"),
 
-    /**
-     * KMS setting variable types.
-     */
-    KMS,
-
     SSH_SESSION_CONFIG,
 
     SERVICE_VARIABLE,
