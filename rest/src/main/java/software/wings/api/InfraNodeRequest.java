@@ -9,19 +9,10 @@ import java.util.List;
  */
 public class InfraNodeRequest {
   private DeploymentType deploymentType;
-  private boolean provisionNodes;
   private int instanceCount;
   private List<String> nodeNames;
   private PhaseElement phaseElement;
   private InstanceUnitType instanceUnitType;
-
-  public boolean isProvisionNodes() {
-    return provisionNodes;
-  }
-
-  public void setProvisionNodes(boolean provisionNodes) {
-    this.provisionNodes = provisionNodes;
-  }
 
   public int getInstanceCount() {
     return instanceCount;
@@ -58,13 +49,12 @@ public class InfraNodeRequest {
   @Override
   public String toString() {
     return "InfraNodeRequest{"
-        + "deploymentType=" + deploymentType + ", provisionNodes=" + provisionNodes + ", instanceCount=" + instanceCount
-        + ", nodeNames=" + nodeNames + ", phaseElement=" + phaseElement + '}';
+        + "deploymentType=" + deploymentType + ", instanceCount=" + instanceCount + ", nodeNames=" + nodeNames
+        + ", phaseElement=" + phaseElement + '}';
   }
 
   public static final class InfraNodeRequestBuilder {
     private DeploymentType deploymentType;
-    private boolean provisionNodes;
     private int instanceCount;
     private List<String> nodeNames;
     private PhaseElement phaseElement;
@@ -78,11 +68,6 @@ public class InfraNodeRequest {
 
     public InfraNodeRequestBuilder withDeploymentType(DeploymentType deploymentType) {
       this.deploymentType = deploymentType;
-      return this;
-    }
-
-    public InfraNodeRequestBuilder withProvisionNodes(boolean provisionNodes) {
-      this.provisionNodes = provisionNodes;
       return this;
     }
 
@@ -108,7 +93,6 @@ public class InfraNodeRequest {
 
     public InfraNodeRequest build() {
       InfraNodeRequest infraNodeRequest = new InfraNodeRequest();
-      infraNodeRequest.setProvisionNodes(provisionNodes);
       infraNodeRequest.setInstanceCount(instanceCount);
       infraNodeRequest.setNodeNames(nodeNames);
       infraNodeRequest.setPhaseElement(phaseElement);

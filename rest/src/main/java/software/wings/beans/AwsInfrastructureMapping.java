@@ -47,11 +47,15 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @Attributes(title = "Use Public DNS for SSH connection") private boolean usePublicDns;
 
-  @Attributes(title = "Provision Instances") private boolean provisionInstances;
+  @Attributes(title = "Use Auto Scaling group") private boolean provisionInstances;
 
   @Attributes(title = "Instance Filter") private AwsInstanceFilter awsInstanceFilter;
 
-  @Attributes(title = "AutoScaling group") private String autoScalingGroupName;
+  @Attributes(title = "Auto Scaling group") private String autoScalingGroupName;
+
+  @Attributes(title = "Set Auto Scaling group desired capacity") private boolean setDesiredCapacity;
+
+  @Attributes(title = "Desired Capacity") private int desiredCapacity;
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -64,7 +68,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     if (provisionInstances) {
       if (isEmpty(autoScalingGroupName)) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
-            "Auto scaling group must not be empty when provision instances is true.");
+            "Auto Scaling group must not be empty when provision instances is true.");
+      }
+      if (setDesiredCapacity && desiredCapacity <= 0) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Desired count must be greater than zero.");
       }
     } else {
       if (awsInstanceFilter == null) {
@@ -236,6 +243,22 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.customName = customName;
   }
 
+  public boolean isSetDesiredCapacity() {
+    return setDesiredCapacity;
+  }
+
+  public void setSetDesiredCapacity(boolean setDesiredCapacity) {
+    this.setDesiredCapacity = setDesiredCapacity;
+  }
+
+  public int getDesiredCapacity() {
+    return desiredCapacity;
+  }
+
+  public void setDesiredCapacity(int desiredCapacity) {
+    this.desiredCapacity = desiredCapacity;
+  }
+
   /**
    * The enum Restriction type.
    */
@@ -331,6 +354,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String deploymentType;
     private String computeProviderName;
     private String displayName;
+    private boolean setDesiredCapacity;
+    private int desiredCapacity;
 
     private Builder() {}
 
@@ -463,6 +488,16 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withSetDesiredCapacity(boolean setDesiredCapacity) {
+      this.setDesiredCapacity = setDesiredCapacity;
+      return this;
+    }
+
+    public Builder withDesiredCapacity(int desiredCapacity) {
+      this.desiredCapacity = desiredCapacity;
+      return this;
+    }
+
     public Builder but() {
       return anAwsInfrastructureMapping()
           .withRestrictionType(restrictionType)
@@ -489,7 +524,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withAutoScalingGroupName(autoScalingGroupName)
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
-          .withDisplayName(displayName);
+          .withDisplayName(displayName)
+          .withSetDesiredCapacity(setDesiredCapacity);
     }
 
     public AwsInfrastructureMapping build() {
@@ -518,6 +554,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setDisplayName(displayName);
+      awsInfrastructureMapping.setSetDesiredCapacity(setDesiredCapacity);
+      awsInfrastructureMapping.setDesiredCapacity(desiredCapacity);
       return awsInfrastructureMapping;
     }
   }

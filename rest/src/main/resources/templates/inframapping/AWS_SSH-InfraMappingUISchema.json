@@ -8,5 +8,5 @@
     "ui:order":["vpcIds","tags","subnetIds","securityGroupIds"]
   },
   "ui:order": [  "deploymentType","computeProviderSettingId", "region", "hostConnectionAttrs", "usePublicDns",
-    "infraMappingType","computeProviderType", "loadBalancerId", "customName", "provisionInstances", "awsInstanceFilter", "autoScalingGroupName"]
+    "infraMappingType","computeProviderType", "loadBalancerId", "customName", "provisionInstances", "awsInstanceFilter", "autoScalingGroupName","setDesiredCapacity","desiredCapacity"]
 }

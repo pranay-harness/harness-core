@@ -1,15 +1,16 @@
 package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
 import com.amazonaws.AmazonServiceException;
@@ -23,8 +24,7 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
-import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
@@ -65,10 +65,8 @@ import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
 import com.amazonaws.services.ec2.model.DescribeTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TagDescription;
@@ -167,21 +165,23 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -189,6 +189,9 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class AwsHelperService {
+  private static final int SLEEP_INTERVAL = 30 * 1000;
+  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
@@ -415,7 +418,7 @@ public class AwsHelperService {
    * @param dnsName the dns name
    * @return the hostname from dns name
    */
-  public String getHostnameFromDnsName(String dnsName) {
+  public String getHostnameFromPrivateDnsName(String dnsName) {
     return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
   }
 
@@ -691,7 +694,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
   }
 
   public List<String> listVPCs(AwsConfig awsConfig, String region) {
@@ -706,7 +709,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Lists.newArrayList();
+    return emptyList();
   }
 
   public List<String> listSecurityGroupIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
@@ -724,7 +727,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Lists.newArrayList();
+    return emptyList();
   }
 
   public List<String> listSubnetIds(AwsConfig awsConfig, String region, List<String> vpcIds) {
@@ -743,7 +746,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Lists.newArrayList();
+    return emptyList();
   }
 
   public Set<String> listTags(AwsConfig awsConfig, String region) {
@@ -760,7 +763,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Sets.newHashSet();
+    return emptySet();
   }
 
   public List<String> listAutoScalingGroups(AwsConfig awsConfig, String region) {
@@ -776,7 +779,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Lists.newArrayList();
+    return emptyList();
   }
 
   public CreateClusterResult createCluster(
@@ -988,7 +991,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return new ArrayList<>();
+    return emptyList();
   }
 
   public List<TargetGroup> listTargetGroupsForElb(String region, AwsConfig awsConfig, String loadBalancerName) {
@@ -1010,101 +1013,81 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return new ArrayList<>();
-  }
-
-  public Map<String, String> listRoles(AwsConfig awsConfig) {
-    try {
-      AmazonIdentityManagementClient amazonIdentityManagementClient =
-          getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-      return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
-          .getRoles()
-          .stream()
-          .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return Maps.newHashMap();
-  }
-
-  public List<Instance> listRunInstancesFromLaunchConfig(
-      AwsConfig awsConfig, String region, String launchConfigName, int instanceCount) {
-    try {
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-      LaunchConfiguration launchConfiguration =
-          amazonAutoScalingClient
-              .describeLaunchConfigurations(
-                  new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
-              .getLaunchConfigurations()
-              .iterator()
-              .next();
-
-      RunInstancesRequest runInstancesRequest =
-          new RunInstancesRequest()
-              .withImageId(launchConfiguration.getImageId())
-              .withInstanceType(launchConfiguration.getInstanceType())
-              .withMinCount(instanceCount)
-              .withMaxCount(instanceCount)
-              .withKeyName(launchConfiguration.getKeyName())
-              .withIamInstanceProfile(
-                  new IamInstanceProfileSpecification().withName(launchConfiguration.getIamInstanceProfile()))
-              .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
-              .withUserData(launchConfiguration.getUserData());
-
-      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
     return emptyList();
   }
 
-  public List<Instance> listRunInstancesFromAutoScalingGroup(
-      AwsConfig awsConfig, String region, String autoScalingGroupName, int instanceCount) {
+  public void setAutoScalingGroupCapacity(AwsConfig awsConfig, AwsInfrastructureMapping infrastructureMapping) {
     try {
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-      AutoScalingGroup autoScalingGroup =
-          amazonAutoScalingClient
-              .describeAutoScalingGroups(
-                  new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName))
-              .getAutoScalingGroups()
-              .iterator()
-              .next();
-
-      LaunchConfiguration launchConfiguration =
-          amazonAutoScalingClient
-              .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(
-                  autoScalingGroup.getLaunchConfigurationName()))
-              .getLaunchConfigurations()
-              .iterator()
-              .next();
-
-      RunInstancesRequest runInstancesRequest =
-          new RunInstancesRequest()
-              .withImageId(launchConfiguration.getImageId())
-              .withInstanceType(launchConfiguration.getInstanceType())
-              .withMinCount(instanceCount)
-              .withMaxCount(instanceCount)
-              .withKeyName(launchConfiguration.getKeyName())
-              .withIamInstanceProfile(
-                  new IamInstanceProfileSpecification().withName(launchConfiguration.getIamInstanceProfile()))
-              .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
-              .withUserData(launchConfiguration.getUserData());
-
-      return amazonEc2Client.runInstances(runInstancesRequest).getReservation().getInstances();
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(
+          Regions.fromName(infrastructureMapping.getRegion()), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      amazonAutoScalingClient.setDesiredCapacity(
+          new SetDesiredCapacityRequest()
+              .withAutoScalingGroupName(infrastructureMapping.getAutoScalingGroupName())
+              .withDesiredCapacity(infrastructureMapping.getDesiredCapacity()));
+      waitForAllInstancesToBeReady(awsConfig, infrastructureMapping);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return emptyList();
   }
 
-  public List<String> listIAMInstanceRoles(AwsConfig awsConfig) {
+  private AutoScalingGroup getAutoScalingGroup(AwsConfig awsConfig, AwsInfrastructureMapping infrastructureMapping) {
+    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(
+        Regions.fromName(infrastructureMapping.getRegion()), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    return amazonAutoScalingClient
+        .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
+            infrastructureMapping.getAutoScalingGroupName()))
+        .getAutoScalingGroups()
+        .iterator()
+        .next();
+  }
+
+  private void waitForAllInstancesToBeReady(AwsConfig awsConfig, AwsInfrastructureMapping infrastructureMapping) {
+    Misc.quietSleep(1, TimeUnit.SECONDS);
+    int retryCount = RETRY_COUNTER;
+    List<String> instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+    while (instanceIds.size() != infrastructureMapping.getDesiredCapacity()
+        || !allInstanceInReadyState(awsConfig, infrastructureMapping.getRegion(), instanceIds)) {
+      if (retryCount-- <= 0) {
+        throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
+      }
+      logger.info("Waiting for all instances to be in running state");
+      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
+      instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+    }
+  }
+
+  private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, List<String> instanceIds) {
+    DescribeInstancesResult describeInstancesResult =
+        describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
+    return describeInstancesResult.getReservations()
+        .stream()
+        .flatMap(reservation -> reservation.getInstances().stream())
+        .allMatch(instance -> instance.getState().getName().equals("running"));
+  }
+
+  DescribeInstancesResult describeAutoScalingGroupInstances(
+      AwsConfig awsConfig, AwsInfrastructureMapping infrastructureMapping) {
+    try {
+      AmazonEC2Client amazonEc2Client =
+          getAmazonEc2Client(infrastructureMapping.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      List<String> instanceIds = listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+      return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceIds));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeInstancesResult();
+  }
+
+  public List<String> listInstanceIdsFromAutoScalingGroup(
+      AwsConfig awsConfig, AwsInfrastructureMapping infrastructureMapping) {
+    return getAutoScalingGroup(awsConfig, infrastructureMapping)
+        .getInstances()
+        .stream()
+        .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)
+        .collect(toList());
+  }
+
+  List<String> listIAMInstanceRoles(AwsConfig awsConfig) {
     try {
       AmazonIdentityManagementClient amazonIdentityManagementClient =
           getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -1116,10 +1099,10 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
   }
 
-  public Map<String, String> listIAMRoles(AwsConfig awsConfig) {
+  Map<String, String> listIAMRoles(AwsConfig awsConfig) {
     try {
       AmazonIdentityManagementClient amazonIdentityManagementClient =
           getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -1131,10 +1114,10 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Maps.newHashMap();
+    return emptyMap();
   }
 
-  public List<String> listApplicationLoadBalancers(AwsConfig awsConfig, String region) {
+  List<String> listApplicationLoadBalancers(AwsConfig awsConfig, String region) {
     try {
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = getAmazonElasticLoadBalancingClient(
           Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -1148,10 +1131,10 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
   }
 
-  public List<String> listClassicLoadBalancers(AwsConfig awsConfig, String region) {
+  List<String> listClassicLoadBalancers(AwsConfig awsConfig, String region) {
     try {
       List<LoadBalancerDescription> describeLoadBalancers = getLoadBalancerDescriptions(region, awsConfig);
       return describeLoadBalancers.stream()
@@ -1160,19 +1143,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return new ArrayList<>();
-  }
-
-  public List<LaunchConfiguration> describeLaunchConfigurations(AwsConfig awsConfig, String region) {
-    try {
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      // TODO:: remove direct usage of LaunchConfiguration
-      return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return Arrays.asList();
+    return emptyList();
   }
 
   public CreateAutoScalingGroupResult createAutoScalingGroup(
@@ -1180,9 +1151,7 @@ public class AwsHelperService {
     try {
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      CreateAutoScalingGroupResult createAutoScalingGroupResult =
-          amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
-      return createAutoScalingGroupResult;
+      return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1227,7 +1196,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
   }
 
   public List<Metric> getCloudWatchMetrics(AwsConfig awsConfig, String region, ListMetricsRequest listMetricsRequest) {
@@ -1239,7 +1208,7 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
-    return Arrays.asList();
+    return emptyList();
   }
 
   public boolean registerInstancesWithLoadBalancer(

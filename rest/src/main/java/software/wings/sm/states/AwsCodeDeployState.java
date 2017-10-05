@@ -283,7 +283,7 @@ public class AwsCodeDeployState extends State {
           (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
       List<InstanceElement> instanceElements = new ArrayList<>();
       commandExecutionData.getInstances().forEach(instance -> {
-        String hostName = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
+        String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
         InstanceElement instanceElement =
             anInstanceElement()
                 .withUuid(instance.getInstanceId())

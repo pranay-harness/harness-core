@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
-import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -18,8 +18,8 @@ import javax.inject.Singleton;
 @Singleton
 public class DirectInfrastructureProvider implements InfrastructureProvider {
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
-      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
+      SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     return aPageResponse().withResponse(null).build();
   }
 

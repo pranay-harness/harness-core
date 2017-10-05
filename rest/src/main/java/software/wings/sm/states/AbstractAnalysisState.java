@@ -10,7 +10,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import com.jcraft.jsch.HASH;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -41,12 +40,12 @@ import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -136,7 +135,7 @@ public abstract class AbstractAnalysisState extends State {
     hosts = hosts.stream()
                 .flatMap(hostname
                     -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                              : Collections.singletonList(hostname).stream())
+                                              : Stream.of(hostname))
                 .collect(Collectors.toSet());
 
     return hosts;
@@ -152,7 +151,7 @@ public abstract class AbstractAnalysisState extends State {
     rv = rv.stream()
              .flatMap(hostname
                  -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                           : Collections.singletonList(hostname).stream())
+                                           : Stream.of(hostname))
              .collect(Collectors.toSet());
 
     return rv;

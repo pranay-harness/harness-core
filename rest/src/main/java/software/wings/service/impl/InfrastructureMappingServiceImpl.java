@@ -26,7 +26,6 @@ import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -272,6 +271,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         updateOperations.unset("customName");
       }
       updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
+      updateOperations.set("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
+      updateOperations.set("desiredCapacity", awsInfrastructureMapping.getDesiredCapacity());
       updateOperations.set("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
       if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
         updateOperations.set("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
@@ -427,7 +428,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       requestBuilder.withLimit(selectionParams.getCount().toString());
     }
 
-    return serviceInstanceService.list(requestBuilder.build()).getResponse();
+    List response = serviceInstanceService.list(requestBuilder.build()).getResponse();
+    return response;
   }
 
   @Override
@@ -743,11 +745,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     AwsInfrastructureProvider awsInfrastructureProvider =
         (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
     AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-    List<Host> hosts = awsInfrastructureProvider
-                           .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting,
-                               awsInfrastructureMapping.getAwsInstanceFilter(),
-                               awsInfrastructureMapping.isUsePublicDns(), new PageRequest<>())
-                           .getResponse();
+    List<Host> hosts =
+        awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
+            .getResponse();
     PageRequest<Host> pageRequest = aPageRequest()
                                         .withLimit(UNLIMITED)
                                         .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
@@ -821,10 +821,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider
-          .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting,
-              awsInfrastructureMapping.getAwsInstanceFilter(), awsInfrastructureMapping.isUsePublicDns(),
-              new PageRequest<>())
+      return infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
           .getResponse()
           .stream()
           .map(Host::getPublicDns)
@@ -838,23 +835,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
     return getInfrastructureMappingHosts(infrastructureMapping);
-  }
-
-  @Override
-  public List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String infraMappingId) {
-    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-
-    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listLaunchConfigurations(
-          computeProviderSetting, ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
-    }
-    return emptyList();
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
@@ -881,7 +861,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount) {
+  public List<ServiceInstance> getAutoScaleGroupNodes(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -895,20 +875,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               infrastructureMapping.getComputeProviderType());
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
-      List<Host> hosts = awsInfrastructureProvider.provisionHosts(awsInfrastructureMapping.getRegion(),
-          computeProviderSetting, awsInfrastructureMapping.getAutoScalingGroupName(),
-          awsInfrastructureMapping.isUsePublicDns(), instanceCount);
+      List<Host> hosts = awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
+          awsInfrastructureMapping, computeProviderSetting);
       updateHostsAndServiceInstances(infrastructureMapping, hosts, emptyList());
 
       return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
           infrastructureMapping.getUuid(),
           ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams()
               .withSelectSpecificHosts(true)
-              .withHostNames(hosts.stream().map(Host::getHostName).collect(Collectors.toList()))
+              .withHostNames(hosts.stream().map(Host::getPublicDns).collect(Collectors.toList()))
               .build());
     } else {
       throw new WingsException(
-          INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infrastructure mapping");
+          INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");
     }
   }
 
