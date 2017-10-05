@@ -796,9 +796,4 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       deleteEncryptionReference(toDelete, null);
     }
   }
-
-  public static void main(String[] args) {
-    System.out.println(Encryptable.class.isAssignableFrom(NewRelicConfig.class));
-    //    System.out.println(SettingAttribute.class.);
-  }
 }

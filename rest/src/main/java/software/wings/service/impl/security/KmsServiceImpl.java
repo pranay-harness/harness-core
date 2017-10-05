@@ -2,15 +2,19 @@ package software.wings.service.impl.security;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedData;
@@ -31,11 +35,10 @@ public class KmsServiceImpl implements KmsService {
 
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private MainConfiguration mainConfiguration;
 
   @Override
   public EncryptedData encrypt(char[] value, KmsConfig kmsConfig) {
-    if (kmsConfig == null || !kmsConfig.isInitialized()) {
+    if (kmsConfig == null) {
       logger.warn("Kms service not configured, encrypting locally");
       return encryptLocal(value);
     }
@@ -50,7 +53,7 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) {
-    if (kmsConfig == null || !kmsConfig.isInitialized()) {
+    if (kmsConfig == null) {
       logger.warn("Kms service not configured, decrypting locally");
       return decryptLocal(data);
     }
@@ -65,6 +68,7 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public KmsConfig getKmsConfig(String accountId) {
+    KmsConfig kmsConfig = null;
     Iterator<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
                                            .field("accountId")
                                            .equal(accountId)
@@ -72,16 +76,76 @@ public class KmsServiceImpl implements KmsService {
                                            .equal(SettingVariableTypes.KMS)
                                            .fetch(new FindOptions().limit(1));
     if (query.hasNext()) {
-      return (KmsConfig) query.next().getValue();
+      kmsConfig = (KmsConfig) query.next().getValue();
+    } else {
+      query = wingsPersistence.createQuery(SettingAttribute.class)
+                  .field("accountId")
+                  .equal(Base.GLOBAL_ACCOUNT_ID)
+                  .field("value.type")
+                  .equal(SettingVariableTypes.KMS)
+                  .fetch(new FindOptions().limit(1));
+
+      if (query.hasNext()) {
+        kmsConfig = (KmsConfig) query.next().getValue();
+      }
     }
 
-    KmsConfig kmsConfig = mainConfiguration.getPortal().getKmsConfig();
     if (kmsConfig != null) {
-      kmsConfig.setAccountId(accountId);
-      return kmsConfig;
+      kmsConfig.setAccessKey(decryptKey(kmsConfig.getAccessKey()));
+      kmsConfig.setSecretKey(decryptKey(kmsConfig.getSecretKey()));
+      kmsConfig.setKmsArn(decryptKey(kmsConfig.getKmsArn()));
     }
 
-    return null;
+    return kmsConfig;
+  }
+
+  private char[] decryptKey(char[] key) {
+    final EncryptedData encryptedData = wingsPersistence.getDatastore().get(EncryptedData.class, new String(key));
+    return decrypt(encryptedData, null);
+  }
+
+  @Override
+  public boolean saveKmsConfig(String accountId, String name, KmsConfig kmsConfig) {
+    kmsConfig.setType(SettingVariableTypes.KMS.name());
+    kmsConfig.setAccountId(accountId);
+
+    EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey(), null);
+    accessKeyData.setAccountId(accountId);
+    accessKeyData.setType(SettingVariableTypes.KMS);
+    String accessKeyId = (String) wingsPersistence.getDatastore().save(accessKeyData).getId();
+    kmsConfig.setAccessKey(accessKeyId.toCharArray());
+
+    EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey(), null);
+    accessKeyData.setAccountId(accountId);
+    accessKeyData.setType(SettingVariableTypes.KMS);
+    String secretKeyId = (String) wingsPersistence.getDatastore().save(secretKeyData).getId();
+
+    EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn(), null);
+    accessKeyData.setAccountId(accountId);
+    accessKeyData.setType(SettingVariableTypes.KMS);
+    String arnKeyId = (String) wingsPersistence.getDatastore().save(arnKeyData).getId();
+
+    kmsConfig.setSecretKey(secretKeyId.toCharArray());
+    kmsConfig.setKmsArn(arnKeyId.toCharArray());
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withAppId(Base.GLOBAL_APP_ID)
+                                            .withName(name)
+                                            .withValue(kmsConfig)
+                                            .build();
+    String parentId = (String) wingsPersistence.getDatastore().save(settingAttribute).getId();
+
+    accessKeyData.setParentId(parentId);
+    wingsPersistence.getDatastore().save(accessKeyData);
+
+    secretKeyData.setParentId(parentId);
+    wingsPersistence.getDatastore().save(secretKeyData);
+
+    arnKeyData.setParentId(parentId);
+    wingsPersistence.getDatastore().save(arnKeyData);
+
+    return true;
   }
 
   private EncryptedData encryptLocal(char[] value) {

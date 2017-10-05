@@ -36,12 +36,12 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
       throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
              IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
     final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
-                                 .withCredentials(new AWSStaticCredentialsProvider(
-                                     new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+                                 .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                                     new String(kmsConfig.getAccessKey()), new String(kmsConfig.getSecretKey()))))
                                  .withRegion(Regions.US_EAST_1)
                                  .build();
     GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
-    dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
+    dataKeyRequest.setKeyId(new String(kmsConfig.getKmsArn()));
     dataKeyRequest.setKeySpec("AES_128");
     GenerateDataKeyResult dataKeyResult = kmsClient.generateDataKey(dataKeyRequest);
 
@@ -63,8 +63,8 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
     }
 
     final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
-                                 .withCredentials(new AWSStaticCredentialsProvider(
-                                     new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+                                 .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                                     new String(kmsConfig.getAccessKey()), new String(kmsConfig.getSecretKey()))))
                                  .withRegion(Regions.US_EAST_1)
                                  .build();
 
