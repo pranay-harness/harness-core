@@ -100,12 +100,12 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
           candidateCount++;
         }
         if (workflowModified) {
-          //        try {
-          //          workflowService.updateWorkflow(workflow);
-          //          Thread.sleep(100);
-          //        } catch (Exception e) {
-          //          e.printStackTrace();
-          //        }
+          try {
+            workflowService.updateWorkflow(workflow);
+            Thread.sleep(100);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
 
           updateCount++;
         }
