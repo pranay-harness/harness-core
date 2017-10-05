@@ -37,7 +37,7 @@ public class ConfigVarYaml extends GenericYaml {
       return false;
     }
     ConfigVarYaml cvy = (ConfigVarYaml) o;
-    return Objects.equals(name, cvy.name) && Objects.equals(value, cvy.value);
+    return Objects.equals(name, cvy.name);
   }
 
   @Override

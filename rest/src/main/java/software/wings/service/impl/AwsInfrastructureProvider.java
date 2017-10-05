@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
@@ -23,6 +22,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
@@ -43,14 +44,11 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -60,17 +58,62 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class AwsInfrastructureProvider implements InfrastructureProvider {
-  private static final int SLEEP_INTERVAL = 30 * 1000;
-  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
   private final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
   @Inject private AwsHelperService awsHelperService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration mainConfiguration;
 
   @Override
-  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting,
-      AwsInstanceFilter instanceFilter, boolean usePublicDns, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
+      SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    DescribeInstancesResult describeInstancesResult;
+    if (awsInfrastructureMapping.isProvisionInstances()) {
+      describeInstancesResult = listAutoScaleHosts(awsInfrastructureMapping, awsConfig);
+    } else {
+      describeInstancesResult = listFilteredHosts(awsInfrastructureMapping, awsConfig);
+    }
+    if (describeInstancesResult != null && describeInstancesResult.getReservations() != null) {
+      List<Host> awsHosts =
+          describeInstancesResult.getReservations()
+              .stream()
+              .flatMap(reservation -> reservation.getInstances().stream())
+              .map(instance
+                  -> aHost()
+                         .withAppId(Base.GLOBAL_APP_ID)
+                         .withHostName(awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                         .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
+                                                                                  : instance.getPrivateDnsName())
+                         .withEc2Instance(instance)
+                         .build())
+              .collect(toList());
+      return aPageResponse().withResponse(awsHosts).build();
+    }
+    return aPageResponse().withResponse(emptyList()).build();
+  }
+
+  private DescribeInstancesResult listAutoScaleHosts(
+      AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig) {
+    DescribeInstancesResult describeInstancesResult;
+    if (awsInfrastructureMapping.isSetDesiredCapacity()) {
+      List<Instance> instances = new ArrayList<>();
+      for (int i = 0; i < awsInfrastructureMapping.getDesiredCapacity(); i++) {
+        int instanceNum = i + 1;
+        instances.add(new Instance()
+                          .withPrivateDnsName("private-dns-" + instanceNum)
+                          .withPublicDnsName("public-dns-" + instanceNum));
+      }
+      describeInstancesResult =
+          new DescribeInstancesResult().withReservations(new Reservation().withInstances(instances));
+    } else {
+      describeInstancesResult = awsHelperService.describeAutoScalingGroupInstances(awsConfig, awsInfrastructureMapping);
+    }
+    return describeInstancesResult;
+  }
+
+  private DescribeInstancesResult listFilteredHosts(
+      AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig) {
+    AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("instance-state-name").withValues("running"));
     if (instanceFilter != null) {
@@ -89,25 +132,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
     }
-    DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withFilters(filters);
-    DescribeInstancesResult describeInstancesResult =
-        awsHelperService.describeEc2Instances(awsConfig, region, describeInstancesRequest);
-    if (describeInstancesResult != null && describeInstancesResult.getReservations() != null) {
-      List<Host> awsHosts =
-          describeInstancesResult.getReservations()
-              .stream()
-              .flatMap(reservation -> reservation.getInstances().stream())
-              .map(instance
-                  -> aHost()
-                         .withAppId(Base.GLOBAL_APP_ID)
-                         .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
-                         .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
-                         .withEc2Instance(instance)
-                         .build())
-              .collect(toList());
-      return aPageResponse().withResponse(awsHosts).build();
-    }
-    return aPageResponse().withResponse(Arrays.asList()).build();
+    return awsHelperService.describeEc2Instances(
+        awsConfig, awsInfrastructureMapping.getRegion(), new DescribeInstancesRequest().withFilters(filters));
   }
 
   @Override
@@ -139,59 +165,28 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<Host> provisionHosts(String region, SettingAttribute computeProviderSetting, String autoScalingGroupName,
-      boolean usePublicDns, int instanceCount) {
+  public List<Host> maybeSetAutoScaleCapacityAndGetHosts(
+      AwsInfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    // TODO(brett): Check instanceCount cs autoscaling group size. Scale autoscale group capacity to match
-    // instanceCount, wait until it does, and return all instances from group.
-
-    List<Instance> instances =
-        awsHelperService.listRunInstancesFromAutoScalingGroup(awsConfig, region, autoScalingGroupName, instanceCount);
-    List<String> instancesIds = instances.stream().map(Instance::getInstanceId).collect(toList());
-    logger.info(
-        "Provisioned hosts count = {} and provisioned hosts instance ids = {}", instancesIds.size(), instancesIds);
-
-    waitForAllInstancesToBeReady(awsConfig, region, instancesIds);
-    logger.info("All instances are in running state");
-
-    List<Instance> readyInstances =
-        awsHelperService
-            .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instancesIds))
-            .getReservations()
-            .stream()
-            .flatMap(reservation -> reservation.getInstances().stream())
-            .collect(Collectors.toList());
-
-    for (Instance instance : readyInstances) {
-      int retryCount = RETRY_COUNTER;
-      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
-      while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
-        if (retryCount-- <= 0) {
-          logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
-          try {
-            awsHelperService.terminateEc2Instances(awsConfig, region, instancesIds);
-            logger.error("Terminated provisioned instances [{}] ", instancesIds);
-          } catch (Exception ignoredException) {
-            ignoredException.printStackTrace();
-          }
-          throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
-        }
-        Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
-        logger.info("Couldn't connect to host {}. {} retry attempts left ", hostname, retryCount);
-      }
-      logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
+    if (infrastructureMapping.isSetDesiredCapacity()) {
+      awsHelperService.setAutoScalingGroupCapacity(awsConfig, infrastructureMapping);
     }
+    List<String> instancesIds = awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+    logger.info("Got {} instance ids from auto scaling group {}: {}", instancesIds.size(),
+        infrastructureMapping.getAutoScalingGroupName(), instancesIds);
 
     return awsHelperService
-        .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instancesIds))
+        .describeEc2Instances(
+            awsConfig, infrastructureMapping.getRegion(), new DescribeInstancesRequest().withInstanceIds(instancesIds))
         .getReservations()
         .stream()
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> aHost()
-                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
-                   .withPublicDns(usePublicDns ? instance.getPublicDnsName() : instance.getPrivateDnsName())
+                   .withHostName(awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                   .withPublicDns(infrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
+                                                                         : instance.getPrivateDnsName())
                    .withEc2Instance(instance)
                    .build())
         .collect(toList());
@@ -212,32 +207,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     List<String> hostInstanceId =
         awsHosts.stream().map(host -> host.getEc2Instance().getInstanceId()).collect(toList());
     awsHelperService.terminateEc2Instances(awsConfig, region, hostInstanceId);
-  }
-
-  private void waitForAllInstancesToBeReady(AwsConfig awsConfig, String region, List<String> instancesIds) {
-    Misc.quietSleep(1, TimeUnit.SECONDS);
-    int retryCount = RETRY_COUNTER;
-    while (!allInstanceInReadyState(awsConfig, region, instancesIds)) {
-      if (retryCount-- <= 0) {
-        throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
-      }
-      logger.info("Waiting for all instances to be in running state");
-      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
-    }
-  }
-
-  private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, List<String> instanceIds) {
-    DescribeInstancesResult describeInstancesResult = awsHelperService.describeEc2Instances(
-        awsConfig, region, new DescribeInstancesRequest().withInstanceIds(instanceIds));
-    return describeInstancesResult.getReservations()
-        .stream()
-        .flatMap(reservation -> reservation.getInstances().stream())
-        .allMatch(instance -> instance.getState().getName().equals("running"));
-  }
-
-  public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting, String region) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.describeLaunchConfigurations(awsConfig, region);
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting, String region) {

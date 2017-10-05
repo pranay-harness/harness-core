@@ -30,17 +30,18 @@ public class CloudWatchResource {
   @Path("/namespaces")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> listNamespace(@QueryParam("settingId") String setttingId) {
-    return new RestResponse<>(cloudWatchService.listNamespaces(setttingId));
+  public RestResponse<List<String>> listNamespace(
+      @QueryParam("settingId") String setttingId, @QueryParam("region") String region) {
+    return new RestResponse<>(cloudWatchService.listNamespaces(setttingId, region));
   }
 
   @GET
   @Path("/namespaces/{namespace}/metrics")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> listMetrics(
-      @QueryParam("settingId") String setttingId, @PathParam("namespace") String namespace) {
-    return new RestResponse<>(cloudWatchService.listMetrics(setttingId, namespace));
+  public RestResponse<List<String>> listMetrics(@QueryParam("settingId") String setttingId,
+      @QueryParam("region") String region, @PathParam("namespace") String namespace) {
+    return new RestResponse<>(cloudWatchService.listMetrics(setttingId, region, namespace));
   }
 
   @GET
@@ -48,7 +49,8 @@ public class CloudWatchResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> listNamespace(@QueryParam("settingId") String setttingId,
-      @PathParam("namespace") String namespace, @PathParam("metric") String metric) {
-    return new RestResponse<>(cloudWatchService.listDimensions(setttingId, namespace, metric));
+      @QueryParam("region") String region, @PathParam("namespace") String namespace,
+      @PathParam("metric") String metric) {
+    return new RestResponse<>(cloudWatchService.listDimensions(setttingId, region, namespace, metric));
   }
 }

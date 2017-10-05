@@ -11,4 +11,6 @@ import java.util.concurrent.TimeoutException;
 public interface UpgradeService {
   void doUpgrade(DelegateScripts delegateScripts, String version)
       throws IOException, TimeoutException, InterruptedException;
+
+  void doRestart() throws IOException, TimeoutException, InterruptedException;
 }

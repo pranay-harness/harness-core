@@ -240,6 +240,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
                            .build())
             .build());
 
+    // TODO(brett): Create aws autoscaling group and reference in inframapping
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping()
             .withAppId(app.getUuid())
@@ -247,12 +248,16 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withServiceTemplateId(serviceTemplateId)
             .withComputeProviderSettingId(computeProviderSetting.getUuid())
             .withHostConnectionAttrs(hostConnectionAttr.getUuid())
+            .withProvisionInstances(true)
+            .withAutoScalingGroupName("autoscalingGroupName")
+            .withSetDesiredCapacity(true)
+            .withDesiredCapacity(5)
             .build();
 
     awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
 
-    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(
-        app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(), 5);
+    List<ServiceInstance> serviceInstances =
+        infrastructureMappingService.getAutoScaleGroupNodes(app.getUuid(), awsInfrastructureMapping.getUuid());
 
     System.out.println(serviceInstances.size());
     //    serviceInstances = infrastructureMappingService
