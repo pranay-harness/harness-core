@@ -37,7 +37,7 @@ public class ArtifactoryServiceTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8881);
+  @Rule public WireMockRule wireMockRule = new WireMockRule(9881);
 
   String url = "http://localhost:8881/artifactory/";
 
