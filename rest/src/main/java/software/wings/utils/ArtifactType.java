@@ -243,7 +243,7 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getStartCommand(), getInstallCommand(), getStopCommand(), getCodeDeployCommand());
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand());
     }
 
     /**
@@ -356,27 +356,6 @@ public enum ArtifactType {
                                  .withType(COPY_CONFIGS.name())
                                  .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
                                  .build())
-                         .buildPipeline())
-          .build();
-    }
-
-    /**
-     * Get Code Deploy Command
-     * @return
-     */
-    private Command getCodeDeployCommand() {
-      return aCommand()
-          .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Amazon Code Deploy")
-                         .addNodes(aNode()
-                                       .withOrigin(true)
-                                       .withX(50)
-                                       .withY(50)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withName("Amazon Code Deploy")
-                                       .withType(CODE_DEPLOY.name())
-                                       .build())
                          .buildPipeline())
           .build();
     }
