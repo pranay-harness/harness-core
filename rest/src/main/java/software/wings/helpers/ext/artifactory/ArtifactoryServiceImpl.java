@@ -21,7 +21,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
-import org.eclipse.jetty.util.ArrayQueue;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
@@ -52,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -329,11 +329,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         try {
           Queue<Future> futures = new ConcurrentLinkedQueue<>();
-          Queue<FolderPath> paths = new ArrayQueue<>();
+          Stack<FolderPath> paths = new Stack<>();
           paths.addAll(getFolderPaths(artifactory, repoKey, ""));
           while (!paths.isEmpty() || !futures.isEmpty()) {
             while (!paths.isEmpty()) {
-              FolderPath folderPath = paths.remove();
+              FolderPath folderPath = paths.pop();
               String path = folderPath.getPath();
               if (folderPath.isFolder()) {
                 traverseInParallel(artifactory, repoKey, futures, paths, folderPath, path);
@@ -363,7 +363,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,
-      Queue<FolderPath> paths, FolderPath folderPath, String path) {
+      Stack<FolderPath> paths, FolderPath folderPath, String path) {
     futures.add(executorService.submit((Callable<Void>) () -> {
       paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()));
       return null;
