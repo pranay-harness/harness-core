@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -192,6 +193,11 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(settingAttribute, savedAttribute);
+
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
+    assertEquals(1, query.asList().size());
+    assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
   }
 
   @Test
@@ -232,6 +238,11 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(savedAttribute, updatedAttribute);
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+    assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
   }
 
   @Test
