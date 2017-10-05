@@ -9,8 +9,6 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
@@ -30,8 +28,6 @@ import java.util.stream.Collectors;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
-  private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
-
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")

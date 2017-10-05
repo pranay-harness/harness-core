@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -10,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
@@ -21,6 +25,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +39,12 @@ import javax.inject.Inject;
 public class DcNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(DcNodeSelectState.class);
 
-  @Attributes(title = "Number of instances") private int instanceCount;
+  @Attributes(title = "Instances (cumulative)") private int instanceCount;
+
+  @Attributes(title = "Instance Unit Type (Count/Percent)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("COUNT")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
 
@@ -52,23 +63,28 @@ public class DcNodeSelectState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     String infraMappingId = phaseElement.getInfraMappingId();
 
-    logger.info(
-        "serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
-        serviceId, envId, infraMappingId, instanceCount, specificHosts, hostNames);
-
     List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
     List<String> excludedServiceInstanceIds =
         hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
-            aServiceInstanceSelectionParams()
-                .withSelectSpecificHosts(specificHosts)
-                .withCount(instanceCount)
-                .withHostNames(hostNames)
-                .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-                .build());
+    ServiceInstanceSelectionParams.Builder serviceInstanceSelectionParams =
+        aServiceInstanceSelectionParams()
+            .withSelectSpecificHosts(specificHosts)
+            .withExcludedServiceInstanceIds(excludedServiceInstanceIds);
+    if (specificHosts) {
+      serviceInstanceSelectionParams.withHostNames(hostNames);
+      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}, hostNames: {}",
+          hostNames.size(), serviceId, envId, infraMappingId, hostNames);
+    } else {
+      int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHosts(appId, infraMappingId).size())
+          - hostExclusionList.size();
+      serviceInstanceSelectionParams.withCount(instancesToAdd);
+      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
+          serviceId, envId, infraMappingId);
+    }
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
+        appId, envId, infraMappingId, serviceInstanceSelectionParams.build());
 
-    if (serviceInstances == null || serviceInstances.isEmpty()) {
+    if (isEmpty(serviceInstances)) {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withErrorMessage("No node selected")
@@ -85,6 +101,16 @@ public class DcNodeSelectState extends State {
         .addNotifyElement(serviceIdParamElement)
         .withStateExecutionData(selectedNodeExecutionData)
         .build();
+  }
+
+  private int getCumulativeTotal(int maxInstances) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      int percent = Math.min(getInstanceCount(), 100);
+      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      return Math.max(instanceCount, 1);
+    } else {
+      return getInstanceCount();
+    }
   }
 
   @Override
@@ -115,6 +141,14 @@ public class DcNodeSelectState extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
+  }
+
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
   }
 
   public List<String> getHostNames() {

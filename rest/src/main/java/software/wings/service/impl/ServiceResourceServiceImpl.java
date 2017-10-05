@@ -752,11 +752,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = get(appId, serviceId);
-    return service.getServiceCommands()
-        .stream()
-        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
-        .findFirst()
-        .orElse(null);
+    if (service != null) {
+      return service.getServiceCommands()
+          .stream()
+          .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
   }
 
   @Override

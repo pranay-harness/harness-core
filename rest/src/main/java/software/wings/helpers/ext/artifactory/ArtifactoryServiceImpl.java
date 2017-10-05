@@ -21,6 +21,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionTimeoutException;
+import org.eclipse.jetty.util.ArrayQueue;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
@@ -42,6 +43,7 @@ import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,12 +52,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -127,20 +129,22 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey) {
+    logger.info("Retrieving repo paths for repoKey {}", repoKey);
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    PackageType packageType = null;
     try {
       Repository repository = artifactory.repository(repoKey).get();
       RepositorySettings settings = repository.getRepositorySettings();
-      PackageType packageType = settings.getPackageType();
-      if (packageType.equals(docker)) {
-        return listDockerImages(artifactory, repoKey);
-      } else if (packageType.equals(maven)) {
-        return getGroupIds(artifactory, repoKey);
-      }
+      packageType = settings.getPackageType();
     } catch (Exception e) {
       logger.error("Error occurred while retrieving repository  from artifactory {} for Repo {}",
           artifactoryConfig.getArtifactoryUrl(), repoKey, e);
       handleException(e);
+    }
+    if (packageType.equals(docker)) {
+      return listDockerImages(artifactory, repoKey);
+    } else if (packageType.equals(maven)) {
+      return getGroupIds(artifactory, repoKey);
     }
     return new ArrayList<>();
   }
@@ -275,18 +279,15 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             String uri = file.get("uri");
             if (uri != null) {
               // strip out the file
-              String groupId = uri.substring(0, uri.lastIndexOf("/"));
-              // strip out the artifact id
-              if (groupId.contains("/")) {
-                groupId = uri.substring(0, groupId.lastIndexOf("/"));
-              }
-              if (groupId.contains("/")) {
-                groupId = uri.substring(1, groupId.lastIndexOf("/"));
-                // strip out the version
-              }
-              groupId = groupId.replace("/", ".");
-              if (groupIds.add(groupId)) {
-                groupIdList.add(groupId);
+              String[] pathElems = uri.substring(1).split("/");
+              if (pathElems.length >= 4) {
+                String groupId =
+                    getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 3).collect(Collectors.toList()));
+                if (groupIds.add(groupId)) {
+                  groupIdList.add(groupId);
+                }
+              } else {
+                logger.info("Ignoring uri {} as it is not valid GAVC format");
               }
             }
           }
@@ -316,57 +317,33 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    * @return
    */
   private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
-    List<String> groupIdList = new ArrayList<>();
     logger.info("Retrieving groupIds with anonymous user access");
-    // List<String> paths  = getGroupIdPaths(artifactory, repoKey, "", new ArrayList<>());
     List<String> paths = gerGroupIdPathsAsync(artifactory, repoKey);
-    Set<String> groupIds = new HashSet<>();
-    if (paths != null) {
-      logger.info("Retrieved  groupId paths success. Size {}", paths.size());
-      for (String path : paths) {
-        // strip out the file
-        if (path.length() == 1) {
-          continue;
-        }
-        // Path must contain at least three elements: Group, Artifact, and Version
-        String[] pathElems = path.substring(1).split("/");
-        if (pathElems.length >= 3) {
-          StringBuilder groupIdBuilder = new StringBuilder();
-          for (int i = 0; i < pathElems.length - 2; i++) {
-            groupIdBuilder.append(pathElems[i]);
-            if (i != pathElems.length - 3) {
-              groupIdBuilder.append(".");
-            }
-          }
-          String groupId = groupIdBuilder.toString();
-          if (groupIds.add(groupId)) {
-            groupIdList.add(groupId);
-          }
-        }
-      }
-    }
-    logger.info("Retrieved unique groupIds size {}", groupIdList.size());
-    return groupIdList;
+    logger.info("Retrieved unique groupIds size {}", (paths == null ? 0 : paths.size()));
+    return paths;
   }
 
   private List<String> gerGroupIdPathsAsync(Artifactory artifactory, String repoKey) {
-    List<String> groupIdList = new ArrayList<>();
+    Set<String> groupIds = new HashSet<>();
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         try {
           Queue<Future> futures = new ConcurrentLinkedQueue<>();
-          Stack<FolderPath> paths = new Stack<>();
+          Queue<FolderPath> paths = new ArrayQueue<>();
           paths.addAll(getFolderPaths(artifactory, repoKey, ""));
-          while (!paths.empty() || !futures.isEmpty()) {
-            while (!paths.empty()) {
-              FolderPath folderPath = paths.pop();
+          while (!paths.isEmpty() || !futures.isEmpty()) {
+            while (!paths.isEmpty()) {
+              FolderPath folderPath = paths.remove();
+              String path = folderPath.getPath();
               if (folderPath.isFolder()) {
-                futures.add(executorService.submit((Callable<Void>) () -> {
-                  paths.addAll(getFolderPaths(artifactory, repoKey, folderPath.getPath() + folderPath.getUri()));
-                  return null;
-                }));
+                traverseInParallel(artifactory, repoKey, futures, paths, folderPath, path);
               } else {
-                groupIdList.add(folderPath.getPath().endsWith("/") ? folderPath.getPath() : folderPath.getPath() + "/");
+                // Strip out the version
+                String[] pathElems = path.substring(1).split("/");
+                if (pathElems.length >= 3) {
+                  groupIds.add(
+                      getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(Collectors.toList())));
+                }
               }
             }
             while (!futures.isEmpty() && futures.peek().isDone()) {
@@ -377,12 +354,31 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         } catch (Exception e) {
           logger.error("Failed to fetch all the groupIds in time. Sending the groupIds collected so far", e);
         }
-        return groupIdList;
+        return new ArrayList<>(groupIds);
       }, notNullValue());
     } catch (ConditionTimeoutException e) {
       logger.warn("Failed to fetch all groupId within 20 secs. Returning all groupIds collected so far", e);
-      return groupIdList;
+      return new ArrayList<>(groupIds);
     }
+  }
+
+  private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,
+      Queue<FolderPath> paths, FolderPath folderPath, String path) {
+    futures.add(executorService.submit((Callable<Void>) () -> {
+      paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()));
+      return null;
+    }));
+  }
+
+  private String getGroupId(List<String> pathElems) {
+    StringBuilder groupIdBuilder = new StringBuilder();
+    for (int i = 0; i < pathElems.size(); i++) {
+      groupIdBuilder.append(pathElems.get(i));
+      if (i != pathElems.size() - 1) {
+        groupIdBuilder.append(".");
+      }
+    }
+    return groupIdBuilder.toString();
   }
 
   private List<FolderPath> getFolderPaths(Artifactory artifactory, String repoKey, String repoPath) {
@@ -543,7 +539,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to fetch the latest version for url {}  " + artifactory.getUri(), e);
+      logger.error("Failed to fetch the latest snap version for url {} repoId {} groupId {} and artifactId {} ",
+          artifactory.getUri(), repoId, groupId, artifactId, e);
       handleException(e);
     }
     return null;

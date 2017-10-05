@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
@@ -96,16 +95,6 @@ public interface InfrastructureMappingService {
   List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
 
   /**
-   * List launch configs list.
-   *
-   * @param appId          the app id
-   * @param envId          the env id
-   * @param infraMappingId the infra mapping id
-   * @return the list
-   */
-  List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String infraMappingId);
-
-  /**
    * Gets infra mapping by compute provider and service id.
    *
    * @param appId             the app id
@@ -121,12 +110,10 @@ public interface InfrastructureMappingService {
    * Provision nodes list.
    *
    * @param appId              the app id
-   * @param envId              the env id
    * @param infraMappingId     the infra mapping id
-   * @param instanceCount      the instance count
    * @return the list
    */
-  List<ServiceInstance> provisionNodes(String appId, String envId, String infraMappingId, int instanceCount);
+  List<ServiceInstance> getAutoScaleGroupNodes(String appId, String infraMappingId);
 
   /**
    * De provision nodes.

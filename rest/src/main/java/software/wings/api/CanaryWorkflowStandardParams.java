@@ -12,6 +12,7 @@ import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPL
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -100,9 +101,9 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         if (infraState != null) {
           EcsServiceDeploy ecsServiceDeploy = (EcsServiceDeploy) infraState;
           return anInfraNodeRequest()
-              .withInstanceCount(ecsServiceDeploy.getInstanceCount())
               .withDeploymentType(DeploymentType.ECS)
-              .withProvisionNodes(true)
+              .withInstanceCount(ecsServiceDeploy.getInstanceCount())
+              .withInstanceUnitType(ecsServiceDeploy.getInstanceUnitType())
               .withPhaseElement(phaseElement)
               .build();
         }
@@ -116,9 +117,9 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
           KubernetesReplicationControllerDeploy replicationControllerDeploy =
               (KubernetesReplicationControllerDeploy) infraState;
           return anInfraNodeRequest()
-              .withInstanceCount(replicationControllerDeploy.getInstanceCount())
               .withDeploymentType(DeploymentType.KUBERNETES)
-              .withProvisionNodes(true)
+              .withInstanceCount(replicationControllerDeploy.getInstanceCount())
+              .withInstanceUnitType(replicationControllerDeploy.getInstanceUnitType())
               .withPhaseElement(phaseElement)
               .build();
         }
@@ -131,29 +132,28 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         if (infraState != null) {
           if (infraState instanceof DcNodeSelectState) {
             DcNodeSelectState dcNodeSelectState = (DcNodeSelectState) infraState;
-            InfraNodeRequestBuilder infraNodeRequestBuilder = anInfraNodeRequest()
-                                                                  .withProvisionNodes(false)
-                                                                  .withDeploymentType(DeploymentType.SSH)
-                                                                  .withPhaseElement(phaseElement);
+            InfraNodeRequestBuilder infraNodeRequestBuilder =
+                anInfraNodeRequest().withDeploymentType(DeploymentType.SSH).withPhaseElement(phaseElement);
             if (dcNodeSelectState.isSpecificHosts()) {
               infraNodeRequestBuilder.withNodeNames(dcNodeSelectState.getHostNames())
-                  .withInstanceCount(dcNodeSelectState.getHostNames().size());
+                  .withInstanceCount(dcNodeSelectState.getHostNames().size())
+                  .withInstanceUnitType(InstanceUnitType.COUNT);
             } else {
-              infraNodeRequestBuilder.withInstanceCount(dcNodeSelectState.getInstanceCount());
+              infraNodeRequestBuilder.withInstanceCount(dcNodeSelectState.getInstanceCount())
+                  .withInstanceUnitType(dcNodeSelectState.getInstanceUnitType());
             }
             return infraNodeRequestBuilder.build();
           } else if (infraState instanceof AwsNodeSelectState) {
             AwsNodeSelectState awsNodeSelectState = (AwsNodeSelectState) infraState;
             InfraNodeRequestBuilder infraNodeRequestBuilder =
-                anInfraNodeRequest()
-                    .withProvisionNodes(awsNodeSelectState.isProvisionNode())
-                    .withDeploymentType(DeploymentType.SSH)
-                    .withPhaseElement(phaseElement);
+                anInfraNodeRequest().withDeploymentType(DeploymentType.SSH).withPhaseElement(phaseElement);
             if (awsNodeSelectState.isSpecificHosts()) {
               infraNodeRequestBuilder.withNodeNames(awsNodeSelectState.getHostNames())
-                  .withInstanceCount(awsNodeSelectState.getHostNames().size());
+                  .withInstanceCount(awsNodeSelectState.getHostNames().size())
+                  .withInstanceUnitType(InstanceUnitType.COUNT);
             } else {
-              infraNodeRequestBuilder.withInstanceCount(awsNodeSelectState.getInstanceCount());
+              infraNodeRequestBuilder.withInstanceCount(awsNodeSelectState.getInstanceCount())
+                  .withInstanceUnitType(awsNodeSelectState.getInstanceUnitType());
             }
             return infraNodeRequestBuilder.build();
           }
