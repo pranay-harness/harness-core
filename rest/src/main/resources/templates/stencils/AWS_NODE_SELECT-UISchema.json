@@ -3,7 +3,6 @@
   "computeProviderId": { "ui:widget": "hidden" },
   "environmentId": { "ui:widget": "hidden" },
   "serviceId": { "ui:widget": "hidden" },
-  "provisionNode": { "ui:widget": "radio", "classNames": "__provisionNodes"  },
   "specificHosts": { "ui:widget": "radio", "classNames": "__specificHosts"  },
-  "ui:order": ["*" , "provisionNode", "launcherConfigName", "specificHosts", "instanceCount", "hostNames"]
+  "ui:order": ["*" , "specificHosts", "instanceCount", "instanceUnitType", "hostNames"]
 }

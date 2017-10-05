@@ -10,8 +10,6 @@ import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.InstanceUnitType;
@@ -34,8 +32,6 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerDeploy extends ContainerServiceDeploy {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
-
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")

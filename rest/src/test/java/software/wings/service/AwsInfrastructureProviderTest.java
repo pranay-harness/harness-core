@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
@@ -22,7 +21,6 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
@@ -35,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -43,7 +42,6 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 
-import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -76,8 +74,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
              (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
     PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, null, true, new PageRequest<>());
+        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
 
     assertThat(hosts)
         .hasSize(2)
@@ -99,8 +99,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
              (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(false).build();
     PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, null, false, new PageRequest<>());
+        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
 
     assertThat(hosts)
         .hasSize(2)
@@ -121,8 +123,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
              (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
     PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(Regions.US_EAST_1.getName(), awsSetting, null, false, new PageRequest<>());
+        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
 
     assertThat(hosts).hasSize(0);
     verify(awsHelperService).describeEc2Instances(awsConfig, Regions.US_EAST_1.getName(), instancesRequest);
@@ -162,8 +166,16 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Test
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();
-    when(awsHelperService.listRunInstancesFromAutoScalingGroup(awsConfig, region, "AUTOSCALING_GROUP", 1))
-        .thenReturn(asList(new Instance().withInstanceId("INSTANCE_ID")));
+    AwsInfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
+                                                         .withRegion(region)
+                                                         .withProvisionInstances(true)
+                                                         .withAutoScalingGroupName("AUTOSCALING_GROUP")
+                                                         .withSetDesiredCapacity(true)
+                                                         .withDesiredCapacity(1)
+                                                         .build();
+
+    when(awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping))
+        .thenReturn(singletonList("INSTANCE_ID"));
 
     when(awsHelperService.describeEc2Instances(
              awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
@@ -173,51 +185,34 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                 .withPublicDnsName(HOST_NAME)
                                                 .withInstanceId("INSTANCE_ID")
                                                 .withState(new InstanceState().withName("running")))));
-    when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
-    when(awsHelperService.getHostnameFromDnsName(HOST_NAME)).thenReturn(HOST_NAME);
+    when(awsHelperService.getHostnameFromPrivateDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
-    List<Host> hosts = infrastructureProvider.provisionHosts(region, awsSetting, "AUTOSCALING_GROUP", false, 1);
+    List<Host> hosts = infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(infrastructureMapping, awsSetting);
 
     assertThat(hosts)
         .hasSize(1)
         .hasOnlyElementsOfType(Host.class)
-        .isEqualTo(asList(
+        .isEqualTo(singletonList(
             aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
-    verify(awsHelperService).canConnectToHost(HOST_NAME, 22, 30000);
-    verify(awsHelperService).listRunInstancesFromAutoScalingGroup(awsConfig, region, "AUTOSCALING_GROUP", 1);
-    verify(awsHelperService, times(3))
+    verify(awsHelperService).setAutoScalingGroupCapacity(awsConfig, infrastructureMapping);
+    verify(awsHelperService).listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+    verify(awsHelperService)
         .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
   }
 
   @Test
   public void shouldDeProvisionHosts() {
     when(hostService.list(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(aHost().withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(singletonList(
+                            aHost().withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()))
+                        .build());
 
     infrastructureProvider.deProvisionHosts(
         APP_ID, INFRA_MAPPING_ID, awsSetting, Regions.US_EAST_1.getName(), singletonList(HOST_NAME));
 
     verify(awsHelperService)
-        .terminateEc2Instances(awsConfig, Regions.US_EAST_1.getName(), Arrays.asList("INSTANCE_ID"));
-  }
-
-  @Test
-  public void shouldListLaunchConfigs() {
-    String region = Regions.US_EAST_1.getName();
-    when(awsHelperService.describeLaunchConfigurations(awsConfig, region))
-        .thenReturn(Arrays.asList(new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
-
-    List<LaunchConfiguration> launchConfigurations =
-        infrastructureProvider.listLaunchConfigurations(awsSetting, region);
-
-    assertThat(launchConfigurations)
-        .hasSize(1)
-        .extracting(LaunchConfiguration::getLaunchConfigurationName)
-        .containsExactly("LAUNCH_CONFIG");
-    verify(awsHelperService).describeLaunchConfigurations(awsConfig, region);
+        .terminateEc2Instances(awsConfig, Regions.US_EAST_1.getName(), singletonList("INSTANCE_ID"));
   }
 }
