@@ -51,7 +51,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   private boolean scopeMatch(DelegateScope delegateScope, DelegateTask task) {
-    if (delegateScope.isEmpty()) {
+    if (!delegateScope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
     }

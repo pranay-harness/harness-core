@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
@@ -27,9 +29,8 @@ public class DelegateScope extends Base {
   private List<String> environments;
   private List<String> serviceInfrastructures;
 
-  public boolean isEmpty() {
-    return (taskTypes == null || taskTypes.isEmpty()) && (environmentTypes == null || environmentTypes.isEmpty())
-        && (applications == null || applications.isEmpty()) && (environments == null || environments.isEmpty())
-        && (serviceInfrastructures == null || serviceInfrastructures.isEmpty());
+  public boolean isValid() {
+    return (isNotEmpty(taskTypes)) || (isNotEmpty(environmentTypes)) || (isNotEmpty(applications))
+        || (isNotEmpty(environments)) || (isNotEmpty(serviceInfrastructures));
   }
 }
