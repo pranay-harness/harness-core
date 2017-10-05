@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -86,18 +85,9 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/hosts")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> listComputeProviderHosts(
+  public RestResponse<List<String>> listHosts(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.listHosts(appId, infraMappingId));
-  }
-
-  @GET
-  @Path("{infraMappingId}/launchconfigs")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<LaunchConfiguration>> listLaunchConfigs(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.listLaunchConfigs(appId, envId, infraMappingId));
   }
 
   @PUT

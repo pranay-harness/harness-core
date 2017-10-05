@@ -180,8 +180,12 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
     if (ygs.getSyncMode() == SyncMode.HARNESS_TO_GIT || ygs.getSyncMode() == SyncMode.BOTH) {
       // createEntityUpdateListEvent(accountId, appId, ygs, SourceType.GIT_SYNC_CREATE);
 
+      logger.info("******* YamlGitSync save");
+
       // if it is Setup - we need to pushDirectory
-      if (ygs.getType() == SETUP) {
+      if (ygs.getEntityId().equals("setup")) {
+        logger.info("******* Calling yamlDirectoryService.pushDirectory");
+
         yamlDirectoryService.pushDirectory(accountId, false);
       }
     }
@@ -321,6 +325,9 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
+    logger.info(
+        "*************** handleTreeSync: entityUpdateListEvent.isTreeSync() = " + entityUpdateListEvent.isTreeSync());
+
     if (entityUpdateListEvent.isTreeSync()) {
       if (entityUpdateListEvent.getEntityUpdateEvents().size() == 1) {
         return handleTreeSync(entityUpdateListEvent);
