@@ -151,49 +151,4 @@ public class GcpClusterSetup extends State {
   public void setMachineType(String machineType) {
     this.machineType = machineType;
   }
-
-  public static final class GcpClusterSetupBuilder {
-    private String name;
-    private String zone;
-    private int nodeCount;
-    private String machineType;
-
-    private GcpClusterSetupBuilder() {}
-
-    public static GcpClusterSetupBuilder aGcpClusterSetup() {
-      return new GcpClusterSetupBuilder();
-    }
-
-    public GcpClusterSetupBuilder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public GcpClusterSetupBuilder withZone(String zone) {
-      this.zone = zone;
-      return this;
-    }
-
-    public GcpClusterSetupBuilder withNodeCount(int nodeCount) {
-      this.nodeCount = nodeCount;
-      return this;
-    }
-
-    public GcpClusterSetupBuilder withMachineType(String machineType) {
-      this.machineType = machineType;
-      return this;
-    }
-
-    public GcpClusterSetupBuilder but() {
-      return aGcpClusterSetup().withName(name).withZone(zone).withNodeCount(nodeCount).withMachineType(machineType);
-    }
-
-    public GcpClusterSetup build() {
-      GcpClusterSetup gcpClusterSetup = new GcpClusterSetup(name);
-      gcpClusterSetup.setZone(zone);
-      gcpClusterSetup.setNodeCount(nodeCount);
-      gcpClusterSetup.setMachineType(machineType);
-      return gcpClusterSetup;
-    }
-  }
 }
