@@ -116,7 +116,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .build();
 
     Set<String> hostsToBeCollected = new HashSet<>();
-    if (lastExecutionNodes != null) {
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
       hostsToBeCollected.addAll(lastExecutionNodes);
     }
     hostsToBeCollected.addAll(canaryNewHostNames);
