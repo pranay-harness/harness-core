@@ -27,7 +27,6 @@ public class PortalConfig {
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
   private String jwtPasswordSecret;
   private String jwtExternalServiceSecret;
-  private KmsConfig kmsConfig;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**

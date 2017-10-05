@@ -19,4 +19,6 @@ public interface KmsService {
   char[] decrypt(EncryptedData data, KmsConfig kmsConfig);
 
   KmsConfig getKmsConfig(String accountId);
+
+  boolean saveKmsConfig(String accountId, String name, KmsConfig kmsConfig);
 }

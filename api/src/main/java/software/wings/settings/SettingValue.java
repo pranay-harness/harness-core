@@ -44,6 +44,10 @@ public abstract class SettingValue implements ExtensionPoint {
     return SettingVariableTypes.valueOf(type);
   }
 
+  public void setSettingType(SettingVariableTypes type) {
+    //
+  }
+
   /**
    * The Enum SettingVariableTypes.
    */

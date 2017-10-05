@@ -14,8 +14,6 @@ import software.wings.rules.WingsRule;
  * Created by anubhaw on 4/28/16.
  */
 public abstract class WingsBaseTest {
-  protected static final String AWS_CREDENTIALS_LOCATION = "AWS_CREDENTIALS_LOCATION";
-
   /**
    * The Test name.
    */
