@@ -640,6 +640,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     encryptedData.setAccountId(accountId);
     encryptedData.setType(object.getSettingType());
 
+    if (kmsConfig != null) {
+      encryptedData.setKmsId(kmsConfig.getUuid());
+    }
     return save(encryptedData);
   }
 
