@@ -150,18 +150,10 @@ public abstract class ContainerServiceDeploy extends State {
     }
 
     int previousCount = previousDesiredCount.get();
-    int maxInstances = getMaxInstances(contextData);
-    int desiredCount = getNewInstancesDesiredCount(maxInstances);
+    int desiredCount = getNewInstancesDesiredCount(contextData);
 
     if (desiredCount <= previousCount) {
       String msg = "Desired instance count must be greater than the current instance count: {current: " + previousCount
-          + ", desired: " + desiredCount + "}";
-      logger.error(msg);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
-    }
-
-    if (desiredCount > maxInstances) {
-      String msg = "Desired instance count is greater than the maximum instance count: {maximum: " + maxInstances
           + ", desired: " + desiredCount + "}";
       logger.error(msg);
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
@@ -174,27 +166,17 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private int getNewInstancesDesiredCount(int maxInstances) {
+  private int getNewInstancesDesiredCount(ContextData contextData) {
     if (getInstanceUnitType() == PERCENTAGE) {
       int percent = Math.min(getInstanceCount(), 100);
-      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      LinkedHashMap<String, Integer> activeServiceCounts =
+          getActiveServiceCounts(contextData.settingAttribute, contextData.region, contextData.containerElement);
+      int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
+      int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
+      int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
       return Math.max(instanceCount, 1);
     } else {
       return getInstanceCount();
-    }
-  }
-
-  private int getMaxInstances(ContextData contextData) {
-    if (getInstanceUnitType() == PERCENTAGE) {
-      int activeInstances =
-          getActiveServiceCounts(contextData.settingAttribute, contextData.region, contextData.containerElement)
-              .values()
-              .stream()
-              .mapToInt(Integer::intValue)
-              .sum();
-      return Math.max(contextData.containerElement.getMaxInstances(), activeInstances);
-    } else {
-      return contextData.containerElement.getMaxInstances();
     }
   }
 

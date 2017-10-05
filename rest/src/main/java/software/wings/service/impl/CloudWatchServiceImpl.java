@@ -24,8 +24,8 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private AwsHelperService awsHelperService;
 
   @Override
-  public List<String> listNamespaces(String settingId) {
-    return awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId))
+  public List<String> listNamespaces(String settingId, String region) {
+    return awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region)
         .stream()
         .map(Metric::getNamespace)
         .distinct()
@@ -33,18 +33,18 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   }
 
   @Override
-  public List<String> listMetrics(String settingId, String namespace) {
+  public List<String> listMetrics(String settingId, String region, String namespace) {
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.setNamespace(namespace);
-    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), listMetricsRequest);
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region, listMetricsRequest);
     return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
   }
 
   @Override
-  public List<String> listDimensions(String settingId, String namespace, String metricName) {
+  public List<String> listDimensions(String settingId, String region, String namespace, String metricName) {
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.withNamespace(namespace).withMetricName(metricName);
-    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), listMetricsRequest);
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region, listMetricsRequest);
     return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()

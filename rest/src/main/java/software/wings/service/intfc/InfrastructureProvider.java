@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -11,15 +11,8 @@ import software.wings.dl.PageResponse;
  * Created by anubhaw on 10/4/16.
  */
 public interface InfrastructureProvider {
-  /**
-   * Gets all host.
-   *
-   * @param computeProviderSetting the compute provider setting
-   * @param req                    the req
-   * @return the all host
-   */
-  PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, AwsInstanceFilter instanceFilter,
-      boolean usePublicDns, PageRequest<Host> req);
+  PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
+      SettingAttribute computeProviderSetting, PageRequest<Host> req);
 
   /**
    * Save host host.

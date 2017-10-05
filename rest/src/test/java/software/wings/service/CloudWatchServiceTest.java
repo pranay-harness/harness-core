@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -50,26 +51,27 @@ public class CloudWatchServiceTest extends WingsBaseTest {
                    .withNamespace(NAMESPACE)
                    .withMetricName(METRIC_NAME)
                    .withDimensions(asList(new Dimension().withName(METRIC_DIMENSION)))));
-    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class))).thenReturn(listMetricsResult.getMetrics());
-    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), any(ListMetricsRequest.class)))
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), anyString()))
+        .thenReturn(listMetricsResult.getMetrics());
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), anyString(), any(ListMetricsRequest.class)))
         .thenReturn(listMetricsResult.getMetrics());
   }
 
   @Test
   public void shouldListNamespaces() {
-    List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID);
+    List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID, "us-east-1");
     Assertions.assertThat(namespaces).hasSize(1).containsExactly(NAMESPACE);
   }
 
   @Test
   public void shouldListMetrics() {
-    List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, NAMESPACE);
+    List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, "us-east-1", NAMESPACE);
     Assertions.assertThat(namespaces).hasSize(1).containsExactly(METRIC_NAME);
   }
 
   @Test
   public void shouldListDimensions() {
-    List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, NAMESPACE, METRIC_NAME);
+    List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, "us-east-1", NAMESPACE, METRIC_NAME);
     Assertions.assertThat(namespaces).hasSize(1).containsExactly(METRIC_DIMENSION);
   }
 }

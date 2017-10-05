@@ -356,6 +356,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (service.getDescription() == null) {
       service.setDescription("");
     }
+
+    // TODO - this ImmutableMap is a problem - it requires a non-null appContainer when one may not be available
+    // (logically)
+
     wingsPersistence.updateFields(Service.class, service.getUuid(),
         ImmutableMap.of("name", service.getName().trim(), "description", service.getDescription(), "artifactType",
             service.getArtifactType(), "appContainer", service.getAppContainer()));
@@ -748,11 +752,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = get(appId, serviceId);
-    return service.getServiceCommands()
-        .stream()
-        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
-        .findFirst()
-        .orElse(null);
+    if (service != null) {
+      return service.getServiceCommands()
+          .stream()
+          .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
   }
 
   @Override

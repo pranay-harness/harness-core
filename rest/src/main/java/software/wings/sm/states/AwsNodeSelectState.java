@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -11,7 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
+import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
@@ -22,6 +27,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,13 +41,15 @@ import javax.inject.Inject;
 public class AwsNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(AwsNodeSelectState.class);
 
-  @Attributes(title = "Number of instances") private int instanceCount;
+  @Attributes(title = "Instances (cumulative)") private int instanceCount;
+
+  @Attributes(title = "Instance Unit Type (Count/Percent)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("COUNT")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
-
-  @Attributes(title = "Provision Nodes?") private boolean provisionNode;
-  @Attributes(title = "Host specification (Launch Configuration Name)") private String launcherConfigName;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
@@ -63,32 +72,47 @@ public class AwsNodeSelectState extends State {
     String infraMappingId = phaseElement.getInfraMappingId();
 
     List<ServiceInstance> serviceInstances;
+    List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
+    List<String> excludedServiceInstanceIds =
+        hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
 
-    if (provisionNode) {
-      logger.info("serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, launcherConfigName: {}",
-          serviceId, envId, infraMappingId, instanceCount, launcherConfigName);
-      serviceInstances = infrastructureMappingService.provisionNodes(appId, envId, infraMappingId, instanceCount);
+    AwsInfrastructureMapping infrastructureMapping =
+        (AwsInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
+
+    if (infrastructureMapping.isProvisionInstances()) {
+      List<ServiceInstance> autoScaleGroupNodes =
+          infrastructureMappingService.getAutoScaleGroupNodes(appId, infraMappingId);
+      int instancesToAdd = getCumulativeTotal(autoScaleGroupNodes.size()) - hostExclusionList.size();
+      serviceInstances = autoScaleGroupNodes.stream()
+                             .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()))
+                             .limit(instancesToAdd)
+                             .collect(toList());
+      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
+          serviceId, envId, infraMappingId);
     } else {
-      logger.info(
-          "serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
-          serviceId, envId, infraMappingId, instanceCount, specificHosts, hostNames);
-      List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
-      List<String> excludedServiceInstanceIds =
-          hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
-
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
+      ServiceInstanceSelectionParams.Builder serviceInstanceSelectionParams =
           aServiceInstanceSelectionParams()
               .withSelectSpecificHosts(specificHosts)
-              .withCount(instanceCount)
-              .withHostNames(hostNames)
-              .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-              .build());
-      if (serviceInstances == null || serviceInstances.isEmpty()) {
-        return anExecutionResponse()
-            .withExecutionStatus(ExecutionStatus.FAILED)
-            .withErrorMessage("No node selected")
-            .build();
+              .withExcludedServiceInstanceIds(excludedServiceInstanceIds);
+      if (specificHosts) {
+        serviceInstanceSelectionParams.withHostNames(hostNames);
+        logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}, hostNames: {}",
+            hostNames.size(), serviceId, envId, infraMappingId, hostNames);
+      } else {
+        int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHosts(appId, infraMappingId).size())
+            - hostExclusionList.size();
+        serviceInstanceSelectionParams.withCount(instancesToAdd);
+        logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
+            serviceId, envId, infraMappingId);
       }
+      serviceInstances = infrastructureMappingService.selectServiceInstances(
+          appId, envId, infraMappingId, serviceInstanceSelectionParams.build());
+    }
+    if (isEmpty(serviceInstances)) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("No node selected")
+          .build();
     }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
@@ -103,6 +127,16 @@ public class AwsNodeSelectState extends State {
         .addNotifyElement(serviceIdParamElement)
         .withStateExecutionData(selectedNodeExecutionData)
         .build();
+  }
+
+  private int getCumulativeTotal(int maxInstances) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      int percent = Math.min(getInstanceCount(), 100);
+      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      return Math.max(instanceCount, 1);
+    } else {
+      return getInstanceCount();
+    }
   }
 
   @Override
@@ -134,6 +168,14 @@ public class AwsNodeSelectState extends State {
    */
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
+  }
+
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
   }
 
   /**
@@ -170,41 +212,5 @@ public class AwsNodeSelectState extends State {
    */
   public void setHostNames(List<String> hostNames) {
     this.hostNames = hostNames;
-  }
-
-  /**
-   * Is provision node boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isProvisionNode() {
-    return provisionNode;
-  }
-
-  /**
-   * Sets provision node.
-   *
-   * @param provisionNode the provision node
-   */
-  public void setProvisionNode(boolean provisionNode) {
-    this.provisionNode = provisionNode;
-  }
-
-  /**
-   * Gets launcher config name.
-   *
-   * @return the launcher config name
-   */
-  public String getLauncherConfigName() {
-    return launcherConfigName;
-  }
-
-  /**
-   * Sets launcher config name.
-   *
-   * @param launcherConfigName the launcher config name
-   */
-  public void setLauncherConfigName(String launcherConfigName) {
-    this.launcherConfigName = launcherConfigName;
   }
 }
