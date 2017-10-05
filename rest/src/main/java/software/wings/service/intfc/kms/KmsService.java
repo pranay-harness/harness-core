@@ -20,5 +20,5 @@ public interface KmsService {
 
   KmsConfig getKmsConfig(String accountId);
 
-  boolean saveKmsConfig(String accountId, String name, KmsConfig kmsConfig);
+  boolean saveKmsConfig(String accountId, KmsConfig kmsConfig);
 }

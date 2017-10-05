@@ -50,7 +50,6 @@ import javax.inject.Inject;
  * Created by rsingh on 9/29/17.
  */
 public class KmsTest extends WingsBaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(KmsTest.class);
   @Inject private KmsService kmsService;
   @Inject private WingsPersistence wingsPersistence;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -62,6 +61,7 @@ public class KmsTest extends WingsBaseTest {
     Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(new KmsDelegateServiceImpl());
     Whitebox.setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
   }
 
   @Test
@@ -73,7 +73,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig savedConfig = kmsService.getKmsConfig(UUID.randomUUID().toString());
     assertNull(savedConfig);
 
-    kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, UUID.randomUUID().toString(), kmsConfig);
+    kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
 
     savedConfig = kmsService.getKmsConfig(UUID.randomUUID().toString());
     kmsConfig = getKmsConfig();
@@ -85,11 +85,10 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void getKmsConfigForAccount() throws IOException {
     String accountId = UUID.randomUUID().toString();
-    String name = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
-    kmsService.saveKmsConfig(kmsConfig.getAccountId(), name, kmsConfig);
+    kmsService.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
 
     KmsConfig savedConfig = kmsService.getKmsConfig(kmsConfig.getAccountId());
     kmsConfig = getKmsConfig();
@@ -171,11 +170,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionWhileSaving() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -204,11 +199,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionUpdateObject() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -230,7 +221,7 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(settingAttribute, savedAttribute);
-    assertEquals(2, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
@@ -239,7 +230,7 @@ public class KmsTest extends WingsBaseTest {
 
     SettingAttribute updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(savedAttribute, updatedAttribute);
-    assertEquals(2, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
   }
 
@@ -248,11 +239,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -274,7 +261,7 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(settingAttribute, savedAttribute);
-    assertEquals(2, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     String updatedAppId = UUID.randomUUID().toString();
@@ -284,7 +271,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(updatedAppId, updatedAttribute.getAppId());
     savedAttribute.setAppId(updatedAppId);
     assertEquals(savedAttribute, updatedAttribute);
-    assertEquals(2, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     final String newPassWord = UUID.randomUUID().toString();
@@ -311,7 +298,7 @@ public class KmsTest extends WingsBaseTest {
     newAppDynamicsConfig.setPassword(newPassWord.toCharArray());
     assertEquals(newAppDynamicsConfig, updatedAttribute.getValue());
 
-    assertEquals(2, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
   }
 
@@ -320,11 +307,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionSaveServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     final ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
                                                 .withTemplateId(UUID.randomUUID().toString())
@@ -353,11 +336,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     final ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
                                                 .withTemplateId(UUID.randomUUID().toString())
@@ -413,11 +392,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -443,13 +418,13 @@ public class KmsTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    assertEquals(numOfSettingAttributes + 1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes,
         wingsPersistence.createQuery(EncryptedData.class).asList().size());
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(settingAttributes.get(i));
       assertEquals(
-          (numOfSettingAttributes + 1) - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+          numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
       assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).asList().size());
     }
@@ -460,11 +435,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -490,20 +461,20 @@ public class KmsTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    assertEquals(numOfSettingAttributes + 1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes,
         wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(SettingAttribute.class, settingAttributes.get(i).getUuid());
       assertEquals(
-          (numOfSettingAttributes + 1) - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+          numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
       assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).asList().size());
     }
 
     wingsPersistence.save(settingAttributes);
-    assertEquals(numOfSettingAttributes + 1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes,
         wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
@@ -511,7 +482,7 @@ public class KmsTest extends WingsBaseTest {
       wingsPersistence.delete(
           SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
       assertEquals(
-          (numOfSettingAttributes + 1) - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+          numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).asList().size());
       assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1),
           wingsPersistence.createQuery(EncryptedData.class).asList().size());
     }
@@ -522,11 +493,7 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
-
-    SettingAttribute kmsAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(kmsConfig).build();
-    wingsPersistence.save(kmsAttribute);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -552,7 +519,7 @@ public class KmsTest extends WingsBaseTest {
       settingAttributes.add(settingAttribute);
     }
 
-    assertEquals(numOfSettingAttributes + 1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes,
         wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
@@ -563,7 +530,7 @@ public class KmsTest extends WingsBaseTest {
         wingsPersistence.createQuery(SettingAttribute.class).field(Mapper.ID_KEY).hasAnyOf(idsToDelete);
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(query);
-      assertEquals((numOfSettingAttributes + 1) - idsToDelete.size(),
+      assertEquals(numOfSettingAttributes - idsToDelete.size(),
           wingsPersistence.createQuery(SettingAttribute.class).asList().size());
       assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes - idsToDelete.size(),
           wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -574,11 +541,10 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void kmsEncryptionSaveGlobalConfig() throws IOException {
     final String accountId = UUID.randomUUID().toString();
-    final String name = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
 
-    kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, name, kmsConfig);
-    assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
+    kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+    assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).asList().size());
 
     KmsConfig savedKmsConfig = kmsService.getKmsConfig(accountId);
     assertNotNull(savedKmsConfig);
@@ -589,9 +555,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(new String(kmsConfig.getSecretKey()), new String(savedKmsConfig.getSecretKey()));
     assertEquals(new String(kmsConfig.getKmsArn()), new String(savedKmsConfig.getKmsArn()));
 
-    SettingAttribute attributeWithEncryption =
-        wingsPersistence.getDatastore().createQuery(SettingAttribute.class).asList().get(0);
-    KmsConfig encryptedKms = (KmsConfig) attributeWithEncryption.getValue();
+    KmsConfig encryptedKms = wingsPersistence.getDatastore().createQuery(KmsConfig.class).asList().get(0);
 
     assertNotEquals(new String(encryptedKms.getAccessKey()), new String(savedKmsConfig.getAccessKey()));
     assertNotEquals(new String(encryptedKms.getSecretKey()), new String(savedKmsConfig.getSecretKey()));
@@ -600,9 +564,9 @@ public class KmsTest extends WingsBaseTest {
 
   private KmsConfig getKmsConfig() throws IOException {
     final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d".toCharArray());
-    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray());
-    kmsConfig.setSecretKey("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".toCharArray());
+    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
+    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
+    kmsConfig.setSecretKey("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");
     return kmsConfig;
   }
 }

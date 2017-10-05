@@ -26,4 +26,8 @@ public class EncryptedData extends Base {
   @NotEmpty @Indexed private String parentId;
 
   @NotEmpty @Indexed private String accountId;
+
+  private boolean enabled = true;
+
+  @NotEmpty private String kmsId;
 }
