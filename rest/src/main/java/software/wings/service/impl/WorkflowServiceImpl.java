@@ -633,6 +633,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               unsetInfraMappingDetails(phase);
               resetNodeSelection(phase);
             }
+            if (inframappingChanged) {
+              resetNodeSelection(phase);
+            }
           }
         }
         Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
@@ -641,6 +644,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             if (envChanged) {
               unsetInfraMappingDetails(phase);
+              resetNodeSelection(phase);
+            }
+            if (inframappingChanged) {
               resetNodeSelection(phase);
             }
           });
