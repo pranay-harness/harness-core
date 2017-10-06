@@ -5,9 +5,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.artifact.Artifact.Status.ABORTED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
-import static software.wings.beans.artifact.Artifact.Status.ERROR;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.NEW;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
@@ -20,6 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -199,10 +198,24 @@ public class ArtifactServiceImpl implements ArtifactService {
    * software.wings.beans.artifact.Artifact.Status)
    */
   @Override
-  public void updateStatus(String artifactId, String appId, Artifact.Status status) {
+  public void updateStatus(String artifactId, String appId, Status status) {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class).set("status", status);
+    wingsPersistence.update(query, ops);
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#updateStatus(java.lang.String, java.lang.String,
+   * software.wings.beans.artifact.Artifact.Status)
+   */
+  @Override
+  public void updateStatus(String artifactId, String appId, Status status, String errorMessage) {
+    Query<Artifact> query =
+        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+    UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
+    setUnset(ops, "status", status);
+    setUnset(ops, "errorMessage", errorMessage);
     wingsPersistence.update(query, ops);
   }
 
@@ -293,7 +306,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactStreamId)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(Status.RUNNING, Status.REJECTED, Status.WAITING, READY, APPROVED))
+        .hasAnyOf(Arrays.asList(RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
         .get();
   }
 
@@ -346,23 +359,14 @@ public class ArtifactServiceImpl implements ArtifactService {
               "ArtifactStreamId {} for the app {} does not have more than {} successful artifacts. Not deleting",
               artifactStreamId, appId, retentionSize);
         }
-        toBeDeletedArtifacts = wingsPersistence
-                                   .query(Artifact.class,
-                                       aPageRequest()
-                                           .withLimit(UNLIMITED)
-                                           .addFilter("appId", EQ, appId)
-                                           .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                           .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED)
-                                           .build())
-                                   .getResponse();
-        if (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) {
-          logger.info("Deleting failed artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
-              toBeDeletedArtifacts.size(), appId);
-          deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
-        } else {
-          logger.info(
-              "ArtifactStreamId {} for the app {} does not have failed artifacts to delete", artifactStreamId, appId);
-        }
+        /* toBeDeletedArtifacts = wingsPersistence.query(Artifact.class,
+             aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("artifactStreamId", EQ,
+         artifactStreamId) .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED).build()).getResponse(); if
+         (!CollectionUtils.isEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
+         {}  of size: {} for appId {}", artifactStreamId, toBeDeletedArtifacts.size(), appId); deleteArtifacts(appId,
+         artifactStreamId, toBeDeletedArtifacts); } else { logger.info("ArtifactStreamId {} for the app {} does not have
+         failed artifacts to delete", artifactStreamId, appId);
+         }*/
       }
     }
   }
