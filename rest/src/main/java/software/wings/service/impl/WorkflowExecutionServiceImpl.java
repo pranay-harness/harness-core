@@ -17,6 +17,7 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
@@ -45,6 +46,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -86,12 +88,10 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
@@ -1367,7 +1367,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services;
       if (isServiceTemplatized(workflow)) {
-        services = resolveServices(workflow, workflowExecution);
+        services = resolveTemplateServices(workflow, workflowExecution);
       } else {
         services = workflow.getServices();
       }
@@ -1375,33 +1375,40 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         services = asList(serviceResourceService.get(
             workflow.getAppId(), workflowExecution.getExecutionArgs().getServiceId(), false));
       }
+      List<InfrastructureMapping> infrastructureMappings;
+      if (isInfraMappingTemplatized(workflow)) {
+        infrastructureMappings = resolveTemplateInfraMappings(workflow, workflowExecution);
+      } else {
+        infrastructureMappings =
+            getInfrastructureMappings(workflow, workflow.getOrchestrationWorkflow().getInfraMappingIds());
+      }
       if (services != null) {
         services.forEach(service -> {
           ServiceElement serviceElement =
               aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
-          serviceExecutionSummaries.add(elementSummary);
-          List<InfrastructureMapping> infraMappings =
-              infrastructureMappingService
-                  .list(aPageRequest()
-                            .addFilter("appId", EQ, workflow.getAppId())
-                            .addFilter("envId", EQ, workflowExecution.getEnvId())
-                            .addFilter("serviceId", EQ, service.getUuid())
-                            .build())
-                  .getResponse();
+          /* List<InfrastructureMapping> infraMappings =
+             infrastructureMappingService.list(aPageRequest().addFilter("appId", EQ,
+             workflow.getAppId()).addFilter("envId", EQ, workflowExecution.getEnvId()).addFilter("serviceId", EQ,
+             service.getUuid()).build()).getResponse();*/
           List<InfraMappingSummary> infraMappingSummaries = new ArrayList<>();
-          for (InfrastructureMapping infraMapping : infraMappings) {
-            infraMappingSummaries.add(anInfraMappingSummary()
-                                          .withInframappingId(infraMapping.getUuid())
-                                          .withInfraMappingType(infraMapping.getInfraMappingType())
-                                          .withComputerProviderName(infraMapping.getComputeProviderName())
-                                          .withDisplayName(infraMapping.getDisplayName())
-                                          .withDeploymentType(infraMapping.getDeploymentType())
-                                          .withComputerProviderType(infraMapping.getComputeProviderType())
-                                          .build());
+          if (infrastructureMappings != null) {
+            for (InfrastructureMapping infraMapping : infrastructureMappings) {
+              if (infraMapping.getServiceId().equals(service.getUuid())) {
+                infraMappingSummaries.add(anInfraMappingSummary()
+                                              .withInframappingId(infraMapping.getUuid())
+                                              .withInfraMappingType(infraMapping.getInfraMappingType())
+                                              .withComputerProviderName(infraMapping.getComputeProviderName())
+                                              .withDisplayName(infraMapping.getDisplayName())
+                                              .withDeploymentType(infraMapping.getDeploymentType())
+                                              .withComputerProviderType(infraMapping.getComputeProviderType())
+                                              .build());
+              }
+            }
+            elementSummary.setInfraMappingSummary(infraMappingSummaries);
           }
-          elementSummary.setInfraMappingSummary(infraMappingSummaries);
+          serviceExecutionSummaries.add(elementSummary);
         });
       }
     }
@@ -1424,7 +1431,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private List<Service> resolveServices(Workflow workflow, WorkflowExecution workflowExecution) {
+  private List<Service> resolveTemplateServices(Workflow workflow, WorkflowExecution workflowExecution) {
     // Lookup service
     List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
@@ -1450,19 +1457,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
     }
-    List<String> templatizedServiceIds = new ArrayList<>();
-    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (workflowPhases != null) {
-      for (WorkflowPhase workflowPhase : workflowPhases) {
-        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
-        if (templateExpressions != null) {
-          if (templateExpressions.stream().anyMatch(
-                  templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
-            templatizedServiceIds.add(workflowPhase.getServiceId());
-          }
-        }
-      }
-    }
+    List<String> templatizedServiceIds = canaryOrchestrationWorkflow.getTemplatizedServiceIds();
     if (workflowServiceIds != null) {
       for (String workflowServiceId : workflowServiceIds) {
         if (!templatizedServiceIds.contains(workflowServiceId)) {
@@ -1470,19 +1465,79 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
     }
-
     if (serviceIds.size() != 0) {
-      PageRequest<Service> pageRequest = aPageRequest()
-                                             .withLimit(PageRequest.UNLIMITED)
-                                             .addFilter("appId", EQ, workflow.getAppId())
-                                             .addFilter("uuid", IN, serviceIds.toArray())
-                                             .build();
-      return serviceResourceService.list(pageRequest, false, false);
+      return getServices(workflow, serviceIds);
     } else {
       logger.info("No services resolved for templatized workflow id {} and workflow execution {]", workflow.getUuid(),
           workflowExecution);
       return null;
     }
+  }
+
+  private List<Service> getServices(Workflow workflow, List<String> serviceIds) {
+    PageRequest<Service> pageRequest = aPageRequest()
+                                           .withLimit(PageRequest.UNLIMITED)
+                                           .addFilter("appId", EQ, workflow.getAppId())
+                                           .addFilter("uuid", IN, serviceIds.toArray())
+                                           .build();
+    return serviceResourceService.list(pageRequest, false, false);
+  }
+
+  private List<InfrastructureMapping> resolveTemplateInfraMappings(
+      Workflow workflow, WorkflowExecution workflowExecution) {
+    // Lookup service
+    List<String> workflowInframappingIds = workflow.getOrchestrationWorkflow().getInfraMappingIds();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
+    List<String> infraMappingNames = new ArrayList<>();
+    if (userVariables != null) {
+      infraMappingNames =
+          userVariables.stream()
+              .filter(variable
+                  -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
+              .map(Variable::getName)
+              .collect(Collectors.toList());
+    }
+    List<String> infraMappingIds = new ArrayList<>();
+    Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
+        ? workflowExecution.getExecutionArgs().getWorkflowVariables()
+        : null;
+    if (workflowVariables != null) {
+      Set<String> workflowVariableNames = workflowVariables.keySet();
+      for (String variableName : workflowVariableNames) {
+        if (infraMappingNames.contains(variableName)) {
+          infraMappingIds.add(workflowVariables.get(variableName));
+        }
+      }
+    }
+    List<String> templatizedInfraMappingIdsIds = canaryOrchestrationWorkflow.getTemplatizedInfraMappingIds();
+    if (workflowInframappingIds != null) {
+      for (String workflowServiceId : workflowInframappingIds) {
+        if (!templatizedInfraMappingIdsIds.contains(workflowServiceId)) {
+          infraMappingIds.add(workflowServiceId);
+        }
+      }
+    }
+    if (infraMappingIds.size() != 0) {
+      return getInfrastructureMappings(workflow, infraMappingIds);
+    } else {
+      logger.info("No inframappings resolved for templatized workflow id {} and workflow execution {]",
+          workflow.getUuid(), workflowExecution);
+      return new ArrayList<>();
+    }
+  }
+
+  private List<InfrastructureMapping> getInfrastructureMappings(Workflow workflow, List<String> infraMappingIds) {
+    if (CollectionUtils.isNotEmpty(infraMappingIds)) {
+      PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
+                                                           .withLimit(PageRequest.UNLIMITED)
+                                                           .addFilter("appId", EQ, workflow.getAppId())
+                                                           .addFilter("uuid", IN, infraMappingIds.toArray())
+                                                           .build();
+      return infrastructureMappingService.list(pageRequest);
+    }
+    return new ArrayList<>();
   }
 
   /**
@@ -1495,21 +1550,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     }
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+    if (orchestrationWorkflow != null) {
+      return orchestrationWorkflow.isServiceTemplatized();
+    }
+    return false;
+  }
+
+  /**
+   * Checks if service templatized or not
+   * @param workflow
+   * @return
+   */
+  private boolean isInfraMappingTemplatized(Workflow workflow) {
+    if (!workflow.isTemplatized()) {
       return false;
     }
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (workflowPhases != null) {
-      for (WorkflowPhase workflowPhase : workflowPhases) {
-        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
-        if (templateExpressions != null) {
-          if (templateExpressions.stream().anyMatch(
-                  templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
-            return true;
-          }
-        }
-      }
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow != null) {
+      return orchestrationWorkflow.isInfraMappingTemplatized();
     }
     return false;
   }

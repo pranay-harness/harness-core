@@ -22,32 +22,32 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   /**
    * Jenkins source type.
    */
-  JENKINS(JenkinsArtifactStream.class, "JENKINS"), /**
-                                                    * BambooService source type.
-                                                    */
-  BAMBOO(BambooArtifactStream.class, "BAMBOO"), /**
-                                                 * Docker source type.
-                                                 */
-  DOCKER(DockerArtifactStream.class, "DOCKER"), /**
-                                                 * ECR source type.
-                                                 */
-  ECR(EcrArtifactStream.class, "ECR"), /**
-                                        * Google Container Registry source type.
-                                        */
-  GCR(GcrArtifactStream.class, "GCR"), /**
-                                        * Nexus Artifact source type.
-                                        */
-  NEXUS(NexusArtifactStream.class, "NEXUS"), /**
-                                              * Artifactory Artifact source type.
-                                              */
-  ARTIFACTORY(ArtifactoryArtifactStream.class, "ARTIFACTORY"), /**
+  JENKINS(JenkinsArtifactStream.class), /**
+                                         * BambooService source type.
+                                         */
+  BAMBOO(BambooArtifactStream.class), /**
+                                       * Docker source type.
+                                       */
+  DOCKER(DockerArtifactStream.class), /**
+                                       * ECR source type.
+                                       */
+  ECR(EcrArtifactStream.class), /**
+                                 * Google Container Registry source type.
+                                 */
+  GCR(GcrArtifactStream.class), /**
+                                 * Nexus Artifact source type.
+                                 */
+  NEXUS(NexusArtifactStream.class), /**
+                                     * Artifactory Artifact source type.
+                                     */
+  ARTIFACTORY(ArtifactoryArtifactStream.class), /**
 
    */
-  ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class, "ARTIFACTORYDOCKER"),
+  ARTIFACTORYDOCKER(ArtifactoryDockerArtifactStream.class),
   /**
    * Amazon S3 source type.
    */
-  AMAZON_S3(AmazonS3ArtifactStream.class, "AMAZON_S3");
+  AMAZON_S3(AmazonS3ArtifactStream.class);
 
   private static final String stencilsPath = "/templates/artifactstreams/";
   private static final String uiSchemaSuffix = "-ArtifactStreamUISchema.json";
@@ -56,15 +56,13 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   private JsonNode jsonSchema;
 
   @JsonIgnore private Class<? extends ArtifactStream> artifactStreamClass;
-  @JsonIgnore private String name;
 
-  ArtifactStreamType(Class<? extends ArtifactStream> artifactStreamClass, String name) {
+  ArtifactStreamType(Class<? extends ArtifactStream> artifactStreamClass) {
     this.artifactStreamClass = artifactStreamClass;
-    this.name = name;
     /* try {
-       uiSchema = UISchemaProcessor.generate(artifactStreamClass);
+      uiSchema = UISchemaProcessor.generate(artifactStreamClass);
 
-     } catch (Exception e) {*/
+    } catch (Exception e) {*/
     try {
       uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception ex) {
@@ -96,7 +94,7 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
 
   @Override
   public String getName() {
-    return name;
+    return name();
   }
 
   /**
