@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
+import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -17,7 +19,9 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
@@ -36,6 +40,7 @@ import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -69,6 +74,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ArtifactStreamService artifactStreamService;
+  @Inject @Transient protected transient FeatureFlagService featureFlagService;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -104,7 +110,15 @@ public abstract class ContainerServiceSetup extends State {
       String clusterName = containerInfrastructureMapping.getClusterName();
       if (!(infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)
           && Constants.RUNTIME.equals(clusterName)) {
-        clusterName = getClusterNameFromContextElement(context);
+        if ((infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+                && featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, app.getAccountId()))
+            || (infrastructureMapping instanceof EcsInfrastructureMapping
+                   && featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId()))) {
+          clusterName = getClusterNameFromContextElement(context);
+        } else {
+          throw new WingsException(
+              ErrorCode.INVALID_REQUEST, "message", "Runtime creation of clusters is not yet supported.");
+        }
       }
 
       StateExecutionData executionData = createService(context, serviceName, imageDetails, app.getName(), envName,

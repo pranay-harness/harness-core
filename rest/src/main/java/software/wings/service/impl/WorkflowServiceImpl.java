@@ -11,6 +11,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
+import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -118,6 +120,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -125,7 +128,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionStatus;
@@ -196,8 +198,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PipelineService pipelineService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -633,6 +635,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               unsetInfraMappingDetails(phase);
               resetNodeSelection(phase);
             }
+            if (inframappingChanged) {
+              resetNodeSelection(phase);
+            }
           }
         }
         Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
@@ -641,6 +646,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
             if (envChanged) {
               unsetInfraMappingDetails(phase);
+              resetNodeSelection(phase);
+            }
+            if (inframappingChanged) {
               resetNodeSelection(phase);
             }
           });
@@ -1530,11 +1538,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof EcsInfrastructureMapping
           && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(
-            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                .addStep(
-                    aNode().withId(getUuid()).withType(AWS_CLUSTER_SETUP.name()).withName("AWS Cluster Setup").build())
-                .build());
+        if (featureFlagService.isEnabled(ECS_CREATE_CLUSTER, appService.get(appId).getAccountId())) {
+          workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                                         .addStep(aNode()
+                                                      .withId(getUuid())
+                                                      .withType(AWS_CLUSTER_SETUP.name())
+                                                      .withName("AWS Cluster Setup")
+                                                      .build())
+                                         .build());
+        }
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
@@ -1568,11 +1580,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(
-            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                .addStep(
-                    aNode().withId(getUuid()).withType(GCP_CLUSTER_SETUP.name()).withName("GCP Cluster Setup").build())
-                .build());
+        if (featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, appService.get(appId).getAccountId())) {
+          workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                                         .addStep(aNode()
+                                                      .withId(getUuid())
+                                                      .withType(GCP_CLUSTER_SETUP.name())
+                                                      .withName("GCP Cluster Setup")
+                                                      .build())
+                                         .build());
+        }
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -46,7 +47,7 @@ public class AwsNodeSelectState extends State {
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
   @DefaultValue("COUNT")
-  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
+  private InstanceUnitType instanceUnitType = COUNT;
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
@@ -78,11 +79,13 @@ public class AwsNodeSelectState extends State {
 
     AwsInfrastructureMapping infrastructureMapping =
         (AwsInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
-
+    int totalAvailableInstances;
     if (infrastructureMapping.isProvisionInstances()) {
+      // Using Auto Scale group nodes
       List<ServiceInstance> autoScaleGroupNodes =
           infrastructureMappingService.getAutoScaleGroupNodes(appId, infraMappingId);
-      int instancesToAdd = getCumulativeTotal(autoScaleGroupNodes.size()) - hostExclusionList.size();
+      totalAvailableInstances = autoScaleGroupNodes.size();
+      int instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
       serviceInstances = autoScaleGroupNodes.stream()
                              .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()))
                              .limit(instancesToAdd)
@@ -90,6 +93,8 @@ public class AwsNodeSelectState extends State {
       logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
           serviceId, envId, infraMappingId);
     } else {
+      // Using filtered nodes
+      totalAvailableInstances = infrastructureMappingService.listHosts(appId, infraMappingId).size();
       ServiceInstanceSelectionParams.Builder serviceInstanceSelectionParams =
           aServiceInstanceSelectionParams()
               .withSelectSpecificHosts(specificHosts)
@@ -99,8 +104,7 @@ public class AwsNodeSelectState extends State {
         logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}, hostNames: {}",
             hostNames.size(), serviceId, envId, infraMappingId, hostNames);
       } else {
-        int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHosts(appId, infraMappingId).size())
-            - hostExclusionList.size();
+        int instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
         serviceInstanceSelectionParams.withCount(instancesToAdd);
         logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
             serviceId, envId, infraMappingId);
@@ -108,11 +112,53 @@ public class AwsNodeSelectState extends State {
       serviceInstances = infrastructureMappingService.selectServiceInstances(
           appId, envId, infraMappingId, serviceInstanceSelectionParams.build());
     }
+
     if (isEmpty(serviceInstances)) {
-      return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.FAILED)
-          .withErrorMessage("No node selected")
-          .build();
+      StringBuilder msg = new StringBuilder("No nodes were selected. ");
+      if (isSpecificHosts()) {
+        msg.append("'Use Specific Hosts' was chosen ");
+        if (isEmpty(hostNames)) {
+          msg.append("but no host names were specified. ");
+        } else {
+          msg.append("with these host names: ").append(hostNames).append(". ");
+        }
+      } else {
+        msg.append("A ")
+            .append(getInstanceUnitType() == COUNT ? "count" : "percent")
+            .append(" of ")
+            .append(getInstanceCount())
+            .append(" was specified. ");
+        if (getInstanceUnitType() == PERCENTAGE) {
+          msg.append("This evaluates to ")
+              .append(getCumulativeTotal(totalAvailableInstances))
+              .append(" instances (cumulative). ");
+        }
+      }
+
+      msg.append("\n\nThe service infrastructure [")
+          .append(infrastructureMapping.getDisplayName())
+          .append("] has ")
+          .append(totalAvailableInstances)
+          .append(" instance")
+          .append(totalAvailableInstances == 1 ? "" : "s")
+          .append(" available and ")
+          .append(hostExclusionList.size())
+          .append(hostExclusionList.size() == 1 ? " has" : " have")
+          .append(" already been deployed. ");
+
+      msg.append("\n\nCheck whether ");
+      if (isSpecificHosts()) {
+        msg.append("you've selected a unique set of host names for each phase. ");
+      } else {
+        if (infrastructureMapping.isProvisionInstances()) {
+          msg.append("your Auto Scale group [")
+              .append(infrastructureMapping.getAutoScalingGroupName())
+              .append("] capacity has changed. ");
+        } else {
+          msg.append("the filters specified in your service infrastructure are correct. ");
+        }
+      }
+      return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(msg.toString()).build();
     }
 
     SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
@@ -146,12 +192,19 @@ public class AwsNodeSelectState extends State {
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
     if (isSpecificHosts()) {
-      if (hostNames == null || hostNames.isEmpty()) {
+      if (isEmpty(hostNames)) {
         invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames must be specified");
+      }
+    } else {
+      if (getInstanceCount() <= 0) {
+        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Count or percent must be specified");
+      } else if (getInstanceUnitType() == PERCENTAGE && getInstanceCount() > 100) {
+        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Percent may not be greater than 100");
       }
     }
     return invalidFieldMessages;
   }
+
   /**
    * Gets instance count.
    *

@@ -28,7 +28,7 @@ public class ElkConfig extends SettingValue implements Encryptable {
   @SchemaIgnore @NotEmpty private String accountId;
 
   /**
-   * Instantiates a new Splunk config.
+   * Instantiates a new Elk config.
    */
   public ElkConfig() {
     super(SettingVariableTypes.ELK.name());
