@@ -11,7 +11,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,8 +47,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return false;
     }
 
-    if (isNotEmpty(featureFlag.getWhiteListedAccountIds())) {
-      if (featureFlag.getWhiteListedAccountIds().contains(accountId)) {
+    if (isNotEmpty(featureFlag.getAccountIds())) {
+      if (featureFlag.getAccountIds().contains(accountId)) {
         return true;
       }
     }
@@ -64,15 +63,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                     .stream()
                                     .map(FeatureFlag::getName)
                                     .collect(Collectors.toSet());
-    List<FeatureFlag> newFeatures = Arrays.stream(FeatureName.values())
-                                        .filter(featureName -> !existing.contains(featureName))
-                                        .map(featureName
-                                            -> FeatureFlag.builder()
-                                                   .name(featureName)
-                                                   .enabled(false)
-                                                   .whiteListedAccountIds(new HashSet<>())
-                                                   .build())
-                                        .collect(Collectors.toList());
+    List<FeatureFlag> newFeatures =
+        Arrays.stream(FeatureName.values())
+            .filter(featureName -> !existing.contains(featureName))
+            .map(featureName -> FeatureFlag.builder().name(featureName).enabled(false).build())
+            .collect(Collectors.toList());
     wingsPersistence.save(newFeatures);
   }
 }
