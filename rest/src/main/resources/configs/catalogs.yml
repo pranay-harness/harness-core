@@ -48,7 +48,7 @@ ARTIFACT_STREAM_TYPE:
     - name: ARTIFACTORY
       value: Artifactory
     - name: AMAZON_S3
-      value: Amazon_S3
+      value: Amazon S3
     - name: DOCKER
       value: Docker
     - name: ECR
