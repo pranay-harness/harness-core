@@ -22,4 +22,28 @@ public class ElbYaml extends SettingAttributeYaml {
     this.loadBalancerName = elbConfig.getLoadBalancerName();
     this.accessKey = elbConfig.getAccessKey();
   }
+
+  public String getLoadBalancerName() {
+    return loadBalancerName;
+  }
+
+  public void setLoadBalancerName(String loadBalancerName) {
+    this.loadBalancerName = loadBalancerName;
+  }
+
+  public String getAccessKey() {
+    return accessKey;
+  }
+
+  public void setAccessKey(String accessKey) {
+    this.accessKey = accessKey;
+  }
+
+  public String getSecretKey() {
+    return secretKey;
+  }
+
+  public void setSecretKey(String secretKey) {
+    this.secretKey = secretKey;
+  }
 }

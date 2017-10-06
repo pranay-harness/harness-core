@@ -38,8 +38,8 @@ import java.util.Set;
 public class GitSyncHelper {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private final String COMMIT_AUTHOR = "bsollish";
-  private final String COMMIT_EMAIL = "bob@harness.io";
+  private final String COMMIT_AUTHOR = "Harness Git Sync";
+  private final String COMMIT_EMAIL = "noreply@harness.io";
   private final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
   private final String YAML_EXTENSION = ".yaml";
   private final String DEFAULT_COMMIT_BRANCH = "origin";
