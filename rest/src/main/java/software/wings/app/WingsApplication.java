@@ -64,6 +64,7 @@ import software.wings.scheduler.LogAnalysisPurgeManager;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
@@ -245,6 +246,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     // TODO it needs to be revisited
     // startAnalysisLogPurger(injector);
 
+    initializeFeatureFlags(injector);
+
     logger.info("Starting app done");
   }
 
@@ -348,5 +351,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     final LogAnalysisPurgeManager logAnalysisPurgeManager =
         new LogAnalysisPurgeManager(injector.getInstance(AnalysisService.class));
     logAnalysisPurgeManager.startArchival();
+  }
+
+  private void initializeFeatureFlags(Injector injector) {
+    injector.getInstance(FeatureFlagService.class).initializeMissingFlags();
   }
 }

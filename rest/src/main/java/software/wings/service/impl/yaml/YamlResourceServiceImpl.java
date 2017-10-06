@@ -7,9 +7,17 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -17,6 +25,8 @@ import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SlackConfig;
+import software.wings.beans.SplunkConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -28,7 +38,11 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.LogzConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
@@ -40,6 +54,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.ArtifactStreamYaml;
 import software.wings.yaml.EnvironmentYaml;
@@ -544,9 +559,464 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<SettingAttribute> updateSettingAttribute(
       String accountId, String uuid, String type, YamlPayload yamlPayload, boolean deleteEnabled) {
-    // TODO
+    logger.info("*********** type: " + type);
 
-    return null;
+    RestResponse rr = new RestResponse<>();
+    rr.setResponseMessages(yamlPayload.getResponseMessages());
+
+    SettingAttribute settingAttribute = settingsService.get(uuid);
+
+    if (settingAttribute == null) {
+      YamlHelper.addSettingAttributeNotFoundMessage(rr, uuid);
+      return rr;
+    }
+
+    String yaml = yamlPayload.getYaml();
+
+    if (yaml == null || yaml.isEmpty()) {
+      YamlHelper.addMissingYamlMessage(rr);
+    }
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+    // get the before Yaml
+    RestResponse beforeResponse = getSettingAttribute(accountId, uuid);
+    YamlPayload beforeYP = (YamlPayload) beforeResponse.getResource();
+    String beforeYaml = beforeYP.getYaml();
+
+    if (yaml.equals(beforeYaml)) {
+      // no change
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
+      return rr;
+    }
+
+    //-------------------
+    SettingAttributeYaml beforeSettingAttributeYaml = null;
+
+    SettingVariableTypes settingVariableType = SettingVariableTypes.valueOf(settingAttribute.getValue().getType());
+
+    logger.info("*********** settingVariableType: " + settingVariableType);
+
+    if (settingVariableType == null) {
+      YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+          "Unrecognized settingVariableType: '" + settingVariableType + "'.");
+      return rr;
+    }
+
+    if (beforeYaml != null && !beforeYaml.isEmpty()) {
+      SettingValue beforeConfig;
+      SettingValue config;
+
+      // TODO - these can probably be refactored (quite a bit)
+
+      try {
+        switch (settingVariableType) {
+          // cloud providers
+          case AWS:
+            AwsYaml beforeAwsYaml = mapper.readValue(beforeYaml, AwsYaml.class);
+            if (beforeAwsYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeAwsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            AwsYaml awsYaml = mapper.readValue(yaml, AwsYaml.class);
+            if (awsYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "awsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (AwsConfig) settingAttribute.getValue();
+            settingAttribute.setName(awsYaml.getName());
+            config = AwsConfig.Builder.anAwsConfig()
+                         .withAccountId(accountId)
+                         .withAccessKey(awsYaml.getAccessKey())
+                         .withSecretKey(((AwsConfig) beforeConfig).getSecretKey())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case GCP:
+            GcpYaml beforeGcpYaml = mapper.readValue(beforeYaml, GcpYaml.class);
+            if (beforeGcpYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeGcpYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            GcpYaml gcpYaml = mapper.readValue(yaml, GcpYaml.class);
+            if (gcpYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "gcpYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            settingAttribute.setName(gcpYaml.getName());
+            config = GcpConfig.GcpConfigBuilder.aGcpConfig()
+                         .withServiceAccountKeyFileContent(gcpYaml.getServiceAccountKeyFileContent())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case PHYSICAL_DATA_CENTER:
+            PhysicalDataCenterYaml beforePdcYaml = mapper.readValue(beforeYaml, PhysicalDataCenterYaml.class);
+            if (beforePdcYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforePdcYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            PhysicalDataCenterYaml pdcYaml = mapper.readValue(yaml, PhysicalDataCenterYaml.class);
+            if (pdcYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "pdcYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            settingAttribute.setName(pdcYaml.getName());
+            break;
+
+          // artifact servers
+          case JENKINS:
+            JenkinsYaml beforeJenkinsYaml = mapper.readValue(beforeYaml, JenkinsYaml.class);
+            if (beforeJenkinsYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeJenkinsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            JenkinsYaml jenkinsYaml = mapper.readValue(yaml, JenkinsYaml.class);
+            if (jenkinsYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "jenkinsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (JenkinsConfig) settingAttribute.getValue();
+            settingAttribute.setName(jenkinsYaml.getName());
+            config = JenkinsConfig.Builder.aJenkinsConfig()
+                         .withAccountId(accountId)
+                         .withJenkinsUrl(jenkinsYaml.getUrl())
+                         .withPassword(((JenkinsConfig) beforeConfig).getPassword())
+                         .withUsername(jenkinsYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case BAMBOO:
+            BambooYaml beforeBambooYaml = mapper.readValue(beforeYaml, BambooYaml.class);
+            if (beforeBambooYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeBambooYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            BambooYaml bambooYaml = mapper.readValue(yaml, BambooYaml.class);
+            if (bambooYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "bambooYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (BambooConfig) settingAttribute.getValue();
+            settingAttribute.setName(bambooYaml.getName());
+            config = BambooConfig.Builder.aBambooConfig()
+                         .withAccountId(accountId)
+                         .withBambooUrl(bambooYaml.getUrl())
+                         .withPassword(((BambooConfig) beforeConfig).getPassword())
+                         .withUsername(bambooYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case DOCKER:
+            DockerYaml beforeDockerYaml = mapper.readValue(beforeYaml, DockerYaml.class);
+            if (beforeDockerYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeDockerYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            DockerYaml dockerYaml = mapper.readValue(yaml, DockerYaml.class);
+            if (dockerYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "dockerYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (DockerConfig) settingAttribute.getValue();
+            settingAttribute.setName(dockerYaml.getName());
+            config = DockerConfig.Builder.aDockerConfig()
+                         .withAccountId(accountId)
+                         .withDockerRegistryUrl(dockerYaml.getUrl())
+                         .withPassword(((DockerConfig) beforeConfig).getPassword())
+                         .withUsername(dockerYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case NEXUS:
+            NexusYaml beforeNexusYaml = mapper.readValue(beforeYaml, NexusYaml.class);
+            if (beforeNexusYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeNexusYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            NexusYaml nexusYaml = mapper.readValue(yaml, NexusYaml.class);
+            if (nexusYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "nexusYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (NexusConfig) settingAttribute.getValue();
+            settingAttribute.setName(nexusYaml.getName());
+            config = NexusConfig.Builder.aNexusConfig()
+                         .withAccountId(accountId)
+                         .withNexusUrl(nexusYaml.getUrl())
+                         .withPassword(((NexusConfig) beforeConfig).getPassword())
+                         .withUsername(nexusYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case ARTIFACTORY:
+            ArtifactoryYaml beforeArtifactoryYaml = mapper.readValue(beforeYaml, ArtifactoryYaml.class);
+            if (beforeArtifactoryYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeArtifactoryYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            ArtifactoryYaml artifactoryYaml = mapper.readValue(yaml, ArtifactoryYaml.class);
+            if (artifactoryYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "artifactoryYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (ArtifactoryConfig) settingAttribute.getValue();
+            settingAttribute.setName(artifactoryYaml.getName());
+            config = ArtifactoryConfig.Builder.anArtifactoryConfig()
+                         .withAccountId(accountId)
+                         .withArtifactoryUrl(artifactoryYaml.getUrl())
+                         .withPassword(((ArtifactoryConfig) beforeConfig).getPassword())
+                         .withUsername(artifactoryYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+
+          // collaboration providers
+          case SMTP:
+            SmtpYaml beforeSmtpYaml = mapper.readValue(beforeYaml, SmtpYaml.class);
+            if (beforeSmtpYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeSmtpYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            SmtpYaml smtpYaml = mapper.readValue(yaml, SmtpYaml.class);
+            if (smtpYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "smtpYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (SmtpConfig) settingAttribute.getValue();
+            settingAttribute.setName(smtpYaml.getName());
+            config = SmtpConfig.Builder.aSmtpConfig()
+                         .withAccountId(accountId)
+                         .withFromAddress(smtpYaml.getFromAddress())
+                         .withHost(smtpYaml.getHost())
+                         .withPassword(((SmtpConfig) beforeConfig).getPassword())
+                         .withPort(smtpYaml.getPort())
+                         .withUsername(smtpYaml.getUsername())
+                         .withUseSSL(smtpYaml.isUseSSL())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case SLACK:
+            SlackYaml beforeSlackYaml = mapper.readValue(beforeYaml, SlackYaml.class);
+            if (beforeSlackYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeSlackYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            SlackYaml slackYaml = mapper.readValue(yaml, SlackYaml.class);
+            if (slackYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "slackYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (SlackConfig) settingAttribute.getValue();
+            settingAttribute.setName(slackYaml.getName());
+            config =
+                SlackConfig.Builder.aSlackConfig().withOutgoingWebhookUrl(slackYaml.getOutgoingWebhookUrl()).build();
+            settingAttribute.setValue(config);
+            break;
+
+          // load balancers
+          case ELB:
+            ElbYaml beforeElbYaml = mapper.readValue(beforeYaml, ElbYaml.class);
+            if (beforeElbYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeElbYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            ElbYaml elbYaml = mapper.readValue(yaml, ElbYaml.class);
+            if (elbYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "elbYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (ElasticLoadBalancerConfig) settingAttribute.getValue();
+            settingAttribute.setName(elbYaml.getName());
+            config = ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig()
+                         .withAccountId(accountId)
+                         .withAccessKey(elbYaml.getAccessKey())
+                         .withLoadBalancerName(elbYaml.getLoadBalancerName())
+                         .withSecretKey(((ElasticLoadBalancerConfig) beforeConfig).getSecretKey())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+
+          // verification providers
+          // JENKINS is also a (logical) part of this group
+          case APP_DYNAMICS:
+            AppDynamicsYaml beforeAppDynamicsYaml = mapper.readValue(beforeYaml, AppDynamicsYaml.class);
+            if (beforeAppDynamicsYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeAppDynamicsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            AppDynamicsYaml appDynamicsYaml = mapper.readValue(yaml, AppDynamicsYaml.class);
+            if (appDynamicsYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "appDynamicsYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (AppDynamicsConfig) settingAttribute.getValue();
+            settingAttribute.setName(appDynamicsYaml.getName());
+            config = AppDynamicsConfig.Builder.anAppDynamicsConfig()
+                         .withAccountId(accountId)
+                         .withAccountname(appDynamicsYaml.getAccountname())
+                         .withControllerUrl(appDynamicsYaml.getUrl())
+                         .withPassword(((AppDynamicsConfig) beforeConfig).getPassword())
+                         .withUsername(appDynamicsYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case SPLUNK:
+            SplunkYaml beforeSplunkYaml = mapper.readValue(beforeYaml, SplunkYaml.class);
+            if (beforeSplunkYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeSplunkYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            SplunkYaml splunkYaml = mapper.readValue(yaml, SplunkYaml.class);
+            if (splunkYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "splunkYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (SplunkConfig) settingAttribute.getValue();
+            settingAttribute.setName(splunkYaml.getName());
+            config = SplunkConfig.builder()
+                         .accountId(accountId)
+                         .password(((SplunkConfig) beforeConfig).getPassword())
+                         .splunkUrl(splunkYaml.getUrl())
+                         .username(splunkYaml.getUsername())
+                         .build();
+            settingAttribute.setValue(config);
+            break;
+          case ELK:
+            ElkYaml beforeElkYaml = mapper.readValue(beforeYaml, ElkYaml.class);
+            if (beforeElkYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeElkYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            ElkYaml elkYaml = mapper.readValue(yaml, ElkYaml.class);
+            if (elkYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "elkYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (ElkConfig) settingAttribute.getValue();
+            settingAttribute.setName(elkYaml.getName());
+            config = new ElkConfig();
+            ((ElkConfig) config).setAccountId(accountId);
+            ((ElkConfig) config).setElkUrl(elkYaml.getUrl());
+            ((ElkConfig) config).setPassword(((ElkConfig) beforeConfig).getPassword());
+            ((ElkConfig) config).setUsername(elkYaml.getUsername());
+            settingAttribute.setValue(config);
+            break;
+          case LOGZ:
+            LogzYaml beforeLogzYaml = mapper.readValue(beforeYaml, LogzYaml.class);
+            if (beforeLogzYaml == null) {
+              YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO,
+                  "beforeLogzYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            LogzYaml logzYaml = mapper.readValue(yaml, LogzYaml.class);
+            if (logzYaml == null) {
+              YamlHelper.addResponseMessage(
+                  rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "logzYaml could not be correctly mapped.");
+              return rr;
+            }
+
+            beforeConfig = (LogzConfig) settingAttribute.getValue();
+            settingAttribute.setName(logzYaml.getName());
+            config = new LogzConfig();
+            ((LogzConfig) config).setAccountId(accountId);
+            ((LogzConfig) config).setLogzUrl(logzYaml.getUrl());
+            ((LogzConfig) config).setToken(((LogzConfig) beforeConfig).getToken());
+            settingAttribute.setValue(config);
+            break;
+          default:
+            // handle not found
+            YamlHelper.addUnknownSettingVariableTypeMessage(rr, settingVariableType);
+            return rr;
+        }
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        // bad before Yaml
+        e.printStackTrace();
+        YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
+        return rr;
+      }
+    } else {
+      // missing before Yaml
+      YamlHelper.addMissingBeforeYamlMessage(rr);
+      return rr;
+    }
+    //-------------------
+
+    settingAttribute = settingsService.update(settingAttribute);
+
+    // return the new resource
+    if (settingAttribute != null) {
+      // save the before yaml version
+      YamlVersion beforeYamLVersion = aYamlVersion()
+                                          .withAccountId(settingAttribute.getAccountId())
+                                          .withEntityId(settingAttribute.getUuid())
+                                          .withType(Type.SETTING)
+                                          .withYaml(beforeYaml)
+                                          .build();
+      yamlHistoryService.save(beforeYamLVersion);
+
+      rr.setResource(settingAttribute);
+    }
+
+    return rr;
   }
 
   /**

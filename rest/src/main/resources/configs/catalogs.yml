@@ -38,6 +38,24 @@ ARTIFACT_SOURCE_TYPE:
     - name: Arifactory Server
       value: ARTIFACTORY
 
+ARTIFACT_STREAM_TYPE:
+    - name: JENKINS
+      value: Jenkins
+    - name: BAMBOO
+      value: Bamboo
+    - name: NEXUS
+      value: Nexus
+    - name: ARTIFACTORY
+      value: Artifactory
+    - name: AMAZON_S3
+      value: Amazon S3
+    - name: DOCKER
+      value: Docker
+    - name: ECR
+      value: Ecr
+    - name: GCR
+      value: Gcr
+
 DEPLOYMENT_STRATEGY:
     - name: Serial
       value: SERIAL
