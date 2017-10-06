@@ -269,6 +269,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldDeleteFailedArtifacts() {
     Application savedApp = anApplication()
                                .withUuid(APP_ID)

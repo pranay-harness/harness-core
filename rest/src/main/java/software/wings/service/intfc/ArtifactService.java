@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import static software.wings.beans.artifact.Artifact.*;
+
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
@@ -55,7 +57,16 @@ public interface ArtifactService {
    * @param appId      the app id
    * @param status     the status
    */
-  void updateStatus(String artifactId, String appId, Artifact.Status status);
+  void updateStatus(String artifactId, String appId, Status status);
+
+  /**
+   * Update status.
+   *
+   * @param artifactId the artifact id
+   * @param appId      the app id
+   * @param status     the status
+   */
+  void updateStatus(String artifactId, String appId, Status status, String errorMessage);
 
   /**
    * Adds the artifact file.

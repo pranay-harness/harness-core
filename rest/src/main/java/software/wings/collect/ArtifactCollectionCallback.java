@@ -3,6 +3,10 @@ package software.wings.collect;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.ERROR;
+import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.READY;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +14,6 @@ import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -51,17 +54,17 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
       logger.error("Artifact file collection failed for artifactId: [{}], appId: [{}]", artifactId, appId);
-      artifactService.updateStatus(artifactId, appId, Status.FAILED);
+      artifactService.updateStatus(artifactId, appId, FAILED, "Failed to download artifact file");
     } else {
       Artifact artifact = artifactService.get(appId, artifactId);
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), READY);
 
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
       if (artifactStream.isAutoApproveForProduction()) {
-        artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
+        artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED);
       }
       artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
       notificationService.sendNotificationAsync(
@@ -80,7 +83,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
     Artifact artifact = artifactService.get(appId, artifactId);
-    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.ERROR);
+    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR);
     eventEmitter.send(Channel.ARTIFACTS,
         anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
   }
