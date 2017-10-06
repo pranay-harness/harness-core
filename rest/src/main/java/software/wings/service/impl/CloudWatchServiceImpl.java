@@ -59,4 +59,12 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     return awsConfig;
   }
+
+  /*
+  https://console.aws.amazon.com/cloudwatch/home?
+  region=us-east-1#metricsV2:graph=~(metrics~(~(~%27AWS*2fLambda~%27Errors))~period~300~stat~%27Sum~start~%27-P1D~end~%27P0D~yAxis~(left~null~right~null)~region~%27us-east-1)
+
+  https://console.aws.amazon.com/cloudwatch/home?
+  region=us-east-1#metricsV2:graph=~(metrics~(~(~%27AWS*2fLambda~%27Invocations))~period~300~stat~%27Sum~start~%27-P1D~end~%27P0D~yAxis~(left~null~right~null)~region~%27us-east-1)
+   */
 }
