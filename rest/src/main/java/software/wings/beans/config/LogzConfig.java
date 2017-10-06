@@ -35,4 +35,28 @@ public class LogzConfig extends SettingValue implements Encryptable {
   public LogzConfig() {
     super(SettingVariableTypes.LOGZ.name());
   }
+
+  public String getLogzUrl() {
+    return logzUrl;
+  }
+
+  public void setLogzUrl(String logzUrl) {
+    this.logzUrl = logzUrl;
+  }
+
+  public char[] getToken() {
+    return token;
+  }
+
+  public void setToken(char[] token) {
+    this.token = token;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
 }
