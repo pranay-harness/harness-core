@@ -6,6 +6,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -67,15 +68,10 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         asList(Application.class, Service.class, SettingAttribute.class, ServiceInstance.class, Host.class));
 
     app = appService.save(anApplication().withName("AppA").withAccountId(accountId).build());
-    service =
-        serviceResourceService.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
+    service = serviceResourceService.save(aService().withAppId(app.getUuid()).withName("Catalog").build());
 
-    // test setup
-    List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
-    for (int i = 1; i < environments.size(); i++) {
-      environmentService.delete(app.getUuid(), environments.get(i).getUuid());
-    }
-    environment = environments.get(0);
+    environment = environmentService.save(
+        Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("Developmenet").build());
   }
 
   @Test
