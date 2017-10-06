@@ -76,7 +76,10 @@ public abstract class OrchestrationWorkflow {
   public abstract OrchestrationWorkflow clone();
 
   public abstract List<Variable> getUserVariables();
+
   public abstract void setCloneMetadata(Map<String, String> serviceIdMapping);
+
+  public abstract List<String> getInfraMappingIds();
 
   /**
    * Checks if the workflow is templatized or not
@@ -91,8 +94,32 @@ public abstract class OrchestrationWorkflow {
     return userVariables.stream().anyMatch(variable -> !variable.isFixed());
   }
 
+  @JsonIgnore
   public List<String> getTemplatizedServiceIds() {
     return Arrays.asList();
+  }
+
+  @JsonIgnore
+  public List<String> getTemplatizedInfraMappingIds() {
+    return Arrays.asList();
+  }
+
+  /**
+   * Checks if any one of InfraMapping is templatized
+   * @return
+   */
+  @JsonIgnore
+  public boolean isServiceTemplatized() {
+    return false;
+  }
+
+  /**
+   * Checks if any one of InfraMapping is templatized
+   * @return
+   */
+  @JsonIgnore
+  public boolean isInfraMappingTemplatized() {
+    return false;
   }
   /***
    * Add template expressions to workflow variables
