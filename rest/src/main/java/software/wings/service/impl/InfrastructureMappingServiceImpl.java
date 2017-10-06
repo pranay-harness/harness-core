@@ -11,6 +11,8 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
+import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -56,12 +58,14 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -115,6 +119,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private WorkflowService workflowService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -161,12 +166,39 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       ((AwsInfrastructureMapping) infraMapping).validate();
     }
 
+    if (infraMapping instanceof EcsInfrastructureMapping) {
+      validateEcsInfraMapping((EcsInfrastructureMapping) infraMapping, computeProviderSetting);
+    }
+
+    if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      validateGcpInfraMapping((GcpKubernetesInfrastructureMapping) infraMapping, computeProviderSetting);
+    }
+
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
     if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
       savedInfraMapping = syncPhysicalHostsAndServiceInstances(savedInfraMapping, serviceTemplate, new ArrayList<>());
     }
     return savedInfraMapping;
+  }
+
+  private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
+    if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
+      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for ECS.");
+      }
+    }
+  }
+
+  private void validateGcpInfraMapping(
+      GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
+    if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
+      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
+      }
+    }
   }
 
   /**
@@ -233,6 +265,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     UpdateOperations<InfrastructureMapping> updateOperations =
         wingsPersistence.createUpdateOperations(InfrastructureMapping.class);
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     if (savedInfraMapping.getHostConnectionAttrs() != null
         && !savedInfraMapping.getHostConnectionAttrs().equals(infrastructureMapping.getHostConnectionAttrs())) {
@@ -243,6 +276,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+      validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
       updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
       updateOperations.set("region", ecsInfrastructureMapping.getRegion());
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
@@ -253,9 +287,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
       updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      updateOperations.set(
-          "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
-      updateOperations.set("namespace", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace());
+      GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
+          (GcpKubernetesInfrastructureMapping) infrastructureMapping;
+      validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
+      updateOperations.set("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
+      updateOperations.set("namespace", gcpKubernetesInfrastructureMapping.getNamespace());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       awsInfrastructureMapping.validate();
