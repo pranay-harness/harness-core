@@ -10,6 +10,12 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.ARTIFACT_PATH;
+import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.common.Constants.KEY;
+import static software.wings.common.Constants.URL;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -25,7 +31,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactService;
@@ -118,7 +123,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withArtifactStreamId(artifactStreamId)
                                   .withArtifactSourceName(artifactStream.getSourceName())
                                   .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
+                                  .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
                                   .withRevision(buildDetails.getRevision())
                                   .build();
           newArtifacts.add(artifactService.create(artifact));
@@ -132,9 +137,8 @@ public class ArtifactCollectionJob implements Job {
       logger.info("Latest version in Nexus server {}", latestVersion);
       if (latestVersion != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-        String buildNo =
-            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-            ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
+        String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
+            ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
             : "";
         logger.info("Last collected Nexus artifact version {} ", buildNo);
         if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
@@ -146,7 +150,7 @@ public class ArtifactCollectionJob implements Job {
                                   .withArtifactStreamId(artifactStreamId)
                                   .withArtifactSourceName(artifactStream.getSourceName())
                                   .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
-                                  .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
+                                  .withMetadata(ImmutableMap.of(BUILD_NO, latestVersion.getNumber()))
                                   .withRevision(latestVersion.getRevision())
                                   .build();
           newArtifacts.add(artifactService.create(artifact));
@@ -183,7 +187,7 @@ public class ArtifactCollectionJob implements Job {
                                     .withArtifactStreamId(artifactStreamId)
                                     .withArtifactSourceName(artifactStream.getSourceName())
                                     .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                    .withMetadata(ImmutableMap.of(Constants.BUILD_NO, buildDetails.getNumber()))
+                                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
                                     .withRevision(buildDetails.getRevision())
                                     .build();
             newArtifacts.add(artifactService.create(artifact));
@@ -206,15 +210,15 @@ public class ArtifactCollectionJob implements Job {
             Collectors.toMap(Artifact::getArtifactPath, Artifact::getUuid, (s, s2) -> s));
         builds.forEach(buildDetails -> {
           if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
-            Artifact artifact = anArtifact()
-                                    .withAppId(appId)
-                                    .withArtifactStreamId(artifactStreamId)
-                                    .withArtifactSourceName(artifactStream.getSourceName())
-                                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
-                                    .withMetadata(ImmutableMap.of(Constants.ARTIFACT_PATH,
-                                        buildDetails.getArtifactPath(), Constants.ARTIFACT_FILE_NAME,
-                                        buildDetails.getNumber(), Constants.BUILD_NO, buildDetails.getNumber()))
-                                    .build();
+            Artifact artifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                    .withMetadata(ImmutableMap.of(ARTIFACT_PATH, buildDetails.getArtifactPath(), ARTIFACT_FILE_NAME,
+                        buildDetails.getNumber(), BUILD_NO, buildDetails.getNumber()))
+                    .build();
             newArtifacts.add(artifactService.create(artifact));
           }
         });
@@ -227,9 +231,8 @@ public class ArtifactCollectionJob implements Job {
         if (latestVersion != null) {
           Artifact lastCollectedArtifact =
               artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-          String buildNo =
-              (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-              ? lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO)
+          String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
+              ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
               : "";
           logger.info("Last collected artifactory maven artifact version {} ", buildNo);
           if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
@@ -241,7 +244,7 @@ public class ArtifactCollectionJob implements Job {
                                     .withArtifactStreamId(artifactStreamId)
                                     .withArtifactSourceName(artifactStream.getSourceName())
                                     .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
-                                    .withMetadata(ImmutableMap.of(Constants.BUILD_NO, latestVersion.getNumber()))
+                                    .withMetadata(ImmutableMap.of(BUILD_NO, latestVersion.getNumber()))
                                     .withRevision(latestVersion.getRevision())
                                     .build();
             newArtifacts.add(artifactService.create(artifact, artifactType));
@@ -267,12 +270,12 @@ public class ArtifactCollectionJob implements Job {
         if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
           Map<String, String> buildParameters = buildDetails.getBuildParameters();
           Map<String, String> map = Maps.newHashMap();
-          map.put(Constants.ARTIFACT_PATH, buildParameters.get(Constants.ARTIFACT_PATH));
-          map.put(Constants.ARTIFACT_FILE_NAME, buildParameters.get(Constants.ARTIFACT_PATH));
-          map.put(Constants.BUILD_NO, buildParameters.get(Constants.BUILD_NO));
-          map.put(Constants.BUCKET_NAME, buildParameters.get(Constants.BUCKET_NAME));
-          map.put(Constants.KEY, buildParameters.get(Constants.KEY));
-          map.put(Constants.URL, buildParameters.get(Constants.URL));
+          map.put(ARTIFACT_PATH, buildParameters.get(ARTIFACT_PATH));
+          map.put(ARTIFACT_FILE_NAME, buildParameters.get(ARTIFACT_PATH));
+          map.put(BUILD_NO, buildParameters.get(BUILD_NO));
+          map.put(BUCKET_NAME, buildParameters.get(BUCKET_NAME));
+          map.put(KEY, buildParameters.get(KEY));
+          map.put(URL, buildParameters.get(URL));
 
           Artifact artifact = anArtifact()
                                   .withAppId(appId)
@@ -290,9 +293,8 @@ public class ArtifactCollectionJob implements Job {
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (lastSuccessfulBuild != null) {
         Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-        int buildNo =
-            (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO) != null)
-            ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(Constants.BUILD_NO))
+        int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
+            ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
             : 0;
         if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
           logger.info(
@@ -300,7 +302,7 @@ public class ArtifactCollectionJob implements Job {
               buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
 
           Map<String, String> metadata = lastSuccessfulBuild.getBuildParameters();
-          metadata.put(Constants.BUILD_NO, lastSuccessfulBuild.getNumber());
+          metadata.put(BUILD_NO, lastSuccessfulBuild.getNumber());
 
           Artifact artifact =
               anArtifact()
