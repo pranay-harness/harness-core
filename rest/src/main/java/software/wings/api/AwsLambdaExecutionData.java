@@ -4,11 +4,19 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.collect.Maps;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AwsLambdaExecutionData extends StateExecutionData implements NotifyResponseData {
   private String functionName;
   private String functionArn;
@@ -17,63 +25,19 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
   private String functionError;
   private String logResult;
   private String payload;
-
-  public AwsLambdaExecutionData() {}
-
-  public String getFunctionArn() {
-    return functionArn;
-  }
-
-  public void setFunctionArn(String functionArn) {
-    this.functionArn = functionArn;
-  }
-
-  public String getFunctionVersion() {
-    return functionVersion;
-  }
-
-  public void setFunctionVersion(String functionVersion) {
-    this.functionVersion = functionVersion;
-  }
-
-  public Integer getStatusCode() {
-    return statusCode;
-  }
-
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public String getFunctionError() {
-    return functionError;
-  }
-
-  public void setFunctionError(String functionError) {
-    this.functionError = functionError;
-  }
-
-  public String getLogResult() {
-    return logResult;
-  }
-
-  public void setLogResult(String logResult) {
-    this.logResult = logResult;
-  }
-
-  public String getPayload() {
-    return payload;
-  }
-
-  public void setPayload(String payload) {
-    this.payload = payload;
-  }
+  private boolean executionDisabled;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     return getInternalExecutionDetails();
   }
 
-  public Map<String, ExecutionDataValue> getInternalExecutionDetails() {
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    return getInternalExecutionDetails();
+  }
+
+  private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
     putNotNull(executionDetails, "functionName",
         anExecutionDataValue().withValue(functionName).withDisplayName("Function Name").build());
@@ -81,6 +45,8 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
         anExecutionDataValue().withValue(functionArn).withDisplayName("Function ARN").build());
     putNotNull(executionDetails, "functionVersion",
         anExecutionDataValue().withValue(functionVersion).withDisplayName("Function Version").build());
+    putNotNull(executionDetails, "executionDisabled",
+        anExecutionDataValue().withValue(executionDisabled).withDisplayName("Execution Disabled").build());
     putNotNull(executionDetails, "statusCode",
         anExecutionDataValue().withValue(statusCode).withDisplayName("Status Code").build());
     putNotNull(executionDetails, "functionError",
@@ -90,18 +56,5 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
     putNotNull(executionDetails, "logResult",
         anExecutionDataValue().withValue(logResult).withDisplayName("Log Result").build());
     return executionDetails;
-  }
-
-  @Override
-  public Map<String, ExecutionDataValue> getExecutionDetails() {
-    return getInternalExecutionDetails();
-  }
-
-  public String getFunctionName() {
-    return functionName;
-  }
-
-  public void setFunctionName(String functionName) {
-    this.functionName = functionName;
   }
 }
