@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang.StringUtils;
@@ -15,6 +16,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -100,7 +102,8 @@ public class LogMLAnalysisGenerator implements Runnable {
             + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
         final List<String> command = new ArrayList<>();
         command.add(this.pythonScriptRoot + "/" + LOG_ML_SHELL_FILE_NAME);
-        command.add("--query=" + query);
+        command.add("--query");
+        command.addAll(Lists.newArrayList(query.split(" ")));
         if (isBaselineCreated) {
           command.add("--control_input_url");
           command.add(controlInputUrl);
