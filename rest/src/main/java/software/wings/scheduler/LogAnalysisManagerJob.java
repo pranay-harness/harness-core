@@ -2,6 +2,8 @@ package software.wings.scheduler;
 
 import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.aLogAnalysisResponse;
 
+import com.google.common.collect.Sets;
+
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -14,6 +16,7 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
@@ -29,6 +32,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -123,6 +127,16 @@ public class LogAnalysisManagerJob implements Job {
       }
     }
 
+    private Set<String> getCollectedNodes() {
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        Set<String> nodes = Sets.newHashSet(context.getControlNodes());
+        nodes.addAll(context.getTestNodes());
+        return nodes;
+      } else {
+        return Sets.newHashSet(context.getTestNodes());
+      }
+    }
+
     @Override
     public void run() {
       boolean completeCron = false;
@@ -150,7 +164,7 @@ public class LogAnalysisManagerJob implements Job {
         } else {
           // TODO support multiple queries
           int logAnalysisMinute = analysisService.getCollectionMinuteForL1(context.getQueries().iterator().next(),
-              context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes());
+              context.getAppId(), context.getStateExecutionId(), context.getStateType(), getCollectedNodes());
           if (logAnalysisMinute != -1) {
             boolean hasRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
                 context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes(),

@@ -85,6 +85,7 @@ import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
@@ -159,6 +160,7 @@ import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.HostService;
@@ -171,7 +173,6 @@ import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -315,6 +316,7 @@ public class WingsModule extends AbstractModule {
     bind(SetupYamlResourceService.class).to(SetupYamlResourceServiceImpl.class);
     bind(YamlGitSyncService.class).to(YamlGitSyncServiceImpl.class);
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
+    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
