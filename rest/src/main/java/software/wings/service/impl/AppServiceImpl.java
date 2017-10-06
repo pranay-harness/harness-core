@@ -118,7 +118,6 @@ public class AppServiceImpl implements AppService {
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
     settingsService.createDefaultApplicationSettings(application.getUuid(), application.getAccountId());
-    environmentService.createDefaultEnvironments(application.getUuid());
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(application.getUuid())
