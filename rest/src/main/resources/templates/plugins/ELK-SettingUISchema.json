@@ -1,6 +1,7 @@
 {
   "password": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
+  "kibanaVersion": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "password" ],
-  "ui:order": [ "type", "elkUrl",  "username", "password" ]
+  "ui:order": [ "type", "elkConnector", "url",  "username", "password", "kibanaVersion" ]
 }

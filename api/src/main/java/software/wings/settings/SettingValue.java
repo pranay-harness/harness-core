@@ -83,11 +83,6 @@ public abstract class SettingValue implements ExtensionPoint {
     ELK("ELK"),
 
     /**
-     * Kibana setting variable types.
-     */
-    KIBANA("Kibana"),
-
-    /**
      * Logz setting variable types.
      */
     LOGZ("LOGZ"),

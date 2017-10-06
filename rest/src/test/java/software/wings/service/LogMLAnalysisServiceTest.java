@@ -11,7 +11,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.KibanaConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -20,6 +20,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogRequest;
@@ -90,8 +91,10 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(new ElkDelegateServiceImpl());
     Whitebox.setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
-    String version =
-        elkAnalysisService.getVersion(accountId, "http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
+    ElkConfig elkConfig = new ElkConfig();
+    elkConfig.setUrl("http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
+    elkConfig.setElkConnector(ElkConnector.KIBANA_SERVER);
+    String version = elkAnalysisService.getVersion(accountId, elkConfig);
     assertEquals("5.5.2", version);
   }
 

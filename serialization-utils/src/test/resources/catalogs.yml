@@ -61,3 +61,9 @@ CONTAINER_FAMILY:
       value: TOMCAT
     - name: JBoss AS 7
       value: JBOSS
+
+ELK_CONNECTOR_TYPE:
+    - name: Elastic Search Server
+      value: ELASTIC_SEARCH_SERVER
+    - name: Kibana Server
+      value: KIBANA_SERVER
