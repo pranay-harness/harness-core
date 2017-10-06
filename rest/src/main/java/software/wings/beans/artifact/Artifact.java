@@ -39,6 +39,7 @@ public class Artifact extends Base {
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
   @Indexed private Status status;
   private String description;
+  private String errorMessage;
 
   /**
    * Gets buildNo.
