@@ -19,16 +19,15 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.Type;
+import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.inject.Inject;
 
 // TODO - add this to test logged error messages
@@ -54,25 +53,22 @@ public class FeatureFlagTest extends WingsBaseTest {
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
   private final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
   private final String TEST_ACCOUNT_ID_Y = "TEST_ACCOUNT_ID_Y";
-  private List<String> listWith = new ArrayList<String>(Arrays.asList(TEST_ACCOUNT_ID, TEST_ACCOUNT_ID_X));
-  private List<String> listWithout = new ArrayList<String>(Arrays.asList(TEST_ACCOUNT_ID_X, TEST_ACCOUNT_ID_Y));
+  private Set<String> listWith = new HashSet<>(Arrays.asList(TEST_ACCOUNT_ID, TEST_ACCOUNT_ID_X));
+  private Set<String> listWithout = new HashSet<>(Arrays.asList(TEST_ACCOUNT_ID_X, TEST_ACCOUNT_ID_Y));
 
-  private FeatureFlag ffTrueEmpty =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(true).whiteListedAccountIds(new ArrayList<String>()).build();
-  private FeatureFlag ffFalseEmpty =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(false).whiteListedAccountIds(new ArrayList<String>()).build();
+  private FeatureFlag ffTrueEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).build();
+  private FeatureFlag ffFalseEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).build();
   private FeatureFlag ffTrueWith =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(true).whiteListedAccountIds(listWith).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).whiteListedAccountIds(listWith).build();
   private FeatureFlag ffFalseWith =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(false).whiteListedAccountIds(listWith).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).whiteListedAccountIds(listWith).build();
   private FeatureFlag ffTrueWithout =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(true).whiteListedAccountIds(listWithout).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).whiteListedAccountIds(listWithout).build();
   private FeatureFlag ffFalseWithout =
-      FeatureFlag.builder().type(Type.GIT_SYNC).flag(false).whiteListedAccountIds(listWithout).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).whiteListedAccountIds(listWithout).build();
 
   private PageRequest<FeatureFlag> ffPageRequest = new PageRequest<>();
   private PageRequest<FeatureFlag> ffPageRequestTypeNull = new PageRequest<>();
-  private PageResponse<FeatureFlag> ffPageResponse = new PageResponse<>();
 
   /**
    * setup for test.
@@ -91,10 +87,10 @@ public class FeatureFlagTest extends WingsBaseTest {
     */
 
     when(wingsPersistence.createQuery(FeatureFlag.class)).thenReturn(query);
-    when(query.field(eq("type"))).thenReturn(end);
+    when(query.field(eq("name"))).thenReturn(end);
 
-    ffPageRequest.addFilter("type", Type.GIT_SYNC, SearchFilter.Operator.EQ);
-    ffPageRequestTypeNull.addFilter("type", null, SearchFilter.Operator.EQ);
+    ffPageRequest.addFilter("name", FeatureName.GIT_SYNC, SearchFilter.Operator.EQ);
+    ffPageRequestTypeNull.addFilter("name", null, SearchFilter.Operator.EQ);
   }
 
   /**
@@ -112,96 +108,96 @@ public class FeatureFlagTest extends WingsBaseTest {
     when(end.equal(null)).thenReturn(query);
 
     when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWith);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffFalseWith);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWithout);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffFalseWithout);
-    assertThat(featureFlagService.getFlag(null, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(null, TEST_ACCOUNT_ID)).isFalse();
   }
 
   @Test
   public void testFlagTrueAccountIdMissing() {
-    when(end.equal(Type.GIT_SYNC)).thenReturn(query);
+    when(end.equal(FeatureName.GIT_SYNC)).thenReturn(query);
 
     when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isTrue();
     // TODO - add this to test logged error messages
     // verifyErrorMessages("FeatureFlag accountId is null or missing!");
 
     when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isTrue();
 
     when(query.get()).thenReturn(ffFalseWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isTrue();
 
     when(query.get()).thenReturn(ffFalseWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, null)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, null)).isFalse();
   }
 
   @Test
   public void testFlagTrueAccountIdEmpty() {
-    when(end.equal(Type.GIT_SYNC)).thenReturn(query);
+    when(end.equal(FeatureName.GIT_SYNC)).thenReturn(query);
 
     when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isTrue();
 
     when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isFalse();
 
     when(query.get()).thenReturn(ffTrueWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isTrue();
 
     when(query.get()).thenReturn(ffFalseWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isFalse();
 
     when(query.get()).thenReturn(ffTrueWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isTrue();
 
     when(query.get()).thenReturn(ffFalseWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, "")).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, "")).isFalse();
   }
 
   @Test
   public void testTypeAccountIdAndWhiteListing() {
-    when(end.equal(Type.GIT_SYNC)).thenReturn(query);
+    when(end.equal(FeatureName.GIT_SYNC)).thenReturn(query);
 
     when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
     // TODO - add this to test logged error messages
     // verifyErrorMessages("FeatureFlag accountId is null or missing!");
 
     when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
 
     // ********** this tests whitelisting ****************
     when(query.get()).thenReturn(ffFalseWith);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
     // ***************************************************
 
     when(query.get()).thenReturn(ffTrueWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isTrue();
 
     when(query.get()).thenReturn(ffFalseWithout);
-    assertThat(featureFlagService.getFlag(Type.GIT_SYNC, TEST_ACCOUNT_ID)).isFalse();
+    assertThat(featureFlagService.isEnabled(FeatureName.GIT_SYNC, TEST_ACCOUNT_ID)).isFalse();
   }
 }

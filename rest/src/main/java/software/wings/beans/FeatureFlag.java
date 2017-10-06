@@ -11,7 +11,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created by bsollish on 10/04/17
@@ -22,11 +22,11 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "featureFlag", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("type") }, options = @IndexOptions(name = "featureFlagIdx", unique = true)))
+@Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(name = "featureFlagIdx", unique = true)))
 public class FeatureFlag extends Base {
-  private Type type;
-  private boolean flag;
-  private List<String> whiteListedAccountIds;
+  private FeatureName name;
+  private boolean enabled;
+  private Set<String> whiteListedAccountIds;
 
-  public enum Type { GIT_SYNC }
+  public enum FeatureName { GIT_SYNC, ECS_CREATE_CLUSTER, KUBERNETES_CREATE_CLUSTER }
 }
