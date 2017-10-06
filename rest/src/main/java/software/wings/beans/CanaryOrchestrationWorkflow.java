@@ -184,6 +184,18 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   @Override
+  public List<String> getInfraMappingIds() {
+    if (workflowPhaseIdMap == null) {
+      return null;
+    }
+    return workflowPhaseIdMap.values()
+        .stream()
+        .map(WorkflowPhase::getInfraMappingId)
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public void setCloneMetadata(Map<String, String> serviceIdMapping) {
     if (workflowPhaseIdMap == null || serviceIdMapping == null) {
       return;
@@ -502,19 +514,78 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getTemplatizedServiceIds() {
-    if (workflowPhaseIdMap == null) {
-      return null;
-    }
     List<String> templatizedServiceIds = new ArrayList<>();
-    for (WorkflowPhase workflowPhase : workflowPhaseIdMap.values()) {
-      if (workflowPhase.getTemplateExpressions() != null) {
-        if (workflowPhase.getTemplateExpressions().stream().anyMatch(
+    if (workflowPhases == null) {
+      return templatizedServiceIds;
+    }
+    for (WorkflowPhase workflowPhase : workflowPhases) {
+      List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+      if (templateExpressions != null) {
+        if (templateExpressions.stream().anyMatch(
                 templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
           templatizedServiceIds.add(workflowPhase.getServiceId());
         }
       }
     }
     return templatizedServiceIds;
+  }
+
+  @Override
+  public List<String> getTemplatizedInfraMappingIds() {
+    List<String> templatizedInfraMappingIds = new ArrayList<>();
+    if (workflowPhases == null) {
+      return templatizedInfraMappingIds;
+    }
+    for (WorkflowPhase workflowPhase : workflowPhases) {
+      List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+      if (templateExpressions != null) {
+        if (templateExpressions.stream().anyMatch(
+                templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))) {
+          templatizedInfraMappingIds.add(workflowPhase.getInfraMappingId());
+        }
+      }
+    }
+    return templatizedInfraMappingIds;
+  }
+
+  /**
+   * Checks if service templatized or not
+   * @return
+   */
+  @Override
+  public boolean isServiceTemplatized() {
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          if (templateExpressions.stream().anyMatch(
+                  templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if Inframapping templatized or not
+   * @return
+   */
+  @Override
+  public boolean isInfraMappingTemplatized() {
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          if (templateExpressions.stream().anyMatch(
+                  templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   public static final class CanaryOrchestrationWorkflowBuilder {
