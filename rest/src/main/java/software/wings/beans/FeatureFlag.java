@@ -26,7 +26,7 @@ import java.util.Set;
 public class FeatureFlag extends Base {
   private FeatureName name;
   private boolean enabled;
-  private Set<String> whiteListedAccountIds;
+  private Set<String> accountIds;
 
   public enum FeatureName { GIT_SYNC, ECS_CREATE_CLUSTER, KUBERNETES_CREATE_CLUSTER }
 }

@@ -59,13 +59,13 @@ public class FeatureFlagTest extends WingsBaseTest {
   private FeatureFlag ffTrueEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).build();
   private FeatureFlag ffFalseEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).build();
   private FeatureFlag ffTrueWith =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).whiteListedAccountIds(listWith).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).accountIds(listWith).build();
   private FeatureFlag ffFalseWith =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).whiteListedAccountIds(listWith).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).accountIds(listWith).build();
   private FeatureFlag ffTrueWithout =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).whiteListedAccountIds(listWithout).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).accountIds(listWithout).build();
   private FeatureFlag ffFalseWithout =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).whiteListedAccountIds(listWithout).build();
+      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).accountIds(listWithout).build();
 
   private PageRequest<FeatureFlag> ffPageRequest = new PageRequest<>();
   private PageRequest<FeatureFlag> ffPageRequestTypeNull = new PageRequest<>();
