@@ -57,17 +57,16 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
-  public void initializeMissingFlags() {
-    Set<FeatureName> existing = wingsPersistence.createQuery(FeatureFlag.class)
-                                    .asList()
-                                    .stream()
-                                    .map(FeatureFlag::getName)
-                                    .collect(Collectors.toSet());
-    List<FeatureFlag> newFeatures =
-        Arrays.stream(FeatureName.values())
-            .filter(featureName -> !existing.contains(featureName))
-            .map(featureName -> FeatureFlag.builder().name(featureName).enabled(false).build())
-            .collect(Collectors.toList());
-    wingsPersistence.save(newFeatures);
+  public void initializeFeatureFlags() {
+    List<FeatureFlag> persistedFeatureFlags = wingsPersistence.createQuery(FeatureFlag.class).asList();
+    Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(Collectors.toSet());
+    persistedFeatureFlags.forEach(flag -> flag.setObsolete(!definedNames.contains(flag.getName())));
+    wingsPersistence.save(persistedFeatureFlags);
+    Set<String> persistedNames = persistedFeatureFlags.stream().map(FeatureFlag::getName).collect(Collectors.toSet());
+    List<FeatureFlag> newFeatureFlags = definedNames.stream()
+                                            .filter(name -> !persistedNames.contains(name))
+                                            .map(name -> FeatureFlag.builder().name(name).enabled(false).build())
+                                            .collect(Collectors.toList());
+    wingsPersistence.save(newFeatureFlags);
   }
 }
