@@ -354,6 +354,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void initializeFeatureFlags(Injector injector) {
-    injector.getInstance(FeatureFlagService.class).initializeMissingFlags();
+    injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
   }
 }
