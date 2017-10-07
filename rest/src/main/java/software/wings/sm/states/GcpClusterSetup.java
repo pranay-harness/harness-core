@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
+import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 
@@ -24,6 +25,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -50,6 +52,7 @@ public class GcpClusterSetup extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new state.
@@ -66,6 +69,11 @@ public class GcpClusterSetup extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
     String env = workflowStandardParams.getEnv().getName();
+
+    if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, app.getAccountId())) {
+      throw new WingsException(
+          ErrorCode.INVALID_REQUEST, "message", "Runtime creation of clusters is not yet supported.");
+    }
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
