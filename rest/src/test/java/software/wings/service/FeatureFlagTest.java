@@ -49,23 +49,23 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
 
   @Inject @InjectMocks private FeatureFlagService featureFlagService;
-
+  private final String TEST_FLAG_NAME = "TEST_FLAG_NAME";
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
   private final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
   private final String TEST_ACCOUNT_ID_Y = "TEST_ACCOUNT_ID_Y";
   private Set<String> listWith = new HashSet<>(Arrays.asList(TEST_ACCOUNT_ID, TEST_ACCOUNT_ID_X));
   private Set<String> listWithout = new HashSet<>(Arrays.asList(TEST_ACCOUNT_ID_X, TEST_ACCOUNT_ID_Y));
 
-  private FeatureFlag ffTrueEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).build();
-  private FeatureFlag ffFalseEmpty = FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).build();
+  private FeatureFlag ffTrueEmpty = FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(true).build();
+  private FeatureFlag ffFalseEmpty = FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(false).build();
   private FeatureFlag ffTrueWith =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).accountIds(listWith).build();
+      FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(true).accountIds(listWith).build();
   private FeatureFlag ffFalseWith =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).accountIds(listWith).build();
+      FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(false).accountIds(listWith).build();
   private FeatureFlag ffTrueWithout =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(true).accountIds(listWithout).build();
+      FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(true).accountIds(listWithout).build();
   private FeatureFlag ffFalseWithout =
-      FeatureFlag.builder().name(FeatureName.GIT_SYNC).enabled(false).accountIds(listWithout).build();
+      FeatureFlag.builder().name(TEST_FLAG_NAME).enabled(false).accountIds(listWithout).build();
 
   private PageRequest<FeatureFlag> ffPageRequest = new PageRequest<>();
   private PageRequest<FeatureFlag> ffPageRequestTypeNull = new PageRequest<>();
