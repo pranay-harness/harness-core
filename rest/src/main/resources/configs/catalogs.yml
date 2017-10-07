@@ -52,9 +52,9 @@ ARTIFACT_STREAM_TYPE:
     - name: DOCKER
       value: Docker
     - name: ECR
-      value: Ecr
+      value: ECR
     - name: GCR
-      value: Gcr
+      value: GCR
 
 DEPLOYMENT_STRATEGY:
     - name: Serial
