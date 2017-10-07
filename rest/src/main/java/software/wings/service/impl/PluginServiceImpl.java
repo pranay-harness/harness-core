@@ -26,7 +26,6 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KibanaConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -138,15 +137,6 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema(SettingVariableTypes.ELK.name()))
             .build(),
         anAccountPlugin()
-            .withSettingClass(KibanaConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName(SettingVariableTypes.KIBANA.name())
-            .withType(SettingVariableTypes.KIBANA.name())
-            .withPluginCategories(asList(Verification))
-            .withUiSchema(readUiSchema(SettingVariableTypes.KIBANA.name()))
-            .build(),
-        anAccountPlugin()
             .withSettingClass(LogzConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
@@ -159,7 +149,7 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(SumoConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName(SettingVariableTypes.SUMO.name())
+            .withDisplayName(SettingVariableTypes.SUMO.getDisplayName())
             .withType(SettingVariableTypes.SUMO.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.SUMO.name()))
