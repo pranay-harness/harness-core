@@ -378,6 +378,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               WorkflowExecution workflowExecution2 =
                   getExecutionDetails(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
+              stageExecution.setStatus(workflowExecution2.getStatus());
             }
             stageExecutionDataList.add(stageExecution);
 
@@ -400,6 +401,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else {
       pipelineExecution.setStatus(workflowExecution.getStatus());
     }
+
+    workflowExecution.setStatus(pipelineExecution.getStatus());
 
     try {
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
