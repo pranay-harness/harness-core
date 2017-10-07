@@ -26,4 +26,6 @@ public interface KibanaRestClient {
   @POST("api/console/proxy")
   Call<Object> search(@Query(value = "path", encoded = true) String index, @Query(value = "method") String method,
       @Body Object elkLogFetchRequest);
+
+  @POST("api/console/proxy?path=_search%3Fsize=1&method=POST") Call<Object> validate();
 }
