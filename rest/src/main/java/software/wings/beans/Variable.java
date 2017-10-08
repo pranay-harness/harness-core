@@ -90,7 +90,11 @@ public class Variable {
     if (metadata == null) {
       return null;
     }
-    return metadata.get(ENTITY_TYPE) != null ? EntityType.valueOf((String) metadata.get(ENTITY_TYPE)) : null;
+    Object entityType = metadata.get(ENTITY_TYPE);
+    if (entityType == null) {
+      return null;
+    }
+    return entityType instanceof EntityType ? (EntityType) entityType : EntityType.valueOf((String) entityType);
   }
 
   @Transient
@@ -99,7 +103,12 @@ public class Variable {
     if (metadata == null) {
       return null;
     }
-    return metadata.get(ARTIFACT_TYPE) != null ? ArtifactType.valueOf((String) metadata.get(ARTIFACT_TYPE)) : null;
+    Object artifactType = metadata.get(ARTIFACT_TYPE);
+    if (artifactType == null) {
+      return null;
+    }
+    return artifactType instanceof ArtifactType ? (ArtifactType) artifactType
+                                                : ArtifactType.valueOf((String) artifactType);
   }
 
   @Transient
