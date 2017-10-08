@@ -1033,7 +1033,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1065,6 +1066,35 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getComputeProviderId()).isNotNull();
     assertThat(workflowPhase.getInfraMappingName()).isNotNull();
   }
+  @Test(expected = WingsException.class)
+  public void shouldUpdateBasicEnvironmentServiceInfraMappingIncompatible() {
+    Workflow workflow1 = createBasicWorkflow();
+    String name2 = "Name2";
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(DOCKER).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
+        .thenReturn(aService().withArtifactType(DOCKER).withUuid(SERVICE_ID_CHANGED).build());
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow2 = aWorkflow()
+                             .withAppId(APP_ID)
+                             .withEnvId(ENV_ID_CHANGED)
+                             .withInfraMappingId(INFRA_MAPPING_ID_CHANGED)
+                             .withServiceId(SERVICE_ID_CHANGED)
+                             .withUuid(workflow1.getUuid())
+                             .withName(name2)
+                             .build();
+
+    workflowService.updateWorkflow(workflow2, null);
+  }
 
   @Test
   public void shouldUpdateBasicDeploymentInCompatibleService() {
@@ -1078,7 +1108,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1163,6 +1194,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1175,7 +1207,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1219,6 +1252,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1231,7 +1265,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1343,6 +1378,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1355,7 +1391,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1397,8 +1434,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateCanaryInCompatibleService() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1411,7 +1450,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
         .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1541,8 +1581,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateWorkflowPhase() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1579,10 +1621,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateWorkflowPhase() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
@@ -1613,11 +1657,66 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
   }
 
-  @Test
-  public void shouldCloneWorkflowPhase() {
+  @Test(expected = WingsException.class)
+  public void shouldCreateWorkflowPhaseInvalidServiceandInframapping() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID_CHANGED)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+  }
+  @Test(expected = WingsException.class)
+  public void shouldUpdateWorkflowPhaseInvalidServiceandInfra() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
+        .thenReturn(aService().withUuid(SERVICE_ID_CHANGED).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID_CHANGED))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID_CHANGED)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
+    workflowPhase2.setName("phase2-changed");
+    workflowPhase2.setServiceId(SERVICE_ID_CHANGED);
+    workflowPhase2.setInfraMappingId(INFRA_MAPPING_ID_CHANGED);
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
+  }
+
+  @Test
+  public void shouldCloneWorkflowPhase() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1657,8 +1756,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateMultiServiceWorkflowPhase() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1696,8 +1797,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateMultiServiceWorkflowPhase() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1795,8 +1898,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateWorkflowPhaseRollback() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -1907,8 +2012,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldHaveGraph() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
@@ -2004,8 +2111,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateComplexWorkflow() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
