@@ -469,6 +469,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
+    validateServiceandInframapping(workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false);
   }
 
@@ -977,10 +978,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+    Validator.notNullCheck("workflow", workflowPhase);
+
+    validateServiceandInframapping(appId, workflowPhase.getServiceId(), workflowPhase.getInfraMappingId());
+
     Workflow workflow = readWorkflow(appId, workflowId);
     Validator.notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     attachWorkflowPhase(workflow, workflowPhase);
@@ -988,6 +994,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+  }
+
+  public void validateServiceandInframapping(String appId, String serviceId, String inframappingId) {
+    // Validate if service Id is valid or not
+    if (serviceId == null || inframappingId == null) {
+      return;
+    }
+    Service service = serviceResourceService.get(appId, serviceId, false);
+    if (service == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Service [" + serviceId + "] does not exist");
+    }
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
+    if (infrastructureMapping == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Service Infrastructure [" + inframappingId + "] does not exist");
+    }
+    if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
+              + service.getName() + "]");
+    }
   }
 
   @Override
@@ -1092,14 +1119,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
     String infraMappingId = workflowPhase.getInfraMappingId();
     String serviceId = workflowPhase.getServiceId();
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
+    if (service == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
+    }
     if (infraMappingId == null) {
       throw new WingsException(
           INVALID_REQUEST, "message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
     }
-
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
-
+    if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
+              + service.getName() + "]");
+    }
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
@@ -1116,7 +1151,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     boolean inframappingChanged = false;
     String oldInfraMappingId = null;
     String oldServiceId = null;
-    ;
     for (int i = 0; i < orchestrationWorkflow.getWorkflowPhases().size(); i++) {
       WorkflowPhase oldWorkflowPhase = orchestrationWorkflow.getWorkflowPhases().get(i);
       if (oldWorkflowPhase.getUuid().equals(workflowPhase.getUuid())) {
