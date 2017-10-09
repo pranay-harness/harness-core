@@ -26,6 +26,8 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
   private String logResult;
   private String payload;
   private boolean executionDisabled;
+  private String assertionStatement;
+  private String assertionStatus;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -53,6 +55,10 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
         anExecutionDataValue().withValue(functionError).withDisplayName("Function Error").build());
     putNotNull(
         executionDetails, "payload", anExecutionDataValue().withValue(payload).withDisplayName("Payload").build());
+    putNotNull(executionDetails, "assertionStatement",
+        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+    putNotNull(executionDetails, "assertionStatus",
+        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
     putNotNull(executionDetails, "logResult",
         anExecutionDataValue().withValue(logResult).withDisplayName("Log Result").build());
     return executionDetails;
