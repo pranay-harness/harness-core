@@ -1116,7 +1116,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             settingAttribute.setName(elkYaml.getName());
             config = new ElkConfig();
             ((ElkConfig) config).setAccountId(accountId);
-            ((ElkConfig) config).setElkUrl(elkYaml.getUrl());
+            ((ElkConfig) config).setUrl(elkYaml.getUrl());
             ((ElkConfig) config).setPassword(((ElkConfig) beforeConfig).getPassword());
             ((ElkConfig) config).setUsername(elkYaml.getUsername());
             settingAttribute.setValue(config);
