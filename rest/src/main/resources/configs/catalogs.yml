@@ -325,3 +325,9 @@ EXECUTION_STATUS:
       value: SUCCESS
     - name: Waiting
       value: WAITING
+
+ELK_CONNECTOR_TYPE:
+    - name: Elastic Search Server
+      value: ELASTIC_SEARCH_SERVER
+    - name: Kibana Server
+      value: KIBANA_SERVER
