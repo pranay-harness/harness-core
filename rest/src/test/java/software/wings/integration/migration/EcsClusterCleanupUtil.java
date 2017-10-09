@@ -29,7 +29,7 @@ public class EcsClusterCleanupUtil extends WingsBaseTest {
   // Comment out the following line in WingsTestModule to execute:
   //    bind(AwsHelperService.class).toInstance(mock(AwsHelperService.class));
 
-  // Enter values for the following the execute.
+  // Enter values for the following, then execute.
   private final String accessKey = "ACCESS_KEY";
   private final String secretKey = "SECRET_KEY";
   private final Regions region = Regions.US_EAST_1;
