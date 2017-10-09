@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -672,6 +673,103 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     assertEquals(logCollectionMinute,
         analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
+  }
+
+  @Test
+  @RealMongo
+  public void hasDataRecords() throws Exception {
+    String query = UUID.randomUUID().toString();
+    assertFalse(analysisService.hasDataRecords(
+        query, appId, stateExecutionId, StateType.SPLUNKV2, Collections.singleton("some-host"), ClusterLevel.L1, 0));
+    int numOfHosts = 1 + r.nextInt(10);
+    int logCollectionMinute = 1 + r.nextInt(10);
+
+    Set<LogDataRecord> logDataRecords = new HashSet<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      String host = UUID.randomUUID().toString();
+      hosts.add(host);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setStateType(StateType.SPLUNKV2);
+      logDataRecord.setClusterLevel(ClusterLevel.L1);
+      logDataRecord.setQuery(query);
+      logDataRecord.setLogCollectionMinute(logCollectionMinute);
+      logDataRecord.setLogMessage(UUID.randomUUID().toString());
+      logDataRecord.setHost(host);
+
+      logDataRecords.add(logDataRecord);
+    }
+
+    wingsPersistence.save(Lists.newArrayList(logDataRecords));
+    assertTrue(analysisService.hasDataRecords(
+        query, appId, stateExecutionId, StateType.SPLUNKV2, hosts, ClusterLevel.L1, logCollectionMinute));
+  }
+
+  @Test
+  @RealMongo
+  public void getLogDataRecordForL0() throws Exception {
+    String query = UUID.randomUUID().toString();
+    assertFalse(analysisService.getLogDataRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2).isPresent());
+    int numOfHosts = 1 + r.nextInt(10);
+    int logCollectionMinute = 1 + r.nextInt(10);
+
+    Set<LogDataRecord> logDataRecords = new HashSet<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      String host = UUID.randomUUID().toString();
+      hosts.add(host);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setStateType(StateType.SPLUNKV2);
+      logDataRecord.setClusterLevel(ClusterLevel.H0);
+      logDataRecord.setQuery(query);
+      logDataRecord.setLogCollectionMinute(logCollectionMinute);
+      logDataRecord.setLogMessage(UUID.randomUUID().toString());
+      logDataRecord.setHost(host);
+
+      logDataRecords.add(logDataRecord);
+    }
+
+    wingsPersistence.save(Lists.newArrayList(logDataRecords));
+    assertTrue(analysisService.getLogDataRecordForL0(appId, stateExecutionId, StateType.SPLUNKV2).isPresent());
+  }
+
+  @Test
+  @RealMongo
+  public void deleteClusterLevel() throws Exception {
+    String query = UUID.randomUUID().toString();
+    int numOfHosts = 1 + r.nextInt(10);
+    int logCollectionMinute = 1 + r.nextInt(10);
+
+    List<LogDataRecord> logDataRecords = new ArrayList<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      String host = UUID.randomUUID().toString();
+      hosts.add(host);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setStateType(StateType.SPLUNKV2);
+      logDataRecord.setClusterLevel(ClusterLevel.H0);
+      logDataRecord.setQuery(query);
+      logDataRecord.setLogCollectionMinute(logCollectionMinute);
+      logDataRecord.setLogMessage(UUID.randomUUID().toString());
+      logDataRecord.setHost(host);
+
+      logDataRecords.add(logDataRecord);
+    }
+
+    wingsPersistence.save(logDataRecords);
+    assertEquals(numOfHosts, wingsPersistence.createQuery(LogDataRecord.class).asList().size());
+    analysisService.deleteClusterLevel(
+        StateType.SPLUNKV2, stateExecutionId, appId, query, hosts, logCollectionMinute, ClusterLevel.H0);
+    assertEquals(0, wingsPersistence.createQuery(LogDataRecord.class).asList().size());
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
