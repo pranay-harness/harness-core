@@ -2,10 +2,10 @@ package software.wings.yaml.command;
 
 import software.wings.yaml.YamlSerialize;
 
-public class YamlCopyConfigCommandUnit extends YamlCommandUnit {
+public class CopyConfigCommandUnitYaml extends CommandUnitYaml {
   @YamlSerialize public String destinationParentPath;
 
-  public YamlCopyConfigCommandUnit() {
+  public CopyConfigCommandUnitYaml() {
     super();
   }
 

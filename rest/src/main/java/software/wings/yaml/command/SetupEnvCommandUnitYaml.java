@@ -2,10 +2,10 @@ package software.wings.yaml.command;
 
 import software.wings.yaml.YamlSerialize;
 
-public class YamlSetupEnvCommandUnit extends YamlCommandUnit {
+public class SetupEnvCommandUnitYaml extends ExecCommandUnitYaml {
   @YamlSerialize public String commandString;
 
-  public YamlSetupEnvCommandUnit() {
+  public SetupEnvCommandUnitYaml() {
     super();
   }
 

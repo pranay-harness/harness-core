@@ -110,20 +110,33 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return null;
     }
 
+    // it needs to be enabled for us to proceed
+    if (!ygs.isEnabled()) {
+      return null;
+    }
+
     // it needs to be HARNESS_TO_GIT or BOTH for us to proceed
     if (ygs.getSyncMode() == SyncMode.GIT_TO_HARNESS) {
       return null;
     }
 
-    EntityUpdateListEvent eule =
-        EntityUpdateListEvent.Builder.anEntityUpdateListEvent().withAccountId(accountId).withTreeSync(true).build();
+    EntityUpdateListEvent eule = EntityUpdateListEvent.Builder.anEntityUpdateListEvent()
+                                     .withAccountId(accountId)
+                                     .withTreeSync(true)
+                                     .withSourceType(SourceType.ENTITY_UPDATE)
+                                     .withFilterCustomGitSync(false)
+                                     .build();
 
     Account account = accountService.get(accountId);
     // TODO - we may want to add a new SourceType for this scenario (?)
     eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
+    /* TODO - this needs to be moved to AFTER the event is QUEUED! (so it doesn't slow UI, etc.)
     // traverse the directory and add all the files
     eule = traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
+    */
+
+    logger.info("******* about to queue EntityUpdateList");
 
     logger.info("******* about to queue EntityUpdateList");
 

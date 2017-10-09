@@ -2,11 +2,11 @@ package software.wings.yaml.command;
 
 import software.wings.yaml.YamlSerialize;
 
-public class YamlCommandRefCommandUnit extends YamlCommandUnit {
+public class CommandRefCommandUnitYaml extends CommandUnitYaml {
   @YamlSerialize public String referenceId;
   @YamlSerialize public String commandType;
 
-  public YamlCommandRefCommandUnit() {
+  public CommandRefCommandUnitYaml() {
     super();
   }
 
