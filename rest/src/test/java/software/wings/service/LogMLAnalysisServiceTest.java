@@ -647,9 +647,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   public void getCollectionMinuteForL1AllRecords() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 1 + r.nextInt(10);
-    int logCollectionMiunte = 1 + r.nextInt(10);
+    int logCollectionMinute = 1 + r.nextInt(10);
 
-    List<LogDataRecord> logDataRecords = new ArrayList<>();
+    Set<LogDataRecord> logDataRecords = new HashSet<>();
     Set<String> hosts = new HashSet<>();
     for (int i = 0; i < numOfHosts; i++) {
       String host = UUID.randomUUID().toString();
@@ -661,16 +661,16 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       logDataRecord.setStateType(StateType.SPLUNKV2);
       logDataRecord.setClusterLevel(ClusterLevel.H1);
       logDataRecord.setQuery(query);
-      logDataRecord.setLogCollectionMinute(logCollectionMiunte);
+      logDataRecord.setLogCollectionMinute(logCollectionMinute);
       logDataRecord.setLogMessage(UUID.randomUUID().toString());
       logDataRecord.setHost(host);
 
       logDataRecords.add(logDataRecord);
     }
 
-    wingsPersistence.save(logDataRecords);
+    wingsPersistence.save(Lists.newArrayList(logDataRecords));
 
-    assertEquals(logCollectionMiunte,
+    assertEquals(logCollectionMinute,
         analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
   }
 
