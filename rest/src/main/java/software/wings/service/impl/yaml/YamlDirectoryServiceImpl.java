@@ -110,7 +110,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     // it needs to be enabled for us to proceed
     if (!ygs.isEnabled()) {
-      return null;
+      return false;
     }
 
     // it needs to be HARNESS_TO_GIT or BOTH for us to proceed
