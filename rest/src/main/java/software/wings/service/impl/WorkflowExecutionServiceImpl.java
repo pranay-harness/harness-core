@@ -375,8 +375,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
             if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-              WorkflowExecution workflowExecution2 =
-                  getExecutionDetails(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+              WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
+                  workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+              if (!workflowExecution2.getStatus().isFinalStatus()) {
+                populateNodeHierarchyWithGraph(workflowExecution);
+              }
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
               stageExecution.setStatus(workflowExecution2.getStatus());
             }
