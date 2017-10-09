@@ -212,7 +212,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
-    for (T t : ts) {
+    for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
+      T t = iterator.next();
+      if (t == null) {
+        iterator.remove();
+      }
       if (SettingAttribute.class.isInstance(t)) {
         this.encryptIfNecessary(((SettingAttribute) t).getValue());
       } else if (t instanceof Encryptable) {
