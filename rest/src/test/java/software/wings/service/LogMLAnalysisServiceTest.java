@@ -1,6 +1,11 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,13 +23,18 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.RiskLevel;
 import software.wings.rules.RealMongo;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -36,7 +46,10 @@ import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -51,6 +64,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   private String workflowExecutionId;
   private String serviceId;
   private String delegateTaskId;
+  private final Random r = new Random();
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private AnalysisService analysisService;
@@ -99,6 +113,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testValidateSumoLogicConfig() throws Exception {
     Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(new SumoDelegateServiceImpl());
@@ -495,5 +510,109 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     Assert.assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
         StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, query));
+  }
+
+  @Test
+  @RealMongo
+  public void testAnalysisSummaryUnknownClusters() throws Exception {
+    int numOfUnknownClusters = 1 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
+    for (int i = 0; i < numOfUnknownClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      hostMap.put(UUID.randomUUID().toString(), cluster);
+      unknownClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setApplicationId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setUnknown_clusters(unknownClusters);
+    wingsPersistence.save(record);
+
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertNotNull(analysisSummary);
+    assertEquals(RiskLevel.HIGH, analysisSummary.getRiskLevel());
+    assertEquals(numOfUnknownClusters, analysisSummary.getUnknownClusters().size());
+    assertTrue(analysisSummary.getTestClusters().isEmpty());
+    assertTrue(analysisSummary.getControlClusters().isEmpty());
+    assertEquals(numOfUnknownClusters + " anomalous clusters found", analysisSummary.getAnalysisSummaryMessage());
+  }
+
+  @Test
+  @RealMongo
+  public void testAnalysisSummaryTestClusters() throws Exception {
+    int numOfTestClusters = 1 + r.nextInt(10);
+    List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = new HashMap<>();
+    for (int i = 0; i < numOfTestClusters; i++) {
+      SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      clusterEvents.add(cluster);
+      Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
+      hostMap.put(UUID.randomUUID().toString(), cluster);
+      testClusters.put(UUID.randomUUID().toString(), hostMap);
+    }
+
+    LogMLAnalysisRecord record = new LogMLAnalysisRecord();
+    record.setStateExecutionId(stateExecutionId);
+    record.setApplicationId(appId);
+    record.setStateType(StateType.SPLUNKV2);
+    record.setLogCollectionMinute(0);
+    record.setQuery(UUID.randomUUID().toString());
+    record.setTest_clusters(testClusters);
+    wingsPersistence.save(record);
+
+    int numOfUnexpectedFreq = 0;
+    for (SplunkAnalysisCluster cluster : clusterEvents) {
+      if (cluster.isUnexpected_freq()) {
+        numOfUnexpectedFreq++;
+      }
+    }
+
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertNotNull(analysisSummary);
+    assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
+    assertTrue(analysisSummary.getUnknownClusters().isEmpty());
+    assertTrue(analysisSummary.getControlClusters().isEmpty());
+    String message;
+    if (numOfUnexpectedFreq == 0) {
+      message = "No anomaly found";
+    } else if (numOfUnexpectedFreq == 1) {
+      message = numOfUnexpectedFreq + " anomalous cluster found";
+    } else {
+      message = numOfUnexpectedFreq + " anomalous clusters found";
+    }
+    assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+  }
+
+  private SplunkAnalysisCluster getRandomClusterEvent() {
+    SplunkAnalysisCluster analysisCluster = new SplunkAnalysisCluster();
+    analysisCluster.setCluster_label(r.nextInt(100));
+    analysisCluster.setAnomalous_counts(Lists.newArrayList(r.nextInt(100), r.nextInt(100), r.nextInt(100)));
+    analysisCluster.setText(UUID.randomUUID().toString());
+    analysisCluster.setTags(
+        Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+    analysisCluster.setDiff_tags(
+        Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+    analysisCluster.setX(r.nextDouble());
+    analysisCluster.setY(r.nextDouble());
+    analysisCluster.setUnexpected_freq(r.nextBoolean());
+    List<Map> frequencyMapList = new ArrayList<>();
+    for (int i = 0; i < 1 + r.nextInt(10); i++) {
+      Map<String, Integer> frequencyMap = new HashMap<>();
+      frequencyMap.put("count", r.nextInt(100));
+      frequencyMapList.add(frequencyMap);
+    }
+
+    analysisCluster.setMessage_frequencies(frequencyMapList);
+    return analysisCluster;
   }
 }
