@@ -10,7 +10,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
+import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.analysis.ElkConnectorProvider;
 import software.wings.settings.SettingValue;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 /**
  * The type ELK config.
@@ -19,13 +23,19 @@ import software.wings.settings.SettingValue;
 @Data
 @ToString(exclude = "password")
 public class ElkConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "ELK URL", required = true) @NotEmpty private String elkUrl;
+  @Attributes(required = true, title = "Connector type")
+  @DefaultValue("ELASTIC_SEARCH_SERVER")
+  private ElkConnector elkConnector;
+
+  @Attributes(title = "URL", required = true) @NotEmpty private String url;
 
   @Attributes(title = "Username") private String username;
 
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
+
+  private String kibanaVersion = "0";
 
   /**
    * Instantiates a new Elk config.

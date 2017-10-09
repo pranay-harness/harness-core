@@ -523,7 +523,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (templateExpressions != null) {
         if (templateExpressions.stream().anyMatch(
                 templateExpression -> templateExpression.getFieldName().equals("serviceId"))) {
-          templatizedServiceIds.add(workflowPhase.getServiceId());
+          if (workflowPhase.getServiceId() != null) {
+            templatizedServiceIds.add(workflowPhase.getServiceId());
+          }
         }
       }
     }
@@ -541,7 +543,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (templateExpressions != null) {
         if (templateExpressions.stream().anyMatch(
                 templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))) {
-          templatizedInfraMappingIds.add(workflowPhase.getInfraMappingId());
+          if (workflowPhase.getInfraMappingId() != null) {
+            templatizedInfraMappingIds.add(workflowPhase.getInfraMappingId());
+          }
         }
       }
     }

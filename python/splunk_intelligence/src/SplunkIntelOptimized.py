@@ -201,7 +201,7 @@ def parse(cli_args):
     parser.add_argument("--state_execution_id", type=str, required=True)
     parser.add_argument("--log_analysis_save_url", required=True)
     parser.add_argument("--log_analysis_get_url", required=True)
-    parser.add_argument("--query", required=True)
+    parser.add_argument("--query", nargs='+', type=str, required=True)
     parser.add_argument("--log_collection_minute", type=int, required=True)
     parser.add_argument("--debug", required=False)
 
@@ -274,6 +274,7 @@ def run_debug_prev_run(options):
 def main(args):
     logger.info(args)
     options = parse(args[1:])
+    options.query = ' '.join(options.query)
     logger.info(options)
 
     if options.debug:

@@ -12,13 +12,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.KibanaConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
-import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.elk.ElkDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -49,8 +47,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       if (StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
         throw new WingsException("User name is empty but password is given");
       }
-
-      getIndices(elkConfig);
+      if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
+        validate(elkConfig);
+      } else {
+        getIndices(elkConfig);
+      }
     } catch (Throwable t) {
       throw new WingsException(t.getMessage());
     }
@@ -58,7 +59,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object search(ElkConfig elkConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+    final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig).getLogSample(
               String.format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
               KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
@@ -73,8 +74,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig) throws IOException {
-    final Call<Map<String, Map<String, Object>>> request =
-        SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+    final Call<Map<String, Map<String, Object>>> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig).template()
         : getElkRestClient(elkConfig).template();
     final Response<Map<String, Map<String, Object>>> response = request.execute();
@@ -109,7 +109,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   @Override
   public Object getLogSample(ElkConfig elkConfig, String index) throws IOException {
-    final Call<Object> request = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA
+    final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig).getLogSample(String.format(KibanaRestClient.searchPathPattern, index, 1),
               KibanaRestClient.searchMethod, ElkLogFetchRequest.lastInsertedRecordObject())
         : getElkRestClient(elkConfig).getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject());
@@ -120,19 +120,32 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     throw new WingsException(response.errorBody().string());
   }
 
+  private Object validate(ElkConfig elkConfig) throws IOException {
+    if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
+      final Call<Object> request = getKibanaRestClient(elkConfig).validate();
+      final Response<Object> response = request.execute();
+      if (response.isSuccessful()) {
+        return response.body();
+      }
+      throw new WingsException(response.errorBody().string());
+    }
+
+    throw new WingsException("Validate call not supported for " + elkConfig.getElkConnector());
+  }
+
   @Override
   public String getVersion(ElkConfig elkConfig) throws IOException {
-    if (SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA) {
+    if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
       try {
         final Call<Object> request = getKibanaRestClient(elkConfig).version();
         final Response<Object> response = request.execute();
         return response.headers().get("kbn-version");
       } catch (Exception ex) {
         logger.warn("Unable to get Kibana version", ex);
-        return "Unable to get version. Check url";
+        throw new RuntimeException("Unable to get version. Check url");
       }
     } else {
-      return "Get version is supported only for the Kibana connector";
+      throw new RuntimeException("Get version is supported only for the Kibana connector");
     }
   }
 
@@ -146,13 +159,13 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   private Retrofit createRetrofit(ElkConfig elkConfig) {
     OkHttpClient.Builder httpClient =
-        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
+        elkConfig.getUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
     httpClient
         .addInterceptor(chain -> {
           Request original = chain.request();
 
           boolean shouldAuthenticate = !StringUtils.isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
-          boolean isKibana = SettingVariableTypes.valueOf(elkConfig.getType()) == SettingVariableTypes.KIBANA;
+          boolean isKibana = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER;
           Request.Builder builder = shouldAuthenticate
               ? original.newBuilder()
                     .header("Accept", "application/json")
@@ -161,7 +174,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
               : original.newBuilder().header("Accept", "application/json").header("Content-Type", "application/json");
 
           if (isKibana) {
-            builder.addHeader("kbn-version", ((KibanaConfig) elkConfig).getKibanaVersion());
+            builder.addHeader("kbn-version", elkConfig.getKibanaVersion());
           }
 
           Request request = builder.method(original.method(), original.body()).build();
@@ -171,7 +184,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS);
 
-    String baseUrl = elkConfig.getElkUrl();
+    String baseUrl = elkConfig.getUrl();
     if (baseUrl.charAt(baseUrl.length() - 1) != '/') {
       baseUrl = baseUrl + "/";
     }

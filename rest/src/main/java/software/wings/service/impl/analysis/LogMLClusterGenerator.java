@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -76,7 +77,8 @@ public class LogMLClusterGenerator implements Runnable {
       command.add(String.valueOf(logRequest.getLogCollectionMinute()));
       command.add("--cluster_level");
       command.add(String.valueOf(toLevel.getLevel()));
-      command.add("--query=" + logRequest.getQuery());
+      command.add("--query");
+      command.addAll(Lists.newArrayList(logRequest.getQuery().split(" ")));
 
       final ProcessResult result =
           new ProcessExecutor(command)
