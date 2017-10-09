@@ -23,7 +23,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.NewRelicConfig;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -35,7 +34,7 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.service.intfc.kms.KmsService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -706,7 +705,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
           char[] outputChars;
           if (encryptedData == null) {
-            // this was saved before kms integration. use old way to decrypt;
+            // this was saved before security integration. use old way to decrypt;
             SimpleEncryption encryption = new SimpleEncryption(accountId);
             outputChars = encryption.decryptChars(input);
           } else {

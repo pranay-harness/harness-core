@@ -169,7 +169,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
-import software.wings.service.intfc.kms.KmsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NexusBuildService;

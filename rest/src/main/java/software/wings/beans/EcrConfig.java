@@ -50,7 +50,7 @@ public class EcrConfig extends SettingValue implements Encryptable {
   }
 
   public EcrConfig(String ecrUrl, String accessKey, char[] secretKey, String region, String accountId) {
-    super(SettingVariableTypes.ECR.name());
+    this();
     this.ecrUrl = ecrUrl;
     this.accessKey = accessKey;
     this.secretKey = secretKey;

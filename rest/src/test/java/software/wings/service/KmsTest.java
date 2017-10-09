@@ -5,9 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -16,9 +17,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -29,15 +29,22 @@ import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.UuidAware;
+import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest.Builder;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
-import software.wings.service.intfc.kms.KmsService;
+import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.intfc.security.KmsService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -53,6 +62,7 @@ import javax.inject.Inject;
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   final int numOfEncryptedValsForKms = 3;
 
@@ -573,11 +583,199 @@ public class KmsTest extends WingsBaseTest {
     assertNotEquals(new String(encryptedKms.getKmsArn()), new String(savedKmsConfig.getKmsArn()));
   }
 
+  @Test
+  @RealMongo
+  public void listEncryptedValues() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    int numOfSettingAttributes = 5;
+    List<Object> encryptedEntities = new ArrayList<>();
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                      .accountId(accountId)
+                                                      .controllerUrl(UUID.randomUUID().toString())
+                                                      .username(UUID.randomUUID().toString())
+                                                      .password(UUID.randomUUID().toString().toCharArray())
+                                                      .accountname(UUID.randomUUID().toString())
+                                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId)
+                                              .withValue(appDynamicsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CONNECTOR)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      wingsPersistence.save(settingAttribute);
+      encryptedEntities.add(settingAttribute);
+    }
+
+    kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(accountId);
+    encryptedEntities.add(kmsConfig);
+
+    Collection<UuidAware> encryptedValues = kmsService.listEncryptedValues(accountId);
+    assertEquals(encryptedEntities.size(), encryptedValues.size());
+    assertTrue(encryptedEntities.containsAll(encryptedValues));
+  }
+
+  @Test
+  @RealMongo
+  public void transitionKms() throws IOException, InterruptedException {
+    startTransitionListener();
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+
+    int numOfSettingAttributes = 5;
+    Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                      .accountId(accountId)
+                                                      .controllerUrl(UUID.randomUUID().toString())
+                                                      .username(UUID.randomUUID().toString())
+                                                      .password(password.toCharArray())
+                                                      .accountname(UUID.randomUUID().toString())
+                                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId)
+                                              .withValue(appDynamicsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CONNECTOR)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      wingsPersistence.save(settingAttribute);
+      appDynamicsConfig.setPassword(password.toCharArray());
+      encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
+    }
+
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
+    List<EncryptedData> encryptedData = new ArrayList<>();
+    assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
+    for (EncryptedData data : query.asList()) {
+      if (data.getKmsId() == null) {
+        continue;
+      }
+      encryptedData.add(data);
+      assertEquals(fromConfig.getUuid(), data.getKmsId());
+      assertEquals(accountId, data.getAccountId());
+    }
+
+    assertEquals(numOfSettingAttributes, encryptedData.size());
+
+    KmsConfig toKmsConfig = getKmsConfig();
+    toKmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/e1aebd89-277b-4ec7-a4e9-9a238f8b2594");
+    kmsService.saveKmsConfig(accountId, toKmsConfig);
+
+    kmsService.transitionKms(accountId, fromConfig.getUuid(), toKmsConfig.getUuid());
+    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    query = wingsPersistence.createQuery(EncryptedData.class);
+    // 2 kms configs have been saved so far
+    assertEquals(2 * numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
+    encryptedData = new ArrayList<>();
+    for (EncryptedData data : query.asList()) {
+      if (data.getKmsId() == null) {
+        continue;
+      }
+      encryptedData.add(data);
+      assertEquals(toKmsConfig.getUuid(), data.getKmsId());
+      assertEquals(accountId, data.getAccountId());
+    }
+    assertEquals(numOfSettingAttributes, encryptedData.size());
+
+    // read the values and compare
+    PageResponse<SettingAttribute> attributeQuery =
+        wingsPersistence.query(SettingAttribute.class, Builder.aPageRequest().build());
+    assertEquals(numOfSettingAttributes, attributeQuery.size());
+    for (SettingAttribute settingAttribute : attributeQuery) {
+      assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
+    }
+  }
+
+  @Test
+  @RealMongo
+  public void transitionAndDeleteKms() throws IOException, InterruptedException {
+    startTransitionListener();
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+
+    int numOfSettingAttributes = 5;
+    Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                      .accountId(accountId)
+                                                      .controllerUrl(UUID.randomUUID().toString())
+                                                      .username(UUID.randomUUID().toString())
+                                                      .password(password.toCharArray())
+                                                      .accountname(UUID.randomUUID().toString())
+                                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId)
+                                              .withValue(appDynamicsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CONNECTOR)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      wingsPersistence.save(settingAttribute);
+      appDynamicsConfig.setPassword(password.toCharArray());
+      encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
+    }
+
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
+    assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
+
+    KmsConfig toKmsConfig = getKmsConfig();
+    toKmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/e1aebd89-277b-4ec7-a4e9-9a238f8b2594");
+    kmsService.saveKmsConfig(accountId, toKmsConfig);
+    assertEquals(2, wingsPersistence.createQuery(KmsConfig.class).asList().size());
+
+    try {
+      kmsService.deleteKmsConfig(accountId, fromConfig.getUuid());
+      fail("Was able to delete kms which has reference in encrypted secrets");
+    } catch (WingsException e) {
+      // expected
+    }
+
+    kmsService.transitionKms(accountId, fromConfig.getUuid(), toKmsConfig.getUuid());
+    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    kmsService.deleteKmsConfig(accountId, fromConfig.getUuid());
+    assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).asList().size());
+
+    query = wingsPersistence.createQuery(EncryptedData.class);
+    assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
+  }
+
   private KmsConfig getKmsConfig() throws IOException {
     final KmsConfig kmsConfig = new KmsConfig();
+    kmsConfig.setName("myKms");
     kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
     kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
     kmsConfig.setSecretKey("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");
     return kmsConfig;
+  }
+
+  private void startTransitionListener() {
+    Whitebox.setInternalState(kmsService, "transitionKmsQueue", transitionKmsQueue);
+    final KmsTransitionEventListener transitionEventListener = new KmsTransitionEventListener();
+    Whitebox.setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
+    Whitebox.setInternalState(transitionEventListener, "queue", transitionKmsQueue);
+    Whitebox.setInternalState(transitionEventListener, "kmsService", kmsService);
+
+    Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
+
+    eventListenerThread.start();
   }
 }
