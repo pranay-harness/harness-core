@@ -378,7 +378,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                   workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
               if (!workflowExecution2.getStatus().isFinalStatus()) {
-                populateNodeHierarchyWithGraph(workflowExecution);
+                populateNodeHierarchyWithGraph(workflowExecution2);
               }
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
               stageExecution.setStatus(workflowExecution2.getStatus());
