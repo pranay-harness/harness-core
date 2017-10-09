@@ -31,7 +31,7 @@ public interface YamlDirectoryService {
    */
   public FolderNode getDirectory(@NotEmpty String accountId, String entityId, boolean filterCustomGitSync);
 
-  public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync);
+  public boolean pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync);
 
   public EntityUpdateListEvent traverseDirectory(
       EntityUpdateListEvent eule, FolderNode fn, String path, SourceType sourceType);
