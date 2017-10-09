@@ -21,13 +21,8 @@ public class ElkSettingProvider implements DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    Map<String, String> result = settingsService.getSettingAttributesByType(appId, SettingVariableTypes.ELK.name())
-                                     .stream()
-                                     .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
-    result.putAll(settingsService.getSettingAttributesByType(appId, SettingVariableTypes.KIBANA.name())
-                      .stream()
-                      .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName)));
-
-    return result;
+    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.ELK.name())
+        .stream()
+        .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }
 }

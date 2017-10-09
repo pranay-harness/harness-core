@@ -12,7 +12,7 @@ public class ElkYaml extends VerificationProviderYaml {
     super(settingAttribute);
 
     ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
-    this.setUrl(elkConfig.getElkUrl());
+    this.setUrl(elkConfig.getUrl());
     this.setUsername(elkConfig.getUsername());
   }
 }

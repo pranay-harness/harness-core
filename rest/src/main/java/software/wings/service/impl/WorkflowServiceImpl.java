@@ -8,11 +8,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.beans.EntityType.valueOf;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
-import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
-import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -35,6 +38,8 @@ import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.ARTIFACT_TYPE;
+import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -120,7 +125,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -199,7 +203,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PipelineService pipelineService;
   @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private FeatureFlagService featureFlagService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -457,7 +460,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     // create initial version
     entityVersionService.newEntityVersion(
-        workflow.getAppId(), EntityType.WORKFLOW, key, workflow.getName(), ChangeType.CREATED, workflow.getNotes());
+        workflow.getAppId(), WORKFLOW, key, workflow.getName(), ChangeType.CREATED, workflow.getNotes());
 
     return readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
   }
@@ -473,6 +476,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
+    validateServiceandInframapping(workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false);
   }
 
@@ -523,7 +527,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
 
-      EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW,
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
           workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
       workflow.setDefaultVersion(entityVersion.getVersion());
 
@@ -576,86 +580,235 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean envChanged, boolean inframappingChanged) {
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-        BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-        if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
-          for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
-            setTemplateExpresssions(templateExpressions, phase);
-            validateServiceCompatibility(appId, serviceId, phase.getServiceId());
-            setServiceId(serviceId, phase);
-            setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
-            if (inframappingChanged || envChanged) {
-              resetNodeSelection(phase);
-            }
-          }
-        }
-        Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
-            basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-        if (rollbackWorkflowPhaseIdMap != null) {
-          rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
-            setServiceId(serviceId, phase);
-            setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
-          });
-        }
+        handleBasicWorkflow((BasicOrchestrationWorkflow) orchestrationWorkflow, templateExpressions, appId, serviceId,
+            inframappingId, envChanged, inframappingChanged);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-        MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
-            (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-        multiServiceOrchestrationWorkflow.addToUserVariables(templateExpressions);
-        List<WorkflowPhase> workflowPhases = multiServiceOrchestrationWorkflow.getWorkflowPhases();
-        if (workflowPhases != null) {
-          for (WorkflowPhase phase : workflowPhases) {
-            if (envChanged) {
-              unsetInfraMappingDetails(phase);
-              resetNodeSelection(phase);
-            }
-            if (inframappingChanged) {
-              resetNodeSelection(phase);
-            }
-          }
-          Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
-              multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-          if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.values() != null) {
-            rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
-              if (envChanged) {
-                unsetInfraMappingDetails(phase);
-                resetNodeSelection(phase);
-              }
-              if (inframappingChanged) {
-                resetNodeSelection(phase);
-              }
-            });
-          }
-        }
+        handleMultiServiceWorkflow(orchestrationWorkflow, templateExpressions, appId, envChanged, inframappingChanged);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        canaryOrchestrationWorkflow.addToUserVariables(templateExpressions);
-        // If envId changed nullify the infraMapping Ids
-        if (canaryOrchestrationWorkflow.getWorkflowPhases() != null) {
-          for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-            if (envChanged) {
-              unsetInfraMappingDetails(phase);
-              resetNodeSelection(phase);
-            }
-            if (inframappingChanged) {
-              resetNodeSelection(phase);
-            }
-          }
-        }
-        Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
-            canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-        if (rollbackWorkflowPhaseIdMap != null) {
-          rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
-            if (envChanged) {
-              unsetInfraMappingDetails(phase);
-              resetNodeSelection(phase);
-            }
-            if (inframappingChanged) {
-              resetNodeSelection(phase);
-            }
-          });
-        }
+        handleCanaryWorkflow(orchestrationWorkflow, templateExpressions, appId, envChanged, inframappingChanged);
       }
     }
     return orchestrationWorkflow;
+  }
+
+  /***
+   *
+   * @param orchestrationWorkflow
+   * @param templateExpressions
+   * @param appId
+   * @param serviceId
+   * @param inframappingId
+   * @param envChanged
+   * @param inframappingChanged
+   */
+  private void handleBasicWorkflow(BasicOrchestrationWorkflow orchestrationWorkflow,
+      List<TemplateExpression> templateExpressions, String appId, String serviceId, String inframappingId,
+      boolean envChanged, boolean inframappingChanged) {
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow = orchestrationWorkflow;
+    if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
+      for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
+        setTemplateExpresssions(templateExpressions, phase);
+        validateServiceCompatibility(appId, serviceId, phase.getServiceId());
+        setServiceId(serviceId, phase);
+        setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
+        if (inframappingChanged || envChanged) {
+          resetNodeSelection(phase);
+        }
+      }
+    }
+    Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
+    if (rollbackWorkflowPhaseIdMap != null) {
+      rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
+        setServiceId(serviceId, phase);
+        setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
+      });
+    }
+  }
+
+  /***
+   * Propagates workflow level data to phase level
+   * @param orchestrationWorkflow
+   * @param templateExpressions
+   * @param appId
+   * @param envChanged
+   * @param inframappingChanged
+   */
+  private void handleCanaryWorkflow(OrchestrationWorkflow orchestrationWorkflow,
+      List<TemplateExpression> templateExpressions, String appId, boolean envChanged, boolean inframappingChanged) {
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    canaryOrchestrationWorkflow.addToUserVariables(templateExpressions);
+    // If envId changed nullify the infraMapping Ids
+    if (canaryOrchestrationWorkflow.getWorkflowPhases() != null) {
+      for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+        if (envChanged) {
+          unsetInfraMappingDetails(phase);
+          resetNodeSelection(phase);
+        }
+        if (inframappingChanged) {
+          resetNodeSelection(phase);
+        }
+        // If environment templatized, then templatize infra automatically
+        List<TemplateExpression> phaseTemplateExpressions = phase.getTemplateExpressions();
+        if (phaseTemplateExpressions == null) {
+          phaseTemplateExpressions = new ArrayList<>();
+        }
+        templatizeServiceInfra(appId, orchestrationWorkflow, phase, templateExpressions, phaseTemplateExpressions);
+        phase.setTemplateExpressions(phaseTemplateExpressions);
+      }
+    }
+    Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
+    if (rollbackWorkflowPhaseIdMap != null) {
+      rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
+        if (envChanged) {
+          unsetInfraMappingDetails(phase);
+          resetNodeSelection(phase);
+        }
+        if (inframappingChanged) {
+          resetNodeSelection(phase);
+        }
+      });
+    }
+  }
+
+  /***
+   *
+   * @param orchestrationWorkflow
+   * @param templateExpressions
+   * @param appId
+   * @param envChanged
+   * @param inframappingChanged
+   */
+  private void handleMultiServiceWorkflow(OrchestrationWorkflow orchestrationWorkflow,
+      List<TemplateExpression> templateExpressions, String appId, boolean envChanged, boolean inframappingChanged) {
+    MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
+        (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+    multiServiceOrchestrationWorkflow.addToUserVariables(templateExpressions);
+    List<WorkflowPhase> workflowPhases = multiServiceOrchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases != null) {
+      for (WorkflowPhase phase : workflowPhases) {
+        if (envChanged) {
+          unsetInfraMappingDetails(phase);
+          resetNodeSelection(phase);
+        }
+        if (inframappingChanged) {
+          resetNodeSelection(phase);
+        }
+        // If environment templatized, then templatize infra automatically
+        List<TemplateExpression> phaseTemplateExpressions = phase.getTemplateExpressions();
+        if (phaseTemplateExpressions == null) {
+          phaseTemplateExpressions = new ArrayList<>();
+        }
+        templatizeServiceInfra(appId, orchestrationWorkflow, phase, templateExpressions, phaseTemplateExpressions);
+        phase.setTemplateExpressions(phaseTemplateExpressions);
+      }
+      Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap =
+          multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
+      if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.values() != null) {
+        rollbackWorkflowPhaseIdMap.values().forEach(phase -> {
+          if (envChanged) {
+            unsetInfraMappingDetails(phase);
+            resetNodeSelection(phase);
+          }
+          if (inframappingChanged) {
+            resetNodeSelection(phase);
+          }
+
+        });
+      }
+    }
+  }
+
+  /***
+   * Templatizes the service infra if environment templatized for Phase
+   */
+  private void templatizeServiceInfra(String appId, OrchestrationWorkflow orchestrationWorkflow,
+      WorkflowPhase workflowPhase, List<TemplateExpression> templateExpressions,
+      List<TemplateExpression> phaseTemplateExpressions) {
+    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
+    if (userVariables == null || userVariables.size() == 0) {
+      return;
+    }
+    List<Variable> entityVariables =
+        userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
+    List<String> serviceInfraVariables =
+        entityVariables.stream()
+            .filter(variable -> variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
+            .map(Variable::getName)
+            .distinct()
+            .collect(toList());
+    if (isEnvironmentTemplatized(templateExpressions) && !isInfraTemplatized(phaseTemplateExpressions)) {
+      Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
+      Validator.notNullCheck("Service", service);
+      TemplateExpression templateExpression = new TemplateExpression();
+
+      Map<String, Object> metaData = new HashMap<>();
+      metaData.put(ENTITY_TYPE, INFRASTRUCTURE_MAPPING.name());
+      if (service.getArtifactType() != null) {
+        metaData.put(ARTIFACT_TYPE, service.getArtifactType().name());
+      }
+      String expression = "${ServiceInfra";
+      if (serviceInfraVariables.size() != 0) {
+        expression = expression + serviceInfraVariables.size();
+      }
+      DeploymentType deploymentType = workflowPhase.getDeploymentType();
+      if (deploymentType.equals(DeploymentType.SSH)) {
+        expression = expression + "_SSH";
+      } else if (deploymentType.equals(DeploymentType.AWS_CODEDEPLOY)) {
+        expression = expression + "_AWS_CodeDeploy";
+      } else if (deploymentType.equals(DeploymentType.ECS)) {
+        expression = expression + "_ECS";
+      } else if (deploymentType.equals(DeploymentType.KUBERNETES)) {
+        expression = expression + "_Kubernetes";
+      }
+      expression = expression + "}";
+      templateExpression.setFieldName("infraMappingId");
+      templateExpression.setMetadata(metaData);
+      templateExpression.setExpression(expression);
+      phaseTemplateExpressions.add(templateExpression);
+    }
+  }
+
+  /***
+   *
+   * @param templateExpressions
+   * @return
+   */
+  private boolean isEnvironmentTemplatized(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions != null) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        Map<String, Object> metadata = templateExpression.getMetadata();
+        if (metadata != null) {
+          if (metadata.get(ENTITY_TYPE) != null) {
+            EntityType entityType = valueOf((String) metadata.get(ENTITY_TYPE));
+            if (entityType.equals(ENVIRONMENT)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+  /***
+   *
+   * @param templateExpressions
+   * @return
+   */
+  private boolean isInfraTemplatized(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions != null) {
+      for (TemplateExpression templateExpression : templateExpressions) {
+        Map<String, Object> metadata = templateExpression.getMetadata();
+        if (metadata != null) {
+          if (metadata.get(ENTITY_TYPE) != null) {
+            EntityType entityType = valueOf((String) metadata.get(ENTITY_TYPE));
+            if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private void unsetInfraMappingDetails(WorkflowPhase phase) {
@@ -981,10 +1134,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+    Validator.notNullCheck("workflow", workflowPhase);
+
+    validateServiceandInframapping(appId, workflowPhase.getServiceId(), workflowPhase.getInfraMappingId());
+
     Workflow workflow = readWorkflow(appId, workflowId);
     Validator.notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     attachWorkflowPhase(workflow, workflowPhase);
@@ -992,6 +1150,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+  }
+
+  public void validateServiceandInframapping(String appId, String serviceId, String inframappingId) {
+    // Validate if service Id is valid or not
+    if (serviceId == null || inframappingId == null) {
+      return;
+    }
+    Service service = serviceResourceService.get(appId, serviceId, false);
+    if (service == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Service [" + serviceId + "] does not exist");
+    }
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
+    if (infrastructureMapping == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Service Infrastructure [" + inframappingId + "] does not exist");
+    }
+    if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
+              + service.getName() + "]");
+    }
   }
 
   @Override
@@ -1034,7 +1213,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(workflow.getAppId(), workflowPhase.getInfraMappingId());
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
-
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
@@ -1096,14 +1274,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
     String infraMappingId = workflowPhase.getInfraMappingId();
     String serviceId = workflowPhase.getServiceId();
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
+    if (service == null) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
+    }
     if (infraMappingId == null) {
       throw new WingsException(
           INVALID_REQUEST, "message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
     }
-
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
-
+    if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Service Infrastructure [" + infrastructureMapping.getDisplayName() + "] not mapped to Service ["
+              + service.getName() + "]");
+    }
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
@@ -1120,7 +1306,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     boolean inframappingChanged = false;
     String oldInfraMappingId = null;
     String oldServiceId = null;
-    ;
     for (int i = 0; i < orchestrationWorkflow.getWorkflowPhases().size(); i++) {
       WorkflowPhase oldWorkflowPhase = orchestrationWorkflow.getWorkflowPhases().get(i);
       if (oldWorkflowPhase.getUuid().equals(workflowPhase.getUuid())) {
@@ -1436,7 +1621,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .asList(
                 DeploymentType.ECS, DeploymentType.KUBERNETES, DeploymentType.AWS_CODEDEPLOY, DeploymentType.AWS_LAMBDA)
             .contains(workflowPhase.getDeploymentType())) {
-      requiredEntityTypes.add(EntityType.ARTIFACT);
+      requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }
 
@@ -1463,7 +1648,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           ServiceCommand command = serviceResourceService.getCommandByName(
               appId, serviceId, (String) step.getProperties().get("commandName"));
           if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
-            requiredEntityTypes.add(EntityType.ARTIFACT);
+            requiredEntityTypes.add(ARTIFACT);
             phaseStep.setArtifactNeeded(true);
             break;
           }
@@ -1538,15 +1723,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof EcsInfrastructureMapping
           && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
-        if (featureFlagService.isEnabled(ECS_CREATE_CLUSTER, appService.get(appId).getAccountId())) {
-          workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                         .addStep(aNode()
-                                                      .withId(getUuid())
-                                                      .withType(AWS_CLUSTER_SETUP.name())
-                                                      .withName("AWS Cluster Setup")
-                                                      .build())
-                                         .build());
-        }
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(AWS_CLUSTER_SETUP.name()).withName("AWS Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
@@ -1580,15 +1761,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        if (featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, appService.get(appId).getAccountId())) {
-          workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                         .addStep(aNode()
-                                                      .withId(getUuid())
-                                                      .withType(GCP_CLUSTER_SETUP.name())
-                                                      .withName("GCP Cluster Setup")
-                                                      .build())
-                                         .build());
-        }
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(GCP_CLUSTER_SETUP.name()).withName("GCP Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.FeatureFlag.FeatureName.GIT_SYNC;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -31,6 +32,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -83,9 +85,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ServiceYamlResourceService serviceYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private SetupYamlResourceService setupYamlResourceService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
+    if (!featureFlagService.isEnabled(GIT_SYNC, accountId)) {
+      return null;
+    }
+
     logger.info("******* pushDirectory");
 
     String setupEntityId = "setup";

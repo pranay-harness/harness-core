@@ -121,6 +121,15 @@ public abstract class OrchestrationWorkflow {
   public boolean isInfraMappingTemplatized() {
     return false;
   }
+
+  /**
+   * Checks if any one of Environment is templatized
+   * @return
+   */
+  @JsonIgnore
+  public boolean isEnvironmentTemplatized() {
+    return false;
+  }
   /***
    * Add template expressions to workflow variables
    */

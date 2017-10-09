@@ -24,8 +24,9 @@ import java.util.Set;
 @Entity(value = "featureFlag", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(name = "featureFlagIdx", unique = true)))
 public class FeatureFlag extends Base {
-  private FeatureName name;
+  private String name;
   private boolean enabled;
+  private boolean obsolete;
   private Set<String> accountIds;
 
   public enum FeatureName { GIT_SYNC, ECS_CREATE_CLUSTER, KUBERNETES_CREATE_CLUSTER }

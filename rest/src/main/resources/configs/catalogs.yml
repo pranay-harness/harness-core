@@ -52,9 +52,9 @@ ARTIFACT_STREAM_TYPE:
     - name: DOCKER
       value: Docker
     - name: ECR
-      value: Ecr
+      value: ECR
     - name: GCR
-      value: Gcr
+      value: GCR
 
 DEPLOYMENT_STRATEGY:
     - name: Serial
@@ -325,3 +325,9 @@ EXECUTION_STATUS:
       value: SUCCESS
     - name: Waiting
       value: WAITING
+
+ELK_CONNECTOR_TYPE:
+    - name: Elastic Search Server
+      value: ELASTIC_SEARCH_SERVER
+    - name: Kibana Server
+      value: KIBANA_SERVER

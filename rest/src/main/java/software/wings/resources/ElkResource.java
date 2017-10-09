@@ -136,14 +136,11 @@ public class ElkResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<Map<String, ElkIndexTemplate>> getIndices(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String analysisServerConfigId) throws IOException {
-    return new RestResponse<>(analysisService.getIndices(accountId, analysisServerConfigId));
-  }
-
-  @POST
-  @Path(LogAnalysisResource.KIBANA_GET_VERSION_URL)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<String> getVersion(@QueryParam("accountId") String accountId, String url) throws IOException {
-    return new RestResponse<>(analysisService.getVersion(accountId, new JSONObject(url).getString("url")));
+    try {
+      return new RestResponse<>(analysisService.getIndices(accountId, analysisServerConfigId));
+    } catch (Exception ex) {
+      logger.warn("Unable to get indices", ex);
+    }
+    return new RestResponse<>(null);
   }
 }
