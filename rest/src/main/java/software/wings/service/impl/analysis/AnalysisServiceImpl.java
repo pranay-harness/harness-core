@@ -642,9 +642,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         continue;
       }
 
-      Set<String> nodes = new HashSet<>(hosts);
+      Set<String> nodes = new HashSet<>(testNodes);
 
-      for (String node : testNodes) {
+      for (String node : hosts) {
         nodes.remove(node);
       }
 
