@@ -51,8 +51,6 @@ import java.util.stream.Stream;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractAnalysisState extends State {
-  public static final int PYTHON_JOB_RETRIES = 3;
-
   protected String timeDuration;
   protected String comparisonStrategy;
 
