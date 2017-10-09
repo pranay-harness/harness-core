@@ -2,7 +2,7 @@ package software.wings.yaml.command;
 
 import software.wings.yaml.YamlSerialize;
 
-public class YamlTargetEnvironment {
+public class TargetEnvironmentYaml {
   @YamlSerialize public String name;
   @YamlSerialize public String version;
 

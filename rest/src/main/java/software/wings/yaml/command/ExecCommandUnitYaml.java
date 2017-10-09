@@ -1,12 +1,16 @@
 package software.wings.yaml.command;
 
+import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.yaml.YamlSerialize;
 
-public class YamlExecCommandUnit extends YamlCommandUnit {
+import java.util.List;
+
+public class ExecCommandUnitYaml extends SshCommandUnitYaml {
   @YamlSerialize public String commandPath;
   @YamlSerialize public String commandString;
+  @YamlSerialize public List<TailFilePatternEntry> tailPatterns;
 
-  public YamlExecCommandUnit() {
+  public ExecCommandUnitYaml() {
     super();
   }
 
@@ -24,5 +28,13 @@ public class YamlExecCommandUnit extends YamlCommandUnit {
 
   public void setCommandString(String commandString) {
     this.commandString = commandString;
+  }
+
+  public List<TailFilePatternEntry> getTailPatterns() {
+    return tailPatterns;
+  }
+
+  public void setTailPatterns(List<TailFilePatternEntry> tailPatterns) {
+    this.tailPatterns = tailPatterns;
   }
 }

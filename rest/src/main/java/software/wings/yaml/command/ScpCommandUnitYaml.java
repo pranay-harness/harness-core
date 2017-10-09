@@ -2,11 +2,11 @@ package software.wings.yaml.command;
 
 import software.wings.yaml.YamlSerialize;
 
-public class YamlScpCommandUnit extends YamlCommandUnit {
+public class ScpCommandUnitYaml extends SshCommandUnitYaml {
   @YamlSerialize public String fileCategory;
   @YamlSerialize public String destinationDirectoryPath;
 
-  public YamlScpCommandUnit() {
+  public ScpCommandUnitYaml() {
     super();
   }
 
