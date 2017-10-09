@@ -64,7 +64,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   private String workflowExecutionId;
   private String serviceId;
   private String delegateTaskId;
-  private final Random r = new Random();
+  private Random r;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private AnalysisService analysisService;
@@ -73,6 +73,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    long seed = System.currentTimeMillis();
+    System.out.println("random seed: " + seed);
+    r = new Random(seed);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
