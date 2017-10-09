@@ -108,6 +108,7 @@ import software.wings.yaml.settingAttribute.SlackYaml;
 import software.wings.yaml.settingAttribute.SmtpYaml;
 import software.wings.yaml.settingAttribute.SplunkYaml;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -273,6 +274,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     ServiceCommand serviceCommand = commandService.getServiceCommand(appId, serviceCommandId);
 
+    // TODO - LEFT OFF HERE
+    // Command command = commandService.getCommand()
+
     if (serviceCommand == null) {
       YamlHelper.addResponseMessage(
           rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "ServiceCommand not found!");
@@ -296,6 +300,37 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       // no change
       YamlHelper.addResponseMessage(rr, ErrorCode.GENERAL_YAML_INFO, ResponseTypeEnum.INFO, "No change to the Yaml.");
       return rr;
+    }
+
+    ServiceCommandYaml serviceCommandYaml = null;
+
+    try {
+      serviceCommandYaml = mapper.readValue(yaml, ServiceCommandYaml.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    if (serviceCommandYaml == null) {
+      // handle missing or unmappable serviceCommandYaml
+      return rr;
+    }
+
+    /* REF
+    name: Install
+    commandUnitType: Command
+    commandType: INSTALL
+    */
+
+    /*
+    serviceCommand.setName(serviceCommandYaml.getName());
+    serviceCommand.set(serviceCommandYaml.getName());
+    serviceCommand.setName(serviceCommandYaml.getName());
+    */
+
+    List<CommandUnitYaml> commandUnitYamls = serviceCommandYaml.getCommandUnits();
+
+    for (CommandUnitYaml cuy : commandUnitYamls) {
+      CommandUnitType cut = CommandUnitType.valueOf(cuy.getCommandUnitType());
     }
 
     //-------------------
