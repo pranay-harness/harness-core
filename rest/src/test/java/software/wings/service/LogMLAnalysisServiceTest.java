@@ -47,9 +47,11 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -594,6 +596,82 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
       message = numOfUnexpectedFreq + " anomalous clusters found";
     }
     assertEquals(message, analysisSummary.getAnalysisSummaryMessage());
+  }
+
+  @Test
+  @RealMongo
+  public void getCollectionMinuteForL1NoRecords() throws Exception {
+    assertEquals(-1,
+        analysisService.getCollectionMinuteForL1(
+            UUID.randomUUID().toString(), appId, stateExecutionId, StateType.SPLUNKV2, Collections.emptySet()));
+  }
+
+  @Test
+  @RealMongo
+  public void getCollectionMinuteForL1PartialRecords() throws Exception {
+    String query = UUID.randomUUID().toString();
+    int numOfHosts = 2 + r.nextInt(10);
+    int logCollectionMinute = 1 + r.nextInt(10);
+
+    List<LogDataRecord> logDataRecords = new ArrayList<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      String host = UUID.randomUUID().toString();
+      hosts.add(host);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setStateType(StateType.SPLUNKV2);
+      logDataRecord.setClusterLevel(ClusterLevel.H1);
+      logDataRecord.setQuery(query);
+      logDataRecord.setLogCollectionMinute(logCollectionMinute);
+      logDataRecord.setLogMessage(UUID.randomUUID().toString());
+      logDataRecord.setHost(host);
+
+      logDataRecords.add(logDataRecord);
+    }
+
+    // save all but one record
+
+    for (int i = 1; i < numOfHosts; i++) {
+      wingsPersistence.save(logDataRecords.get(i));
+    }
+
+    assertEquals(
+        -1, analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
+  }
+
+  @Test
+  @RealMongo
+  public void getCollectionMinuteForL1AllRecords() throws Exception {
+    String query = UUID.randomUUID().toString();
+    int numOfHosts = 1 + r.nextInt(10);
+    int logCollectionMiunte = 1 + r.nextInt(10);
+
+    List<LogDataRecord> logDataRecords = new ArrayList<>();
+    Set<String> hosts = new HashSet<>();
+    for (int i = 0; i < numOfHosts; i++) {
+      String host = UUID.randomUUID().toString();
+      hosts.add(host);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+      logDataRecord.setStateType(StateType.SPLUNKV2);
+      logDataRecord.setClusterLevel(ClusterLevel.H1);
+      logDataRecord.setQuery(query);
+      logDataRecord.setLogCollectionMinute(logCollectionMiunte);
+      logDataRecord.setLogMessage(UUID.randomUUID().toString());
+      logDataRecord.setHost(host);
+
+      logDataRecords.add(logDataRecord);
+    }
+
+    wingsPersistence.save(logDataRecords);
+
+    assertEquals(logCollectionMiunte,
+        analysisService.getCollectionMinuteForL1(query, appId, stateExecutionId, StateType.SPLUNKV2, hosts));
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
