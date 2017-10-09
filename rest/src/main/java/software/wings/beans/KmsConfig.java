@@ -22,11 +22,15 @@ import software.wings.settings.SettingValue;
 @AllArgsConstructor
 @Entity(value = "kmsConfig", noClassnameStored = true)
 public class KmsConfig extends Base {
+  @Attributes(title = "Name", required = true) private String name;
+
   @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
 
   @Attributes(title = "AWS Secret Key", required = true) @Encrypted private String secretKey;
 
   @Attributes(title = "AWS key ARN", required = true) @Encrypted private String kmsArn;
+
+  private boolean isDefault = true;
 
   @SchemaIgnore @NotEmpty private String accountId;
 }

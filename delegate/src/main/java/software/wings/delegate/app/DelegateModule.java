@@ -89,7 +89,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
-import software.wings.service.intfc.kms.KmsDelegateService;
+import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;

@@ -45,7 +45,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   public ElasticLoadBalancerConfig(
       Regions region, String loadBalancerName, String accessKey, char[] secretKey, String accountId) {
-    super(SettingVariableTypes.ELB.name());
+    this();
     this.region = region;
     this.loadBalancerName = loadBalancerName;
     this.accessKey = accessKey;

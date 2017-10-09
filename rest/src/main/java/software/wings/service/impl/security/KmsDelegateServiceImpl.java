@@ -8,11 +8,10 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.intfc.kms.KmsDelegateService;
+import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -51,7 +50,12 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
         value == null ? null : encrypt(new String(value), new SecretKeySpec(getByteArray(plainTextKey), "AES"));
     String encryptedKeyString = StandardCharsets.ISO_8859_1.decode(dataKeyResult.getCiphertextBlob()).toString();
 
-    return EncryptedData.builder().encryptionKey(encryptedKeyString).encryptedValue(encryptedValue).build();
+    return EncryptedData.builder()
+        .encryptionKey(encryptedKeyString)
+        .encryptedValue(encryptedValue)
+        .type(SettingVariableTypes.KMS)
+        .kmsId(kmsConfig.getUuid())
+        .build();
   }
 
   @Override

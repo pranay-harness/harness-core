@@ -118,11 +118,6 @@ public abstract class SettingValue implements ExtensionPoint {
     ELB("Elastic Classic Load Balancer"),
 
     /**
-     * Application load balancer setting variable types.
-     */
-    ALB("Elastic Application Load Balancer"),
-
-    /**
      * Slack setting variable types.
      */
     SLACK("SLACK"),
@@ -186,7 +181,9 @@ public abstract class SettingValue implements ExtensionPoint {
 
     SERVICE_VARIABLE,
 
-    CONFIG_FILE;
+    CONFIG_FILE,
+
+    KMS;
 
     private String displayName;
 
