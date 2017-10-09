@@ -1,14 +1,17 @@
 package software.wings.sm;
 
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.utils.Misc.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.LogType;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +55,7 @@ public class AwsLambdaVerification extends State {
     String errorMessage = null;
 
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
-
+    boolean assertionStatus = true;
     try {
       AwsLambdaFunctionElement awsLambdaFunctionElement =
           context.getContextElement(ContextElementType.AWS_LAMBDA_FUNCTION);
@@ -63,22 +66,39 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setFunctionName(functionMeta.getFunctionName());
       awsLambdaExecutionData.setFunctionVersion(functionMeta.getVersion());
 
-      InvokeRequest invokeRequest =
-          new InvokeRequest().withFunctionName(functionMeta.getFunctionArn()).withQualifier(functionMeta.getVersion());
-
       ImmutableMap<String, LambdaTestEvent> functionNameMap = lambdaTestEvents == null
           ? ImmutableMap.of()
-          : Maps.uniqueIndex(lambdaTestEvents, LambdaTestEvent::getFunctionName);
+          : Maps.uniqueIndex(
+                lambdaTestEvents, lambdaTestEvent -> context.renderExpression(lambdaTestEvent.getFunctionName()));
 
-      if (functionNameMap.containsKey(functionMeta.getFunctionName())) {
-        InvokeResult invokeResult = awsHelperService.invokeFunction(
-            awsLambdaFunctionElement.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), invokeRequest);
-        awsLambdaExecutionData.setStatusCode(invokeResult.getStatusCode());
-        awsLambdaExecutionData.setFunctionError(invokeResult.getFunctionError());
-        awsLambdaExecutionData.setLogResult(invokeResult.getLogResult());
-        awsLambdaExecutionData.setPayload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
-      } else {
-        awsLambdaExecutionData.setExecutionDisabled(true);
+      LambdaTestEvent lambdaTestEvent =
+          functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
+
+      InvokeRequest invokeRequest = new InvokeRequest()
+                                        .withFunctionName(functionMeta.getFunctionArn())
+                                        .withQualifier(functionMeta.getVersion())
+                                        .withLogType(LogType.Tail);
+
+      if (!isNullOrEmpty(lambdaTestEvent.getPayload())) {
+        invokeRequest.setPayload(lambdaTestEvent.getPayload());
+      }
+
+      InvokeResult invokeResult = awsHelperService.invokeFunction(
+          awsLambdaFunctionElement.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), invokeRequest);
+      logger.info("Lambda invocation result: " + invokeResult.toString());
+
+      awsLambdaExecutionData.setStatusCode(invokeResult.getStatusCode());
+      awsLambdaExecutionData.setFunctionError(invokeResult.getFunctionError());
+      String logResult = invokeResult.getLogResult();
+      if (logResult != null) {
+        logResult = new String(Base64.decodeBase64(logResult), "UTF-8");
+      }
+      awsLambdaExecutionData.setLogResult(logResult);
+      awsLambdaExecutionData.setPayload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
+      awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
+
+      if (!isNullOrEmpty(lambdaTestEvent.getAssertion())) {
+        assertionStatus = (boolean) context.evaluateExpression(lambdaTestEvent.getAssertion(), awsLambdaExecutionData);
       }
     } catch (Exception ex) {
       logger.error("Exception in verifying lambda", ex);
@@ -86,6 +106,12 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setErrorMsg(errorMessage);
       executionStatus = ExecutionStatus.FAILED;
     }
+
+    if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200
+        || awsLambdaExecutionData.getStatusCode() > 299) { // Lambda return non 200 range for failure
+      executionStatus = ExecutionStatus.FAILED;
+    }
+    awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
 
     updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
     return ExecutionResponse.Builder.anExecutionResponse()
