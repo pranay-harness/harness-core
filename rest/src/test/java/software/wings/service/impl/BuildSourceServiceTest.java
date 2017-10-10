@@ -87,6 +87,17 @@ public class BuildSourceServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  public void getPlans() {
+    Service service =
+        Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
+    wingsPersistence.save(service);
+    Map<String, String> plans = buildSourceService.getPlans(
+        appId, jenkinsSettingAttribute.getUuid(), service.getUuid(), ArtifactStreamType.JENKINS.name());
+    assertTrue(plans.size() > 0);
+  }
+
+  @Test
+  @RealMongo
   public void getArtifactPaths() {
     Set<String> artifactPaths = buildSourceService.getArtifactPaths(
         appId, "todolist_war", jenkinsSettingAttribute.getUuid(), null, ArtifactStreamType.JENKINS.name());
