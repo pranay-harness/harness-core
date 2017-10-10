@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.InstanceUnitType.COUNT;
+
 import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.sm.StateType;
@@ -17,7 +19,7 @@ public class DcNodeSelectState extends NodeSelectState {
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
   @DefaultValue("COUNT")
-  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
+  private InstanceUnitType instanceUnitType = COUNT;
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
 
