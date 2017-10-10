@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by sgurubelli on 8/11/17.
@@ -14,7 +15,6 @@ public class TemplateExpression {
   private boolean expressionAllowed = true; // Can this template expression can contain other expression
   private String description;
   private boolean mandatory;
-  private EntityType entityType;
   private Map<String, Object> metadata = Maps.newHashMap();
 
   public String getFieldName() {
@@ -40,20 +40,13 @@ public class TemplateExpression {
   public void setMetadata(Map<String, Object> metadata) {
     this.metadata = metadata;
   }
+
   public boolean isExpressionAllowed() {
     return expressionAllowed;
   }
 
   public void setExpressionAllowed(boolean expressionAllowed) {
     this.expressionAllowed = expressionAllowed;
-  }
-
-  public EntityType getEntityType() {
-    return entityType;
-  }
-
-  public void setEntityType(EntityType entityType) {
-    this.entityType = entityType;
   }
 
   public boolean isMandatory() {
@@ -77,9 +70,23 @@ public class TemplateExpression {
     return MoreObjects.toStringHelper(this)
         .add("fieldName", fieldName)
         .add("expression", expression)
-        .add("entityType", entityType)
         .add("metadata", metadata)
         .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    TemplateExpression that = (TemplateExpression) o;
+    return Objects.equals(fieldName, that.fieldName) && Objects.equals(expression, that.expression);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fieldName, expression);
   }
 
   public static final class Builder {
@@ -139,7 +146,6 @@ public class TemplateExpression {
       templateExpression.setExpressionAllowed(expressionAllowed);
       templateExpression.setMandatory(mandatory);
       templateExpression.setDescription(description);
-      templateExpression.setEntityType(entityType);
       templateExpression.setMetadata(metadata);
 
       return templateExpression;
