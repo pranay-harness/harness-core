@@ -71,8 +71,10 @@ import software.wings.utils.Validator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -478,13 +480,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     for (WorkflowExecution workflowExecution : pageResponse.getResponse()) {
       try {
         List<EntitySummary> environmentList = Lists.newArrayList();
+        Set<String> envEntitySummarySet = new HashSet<>();
         workflowExecution.getPipelineExecution()
             .getPipelineStageExecutions()
             .stream()
             .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
             .forEach(workflowExecution1 -> {
-              environmentList.add(getEntitySummary(
-                  workflowExecution1.getEnvName(), workflowExecution1.getEnvId(), EntityType.ENVIRONMENT.name()));
+              if (!envEntitySummarySet.contains(workflowExecution1.getEnvId())) {
+                environmentList.add(getEntitySummary(
+                    workflowExecution1.getEnvName(), workflowExecution1.getEnvId(), EntityType.ENVIRONMENT.name()));
+                envEntitySummarySet.add(workflowExecution1.getEnvId());
+              }
             });
         EntitySummary pipelineSummary =
             getEntitySummary(workflowExecution.getPipelineExecution().getPipeline().getName(),
