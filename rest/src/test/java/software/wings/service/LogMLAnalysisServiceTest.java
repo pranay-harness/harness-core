@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -521,7 +520,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void testAnalysisSummaryUnknownClusters() throws Exception {
-    int numOfUnknownClusters = 1 + r.nextInt(10);
+    int numOfUnknownClusters = 2 + r.nextInt(10);
     List<SplunkAnalysisCluster> clusterEvents = new ArrayList<>();
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = new HashMap<>();
     for (int i = 0; i < numOfUnknownClusters; i++) {
