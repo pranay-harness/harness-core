@@ -20,10 +20,7 @@ public class PipelineExecution extends Base {
   @Indexed private String pipelineId;
   @Indexed private String workflowExecutionId;
   private String stateMachineId;
-  private String artifactId;
-  private String artifactName;
   @Embedded private Pipeline pipeline;
-  private ExecutionArgs executionArgs;
   private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
   @Indexed private WorkflowType workflowType;
@@ -70,14 +67,6 @@ public class PipelineExecution extends Base {
    */
   public void setPipeline(Pipeline pipeline) {
     this.pipeline = pipeline;
-  }
-
-  public ExecutionArgs getExecutionArgs() {
-    return executionArgs;
-  }
-
-  public void setExecutionArgs(ExecutionArgs executionArgs) {
-    this.executionArgs = executionArgs;
   }
 
   /**
@@ -232,47 +221,11 @@ public class PipelineExecution extends Base {
     this.stateMachineId = stateMachineId;
   }
 
-  /**
-   * Gets artifact id.
-   *
-   * @return the artifact id
-   */
-  public String getArtifactId() {
-    return artifactId;
-  }
-
-  /**
-   * Sets artifact id.
-   *
-   * @param artifactId the artifact id
-   */
-  public void setArtifactId(String artifactId) {
-    this.artifactId = artifactId;
-  }
-
-  /**
-   * Gets artifact name.
-   *
-   * @return the artifact name
-   */
-  public String getArtifactName() {
-    return artifactName;
-  }
-
-  /**
-   * Sets artifact name.
-   *
-   * @param artifactName the artifact name
-   */
-  public void setArtifactName(String artifactName) {
-    this.artifactName = artifactName;
-  }
-
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(pipelineId, workflowExecutionId, artifactId, artifactName, pipeline, pipelineStageExecutions,
-              appName, workflowType, status, name, startTs, endTs);
+        + Objects.hash(pipelineId, workflowExecutionId, pipeline, pipelineStageExecutions, appName, workflowType,
+              status, name, startTs, endTs);
   }
 
   @Override
@@ -289,7 +242,6 @@ public class PipelineExecution extends Base {
     final PipelineExecution other = (PipelineExecution) obj;
     return Objects.equals(this.pipelineId, other.pipelineId)
         && Objects.equals(this.workflowExecutionId, other.workflowExecutionId)
-        && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.pipeline, other.pipeline)
         && Objects.equals(this.pipelineStageExecutions, other.pipelineStageExecutions)
         && Objects.equals(this.appName, other.appName) && Objects.equals(this.workflowType, other.workflowType)
@@ -302,8 +254,6 @@ public class PipelineExecution extends Base {
     return MoreObjects.toStringHelper(this)
         .add("pipelineId", pipelineId)
         .add("workflowExecutionId", workflowExecutionId)
-        .add("artifactId", artifactId)
-        .add("artifactName", artifactName)
         .add("pipeline", pipeline)
         .add("pipelineStageExecutions", pipelineStageExecutions)
         .add("appName", appName)
@@ -644,8 +594,6 @@ public class PipelineExecution extends Base {
       PipelineExecution pipelineExecution = new PipelineExecution();
       pipelineExecution.setPipelineId(pipelineId);
       pipelineExecution.setWorkflowExecutionId(workflowExecutionId);
-      pipelineExecution.setArtifactId(artifactId);
-      pipelineExecution.setArtifactName(artifactName);
       pipelineExecution.setPipeline(pipeline);
       pipelineExecution.setPipelineStageExecutions(pipelineStageExecutions);
       pipelineExecution.setAppName(appName);
@@ -662,7 +610,6 @@ public class PipelineExecution extends Base {
       pipelineExecution.setLastUpdatedBy(lastUpdatedBy);
       pipelineExecution.setLastUpdatedAt(lastUpdatedAt);
       pipelineExecution.setStateMachineId(stateMachineId);
-      pipelineExecution.setExecutionArgs(executionArgs);
       return pipelineExecution;
     }
   }
