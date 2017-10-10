@@ -1,14 +1,15 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -28,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
@@ -243,25 +245,31 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateHostInstanceMapping() {
-    List<Host> newHostList = asList(aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build());
-    List<String> deletedHosts = asList("DELETED_HOST_NAME");
+    List<Host> newHostList = singletonList(aHost()
+                                               .withAppId(APP_ID)
+                                               .withEnvId(ENV_ID)
+                                               .withUuid("NEW_HOST_ID")
+                                               .withHostName(HOST_NAME)
+                                               .withPublicDns(HOST_NAME)
+                                               .build());
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).withServiceId(SERVICE_ID).build();
-    serviceInstanceService.updateInstanceMappings(serviceTemplate,
-        aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList, deletedHosts);
-    verify(wingsPersistence).delete(isA(Query.class));
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("serviceTemplate");
-    verify(end).equal(TEMPLATE_ID);
+    serviceInstanceService.updateInstanceMappings(
+        serviceTemplate, aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList);
+    verify(query).field("infraMappingId");
+    verify(end).equal(INFRA_MAPPING_ID);
+    verify(query).field("hostId");
+    verify(end).equal("NEW_HOST_ID");
+    verify(query).field("hostName");
     verify(query).field("publicDns");
-    verify(end).hasAnyOf(asList("DELETED_HOST_NAME"));
+    verify(end, times(2)).equal(HOST_NAME);
     verify(wingsPersistence)
-        .save(aServiceInstance()
-                  .withAppId(APP_ID)
-                  .withEnvId(ENV_ID)
-                  .withServiceTemplate(serviceTemplate)
-                  .withHost(newHostList.get(0))
-                  .build());
+        .saveAndGet(ServiceInstance.class,
+            aServiceInstance()
+                .withAppId(APP_ID)
+                .withEnvId(ENV_ID)
+                .withServiceTemplate(serviceTemplate)
+                .withHost(newHostList.get(0))
+                .build());
   }
 }

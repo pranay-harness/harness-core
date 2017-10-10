@@ -3,14 +3,12 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
@@ -199,20 +197,5 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     verify(awsHelperService).listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
     verify(awsHelperService)
         .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
-  }
-
-  @Test
-  public void shouldDeProvisionHosts() {
-    when(hostService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(singletonList(
-                            aHost().withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()))
-                        .build());
-
-    infrastructureProvider.deProvisionHosts(
-        APP_ID, INFRA_MAPPING_ID, awsSetting, Regions.US_EAST_1.getName(), singletonList(HOST_NAME));
-
-    verify(awsHelperService)
-        .terminateEc2Instances(awsConfig, Regions.US_EAST_1.getName(), singletonList("INSTANCE_ID"));
   }
 }
