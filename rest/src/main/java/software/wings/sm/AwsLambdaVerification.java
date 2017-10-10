@@ -1,11 +1,17 @@
 package software.wings.sm;
 
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.utils.Misc.isNullOrEmpty;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.LogType;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,18 +23,18 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.LambdaTestEvent;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
-import software.wings.stencils.EnumData;
+import software.wings.utils.LambdaConvention;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import javax.inject.Inject;
 
 public class AwsLambdaVerification extends State {
-  @EnumData(enumDataProvider = AwsSettingProvider.class)
-  @Attributes(required = true, title = "AWS account")
-  private String awsCredentialsConfigId;
+  @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private AwsHelperService awsHelperService;
@@ -37,7 +43,7 @@ public class AwsLambdaVerification extends State {
   /**
    * Instantiates a new state.
    *
-   * @param name      the name
+   * @param name the name
    */
   public AwsLambdaVerification(String name) {
     super(name, StateType.AWS_LAMBDA_VERIFICATION.name());
@@ -50,7 +56,7 @@ public class AwsLambdaVerification extends State {
     String errorMessage = null;
 
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
-
+    boolean assertionStatus = true;
     try {
       AwsLambdaFunctionElement awsLambdaFunctionElement =
           context.getContextElement(ContextElementType.AWS_LAMBDA_FUNCTION);
@@ -61,19 +67,53 @@ public class AwsLambdaVerification extends State {
       awsLambdaExecutionData.setFunctionName(functionMeta.getFunctionName());
       awsLambdaExecutionData.setFunctionVersion(functionMeta.getVersion());
 
-      InvokeResult invokeResult = awsHelperService.invokeFunction(awsLambdaFunctionElement.getRegion(),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-          new InvokeRequest().withFunctionName(functionMeta.getFunctionArn()).withQualifier(functionMeta.getVersion()));
+      ImmutableMap<String, LambdaTestEvent> functionNameMap = lambdaTestEvents == null
+          ? ImmutableMap.of()
+          : Maps.uniqueIndex(lambdaTestEvents,
+                lambdaTestEvent
+                -> LambdaConvention.normalizeFunctionName(context.renderExpression(lambdaTestEvent.getFunctionName())));
+
+      LambdaTestEvent lambdaTestEvent =
+          functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
+
+      InvokeRequest invokeRequest = new InvokeRequest()
+                                        .withFunctionName(functionMeta.getFunctionArn())
+                                        .withQualifier(functionMeta.getVersion())
+                                        .withLogType(LogType.Tail);
+
+      if (!isNullOrEmpty(lambdaTestEvent.getPayload())) {
+        invokeRequest.setPayload(lambdaTestEvent.getPayload());
+      }
+
+      InvokeResult invokeResult = awsHelperService.invokeFunction(
+          awsLambdaFunctionElement.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), invokeRequest);
+      logger.info("Lambda invocation result: " + invokeResult.toString());
+
       awsLambdaExecutionData.setStatusCode(invokeResult.getStatusCode());
       awsLambdaExecutionData.setFunctionError(invokeResult.getFunctionError());
-      awsLambdaExecutionData.setLogResult(invokeResult.getLogResult());
+      String logResult = invokeResult.getLogResult();
+      if (logResult != null) {
+        logResult = new String(Base64.decodeBase64(logResult), "UTF-8");
+      }
+      awsLambdaExecutionData.setLogResult(logResult);
       awsLambdaExecutionData.setPayload(StandardCharsets.UTF_8.decode(invokeResult.getPayload()).toString());
+      awsLambdaExecutionData.setAssertionStatement(lambdaTestEvent.getAssertion());
+
+      if (!isNullOrEmpty(lambdaTestEvent.getAssertion())) {
+        assertionStatus = (boolean) context.evaluateExpression(lambdaTestEvent.getAssertion(), awsLambdaExecutionData);
+      }
     } catch (Exception ex) {
       logger.error("Exception in verifying lambda", ex);
       errorMessage = ex.getMessage();
       awsLambdaExecutionData.setErrorMsg(errorMessage);
       executionStatus = ExecutionStatus.FAILED;
     }
+
+    if (!assertionStatus || awsLambdaExecutionData.getStatusCode() < 200
+        || awsLambdaExecutionData.getStatusCode() > 299) { // Lambda return non 200 range for failure
+      executionStatus = ExecutionStatus.FAILED;
+    }
+    awsLambdaExecutionData.setAssertionStatus(executionStatus.name());
 
     updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionStatus);
     return ExecutionResponse.Builder.anExecutionResponse()
@@ -86,15 +126,7 @@ public class AwsLambdaVerification extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  public String getAwsCredentialsConfigId() {
-    return awsCredentialsConfigId;
-  }
-
-  public void setAwsCredentialsConfigId(String awsCredentialsConfigId) {
-    this.awsCredentialsConfigId = awsCredentialsConfigId;
-  }
-
-  protected String createActivity(ExecutionContext executionContext) {
+  private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
@@ -116,13 +148,21 @@ public class AwsLambdaVerification extends State {
     return activityService.save(activityBuilder.build()).getUuid();
   }
 
+  private void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
+    activityService.updateStatus(activityId, appId, status);
+  }
+
   @Override
   @SchemaIgnore
   public ContextElementType getRequiredContextElementType() {
     return ContextElementType.AWS_LAMBDA_FUNCTION;
   }
 
-  protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
-    activityService.updateStatus(activityId, appId, status);
+  public List<LambdaTestEvent> getLambdaTestEvents() {
+    return lambdaTestEvents;
+  }
+
+  public void setLambdaTestEvents(List<LambdaTestEvent> lambdaTestEvents) {
+    this.lambdaTestEvents = lambdaTestEvents;
   }
 }

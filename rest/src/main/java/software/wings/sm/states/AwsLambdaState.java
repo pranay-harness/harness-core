@@ -72,10 +72,12 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.LambdaConvention;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -123,6 +125,8 @@ public class AwsLambdaState extends State {
   @DefaultValue("${env.name}")
   @SchemaIgnore
   private List<String> aliases = new ArrayList<>();
+
+  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
   /**
    * Instantiates a new Aws lambda state.
@@ -263,6 +267,8 @@ public class AwsLambdaState extends State {
     String bucket = context.renderExpression(artifact.getMetadata().get("bucketName"));
 
     String functionName = context.renderExpression(lambdaSpecification.getFunctionName());
+    functionName = LambdaConvention.normalizeFunctionName(functionName);
+
     String handler = context.renderExpression(lambdaSpecification.getHandler());
     String runtime = context.renderExpression(lambdaSpecification.getRuntime());
     Integer memory = lambdaSpecification.getMemorySize();
