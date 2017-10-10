@@ -8,8 +8,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.List;
-
 /**
  * Created by brett on 10/10/17
  */
@@ -22,8 +20,6 @@ public class DcNodeSelectState extends NodeSelectState {
   private InstanceUnitType instanceUnitType = COUNT;
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
-
-  private List<String> hostNames;
 
   public DcNodeSelectState(String name) {
     super(name, StateType.DC_NODE_SELECT.name());
@@ -54,14 +50,5 @@ public class DcNodeSelectState extends NodeSelectState {
 
   public void setSpecificHosts(boolean specificHosts) {
     this.specificHosts = specificHosts;
-  }
-
-  @Override
-  public List<String> getHostNames() {
-    return hostNames;
-  }
-
-  public void setHostNames(List<String> hostNames) {
-    this.hostNames = hostNames;
   }
 }

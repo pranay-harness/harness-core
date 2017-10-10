@@ -42,6 +42,8 @@ import javax.inject.Inject;
 public abstract class NodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
 
+  private List<String> hostNames;
+
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
   NodeSelectState(String name, String stateType) {
@@ -191,11 +193,17 @@ public abstract class NodeSelectState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  public List<String> getHostNames() {
+    return hostNames;
+  }
+
+  public void setHostNames(List<String> hostNames) {
+    this.hostNames = hostNames;
+  }
+
   public abstract boolean isSpecificHosts();
 
   public abstract int getInstanceCount();
 
   public abstract InstanceUnitType getInstanceUnitType();
-
-  public abstract List<String> getHostNames();
 }
