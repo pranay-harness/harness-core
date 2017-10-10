@@ -69,16 +69,18 @@ public class DcNodeSelectState extends State {
         aServiceInstanceSelectionParams()
             .withSelectSpecificHosts(specificHosts)
             .withExcludedServiceInstanceIds(excludedServiceInstanceIds);
+    int instancesToAdd;
     if (specificHosts) {
       serviceInstanceSelectionParams.withHostNames(hostNames);
-      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}, hostNames: {}", hostNames.size(), serviceId,
+      instancesToAdd = hostNames.size();
+      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}, hostNames: {}", instancesToAdd, serviceId,
           infraMappingId, hostNames);
     } else {
-      int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHostNames(appId, infraMappingId).size())
+      instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHostNames(appId, infraMappingId).size())
           - hostExclusionList.size();
-      serviceInstanceSelectionParams.withCount(instancesToAdd);
       logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
     }
+    serviceInstanceSelectionParams.withCount(instancesToAdd);
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
         appId, infraMappingId, serviceInstanceSelectionParams.build());
 
