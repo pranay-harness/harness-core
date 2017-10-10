@@ -8,8 +8,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.List;
-
 /**
  * Created by brett on 10/10/17
  */
