@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -87,7 +89,7 @@ public class InstanceHelper {
 
         for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
           List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
-          if (instanceStatusSummaries == null) {
+          if (isEmpty(instanceStatusSummaries)) {
             logger.debug("No instances to process");
             return;
           }
