@@ -23,8 +23,6 @@ public class AwsNodeSelectState extends NodeSelectState {
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
 
-  private List<String> hostNames;
-
   public AwsNodeSelectState(String name) {
     super(name, StateType.AWS_NODE_SELECT.name());
   }
@@ -54,14 +52,5 @@ public class AwsNodeSelectState extends NodeSelectState {
 
   public void setSpecificHosts(boolean specificHosts) {
     this.specificHosts = specificHosts;
-  }
-
-  @Override
-  public List<String> getHostNames() {
-    return hostNames;
-  }
-
-  public void setHostNames(List<String> hostNames) {
-    this.hostNames = hostNames;
   }
 }
