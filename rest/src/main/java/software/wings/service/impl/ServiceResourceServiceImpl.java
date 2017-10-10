@@ -21,6 +21,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
@@ -40,6 +41,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -80,6 +82,7 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.io.File;
@@ -90,8 +93,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -841,7 +846,36 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public LambdaSpecification createLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    validateLambdaSpecification(lambdaSpecification);
     return wingsPersistence.saveAndGet(LambdaSpecification.class, lambdaSpecification);
+  }
+
+  private void validateLambdaSpecification(LambdaSpecification lambdaSpecification) {
+    List<String> duplicateFunctionName =
+        getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
+    if (!Misc.isNullOrEmpty(duplicateFunctionName)) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
+              + "]");
+    }
+    List<String> duplicateHandlerName =
+        getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getHandler);
+    if (!Misc.isNullOrEmpty(duplicateHandlerName)) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Function Handler name should be unique. Duplicate function handlers: ["
+              + Joiner.on(",").join(duplicateHandlerName) + "]");
+    }
+  }
+
+  private List<String> getFunctionAttributeDuplicateValues(
+      LambdaSpecification lambdaSpecification, Function<FunctionSpecification, String> getAttributeValue) {
+    Map<String, Long> valueCountMap = lambdaSpecification.getFunctions().stream().collect(
+        Collectors.groupingBy(getAttributeValue, Collectors.counting()));
+    return valueCountMap.entrySet()
+        .stream()
+        .filter(stringLongEntry -> stringLongEntry.getValue() > 1)
+        .map(Entry::getKey)
+        .collect(Collectors.toList());
   }
 
   @Override
