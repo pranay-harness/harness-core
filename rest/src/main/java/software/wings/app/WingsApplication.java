@@ -220,6 +220,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerJerseyProviders(environment);
 
+    registerCharsetResponseFilter(environment, injector);
+
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
 
@@ -334,6 +336,10 @@ public class WingsApplication extends Application<MainConfiguration> {
       environment.jersey().register(injector.getInstance(AuthRuleFilter.class));
       environment.jersey().register(injector.getInstance(AuthResponseFilter.class));
     }
+  }
+
+  private void registerCharsetResponseFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
   }
 
   private void startPlugins(Injector injector) {
