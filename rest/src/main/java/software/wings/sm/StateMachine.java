@@ -126,7 +126,11 @@ public class StateMachine extends Base {
       orchestrationWorkflow.setValid(true);
       orchestrationWorkflow.setValidationMessage(null);
     }
+
+    // Update Orchestration Workflow user variables
+    orchestrationWorkflow.updateUserVariables();
   }
+
   public StateMachine(
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     deepTransform(graph, stencilMap, orchestrationWorkflow);

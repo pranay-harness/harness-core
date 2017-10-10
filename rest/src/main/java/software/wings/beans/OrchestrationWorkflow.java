@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,11 @@ public abstract class OrchestrationWorkflow {
 
   public abstract List<String> getInfraMappingIds();
 
+  @JsonIgnore
+  public List<String> getTemplateVariables() {
+    return new ArrayList<>();
+  }
+
   /**
    * Checks if the workflow is templatized or not
    * @return
@@ -104,6 +110,8 @@ public abstract class OrchestrationWorkflow {
     return Arrays.asList();
   }
 
+  public void updateUserVariables() {}
+
   /**
    * Checks if any one of InfraMapping is templatized
    * @return
@@ -114,20 +122,11 @@ public abstract class OrchestrationWorkflow {
   }
 
   /**
-   * Checks if any one of InfraMapping is templatized
+   * Checks if any one of Env is templatized
    * @return
    */
   @JsonIgnore
   public boolean isInfraMappingTemplatized() {
-    return false;
-  }
-
-  /**
-   * Checks if any one of Environment is templatized
-   * @return
-   */
-  @JsonIgnore
-  public boolean isEnvironmentTemplatized() {
     return false;
   }
   /***
@@ -163,34 +162,23 @@ public abstract class OrchestrationWorkflow {
         }
       }
       if (matcher.matches()) {
-        String templateVariable = matcher.group(0);
-        templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-        templateVariable = getTemplateExpressionName(templateExpression, templateVariable, entityType, stateType);
-        if (!contains(getUserVariables(), templateVariable)) {
-          getUserVariables().add(aVariable()
-                                     .withName(templateVariable)
-                                     .withEntityType(entityType)
-                                     .withArtifactType(artifactType)
-                                     .withRelatedField(relatedField)
-                                     .withType(entityType != null ? ENTITY : TEXT)
-                                     .withMandatory(templateExpression.isMandatory())
-                                     .withDescription(templateExpression.getDescription())
-                                     .build());
-        }
+        expression = getTemplateExpressionName(
+            templateExpression, matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType, stateType);
       } else {
         expression = getTemplateExpressionName(templateExpression, expression, entityType, stateType);
-        if (!contains(getUserVariables(), expression)) {
-          getUserVariables().add(aVariable()
-                                     .withName(expression)
-                                     .withEntityType(entityType)
-                                     .withArtifactType(artifactType)
-                                     .withRelatedField(relatedField)
-                                     .withType(entityType != null ? ENTITY : TEXT)
-                                     .withMandatory(templateExpression.isMandatory())
-                                     .withDescription(templateExpression.getDescription())
-                                     .build());
-        }
       }
+      if (!contains(getUserVariables(), expression)) {
+        getUserVariables().add(aVariable()
+                                   .withName(expression)
+                                   .withEntityType(entityType)
+                                   .withArtifactType(artifactType)
+                                   .withRelatedField(relatedField)
+                                   .withType(entityType != null ? ENTITY : TEXT)
+                                   .withMandatory(templateExpression.isMandatory())
+                                   .withDescription(templateExpression.getDescription())
+                                   .build());
+      }
+      getTemplateVariables().add(expression);
     }
   }
   /**
