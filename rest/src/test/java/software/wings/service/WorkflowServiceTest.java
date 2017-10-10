@@ -832,6 +832,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
@@ -2173,47 +2174,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTemplatizeWorkflow() {
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
-        .thenReturn(anAwsInfrastructureMapping()
-                        .withUuid(INFRA_MAPPING_ID)
-                        .withDeploymentType(SSH.name())
-                        .withComputeProviderType(SettingVariableTypes.AWS.name())
-                        .build());
-
-    Workflow workflow1 =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withAppId(APP_ID)
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .withName("Phase1")
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withDeploymentType(SSH)
-                                          .build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
-                    .build())
-            .build();
-
-    Workflow workflow2 = workflowService.createWorkflow(workflow1);
-    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
-
-    Workflow templatizedWorkflow =
-        workflowService.templatizeWorkflow(workflow2.getAppId(), workflow2.getUuid(), workflow2);
-    assertThat(templatizedWorkflow).isNotNull();
-    assertThat(templatizedWorkflow.isTemplatized()).isTrue();
-
-    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
-        (CanaryOrchestrationWorkflow) templatizedWorkflow.getOrchestrationWorkflow();
-    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
-  }
-
-  @Test
   public void shouldTemplatizeBasicDeployment() {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
@@ -2469,5 +2429,518 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
         .extracting(variable -> variable.getEntityType())
         .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test
+  public void shouldUpdateTemplatizeExpressionsBasicDeployment() {
+    Workflow workflow1 = createBasicWorkflow();
+    String name2 = "Name2";
+
+    Workflow workflow2 =
+        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+
+    TemplateExpression envExpression = aTemplateExpression()
+                                           .withFieldName("envId")
+                                           .withExpression("${Environment}")
+                                           .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                           .build();
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+    workflow2.setTemplateExpressions(asList(envExpression, infraExpression, serviceExpression));
+
+    workflowService.updateWorkflow(workflow2, null);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(
+        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+
+    // Now update template expressions with different names
+
+    envExpression = aTemplateExpression()
+                        .withFieldName("envId")
+                        .withExpression("${Environment_Changed}")
+                        .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                        .build();
+    infraExpression = aTemplateExpression()
+                          .withFieldName("infraMappingId")
+                          .withExpression("${ServiceInfra_SSH_Changed}")
+                          .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                          .build();
+    serviceExpression = aTemplateExpression()
+                            .withFieldName("serviceId")
+                            .withExpression("${Service_Changed}")
+                            .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                            .build();
+    workflow2.setTemplateExpressions(asList(envExpression, infraExpression, serviceExpression));
+
+    workflowService.updateWorkflow(workflow2, null);
+
+    Workflow templatizedWorkflow = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
+    workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(
+        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
+        .isFalse();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Service_Changed")))
+        .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+        .isFalse();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH_Changed")))
+        .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Environment")))
+        .isFalse();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Environment_Changed")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("serviceId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test
+  public void shouldUpdateTemplatizeExpressionsCanary() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    TemplateExpression envExpression = aTemplateExpression()
+                                           .withFieldName("envId")
+                                           .withExpression("${Environment}")
+                                           .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                           .build();
+    workflow2.setTemplateExpressions(asList(envExpression));
+
+    workflowService.updateWorkflow(workflow2, null);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+
+    envExpression = aTemplateExpression()
+                        .withFieldName("envId")
+                        .withExpression("${Environment_Changed}")
+                        .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                        .build();
+    workflow3.setTemplateExpressions(asList(envExpression));
+
+    workflow3 = workflowService.updateWorkflow(workflow3, null);
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
+    workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().doesNotContain(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+        .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Environment")))
+        .isFalse();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Environment_Changed")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test
+  public void shouldTemplatizeBasicPhase() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+
+    Workflow workflow = createBasicWorkflow();
+
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+    List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    WorkflowPhase workflowPhase = workflowPhases.get(workflowPhases.size() - 1);
+
+    workflowPhase.setName("phase2-changed");
+
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+    workflowPhase.setTemplateExpressions(asList(serviceExpression, infraExpression));
+
+    workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((BasicOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase3 = workflowPhases2.get(workflowPhases2.size() - 1);
+    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase, "uuid", "name");
+
+    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test
+  public void shouldDeTemplatizeBasicDeployment() {
+    Workflow workflow1 = createBasicWorkflow();
+    String name2 = "Name2";
+
+    Workflow workflow2 =
+        aWorkflow().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(workflow1.getUuid()).withName(name2).build();
+
+    TemplateExpression envExpression = aTemplateExpression()
+                                           .withFieldName("envId")
+                                           .withExpression("${Environment}")
+                                           .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                           .build();
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+    workflow2.setTemplateExpressions(asList(envExpression, infraExpression, serviceExpression));
+
+    workflowService.updateWorkflow(workflow2, null);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    OrchestrationWorkflow orchestrationWorkflow = workflow3.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(
+        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+
+    // Detemplatize service Infra
+    workflow2.setTemplateExpressions(asList(envExpression, infraExpression));
+
+    workflowService.updateWorkflow(workflow2, null);
+
+    Workflow templatizedWorkflow = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+
+    assertThat(workflow3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    orchestrationWorkflow = templatizedWorkflow.getOrchestrationWorkflow();
+    workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNullOrEmpty();
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(
+        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
+        .isFalse();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH")))
+        .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("Environment")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .doesNotContain("serviceId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldDeTemplatizeOnlyInfraCanaryPhase() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
+    workflowPhase2.setName("phase2-changed");
+
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+    workflowPhase2.setTemplateExpressions(asList(serviceExpression, infraExpression));
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases3 =
+        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
+    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
+
+    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+
+    workflowPhase3.setTemplateExpressions(asList(serviceExpression));
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase3);
+  }
+
+  @Test
+  public void shouldDeTemplatizeOnlyServiceandInfraCanaryPhase() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
+    workflowPhase2.setName("phase2-changed");
+
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+    workflowPhase2.setTemplateExpressions(asList(serviceExpression, infraExpression));
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases3 =
+        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
+    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
+
+    assertThat(workflowPhase3.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase3.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(workflow3.getOrchestrationWorkflow().getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(SERVICE, INFRASTRUCTURE_MAPPING);
+
+    workflowPhase3.setTemplateExpressions(null);
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase3);
+
+    Workflow workflow4 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases4 =
+        ((CanaryOrchestrationWorkflow) workflow4.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase4 = workflowPhases3.get(workflowPhases4.size() - 1);
+    assertThat(workflowPhase4).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
+
+    assertThat(workflowPhase4.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase4.getTemplateExpressions()).isEmpty();
+    assertThat(workflow4.getOrchestrationWorkflow().getUserVariables()).isNullOrEmpty();
   }
 }
