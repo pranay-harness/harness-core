@@ -30,6 +30,8 @@ public class WorkflowExecution extends Base {
 
   private String stateMachineId;
   @Indexed private String envId;
+  @Indexed private List<String> envIds;
+  @Indexed private List<String> serviceIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;
@@ -462,6 +464,22 @@ public class WorkflowExecution extends Base {
 
   public void setTriggeredBy(EmbeddedUser triggeredBy) {
     this.triggeredBy = triggeredBy;
+  }
+
+  public List<String> getEnvIds() {
+    return envIds;
+  }
+
+  public void setEnvIds(List<String> envIds) {
+    this.envIds = envIds;
+  }
+
+  public List<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  public void setServiceIds(List<String> serviceIds) {
+    this.serviceIds = serviceIds;
   }
 
   public PipelineSummary getPipelineSummary() {

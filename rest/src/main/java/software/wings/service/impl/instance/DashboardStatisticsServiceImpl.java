@@ -5,8 +5,14 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.WorkflowType.ORCHESTRATION;
+import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.instance.dashboard.EntitySummary.Builder.anEntitySummary;
 import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
+import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -21,12 +27,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.PipelineExecution;
-import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -43,11 +49,15 @@ import software.wings.beans.instance.dashboard.ServiceSummary;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.PipelineExecutionHistory;
+import software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -61,9 +71,12 @@ import software.wings.utils.Validator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 8/13/17
@@ -76,6 +89,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
@@ -434,9 +448,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public ServiceInstanceDashboard getServiceInstanceDashboard(String appId, String serviceId) {
-    List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(serviceId);
-    List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(serviceId);
-    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(serviceId);
+    List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(appId, serviceId);
+    List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(appId, serviceId);
+    List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
     Validator.notNullCheck("Service", service);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
@@ -448,103 +462,72 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
-  // Had to add all kinds of null checks since we query the pipelines that could be in different stages.
-  // We have seen NPEs in few cases. So, added bunch of null checks
-  private List<PipelineExecutionHistory> getPipelineExecutionHistory(String serviceId) {
-    List<PipelineExecution> pipelineExecutionList = pipelineService.getPipelineExecutionHistory(serviceId, 10);
-    if (pipelineExecutionList == null || pipelineExecutionList.isEmpty()) {
-      return Lists.newArrayList();
+  private List<PipelineExecutionHistory> getPipelineExecutionHistory(String appId, String serviceId) {
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                     .withLimit("10")
+                                                     .addFilter("appId", EQ, appId)
+                                                     .addFilter("workflowType", EQ, PIPELINE)
+                                                     .addFilter("serviceIds", IN, serviceId)
+                                                     .addOrder("createdAt", OrderType.DESC)
+                                                     .build();
+    PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, false);
+
+    List<PipelineExecutionHistory> pipelineExecutionHistoryList = new ArrayList<>();
+    if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
+      return pipelineExecutionHistoryList;
     }
 
-    List<PipelineExecutionHistory> pipelineExecutionHistoryList =
-        Lists.newArrayListWithExpectedSize(pipelineExecutionList.size());
+    for (WorkflowExecution workflowExecution : pageResponse.getResponse()) {
+      try {
+        List<EntitySummary> environmentList = Lists.newArrayList();
+        Set<String> envEntitySummarySet = new HashSet<>();
+        workflowExecution.getPipelineExecution()
+            .getPipelineStageExecutions()
+            .stream()
+            .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+            .forEach(workflowExecution1 -> {
+              if (!envEntitySummarySet.contains(workflowExecution1.getEnvId())) {
+                environmentList.add(getEntitySummary(
+                    workflowExecution1.getEnvName(), workflowExecution1.getEnvId(), EntityType.ENVIRONMENT.name()));
+                envEntitySummarySet.add(workflowExecution1.getEnvId());
+              }
+            });
+        EntitySummary pipelineSummary =
+            getEntitySummary(workflowExecution.getPipelineExecution().getPipeline().getName(),
+                workflowExecution.getUuid(), EntityType.PIPELINE.name());
 
-    for (PipelineExecution pipelineExecution : pipelineExecutionList) {
-      boolean skip = false;
-      List<EntitySummary> environmentList = Lists.newArrayList();
-      EntitySummary pipelineSummary = getEntitySummary(
-          pipelineExecution.getPipeline().getName(), pipelineExecution.getUuid(), EntityType.PIPELINE.name());
-      List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-      if (pipelineStageExecutions == null || pipelineStageExecutions.isEmpty()) {
-        continue;
-      }
+        Artifact artifact = workflowExecution.getExecutionArgs()
+                                .getArtifacts()
+                                .stream()
+                                .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
+                                .findFirst()
+                                .get();
+        ArtifactSummary artifactSummary = getArtifactSummary(
+            artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
 
-      for (PipelineStageExecution pipelineStageExecution : pipelineStageExecutions) {
-        List<WorkflowExecution> workflowExecutions = pipelineStageExecution.getWorkflowExecutions();
-        if (workflowExecutions == null || workflowExecutions.isEmpty()) {
-          continue;
+        Builder builder = aPipelineExecutionHistory()
+                              .withPipeline(pipelineSummary)
+                              .withArtifact(artifactSummary)
+                              .withEnvironmentList(environmentList)
+                              .withStatus(workflowExecution.getStatus().name());
+        if (workflowExecution.getStartTs() != null) {
+          builder.withStartTime(new Date(workflowExecution.getStartTs()));
         }
-
-        for (WorkflowExecution workflowExecution : workflowExecutions) {
-          ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
-          if (executionArgs == null) {
-            continue;
-          }
-
-          List<Artifact> artifacts = executionArgs.getArtifacts();
-          if (artifacts == null || artifacts.isEmpty()) {
-            continue;
-          }
-
-          for (Artifact artifact : artifacts) {
-            List<String> serviceIds = artifact.getServiceIds();
-            if (serviceIds == null || serviceIds.isEmpty()) {
-              continue;
-            }
-
-            if (serviceIds.contains(serviceId)) {
-              EntitySummary environmentSummary = getEntitySummary(
-                  workflowExecution.getEnvName(), workflowExecution.getEnvId(), EntityType.ENVIRONMENT.name());
-              environmentList.add(environmentSummary);
-
-              Long startTs = pipelineExecution.getStartTs();
-              Date startTime = null;
-              if (startTs != null) {
-                startTime = new Date(startTs);
-              }
-
-              Long endTs = pipelineExecution.getEndTs();
-              Date endTime = null;
-              if (endTs != null) {
-                endTime = new Date(endTs);
-              }
-
-              ExecutionStatus status = pipelineExecution.getStatus();
-              String statusName = null;
-              if (status != null) {
-                statusName = status.name();
-              }
-
-              ArtifactSummary artifactSummary = getArtifactSummary(artifact.getDisplayName(), artifact.getUuid(),
-                  artifact.getBuildNo(), artifact.getArtifactSourceName());
-              PipelineExecutionHistory pipelineExecutionHistory =
-                  PipelineExecutionHistory.Builder.aPipelineExecutionHistory()
-                      .withPipeline(pipelineSummary)
-                      .withArtifact(artifactSummary)
-                      .withEndTime(endTime)
-                      .withEnvironmentList(environmentList)
-                      .withStartTime(startTime)
-                      .withStatus(statusName)
-                      .build();
-              pipelineExecutionHistoryList.add(pipelineExecutionHistory);
-              skip = true;
-              break;
-            }
-            if (skip)
-              break;
-          }
-          if (skip)
-            break;
+        if (workflowExecution.getEndTs() != null) {
+          builder.withEndTime(new Date(workflowExecution.getEndTs()));
         }
-        if (skip)
-          break;
+        PipelineExecutionHistory pipelineExecutionHistory = builder.build();
+        pipelineExecutionHistoryList.add(pipelineExecutionHistory);
+      } catch (Exception e) {
+        logger.error(
+            "Error in preparing PipelineExecutionHistory for workflowExecution : {}", workflowExecution.getUuid(), e);
       }
     }
 
     return pipelineExecutionHistoryList;
   }
 
-  private List<CurrentActiveInstances> getCurrentActiveInstances(String serviceId) {
+  private List<CurrentActiveInstances> getCurrentActiveInstances(String appId, String serviceId) {
     Query<Instance> query;
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
@@ -623,26 +606,42 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return instanceService.get(instanceId);
   }
 
-  private List<DeploymentHistory> getDeploymentHistory(String serviceId) {
+  private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {
+    List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
+    List<Environment> environments = environmentService.getEnvByApp(appId);
+    if (environments == null || environments.isEmpty()) {
+      return deploymentExecutionHistoryList;
+    }
+    List<String> envIds = environments.stream()
+                              .filter(environment -> environment.getEnvironmentType() == EnvironmentType.PROD)
+                              .map(Environment::getUuid)
+                              .collect(Collectors.toList());
+
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                     .addFilter("appId", EQ, appId)
+                                                     .addFilter("workflowType", EQ, ORCHESTRATION)
+                                                     .addFilter("serviceIds", IN, serviceId)
+                                                     .addFilter("envIds", IN, envIds)
+                                                     .addOrder("createdAt", OrderType.DESC)
+                                                     .withLimit("10")
+                                                     .build();
+
     List<WorkflowExecution> workflowExecutionList =
-        workflowExecutionService.getWorkflowExecutionHistory(serviceId, EnvironmentType.PROD.name(), 10);
+        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
 
     if (workflowExecutionList == null || workflowExecutionList.isEmpty()) {
-      return Lists.newArrayList();
+      return deploymentExecutionHistoryList;
     }
-
-    List<DeploymentHistory> deploymentExecutionHistoryList =
-        Lists.newArrayListWithExpectedSize(workflowExecutionList.size());
 
     for (WorkflowExecution workflowExecution : workflowExecutionList) {
       PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
       EntitySummary pipelineEntitySummary = null;
-      if (pipelineSummary != null) {
-        pipelineEntitySummary = getEntitySummary(
-            pipelineSummary.getPipelineName(), pipelineSummary.getPipelineId(), EntityType.PIPELINE.name());
-      } else {
+      if (pipelineSummary == null) {
         // This is temporary fix to work around ui bug. UI code assumed the pipeline is always present
         pipelineEntitySummary = getEntitySummary("", "dummy", EntityType.PIPELINE.name());
+      } else {
+        pipelineEntitySummary = getEntitySummary(
+            pipelineSummary.getPipelineName(), pipelineSummary.getPipelineId(), EntityType.PIPELINE.name());
       }
 
       EntitySummary workflowExecutionSummary =

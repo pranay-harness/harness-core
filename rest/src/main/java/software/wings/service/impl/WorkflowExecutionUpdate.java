@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -40,7 +39,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private PipelineService pipelineService;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
 
   /**
@@ -123,7 +121,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
-      pipelineService.refreshPipelineExecution(appId, workflowExecutionId);
       waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
     }
   }
