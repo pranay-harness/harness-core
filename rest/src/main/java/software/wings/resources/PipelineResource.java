@@ -7,19 +7,14 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.ApprovalDetails;
-import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineExecution;
 import software.wings.beans.RestResponse;
-import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
@@ -156,79 +151,6 @@ public class PipelineResource {
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipelineService.deletePipeline(appId, pipelineId);
     return new RestResponse();
-  }
-
-  /**
-   * List executions rest response.
-   *
-   * @param pageRequest the page request
-   * @return the rest response
-   */
-  @GET
-  @Path("executions")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(value = ResourceType.CD)
-  public RestResponse<PageResponse<PipelineExecution>> listExecutions(
-      @BeanParam PageRequest<PipelineExecution> pageRequest) {
-    return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest));
-  }
-
-  /**
-   * Trigger execution rest response.
-   *
-   * @param appId         the app id
-   * @param pipelineId    the pipeline id
-   * @param executionArgs the execution args
-   * @return the rest response
-   */
-  @POST
-  @Path("executions")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(value = ResourceType.CD)
-  public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(pipelineService.execute(appId, pipelineId, executionArgs));
-  }
-
-  /**
-   * Trigger execution rest response.
-   *
-   * @param appId         the app id
-   * @param pipelineExecutionId    the pipeline execution id
-   * @param approvalDetails the Approval User details
-   * @return the rest response
-   */
-  @PUT
-  @Path("executions/{pipelineExecutionId}/approval")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(value = ResourceType.CD)
-  public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
-      @PathParam("pipelineExecutionId") String pipelineExecutionId, ApprovalDetails approvalDetails) {
-    return new RestResponse<>(pipelineService.approveOrRejectExecution(appId, pipelineExecutionId, approvalDetails));
-  }
-
-  /**
-   * Trigger execution rest response.
-   *
-   * @param appId         the app id
-   * @param pipelineExecutionId    the pipeline execution id
-   * @param executionInterrupt the executionInterrupt
-   * @return the rest response
-   */
-  @PUT
-  @Path("executions/{pipelineExecutionId}")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(value = ResourceType.CD)
-  public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
-      @PathParam("pipelineExecutionId") String pipelineExecutionId, ExecutionInterrupt executionInterrupt) {
-    executionInterrupt.setAppId(appId);
-    executionInterrupt.setExecutionUuid(pipelineExecutionId);
-
-    return new RestResponse<>(pipelineService.triggerExecutionInterrupt(executionInterrupt));
   }
 
   /**
