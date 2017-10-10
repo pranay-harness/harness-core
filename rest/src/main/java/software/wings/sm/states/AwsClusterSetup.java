@@ -86,7 +86,7 @@ public class AwsClusterSetup extends State {
     Application app = workflowStandardParams.getApp();
     String env = workflowStandardParams.getEnv().getName();
 
-    if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId())) {
+    if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER.name(), app.getAccountId())) {
       throw new WingsException(
           ErrorCode.INVALID_REQUEST, "message", "Runtime creation of clusters is not yet supported.");
     }

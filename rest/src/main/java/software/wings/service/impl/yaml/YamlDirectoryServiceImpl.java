@@ -88,7 +88,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public boolean pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
-    if (!featureFlagService.isEnabled(GIT_SYNC, accountId)) {
+    if (!featureFlagService.isEnabled(GIT_SYNC.name(), accountId)) {
       return false;
     }
 
