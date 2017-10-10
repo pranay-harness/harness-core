@@ -390,6 +390,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
       orchestrationWorkflow.onLoad();
+      workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
     }
     populateServices(workflow);
   }
@@ -518,8 +519,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
-        workflow.setTemplatized(orchestrationWorkflow.isTemplatized());
-        setUnset(ops, "templatized", workflow.isTemplatized());
         if (envChanged) {
           workflow.setEnvId(envId);
           setUnset(ops, "envId", envId);
@@ -605,9 +604,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<TemplateExpression> templateExpressions, String appId, String serviceId, String inframappingId,
       boolean envChanged, boolean inframappingChanged) {
     BasicOrchestrationWorkflow basicOrchestrationWorkflow = orchestrationWorkflow;
+    Optional<TemplateExpression> envExpression =
+        templateExpressions.stream()
+            .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
+            .findAny();
+    if (envExpression.isPresent()) {
+      basicOrchestrationWorkflow.addToUserVariables(Arrays.asList(envExpression.get()));
+    }
     if (basicOrchestrationWorkflow.getWorkflowPhases() != null) {
       for (WorkflowPhase phase : basicOrchestrationWorkflow.getWorkflowPhases()) {
-        setTemplateExpresssions(templateExpressions, phase);
+        setTemplateExpresssionsToPhase(templateExpressions, phase);
         validateServiceCompatibility(appId, serviceId, phase.getServiceId());
         setServiceId(serviceId, phase);
         setInframappingDetails(appId, inframappingId, phase, envChanged, inframappingChanged);
@@ -747,8 +753,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         metaData.put(ARTIFACT_TYPE, service.getArtifactType().name());
       }
       String expression = "${ServiceInfra";
-      if (serviceInfraVariables.size() != 0) {
-        expression = expression + serviceInfraVariables.size();
+      int i = 0;
+      for (String serviceInfraVariable : serviceInfraVariables) {
+        if (serviceInfraVariable.startsWith("ServiceInfra") || serviceInfraVariable.startsWith("ServiceInfra" + i)) {
+          i++;
+        }
+      }
+      if (i != 0) {
+        expression = expression + i;
       }
       DeploymentType deploymentType = workflowPhase.getDeploymentType();
       if (deploymentType.equals(DeploymentType.SSH)) {
@@ -819,20 +831,102 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   /**
-   * Propagate template expressions back and forth
+   * Set template expressions to phase from workflow level
    *
    * @param templateExpressions
    * @param workflowPhase
    */
-  private void setTemplateExpresssions(List<TemplateExpression> templateExpressions, WorkflowPhase workflowPhase) {
+  private void setTemplateExpresssionsToPhase(
+      List<TemplateExpression> templateExpressions, WorkflowPhase workflowPhase) {
+    if (workflowPhase != null) {
+      List<TemplateExpression> phaseTemplateExpressions = new ArrayList<>();
+      Optional<TemplateExpression> serviceExpression =
+          templateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+              .findAny();
+      Optional<TemplateExpression> infraExpression =
+          templateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
+              .findAny();
+      if (serviceExpression.isPresent()) {
+        phaseTemplateExpressions.add(serviceExpression.get());
+      }
+      if (infraExpression.isPresent()) {
+        phaseTemplateExpressions.add(infraExpression.get());
+      }
+      workflowPhase.setTemplateExpressions(phaseTemplateExpressions);
+    }
+  }
+
+  /**
+   * Set template expressions to phase from workflow level
+   *
+   * @param workflow
+   * @param workflowPhase
+   */
+  private void setTemplateExpresssionsFromPhase(Workflow workflow, WorkflowPhase workflowPhase) {
+    List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
+    Optional<TemplateExpression> envExpression = templateExpressions == null
+        ? Optional.empty()
+        : templateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
+              .findAny();
+    // Reset template expressions
+    templateExpressions = new ArrayList<>();
+    if (envExpression.isPresent()) {
+      templateExpressions.add(envExpression.get());
+    }
     if (workflowPhase != null) {
       List<TemplateExpression> phaseTemplateExpressions = workflowPhase.getTemplateExpressions();
-      if (templateExpressions.size() == 0) {
-        if (phaseTemplateExpressions != null) {
-          templateExpressions.addAll(phaseTemplateExpressions);
-        }
-      } else {
-        workflowPhase.setTemplateExpressions(templateExpressions);
+      if (phaseTemplateExpressions == null || phaseTemplateExpressions.size() == 0) {
+        phaseTemplateExpressions = new ArrayList<>();
+      }
+      // It means, user templatizing it from phase level
+      Optional<TemplateExpression> serviceExpression =
+          phaseTemplateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+              .findAny();
+      Optional<TemplateExpression> infraExpression =
+          phaseTemplateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
+              .findAny();
+      if (serviceExpression.isPresent()) {
+        templateExpressions.add(serviceExpression.get());
+      }
+      if (infraExpression.isPresent()) {
+        templateExpressions.add(infraExpression.get());
+      }
+      validateTemplateExpressions(envExpression, templateExpressions);
+      workflow.setTemplateExpressions(templateExpressions);
+    }
+  }
+
+  private void validateTemplateExpressions(
+      Optional<TemplateExpression> envExpression, List<TemplateExpression> templateExpressions) {
+    // Validate combinations
+    Optional<TemplateExpression> serviceExpression = templateExpressions == null
+        ? Optional.empty()
+        : templateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+              .findAny();
+    Optional<TemplateExpression> infraExpression = templateExpressions == null
+        ? Optional.empty()
+        : templateExpressions.stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
+              .findAny();
+    // It means nullifying both Service and InfraMappings .. throw an error if environment is templatized
+    if (envExpression.isPresent()) {
+      // Infra not present
+      if (!infraExpression.isPresent()) {
+        throw new WingsException(INVALID_REQUEST, "message",
+            "Service Infrastructure cannot be de-templatized because Environment is templatized");
+      }
+    }
+    if (serviceExpression.isPresent()) {
+      // Infra not present
+      if (!infraExpression.isPresent()) {
+        throw new WingsException(INVALID_REQUEST, "message",
+            "Service Infrastructure cannot be de-templatized because Service is templatized");
       }
     }
   }
@@ -1339,6 +1433,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(INVALID_REQUEST, "message", "No matching Workflow Phase");
     }
 
+    // Propagate template expressions to workflow level
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
+      setTemplateExpresssionsFromPhase(workflow, workflowPhase);
+    } else {
+      List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
+      Optional<TemplateExpression> envExpression = templateExpressions == null
+          ? Optional.empty()
+          : templateExpressions.stream()
+                .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
+                .findAny();
+      validateTemplateExpressions(envExpression, workflowPhase.getTemplateExpressions());
+    }
+
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, inframappingChanged, false)
             .getOrchestrationWorkflow();
@@ -1484,18 +1591,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
     }
-  }
-
-  @Override
-  public Workflow templatizeWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
-    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
-    Workflow templatizedWorkflow = originalWorkflow.clone();
-    templatizedWorkflow.setName(workflow.getName());
-    templatizedWorkflow.setDescription(workflow.getDescription());
-    templatizedWorkflow.setTemplatized(true);
-    Workflow savedWorkflow = createWorkflow(templatizedWorkflow);
-    savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
-    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false);
   }
 
   @Override

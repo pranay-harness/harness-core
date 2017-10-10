@@ -1552,9 +1552,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return
    */
   private boolean isServiceTemplatized(Workflow workflow) {
-    if (!workflow.isTemplatized()) {
-      return false;
-    }
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
       return orchestrationWorkflow.isServiceTemplatized();
@@ -1568,9 +1565,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return
    */
   private boolean isInfraMappingTemplatized(Workflow workflow) {
-    if (!workflow.isTemplatized()) {
-      return false;
-    }
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
       return orchestrationWorkflow.isInfraMappingTemplatized();
