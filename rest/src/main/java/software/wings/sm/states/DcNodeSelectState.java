@@ -57,7 +57,6 @@ public class DcNodeSelectState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
-    String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
@@ -72,17 +71,16 @@ public class DcNodeSelectState extends State {
             .withExcludedServiceInstanceIds(excludedServiceInstanceIds);
     if (specificHosts) {
       serviceInstanceSelectionParams.withHostNames(hostNames);
-      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}, hostNames: {}",
-          hostNames.size(), serviceId, envId, infraMappingId, hostNames);
+      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}, hostNames: {}", hostNames.size(), serviceId,
+          infraMappingId, hostNames);
     } else {
-      int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHosts(appId, infraMappingId).size())
+      int instancesToAdd = getCumulativeTotal(infrastructureMappingService.listHostNames(appId, infraMappingId).size())
           - hostExclusionList.size();
       serviceInstanceSelectionParams.withCount(instancesToAdd);
-      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
-          serviceId, envId, infraMappingId);
+      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
     }
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-        appId, envId, infraMappingId, serviceInstanceSelectionParams.build());
+        appId, infraMappingId, serviceInstanceSelectionParams.build());
 
     if (isEmpty(serviceInstances)) {
       return anExecutionResponse()

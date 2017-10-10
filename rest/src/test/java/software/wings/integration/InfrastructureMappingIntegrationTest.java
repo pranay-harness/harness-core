@@ -111,16 +111,16 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     // Setup done. Two Host and Two service instances
 
     // Test specific host
-    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(),
-        environment.getUuid(), infrastructureMapping.getUuid(),
-        aServiceInstanceSelectionParams().withSelectSpecificHosts(true).withHostNames(asList("host1")).build());
+    List<ServiceInstance> serviceInstances =
+        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
+            aServiceInstanceSelectionParams().withSelectSpecificHosts(true).withHostNames(asList("host1")).build());
 
     assertThat(serviceInstances).hasSize(1).extracting(ServiceInstance::getHostName).containsExactlyInAnyOrder("host1");
 
     // Test host count
-    serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(), environment.getUuid(),
-        infrastructureMapping.getUuid(),
-        aServiceInstanceSelectionParams().withSelectSpecificHosts(false).withCount(2).build());
+    serviceInstances =
+        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
+            aServiceInstanceSelectionParams().withSelectSpecificHosts(false).withCount(2).build());
 
     assertThat(serviceInstances)
         .hasSize(2)
@@ -131,34 +131,34 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     List<ServiceInstance> allServiceInstances = serviceInstanceService.list(new PageRequest<>()).getResponse();
 
     // Exclude 1st service instance
-    serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(), environment.getUuid(),
-        infrastructureMapping.getUuid(),
-        aServiceInstanceSelectionParams()
-            .withSelectSpecificHosts(false)
-            .withCount(2)
-            .withExcludedServiceInstanceIds(asList(allServiceInstances.get(0).getUuid()))
-            .build());
+    serviceInstances =
+        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
+            aServiceInstanceSelectionParams()
+                .withSelectSpecificHosts(false)
+                .withCount(2)
+                .withExcludedServiceInstanceIds(asList(allServiceInstances.get(0).getUuid()))
+                .build());
     assertThat(serviceInstances).hasSize(1).containsExactly(allServiceInstances.get(1));
 
     // Exclude 2nd service instance
-    serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(), environment.getUuid(),
-        infrastructureMapping.getUuid(),
-        aServiceInstanceSelectionParams()
-            .withSelectSpecificHosts(false)
-            .withCount(2)
-            .withExcludedServiceInstanceIds(asList(allServiceInstances.get(1).getUuid()))
-            .build());
+    serviceInstances =
+        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
+            aServiceInstanceSelectionParams()
+                .withSelectSpecificHosts(false)
+                .withCount(2)
+                .withExcludedServiceInstanceIds(asList(allServiceInstances.get(1).getUuid()))
+                .build());
     assertThat(serviceInstances).hasSize(1).containsExactly(allServiceInstances.get(0));
 
     // Exclude both service instance
-    serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(), environment.getUuid(),
-        infrastructureMapping.getUuid(),
-        aServiceInstanceSelectionParams()
-            .withSelectSpecificHosts(false)
-            .withCount(2)
-            .withExcludedServiceInstanceIds(
-                allServiceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toList()))
-            .build());
+    serviceInstances =
+        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
+            aServiceInstanceSelectionParams()
+                .withSelectSpecificHosts(false)
+                .withCount(2)
+                .withExcludedServiceInstanceIds(
+                    allServiceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toList()))
+                .build());
     assertThat(serviceInstances).hasSize(0);
   }
 
@@ -252,14 +252,14 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
     awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
 
-    List<ServiceInstance> serviceInstances =
+    List<Host> hosts =
         infrastructureMappingService.getAutoScaleGroupNodes(app.getUuid(), awsInfrastructureMapping.getUuid());
 
-    System.out.println(serviceInstances.size());
+    System.out.println(hosts.size());
     //    serviceInstances = infrastructureMappingService
     //        .selectServiceInstances(app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(),
     //        ImmutableMap.of(), new ArrayList<>());
-    System.out.println(serviceInstances.size());
+    System.out.println(hosts.size());
 
     System.out.println(awsInfrastructureMapping.toString());
   }

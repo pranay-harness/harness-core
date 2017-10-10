@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -15,10 +16,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -66,7 +69,6 @@ public class AwsNodeSelectState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
-    String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
@@ -79,40 +81,64 @@ public class AwsNodeSelectState extends State {
 
     AwsInfrastructureMapping infrastructureMapping =
         (AwsInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
-    int totalAvailableInstances;
-    if (infrastructureMapping.isProvisionInstances()) {
-      // Using Auto Scale group nodes
-      List<ServiceInstance> autoScaleGroupNodes =
-          infrastructureMappingService.getAutoScaleGroupNodes(appId, infraMappingId);
-      totalAvailableInstances = autoScaleGroupNodes.size();
-      int instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
-      serviceInstances = autoScaleGroupNodes.stream()
-                             .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()))
-                             .limit(instancesToAdd)
-                             .collect(toList());
-      logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
-          serviceId, envId, infraMappingId);
-    } else {
-      // Using filtered nodes
-      totalAvailableInstances = infrastructureMappingService.listHosts(appId, infraMappingId).size();
-      ServiceInstanceSelectionParams.Builder serviceInstanceSelectionParams =
-          aServiceInstanceSelectionParams()
-              .withSelectSpecificHosts(specificHosts)
-              .withExcludedServiceInstanceIds(excludedServiceInstanceIds);
-      if (specificHosts) {
-        serviceInstanceSelectionParams.withHostNames(hostNames);
-        logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}, hostNames: {}",
-            hostNames.size(), serviceId, envId, infraMappingId, hostNames);
-      } else {
-        int instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
-        serviceInstanceSelectionParams.withCount(instancesToAdd);
-        logger.info("Adding {} instances. serviceId: {}, environmentId: {}, infraMappingId: {}", instancesToAdd,
-            serviceId, envId, infraMappingId);
+    ServiceInstanceSelectionParams.Builder selectionParams =
+        aServiceInstanceSelectionParams()
+            .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
+            .withSelectSpecificHosts(specificHosts);
+    int totalAvailableInstances = infrastructureMappingService.listHostNames(appId, infraMappingId).size();
+    if (specificHosts) {
+      if (infrastructureMapping.isProvisionInstances()) {
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Cannot specify hosts when using an auto scale group");
       }
-      serviceInstances = infrastructureMappingService.selectServiceInstances(
-          appId, envId, infraMappingId, serviceInstanceSelectionParams.build());
+      int instancesToAdd = hostNames.size();
+      selectionParams.withHostNames(hostNames).withCount(instancesToAdd);
+      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}, hostNames: {}", instancesToAdd, serviceId,
+          infraMappingId, hostNames);
+    } else {
+      int instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
+      selectionParams.withCount(instancesToAdd);
+      logger.info("Adding {} instances. serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
     }
 
+    serviceInstances =
+        infrastructureMappingService.selectServiceInstances(appId, infraMappingId, selectionParams.build());
+
+    String errorMessage = buildServiceInstancesErrorMessage(
+        serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);
+
+    if (isNotEmpty(errorMessage)) {
+      return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
+    }
+
+    SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
+    selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+
+    List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
+
+    ContextElement serviceIdParamElement =
+        aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
+    return anExecutionResponse()
+        .addContextElement(serviceIdParamElement)
+        .addNotifyElement(serviceIdParamElement)
+        .withStateExecutionData(selectedNodeExecutionData)
+        .build();
+  }
+
+  private int getCumulativeTotal(int maxInstances) {
+    if (getInstanceUnitType() == PERCENTAGE) {
+      int percent = Math.min(getInstanceCount(), 100);
+      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      return Math.max(instanceCount, 1);
+    } else {
+      return getInstanceCount();
+    }
+  }
+
+  private String buildServiceInstancesErrorMessage(List<ServiceInstance> serviceInstances,
+      List<ServiceInstance> hostExclusionList, AwsInfrastructureMapping infrastructureMapping,
+      int totalAvailableInstances) {
+    String errorMessage = null;
     if (isEmpty(serviceInstances)) {
       StringBuilder msg = new StringBuilder("No nodes were selected. ");
       if (isSpecificHosts()) {
@@ -158,31 +184,12 @@ public class AwsNodeSelectState extends State {
           msg.append("the filters specified in your service infrastructure are correct. ");
         }
       }
-      return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(msg.toString()).build();
+      errorMessage = msg.toString();
+    } else if (serviceInstances.size() > totalAvailableInstances) {
+      errorMessage =
+          "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
     }
-
-    SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-    selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
-
-    List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-
-    ContextElement serviceIdParamElement =
-        aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
-    return anExecutionResponse()
-        .addContextElement(serviceIdParamElement)
-        .addNotifyElement(serviceIdParamElement)
-        .withStateExecutionData(selectedNodeExecutionData)
-        .build();
-  }
-
-  private int getCumulativeTotal(int maxInstances) {
-    if (getInstanceUnitType() == PERCENTAGE) {
-      int percent = Math.min(getInstanceCount(), 100);
-      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
-      return Math.max(instanceCount, 1);
-    } else {
-      return getInstanceCount();
-    }
+    return errorMessage;
   }
 
   @Override

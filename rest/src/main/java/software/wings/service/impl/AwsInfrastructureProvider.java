@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -33,10 +32,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
-import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -80,7 +77,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .flatMap(reservation -> reservation.getInstances().stream())
               .map(instance
                   -> aHost()
-                         .withAppId(Base.GLOBAL_APP_ID)
                          .withHostName(awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
                          .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
                                                                                   : instance.getPrivateDnsName())
@@ -190,23 +186,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withEc2Instance(instance)
                    .build())
         .collect(toList());
-  }
-
-  public void deProvisionHosts(String appId, String infraMappingId, SettingAttribute computeProviderSetting,
-      String region, List<String> hostNames) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-
-    List<Host> awsHosts = hostService
-                              .list(aPageRequest()
-                                        .addFilter("appId", Operator.EQ, appId)
-                                        .addFilter("infraMappingId", Operator.EQ, infraMappingId)
-                                        .addFilter("hostNames", Operator.IN, hostNames)
-                                        .build())
-                              .getResponse();
-
-    List<String> hostInstanceId =
-        awsHosts.stream().map(host -> host.getEc2Instance().getInstanceId()).collect(toList());
-    awsHelperService.terminateEc2Instances(awsConfig, region, hostInstanceId);
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting, String region) {
