@@ -42,7 +42,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
@@ -490,10 +489,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String artifactId = null;
 
     if (artifactStreamAction.getWorkflowType().equals(PIPELINE)) {
-      pageRequest.addFilter("pipelineId", artifactStreamAction.getWorkflowId(), Operator.EQ);
-      List<PipelineExecution> response = pipelineService.listPipelineExecutions(pageRequest).getResponse();
-      if (response.size() == 1) {
-        artifactId = response.get(0).getArtifactId();
+      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), Operator.EQ);
+      List<WorkflowExecution> response = workflowExecutionService.listExecutions(pageRequest, false).getResponse();
+      if (response.size() == 1 && response.get(0).getExecutionArgs() != null
+          && response.get(0).getExecutionArgs().getArtifacts() != null
+          && !response.get(0).getExecutionArgs().getArtifacts().isEmpty()
+          && response.get(0).getExecutionArgs().getArtifacts().get(0) != null) {
+        artifactId = response.get(0).getExecutionArgs().getArtifacts().get(0).getUuid();
       }
     } else {
       pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), Operator.EQ);
