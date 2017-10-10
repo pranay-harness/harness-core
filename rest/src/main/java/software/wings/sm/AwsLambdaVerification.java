@@ -26,6 +26,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.utils.LambdaConvention;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -68,8 +69,9 @@ public class AwsLambdaVerification extends State {
 
       ImmutableMap<String, LambdaTestEvent> functionNameMap = lambdaTestEvents == null
           ? ImmutableMap.of()
-          : Maps.uniqueIndex(
-                lambdaTestEvents, lambdaTestEvent -> context.renderExpression(lambdaTestEvent.getFunctionName()));
+          : Maps.uniqueIndex(lambdaTestEvents,
+                lambdaTestEvent
+                -> LambdaConvention.normalizeFunctionName(context.renderExpression(lambdaTestEvent.getFunctionName())));
 
       LambdaTestEvent lambdaTestEvent =
           functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
