@@ -6,8 +6,6 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.InfrastructureMapping;
@@ -31,7 +29,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -75,12 +72,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
           ServiceInstance serviceInstance = wingsPersistence.createQuery(ServiceInstance.class)
                                                 .field("infraMappingId")
                                                 .equal(infraMapping.getUuid())
-                                                .field("hostId")
-                                                .equal(host.getUuid())
                                                 .field("hostName")
                                                 .equal(host.getHostName())
-                                                .field("publicDns")
-                                                .equal(host.getPublicDns())
                                                 .get();
           return serviceInstance != null ? serviceInstance
                                          : wingsPersistence.saveAndGet(ServiceInstance.class,
