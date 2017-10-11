@@ -305,10 +305,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void delete(String appId, String envId, String infraMappingId) {
+  public void delete(String appId, String infraMappingId) {
+    delete(appId, infraMappingId, false);
+  }
+
+  private void delete(String appId, String infraMappingId, boolean forceDelete) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     if (infrastructureMapping != null) {
-      ensureInfraMappingSafeToDelete(infrastructureMapping);
+      if (!forceDelete) {
+        ensureInfraMappingSafeToDelete(infrastructureMapping);
+      }
       boolean deleted = wingsPersistence.delete(infrastructureMapping);
       if (deleted) {
         InfrastructureProvider infrastructureProvider =
@@ -350,14 +356,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId) {
+  public void deleteByServiceTemplate(String appId, String serviceTemplateId) {
     List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                 .field("appId")
                                                 .equal(appId)
                                                 .field("serviceTemplateId")
                                                 .equal(serviceTemplateId)
                                                 .asKeyList();
-    keys.forEach(key -> delete(appId, envId, key.toString()));
+    keys.forEach(key -> delete(appId, key.toString(), true));
   }
 
   @Override

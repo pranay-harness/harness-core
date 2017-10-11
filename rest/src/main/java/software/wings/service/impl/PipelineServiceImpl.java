@@ -133,7 +133,7 @@ public class PipelineServiceImpl implements PipelineService {
     if (pipeline == null) {
       return true;
     }
-    boolean deleted = false;
+    boolean deleted;
 
     if (forceDelete) {
       deleted = wingsPersistence.delete(pipeline);

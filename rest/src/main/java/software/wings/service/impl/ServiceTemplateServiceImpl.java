@@ -253,17 +253,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public void delete(String appId, String envId, String serviceTemplateId) {
+  public void delete(String appId, String serviceTemplateId) {
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
                                                   .field("appId")
                                                   .equal(appId)
-                                                  .field("envId")
-                                                  .equal(envId)
                                                   .field(ID_KEY)
                                                   .equal(serviceTemplateId));
     if (deleted) {
-      executorService.submit(
-          () -> infrastructureMappingService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+      executorService.submit(() -> infrastructureMappingService.deleteByServiceTemplate(appId, serviceTemplateId));
       executorService.submit(() -> configService.deleteByTemplateId(appId, serviceTemplateId));
       executorService.submit(() -> serviceVariableService.deleteByTemplateId(appId, serviceTemplateId));
     }
@@ -278,7 +275,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                           .equal(envId)
                                           .asKeyList();
     for (Key<ServiceTemplate> key : keys) {
-      delete(appId, envId, (String) key.getId());
+      delete(appId, (String) key.getId());
     }
   }
 
@@ -290,8 +287,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .field("serviceId")
         .equal(serviceId)
         .asList()
-        .forEach(serviceTemplate
-            -> delete(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid()));
+        .forEach(serviceTemplate -> delete(serviceTemplate.getAppId(), serviceTemplate.getUuid()));
   }
 
   @Override

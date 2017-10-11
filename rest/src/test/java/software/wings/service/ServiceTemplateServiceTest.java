@@ -193,15 +193,13 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteServiceTemplate() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
-    templateService.delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    templateService.delete(APP_ID, TEMPLATE_ID);
     verify(wingsPersistence).delete(query);
     verify(query).field("appId");
     verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
     verify(query).field(ID_KEY);
     verify(end).equal(TEMPLATE_ID);
-    verify(infrastructureMappingService).deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(infrastructureMappingService).deleteByServiceTemplate(APP_ID, TEMPLATE_ID);
     verify(configService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
     verify(serviceVariableService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
   }
@@ -218,7 +216,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                .withEnvId(ENV_ID)
                                .withName(TEMPLATE_NAME)
                                .build()));
-    doNothing().when(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
     spyTemplateService.deleteByEnv(APP_ID, ENV_ID);
     verify(query).field("appId");
     verify(end).equal(APP_ID);
@@ -231,7 +229,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteByService() {
-    doNothing().when(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
     when(query.asList())
         .thenReturn(asList(aServiceTemplate()
                                .withUuid(TEMPLATE_ID)
@@ -244,7 +242,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field("serviceId");
     verify(end).equal(SERVICE_ID);
-    verify(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
   }
 
   /**

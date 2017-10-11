@@ -42,8 +42,6 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -58,7 +56,6 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.Validator;
 
@@ -91,7 +88,6 @@ public class AppServiceImpl implements AppService {
   @Inject private SettingsService settingsService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
-  @Inject private AppContainerService appContainerService;
   @Inject private ExecutorService executorService;
   @Inject private SetupService setupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -104,8 +100,6 @@ public class AppServiceImpl implements AppService {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private AccountService accountService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
   /* (non-Javadoc)

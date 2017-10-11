@@ -268,7 +268,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(physicalInfrastructureMapping)).thenReturn(true);
     when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
-    infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID);
+    infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID);
 
     verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(physicalInfrastructureMapping);
@@ -305,7 +305,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(workflow)).build());
 
-    assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID))
+    assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.INVALID_REQUEST.name());
   }

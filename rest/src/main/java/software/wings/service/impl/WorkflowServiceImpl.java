@@ -1031,12 +1031,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    ensureWorkflowSafeToDelete(workflow);
-
-    boolean deleted = false;
+    boolean deleted;
     if (forceDelete) {
       deleted = wingsPersistence.delete(Workflow.class, appId, workflowId);
     } else {
+      ensureWorkflowSafeToDelete(workflow);
       if (workflowExecutionService.workflowExecutionsRunning(workflow.getWorkflowType(), appId, workflowId)) {
         String message = String.format("Workflow: [%s] couldn't be deleted", workflow.getName());
         throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, "message", message);
