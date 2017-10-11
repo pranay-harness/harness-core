@@ -4,11 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Property;
 import software.wings.beans.infrastructure.Host;
 import software.wings.sm.ExecutionStatus;
@@ -19,8 +15,6 @@ import java.util.Objects;
  * The Class ServiceInstance.
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("hostName")
-                           , @Field("infraMappingId") }, options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
 
@@ -32,7 +26,7 @@ public class ServiceInstance extends Base {
 
   @Indexed private String serviceName;
 
-  private String hostId;
+  @Indexed private String hostId;
   @Indexed private String hostName;
   @Indexed private String publicDns;
   @Indexed private String infraMappingId;
