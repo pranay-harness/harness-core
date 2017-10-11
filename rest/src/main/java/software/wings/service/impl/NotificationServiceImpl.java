@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ActionableNotification;
-import software.wings.beans.Application;
 import software.wings.beans.ApprovalNotification;
 import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.InformationNotification;
@@ -105,8 +105,9 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   private void sendNotification(Notification notification, List<NotificationRule> notificationRules) {
-    Application application = appService.get(notification.getAppId());
-    notification.setAccountId(application.getAccountId());
+    if (isEmpty(notification.getAccountId()) && appService.exist(notification.getAppId())) {
+      notification.setAccountId(appService.get(notification.getAppId()).getAccountId());
+    }
 
     if (notification instanceof InformationNotification) {
       ((InformationNotification) notification)
