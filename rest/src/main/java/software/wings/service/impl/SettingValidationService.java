@@ -59,7 +59,7 @@ public class SettingValidationService {
         || settingValue instanceof ArtifactoryConfig) {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     } else if (settingValue instanceof AppDynamicsConfig) {
-      appdynamicsService.validateConfig(settingAttribute);
+      newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS);
     } else if (settingValue instanceof KubernetesConfig) {
       kubernetesHelperService.validateCredential((KubernetesConfig) settingValue);
     } else if (settingValue instanceof SplunkConfig) {
@@ -81,7 +81,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof SumoConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SUMO);
     } else if (settingValue instanceof NewRelicConfig) {
-      newRelicService.validateConfig(settingAttribute);
+      newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC);
     }
 
     return true;
