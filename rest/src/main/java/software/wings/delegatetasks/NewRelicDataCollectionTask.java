@@ -28,6 +28,7 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -85,14 +86,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private final NewRelicDataCollectionInfo dataCollectionInfo;
     private final List<NewRelicApplicationInstance> instances;
     private long collectionStartTime;
-    private final List<NewRelicMetric> metrics;
+    private Collection<NewRelicMetric> metrics;
     private int dataCollectionMinute;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo) throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
       this.instances = newRelicDelegateService.getApplicationInstances(
-          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
-      this.metrics = newRelicDelegateService.getMetricsNameToCollect(
           dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
       this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
@@ -102,6 +101,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     @Override
     public void run() {
       try {
+        if (metrics == null || metrics.isEmpty() || dataCollectionMinute % DURATION_TO_ASK_MINUTES == 0) {
+          metrics = newRelicDelegateService.getMetricsNameToCollect(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
+        }
         final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
         for (NewRelicApplicationInstance node : instances) {
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
@@ -121,8 +124,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .level(ClusterLevel.H0)
                   .build());
 
-          List<List<String>> metricBatches = batchMetricsToCollect();
-          for (List<String> metricNames : metricBatches) {
+          List<Collection<String>> metricBatches = batchMetricsToCollect();
+          for (Collection<String> metricNames : metricBatches) {
             try {
               NewRelicMetricData metricData =
                   newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
@@ -224,8 +227,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private List<String> getApdexMetricNames(List<String> metricNames) {
-      final List<String> rv = new ArrayList<>();
+    private Collection<String> getApdexMetricNames(Collection<String> metricNames) {
+      final Collection<String> rv = new ArrayList<>();
       for (String metricName : metricNames) {
         rv.add(metricName.replace("WebTransaction", "Apdex"));
       }
@@ -233,8 +236,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return rv;
     }
 
-    private List<String> getErrorMetricNames(List<String> metricNames) {
-      final List<String> rv = new ArrayList<>();
+    private Collection<String> getErrorMetricNames(Collection<String> metricNames) {
+      final Collection<String> rv = new ArrayList<>();
       for (String metricName : metricNames) {
         rv.add("Errors/" + metricName);
       }
@@ -242,8 +245,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return rv;
     }
 
-    private List<List<String>> batchMetricsToCollect() {
-      List<List<String>> rv = new ArrayList<>();
+    private List<Collection<String>> batchMetricsToCollect() {
+      List<Collection<String>> rv = new ArrayList<>();
 
       List<String> batchedMetrics = new ArrayList<>();
       for (NewRelicMetric metric : metrics) {
@@ -266,7 +269,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
       List<NewRelicMetricDataRecord> rv = new ArrayList<>();
       for (Cell<String, Long, NewRelicMetricDataRecord> cell : records.cellSet()) {
-        rv.add(cell.getValue());
+        NewRelicMetricDataRecord value = cell.getValue();
+        value.setName(value.getName().replace("WebTransaction/", ""));
+        rv.add(value);
       }
 
       return rv;
