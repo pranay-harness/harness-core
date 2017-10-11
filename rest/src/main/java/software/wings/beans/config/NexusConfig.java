@@ -28,6 +28,8 @@ public class NexusConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new Nexus config.
    */
@@ -35,11 +37,12 @@ public class NexusConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.NEXUS.name());
   }
 
-  public NexusConfig(String nexusUrl, String username, char[] password, String accountId) {
+  public NexusConfig(String nexusUrl, String username, char[] password, String accountId, String encryptedPassword) {
     this();
     this.nexusUrl = nexusUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

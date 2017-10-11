@@ -30,6 +30,8 @@ public class BambooConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new BambooService config.
    */
@@ -37,11 +39,12 @@ public class BambooConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.BAMBOO.name());
   }
 
-  public BambooConfig(String bambooUrl, String username, char[] password, String accountId) {
-    super(SettingVariableTypes.BAMBOO.name());
+  public BambooConfig(String bambooUrl, String username, char[] password, String accountId, String encryptedPassword) {
+    this();
     this.bambooUrl = bambooUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

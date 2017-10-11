@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
@@ -36,30 +37,15 @@ public class SshSessionConfig implements Encryptable {
   @Encrypted private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
 
+  @SchemaIgnore private String encryptedPassword;
+
+  @SchemaIgnore private String encryptedKey;
+
+  @SchemaIgnore private String encryptedSudoAppPassword;
+
   @Override
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.SSH_SESSION_CONFIG;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("accountId", accountId)
-        .add("appId", appId)
-        .add("executorType", executorType)
-        .add("executionId", executionId)
-        .add("commandUnitName", commandUnitName)
-        .add("socketConnectTimeout", socketConnectTimeout)
-        .add("sshConnectionTimeout", sshConnectionTimeout)
-        .add("sshSessionTimeout", sshSessionTimeout)
-        .add("retryInterval", retryInterval)
-        .add("host", host)
-        .add("port", port)
-        .add("userName", userName)
-        .add("keyName", keyName)
-        .add("sudoAppName", sudoAppName)
-        .add("bastionHostConfig", bastionHostConfig)
-        .toString();
   }
 
   /**

@@ -30,6 +30,8 @@ public class DockerConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new Docker registry config.
    */
@@ -37,11 +39,13 @@ public class DockerConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.DOCKER.name());
   }
 
-  public DockerConfig(String dockerRegistryUrl, String username, char[] password, String accountId) {
+  public DockerConfig(
+      String dockerRegistryUrl, String username, char[] password, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.DOCKER.name());
     this.dockerRegistryUrl = dockerRegistryUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

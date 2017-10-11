@@ -41,6 +41,8 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedApiKey;
+
   /**
    * Instantiates a new New Relic dynamics config.
    */
@@ -48,10 +50,11 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
     super(StateType.NEW_RELIC.name());
   }
 
-  public NewRelicConfig(String newRelicUrl, char[] apiKey, String accountId) {
+  public NewRelicConfig(String newRelicUrl, char[] apiKey, String accountId, String encryptedApiKey) {
     this();
     this.newRelicUrl = newRelicUrl;
     this.apiKey = apiKey;
     this.accountId = accountId;
+    this.encryptedApiKey = encryptedApiKey;
   }
 }

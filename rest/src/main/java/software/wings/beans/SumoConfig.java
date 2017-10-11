@@ -35,6 +35,9 @@ public class SumoConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedAccessId;
+
+  @SchemaIgnore private String encryptedAccessKey;
   /**
    * Instantiates a new setting value.
    **/

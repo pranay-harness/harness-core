@@ -37,6 +37,8 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   private String kibanaVersion = "0";
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new Elk config.
    */
