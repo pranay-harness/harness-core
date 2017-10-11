@@ -235,18 +235,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceTemplateService.save(clonedServiceTemplate);
     });
 
-    List<ArtifactStream> artifactStreams = artifactStreamService
-                                               .list(aPageRequest()
-                                                         .addFilter("appId", EQ, originalService.getAppId())
-                                                         .addFilter("serviceId", EQ, originalService.getUuid())
-                                                         .build())
-                                               .getResponse();
-    artifactStreams.forEach(originalArtifactStream -> {
-      ArtifactStream clonedArtifactStream = originalArtifactStream.clone();
-      clonedArtifactStream.setServiceId(savedCloneService.getUuid());
-      artifactStreamService.create(clonedArtifactStream);
-    });
-
     originalService.getConfigFiles().forEach(originalConfigFile -> {
       try {
         File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
