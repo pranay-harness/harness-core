@@ -263,12 +263,12 @@ public class AppServiceTest extends WingsBaseTest {
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
         appContainerService, jobScheduler, artifactService, artifactStreamService, workflowService, pipelineService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
-    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
     inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
     inOrder.verify(pipelineService).deletePipelineByApplication(APP_ID);
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(jobScheduler, Mockito.times(2)).deleteJob(eq(APP_ID), anyString());
   }
 }
