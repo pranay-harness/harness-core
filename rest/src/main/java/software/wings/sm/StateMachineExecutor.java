@@ -1203,6 +1203,7 @@ public class StateMachineExecutor {
             .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
             .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
+            .addFilter("status", Operator.IN, NEW, STARTING, RUNNING, PAUSED, PAUSING, WAITING)
             .build();
 
     PageResponse<StateExecutionInstance> childInstances =
