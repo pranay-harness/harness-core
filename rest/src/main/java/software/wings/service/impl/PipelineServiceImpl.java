@@ -1,16 +1,17 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.WorkflowDetails.Builder.aWorkflowDetails;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.ENV_STATE;
 
 import com.google.inject.Singleton;
@@ -22,9 +23,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.BasicOrchestrationWorkflow;
-import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -33,7 +31,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowDetails;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -42,6 +40,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -74,6 +73,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -83,6 +83,54 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
+    return res;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails) {
+    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
+    if (res == null || res.getResponse() == null) {
+      return res;
+    }
+    List<Pipeline> pipelines = res.getResponse();
+    for (Pipeline pipeline : pipelines) {
+      List<String> invalidWorkflows = new ArrayList<>();
+      List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+      for (PipelineStage pipelineStage : pipelineStages) {
+        List<String> invalidStageWorkflows = new ArrayList<>();
+        for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+          if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+            try {
+              if (pipelineStageElement.getWorkflowVariables() == null
+                  || pipelineStageElement.getWorkflowVariables().size() == 0) {
+                // No need to validate pipeline
+              } else {
+                pipeline.setTemplatized(true);
+                Workflow workflow = workflowService.readWorkflow(
+                    pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+                validatePipelineEnvState(workflow, pipelineStageElement, invalidStageWorkflows);
+              }
+            } catch (Exception ex) {
+              logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
+            }
+          }
+        }
+        if (invalidStageWorkflows.size() != 0) {
+          pipelineStage.setValid(false);
+          pipelineStage.setValidationMessage(
+              String.format(Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
+        }
+        invalidWorkflows.addAll(invalidStageWorkflows);
+      }
+      if (invalidWorkflows.size() != 0) {
+        pipeline.setValid(false);
+        pipeline.setValidationMessage(
+            String.format(Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+      }
+    }
     return res;
   }
 
@@ -189,8 +237,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {
     List<Service> services = new ArrayList<>();
-    Set<String> serviceIds = new HashSet();
-    List<WorkflowDetails> workflowDetails = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
     pipeline.getPipelineStages()
         .stream()
         .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
@@ -199,41 +246,98 @@ public class PipelineServiceImpl implements PipelineService {
           try {
             Workflow workflow =
                 workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-            List<Variable> variables = new ArrayList<>();
-            if (orchestrationWorkflow != null) {
-              if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-                variables = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-              } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
-                variables = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-              } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-                variables = ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getUserVariables();
-              }
-              if (variables.size() > 0) {
-                WorkflowDetails workflowDetail = aWorkflowDetails()
-                                                     .withWorkflowId(workflow.getUuid())
-                                                     .withWorkflowName(workflow.getName())
-                                                     .withPipelineStageName(pse.getName())
-                                                     .withVariables(variables)
-                                                     .build();
-                workflowDetails.add(workflowDetail);
+            if (pse.getWorkflowVariables() == null || pse.getWorkflowVariables().size() == 0) {
+              workflow.getServices().forEach(service -> {
+                if (!serviceIds.contains(service.getUuid())) {
+                  services.add(service);
+                  serviceIds.add(service.getUuid());
+                }
+              });
+            } else {
+              List<Service> resolvedServices = resolveTemplateServices(workflow, pse.getWorkflowVariables());
+              if (resolvedServices != null) {
+                for (Service resolvedService : resolvedServices) {
+                  if (!serviceIds.contains(resolvedService.getUuid())) {
+                    services.add(resolvedService);
+                    serviceIds.add(resolvedService.getUuid());
+                  }
+                }
               }
             }
-            workflow.getServices().forEach(service -> {
-              if (!serviceIds.contains(service.getUuid())) {
-                services.add(service);
-                serviceIds.add(service.getUuid());
-              }
-            });
+
           } catch (Exception ex) {
             logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
           }
         });
-
     pipeline.setServices(services);
-    pipeline.setWorkflowDetails(workflowDetails);
   }
 
+  private List<Service> resolveTemplateServices(Workflow workflow, Map<String, String> workflowVariables) {
+    // Lookup service
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow == null) {
+      return new ArrayList<>();
+    }
+    List<String> serviceIds = new ArrayList<>();
+    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
+    if (userVariables != null) {
+      List<String> serviceNames =
+          userVariables.stream()
+              .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
+              .map(Variable::getName)
+              .distinct()
+              .collect(toList());
+      if (serviceNames != null) {
+        for (String serviceName : serviceNames) {
+          if (workflowVariables.get(serviceName) != null) {
+            serviceIds.add(workflowVariables.get(serviceName));
+          }
+        }
+      }
+    }
+    List<String> workflowServiceIds = orchestrationWorkflow.getServiceIds();
+    List<String> templatizedServiceIds = orchestrationWorkflow.getTemplatizedServiceIds();
+    if (workflowServiceIds != null) {
+      for (String workflowServiceId : workflowServiceIds) {
+        if (!templatizedServiceIds.contains(workflowServiceId)) {
+          serviceIds.add(workflowServiceId);
+        }
+      }
+    }
+    return getServices(workflow, serviceIds.stream().distinct().collect(toList()));
+  }
+  private void validatePipelineEnvState(
+      Workflow workflow, PipelineStageElement pipelineStageElement, List<String> invalidWorkflows) {
+    Map<String, String> pseWorkflowVariables = pipelineStageElement.getWorkflowVariables();
+    if (pseWorkflowVariables == null || pseWorkflowVariables.size() == 0) {
+      return;
+    }
+    Set<String> pseWkflwVariableNames = pseWorkflowVariables.keySet();
+    Set<String> wrkflowVariableNames = new HashSet<>();
+    if (workflow.getOrchestrationWorkflow() != null) {
+      List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+      if (userVariables != null) {
+        wrkflowVariableNames = userVariables.stream().map(variable -> variable.getName()).collect(toSet());
+      }
+    }
+    if (!pseWkflwVariableNames.containsAll(wrkflowVariableNames)) {
+      pipelineStageElement.setValid(false);
+      pipelineStageElement.setValidationMessage("Workflow variables updated or deleted");
+      invalidWorkflows.add(workflow.getName());
+    }
+  }
+
+  private List<Service> getServices(Workflow workflow, List<String> serviceIds) {
+    if (CollectionUtils.isNotEmpty(serviceIds)) {
+      PageRequest<Service> pageRequest = aPageRequest()
+                                             .withLimit(UNLIMITED)
+                                             .addFilter("appId", EQ, workflow.getAppId())
+                                             .addFilter("uuid", IN, serviceIds.toArray())
+                                             .build();
+      return serviceResourceService.list(pageRequest, false, false);
+    }
+    return new ArrayList<>();
+  }
   @Override
   public Pipeline createPipeline(Pipeline pipeline) {
     validatePipeline(pipeline);
