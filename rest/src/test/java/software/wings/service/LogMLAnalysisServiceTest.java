@@ -111,7 +111,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         .thenReturn(new ElkDelegateServiceImpl());
     Whitebox.setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
     ElkConfig elkConfig = new ElkConfig();
-    elkConfig.setUrl("http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
+    elkConfig.setElkUrl("http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
     elkConfig.setElkConnector(ElkConnector.KIBANA_SERVER);
     String version = elkAnalysisService.getVersion(accountId, elkConfig);
     assertEquals("5.5.2", version);
