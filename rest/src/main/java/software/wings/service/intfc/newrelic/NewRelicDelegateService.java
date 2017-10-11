@@ -9,7 +9,9 @@ import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -28,7 +30,8 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_METRICES_DATA)
   NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      List<String> metricNames, long fromTime, long toTime) throws IOException;
+      Collection<String> metricNames, long fromTime, long toTime) throws IOException;
 
-  List<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId) throws IOException;
+  Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
+      throws IOException;
 }
