@@ -30,7 +30,9 @@ public class Pipeline extends Base {
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
-  @Transient private List<WorkflowDetails> workflowDetails = new ArrayList<>();
+  @Transient private boolean valid = true;
+  @Transient private String validationMessage;
+  @Transient private boolean templatized = false;
 
   /**
    * Gets state eta map.
@@ -104,20 +106,28 @@ public class Pipeline extends Base {
     this.pipelineStages = pipelineStages;
   }
 
-  /**
-   * Get workflow variables
-   * @return
-   */
-  public List<WorkflowDetails> getWorkflowDetails() {
-    return workflowDetails;
+  public boolean isValid() {
+    return valid;
   }
 
-  /**
-   * Set workflow variables
-   * @param workflowDetails
-   */
-  public void setWorkflowDetails(List<WorkflowDetails> workflowDetails) {
-    this.workflowDetails = workflowDetails;
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public String getValidationMessage() {
+    return validationMessage;
+  }
+
+  public void setValidationMessage(String validationMessage) {
+    this.validationMessage = validationMessage;
+  }
+
+  public boolean isTemplatized() {
+    return templatized;
+  }
+
+  public void setTemplatized(boolean templatized) {
+    this.templatized = templatized;
   }
 
   @Override

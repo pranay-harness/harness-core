@@ -1528,7 +1528,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (serviceIds.size() != 0) {
       return getServices(workflow, serviceIds);
     } else {
-      logger.info("No services resolved for templatized workflow id {} and workflow execution {]", workflow.getUuid(),
+      logger.info("No services resolved for templatized workflow id {} and workflow execution {}", workflow.getUuid(),
           workflowExecution);
       return null;
     }

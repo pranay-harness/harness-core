@@ -22,6 +22,15 @@ public interface PipelineService {
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest);
 
   /**
+   * List pipelines page response.
+   *
+   * @param pageRequest the page request
+   * @param withDetails with details
+   * @return the page response
+   */
+  PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails);
+
+  /**
    * Read pipeline pipeline.
    *
    * @param appId        the app id

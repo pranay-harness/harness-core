@@ -67,7 +67,7 @@ public class PipelineResource {
   @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<Pipeline> pageRequest) {
-    return new RestResponse<>(pipelineService.listPipelines(pageRequest));
+    return new RestResponse<>(pipelineService.listPipelines(pageRequest, true));
   }
 
   /**
