@@ -258,8 +258,6 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
         serviceTemplate, aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList);
     verify(query).field("infraMappingId");
     verify(end).equal(INFRA_MAPPING_ID);
-    verify(query).field("hostId");
-    verify(end).equal("NEW_HOST_ID");
     verify(query).field("hostName");
     verify(query).field("publicDns");
     verify(end, times(2)).equal(HOST_NAME);
