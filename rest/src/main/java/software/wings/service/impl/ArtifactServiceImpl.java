@@ -298,12 +298,15 @@ public class ArtifactServiceImpl implements ArtifactService {
         .forEach(artifact -> delete(appId, artifact.getUuid()));
   }
 
-  public Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId) {
+  public Artifact fetchLatestArtifactForArtifactStream(
+      String appId, String artifactStreamId, String artifactSourceName) {
     return wingsPersistence.createQuery(Artifact.class)
         .field("appId")
         .equal(appId)
         .field("artifactStreamId")
         .equal(artifactStreamId)
+        .field("artifactSourceName")
+        .equal(artifactSourceName)
         .order("-createdAt")
         .field("status")
         .hasAnyOf(Arrays.asList(RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))

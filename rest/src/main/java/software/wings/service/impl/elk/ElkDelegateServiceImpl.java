@@ -159,7 +159,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   private Retrofit createRetrofit(ElkConfig elkConfig) {
     OkHttpClient.Builder httpClient =
-        elkConfig.getUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
+        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
     httpClient
         .addInterceptor(chain -> {
           Request original = chain.request();
@@ -184,7 +184,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS);
 
-    String baseUrl = elkConfig.getUrl();
+    String baseUrl = elkConfig.getElkUrl();
     if (baseUrl.charAt(baseUrl.length() - 1) != '/') {
       baseUrl = baseUrl + "/";
     }

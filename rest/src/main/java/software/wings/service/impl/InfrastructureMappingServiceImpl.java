@@ -389,7 +389,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return syncHostsAndUpdateInstances(infrastructureMapping, hosts)
         .stream()
         .filter(serviceInstance -> !selectionParams.getExcludedServiceInstanceIds().contains(serviceInstance.getUuid()))
-        .limit(selectionParams.getCount())
+        .limit(selectionParams.isSelectSpecificHosts() ? selectionParams.getHostNames().size()
+                                                       : selectionParams.getCount())
         .collect(Collectors.toList());
   }
 
