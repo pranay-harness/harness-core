@@ -109,7 +109,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
-    infrastructureMappingService.delete(appId, envId, infraMappingId);
+    infrastructureMappingService.delete(appId, infraMappingId);
     return new RestResponse();
   }
 

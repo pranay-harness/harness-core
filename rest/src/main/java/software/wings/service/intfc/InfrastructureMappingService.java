@@ -62,19 +62,17 @@ public interface InfrastructureMappingService {
    * Delete.
    *
    * @param appId          the app id
-   * @param envId          the env id
    * @param infraMappingId the infra mapping id
    */
-  void delete(String appId, String envId, String infraMappingId);
+  void delete(String appId, String infraMappingId);
 
   /**
    * Delete by service template.
    *
    * @param appId             the app id
-   * @param envId             the env id
    * @param serviceTemplateId the service template id
    */
-  void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId);
+  void deleteByServiceTemplate(String appId, String serviceTemplateId);
 
   /**
    * Gets infra mapping stencils.

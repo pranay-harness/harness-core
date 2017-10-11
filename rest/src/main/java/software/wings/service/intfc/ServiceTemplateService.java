@@ -80,10 +80,9 @@ public interface ServiceTemplateService {
    * Delete.
    *
    * @param appId             the app id
-   * @param envId             the env id
    * @param serviceTemplateId the service template id
    */
-  void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId);
+  void delete(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
 
   /**
    * Gets the.

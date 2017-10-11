@@ -75,7 +75,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -124,7 +123,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WorkflowService workflowService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
@@ -436,13 +434,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public void delete(String appId, String serviceId) {
+    delete(appId, serviceId, false);
+  }
+
+  private void delete(String appId, String serviceId, boolean forceDelete) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
       return;
     }
 
-    // Ensure service is safe to delete
-    ensureServiceSafeToDelete(service);
+    if (!forceDelete) {
+      // Ensure service is safe to delete
+      ensureServiceSafeToDelete(service);
+    }
 
     // safe to delete
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
@@ -569,7 +573,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .field("appId")
         .equal(appId)
         .asList()
-        .forEach(service -> delete(appId, service.getUuid()));
+        .forEach(service -> delete(appId, service.getUuid(), true));
   }
 
   @Override
