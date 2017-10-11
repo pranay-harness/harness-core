@@ -10,9 +10,9 @@ import java.util.Collection;
  * Created by rsingh on 9/29/17.
  */
 public interface KmsService {
-  EncryptedData encrypt(char[] value, KmsConfig kmsConfig);
+  EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig);
 
-  char[] decrypt(EncryptedData data, KmsConfig kmsConfig);
+  char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig);
 
   KmsConfig getKmsConfig(String accountId);
 

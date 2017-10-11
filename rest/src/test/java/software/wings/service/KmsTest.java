@@ -110,21 +110,21 @@ public class KmsTest extends WingsBaseTest {
   @Test
   public void localNullEncryption() throws Exception {
     final char[] keyToEncrypt = null;
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null);
+    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
     assertNull(encryptedData.getEncryptedValue());
     assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
 
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null);
+    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
     assertNull(decryptedValue);
   }
 
   @Test
   public void localEncryption() throws Exception {
     final String keyToEncrypt = UUID.randomUUID().toString();
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null);
+    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
     assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
 
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, null);
+    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, null);
     assertEquals(keyToEncrypt, new String(decryptedValue));
   }
 
@@ -132,11 +132,11 @@ public class KmsTest extends WingsBaseTest {
   public void kmsNullEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final char[] keyToEncrypt = null;
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, kmsConfig);
+    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
     assertNull(encryptedData.getEncryptedValue());
     assertFalse(StringUtils.isBlank(encryptedData.getEncryptionKey()));
 
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, kmsConfig);
+    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
     assertNull(decryptedValue);
   }
 
@@ -144,10 +144,11 @@ public class KmsTest extends WingsBaseTest {
   public void kmsEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
-    final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), kmsConfig);
+    final EncryptedData encryptedData =
+        kmsService.encrypt(keyToEncrypt.toCharArray(), UUID.randomUUID().toString(), kmsConfig);
     assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
 
-    final char[] decryptedValue = kmsService.decrypt(encryptedData, kmsConfig);
+    final char[] decryptedValue = kmsService.decrypt(encryptedData, null, kmsConfig);
     assertEquals(keyToEncrypt, new String(decryptedValue));
   }
 

@@ -43,12 +43,11 @@ public class KmsServiceImpl implements KmsService {
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
 
   @Override
-  public EncryptedData encrypt(char[] value, KmsConfig kmsConfig) {
+  public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
     if (kmsConfig == null) {
       return encryptLocal(value);
     }
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(kmsConfig.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
     } catch (Exception e) {
@@ -57,12 +56,11 @@ public class KmsServiceImpl implements KmsService {
   }
 
   @Override
-  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) {
+  public char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig) {
     if (kmsConfig == null) {
       return decryptLocal(data);
     }
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(kmsConfig.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
@@ -104,26 +102,26 @@ public class KmsServiceImpl implements KmsService {
 
   private char[] decryptKey(char[] key) {
     final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, new String(key));
-    return decrypt(encryptedData, null);
+    return decrypt(encryptedData, null, null);
   }
 
   @Override
   public boolean saveKmsConfig(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
 
-    EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), null);
+    EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
     accessKeyData.setAccountId(accountId);
     accessKeyData.setType(SettingVariableTypes.KMS);
     String accessKeyId = wingsPersistence.save(accessKeyData);
     kmsConfig.setAccessKey(accessKeyId);
 
-    EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), null);
+    EncryptedData secretKeyData = encrypt(kmsConfig.getSecretKey().toCharArray(), accountId, null);
     secretKeyData.setAccountId(accountId);
     secretKeyData.setType(SettingVariableTypes.KMS);
     String secretKeyId = wingsPersistence.save(secretKeyData);
     kmsConfig.setSecretKey(secretKeyId);
 
-    EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), null);
+    EncryptedData arnKeyData = encrypt(kmsConfig.getKmsArn().toCharArray(), accountId, null);
     arnKeyData.setAccountId(accountId);
     arnKeyData.setType(SettingVariableTypes.KMS);
     String arnKeyId = wingsPersistence.save(arnKeyData);
@@ -204,8 +202,8 @@ public class KmsServiceImpl implements KmsService {
     KmsConfig toConfig = getKmsConfig(accountId, toKmsId);
     Preconditions.checkNotNull(toConfig, "No kms found for account " + accountId + " with id " + entityId);
 
-    char[] decrypted = decrypt(encryptedData, fromConfig);
-    EncryptedData encrypted = encrypt(decrypted, toConfig);
+    char[] decrypted = decrypt(encryptedData, accountId, fromConfig);
+    EncryptedData encrypted = encrypt(decrypted, accountId, toConfig);
     encryptedData.setKmsId(toKmsId);
     encryptedData.setEncryptionKey(encrypted.getEncryptionKey());
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());

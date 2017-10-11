@@ -635,7 +635,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     final String accountId = object.getAccountId();
 
     final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
-    EncryptedData encryptedData = kmsService.encrypt(secret, kmsConfig);
+    EncryptedData encryptedData = kmsService.encrypt(secret, accountId, kmsConfig);
     encryptedData.setAccountId(accountId);
     encryptedData.setType(object.getSettingType());
 
@@ -710,7 +710,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
             outputChars = encryption.decryptChars(input);
           } else {
             final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
-            outputChars = kmsService.decrypt(encryptedData, kmsConfig);
+            outputChars = kmsService.decrypt(encryptedData, accountId, kmsConfig);
           }
 
           // This is a quirk of Mongo where if we insert a char[] and then retrieve it, it's wrapped
