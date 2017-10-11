@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -48,16 +47,18 @@ public class ServiceVariableResourceTest {
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
 
-  private static final ServiceVariable SERVICE_VARIABLE = aServiceVariable()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withUuid(WingsTestConstants.SERVICE_VARIABLE_ID)
-                                                              .withEntityType(EntityType.ENVIRONMENT)
-                                                              .withEntityId(TEMPLATE_ID)
-                                                              .withTemplateId(TEMPLATE_ID)
-                                                              .withType(Type.TEXT)
-                                                              .withValue("8080".toCharArray())
+  private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
+                                                              .envId(ENV_ID)
+                                                              .entityType(EntityType.ENVIRONMENT)
+                                                              .entityId(TEMPLATE_ID)
+                                                              .templateId(TEMPLATE_ID)
+                                                              .type(Type.TEXT)
+                                                              .value("8080".toCharArray())
                                                               .build();
+  static {
+    SERVICE_VARIABLE.setUuid(WingsTestConstants.SERVICE_VARIABLE_ID);
+    SERVICE_VARIABLE.setAppId(APP_ID);
+  }
 
   /**
    * Should list variables.

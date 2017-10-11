@@ -330,19 +330,19 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    final ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                                .withTemplateId(UUID.randomUUID().toString())
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withEntityType(EntityType.APPLICATION)
-                                                .withEntityId(UUID.randomUUID().toString())
-                                                .withParentServiceVariableId(UUID.randomUUID().toString())
-                                                .withOverrideType(OverrideType.ALL)
-                                                .withInstances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .withExpression(UUID.randomUUID().toString())
-                                                .withAccountId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .withValue(UUID.randomUUID().toString().toCharArray())
-                                                .withType(Type.ENCRYPTED_TEXT)
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(UUID.randomUUID().toString())
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
@@ -359,19 +359,19 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    final ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                                .withTemplateId(UUID.randomUUID().toString())
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withEntityType(EntityType.APPLICATION)
-                                                .withEntityId(UUID.randomUUID().toString())
-                                                .withParentServiceVariableId(UUID.randomUUID().toString())
-                                                .withOverrideType(OverrideType.ALL)
-                                                .withInstances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .withExpression(UUID.randomUUID().toString())
-                                                .withAccountId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .withValue(UUID.randomUUID().toString().toCharArray())
-                                                .withType(Type.ENCRYPTED_TEXT)
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(UUID.randomUUID().toString())
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
@@ -626,7 +626,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void transitionKms() throws IOException, InterruptedException {
-    startTransitionListener();
+    Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
@@ -698,12 +698,14 @@ public class KmsTest extends WingsBaseTest {
     for (SettingAttribute settingAttribute : attributeQuery) {
       assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
     }
+
+    stopTransitionListener(listenerThread);
   }
 
   @Test
   @RealMongo
   public void transitionAndDeleteKms() throws IOException, InterruptedException {
-    startTransitionListener();
+    Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
@@ -756,6 +758,7 @@ public class KmsTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
+    stopTransitionListener(listenerThread);
   }
 
   private KmsConfig getKmsConfig() throws IOException {
@@ -767,7 +770,7 @@ public class KmsTest extends WingsBaseTest {
     return kmsConfig;
   }
 
-  private void startTransitionListener() {
+  private Thread startTransitionListener() {
     Whitebox.setInternalState(kmsService, "transitionKmsQueue", transitionKmsQueue);
     final KmsTransitionEventListener transitionEventListener = new KmsTransitionEventListener();
     Whitebox.setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
@@ -775,7 +778,11 @@ public class KmsTest extends WingsBaseTest {
     Whitebox.setInternalState(transitionEventListener, "kmsService", kmsService);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
-
     eventListenerThread.start();
+    return eventListenerThread;
+  }
+
+  private void stopTransitionListener(Thread thread) {
+    thread.interrupt();
   }
 }

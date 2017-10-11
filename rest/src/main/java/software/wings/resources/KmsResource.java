@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -11,7 +13,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.security.KmsService;
 
 import java.util.Collection;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
