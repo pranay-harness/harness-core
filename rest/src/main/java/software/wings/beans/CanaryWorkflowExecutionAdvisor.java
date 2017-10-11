@@ -7,6 +7,11 @@ import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
+import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.StateType.SUB_WORKFLOW;
 
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -166,6 +171,12 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       case MANUAL_INTERVENTION: {
+        if (REPEAT.name().equals(state.getStateType()) || FORK.name().equals(state.getStateType())
+            || PHASE.name().equals(state.getStateType()) || PHASE_STEP.name().equals(state.getStateType())
+            || SUB_WORKFLOW.name().equals(state.getStateType())) {
+          return null;
+        }
+
         Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state);
         return anExecutionEventAdvice()
             .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
@@ -199,7 +210,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         String stateType = executionEvent.getState().getStateType();
         if (stateType.equals(StateType.PHASE.name()) || stateType.equals(StateType.PHASE_STEP.name())
             || stateType.equals(StateType.SUB_WORKFLOW.name()) || stateType.equals(StateType.FORK.name())
-            || stateType.equals(StateType.REPEAT.name())) {
+            || stateType.equals(REPEAT.name())) {
           // Retry is only at the leaf node
           FailureStrategy failureStrategyAfterRetry =
               aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
