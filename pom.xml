@@ -47,8 +47,8 @@
         <morphia.version>1.3.2</morphia.version>
     </properties>
 
-    <repositories>
-        <repository>
+    <pluginRepositories>
+        <pluginRepository>
             <id>oss-sonatype</id>
             <name>oss-sonatype</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
@@ -56,7 +56,9 @@
                 <updatePolicy>daily</updatePolicy>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
+        </pluginRepository>
+    </pluginRepositories>
+    <repositories>
         <repository>
             <id>spring-io</id>
             <url>http://repo.spring.io/plugins-release/</url>
@@ -1125,7 +1127,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.9</version>
+                    <version>0.7.10-SNAPSHOT</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
