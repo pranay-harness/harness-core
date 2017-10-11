@@ -6,19 +6,25 @@ import lombok.Data;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateType;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/4/16.
  */
 @Data
-public class NewRelicExecutionData extends StateExecutionData {
+public class MetricAnalysisExecutionData extends StateExecutionData {
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
   private String correlationId;
+  private String workflowExecutionId;
   private String stateExecutionInstanceId;
   private String serverConfigId;
   private int timeDuration;
@@ -40,12 +46,12 @@ public class NewRelicExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "errorMsg",
         anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
-    final int total = timeDuration + 1;
+    final int total = timeDuration;
     putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
-    int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
-    if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
-      elapsedMinutes = 0;
-    }
+    final NewRelicMetricAnalysisRecord analysisRecord = metricDataAnalysisService.getMetricsAnalysis(
+        StateType.valueOf(getStateType()), stateExecutionInstanceId, workflowExecutionId);
+
+    int elapsedMinutes = analysisRecord == null ? 0 : analysisRecord.getAnalysisMinute();
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case FAILED:
@@ -70,6 +76,7 @@ public class NewRelicExecutionData extends StateExecutionData {
    */
   public static final class Builder {
     private String correlationId;
+    private String workflowExecutionId;
     private String stateExecutionInstanceId;
     private String serverConfigId;
     private int timeDuration;
@@ -85,6 +92,11 @@ public class NewRelicExecutionData extends StateExecutionData {
 
     public static Builder anAnanlysisExecutionData() {
       return new Builder();
+    }
+
+    public Builder withWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
+      return this;
     }
 
     public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
@@ -194,20 +206,21 @@ public class NewRelicExecutionData extends StateExecutionData {
      *
      * @return the app dynamics execution data
      */
-    public NewRelicExecutionData build() {
-      NewRelicExecutionData newRelicExecutionData = new NewRelicExecutionData();
-      newRelicExecutionData.setCorrelationId(correlationId);
-      newRelicExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
-      newRelicExecutionData.setServerConfigId(serverConfigId);
-      newRelicExecutionData.setTimeDuration(timeDuration);
-      newRelicExecutionData.setStateName(stateName);
-      newRelicExecutionData.setStartTs(startTs);
-      newRelicExecutionData.setEndTs(endTs);
-      newRelicExecutionData.setStatus(status);
-      newRelicExecutionData.setErrorMsg(errorMsg);
-      newRelicExecutionData.setCanaryNewHostNames(canaryNewHostNames);
-      newRelicExecutionData.setLastExecutionNodes(lastExecutionNodes);
-      return newRelicExecutionData;
+    public MetricAnalysisExecutionData build() {
+      MetricAnalysisExecutionData metricAnalysisExecutionData = new MetricAnalysisExecutionData();
+      metricAnalysisExecutionData.setCorrelationId(correlationId);
+      metricAnalysisExecutionData.setWorkflowExecutionId(workflowExecutionId);
+      metricAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
+      metricAnalysisExecutionData.setServerConfigId(serverConfigId);
+      metricAnalysisExecutionData.setTimeDuration(timeDuration);
+      metricAnalysisExecutionData.setStateName(stateName);
+      metricAnalysisExecutionData.setStartTs(startTs);
+      metricAnalysisExecutionData.setEndTs(endTs);
+      metricAnalysisExecutionData.setStatus(status);
+      metricAnalysisExecutionData.setErrorMsg(errorMsg);
+      metricAnalysisExecutionData.setCanaryNewHostNames(canaryNewHostNames);
+      metricAnalysisExecutionData.setLastExecutionNodes(lastExecutionNodes);
+      return metricAnalysisExecutionData;
     }
   }
 }
