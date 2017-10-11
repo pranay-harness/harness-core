@@ -22,7 +22,7 @@ public interface KmsService {
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 
-  void transitionKms(String accountId, String fromKmsId, String toKmsId);
+  boolean transitionKms(String accountId, String fromKmsId, String toKmsId);
 
   void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId);
 }

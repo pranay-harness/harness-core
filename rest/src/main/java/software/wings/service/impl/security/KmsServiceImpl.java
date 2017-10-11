@@ -176,7 +176,7 @@ public class KmsServiceImpl implements KmsService {
   }
 
   @Override
-  public void transitionKms(String accountId, String fromKmsId, String toKmsId) {
+  public boolean transitionKms(String accountId, String fromKmsId, String toKmsId) {
     Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                         .field("accountId")
                                         .equal(accountId)
@@ -192,6 +192,7 @@ public class KmsServiceImpl implements KmsService {
                                   .toKmsId(toKmsId)
                                   .build());
     }
+    return true;
   }
 
   @Override
