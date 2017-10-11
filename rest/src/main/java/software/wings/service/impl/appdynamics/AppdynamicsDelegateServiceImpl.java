@@ -45,7 +45,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId) throws IOException {
+  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
     final Call<List<AppdynamicsTier>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listTiers(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
@@ -59,7 +59,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId)
+  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
       throws IOException {
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)

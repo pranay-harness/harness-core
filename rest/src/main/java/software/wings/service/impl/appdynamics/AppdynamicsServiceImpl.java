@@ -50,7 +50,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsTier> getTiers(String settingId, int appdynamicsAppId) throws IOException {
+  public List<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
@@ -59,7 +59,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(String settingId, int appdynamicsAppId, int tierId) throws IOException {
+  public List<AppdynamicsNode> getNodes(String settingId, long appdynamicsAppId, long tierId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
@@ -91,7 +91,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(
-      String settingId, int appdynamicsAppId, int tierId, String btName, int durantionInMinutes) throws IOException {
+      String settingId, long appdynamicsAppId, long tierId, String btName, int durantionInMinutes) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();

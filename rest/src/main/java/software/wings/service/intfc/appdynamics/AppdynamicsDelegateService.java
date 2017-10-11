@@ -21,10 +21,10 @@ public interface AppdynamicsDelegateService {
   List<NewRelicApplication> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
-  List<AppdynamicsTier> getTiers(AppDynamicsConfig value, int appdynamicsAppId) throws IOException;
+  List<AppdynamicsTier> getTiers(AppDynamicsConfig value, long appdynamicsAppId) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_NODES_TASK)
-  List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId)
+  List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
       throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
