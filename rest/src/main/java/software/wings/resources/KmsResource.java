@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.Base;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.UuidAware;
@@ -28,6 +29,15 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class KmsResource {
   @Inject private KmsService kmsService;
+
+  @POST
+  @Path("/save-global-kms")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveGlobalKmsConfig(
+      @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
+    return new RestResponse<>(kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig));
+  }
 
   @POST
   @Path("/save-kms")
