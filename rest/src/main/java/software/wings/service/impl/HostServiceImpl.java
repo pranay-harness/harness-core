@@ -96,6 +96,8 @@ public class HostServiceImpl implements HostService {
                                .equal(appHost.getServiceTemplateId())
                                .field("hostName")
                                .equal(appHost.getHostName())
+                               .field("publicDns")
+                               .equal(appHost.getPublicDns())
                                .field("appId")
                                .equal(appHost.getAppId())
                                .field("envId")

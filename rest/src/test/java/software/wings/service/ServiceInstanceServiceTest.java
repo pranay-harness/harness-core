@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -257,8 +258,11 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
         serviceTemplate, aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList);
     verify(query).field("infraMappingId");
     verify(end).equal(INFRA_MAPPING_ID);
+    verify(query).field("hostId");
+    verify(end).equal("NEW_HOST_ID");
     verify(query).field("hostName");
-    verify(end).equal(HOST_NAME);
+    verify(query).field("publicDns");
+    verify(end, times(2)).equal(HOST_NAME);
     verify(wingsPersistence)
         .saveAndGet(ServiceInstance.class,
             aServiceInstance()

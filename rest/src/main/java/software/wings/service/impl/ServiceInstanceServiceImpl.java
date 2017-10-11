@@ -72,8 +72,12 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
           ServiceInstance serviceInstance = wingsPersistence.createQuery(ServiceInstance.class)
                                                 .field("infraMappingId")
                                                 .equal(infraMapping.getUuid())
+                                                .field("hostId")
+                                                .equal(host.getUuid())
                                                 .field("hostName")
                                                 .equal(host.getHostName())
+                                                .field("publicDns")
+                                                .equal(host.getPublicDns())
                                                 .get();
           return serviceInstance != null ? serviceInstance
                                          : wingsPersistence.saveAndGet(ServiceInstance.class,
