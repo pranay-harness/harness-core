@@ -514,30 +514,4 @@ public class BambooServiceImpl implements BambooService {
     }
     return jobKeys;
   }
-
-  public static void main(String... args) throws Exception {
-    String url = "http:/dv0127d.chicago.cme.com:8085/"; //"https://127.0.0.1:8000"; //;
-
-    //  url = "https://localhost:8000";
-
-    BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                    .withBambooUrl(url)
-                                    .withUsername("wingsbuild")
-                                    .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
-                                    .build();
-    BambooServiceImpl bambooService = new BambooServiceImpl();
-
-    bambooService.isRunning(bambooConfig);
-    // Get all Plan Keys
-    // Map<String, String> planKeys = bambooService.getPlanKeys(bambooConfig);
-
-    // planKeys.forEach((s, s2) -> System.out.println("s = " + s));
-
-    // Trigger Plan
-    // bambooService.triggerPlan(bambooConfig, "TOD-TOD", new HashMap<>());
-    // Get the build status result
-    // System.out.println("bambooService status = " + bambooService.getBuildResultStatus(bambooConfig, "TOD-TOD-49"));
-
-    // System.out.println("bambooService result = " + bambooService.getBuildResult(bambooConfig, "TOD-TOD-49"));
-  }
 }

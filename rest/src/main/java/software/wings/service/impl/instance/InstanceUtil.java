@@ -64,14 +64,11 @@ public class InstanceUtil {
 
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
       KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
-      containerInstanceKey = ContainerInstanceKey.Builder.aContainerInstanceKey()
-                                 .withContainerId(kubernetesContainerInfo.getPodName())
-                                 .build();
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(kubernetesContainerInfo.getPodName()).build();
 
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
       EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
-      containerInstanceKey =
-          ContainerInstanceKey.Builder.aContainerInstanceKey().withContainerId(ecsContainerInfo.getTaskArn()).build();
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);

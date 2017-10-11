@@ -56,6 +56,6 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
         }
       }
     }
-    return ContainerSyncResponse.Builder.aContainerSyncResponse().withContainerInfoList(result).build();
+    return ContainerSyncResponse.builder().containerInfoList(result).build();
   }
 }
