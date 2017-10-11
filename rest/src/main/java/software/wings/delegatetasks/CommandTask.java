@@ -15,7 +15,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
-import software.wings.utils.Misc;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -40,7 +39,7 @@ public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionRe
   }
 
   private CommandExecutionResult run(Command command, CommandExecutionContext commandExecutionContext) {
-    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+    CommandExecutionStatus commandExecutionStatus;
     String errorMessage = null;
     try {
       commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
