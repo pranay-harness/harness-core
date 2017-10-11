@@ -13,6 +13,14 @@
 
     <repositories>
         <repository>
+            <id>oss-sonatype</id>
+            <name>oss-sonatype</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>localrepository</id>
             <url>file://${basedir}/../repo</url>
         </repository>
@@ -567,7 +575,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.16</version>
+            <version>1.16.18</version>
             <scope>provided</scope>
         </dependency>
 
@@ -867,7 +875,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.6.201602180812</version>
                 <configuration>
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
