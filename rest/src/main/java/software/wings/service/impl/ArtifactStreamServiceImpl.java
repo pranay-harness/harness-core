@@ -449,7 +449,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(actionId, streamId);
       return;
     }
-    Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
+    Artifact latestArtifact =
+        artifactService.fetchLatestArtifactForArtifactStream(appId, streamId, artifactStream.getSourceName());
     String latestArtifactBuildNo =
         (latestArtifact != null && latestArtifact.getMetadata().get(Constants.BUILD_NO) != null)
         ? latestArtifact.getMetadata().get(Constants.BUILD_NO)

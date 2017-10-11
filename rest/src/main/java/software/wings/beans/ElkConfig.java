@@ -27,7 +27,7 @@ public class ElkConfig extends SettingValue implements Encryptable {
   @DefaultValue("ELASTIC_SEARCH_SERVER")
   private ElkConnector elkConnector;
 
-  @Attributes(title = "URL", required = true) @NotEmpty private String url;
+  @Attributes(title = "URL", required = true) @NotEmpty private String elkUrl;
 
   @Attributes(title = "Username") private String username;
 

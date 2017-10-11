@@ -42,6 +42,8 @@ import javax.inject.Inject;
 public abstract class NodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
 
+  private List<String> hostNames;
+
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
   NodeSelectState(String name, String stateType) {
@@ -50,58 +52,66 @@ public abstract class NodeSelectState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    String appId = ((ExecutionContextImpl) context).getApp().getUuid();
+    try {
+      String appId = ((ExecutionContextImpl) context).getApp().getUuid();
 
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    String serviceId = phaseElement.getServiceElement().getUuid();
-    String infraMappingId = phaseElement.getInfraMappingId();
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      String serviceId = phaseElement.getServiceElement().getUuid();
+      String infraMappingId = phaseElement.getInfraMappingId();
 
-    List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
-    List<String> excludedServiceInstanceIds =
-        hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
+      List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
+      List<String> excludedServiceInstanceIds =
+          hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
 
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    ServiceInstanceSelectionParams.Builder selectionParams =
-        aServiceInstanceSelectionParams()
-            .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-            .withSelectSpecificHosts(isSpecificHosts());
-    int totalAvailableInstances = infrastructureMappingService.listHostNames(appId, infraMappingId).size();
-    int instancesToAdd;
-    if (isSpecificHosts()) {
-      if (infrastructureMapping instanceof AwsInfrastructureMapping
-          && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-        throw new WingsException(
-            ErrorCode.INVALID_ARGUMENT, "args", "Cannot specify hosts when using an auto scale group");
+      InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+      ServiceInstanceSelectionParams.Builder selectionParams =
+          aServiceInstanceSelectionParams()
+              .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
+              .withSelectSpecificHosts(isSpecificHosts());
+      int totalAvailableInstances = infrastructureMappingService.listHostNames(appId, infraMappingId).size();
+      int instancesToAdd;
+      if (isSpecificHosts()) {
+        if (infrastructureMapping instanceof AwsInfrastructureMapping
+            && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
+          throw new WingsException(
+              ErrorCode.INVALID_ARGUMENT, "args", "Cannot specify hosts when using an auto scale group");
+        }
+        selectionParams.withHostNames(getHostNames());
+        instancesToAdd = getHostNames().size();
+        logger.info("Selecting specific hosts: {}", getHostNames());
+      } else {
+        instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
       }
-      selectionParams.withHostNames(getHostNames());
-      instancesToAdd = getHostNames().size();
-      logger.info("Selecting specific hosts: {}", getHostNames());
-    } else {
-      instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
+      selectionParams.withCount(instancesToAdd);
+
+      logger.info(
+          "Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
+      List<ServiceInstance> serviceInstances =
+          infrastructureMappingService.selectServiceInstances(appId, infraMappingId, selectionParams.build());
+
+      String errorMessage = buildServiceInstancesErrorMessage(
+          serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);
+
+      if (isNotEmpty(errorMessage)) {
+        return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
+      }
+
+      SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
+      selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+      List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
+      ContextElement serviceIdParamElement =
+          aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
+      return anExecutionResponse()
+          .addContextElement(serviceIdParamElement)
+          .addNotifyElement(serviceIdParamElement)
+          .withStateExecutionData(selectedNodeExecutionData)
+          .build();
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.warn(e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
     }
-    selectionParams.withCount(instancesToAdd);
-
-    logger.info("Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(appId, infraMappingId, selectionParams.build());
-
-    String errorMessage = buildServiceInstancesErrorMessage(
-        serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances);
-
-    if (isNotEmpty(errorMessage)) {
-      return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
-    }
-
-    SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-    selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
-    List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-    ContextElement serviceIdParamElement =
-        aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
-    return anExecutionResponse()
-        .addContextElement(serviceIdParamElement)
-        .addNotifyElement(serviceIdParamElement)
-        .withStateExecutionData(selectedNodeExecutionData)
-        .build();
   }
 
   private int getCumulativeTotal(int maxInstances) {
@@ -191,11 +201,17 @@ public abstract class NodeSelectState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  public List<String> getHostNames() {
+    return hostNames;
+  }
+
+  public void setHostNames(List<String> hostNames) {
+    this.hostNames = hostNames;
+  }
+
   public abstract boolean isSpecificHosts();
 
   public abstract int getInstanceCount();
 
   public abstract InstanceUnitType getInstanceUnitType();
-
-  public abstract List<String> getHostNames();
 }

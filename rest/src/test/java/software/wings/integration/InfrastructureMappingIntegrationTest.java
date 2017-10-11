@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
@@ -101,19 +102,13 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
         (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping);
 
     assertThat(infrastructureMapping.getHostNames()).containsExactlyInAnyOrder("host1", "host2");
-    assertThat(serviceInstanceService.list(new PageRequest<>())
-                   .getResponse()
-                   .stream()
-                   .map(ServiceInstance::getHostName)
-                   .collect(Collectors.toList()))
-        .containsExactlyInAnyOrder("host1", "host2");
 
     // Setup done. Two Host and Two service instances
 
     // Test specific host
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(app.getUuid(), infrastructureMapping.getUuid(),
-            aServiceInstanceSelectionParams().withSelectSpecificHosts(true).withHostNames(asList("host1")).build());
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(),
+        infrastructureMapping.getUuid(),
+        aServiceInstanceSelectionParams().withSelectSpecificHosts(true).withHostNames(singletonList("host1")).build());
 
     assertThat(serviceInstances).hasSize(1).extracting(ServiceInstance::getHostName).containsExactlyInAnyOrder("host1");
 
@@ -136,7 +131,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             aServiceInstanceSelectionParams()
                 .withSelectSpecificHosts(false)
                 .withCount(2)
-                .withExcludedServiceInstanceIds(asList(allServiceInstances.get(0).getUuid()))
+                .withExcludedServiceInstanceIds(singletonList(allServiceInstances.get(0).getUuid()))
                 .build());
     assertThat(serviceInstances).hasSize(1).containsExactly(allServiceInstances.get(1));
 
@@ -146,7 +141,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             aServiceInstanceSelectionParams()
                 .withSelectSpecificHosts(false)
                 .withCount(2)
-                .withExcludedServiceInstanceIds(asList(allServiceInstances.get(1).getUuid()))
+                .withExcludedServiceInstanceIds(singletonList(allServiceInstances.get(1).getUuid()))
                 .build());
     assertThat(serviceInstances).hasSize(1).containsExactly(allServiceInstances.get(0));
 

@@ -136,7 +136,8 @@ public class ArtifactCollectionJob implements Job {
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       logger.info("Latest version in Nexus server {}", latestVersion);
       if (latestVersion != null) {
-        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
+            appId, artifactStreamId, artifactStream.getSourceName());
         String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
             ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
             : "";
@@ -229,8 +230,8 @@ public class ArtifactCollectionJob implements Job {
             buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
         logger.info("Latest version in artifactory server {}", latestVersion);
         if (latestVersion != null) {
-          Artifact lastCollectedArtifact =
-              artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+          Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
+              appId, artifactStreamId, artifactStream.getSourceName());
           String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
               ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
               : "";
@@ -292,7 +293,8 @@ public class ArtifactCollectionJob implements Job {
       BuildDetails lastSuccessfulBuild =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (lastSuccessfulBuild != null) {
-        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+        Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
+            appId, artifactStreamId, artifactStream.getSourceName());
         int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
             ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
             : 0;
