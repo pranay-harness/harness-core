@@ -28,6 +28,8 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new jenkins config.
    */
@@ -35,11 +37,13 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.JENKINS.name());
   }
 
-  public JenkinsConfig(String jenkinsUrl, String username, char[] password, String accountId) {
+  public JenkinsConfig(
+      String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.JENKINS.name());
     this.jenkinsUrl = jenkinsUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

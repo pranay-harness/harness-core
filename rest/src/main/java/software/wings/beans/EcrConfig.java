@@ -42,6 +42,8 @@ public class EcrConfig extends SettingValue implements Encryptable {
   private String region;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedSecretKey;
+
   /**
    * Instantiates a new ECR registry config.
    */
@@ -49,12 +51,14 @@ public class EcrConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.ECR.name());
   }
 
-  public EcrConfig(String ecrUrl, String accessKey, char[] secretKey, String region, String accountId) {
+  public EcrConfig(
+      String ecrUrl, String accessKey, char[] secretKey, String region, String accountId, String encryptedSecretKey) {
     this();
     this.ecrUrl = ecrUrl;
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
     this.accountId = accountId;
+    this.encryptedSecretKey = encryptedSecretKey;
   }
 }

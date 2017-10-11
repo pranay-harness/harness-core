@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
@@ -21,6 +23,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
+@Data
 public class HostConnectionAttributes extends SettingValue implements Encryptable {
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
@@ -28,6 +31,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "User Name") private String userName;
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
+
+  @SchemaIgnore private String encryptedKey;
 
   /**
    * Instantiates a new host connection attributes.
@@ -43,126 +48,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
    */
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type.name());
-  }
-
-  /**
-   * Gets access type.
-   *
-   * @return the access type
-   */
-  public AccessType getAccessType() {
-    return accessType;
-  }
-
-  /**
-   * Sets access type.
-   *
-   * @param accessType the access type
-   */
-  public void setAccessType(AccessType accessType) {
-    this.accessType = accessType;
-  }
-
-  /**
-   * Gets connection type.
-   *
-   * @return the connection type
-   */
-  public ConnectionType getConnectionType() {
-    return connectionType;
-  }
-
-  /**
-   * Sets connection type.
-   *
-   * @param connectionType the connection type
-   */
-  public void setConnectionType(ConnectionType connectionType) {
-    this.connectionType = connectionType;
-  }
-
-  /**
-   * Gets key.
-   *
-   * @return the key
-   */
-  public char[] getKey() {
-    return key;
-  }
-
-  /**
-   * Sets key.
-   *
-   * @param key the key
-   */
-  public void setKey(char[] key) {
-    this.key = key;
-  }
-
-  /**
-   * Getter for property 'userName'.
-   *
-   * @return Value for property 'userName'.
-   */
-  public String getUserName() {
-    return userName;
-  }
-
-  /**
-   * Setter for property 'userName'.
-   *
-   * @param userName Value to set for property 'userName'.
-   */
-  public void setUserName(String userName) {
-    this.userName = userName;
-  }
-
-  @Override
-  @SchemaIgnore
-  public String getAccountId() {
-    return accountId;
-  }
-
-  @Override
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hash(accessType, connectionType, key, userName);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final HostConnectionAttributes other = (HostConnectionAttributes) obj;
-    return Objects.equals(this.accessType, other.accessType)
-        && Objects.equals(this.connectionType, other.connectionType) && Arrays.equals(this.key, other.key)
-        && Objects.equals(this.userName, other.userName);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("accessType", accessType)
-        .add("connectionType", connectionType)
-        .add("userName", userName)
-        .toString();
   }
 
   /**

@@ -36,6 +36,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedSecretKey;
+
   /**
    * Instantiates a new Elastic load balancer config.
    */
@@ -43,13 +45,14 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     super(SettingVariableTypes.ELB.name());
   }
 
-  public ElasticLoadBalancerConfig(
-      Regions region, String loadBalancerName, String accessKey, char[] secretKey, String accountId) {
+  public ElasticLoadBalancerConfig(Regions region, String loadBalancerName, String accessKey, char[] secretKey,
+      String accountId, String encryptedSecretKey) {
     this();
     this.region = region;
     this.loadBalancerName = loadBalancerName;
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.accountId = accountId;
+    this.encryptedSecretKey = encryptedSecretKey;
   }
 }

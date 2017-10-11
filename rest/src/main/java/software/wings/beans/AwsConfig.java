@@ -25,6 +25,7 @@ public class AwsConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId; // internal
 
+  @SchemaIgnore private String encryptedSecretKey;
   /**
    * Instantiates a new Aws config.
    */
@@ -32,10 +33,11 @@ public class AwsConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.AWS.name());
   }
 
-  public AwsConfig(String accessKey, char[] secretKey, String accountId) {
-    super(SettingVariableTypes.AWS.name());
+  public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey) {
+    this();
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.accountId = accountId;
+    this.encryptedSecretKey = encryptedSecretKey;
   }
 }

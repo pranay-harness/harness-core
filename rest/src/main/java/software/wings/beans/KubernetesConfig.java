@@ -30,6 +30,8 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   private String namespace;
   @NotEmpty @SchemaIgnore private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new setting value.
    */
@@ -38,7 +40,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   }
 
   public KubernetesConfig(String masterUrl, String username, char[] password, String caCert, String clientCert,
-      String clientKey, String namespace, String accountId) {
+      String clientKey, String namespace, String accountId, String encryptedPassword) {
     this();
     this.masterUrl = masterUrl;
     this.username = username;
@@ -48,5 +50,6 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
     this.clientKey = clientKey;
     this.namespace = namespace;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

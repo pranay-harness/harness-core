@@ -23,7 +23,6 @@ import software.wings.sm.StateType;
 @Data
 @Builder
 @ToString(exclude = "password")
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
@@ -35,6 +34,8 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new App dynamics config.
    */
@@ -42,13 +43,14 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
     super(StateType.APP_DYNAMICS.name());
   }
 
-  public AppDynamicsConfig(
-      String username, String accountname, char[] password, String controllerUrl, String accountId) {
-    super(StateType.APP_DYNAMICS.name());
+  public AppDynamicsConfig(String username, String accountname, char[] password, String controllerUrl, String accountId,
+      String encryptedPassword) {
+    this();
     this.username = username;
     this.accountname = accountname;
     this.password = password;
     this.controllerUrl = controllerUrl;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

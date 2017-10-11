@@ -28,6 +28,8 @@ public class SmtpConfig extends SettingValue implements Encryptable {
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new smtp config.
    */
@@ -35,8 +37,8 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.SMTP.name());
   }
 
-  public SmtpConfig(
-      String host, int port, String fromAddress, boolean useSSL, String username, char[] password, String accountId) {
+  public SmtpConfig(String host, int port, String fromAddress, boolean useSSL, String username, char[] password,
+      String accountId, String encryptedPassword) {
     this();
     this.host = host;
     this.port = port;
@@ -45,5 +47,6 @@ public class SmtpConfig extends SettingValue implements Encryptable {
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

@@ -29,15 +29,19 @@ public class ArtifactoryConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   public ArtifactoryConfig() {
     super(SettingVariableTypes.ARTIFACTORY.name());
   }
 
-  public ArtifactoryConfig(String artifactoryUrl, String username, char[] password, String accountId) {
-    super(SettingVariableTypes.ARTIFACTORY.name());
+  public ArtifactoryConfig(
+      String artifactoryUrl, String username, char[] password, String accountId, String encryptedPassword) {
+    this();
     this.artifactoryUrl = artifactoryUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

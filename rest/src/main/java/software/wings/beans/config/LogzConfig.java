@@ -29,6 +29,7 @@ public class LogzConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedToken;
   /**
    * Instantiates a new Splunk config.
    */
