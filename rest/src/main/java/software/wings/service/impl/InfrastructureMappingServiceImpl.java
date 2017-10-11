@@ -268,6 +268,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validatePyInfraMapping((PhysicalInfrastructureMapping) infrastructureMapping);
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      updateOperations.set("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           ((CodeDeployInfrastructureMapping) infrastructureMapping);
