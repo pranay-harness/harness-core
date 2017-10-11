@@ -367,8 +367,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any(Boolean.class)))
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
-    when(artifactStreamService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(asList(aJenkinsArtifactStream().build())).build());
 
     Service clonedService = spyServiceResourceService.clone(
         APP_ID, SERVICE_ID, aService().withName("Clone Service").withDescription("clone description").build());
@@ -400,8 +398,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).save(any(ConfigFile.class), new BoundedInputStream(any(InputStream.class)));
     verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false);
     verify(serviceVariableService).save(any(ServiceVariable.class));
-    verify(artifactStreamService).list(any(PageRequest.class));
-    verify(artifactStreamService).create(any(ArtifactStream.class));
   }
 
   @Test
