@@ -16,7 +16,6 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.*;
@@ -97,13 +96,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   public void shouldGetServiceVariableExpressions() {
     when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
 
-    PageResponse<ServiceVariable> serviceVariables = aPageResponse()
-                                                         .withResponse(asList(aServiceVariable()
-                                                                                  .withName(SERVICE_VARIABLE_NAME)
-                                                                                  .withEntityId(SERVICE_ID)
-                                                                                  .withEntityType(SERVICE)
-                                                                                  .build()))
-                                                         .build();
+    PageResponse<ServiceVariable> serviceVariables =
+        aPageResponse()
+            .withResponse(asList(
+                ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityId(SERVICE_ID).entityType(SERVICE).build()))
+            .build();
     PageRequest<ServiceVariable> pageRequest = aPageRequest()
                                                    .withLimit(UNLIMITED)
                                                    .addFilter("appId", EQ, APP_ID)
@@ -120,13 +117,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceTemplateVariableExpressions() {
-    PageResponse<ServiceVariable> serviceVariables = aPageResponse()
-                                                         .withResponse(asList(aServiceVariable()
-                                                                                  .withName(SERVICE_VARIABLE_NAME)
-                                                                                  .withEntityId(SERVICE_ID)
-                                                                                  .withEntityType(SERVICE)
-                                                                                  .build()))
-                                                         .build();
+    PageResponse<ServiceVariable> serviceVariables =
+        aPageResponse()
+            .withResponse(asList(
+                ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityId(SERVICE_ID).entityType(SERVICE).build()))
+            .build();
     PageRequest<ServiceVariable> pageRequest = aPageRequest()
                                                    .withLimit(UNLIMITED)
                                                    .addFilter("appId", EQ, APP_ID)
@@ -161,7 +156,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     serviceVariables =
         aPageResponse()
             .withResponse(asList(
-                aServiceVariable().withName("ENV").withEntityId(TEMPLATE_ID).withEntityType(SERVICE_TEMPLATE).build()))
+                ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
             .build();
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
 
@@ -184,13 +179,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   public void shouldGetEnvironmentServiceVariableExpressions() {
     when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
 
-    PageResponse<ServiceVariable> serviceVariables = aPageResponse()
-                                                         .withResponse(asList(aServiceVariable()
-                                                                                  .withName(SERVICE_VARIABLE_NAME)
-                                                                                  .withEntityId(SERVICE_ID)
-                                                                                  .withEntityType(SERVICE)
-                                                                                  .build()))
-                                                         .build();
+    PageResponse<ServiceVariable> serviceVariables =
+        aPageResponse()
+            .withResponse(asList(
+                ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityId(SERVICE_ID).entityType(SERVICE).build()))
+            .build();
     PageRequest<ServiceVariable> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     pageRequest.addFilter("appId", APP_ID, EQ);
     pageRequest.addFilter("entityId", SERVICE_ID, EQ);

@@ -564,17 +564,18 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldStoreAndRetrieveEncryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
-    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                          .withAppId("myapp")
-                                          .withTemplateId(TEMPLATE_ID)
-                                          .withEnvId(ENV_ID)
-                                          .withEntityType(EntityType.SERVICE)
-                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
-                                          .withName("foo" + rand)
-                                          .withValue(password)
-                                          .withType(Type.ENCRYPTED_TEXT)
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.ENCRYPTED_TEXT)
                                           .build();
+    serviceVariable.setAppId("myapp");
+
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));
@@ -588,17 +589,18 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldStoreAndRetrieveUnencryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
-    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                          .withAppId("myapp")
-                                          .withTemplateId(TEMPLATE_ID)
-                                          .withEnvId(ENV_ID)
-                                          .withEntityType(EntityType.SERVICE)
-                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
-                                          .withName("foo" + rand)
-                                          .withValue(password)
-                                          .withType(Type.TEXT)
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.TEXT)
                                           .build();
+    serviceVariable.setAppId("myapp");
+
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));

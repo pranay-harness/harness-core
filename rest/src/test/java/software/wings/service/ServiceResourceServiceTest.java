@@ -25,7 +25,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
@@ -362,8 +361,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(asList(aConfigFile().withAppId(APP_ID).withUuid("CONFIG_FILE_ID").build()));
     when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
 
+    ServiceVariable serviceVariable = ServiceVariable.builder().build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
     when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false))
-        .thenReturn(asList(aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).build()));
+        .thenReturn(asList(serviceVariable));
 
     when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any(Boolean.class)))
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
