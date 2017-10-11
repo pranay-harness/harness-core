@@ -30,7 +30,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class Artifact extends Base {
   @Indexed private String artifactStreamId;
-  private String artifactSourceName;
+  @Indexed private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();
   @Indexed @NotEmpty private String displayName;
   @Indexed private String revision;
