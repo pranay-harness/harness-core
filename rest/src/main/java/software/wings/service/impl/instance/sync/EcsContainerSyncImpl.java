@@ -76,6 +76,6 @@ public class EcsContainerSyncImpl implements ContainerSync {
       } while (nextToken != null);
     }
 
-    return ContainerSyncResponse.Builder.aContainerSyncResponse().withContainerInfoList(result).build();
+    return ContainerSyncResponse.builder().containerInfoList(result).build();
   }
 }

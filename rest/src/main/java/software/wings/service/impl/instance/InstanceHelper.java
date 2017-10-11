@@ -189,10 +189,8 @@ public class InstanceHelper {
   private void setInstanceInfoAndKey(
       Instance.Builder builder, HostElement host, String infraMappingType, String infraMappingId) {
     InstanceInfo instanceInfo = null;
-    HostInstanceKey hostInstanceKey = HostInstanceKey.Builder.aHostInstanceKey()
-                                          .withHostName(host.getHostName())
-                                          .withInfraMappingId(infraMappingId)
-                                          .build();
+    HostInstanceKey hostInstanceKey =
+        HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
     if (InfrastructureMappingType.AWS_SSH.getName().equals(infraMappingType)
