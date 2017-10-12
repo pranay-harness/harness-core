@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
@@ -36,12 +37,14 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> allApplications = newRelicDelegateService.getAllApplications(newRelicConfig);
     assertFalse(allApplications.isEmpty());
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getApplicationInstances() throws IOException {
     NewRelicApplication demoApp = getDemoApp();
     List<NewRelicApplicationInstance> applicationInstances =
@@ -50,6 +53,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getMetricsNameToCollect() throws IOException {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =
