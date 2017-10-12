@@ -6,7 +6,10 @@ import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
+import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.ecs.model.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
@@ -26,6 +29,8 @@ import java.util.Set;
  * @author rktummala on 09/08/17
  */
 public class EcsContainerSyncImpl implements ContainerSync {
+  private static final Logger logger = LoggerFactory.getLogger(EcsContainerSyncImpl.class);
+
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
 
@@ -48,7 +53,13 @@ public class EcsContainerSyncImpl implements ContainerSync {
                                                 .withMaxResults(100)
                                                 .withNextToken(nextToken)
                                                 .withDesiredStatus("RUNNING");
-        ListTasksResult listTasksResult = awsHelperService.listTasks(filter.getRegion(), awsConfig, listTasksRequest);
+        ListTasksResult listTasksResult;
+        try {
+          listTasksResult = awsHelperService.listTasks(filter.getRegion(), awsConfig, listTasksRequest);
+        } catch (ServiceNotFoundException serviceNotFoundException) {
+          logger.warn("ECS Cluster / Service not found for service name:" + serviceName);
+          continue;
+        }
 
         if (!listTasksResult.getTaskArns().isEmpty()) {
           DescribeTasksRequest describeTasksRequest =
