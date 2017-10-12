@@ -77,7 +77,6 @@ public class ContainerInstanceHelper {
 
   @Inject @Named("KubernetesInstanceSync") private ContainerSync kubernetesSyncService;
   @Inject @Named("EcsInstanceSync") private ContainerSync ecsSyncService;
-  @Inject private InfrastructureMappingService infraMappingService;
 
   // This queue is used to asynchronously process all the container deployment information that the workflow touched
   // upon.
@@ -362,7 +361,7 @@ public class ContainerInstanceHelper {
       String infraMappingId, String clusterName, String computeProviderId) {
     ContainerFilter containerFilter;
     Validator.notNullCheck("InstanceType", instanceType);
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
       containerFilter = KubernetesFilter.builder()
