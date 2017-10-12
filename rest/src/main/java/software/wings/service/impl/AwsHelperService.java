@@ -884,6 +884,10 @@ public class AwsHelperService {
   public ListTasksResult listTasks(String region, AwsConfig awsConfig, ListTasksRequest listTasksRequest) {
     try {
       return getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey()).listTasks(listTasksRequest);
+    } catch (ClusterNotFoundException ex) {
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND, "message", ex.getMessage());
+    } catch (ServiceNotFoundException ex) {
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND, "message", ex.getMessage());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
