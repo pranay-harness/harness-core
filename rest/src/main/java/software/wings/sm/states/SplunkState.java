@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static com.google.common.collect.ImmutableSortedMap.of;
 import static java.util.Arrays.asList;
-import static software.wings.api.SplunkStateExecutionData.Builder.aSplunkStateExecutionData;
 
 import com.google.inject.Inject;
 
@@ -60,7 +59,7 @@ public class SplunkState extends HttpState {
     ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
     executionResponse.setStateExecutionData(
-        aSplunkStateExecutionData().withQuery(evaluatedQuery).withAssertionStatement(getAssertion()).build());
+        SplunkStateExecutionData.builder().query(evaluatedQuery).assertionStatement(getAssertion()).build());
 
     return executionResponse;
   }
@@ -73,11 +72,11 @@ public class SplunkState extends HttpState {
 
     SplunkStateExecutionData splunkStateExecutionData = (SplunkStateExecutionData) context.getStateExecutionData();
 
-    executionResponse.setStateExecutionData(aSplunkStateExecutionData()
-                                                .withQuery(splunkStateExecutionData.getQuery())
-                                                .withAssertionStatement(getAssertion())
-                                                .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
-                                                .withResponse(httpStateExecutionData.getHttpResponseBody())
+    executionResponse.setStateExecutionData(SplunkStateExecutionData.builder()
+                                                .query(splunkStateExecutionData.getQuery())
+                                                .assertionStatement(getAssertion())
+                                                .assertionStatus(httpStateExecutionData.getAssertionStatus())
+                                                .response(httpStateExecutionData.getHttpResponseBody())
                                                 .build());
 
     return executionResponse;

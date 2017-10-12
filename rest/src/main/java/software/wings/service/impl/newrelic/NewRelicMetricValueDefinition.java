@@ -5,10 +5,10 @@ import com.google.common.math.Stats;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang.WordUtils;
-import software.wings.metrics.MetricDefinition.Threshold;
-import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
+import software.wings.metrics.ThresholdType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 
