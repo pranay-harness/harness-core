@@ -319,8 +319,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshPipelineExecution(WorkflowExecution workflowExecution) {
-    if (workflowExecution == null || workflowExecution.getPipelineExecution() == null
-        || workflowExecution.getPipelineExecution().getStatus().isFinalStatus()) {
+    if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
+      return;
+    }
+    if (workflowExecution.getPipelineExecution().getStatus().isFinalStatus()
+        && workflowExecution.getPipelineExecution()
+               .getPipelineStageExecutions()
+               .stream()
+               .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+               .allMatch(workflowExecution1 -> workflowExecution1.getStatus().isFinalStatus())) {
       return;
     }
 
