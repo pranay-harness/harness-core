@@ -83,16 +83,16 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
 
     final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
-            .withWorkflowExecutionId(context.getWorkflowExecutionId())
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withServerConfigID(getAnalysisServerConfigId())
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCanaryNewHostNames(canaryNewHostNames)
-            .withLastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-            .withCorrelationId(analysisContext.getCorrelationId())
+        MetricAnalysisExecutionData.builder()
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .serverConfigId(getAnalysisServerConfigId())
+            .timeDuration(Integer.parseInt(timeDuration))
+            .canaryNewHostNames(canaryNewHostNames)
+            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+            .correlationId(analysisContext.getCorrelationId())
             .build();
+    executionData.setStatus(ExecutionStatus.RUNNING);
     String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
 
     final MetricDataAnalysisResponse response =
@@ -166,13 +166,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected ExecutionResponse generateAnalysisResponse(
       ExecutionContext context, ExecutionStatus status, String message) {
     final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withServerConfigID(getAnalysisServerConfigId())
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCorrelationId(UUID.randomUUID().toString())
+        MetricAnalysisExecutionData.builder()
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .serverConfigId(getAnalysisServerConfigId())
+            .timeDuration(Integer.parseInt(timeDuration))
+            .correlationId(UUID.randomUUID().toString())
             .build();
+    executionData.setStatus(ExecutionStatus.RUNNING);
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                             .message(message)
                                                             .stateType(StateType.valueOf(getStateType()))

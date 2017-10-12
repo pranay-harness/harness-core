@@ -232,16 +232,16 @@ public class MetricAnalysisJob implements Job {
 
     private void sendStateNotification(AnalysisContext context) {
       final MetricAnalysisExecutionData executionData =
-          MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
-              .withWorkflowExecutionId(context.getWorkflowExecutionId())
-              .withStateExecutionInstanceId(context.getStateExecutionId())
-              .withServerConfigID(context.getAnalysisServerConfigId())
-              .withAnalysisDuration(context.getTimeDuration())
-              .withStatus(ExecutionStatus.SUCCESS)
-              .withCanaryNewHostNames(context.getTestNodes())
-              .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
-              .withCorrelationId(context.getCorrelationId())
+          MetricAnalysisExecutionData.builder()
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .stateExecutionInstanceId(context.getStateExecutionId())
+              .serverConfigId(context.getAnalysisServerConfigId())
+              .timeDuration(context.getTimeDuration())
+              .canaryNewHostNames(context.getTestNodes())
+              .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+              .correlationId(context.getCorrelationId())
               .build();
+      executionData.setStatus(ExecutionStatus.SUCCESS);
       final MetricDataAnalysisResponse response =
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.SUCCESS);
