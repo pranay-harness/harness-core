@@ -42,7 +42,11 @@ import javax.inject.Inject;
 public abstract class NodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
 
+  private int instanceCount;
+  private InstanceUnitType instanceUnitType = COUNT;
+  private boolean specificHosts;
   private List<String> hostNames;
+  private Boolean excludeSelectedHostsFromFuturePhases;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
@@ -98,6 +102,8 @@ public abstract class NodeSelectState extends State {
 
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
       selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+      selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(
+          getExcludeSelectedHostsFromFuturePhases() == null ? true : getExcludeSelectedHostsFromFuturePhases());
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
@@ -209,9 +215,35 @@ public abstract class NodeSelectState extends State {
     this.hostNames = hostNames;
   }
 
-  public abstract boolean isSpecificHosts();
+  public int getInstanceCount() {
+    return instanceCount;
+  }
 
-  public abstract int getInstanceCount();
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
 
-  public abstract InstanceUnitType getInstanceUnitType();
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
+  }
+
+  public boolean isSpecificHosts() {
+    return specificHosts;
+  }
+
+  public void setSpecificHosts(boolean specificHosts) {
+    this.specificHosts = specificHosts;
+  }
+
+  public Boolean getExcludeSelectedHostsFromFuturePhases() {
+    return excludeSelectedHostsFromFuturePhases;
+  }
+
+  public void setExcludeSelectedHostsFromFuturePhases(Boolean excludeSelectedHostsFromFuturePhases) {
+    this.excludeSelectedHostsFromFuturePhases = excludeSelectedHostsFromFuturePhases;
+  }
 }
