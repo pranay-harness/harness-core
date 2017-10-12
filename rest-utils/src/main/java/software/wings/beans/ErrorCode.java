@@ -414,6 +414,10 @@ public enum ErrorCode {
 
   AWS_ACCESS_DENIED("AWS_ACCESS_DENIED"),
 
+  AWS_CLUSTER_NOT_FOUND("AWS_CLUSTER_NOT_FOUND"),
+
+  AWS_SERVICE_NOT_FOUND("AWS_SERVICE_NOT_FOUND"),
+
   /**
    * Invalid YamlPayload
    */
