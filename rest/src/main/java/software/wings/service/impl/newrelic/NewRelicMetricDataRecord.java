@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.sm.StateType;
 
 /**
  * Created by rsingh on 08/30/17.
@@ -23,7 +24,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
   @Index(fields = {
     @Field("name")
     , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
-        @Field("serviceId"), @Field("workflowId"), @Field("level")
+        @Field("serviceId"), @Field("workflowId"), @Field("level"), @Field("stateType")
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
@@ -31,6 +32,8 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 @AllArgsConstructor
 @Builder
 public class NewRelicMetricDataRecord extends Base {
+  @NotEmpty @Indexed private StateType stateType;
+
   @NotEmpty @Indexed private String name;
 
   @NotEmpty @Indexed private String applicationId;
@@ -51,8 +54,15 @@ public class NewRelicMetricDataRecord extends Base {
 
   @Indexed private ClusterLevel level;
 
+  private double error = -1;
+
+  // new relic metrics
   private double throughput = -1;
   private double averageResponseTime = -1;
-  private double error = -1;
   private double apdexScore = -1;
+
+  // appdynamics metrics
+  private double response95th = -1;
+  private double stalls = -1;
+  private double slowCalls = -1;
 }

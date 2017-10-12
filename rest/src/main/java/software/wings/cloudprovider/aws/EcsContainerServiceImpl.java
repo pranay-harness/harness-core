@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
@@ -957,7 +958,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                       new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
                                   .getTaskArns();
       if (taskArns == null || taskArns.size() == 0) {
-        return Arrays.asList();
+        return emptyList();
       }
 
       logger.info("Task arns = " + taskArns);

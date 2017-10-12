@@ -42,7 +42,11 @@ import javax.inject.Inject;
 public abstract class NodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(NodeSelectState.class);
 
+  private int instanceCount;
+  private InstanceUnitType instanceUnitType = COUNT;
+  private boolean specificHosts;
   private List<String> hostNames;
+  private boolean excludeSelectedHostsFromFuturePhases;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
@@ -67,18 +71,18 @@ public abstract class NodeSelectState extends State {
       ServiceInstanceSelectionParams.Builder selectionParams =
           aServiceInstanceSelectionParams()
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-              .withSelectSpecificHosts(isSpecificHosts());
+              .withSelectSpecificHosts(specificHosts);
       int totalAvailableInstances = infrastructureMappingService.listHostNames(appId, infraMappingId).size();
       int instancesToAdd;
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         if (infrastructureMapping instanceof AwsInfrastructureMapping
             && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
           throw new WingsException(
               ErrorCode.INVALID_ARGUMENT, "args", "Cannot specify hosts when using an auto scale group");
         }
-        selectionParams.withHostNames(getHostNames());
-        instancesToAdd = getHostNames().size();
-        logger.info("Selecting specific hosts: {}", getHostNames());
+        selectionParams.withHostNames(hostNames);
+        instancesToAdd = hostNames.size();
+        logger.info("Selecting specific hosts: {}", hostNames);
       } else {
         instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
       }
@@ -98,6 +102,7 @@ public abstract class NodeSelectState extends State {
 
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
       selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
+      selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
@@ -115,12 +120,12 @@ public abstract class NodeSelectState extends State {
   }
 
   private int getCumulativeTotal(int maxInstances) {
-    if (getInstanceUnitType() == PERCENTAGE) {
-      int percent = Math.min(getInstanceCount(), 100);
-      int instanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
-      return Math.max(instanceCount, 1);
+    if (instanceUnitType == PERCENTAGE) {
+      int percent = Math.min(instanceCount, 100);
+      int percentInstanceCount = Long.valueOf(Math.round(percent * maxInstances / 100.0)).intValue();
+      return Math.max(percentInstanceCount, 1);
     } else {
-      return getInstanceCount();
+      return instanceCount;
     }
   }
 
@@ -129,20 +134,20 @@ public abstract class NodeSelectState extends State {
     String errorMessage = null;
     if (isEmpty(serviceInstances)) {
       StringBuilder msg = new StringBuilder("No nodes were selected. ");
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         msg.append("'Use Specific Hosts' was chosen ");
-        if (isEmpty(getHostNames())) {
+        if (isEmpty(hostNames)) {
           msg.append("but no host names were specified. ");
         } else {
-          msg.append("with these host names: ").append(getHostNames()).append(". ");
+          msg.append("with these host names: ").append(hostNames).append(". ");
         }
       } else {
         msg.append("A ")
-            .append(getInstanceUnitType() == COUNT ? "count" : "percent")
+            .append(instanceUnitType == COUNT ? "count" : "percent")
             .append(" of ")
-            .append(getInstanceCount())
+            .append(instanceCount)
             .append(" was specified. ");
-        if (getInstanceUnitType() == PERCENTAGE) {
+        if (instanceUnitType == PERCENTAGE) {
           msg.append("This evaluates to ")
               .append(getCumulativeTotal(totalAvailableInstances))
               .append(" instances (cumulative). ");
@@ -161,7 +166,7 @@ public abstract class NodeSelectState extends State {
           .append(" already been deployed. ");
 
       msg.append("\n\nCheck whether ");
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         msg.append("you've selected a unique set of host names for each phase. ");
       } else if (infraMapping instanceof AwsInfrastructureMapping) {
         AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
@@ -184,14 +189,14 @@ public abstract class NodeSelectState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
-    if (isSpecificHosts()) {
-      if (isEmpty(getHostNames())) {
+    if (specificHosts) {
+      if (isEmpty(hostNames)) {
         invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames must be specified");
       }
     } else {
-      if (getInstanceCount() <= 0) {
+      if (instanceCount <= 0) {
         invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Count or percent must be specified");
-      } else if (getInstanceUnitType() == PERCENTAGE && getInstanceCount() > 100) {
+      } else if (instanceUnitType == PERCENTAGE && instanceCount > 100) {
         invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Percent may not be greater than 100");
       }
     }
@@ -209,9 +214,35 @@ public abstract class NodeSelectState extends State {
     this.hostNames = hostNames;
   }
 
-  public abstract boolean isSpecificHosts();
+  public int getInstanceCount() {
+    return instanceCount;
+  }
 
-  public abstract int getInstanceCount();
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
 
-  public abstract InstanceUnitType getInstanceUnitType();
+  public InstanceUnitType getInstanceUnitType() {
+    return instanceUnitType;
+  }
+
+  public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
+    this.instanceUnitType = instanceUnitType;
+  }
+
+  public boolean isSpecificHosts() {
+    return specificHosts;
+  }
+
+  public void setSpecificHosts(boolean specificHosts) {
+    this.specificHosts = specificHosts;
+  }
+
+  public boolean getExcludeSelectedHostsFromFuturePhases() {
+    return excludeSelectedHostsFromFuturePhases;
+  }
+
+  public void setExcludeSelectedHostsFromFuturePhases(Boolean excludeSelectedHostsFromFuturePhases) {
+    this.excludeSelectedHostsFromFuturePhases = excludeSelectedHostsFromFuturePhases;
+  }
 }
