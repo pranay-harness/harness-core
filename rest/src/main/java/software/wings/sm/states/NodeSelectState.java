@@ -142,17 +142,21 @@ public abstract class NodeSelectState extends State {
           msg.append("with these host names: ").append(hostNames).append(". ");
         }
       } else {
-        msg.append("A ")
-            .append(instanceUnitType == COUNT ? "count" : "percent")
-            .append(" of ")
-            .append(instanceCount)
-            .append(" was specified. ");
+        msg.append("This phase deploys to ");
         if (instanceUnitType == PERCENTAGE) {
-          msg.append("This evaluates to ")
+          msg.append(instanceCount)
+              .append("%, which evaluates to ")
               .append(getCumulativeTotal(totalAvailableInstances))
-              .append(" instances (cumulative). ");
+              .append(" instances (cumulative) ");
+        } else {
+          msg.append(instanceCount).append(" instance").append(instanceCount == 1 ? "" : "s").append(" (cumulative) ");
         }
       }
+
+      msg.append("and ")
+          .append(hostExclusionList.size())
+          .append(hostExclusionList.size() == 1 ? " instance has" : " instances have")
+          .append(" already been deployed. ");
 
       msg.append("\n\nThe service infrastructure [")
           .append(infraMapping.getDisplayName())
@@ -160,16 +164,13 @@ public abstract class NodeSelectState extends State {
           .append(totalAvailableInstances)
           .append(" instance")
           .append(totalAvailableInstances == 1 ? "" : "s")
-          .append(" available and ")
-          .append(hostExclusionList.size())
-          .append(hostExclusionList.size() == 1 ? " has" : " have")
-          .append(" already been deployed. ");
+          .append(" available. ");
 
-      msg.append("\n\nCheck whether ");
       if (specificHosts) {
-        msg.append("you've selected a unique set of host names for each phase. ");
+        msg.append("\n\nCheck whether you've selected a unique set of host names for each phase. ");
       } else if (infraMapping instanceof AwsInfrastructureMapping) {
         AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
+        msg.append("\n\nCheck whether ");
         if (awsInfrastructureMapping.isProvisionInstances()) {
           msg.append("your Auto Scale group [")
               .append(awsInfrastructureMapping.getAutoScalingGroupName())
