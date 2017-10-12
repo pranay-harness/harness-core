@@ -2,6 +2,7 @@ package software.wings.service.impl.instance.sync;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
@@ -56,8 +57,11 @@ public class EcsContainerSyncImpl implements ContainerSync {
         ListTasksResult listTasksResult;
         try {
           listTasksResult = awsHelperService.listTasks(filter.getRegion(), awsConfig, listTasksRequest);
-        } catch (ServiceNotFoundException serviceNotFoundException) {
-          logger.warn("ECS Cluster / Service not found for service name:" + serviceName);
+        } catch (ClusterNotFoundException ex) {
+          logger.warn("ECS Cluster not found for service name:" + serviceName);
+          continue;
+        } catch (ServiceNotFoundException ex) {
+          logger.warn("ECS Service not found for service name:" + serviceName);
           continue;
         }
 
