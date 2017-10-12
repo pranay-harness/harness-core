@@ -32,15 +32,18 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public void validateConfig(SettingAttribute settingAttribute, StateType stateType) {
+    ErrorCode errorCode = null;
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {
         case NEW_RELIC:
+          errorCode = ErrorCode.NEWRELIC_CONFIGURATION_ERROR;
           delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
               .validateConfig((NewRelicConfig) settingAttribute.getValue());
           break;
         case APP_DYNAMICS:
+          errorCode = ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR;
           delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
               .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
           break;
@@ -48,21 +51,24 @@ public class NewRelicServiceImpl implements NewRelicService {
           throw new IllegalStateException("Invalid state" + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(errorCode, "reason", e.getMessage());
     }
   }
 
   @Override
   public List<NewRelicApplication> getApplications(String settingId, StateType stateType) {
+    ErrorCode errorCode = null;
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {
         case NEW_RELIC:
+          errorCode = ErrorCode.NEWRELIC_ERROR;
           return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
               .getAllApplications((NewRelicConfig) settingAttribute.getValue());
         case APP_DYNAMICS:
+          errorCode = ErrorCode.APPDYNAMICS_ERROR;
           return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
               .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
         default:
@@ -70,8 +76,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
 
     } catch (Exception e) {
-      throw new WingsException(
-          ErrorCode.NEWRELIC_ERROR, "message", "Error in getting new relic applications. " + e.getMessage());
+      throw new WingsException(errorCode, "message", "Error in getting new relic applications. " + e.getMessage());
     }
   }
 }
