@@ -2,19 +2,20 @@ package software.wings.service.impl.instance.sync;
 
 import com.google.inject.Inject;
 
-import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
-import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.ecs.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.request.EcsFilter;
@@ -57,12 +58,22 @@ public class EcsContainerSyncImpl implements ContainerSync {
         ListTasksResult listTasksResult;
         try {
           listTasksResult = awsHelperService.listTasks(filter.getRegion(), awsConfig, listTasksRequest);
-        } catch (ClusterNotFoundException ex) {
-          logger.warn("ECS Cluster not found for service name:" + serviceName);
-          continue;
-        } catch (ServiceNotFoundException ex) {
-          logger.warn("ECS Service not found for service name:" + serviceName);
-          continue;
+        } catch (WingsException ex) {
+          // if the cluster / service has been deleted, we need to continue and check the rest of the service names
+          List<ResponseMessage> responseMessageList = ex.getResponseMessageList();
+          if (!responseMessageList.isEmpty()) {
+            ErrorCode errorCode = responseMessageList.get(0).getCode();
+            if (errorCode != null) {
+              if (ErrorCode.AWS_CLUSTER_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+                logger.info("ECS Cluster not found for service name:" + serviceName);
+                continue;
+              } else if (ErrorCode.AWS_SERVICE_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+                logger.info("ECS Service not found for service name:" + serviceName);
+                continue;
+              }
+            }
+          }
+          throw ex;
         }
 
         if (!listTasksResult.getTaskArns().isEmpty()) {

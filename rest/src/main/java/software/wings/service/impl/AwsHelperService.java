@@ -86,6 +86,7 @@ import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClientException;
+import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateClusterResult;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
@@ -112,6 +113,7 @@ import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
+import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
@@ -567,6 +569,10 @@ public class AwsHelperService {
         throw amazonServiceException;
       }
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
+    } else if (amazonServiceException instanceof ClusterNotFoundException) {
+      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND, "message", amazonServiceException.getMessage());
+    } else if (amazonServiceException instanceof ServiceNotFoundException) {
+      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND, "message", amazonServiceException.getMessage());
     } else {
       logger.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, "message", amazonServiceException.getMessage());
