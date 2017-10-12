@@ -1,12 +1,12 @@
 package software.wings.sm.states;
 
-import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.amazonaws.regions.Regions;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ElbStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
@@ -106,7 +106,7 @@ public class ElasticLoadBalancerState extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(anElbStateExecutionData().withHostName(instance.getHost().getHostName()).build())
+        .withStateExecutionData(ElbStateExecutionData.builder().hostName(instance.getHost().getHostName()).build())
         .withExecutionStatus(status)
         .withErrorMessage(errorMessage)
         .build();
