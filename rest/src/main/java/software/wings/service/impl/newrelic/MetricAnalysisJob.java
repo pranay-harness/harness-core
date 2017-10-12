@@ -16,7 +16,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -36,11 +36,11 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 9/11/17.
  */
-public class NewRelicMetricAnalysisJob implements Job {
+public class MetricAnalysisJob implements Job {
   private static final ConcurrentHashMap<String, UUID> stateExecutionLocks = new ConcurrentHashMap<>();
   private static final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
-  @Inject private NewRelicService newRelicService;
+  @Inject private MetricDataAnalysisService analysisService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -48,7 +48,7 @@ public class NewRelicMetricAnalysisJob implements Job {
 
   @Inject private DelegateService delegateService;
 
-  private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricAnalysisJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetricAnalysisJob.class);
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
@@ -61,7 +61,7 @@ public class NewRelicMetricAnalysisJob implements Job {
         UUID id = UUID.randomUUID();
         if (stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
           // TODO unbounded task queue
-          executorService.submit(new NewRelicAnalysisGenerator(context, jobExecutionContext, delegateTaskId, id));
+          executorService.submit(new MetricAnalysisGenerator(context, jobExecutionContext, delegateTaskId, id));
         }
       }
     } catch (Exception ex) {
@@ -74,13 +74,13 @@ public class NewRelicMetricAnalysisJob implements Job {
     }
   }
 
-  private class NewRelicAnalysisGenerator implements Runnable {
+  private class MetricAnalysisGenerator implements Runnable {
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
     private final UUID uuid;
 
-    private NewRelicAnalysisGenerator(
+    private MetricAnalysisGenerator(
         AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId, UUID uuid) {
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
@@ -102,12 +102,12 @@ public class NewRelicMetricAnalysisJob implements Job {
          * Work flow is invalid
          * exit immediately
          **/
-        if (!newRelicService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           completeCron = true;
           return;
         }
 
-        final int analysisMinute = newRelicService.getCollectionMinuteToProcess(
+        final int analysisMinute = analysisService.getCollectionMinuteToProcess(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
 
         if (analysisMinute > context.getTimeDuration() - 1) {
@@ -118,19 +118,21 @@ public class NewRelicMetricAnalysisJob implements Job {
         logger.info("running new relic analysis for minute {}", analysisMinute);
         final List<NewRelicMetricDataRecord> controlRecords =
             context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-            ? newRelicService.getPreviousSuccessfulRecords(
-                  context.getWorkflowId(), context.getServiceId(), analysisMinute)
-            : newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                  context.getWorkflowId(), context.getServiceId(), context.getControlNodes(), analysisMinute);
+            ? analysisService.getPreviousSuccessfulRecords(
+                  context.getStateType(), context.getWorkflowId(), context.getServiceId(), analysisMinute)
+            : analysisService.getRecords(context.getStateType(), context.getWorkflowExecutionId(),
+                  context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
+                  context.getControlNodes(), analysisMinute);
 
-        final List<NewRelicMetricDataRecord> testRecords =
-            newRelicService.getRecords(context.getWorkflowExecutionId(), context.getStateExecutionId(),
-                context.getWorkflowId(), context.getServiceId(), context.getTestNodes(), analysisMinute);
+        final List<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getStateType(),
+            context.getWorkflowExecutionId(), context.getStateExecutionId(), context.getWorkflowId(),
+            context.getServiceId(), context.getTestNodes(), analysisMinute);
 
         Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
         Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
         NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
+                                                          .stateType(context.getStateType())
                                                           .stateExecutionId(context.getStateExecutionId())
                                                           .workflowExecutionId(context.getWorkflowExecutionId())
                                                           .workflowId(context.getWorkflowId())
@@ -138,6 +140,18 @@ public class NewRelicMetricAnalysisJob implements Job {
                                                           .riskLevel(RiskLevel.LOW)
                                                           .metricAnalyses(new ArrayList<>())
                                                           .build();
+
+        Map<String, List<Threshold>> stateValuesToAnalyze;
+        switch (context.getStateType()) {
+          case NEW_RELIC:
+            stateValuesToAnalyze = NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
+            break;
+          case APP_DYNAMICS:
+            stateValuesToAnalyze = NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+            break;
+          default:
+            throw new IllegalStateException("Invalid stateType " + context.getStateType());
+        }
 
         for (Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
           final String metricName = metric.getKey();
@@ -147,8 +161,7 @@ public class NewRelicMetricAnalysisJob implements Job {
                                                       .metricValues(new ArrayList<>())
                                                       .build();
 
-          for (Entry<String, List<Threshold>> valuesToAnalyze :
-              NewRelicMetricValueDefinition.VALUES_TO_ANALYZE.entrySet()) {
+          for (Entry<String, List<Threshold>> valuesToAnalyze : stateValuesToAnalyze.entrySet()) {
             NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                       .metricName(metricName)
                                                                       .metricValueName(valuesToAnalyze.getKey())
@@ -171,9 +184,9 @@ public class NewRelicMetricAnalysisJob implements Job {
         }
 
         analysisRecord.setAnalysisMinute(analysisMinute);
-        newRelicService.saveAnalysisRecords(analysisRecord);
-        newRelicService.bumpCollectionMinuteToProcess(
-            context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
+        analysisService.saveAnalysisRecords(analysisRecord);
+        analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
+            context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
       } catch (Exception ex) {
         completeCron = true;
         logger.warn("analysis failed", ex);
@@ -181,7 +194,7 @@ public class NewRelicMetricAnalysisJob implements Job {
         try {
           stateExecutionLocks.remove(context.getStateExecutionId());
           // send notification to state manager and delete cron.
-          if (completeCron || !newRelicService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+          if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               delegateService.abortTask(context.getAccountId(), delegateTaskId);
               sendStateNotification(context);
@@ -218,8 +231,9 @@ public class NewRelicMetricAnalysisJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context) {
-      final NewRelicExecutionData executionData =
-          NewRelicExecutionData.Builder.anAnanlysisExecutionData()
+      final MetricAnalysisExecutionData executionData =
+          MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
+              .withWorkflowExecutionId(context.getWorkflowExecutionId())
               .withStateExecutionInstanceId(context.getStateExecutionId())
               .withServerConfigID(context.getAnalysisServerConfigId())
               .withAnalysisDuration(context.getTimeDuration())

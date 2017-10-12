@@ -19,6 +19,8 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractDelegateDataCollectionTask
     extends AbstractDelegateRunnableTask<DataCollectionTaskResult> {
+  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
+
   protected static final int RETRIES = 3;
   protected final AtomicBoolean completed = new AtomicBoolean(false);
   protected ScheduledExecutorService collectionService;
@@ -35,7 +37,7 @@ public abstract class AbstractDelegateDataCollectionTask
         lockObject.wait();
       } catch (InterruptedException e) {
         completed.set(true);
-        getLogger().info("Splunk data collection interrupted");
+        getLogger().info("{} data collection interrupted", getStateType());
       }
     }
   }

@@ -55,7 +55,12 @@ public class CanaryUtils {
         }
         for (StepExecutionSummary stepExecutionSummary : phaseStepExecutionSummary.getStepExecutionSummaryList()) {
           if (stepExecutionSummary instanceof SelectNodeStepExecutionSummary) {
-            hostExclusionList.addAll(((SelectNodeStepExecutionSummary) stepExecutionSummary).getServiceInstanceList());
+            SelectNodeStepExecutionSummary selectNodeStepExecutionSummary =
+                (SelectNodeStepExecutionSummary) stepExecutionSummary;
+            if (selectNodeStepExecutionSummary.isExcludeSelectedHostsFromFuturePhases()) {
+              hostExclusionList.addAll(
+                  ((SelectNodeStepExecutionSummary) stepExecutionSummary).getServiceInstanceList());
+            }
           }
         }
       }
