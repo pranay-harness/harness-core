@@ -394,6 +394,7 @@ public class PageRequest<T> {
    * @see java.lang.Object#equals(java.lang.Object)
    */
   @Override
+  @lombok.Generated
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
@@ -412,6 +413,7 @@ public class PageRequest<T> {
    * @see java.lang.Object#hashCode()
    */
   @Override
+  @lombok.Generated
   public int hashCode() {
     return Objects.hashCode(offset, start, limit, pageSize, filters, orders, fieldsIncluded, fieldsExcluded, isOr);
   }
@@ -420,6 +422,7 @@ public class PageRequest<T> {
    * @see java.lang.Object#toString()
    */
   @Override
+  @lombok.Generated
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("isOr", isOr)
