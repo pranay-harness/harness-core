@@ -190,7 +190,9 @@ public abstract class OrchestrationWorkflow {
   }
 
   private boolean contains(List<Variable> userVariables, String name) {
-    return userVariables.stream().anyMatch(variable -> variable.getName().equals(name));
+    return userVariables != null
+        && userVariables.stream().anyMatch(
+               variable -> variable != null && variable.getName() != null && variable.getName().equals(name));
   }
 
   private String getTemplateExpressionName(
@@ -207,7 +209,7 @@ public abstract class OrchestrationWorkflow {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
             "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }
-    } else if (entityType == null && stateType != null) {
+    } else if (stateType != null) {
       // TODO: Check if it can contain other expressions
     }
     return templateVariable;
