@@ -147,7 +147,7 @@ public abstract class NodeSelectState extends State {
           msg.append(instanceCount)
               .append("%, which evaluates to ")
               .append(getCumulativeTotal(totalAvailableInstances))
-              .append(" instances (cumulative) ");
+              .append(" instances (cumulative), ");
         } else {
           msg.append(instanceCount).append(" instance").append(instanceCount == 1 ? "" : "s").append(" (cumulative) ");
         }
