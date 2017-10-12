@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  */
 public class SelectedNodeExecutionData extends StateExecutionData {
   private List<ServiceInstance> serviceInstanceList;
+  private boolean excludeSelectedHostsFromFuturePhases;
 
   public List<ServiceInstance> getServiceInstanceList() {
     return serviceInstanceList;
@@ -22,6 +23,14 @@ public class SelectedNodeExecutionData extends StateExecutionData {
 
   public void setServiceInstanceList(List<ServiceInstance> serviceInstanceList) {
     this.serviceInstanceList = serviceInstanceList;
+  }
+
+  public boolean isExcludeSelectedHostsFromFuturePhases() {
+    return excludeSelectedHostsFromFuturePhases;
+  }
+
+  public void setExcludeSelectedHostsFromFuturePhases(boolean excludeSelectedHostsFromFuturePhases) {
+    this.excludeSelectedHostsFromFuturePhases = excludeSelectedHostsFromFuturePhases;
   }
 
   @Override
@@ -55,6 +64,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
     SelectNodeStepExecutionSummary selectNodeStepExecutionSummary = new SelectNodeStepExecutionSummary();
     populateStepExecutionSummary(selectNodeStepExecutionSummary);
     selectNodeStepExecutionSummary.setServiceInstanceList(serviceInstanceList);
+    selectNodeStepExecutionSummary.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
     return selectNodeStepExecutionSummary;
   }
 }
