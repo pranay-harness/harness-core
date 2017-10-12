@@ -9,7 +9,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -26,16 +25,21 @@ public class RemoveOrphanInfrastructureMappingMigrationUtil extends WingsBaseTes
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Test
   public void removeOrphanedInfraMappings() {
     List<InfrastructureMapping> infraMappings = wingsPersistence.createQuery(InfrastructureMapping.class).asList();
     int deleted = 0;
     for (InfrastructureMapping infraMapping : infraMappings) {
-      if (!appService.exist(infraMapping.getAppId())
-          || !serviceResourceService.exist(infraMapping.getAppId(), infraMapping.getServiceId())
-          || !serviceTemplateService.exist(infraMapping.getAppId(), infraMapping.getServiceTemplateId())) {
+      boolean missingApp = !appService.exist(infraMapping.getAppId());
+      boolean missingService = !serviceResourceService.exist(infraMapping.getAppId(), infraMapping.getServiceId());
+      boolean missingServiceTemplate =
+          !serviceTemplateService.exist(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
+
+      if (missingApp || missingService || missingServiceTemplate) {
+        System.out.println("\ninframapping: " + infraMapping.getUuid());
+        System.out.println("missing app: " + missingApp + ", missing service: " + missingService
+            + ", missing template: " + missingServiceTemplate);
         wingsPersistence.delete(infraMapping);
         deleted++;
       }
