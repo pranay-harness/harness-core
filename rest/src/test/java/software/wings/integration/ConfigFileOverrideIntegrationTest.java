@@ -139,11 +139,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                              .withCategory(Category.CONNECTOR)
                              .withName("AppDynamics")
                              .withAccountId(accountId)
-                             .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                            .withControllerUrl("https://na774.saas.appdynamics.com/controller")
-                                            .withUsername("testuser")
-                                            .withAccountname("na774")
-                                            .withPassword("testuser123".toCharArray())
+                             .withValue(AppDynamicsConfig.builder()
+                                            .controllerUrl("https://na774.saas.appdynamics.com/controller")
+                                            .username("testuser")
+                                            .accountname("na774")
+                                            .password("testuser123".toCharArray())
                                             .build())
                              .build());
 

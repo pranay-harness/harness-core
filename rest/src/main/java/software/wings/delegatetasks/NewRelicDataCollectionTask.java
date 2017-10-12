@@ -42,7 +42,6 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 3;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
@@ -112,6 +111,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           // HeartBeat
           records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
               NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
                   .name(HARNESS_HEARTEAT_METRIC_NAME)
                   .applicationId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
@@ -141,6 +141,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
                   metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
                   metricDataRecord.setDataCollectionMinute(dataCollectionMinute);
+                  metricDataRecord.setStateType(getStateType());
 
                   // set from time to the timestamp
                   long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
