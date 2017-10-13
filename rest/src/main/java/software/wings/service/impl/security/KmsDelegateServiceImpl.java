@@ -20,6 +20,9 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.TreeSet;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -55,6 +58,7 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
         .encryptedValue(encryptedValue)
         .type(SettingVariableTypes.KMS)
         .kmsId(kmsConfig.getUuid())
+        .updates(new HashMap<>())
         .build();
   }
 

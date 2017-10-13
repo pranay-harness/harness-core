@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider.App;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +24,7 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureName;
@@ -32,6 +34,7 @@ import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.User;
 import software.wings.beans.UuidAware;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -40,6 +43,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
@@ -52,6 +56,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +74,9 @@ public class KmsTest extends WingsBaseTest {
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   final int numOfEncryptedValsForKms = 3;
+  private final String userEmail = "rsingh@harness.io";
+  private final String userName = "raghu";
+  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
 
   @Before
   public void setup() {
@@ -77,6 +85,8 @@ public class KmsTest extends WingsBaseTest {
         .thenReturn(new KmsDelegateServiceImpl());
     Whitebox.setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    wingsPersistence.save(user);
+    UserThreadLocal.set(user);
   }
 
   @Test
@@ -250,7 +260,14 @@ public class KmsTest extends WingsBaseTest {
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
     assertEquals(1, query.asList().size());
-    assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
+    EncryptedData encryptedData = query.asList().get(0);
+    assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
+    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
+    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
+    assertEquals(userName, encryptedData.getCreatedBy().getName());
+
+    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
+    assertTrue(allUpdates.isEmpty());
 
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncryptedValsForKms + 1, query.asList().size());
@@ -336,6 +353,10 @@ public class KmsTest extends WingsBaseTest {
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
+    User user1 =
+        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    wingsPersistence.save(user1);
+    UserThreadLocal.set(user1);
     wingsPersistence.save(savedAttribute);
 
     SettingAttribute updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -346,7 +367,46 @@ public class KmsTest extends WingsBaseTest {
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
     assertEquals(1, query.asList().size());
-    assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
+    EncryptedData encryptedData = query.asList().get(0);
+    assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
+
+    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
+    assertEquals(1, allUpdates.size());
+    Pair<Long, EmbeddedUser> pair = allUpdates.iterator().next();
+    assertEquals(user1.getUuid(), pair.getValue().getUuid());
+    assertEquals(user1.getEmail(), pair.getValue().getEmail());
+    assertEquals(user1.getName(), pair.getValue().getName());
+    assertNotEquals(encryptedData.getCreatedAt(), pair.getKey().longValue());
+
+    User user2 =
+        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    wingsPersistence.save(user2);
+    UserThreadLocal.set(user2);
+    wingsPersistence.save(savedAttribute);
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+    encryptedData = query.asList().get(0);
+
+    allUpdates = encryptedData.getAllUpdates();
+    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
+    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
+    assertEquals(userName, encryptedData.getCreatedBy().getName());
+
+    assertEquals(2, allUpdates.size());
+    Iterator<Pair<Long, EmbeddedUser>> pairIterator = allUpdates.iterator();
+
+    pair = pairIterator.next();
+    assertEquals(user2.getUuid(), pair.getValue().getUuid());
+    assertEquals(user2.getEmail(), pair.getValue().getEmail());
+    assertEquals(user2.getName(), pair.getValue().getName());
+
+    pair = pairIterator.next();
+    assertEquals(user1.getUuid(), pair.getValue().getUuid());
+    assertEquals(user1.getEmail(), pair.getValue().getEmail());
+    assertEquals(user1.getName(), pair.getValue().getName());
+
+    assertNotEquals(encryptedData.getCreatedAt(), pair.getKey().longValue());
   }
 
   @Test
@@ -390,6 +450,13 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+    EncryptedData encryptedData = query.asList().get(0);
+    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
+    assertEquals(0, allUpdates.size());
+
     final String newPassWord = UUID.randomUUID().toString();
     final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
                                                        .accountId(accountId)
@@ -406,7 +473,25 @@ public class KmsTest extends WingsBaseTest {
     keyValuePairs.put("appId", updatedAppId);
     keyValuePairs.put("value", newAppDynamicsConfig);
 
+    User user1 =
+        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    wingsPersistence.save(user1);
+    UserThreadLocal.set(user1);
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+    encryptedData = query.asList().get(0);
+    allUpdates = encryptedData.getAllUpdates();
+    assertEquals(1, allUpdates.size());
+    Pair<Long, EmbeddedUser> pair = allUpdates.iterator().next();
+    assertEquals(user1.getUuid(), pair.getValue().getUuid());
+    assertEquals(user1.getEmail(), pair.getValue().getEmail());
+    assertEquals(user1.getName(), pair.getValue().getName());
+    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
+    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
+    assertEquals(userName, encryptedData.getCreatedBy().getName());
+
     updatedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertEquals(updatedAppId, updatedAttribute.getAppId());
     assertEquals(updatedName, updatedAttribute.getName());
@@ -416,6 +501,34 @@ public class KmsTest extends WingsBaseTest {
 
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    User user2 =
+        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    wingsPersistence.save(user2);
+    UserThreadLocal.set(user2);
+    wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+    encryptedData = query.asList().get(0);
+
+    allUpdates = encryptedData.getAllUpdates();
+    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
+    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
+    assertEquals(userName, encryptedData.getCreatedBy().getName());
+
+    assertEquals(2, allUpdates.size());
+    Iterator<Pair<Long, EmbeddedUser>> pairIterator = allUpdates.iterator();
+
+    pair = pairIterator.next();
+    assertEquals(user2.getUuid(), pair.getValue().getUuid());
+    assertEquals(user2.getEmail(), pair.getValue().getEmail());
+    assertEquals(user2.getName(), pair.getValue().getName());
+
+    pair = pairIterator.next();
+    assertEquals(user1.getUuid(), pair.getValue().getUuid());
+    assertEquals(user1.getEmail(), pair.getValue().getEmail());
+    assertEquals(user1.getName(), pair.getValue().getName());
   }
 
   @Test
