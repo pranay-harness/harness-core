@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -33,7 +32,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,8 +41,6 @@ import javax.inject.Named;
  */
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
-
-  @Transient @SchemaIgnore private ScheduledExecutorService analysisExecutorService;
 
   @Transient @Inject private MetricDataAnalysisService metricAnalysisService;
 
