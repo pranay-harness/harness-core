@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -26,11 +28,9 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -39,6 +39,7 @@ import javax.inject.Inject;
  */
 public class KmsServiceImpl implements KmsService {
   private static final Logger logger = LoggerFactory.getLogger(KmsServiceImpl.class);
+  public static final String SECRET_MASK = "**************";
 
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
@@ -53,7 +54,7 @@ public class KmsServiceImpl implements KmsService {
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
     } catch (Exception e) {
-      throw new WingsException("Encryption with security failed", e);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e.getMessage(), e);
     }
   }
 
@@ -66,7 +67,7 @@ public class KmsServiceImpl implements KmsService {
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
-      throw new WingsException("Decryption with security failed", e);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e.getMessage(), e);
     }
   }
 
@@ -109,6 +110,11 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public boolean saveKmsConfig(String accountId, KmsConfig kmsConfig) {
+    validateKms(accountId, kmsConfig);
+
+    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).field("accountId").equal(accountId);
+    Collection<KmsConfig> savedConfigs = query.asList();
+
     kmsConfig.setAccountId(accountId);
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
@@ -140,6 +146,14 @@ public class KmsServiceImpl implements KmsService {
     arnKeyData.setParentId(parentId);
     wingsPersistence.save(arnKeyData);
 
+    if (!savedConfigs.isEmpty()) {
+      for (KmsConfig savedConfig : savedConfigs) {
+        savedConfig.setDefault(false);
+      }
+
+      wingsPersistence.save(Lists.newArrayList(savedConfigs));
+    }
+
     return true;
   }
 
@@ -170,7 +184,32 @@ public class KmsServiceImpl implements KmsService {
         wingsPersistence.createQuery(EncryptedData.class).field("accountId").equal(accountId).fetch();
     while (query.hasNext()) {
       EncryptedData data = query.next();
-      rv.put(data.getParentId(), fetchParent(data));
+      if (data.getType() != SettingVariableTypes.KMS) {
+        rv.put(data.getParentId(), fetchParent(data));
+      }
+    }
+    return rv.values();
+  }
+
+  @Override
+  public Collection<KmsConfig> listKmsConfigs(String accountId) {
+    Map<String, KmsConfig> rv = new HashMap<>();
+    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                        .field("accountId")
+                                        .equal(accountId)
+                                        .field("type")
+                                        .equal(SettingVariableTypes.KMS)
+                                        .fetch();
+    while (query.hasNext()) {
+      EncryptedData data = query.next();
+
+      if (rv.containsKey(data.getParentId())) {
+        continue;
+      }
+
+      KmsConfig kmsConfig = (KmsConfig) fetchParent(data);
+      kmsConfig.setSecretKey(SECRET_MASK);
+      rv.put(data.getParentId(), kmsConfig);
     }
     return rv.values();
   }
@@ -211,6 +250,10 @@ public class KmsServiceImpl implements KmsService {
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
 
     wingsPersistence.save(encryptedData);
+  }
+
+  private void validateKms(String accountId, KmsConfig kmsConfig) {
+    encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
   }
 
   private KmsConfig getKmsConfig(String accountId, String entityId) {

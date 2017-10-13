@@ -57,6 +57,14 @@ public class KmsResource {
   }
 
   @GET
+  @Path("/list-kms")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Collection<KmsConfig>> lisKmsConfigs(@QueryParam("accountId") final String accountId) {
+    return new RestResponse<>(kmsService.listKmsConfigs(accountId));
+  }
+
+  @GET
   @Path("/list-values")
   @Timed
   @ExceptionMetered
