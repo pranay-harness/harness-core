@@ -26,9 +26,11 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -237,7 +239,11 @@ public class KmsServiceImpl implements KmsService {
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
     char[] encryptChars = simpleEncryption.encryptChars(value);
 
-    return EncryptedData.builder().encryptionKey(encryptionKey).encryptedValue(encryptChars).build();
+    return EncryptedData.builder()
+        .encryptionKey(encryptionKey)
+        .encryptedValue(encryptChars)
+        .updates(new HashMap<>())
+        .build();
   }
 
   private char[] decryptLocal(EncryptedData data) {
