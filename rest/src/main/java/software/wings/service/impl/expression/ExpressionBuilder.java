@@ -1,6 +1,9 @@
 package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
+import static software.wings.common.Constants.WINGS_BACKUP_PATH;
+import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
+import static software.wings.common.Constants.WINGS_STAGING_PATH;
 
 import software.wings.sm.StateType;
 
@@ -83,6 +86,13 @@ public abstract class ExpressionBuilder {
 
   public abstract Set<String> getDynamicExpressions(String appId, String entityId);
 
+  public Set<String> getExpressions(String appId, String entityId, StateType stateType) {
+    if (stateType == null) {
+      return getExpressions(appId, entityId);
+    }
+    return new HashSet<>();
+  }
+
   Set<String> getStaticExpressions() {
     Set<String> expressions = new HashSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
@@ -116,6 +126,8 @@ public abstract class ExpressionBuilder {
       case EMAIL:
         expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY));
         break;
+      case COMMAND:
+        expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
     }
 
     return expressions;
