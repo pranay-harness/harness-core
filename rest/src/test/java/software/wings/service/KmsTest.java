@@ -22,6 +22,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EmbeddedUser;
@@ -1053,6 +1054,40 @@ public class KmsTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncryptedValsForKms + numOfSettingAttributes, query.asList().size());
     stopTransitionListener(listenerThread);
+  }
+
+  @Test
+  @RealMongo
+  public void saveAwsConfig() throws IOException, InterruptedException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+    enableKmsFeatureFlag();
+
+    int numOfSettingAttributes = 5;
+    Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
+    for (int i = 0; i < numOfSettingAttributes; i++) {
+      final AwsConfig awsConfig = AwsConfig.builder()
+                                      .accountId(accountId)
+                                      .accessKey(UUID.randomUUID().toString())
+                                      .secretKey(UUID.randomUUID().toString().toCharArray())
+                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId)
+                                              .withValue(awsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CLOUD_PROVIDER)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      wingsPersistence.save(settingAttribute);
+      encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
+    }
+
+    Collection<UuidAware> uuidAwares = kmsService.listEncryptedValues(accountId);
+    assertEquals(encryptedEntities.size(), uuidAwares.size());
   }
 
   private KmsConfig getKmsConfig() throws IOException {
