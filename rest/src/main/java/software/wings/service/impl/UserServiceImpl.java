@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
@@ -117,7 +118,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User register(User user) {
     if (!StringUtils.isBlank(user.getEmail())) {
-      user.setEmail(user.getEmail().trim());
+      user.setEmail(user.getEmail().trim().toLowerCase());
     }
 
     if (!StringUtils.isBlank(user.getAccountName())) {
@@ -200,7 +201,9 @@ public class UserServiceImpl implements UserService {
   }
 
   private User getUserByEmail(String email) {
-    return wingsPersistence.createQuery(User.class).field("email").equal(email).get();
+    return isNotEmpty(email)
+        ? wingsPersistence.createQuery(User.class).field("email").equal(email.trim().toLowerCase()).get()
+        : null;
   }
 
   private boolean domainAllowedToRegister(String email) {
