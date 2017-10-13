@@ -6,7 +6,6 @@ import com.google.common.collect.TreeBasedTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicApdex;
@@ -30,10 +29,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -210,6 +206,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 dataCollectionInfo.getApplicationId(), getAllMetricRecords(records));
             logger.info("Sending " + records.cellSet().size() + " new relic metric records to the server for minute "
                 + dataCollectionMinute);
+            records.clear();
+          }
+          if (!records.isEmpty()) {
+            logger.warn(
+                "No metrics found for {}. Sending the heartbeat for minute {}. This happens when there is no metric with data in last 24 hours",
+                dataCollectionInfo, dataCollectionMinute);
+            metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
+                dataCollectionInfo.getApplicationId(), getAllMetricRecords(records));
             records.clear();
           }
         }
