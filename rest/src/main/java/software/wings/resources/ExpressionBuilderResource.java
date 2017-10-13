@@ -7,8 +7,11 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.EntityType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
@@ -38,8 +41,14 @@ public class ExpressionBuilderResource {
       @QueryParam("entityId") String entityId, @QueryParam("entityType") EntityType entityType,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
     StateType stateType = null;
-    if (strStateType != null && !strStateType.isEmpty() && !strStateType.contains("")) {
-      stateType = StateType.valueOf(strStateType);
+    if (!StringUtils.isBlank(strStateType)) {
+      try {
+        if (!strStateType.contentEquals("\"\"")) {
+          stateType = StateType.valueOf(strStateType);
+        }
+      } catch (IllegalArgumentException e) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid state type " + strStateType);
+      }
     }
     return new RestResponse(
         expressionBuilderService.listExpressions(appId, entityId, entityType, serviceId, stateType));
