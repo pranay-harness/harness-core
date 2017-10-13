@@ -22,6 +22,8 @@ public interface KmsService {
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 
+  Collection<KmsConfig> listKmsConfigs(String accountId);
+
   boolean transitionKms(String accountId, String fromKmsId, String toKmsId);
 
   void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId);

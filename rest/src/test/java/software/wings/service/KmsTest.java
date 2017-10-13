@@ -26,6 +26,7 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.KmsConfig;
@@ -46,6 +47,7 @@ import software.wings.rules.RealMongo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.KmsService;
@@ -104,6 +106,22 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
     assertEquals(kmsConfig, savedConfig);
+  }
+
+  @Test
+  @RealMongo
+  public void validateConfig() throws IOException {
+    String accountId = UUID.randomUUID().toString();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setAccountId(accountId);
+    kmsConfig.setSecretKey(UUID.randomUUID().toString());
+
+    try {
+      kmsService.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
+      fail("Saved invalid kms config");
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getResponseMessageList().get(0).getCode());
+    }
   }
 
   @Test
@@ -830,11 +848,71 @@ public class KmsTest extends WingsBaseTest {
 
     kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
-    encryptedEntities.add(kmsConfig);
 
     Collection<UuidAware> encryptedValues = kmsService.listEncryptedValues(accountId);
     assertEquals(encryptedEntities.size(), encryptedValues.size());
     assertTrue(encryptedEntities.containsAll(encryptedValues));
+  }
+
+  @Test
+  @RealMongo
+  public void listKmsConfig() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    kmsConfig = getKmsConfig();
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(1, kmsConfigs.size());
+    KmsConfig actualConfig = kmsConfigs.iterator().next();
+    assertEquals(kmsConfig.getName(), actualConfig.getName());
+    assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
+    assertEquals(kmsConfig.getKmsArn(), actualConfig.getKmsArn());
+    assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+    assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+    assertTrue(actualConfig.isDefault());
+
+    // add another kms
+    String name = UUID.randomUUID().toString();
+    kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(true);
+    kmsConfig.setName(name);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(2, kmsConfigs.size());
+
+    boolean defalultPresent = false;
+    for (KmsConfig config : kmsConfigs) {
+      if (config.getName().equals(name)) {
+        defalultPresent = true;
+        assertTrue(config.isDefault());
+      } else {
+        assertFalse(config.isDefault());
+      }
+    }
+
+    assertTrue(defalultPresent);
+
+    name = UUID.randomUUID().toString();
+    kmsConfig = getKmsConfig();
+    kmsConfig.setDefault(true);
+    kmsConfig.setName(name);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(3, kmsConfigs.size());
+
+    defalultPresent = false;
+    for (KmsConfig config : kmsConfigs) {
+      if (config.getName().equals(name)) {
+        defalultPresent = true;
+        assertTrue(config.isDefault());
+      } else {
+        assertFalse(config.isDefault());
+      }
+    }
+    assertTrue(defalultPresent);
   }
 
   @Test

@@ -8,6 +8,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
@@ -20,6 +24,9 @@ import software.wings.settings.SettingValue;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Indexes({
+  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+})
 @Entity(value = "kmsConfig", noClassnameStored = true)
 public class KmsConfig extends Base {
   @Attributes(title = "Name", required = true) private String name;
