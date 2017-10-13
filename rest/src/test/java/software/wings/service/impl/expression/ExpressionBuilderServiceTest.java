@@ -19,9 +19,11 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.common.Constants.*;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -78,6 +80,17 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("service.name"));
+  }
+
+  @Test
+  public void shouldGetServiceExpressionsCommand() {
+    when(appService.get(APP_ID)).thenReturn(anApplication().withName(APP_NAME).build());
+    Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE, SERVICE_ID, COMMAND);
+    assertThat(expressions).isNotNull();
+    assertThat(expressions.contains("service.name"));
+    assertThat(expressions.contains(WINGS_RUNTIME_PATH));
+    assertThat(expressions.contains(WINGS_BACKUP_PATH));
+    assertThat(expressions.contains(WINGS_STAGING_PATH));
   }
 
   @Test
