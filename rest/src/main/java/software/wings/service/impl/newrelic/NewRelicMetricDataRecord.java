@@ -36,8 +36,6 @@ public class NewRelicMetricDataRecord extends Base {
 
   @NotEmpty @Indexed private String name;
 
-  @NotEmpty @Indexed private String applicationId;
-
   @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;

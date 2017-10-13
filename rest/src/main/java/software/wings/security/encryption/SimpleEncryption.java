@@ -5,6 +5,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
@@ -32,6 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Very simple hardcoded encryption package for encrypting user passwords in persistence.
  * Created by mike@ on 4/24/17.
  */
+@Data
 public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore private static final Charset CHARSET = Charsets.ISO_8859_1;
   @JsonIgnore private static final int AES_256_KEY_LENGTH = 32;
@@ -59,10 +61,6 @@ public class SimpleEncryption implements EncryptionInterface {
         EncryptionUtils.generateSalt());
   }
 
-  public SimpleEncryption(String keySource, byte[] salt) {
-    this(BaseEncoding.base64().encode(Hashing.sha256().hashString(keySource, CHARSET).asBytes()).toCharArray(), salt);
-  }
-
   public SimpleEncryption(char[] key, byte[] salt) {
     if (key.length > AES_256_KEY_LENGTH) {
       key = Arrays.copyOf(key, AES_256_KEY_LENGTH);
@@ -77,19 +75,6 @@ public class SimpleEncryption implements EncryptionInterface {
 
   public EncryptionType getEncryptionType() {
     return this.encryptionType;
-  }
-
-  @JsonIgnore
-  public SecretKey getSecretKey() {
-    return this.secretKey;
-  }
-
-  public byte[] getSalt() {
-    return this.salt;
-  }
-
-  public void setSalt(byte[] salt) {
-    this.salt = salt;
   }
 
   public byte[] encrypt(byte[] content) {
