@@ -21,7 +21,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
-import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
@@ -40,7 +39,6 @@ public class SettingValidationService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private GcpHelperService gcpHelperService;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private AppdynamicsService appdynamicsService;
   @Inject private NewRelicService newRelicService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private AnalysisService analysisService;

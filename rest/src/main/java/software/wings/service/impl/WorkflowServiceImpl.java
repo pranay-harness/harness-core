@@ -375,7 +375,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Workflow readWorkflow(String appId, String workflowId, Integer version) {
     Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
     if (workflow == null) {
-      return workflow;
+      return null;
     }
     loadOrchestrationWorkflow(workflow, version);
     return workflow;
@@ -1104,6 +1104,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
 
+    filter = new SearchFilter();
     filter.setFieldName("originId");
     filter.setFieldValues(originId);
     filter.setOp(Operator.EQ);

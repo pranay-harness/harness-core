@@ -2,9 +2,6 @@ package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
-import com.google.common.base.MoreObjects;
-
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -15,27 +12,13 @@ import java.util.Map;
 public class ElbStateExecutionData extends StateExecutionData {
   private String hostName;
 
-  /**
-   * Getter for property 'hostName'.
-   *
-   * @return Value for property 'hostName'.
-   */
-  public String getHostName() {
-    return hostName;
-  }
-
-  /**
-   * Setter for property 'hostName'.
-   *
-   * @param hostName Value to set for property 'hostName'.
-   */
-  public void setHostName(String hostName) {
+  @java.beans.ConstructorProperties({"hostName"})
+  ElbStateExecutionData(String hostName) {
     this.hostName = hostName;
   }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
+  public static ElbStateExecutionDataBuilder builder() {
+    return new ElbStateExecutionDataBuilder();
   }
 
   @Override
@@ -52,126 +35,61 @@ public class ElbStateExecutionData extends StateExecutionData {
     return data;
   }
 
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
-    /**
-     * The Host name.
-     */
-    String hostName;
-    private String stateName;
-    private Long startTs;
-    private Long endTs;
-    private ExecutionStatus status;
-    private String errorMsg;
+  public String getHostName() {
+    return this.hostName;
+  }
 
-    private Builder() {}
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
+  }
 
-    /**
-     * An elb state execution data builder.
-     *
-     * @return the builder
-     */
-    public static Builder anElbStateExecutionData() {
-      return new Builder();
-    }
+  public boolean equals(Object o) {
+    if (o == this)
+      return true;
+    if (!(o instanceof ElbStateExecutionData))
+      return false;
+    final ElbStateExecutionData other = (ElbStateExecutionData) o;
+    if (!other.canEqual((Object) this))
+      return false;
+    final Object this$hostName = this.getHostName();
+    final Object other$hostName = other.getHostName();
+    if (this$hostName == null ? other$hostName != null : !this$hostName.equals(other$hostName))
+      return false;
+    return true;
+  }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
-    public Builder withHostName(String hostName) {
+  public int hashCode() {
+    final int PRIME = 59;
+    int result = 1;
+    final Object $hostName = this.getHostName();
+    result = result * PRIME + ($hostName == null ? 43 : $hostName.hashCode());
+    return result;
+  }
+
+  protected boolean canEqual(Object other) {
+    return other instanceof ElbStateExecutionData;
+  }
+
+  public String toString() {
+    return "software.wings.api.ElbStateExecutionData(hostName=" + this.getHostName() + ")";
+  }
+
+  public static class ElbStateExecutionDataBuilder {
+    private String hostName;
+
+    ElbStateExecutionDataBuilder() {}
+
+    public ElbStateExecutionData.ElbStateExecutionDataBuilder hostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    /**
-     * With state name builder.
-     *
-     * @param stateName the state name
-     * @return the builder
-     */
-    public Builder withStateName(String stateName) {
-      this.stateName = stateName;
-      return this;
-    }
-
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
-    public Builder withStartTs(Long startTs) {
-      this.startTs = startTs;
-      return this;
-    }
-
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
-    public Builder withEndTs(Long endTs) {
-      this.endTs = endTs;
-      return this;
-    }
-
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
-    public Builder withStatus(ExecutionStatus status) {
-      this.status = status;
-      return this;
-    }
-
-    /**
-     * With error msg builder.
-     *
-     * @param errorMsg the error msg
-     * @return the builder
-     */
-    public Builder withErrorMsg(String errorMsg) {
-      this.errorMsg = errorMsg;
-      return this;
-    }
-
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return anElbStateExecutionData()
-          .withHostName(hostName)
-          .withStateName(stateName)
-          .withStartTs(startTs)
-          .withEndTs(endTs)
-          .withStatus(status)
-          .withErrorMsg(errorMsg);
-    }
-
-    /**
-     * Build elb state execution data.
-     *
-     * @return the elb state execution data
-     */
     public ElbStateExecutionData build() {
-      ElbStateExecutionData eLBStateExecutionData = new ElbStateExecutionData();
-      eLBStateExecutionData.setHostName(hostName);
-      eLBStateExecutionData.setStateName(stateName);
-      eLBStateExecutionData.setStartTs(startTs);
-      eLBStateExecutionData.setEndTs(endTs);
-      eLBStateExecutionData.setStatus(status);
-      eLBStateExecutionData.setErrorMsg(errorMsg);
-      return eLBStateExecutionData;
+      return new ElbStateExecutionData(hostName);
+    }
+
+    public String toString() {
+      return "software.wings.api.ElbStateExecutionData.ElbStateExecutionDataBuilder(hostName=" + this.hostName + ")";
     }
   }
 }

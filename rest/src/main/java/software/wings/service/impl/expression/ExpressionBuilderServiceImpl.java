@@ -1,5 +1,7 @@
 package software.wings.service.impl.expression;
 
+import static software.wings.beans.EntityType.*;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -41,11 +43,11 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     Validator.notNullCheck("entityId", entityId);
     Validator.notNullCheck("entityType", entityId);
     Set<String> expressions = new TreeSet<>();
-    if (entityType.equals(EntityType.SERVICE)) {
-      expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId));
-    } else if (entityType.equals(EntityType.ENVIRONMENT)) {
+    if (entityType.equals(SERVICE)) {
+      expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId, stateType));
+    } else if (entityType.equals(ENVIRONMENT)) {
       expressions.addAll(envExpressionBuilder.getExpressions(appId, entityId, serviceId));
-    } else if (entityType.equals(EntityType.WORKFLOW)) {
+    } else if (entityType.equals(WORKFLOW)) {
       expressions.addAll(workflowExpressionBuilder.getExpressions(appId, entityId, serviceId, stateType));
     } else {
       return new TreeSet<>();

@@ -3,7 +3,6 @@ package software.wings.metrics;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.metrics.MetricDefinition.Threshold;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;

@@ -18,6 +18,7 @@ import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
 import java.util.List;
@@ -41,6 +42,19 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
     expressions.addAll(getStaticExpressions());
     expressions.addAll(getDynamicExpressions(appId, entityId));
     expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId));
+    return expressions;
+  }
+
+  @Override
+  public Set<String> getExpressions(String appId, String entityId, StateType stateType) {
+    if (stateType == null) {
+      return getExpressions(appId, entityId);
+    }
+    SortedSet<String> expressions = new TreeSet<>();
+    expressions.addAll(getExpressions(appId, entityId));
+    if (stateType != null) {
+      expressions.addAll(getStateTypeExpressions(stateType));
+    }
     return expressions;
   }
 
