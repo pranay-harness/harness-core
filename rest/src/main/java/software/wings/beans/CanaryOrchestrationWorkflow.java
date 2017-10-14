@@ -7,9 +7,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
@@ -260,36 +258,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
-  /**
-   * Set template descripton
-   * @param templateExpression
-   */
-  private void setTemplateDescription(TemplateExpression templateExpression, String phaseName) {
-    EntityType entityType = null;
-    Map<String, Object> metadata = templateExpression.getMetadata();
-    if (metadata != null) {
-      if (metadata.get(ENTITY_TYPE) != null) {
-        entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
-      }
-    }
-    if (entityType != null) {
-      if (entityType.equals(ENVIRONMENT)) {
-        templateExpression.setDescription("Variable for Environment entity");
-      } else if (entityType.equals(SERVICE)) {
-        if (getOrchestrationWorkflowType().equals(BASIC)) {
-          templateExpression.setDescription("Variable for Service entity");
-        } else {
-          templateExpression.setDescription("Variable for Service entity in " + phaseName);
-        }
-      } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
-        if (getOrchestrationWorkflowType().equals(BASIC)) {
-          templateExpression.setDescription("Variable for Service Infra-strucuture entity");
-        } else {
-          templateExpression.setDescription("Variable for Service Infra-strucuture entity " + phaseName);
-        }
-      }
-    }
-  }
   /**
    * Invoked after loading document from mongo by morphia.
    */

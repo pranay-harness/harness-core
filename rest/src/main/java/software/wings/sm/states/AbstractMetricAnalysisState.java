@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -33,7 +32,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,8 +41,6 @@ import javax.inject.Named;
  */
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
-
-  @Transient @SchemaIgnore private ScheduledExecutorService analysisExecutorService;
 
   @Transient @Inject private MetricDataAnalysisService metricAnalysisService;
 
@@ -83,16 +79,16 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
 
     final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
-            .withWorkflowExecutionId(context.getWorkflowExecutionId())
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withServerConfigID(getAnalysisServerConfigId())
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCanaryNewHostNames(canaryNewHostNames)
-            .withLastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-            .withCorrelationId(analysisContext.getCorrelationId())
+        MetricAnalysisExecutionData.builder()
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .serverConfigId(getAnalysisServerConfigId())
+            .timeDuration(Integer.parseInt(timeDuration))
+            .canaryNewHostNames(canaryNewHostNames)
+            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+            .correlationId(analysisContext.getCorrelationId())
             .build();
+    executionData.setStatus(ExecutionStatus.RUNNING);
     String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), null);
 
     final MetricDataAnalysisResponse response =
@@ -166,13 +162,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected ExecutionResponse generateAnalysisResponse(
       ExecutionContext context, ExecutionStatus status, String message) {
     final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.Builder.anAnanlysisExecutionData()
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withServerConfigID(getAnalysisServerConfigId())
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCorrelationId(UUID.randomUUID().toString())
+        MetricAnalysisExecutionData.builder()
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .serverConfigId(getAnalysisServerConfigId())
+            .timeDuration(Integer.parseInt(timeDuration))
+            .correlationId(UUID.randomUUID().toString())
             .build();
+    executionData.setStatus(ExecutionStatus.RUNNING);
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                             .message(message)
                                                             .stateType(StateType.valueOf(getStateType()))
