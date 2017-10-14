@@ -271,8 +271,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
-    stateExecutionInstance.getStateExecutionMap().entrySet().forEach(
-        entry -> { context.put(normalizeStateName(entry.getKey()), entry.getValue()); });
+    stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
 
     context.put(CURRENT_STATE, normalizeStateName(getStateExecutionInstance().getStateName()));
 
