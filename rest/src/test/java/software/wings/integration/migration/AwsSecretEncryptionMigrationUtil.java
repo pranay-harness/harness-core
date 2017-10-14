@@ -36,9 +36,7 @@ public class AwsSecretEncryptionMigrationUtil extends WingsBaseTest {
     int updated = 0;
     for (SettingAttribute settingAttribute : settingAttributes) {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      SimpleEncryption encryption = new SimpleEncryption(settingAttribute.getAccountId());
-      char[] encrypted = encryption.encryptChars(awsConfig.getSecretKey());
-      awsConfig.setSecretKey(encrypted);
+      System.out.println("going to encrypt" + awsConfig.getSecretKey());
 
       wingsPersistence.save(settingAttribute);
       updated++;
