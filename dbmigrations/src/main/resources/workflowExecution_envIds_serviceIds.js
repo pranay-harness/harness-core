@@ -1,9 +1,12 @@
 db.getCollection('workflowExecutions').find({workflowType:"ORCHESTRATION", envIds:{$exists:false}}).forEach(function(we){
 	var envIds = [we.envId];
 	var serviceIds = [];
+	if (we.serviceExecutionSummaries) {
 		we.serviceExecutionSummaries.forEach(function(summ){
 			serviceIds.push(summ.contextElement.uuid);
 		});
+	}
+	serviceIds = Array.from(new Set(serviceIds));
 	db.workflowExecutions.update({ _id: we._id}, { $set: { 'serviceIds': serviceIds, 'envIds': envIds }});
 });
 
