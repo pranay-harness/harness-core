@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -33,15 +34,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   private static final Logger logger = LoggerFactory.getLogger(MetricDataAnalysisServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   public boolean saveMetricData(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData)
       throws IOException {
     logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
-    for (NewRelicMetricDataRecord record : metricData) {
-      record.setAppId(applicationId);
-    }
     wingsPersistence.saveIgnoringDuplicateKeys(metricData);
     logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
     return true;
