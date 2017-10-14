@@ -109,6 +109,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               NewRelicMetricDataRecord.builder()
                   .stateType(getStateType())
                   .name(HARNESS_HEARTEAT_METRIC_NAME)
+                  .applicationId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
                   .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                   .serviceId(dataCollectionInfo.getServiceId())
@@ -130,6 +131,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
                   final NewRelicMetricDataRecord metricDataRecord = new NewRelicMetricDataRecord();
                   metricDataRecord.setName(metric.getName());
+                  metricDataRecord.setApplicationId(dataCollectionInfo.getApplicationId());
                   metricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
                   metricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());

@@ -123,6 +123,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTEAT_METRIC_NAME)
+                    .applicationId(dataCollectionInfo.getApplicationId())
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())
@@ -156,6 +157,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             if (hostRecord == null) {
               hostRecord = new NewRelicMetricDataRecord();
               hostRecord.setName(btName);
+              hostRecord.setApplicationId(dataCollectionInfo.getApplicationId());
               hostRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
               hostRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
               hostRecord.setServiceId(dataCollectionInfo.getServiceId());
