@@ -357,8 +357,8 @@ public class CommandState extends State {
           || ((ExecCommandUnit) commandUnit).getCommandString() == null) {
         continue;
       }
-      ((ExecCommandUnit) commandUnit)
-          .setCommandString(context.renderExpression(((ExecCommandUnit) commandUnit).getCommandString()));
+      ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
+      execCommandUnit.setCommandString(context.renderExpressionForExecCommand(execCommandUnit.getCommandString()));
     }
   }
 

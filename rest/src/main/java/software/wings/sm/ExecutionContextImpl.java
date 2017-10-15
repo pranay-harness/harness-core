@@ -98,6 +98,12 @@ public class ExecutionContextImpl implements ExecutionContext {
     return renderExpression(expression, context);
   }
 
+  @Override
+  public String renderExpressionForExecCommand(String expression) {
+    Map<String, Object> context = prepareContext();
+    return renderExpression(expression, context, true);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -244,7 +250,11 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return evaluator.merge(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
+    return renderExpression(expression, context, false);
+  }
+
+  private String renderExpression(String expression, Map<String, Object> context, boolean escapify) {
+    return evaluator.merge(expression, context, normalizeStateName(stateExecutionInstance.getStateName()), escapify);
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {

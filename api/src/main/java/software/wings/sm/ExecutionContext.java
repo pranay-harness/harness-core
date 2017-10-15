@@ -49,6 +49,8 @@ public interface ExecutionContext {
    */
   String renderExpression(String expression);
 
+  String renderExpressionForExecCommand(String expression);
+
   /**
    * Render expression.
    *
