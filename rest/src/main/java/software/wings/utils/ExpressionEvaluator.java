@@ -5,6 +5,7 @@
 package software.wings.utils;
 
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.command.InitSshCommandUnit.escapifyString;
 
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -145,7 +146,7 @@ public class ExpressionEvaluator {
    * @return the string
    */
   public String merge(String expression, Map<String, Object> context) {
-    return merge(expression, context, null);
+    return merge(expression, context, null, false);
   }
 
   /**
@@ -156,9 +157,9 @@ public class ExpressionEvaluator {
    * @param defaultObjectPrefix the default object prefix
    * @return the string
    */
-  public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+  public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix, boolean escapify) {
     if (expression == null) {
-      return expression;
+      return null;
     }
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
@@ -181,7 +182,7 @@ public class ExpressionEvaluator {
         }
       }
 
-      String evaluatedValue = variable;
+      String evaluatedValue;
       try {
         evaluatedValue = String.valueOf(evaluate(variable, context));
         if (evaluatedValue == null) {
@@ -189,13 +190,14 @@ public class ExpressionEvaluator {
         }
         Matcher matcher2 = wingsVariablePattern.matcher(evaluatedValue);
         if (matcher2.find()) {
-          evaluatedValue = merge(evaluatedValue, context, defaultObjectPrefix);
+          evaluatedValue = merge(evaluatedValue, context, defaultObjectPrefix, escapify);
         }
       } catch (Exception e) {
         logger.warn("Ignoring exception -" + e.getMessage(), e);
         continue;
       }
-      matcher.appendReplacement(sb, evaluatedValue);
+      String replacement = escapify ? escapifyString(escapifyString(evaluatedValue)) : evaluatedValue;
+      matcher.appendReplacement(sb, replacement);
     }
     matcher.appendTail(sb);
 
