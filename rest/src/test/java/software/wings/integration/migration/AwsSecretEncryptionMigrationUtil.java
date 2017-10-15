@@ -9,7 +9,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.security.encryption.SimpleEncryption;
 
 import java.util.List;
 
@@ -36,8 +35,7 @@ public class AwsSecretEncryptionMigrationUtil extends WingsBaseTest {
     int updated = 0;
     for (SettingAttribute settingAttribute : settingAttributes) {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      System.out.println("going to encrypt" + awsConfig.getSecretKey());
-
+      System.out.println("going to encrypt: " + new String(awsConfig.getSecretKey()));
       wingsPersistence.save(settingAttribute);
       updated++;
       Thread.sleep(100);
