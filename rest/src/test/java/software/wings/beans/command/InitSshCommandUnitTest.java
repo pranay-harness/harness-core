@@ -25,5 +25,6 @@ public class InitSshCommandUnitTest extends WingsBaseTest {
     assertThat(escapifyString("a<b")).isEqualTo("a\\<b");
     assertThat(escapifyString("a>b")).isEqualTo("a\\>b");
     assertThat(escapifyString("a;b")).isEqualTo("a\\;b");
+    assertThat(escapifyString("a b")).isEqualTo("a\\ b");
   }
 }
