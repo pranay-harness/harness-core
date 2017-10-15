@@ -147,7 +147,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
         .replaceAll("\\|", "\\\\|")
         .replaceAll("<", "\\\\<")
         .replaceAll(">", "\\\\>")
-        .replaceAll(";", "\\\\;");
+        .replaceAll(";", "\\\\;")
+        .replaceAll(" ", "\\\\ ");
   }
 
   /**
