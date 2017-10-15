@@ -23,6 +23,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
+import software.wings.beans.command.SetupEnvCommandUnit;
 
 import java.util.List;
 
@@ -170,79 +171,76 @@ public enum ContainerFamily {
 
     @Override
     protected Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer) {
-      Graph graph =
-          aGraph()
-              .withGraphName("Install")
-              .addNodes(
-                  aNode()
-                      .withOrigin(true)
-                      .withX(50)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Setup Runtime Paths")
-                      .withType(SETUP_ENV.name())
-                      .addProperty("commandString",
-                          "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
-                      .build(),
-                  aNode()
-                      .withX(200)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Stop")
-                      .withType(COMMAND.name())
-                      .addProperty("referenceId", "Stop")
-                      .build(),
-                  aNode()
-                      .withX(350)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy App Stack")
-                      .withType(SCP.name())
-                      .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                      .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
-                      .build(),
-                  aNode()
-                      .withX(500)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Expand App Stack")
-                      .withType(EXEC.name())
-                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                      .addProperty("commandString",
-                          "rm -rf tomcat\n"
-                              + (".".equals(appContainer.getStackRootDirectory())
-                                        ? ""
-                                        : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
-                              + appContainer.getFileType().getUnarchiveCommand(
-                                    appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
-                              + "\nchmod +x tomcat/bin/*")
-                      .build(),
-                  aNode()
-                      .withX(650)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy Artifact")
-                      .withType(SCP.name())
-                      .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                      .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH/tomcat/webapps")
-                      .build(),
-                  aNode()
-                      .withX(800)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy Configs")
-                      .withType(COPY_CONFIGS.name())
-                      .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                      .build(),
-                  aNode()
-                      .withX(950)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Start")
-                      .withType(COMMAND.name())
-                      .addProperty("referenceId", "Start")
-                      .build())
-              .buildPipeline();
+      Graph graph = aGraph()
+                        .withGraphName("Install")
+                        .addNodes(aNode()
+                                      .withOrigin(true)
+                                      .withX(50)
+                                      .withY(50)
+                                      .withId(graphIdGenerator("node"))
+                                      .withName("Setup Runtime Paths")
+                                      .withType(SETUP_ENV.name())
+                                      .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
+                                      .build(),
+                            aNode()
+                                .withX(200)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Stop")
+                                .withType(COMMAND.name())
+                                .addProperty("referenceId", "Stop")
+                                .build(),
+                            aNode()
+                                .withX(350)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy App Stack")
+                                .withType(SCP.name())
+                                .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                                .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
+                                .build(),
+                            aNode()
+                                .withX(500)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Expand App Stack")
+                                .withType(EXEC.name())
+                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                .addProperty("commandString",
+                                    "rm -rf tomcat\n"
+                                        + (".".equals(appContainer.getStackRootDirectory())
+                                                  ? ""
+                                                  : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
+                                        + appContainer.getFileType().getUnarchiveCommand(appContainer.getFileName(),
+                                              appContainer.getStackRootDirectory(), "tomcat")
+                                        + "\nchmod +x tomcat/bin/*")
+                                .build(),
+                            aNode()
+                                .withX(650)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy Artifact")
+                                .withType(SCP.name())
+                                .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                                .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH/tomcat/webapps")
+                                .build(),
+                            aNode()
+                                .withX(800)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy Configs")
+                                .withType(COPY_CONFIGS.name())
+                                .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                                .build(),
+                            aNode()
+                                .withX(950)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Start")
+                                .withType(COMMAND.name())
+                                .addProperty("referenceId", "Start")
+                                .build())
+                        .buildPipeline();
       return aCommand().withCommandType(CommandType.INSTALL).withGraph(graph).build();
     }
 
@@ -384,92 +382,89 @@ public enum ContainerFamily {
 
     @Override
     protected Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer) {
-      Graph graph =
-          aGraph()
-              .withGraphName("Install")
-              .addNodes(
-                  aNode()
-                      .withOrigin(true)
-                      .withX(50)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Setup Runtime Paths")
-                      .withType(SETUP_ENV.name())
-                      .addProperty("commandString",
-                          "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
-                      .build(),
-                  aNode()
-                      .withX(200)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Stop")
-                      .withType(COMMAND.name())
-                      .addProperty("referenceId", "Stop")
-                      .build(),
-                  aNode()
-                      .withX(350)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy App Stack")
-                      .withType(SCP.name())
-                      .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                      .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
-                      .build(),
-                  aNode()
-                      .withX(500)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Expand App Stack")
-                      .withType(EXEC.name())
-                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
-                      .addProperty("commandString",
-                          "rm -rf jboss\n"
-                              + (".".equals(appContainer.getStackRootDirectory())
-                                        ? ""
-                                        : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
-                              + appContainer.getFileType().getUnarchiveCommand(
-                                    appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
-                              + "\nchmod +x jboss/bin/*")
-                      .build(),
-                  aNode()
-                      .withX(650)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy Artifact")
-                      .withType(SCP.name())
-                      .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                      .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
-                      .build(),
-                  aNode()
-                      .withX(800)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Expand Artifact")
-                      .withType(EXEC.name())
-                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH/jboss/standalone/deployments")
-                      .addProperty("commandString",
-                          "mkdir -p $ARTIFACT_FILE_NAME\n"
-                              + "touch ${ARTIFACT_FILE_NAME}.dodeploy\n"
-                              + "cd $ARTIFACT_FILE_NAME\n"
-                              + "jar xvf $WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME")
-                      .build(),
-                  aNode()
-                      .withX(950)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Copy Configs")
-                      .withType(COPY_CONFIGS.name())
-                      .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
-                      .build(),
-                  aNode()
-                      .withX(1100)
-                      .withY(50)
-                      .withId(graphIdGenerator("node"))
-                      .withName("Start")
-                      .withType(COMMAND.name())
-                      .addProperty("referenceId", "Start")
-                      .build())
-              .buildPipeline();
+      Graph graph = aGraph()
+                        .withGraphName("Install")
+                        .addNodes(aNode()
+                                      .withOrigin(true)
+                                      .withX(50)
+                                      .withY(50)
+                                      .withId(graphIdGenerator("node"))
+                                      .withName("Setup Runtime Paths")
+                                      .withType(SETUP_ENV.name())
+                                      .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
+                                      .build(),
+                            aNode()
+                                .withX(200)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Stop")
+                                .withType(COMMAND.name())
+                                .addProperty("referenceId", "Stop")
+                                .build(),
+                            aNode()
+                                .withX(350)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy App Stack")
+                                .withType(SCP.name())
+                                .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                                .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
+                                .build(),
+                            aNode()
+                                .withX(500)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Expand App Stack")
+                                .withType(EXEC.name())
+                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                .addProperty("commandString",
+                                    "rm -rf jboss\n"
+                                        + (".".equals(appContainer.getStackRootDirectory())
+                                                  ? ""
+                                                  : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
+                                        + appContainer.getFileType().getUnarchiveCommand(
+                                              appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
+                                        + "\nchmod +x jboss/bin/*")
+                                .build(),
+                            aNode()
+                                .withX(650)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy Artifact")
+                                .withType(SCP.name())
+                                .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                                .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                                .build(),
+                            aNode()
+                                .withX(800)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Expand Artifact")
+                                .withType(EXEC.name())
+                                .addProperty("commandPath", "$WINGS_RUNTIME_PATH/jboss/standalone/deployments")
+                                .addProperty("commandString",
+                                    "mkdir -p $ARTIFACT_FILE_NAME\n"
+                                        + "touch ${ARTIFACT_FILE_NAME}.dodeploy\n"
+                                        + "cd $ARTIFACT_FILE_NAME\n"
+                                        + "jar xvf \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"")
+                                .build(),
+                            aNode()
+                                .withX(950)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Copy Configs")
+                                .withType(COPY_CONFIGS.name())
+                                .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                                .build(),
+                            aNode()
+                                .withX(1100)
+                                .withY(50)
+                                .withId(graphIdGenerator("node"))
+                                .withName("Start")
+                                .withType(COMMAND.name())
+                                .addProperty("referenceId", "Start")
+                                .build())
+                        .buildPipeline();
       return aCommand().withCommandType(CommandType.INSTALL).withGraph(graph).build();
     }
   };
