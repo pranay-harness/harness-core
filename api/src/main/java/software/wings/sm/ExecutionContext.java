@@ -137,5 +137,7 @@ public interface ExecutionContext {
    */
   Map<String, String> getServiceVariables();
 
+  Map<String, String> getSafeDisplayServiceVariables();
+
   SettingValue getSettingValue(String name, String type);
 }

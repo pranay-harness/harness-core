@@ -1,14 +1,19 @@
 #!/usr/bin/env sh
 
-set -x
 # set session
 set -m
 
 # Set Environment Variables.
 <#list envVariables?keys as envVariable>
-${envVariable}=${envVariables[envVariable]}
-export ${envVariable}
+export ${envVariable}=${envVariables[envVariable]}
 </#list>
+
+# Display Environment Variables.
+<#list safeEnvVariables?keys as safeEnvVariable>
+echo "export ${safeEnvVariable}=${safeEnvVariables[safeEnvVariable]}"
+</#list>
+
+set -x
 
 if [ "$#" -gt 1 ]
 then

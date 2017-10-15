@@ -38,6 +38,7 @@ public class CommandExecutionContext {
   private AppContainer appContainer;
   private List<ArtifactFile> artifactFiles;
   private Map<String, String> serviceVariables = Maps.newHashMap();
+  private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
   private Map<String, String> envVariables = Maps.newHashMap();
   private SettingAttribute hostConnectionAttributes;
   private SettingAttribute bastionConnectionAttributes;
@@ -74,6 +75,7 @@ public class CommandExecutionContext {
     this.appContainer = other.appContainer;
     this.artifactFiles = other.artifactFiles;
     this.serviceVariables = other.serviceVariables;
+    this.safeDisplayServiceVariables = other.safeDisplayServiceVariables;
     this.envVariables = other.envVariables;
     this.hostConnectionAttributes = other.hostConnectionAttributes;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
@@ -133,6 +135,7 @@ public class CommandExecutionContext {
     private AppContainer appContainer;
     private List<ArtifactFile> artifactFiles;
     private Map<String, String> serviceVariables = Maps.newHashMap();
+    private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
     private Map<String, String> envVariables = Maps.newHashMap();
     private SettingAttribute hostConnectionAttributes;
     private SettingAttribute bastionConnectionAttributes;
@@ -216,6 +219,11 @@ public class CommandExecutionContext {
 
     public Builder withServiceVariables(Map<String, String> serviceVariables) {
       this.serviceVariables = serviceVariables;
+      return this;
+    }
+
+    public Builder withSafeDisplayServiceVariables(Map<String, String> safeDisplayServiceVariables) {
+      this.safeDisplayServiceVariables = safeDisplayServiceVariables;
       return this;
     }
 
@@ -317,7 +325,8 @@ public class CommandExecutionContext {
           .withMetadata(metadata)
           .withDesiredCounts(desiredCounts)
           .withCommandExecutionData(commandExecutionData)
-          .withEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout);
+          .withEcsServiceSteadyStateTimeout(ecsServiceSteadyStateTimeout)
+          .withSafeDisplayServiceVariables(safeDisplayServiceVariables);
     }
 
     public CommandExecutionContext build() {
@@ -335,6 +344,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setAppContainer(appContainer);
       commandExecutionContext.setArtifactFiles(artifactFiles);
       commandExecutionContext.setServiceVariables(serviceVariables);
+      commandExecutionContext.setSafeDisplayServiceVariables(safeDisplayServiceVariables);
       commandExecutionContext.setEnvVariables(envVariables);
       commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);

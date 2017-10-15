@@ -48,6 +48,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
   @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
 
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> safeDisplayEnvVariables = Maps.newHashMap();
+
   @JsonIgnore @Transient @SchemaIgnore private String preInitCommand;
 
   @JsonIgnore @Transient @SchemaIgnore private String executionStagingDir;
@@ -85,6 +87,10 @@ public class InitSshCommandUnit extends SshCommandUnit {
       if (StringUtils.isNotEmpty(value)) {
         envVariables.put("ARTIFACT_FILE_NAME", value);
       }
+    }
+
+    for (Map.Entry<String, String> entry : context.getSafeDisplayServiceVariables().entrySet()) {
+      safeDisplayEnvVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
 
     launcherScriptFileName = "harnesslauncher" + activityId + ".sh";
@@ -164,7 +170,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
     String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
-      cfg.getTemplate("execlauncher.ftl").process(of("envVariables", envVariables), fileWriter);
+      cfg.getTemplate("execlauncher.ftl")
+          .process(of("envVariables", envVariables, "safeEnvVariables", safeDisplayEnvVariables), fileWriter);
     }
     return launcherScript;
   }
