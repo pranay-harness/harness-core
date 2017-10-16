@@ -91,7 +91,8 @@ public interface InfrastructureMappingService {
    * @param computeProviderId the compute provider id
    * @return the list
    */
-  List<String> listComputeProviderHostNames(String appId, String envId, String serviceId, String computeProviderId);
+  List<String> listComputeProviderHostDisplayNames(
+      String appId, String envId, String serviceId, String computeProviderId);
 
   /**
    * Gets infra mapping by compute provider and service id.
@@ -334,7 +335,7 @@ public interface InfrastructureMappingService {
    * @param infraMappingId the infra mapping id
    * @return the list
    */
-  List<String> listHostNames(String appId, String infraMappingId);
+  List<String> listHostDisplayNames(String appId, String infraMappingId);
 
   /**
    * List aws iam roles map.

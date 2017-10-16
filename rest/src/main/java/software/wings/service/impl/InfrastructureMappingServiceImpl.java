@@ -79,6 +79,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -760,7 +761,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listComputeProviderHostNames(
+  public List<String> listHostDisplayNames(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
+  }
+
+  @Override
+  public List<String> listComputeProviderHostDisplayNames(
       String appId, String envId, String serviceId, String computeProviderId) {
     Object serviceTemplateId =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
@@ -776,10 +784,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .get();
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
-    return getInfrastructureMappingHostNames(infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
   }
 
-  private List<String> getInfrastructureMappingHostNames(InfrastructureMapping infrastructureMapping) {
+  private List<String> getInfrastructureMappingHostDisplayNames(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
@@ -792,31 +800,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       List<Host> hosts =
           infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
               .getResponse();
-      return hosts.stream()
-          .map(host -> {
-            String name = host.getPublicDns();
-            // Add Name tag if there is one
-            if (host.getEc2Instance() != null) {
-              Optional<Tag> optNameTag =
-                  host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
-              if (optNameTag.isPresent() && isNotBlank(optNameTag.get().getValue())) {
-                // UI checks for " [" in the name to get dns name only. If you change here then also update
-                // NodeSelectModal.js
-                name += " [" + optNameTag.get().getValue() + "]";
-              }
-            }
-            return name;
-          })
-          .collect(Collectors.toList());
+      List<String> hostDisplayNames = new ArrayList<>();
+      for (Host host : hosts) {
+        String displayName = host.getPublicDns();
+        if (host.getEc2Instance() != null) {
+          Optional<Tag> optNameTag =
+              host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
+          if (optNameTag.isPresent() && isNotBlank(optNameTag.get().getValue())) {
+            // UI checks for " [" in the name to get dns name only. If you change here then also update
+            // NodeSelectModal.js
+            displayName += " [" + optNameTag.get().getValue() + "]";
+          }
+        }
+        hostDisplayNames.add(displayName);
+      }
+      return hostDisplayNames;
     }
     return emptyList();
-  }
-
-  @Override
-  public List<String> listHostNames(String appId, String infraMappingId) {
-    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    return getInfrastructureMappingHostNames(infrastructureMapping);
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {

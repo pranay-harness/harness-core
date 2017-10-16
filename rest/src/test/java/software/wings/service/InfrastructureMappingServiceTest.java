@@ -408,8 +408,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
     when(query.get()).thenReturn(physicalInfrastructureMapping);
 
-    List<String> hostNames =
-        infrastructureMappingService.listComputeProviderHostNames(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
+    List<String> hostNames = infrastructureMappingService.listComputeProviderHostDisplayNames(
+        APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
     assertThat(hostNames).hasSize(1).containsExactly(HOST_NAME);
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(query).get();
@@ -455,8 +455,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                         .build()))
                 .build());
 
-    List<String> hostNames =
-        infrastructureMappingService.listComputeProviderHostNames(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
+    List<String> hostNames = infrastructureMappingService.listComputeProviderHostDisplayNames(
+        APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
 
     assertThat(hostNames).hasSize(4).containsExactly("host1", "host2", "host3", "host4 [Host 4]");
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
