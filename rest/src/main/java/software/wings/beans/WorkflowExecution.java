@@ -6,6 +6,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -67,6 +68,13 @@ public class WorkflowExecution extends Base {
    * @return the name
    */
   public String getName() {
+    if (StringUtils.isBlank(name)) {
+      if (pipelineExecution != null && pipelineExecution.getPipeline() != null
+          && StringUtils.isNotBlank(pipelineExecution.getPipeline().getName())) {
+        return pipelineExecution.getPipeline().getName();
+      }
+      return String.valueOf(workflowType);
+    }
     return name;
   }
 

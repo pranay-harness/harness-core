@@ -229,6 +229,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     for (int i = 0; i < res.size(); i++) {
       WorkflowExecution workflowExecution = res.get(i);
+      refreshBreakdown(workflowExecution);
       if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
         // pipeline
         refreshPipelineExecution(workflowExecution);
@@ -245,11 +246,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         continue;
       }
       if (withBreakdownAndSummary) {
-        try {
-          refreshBreakdown(workflowExecution);
-        } catch (Exception e) {
-          logger.error("Failed to  prepare breakdown summary for the workflow execution {} ", workflowExecution, e);
-        }
         try {
           refreshSummaries(workflowExecution);
         } catch (Exception e) {
@@ -651,6 +647,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setWorkflowId(pipelineId);
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
+    workflowExecution.setName(pipeline.getName());
 
     // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
     pipeline.setUuid(UUIDGenerator.getUuid() + "_embedded");
@@ -766,7 +763,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setEnvId(envId);
       workflowExecution.setEnvIds(asList(envId));
       workflowExecution.setWorkflowId(workflowId);
-      workflowExecution.setName(WORKFLOW_NAME_PREF + workflow.getName());
+      workflowExecution.setName(workflow.getName());
       workflowExecution.setWorkflowType(ORCHESTRATION);
       workflowExecution.setStateMachineId(stateMachine.getUuid());
       workflowExecution.setPipelineExecutionId(pipelineExecutionId);
@@ -1148,7 +1145,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
     Service service = serviceResourceService.get(appId, executionArgs.getServiceId());
     workflowExecution.setServiceIds(asList(executionArgs.getServiceId()));
-    workflowExecution.setName(COMMAND_NAME_PREF + service.getName() + "/" + executionArgs.getCommandName());
+    workflowExecution.setName(service.getName() + "/" + executionArgs.getCommandName());
     workflowExecution.setWorkflowId(workflow.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
