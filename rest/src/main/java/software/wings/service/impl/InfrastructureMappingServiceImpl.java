@@ -799,6 +799,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               Optional<Tag> optNameTag =
                   host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
               if (optNameTag.isPresent() && isNotBlank(optNameTag.get().getValue())) {
+                // UI checks for " [" in the name to get dns name only. If you change here then also update
+                // NodeSelectModal.js
                 name += " [" + optNameTag.get().getValue() + "]";
               }
             }
