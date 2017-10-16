@@ -437,6 +437,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
     final WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
@@ -482,6 +483,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  @Ignore
   public void testIsBaseLineCreate() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
