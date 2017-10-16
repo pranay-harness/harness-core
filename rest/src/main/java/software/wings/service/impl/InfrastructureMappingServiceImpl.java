@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.ec2.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -82,7 +81,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -791,18 +789,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
           .getResponse()
           .stream()
-          .map(host -> {
-            String name = host.getPublicDns();
-            // Add Name tag if there is one
-            if (host.getEc2Instance() != null) {
-              Optional<Tag> optNameTag =
-                  host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
-              if (optNameTag.isPresent()) {
-                name += " [" + optNameTag.get().getValue() + "]";
-              }
-            }
-            return name;
-          })
+          .map(Host::getPublicDns)
           .collect(Collectors.toList());
     }
     return emptyList();
