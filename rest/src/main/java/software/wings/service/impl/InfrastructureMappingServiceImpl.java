@@ -789,9 +789,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
-          .getResponse()
-          .stream()
+      List<Host> hosts =
+          infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
+              .getResponse();
+      return hosts.stream()
           .map(host -> {
             String name = host.getPublicDns();
             // Add Name tag if there is one
