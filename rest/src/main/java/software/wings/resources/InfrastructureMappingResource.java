@@ -78,7 +78,7 @@ public class InfrastructureMappingResource {
       @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
-        infrastructureMappingService.listComputeProviderHostNames(appId, envId, serviceId, computeProviderId));
+        infrastructureMappingService.listComputeProviderHostDisplayNames(appId, envId, serviceId, computeProviderId));
   }
 
   @GET
@@ -87,7 +87,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> listHosts(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.listHostNames(appId, infraMappingId));
+    return new RestResponse<>(infrastructureMappingService.listHostDisplayNames(appId, infraMappingId));
   }
 
   @PUT

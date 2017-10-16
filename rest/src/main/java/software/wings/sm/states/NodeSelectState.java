@@ -72,7 +72,7 @@ public abstract class NodeSelectState extends State {
           aServiceInstanceSelectionParams()
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
               .withSelectSpecificHosts(specificHosts);
-      int totalAvailableInstances = infrastructureMappingService.listHostNames(appId, infraMappingId).size();
+      int totalAvailableInstances = infrastructureMappingService.listHostDisplayNames(appId, infraMappingId).size();
       int instancesToAdd;
       if (specificHosts) {
         if (infrastructureMapping instanceof AwsInfrastructureMapping
