@@ -2,21 +2,16 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
-import java.util.Arrays;
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**

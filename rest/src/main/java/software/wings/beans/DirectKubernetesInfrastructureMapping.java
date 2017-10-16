@@ -8,7 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 
 /**
  * Created by brett on 2/27/17

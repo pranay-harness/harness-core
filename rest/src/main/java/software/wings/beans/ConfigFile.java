@@ -523,6 +523,11 @@ public class ConfigFile extends BaseFile implements Encryptable {
     //
   }
 
+  @Override
+  public List<java.lang.reflect.Field> getEncryptedFields() {
+    throw new IllegalStateException("This method shouldn't have been called");
+  }
+
   /**
    * The type Builder.
    */

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -13,11 +12,13 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.WingsReflectionUtils;
 import software.wings.utils.validation.Create;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -77,6 +78,15 @@ public class ServiceVariable extends Base implements Encryptable {
 
   public void setSettingType(SettingVariableTypes type) {
     //
+  }
+
+  @Override
+  public List<java.lang.reflect.Field> getEncryptedFields() {
+    if (type != Type.ENCRYPTED_TEXT) {
+      return Collections.emptyList();
+    }
+
+    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   /**
