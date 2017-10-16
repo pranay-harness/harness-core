@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -437,12 +438,27 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     when(awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>()))
-        .thenReturn(aPageResponse().withResponse(asList(aHost().withHostName(HOST_NAME).build())).build());
+        .thenReturn(
+            aPageResponse()
+                .withResponse(asList(aHost().withHostName("host1").build(),
+                    aHost()
+                        .withHostName("host2")
+                        .withEc2Instance(new Instance().withTags(new Tag().withKey("Other").withValue("otherValue")))
+                        .build(),
+                    aHost()
+                        .withHostName("host3")
+                        .withEc2Instance(new Instance().withTags(new Tag().withKey("Name")))
+                        .build(),
+                    aHost()
+                        .withHostName("host4")
+                        .withEc2Instance(new Instance().withTags(new Tag().withKey("Name").withValue("Host 4")))
+                        .build()))
+                .build());
 
     List<String> hostNames =
         infrastructureMappingService.listComputeProviderHostNames(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
 
-    assertThat(hostNames).hasSize(1).containsExactly(HOST_NAME);
+    assertThat(hostNames).hasSize(4).containsExactly("host1", "host2", "host3", "host4 [Host 4]");
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider).listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>());

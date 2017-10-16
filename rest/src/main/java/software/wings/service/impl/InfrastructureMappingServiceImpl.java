@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.eclipse.jetty.util.StringUtil.isNotBlank;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -797,7 +798,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             if (host.getEc2Instance() != null) {
               Optional<Tag> optNameTag =
                   host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
-              if (optNameTag.isPresent()) {
+              if (optNameTag.isPresent() && isNotBlank(optNameTag.get().getValue())) {
                 name += " [" + optNameTag.get().getValue() + "]";
               }
             }
