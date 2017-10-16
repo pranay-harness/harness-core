@@ -27,9 +27,11 @@ import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -109,13 +111,21 @@ public class KmsServiceImpl implements KmsService {
   }
 
   @Override
+  public boolean saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
+    validateKms(accountId, kmsConfig);
+    return saveKmsConfigInternal(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+  }
+
+  @Override
   public boolean saveKmsConfig(String accountId, KmsConfig kmsConfig) {
     validateKms(accountId, kmsConfig);
+    return saveKmsConfigInternal(accountId, kmsConfig);
+  }
 
+  private boolean saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
+    kmsConfig.setAccountId(accountId);
     Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).field("accountId").equal(accountId);
     Collection<KmsConfig> savedConfigs = query.asList();
-
-    kmsConfig.setAccountId(accountId);
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
     accessKeyData.setAccountId(accountId);
@@ -193,25 +203,25 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public Collection<KmsConfig> listKmsConfigs(String accountId) {
-    Map<String, KmsConfig> rv = new HashMap<>();
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("type")
-                                        .equal(SettingVariableTypes.KMS)
-                                        .fetch();
+    List<KmsConfig> rv = new ArrayList<>();
+    Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
+                                    .field("accountId")
+                                    .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                    .fetch();
     while (query.hasNext()) {
-      EncryptedData data = query.next();
+      KmsConfig kmsConfig = query.next();
+      EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
+      Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
+      kmsConfig.setAccessKey(new String(decrypt(accessKeyData, null, null)));
 
-      if (rv.containsKey(data.getParentId())) {
-        continue;
-      }
+      EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
+      Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
+      kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
 
-      KmsConfig kmsConfig = (KmsConfig) fetchParent(data);
       kmsConfig.setSecretKey(SECRET_MASK);
-      rv.put(data.getParentId(), kmsConfig);
+      rv.add(kmsConfig);
     }
-    return rv.values();
+    return rv;
   }
 
   @Override

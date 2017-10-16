@@ -10,7 +10,6 @@ import static org.junit.Assert.fail;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider.App;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -50,7 +49,6 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.KmsService;
 
 import java.io.IOException;
@@ -95,13 +93,14 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void getKmsConfigGlobal() throws IOException {
+    String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
 
     KmsConfig savedConfig = kmsService.getKmsConfig(UUID.randomUUID().toString());
     assertNull(savedConfig);
 
-    kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
+    kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
 
     savedConfig = kmsService.getKmsConfig(UUID.randomUUID().toString());
     kmsConfig = getKmsConfig();
@@ -857,6 +856,51 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  public void listKmsConfigHasDefault() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setDefault(false);
+    globalKmsConfig.setName("global-kms-config");
+    kmsService.saveGlobalKmsConfig(accountId, globalKmsConfig);
+    globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setDefault(false);
+    globalKmsConfig.setName("global-kms-config");
+
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    kmsConfig = getKmsConfig();
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(2, kmsConfigs.size());
+
+    int defaultConfig = 0;
+    int accountConfig = 0;
+
+    for (KmsConfig actualConfig : kmsConfigs) {
+      if (actualConfig.isDefault()) {
+        accountConfig++;
+        assertEquals(kmsConfig.getName(), actualConfig.getName());
+        assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+      } else {
+        defaultConfig++;
+        assertEquals(globalKmsConfig.getName(), actualConfig.getName());
+        assertEquals(globalKmsConfig.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(globalKmsConfig.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+        assertEquals(Base.GLOBAL_ACCOUNT_ID, actualConfig.getAccountId());
+      }
+    }
+
+    assertEquals(1, defaultConfig);
+    assertEquals(1, accountConfig);
+  }
+
+  @Test
+  @RealMongo
   public void listKmsConfig() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -883,17 +927,17 @@ public class KmsTest extends WingsBaseTest {
     kmsConfigs = kmsService.listKmsConfigs(accountId);
     assertEquals(2, kmsConfigs.size());
 
-    boolean defalultPresent = false;
+    int defaultPresent = 0;
     for (KmsConfig config : kmsConfigs) {
       if (config.getName().equals(name)) {
-        defalultPresent = true;
+        defaultPresent++;
         assertTrue(config.isDefault());
       } else {
         assertFalse(config.isDefault());
       }
     }
 
-    assertTrue(defalultPresent);
+    assertEquals(1, defaultPresent);
 
     name = UUID.randomUUID().toString();
     kmsConfig = getKmsConfig();
@@ -904,16 +948,16 @@ public class KmsTest extends WingsBaseTest {
     kmsConfigs = kmsService.listKmsConfigs(accountId);
     assertEquals(3, kmsConfigs.size());
 
-    defalultPresent = false;
+    defaultPresent = 0;
     for (KmsConfig config : kmsConfigs) {
       if (config.getName().equals(name)) {
-        defalultPresent = true;
+        defaultPresent++;
         assertTrue(config.isDefault());
       } else {
         assertFalse(config.isDefault());
       }
     }
-    assertTrue(defalultPresent);
+    assertEquals(1, defaultPresent);
   }
 
   @Test
