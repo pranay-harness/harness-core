@@ -165,6 +165,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "accountId not specified");
     }
 
+    if (user != null) {
+      if (!user.getAccounts().contains(accountId)) {
+        String msg = "User: " + user.getName() + " is not authorized to access account: " + accountId;
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
+      }
+    }
+
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
     UserRequestInfoBuilder userRequestInfoBuilder =
         anUserRequestInfo()
