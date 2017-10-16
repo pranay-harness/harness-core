@@ -20,8 +20,10 @@ import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.B
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
-import static software.wings.dl.PageRequest.*;
+import static software.wings.dl.PageRequest.Builder;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.sm.ExecutionStatus.*;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
@@ -38,7 +40,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -81,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 
@@ -366,24 +366,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         allTopConsumers = allTopConsumers.stream().sorted(byCount).collect(toList());
 
-        Map<String, Set<String>> appServiceIdMap = allTopConsumers.stream().collect(
-            groupingBy(TopConsumer::getAppId, Collectors.mapping(TopConsumer::getServiceId, Collectors.toSet())));
-        Map<String, String> serviceIdNames = new HashMap<>();
-        for (String appId : appServiceIdMap.keySet()) {
-          PageRequest<Service> servicePageRequest = aPageRequest()
-                                                        .withLimit(UNLIMITED)
-                                                        .addFilter("appId", EQ, appId)
-                                                        .addFilter("uuid", IN, appServiceIdMap.get(appId).toArray())
-                                                        .addFieldsIncluded("appId", "uuid", "name")
-                                                        .build();
-          List<Service> services = serviceResourceService.list(servicePageRequest, false, false);
-          if (services != null) {
-            services.forEach(service -> serviceIdNames.put(service.getUuid(), service.getName()));
-          }
-        }
-        allTopConsumers.forEach(
-            topConsumer -> topConsumer.setServiceName(serviceIdNames.get(topConsumer.getServiceId())));
-
         Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
             workflowExecutions.parallelStream().collect(
                 groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
@@ -391,15 +373,11 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<TopConsumer> prodTopConsumers = new ArrayList<>();
         getTopServicesDeployed(prodTopConsumers, wflExecutionByEnvType.get(PROD));
         prodTopConsumers = prodTopConsumers.stream().sorted(byCount).collect(toList());
-        prodTopConsumers.forEach(
-            topConsumer -> topConsumer.setServiceName(serviceIdNames.get(topConsumer.getServiceId())));
 
         List<TopConsumer> nonProdTopConsumers = new ArrayList<>();
         getTopServicesDeployed(nonProdTopConsumers, wflExecutionByEnvType.get(NON_PROD));
 
         nonProdTopConsumers = nonProdTopConsumers.stream().sorted(byCount).collect(toList());
-        nonProdTopConsumers.forEach(
-            topConsumer -> topConsumer.setServiceName(serviceIdNames.get(topConsumer.getServiceId())));
 
         instanceStats.getStatsMap().put(ALL, allTopConsumers);
         instanceStats.getStatsMap().put(PROD, prodTopConsumers);
@@ -524,7 +502,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                                          .field("createdAt")
                                          .greaterThanOrEq(epochMilli)
                                          .field("status")
-                                         .hasAnyOf(asList(ExecutionStatus.FAILED, SUCCESS))
+                                         .hasAnyOf(asList(FAILED, SUCCESS))
                                          .field("workflowType")
                                          .hasAnyOf(asList(ORCHESTRATION, SIMPLE, PIPELINE))
                                          .field("pipelineExecutionId")
@@ -572,30 +550,33 @@ public class StatisticsServiceImpl implements StatisticsService {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
-      if ((execution.getStatus() != ExecutionStatus.SUCCESS && execution.getStatus() != ExecutionStatus.FAILED
-              && execution.getStatus() != ExecutionStatus.ABORTED && execution.getStatus() != ExecutionStatus.ERROR)) {
+      if ((execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
+              && execution.getStatus() != ERROR)
+          || execution.getServiceExecutionSummaries() == null) {
         continue;
       }
-      if (execution.getServiceIds() == null) {
-        continue;
-      }
-      Map<String, ExecutionStatus> serviceExecutionStatusMap = new HashMap<>();
-      for (String serviceId : execution.getServiceIds()) {
-        serviceExecutionStatusMap.put(serviceId, execution.getStatus());
-      }
-      TopConsumer topConsumer;
-      for (String serviceId : serviceExecutionStatusMap.keySet()) {
+      for (ElementExecutionSummary serviceExecutionSummary : execution.getServiceExecutionSummaries()) {
+        if (serviceExecutionSummary.getContextElement() == null) {
+          continue;
+        }
+        String serviceId = serviceExecutionSummary.getContextElement().getUuid();
+        ExecutionStatus serviceExecutionStatus = serviceExecutionSummary.getStatus();
+        if (serviceExecutionStatus == null) {
+          serviceExecutionStatus = execution.getStatus();
+        }
+        TopConsumer topConsumer;
         if (!topConsumerMap.containsKey(serviceId)) {
           TopConsumer tempConsumer = aTopConsumer()
                                          .withAppId(execution.getAppId())
                                          .withAppName(execution.getAppName())
                                          .withServiceId(serviceId)
+                                         .withServiceName(serviceExecutionSummary.getContextElement().getName())
                                          .build();
           topConsumerMap.put(serviceId, tempConsumer);
           topConsumers.add(tempConsumer);
         }
         topConsumer = topConsumerMap.get(serviceId);
-        if (serviceExecutionStatusMap.get(serviceId).equals(SUCCESS)) {
+        if (serviceExecutionStatus.equals(SUCCESS)) {
           topConsumer.setSuccessfulActivityCount(topConsumer.getSuccessfulActivityCount() + 1);
           topConsumer.setTotalCount(topConsumer.getTotalCount() + 1);
         } else {
@@ -614,8 +595,8 @@ public class StatisticsServiceImpl implements StatisticsService {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
-      if ((execution.getStatus() != ExecutionStatus.SUCCESS && execution.getStatus() != ExecutionStatus.FAILED
-              && execution.getStatus() != ExecutionStatus.ABORTED && execution.getStatus() != ExecutionStatus.ERROR)
+      if ((execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
+              && execution.getStatus() != ERROR)
           || execution.getServiceExecutionSummaries() == null) {
         continue;
       }

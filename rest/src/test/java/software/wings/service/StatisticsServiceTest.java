@@ -18,15 +18,12 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.stats.ActivityStatusAggregation.Builder.anActivityStatusAggregation;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -51,7 +48,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Service.Builder;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.ActivityStatusAggregation;
@@ -407,48 +403,48 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
-    when(serviceResourceService.list(aPageRequest()
-                                         .withLimit(PageRequest.UNLIMITED)
-                                         .addFilter("appId", EQ, APP_ID)
-                                         .addFilter("uuid", IN, asList(SERVICE_ID).toArray())
-                                         .addFieldsIncluded("appId", "uuid", "name")
-                                         .build(),
-             false, false))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(Builder.aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build()))
-                        .build());
+
+    List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withStatus(SUCCESS)
+                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .build());
+    List<ElementExecutionSummary> serviceFailureExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withStatus(FAILED)
+                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
                                                     .withAppName(APP_NAME)
                                                     .withEnvType(PROD)
                                                     .withStatus(SUCCESS)
-                                                    .withServiceIds(asList(SERVICE_ID))
+                                                    .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withServiceIds(asList(SERVICE_ID))
             .withEnvType(PROD)
             .withStatus(SUCCESS)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withServiceIds(asList(SERVICE_ID))
             .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
-            .withServiceIds(asList(SERVICE_ID))
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build(),
         aWorkflowExecution()
             .withAppId(APP_ID)
             .withAppName(APP_NAME)
-            .withServiceIds(asList(SERVICE_ID))
             .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceFailureExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build());
 
