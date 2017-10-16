@@ -36,7 +36,7 @@ public class KmsResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveGlobalKmsConfig(
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
-    return new RestResponse<>(kmsService.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig));
+    return new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
   }
 
   @POST
