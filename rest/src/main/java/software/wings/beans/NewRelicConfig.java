@@ -10,7 +10,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
 import software.wings.jersey.JsonViews;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;

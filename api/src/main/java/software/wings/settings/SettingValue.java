@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;
+import software.wings.utils.WingsReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/16/16.
@@ -46,6 +50,10 @@ public abstract class SettingValue implements ExtensionPoint {
 
   public void setSettingType(SettingVariableTypes type) {
     //
+  }
+
+  public List<Field> getEncryptedFields() {
+    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   /**

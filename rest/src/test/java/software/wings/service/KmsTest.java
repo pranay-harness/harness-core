@@ -551,6 +551,36 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  public void saveServiceVariableNoEncryption() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertEquals(serviceVariable, savedAttribute);
+    assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+  }
+
+  @Test
+  @RealMongo
   public void kmsEncryptionSaveServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();

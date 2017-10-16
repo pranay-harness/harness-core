@@ -12,9 +12,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.security.annotations.Encrypted;
-import software.wings.security.encryption.Encryptable;
-import software.wings.settings.SettingValue;
+import software.wings.annotation.Encrypted;
 
 /**
  * Created by rsingh on 9/29/17.

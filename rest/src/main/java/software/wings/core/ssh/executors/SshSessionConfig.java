@@ -1,15 +1,16 @@
 package software.wings.core.ssh.executors;
 
-import com.google.common.base.MoreObjects;
-
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.WingsReflectionUtils;
 
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,6 +47,11 @@ public class SshSessionConfig implements Encryptable {
   @Override
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.SSH_SESSION_CONFIG;
+  }
+
+  @Override
+  public List<Field> getEncryptedFields() {
+    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   /**
