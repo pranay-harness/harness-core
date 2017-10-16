@@ -520,6 +520,8 @@ public class WorkflowExecution extends Base {
     private EmbeddedUser triggeredBy;
     private Map<String, InfraMappingSummary> infraMappingSummary;
     private PipelineSummary pipelineSummary;
+    private List<String> serviceIds;
+    private List<String> envIds;
 
     private WorkflowExecutionBuilder() {}
 
@@ -671,6 +673,16 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withServiceIds(List<String> serviceIds) {
+      this.serviceIds = serviceIds;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEnvIds(List<String> envIds) {
+      this.envIds = envIds;
+      return this;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
@@ -714,7 +726,9 @@ public class WorkflowExecution extends Base {
           .withLastUpdatedAt(lastUpdatedAt)
           .withTriggeredBy(triggeredBy)
           .withPipelineSummary(pipelineSummary)
-          .withInfraMappingSummary(infraMappingSummary);
+          .withInfraMappingSummary(infraMappingSummary)
+          .withServiceIds(serviceIds)
+          .withEnvIds(envIds);
     }
 
     public WorkflowExecution build() {
@@ -747,6 +761,8 @@ public class WorkflowExecution extends Base {
       workflowExecution.setLastUpdatedAt(lastUpdatedAt);
       workflowExecution.setTriggeredBy(triggeredBy);
       workflowExecution.setPipelineSummary(pipelineSummary);
+      workflowExecution.setServiceIds(serviceIds);
+      workflowExecution.setEnvIds(envIds);
       return workflowExecution;
     }
   }
