@@ -98,11 +98,7 @@ public class ExecutionResource {
     filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
 
-    if (workflowTypes == null || workflowTypes.isEmpty()) {
-      pageRequest.addFilter(aSearchFilter()
-                                .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
-                                .build());
-    } else {
+    if (workflowTypes != null && !workflowTypes.isEmpty()) {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
     }
 
@@ -164,7 +160,6 @@ public class ExecutionResource {
    * Update execution details rest response.
    *
    * @param appId               the app id
-   * @param envId               the env id
    * @param workflowExecutionId the workflow execution id
    * @param executionInterrupt      the execution event
    * @return the rest response
