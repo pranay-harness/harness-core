@@ -168,7 +168,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (user != null) {
       final String accountIdFinal = accountId;
       if (user.getAccounts().stream().filter(account -> account.getUuid().equals(accountIdFinal)).count() != 1) {
-        String msg = "User: " + user.getName() + " is not authorized to access account: " + accountId;
+        String loggerMsg = "User: " + user.getName() + " is not authorized to access account: " + accountId;
+        logger.error(loggerMsg);
+        String msg = "User not authorized to access the given account";
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", msg);
       }
     }
