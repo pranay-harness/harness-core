@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -206,6 +207,7 @@ public class SecureResourceTest {
                                       .build()))
           .build();
 
+  private final Account account = Account.Builder.anAccount().withUuid(ACCOUNT_ID).build();
   private User user =
       anUser()
           .withUuid(USER_ID)
@@ -213,6 +215,7 @@ public class SecureResourceTest {
           .withEmail(USER_EMAIL)
           .withName(USER_NAME)
           .withPassword(PASSWORD)
+          .withAccounts(Lists.newArrayList(account))
           .withRoles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
           .build();
 
