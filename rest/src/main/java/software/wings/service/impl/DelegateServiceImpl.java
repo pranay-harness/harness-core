@@ -356,7 +356,10 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
-      return update(delegate);
+      Delegate updatedDelegate = update(delegate);
+      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
+          .broadcast("[X]" + delegate.getUuid());
+      return updatedDelegate;
     }
   }
 
