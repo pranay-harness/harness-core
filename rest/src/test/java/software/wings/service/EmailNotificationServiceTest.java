@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
-import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -45,7 +44,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
                                                      .withAccountId(ACCOUNT_ID)
                                                      .build();
 
-  private static final SmtpConfig smtpConfig = aSmtpConfig().build();
+  private static final SmtpConfig smtpConfig = SmtpConfig.builder().build();
 
   @Mock private Mailer mailer;
 

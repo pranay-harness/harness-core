@@ -1,7 +1,5 @@
 package software.wings.cloudprovider.aws;
 
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
@@ -9,6 +7,7 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
@@ -26,9 +25,9 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
 
   SettingAttribute cloudProvider =
       SettingAttribute.Builder.aSettingAttribute()
-          .withValue(anAwsConfig()
-                         .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                         .withSecretKey("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".toCharArray())
+          .withValue(AwsConfig.builder()
+                         .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                         .secretKey("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".toCharArray())
                          .build())
           .build();
 

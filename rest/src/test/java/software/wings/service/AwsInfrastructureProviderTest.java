@@ -5,7 +5,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -55,7 +54,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
-          .withValue(anAwsConfig().withSecretKey(SECRET_KEY).withAccessKey(ACCESS_KEY).build())
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
           .build();
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before

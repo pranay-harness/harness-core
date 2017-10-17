@@ -5,7 +5,6 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.KubernetesConfig.KubernetesConfigBuilder.aKubernetesConfig;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 
 import com.google.common.collect.ImmutableList;
@@ -54,11 +53,11 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   public static final String MASTER_URL = "masterUrl";
   public static final String USERNAME = "username";
 
-  private static final KubernetesConfig KUBERNETES_CONFIG = aKubernetesConfig()
-                                                                .withMasterUrl(MASTER_URL)
-                                                                .withUsername(USERNAME)
-                                                                .withPassword(PASSWORD)
-                                                                .withNamespace("default")
+  private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder()
+                                                                .masterUrl(MASTER_URL)
+                                                                .username(USERNAME)
+                                                                .password(PASSWORD)
+                                                                .namespace("default")
                                                                 .build();
 
   @Mock private KubernetesHelperService kubernetesHelperService;

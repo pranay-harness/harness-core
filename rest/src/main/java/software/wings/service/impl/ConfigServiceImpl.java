@@ -10,14 +10,17 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
@@ -25,17 +28,21 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.InvalidPathException;
@@ -67,6 +74,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private EnvironmentService environmentService;
+  @Inject private KmsService kmsService;
+  @Inject private FeatureFlagService featureFlagService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -91,7 +100,7 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
     if (configFile.isEncrypted()) {
-      toWrite = EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
+      toWrite = getEncryptedInputStream(configFile, inputStream);
     }
 
     String fileId = fileService.saveFile(configFile, toWrite, CONFIGS);
@@ -166,7 +175,7 @@ public class ConfigServiceImpl implements ConfigService {
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = EncryptionUtils.decrypt(file, configFile.getAccountId());
+      file = getDecryptedFile(configFile, file);
     }
     return file;
   }
@@ -180,9 +189,19 @@ public class ConfigServiceImpl implements ConfigService {
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(fileId, file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = EncryptionUtils.decrypt(file, configFile.getAccountId());
+      file = getDecryptedFile(configFile, file);
     }
     return file;
+  }
+
+  private File getDecryptedFile(ConfigFile configFile, File file) {
+    if (shouldUseKms(configFile.getAccountId())) {
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+      Preconditions.checkNotNull(encryptedData);
+      return kmsService.decryptFile(file, configFile.getAccountId(), encryptedData);
+    } else {
+      return EncryptionUtils.decrypt(file, configFile.getAccountId());
+    }
   }
 
   /* (non-Javadoc)
@@ -206,7 +225,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
-        toWrite = EncryptionUtils.encrypt(uploadedInputStream, inputConfigFile.getAccountId());
+        toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream);
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -222,6 +241,7 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
       updateMap.put("encrypted", inputConfigFile.isEncrypted());
+      updateMap.put("encryptedFileId", savedConfigFile.getEncryptedFileId());
     }
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
@@ -242,6 +262,19 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
+  }
+
+  private InputStream getEncryptedInputStream(ConfigFile configFile, BoundedInputStream inputStream) {
+    if (shouldUseKms(configFile.getAccountId())) {
+      if (!StringUtils.isBlank(configFile.getUuid())) {
+        wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
+      }
+      EncryptedData encryptedData = kmsService.encryptFile(inputStream, configFile.getAccountId());
+      configFile.setEncryptedFileId(encryptedData.getUuid());
+      return new ByteArrayInputStream(new String(encryptedData.getEncryptedValue()).getBytes());
+    } else {
+      return EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
+    }
   }
 
   /**
@@ -350,5 +383,10 @@ public class ConfigServiceImpl implements ConfigService {
         .equal(entityId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
+  }
+
+  private boolean shouldUseKms(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.KMS.name(), accountId)
+        && kmsService.getKmsConfig(accountId) != null;
   }
 }

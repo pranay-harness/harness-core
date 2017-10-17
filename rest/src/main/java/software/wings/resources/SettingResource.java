@@ -5,7 +5,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -21,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -126,7 +126,7 @@ public class SettingResource {
 
     SettingValue value = null;
     if (GCP.name().equals(type)) {
-      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+      value = GcpConfig.builder().serviceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
     }
     if (null != value) {
       if (value instanceof Encryptable) {
@@ -200,7 +200,7 @@ public class SettingResource {
     String credentials = IOUtils.toString(uploadedInputStream);
     SettingValue value = null;
     if (GCP.name().equals(type) && !isNullOrEmpty(credentials)) {
-      value = aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
+      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
     }
     SettingAttribute.Builder settingAttribute =
         aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId);

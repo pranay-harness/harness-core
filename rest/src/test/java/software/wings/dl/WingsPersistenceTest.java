@@ -506,11 +506,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   public void shouldStoreAndRetrieveEncryptedPassword() {
     String rand = String.valueOf(Math.random());
-    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
-                                      .withJenkinsUrl("https://jenkins.wings.software")
-                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                      .withUsername("wingsbuild")
-                                      .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                      .jenkinsUrl("https://jenkins.wings.software")
+                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .username("wingsbuild")
+                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")
@@ -532,11 +532,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateEncryptedPassword() {
     String rand = String.valueOf(Math.random());
-    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
-                                      .withJenkinsUrl("https://jenkins.wings.software")
-                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                      .withUsername("wingsbuild")
-                                      .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                      .jenkinsUrl("https://jenkins.wings.software")
+                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .username("wingsbuild")
+                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")
@@ -564,17 +564,18 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldStoreAndRetrieveEncryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
-    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                          .withAppId("myapp")
-                                          .withTemplateId(TEMPLATE_ID)
-                                          .withEnvId(ENV_ID)
-                                          .withEntityType(EntityType.SERVICE)
-                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
-                                          .withName("foo" + rand)
-                                          .withValue(password)
-                                          .withType(Type.ENCRYPTED_TEXT)
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.ENCRYPTED_TEXT)
                                           .build();
+    serviceVariable.setAppId("myapp");
+
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));
@@ -588,17 +589,18 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldStoreAndRetrieveUnencryptedConfigValue() {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
-    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
-                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
-                                          .withAppId("myapp")
-                                          .withTemplateId(TEMPLATE_ID)
-                                          .withEnvId(ENV_ID)
-                                          .withEntityType(EntityType.SERVICE)
-                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
-                                          .withName("foo" + rand)
-                                          .withValue(password)
-                                          .withType(Type.TEXT)
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .templateId(TEMPLATE_ID)
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE)
+                                          .entityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .name("foo" + rand)
+                                          .value(password)
+                                          .type(Type.TEXT)
                                           .build();
+    serviceVariable.setAppId("myapp");
+
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));

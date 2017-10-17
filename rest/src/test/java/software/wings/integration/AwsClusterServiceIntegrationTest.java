@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 
@@ -11,6 +10,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -33,9 +33,9 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
   private SettingAttribute awsConnectorSetting =
       aSettingAttribute()
-          .withValue(anAwsConfig()
-                         .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                         .withSecretKey("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".toCharArray())
+          .withValue(AwsConfig.builder()
+                         .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                         .secretKey("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".toCharArray())
                          .build())
           .build();
 

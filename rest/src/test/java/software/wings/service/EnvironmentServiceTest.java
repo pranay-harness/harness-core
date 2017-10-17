@@ -18,7 +18,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -455,17 +454,17 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
         .thenReturn(serviceTemplate);
 
-    ServiceVariable serviceVariable = aServiceVariable()
-                                          .withAppId(APP_ID)
-                                          .withEnvId(ENV_ID)
-                                          .withUuid(SERVICE_VARIABLE_ID)
-                                          .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                          .withEntityId(TEMPLATE_ID)
-                                          .withTemplateId(TEMPLATE_ID)
-                                          .withName(SERVICE_VARIABLE_NAME)
-                                          .withType(TEXT)
-                                          .withValue("8080".toCharArray())
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(TEMPLATE_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .name(SERVICE_VARIABLE_NAME)
+                                          .type(TEXT)
+                                          .value("8080".toCharArray())
                                           .build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
 
     PageResponse<ServiceVariable> serviceVariableResponse =
         aPageResponse().withResponse(asList(serviceVariable)).build();

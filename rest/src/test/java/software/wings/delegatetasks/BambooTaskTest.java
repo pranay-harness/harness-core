@@ -47,11 +47,8 @@ public class BambooTaskTest {
   private List<ParameterEntry> parameters = new ArrayList<>();
   private List<FilePathAssertionEntry> filePathAssertionEntries = new ArrayList<>();
 
-  private BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                          .withBambooUrl("http://localhost:9095/")
-                                          .withUsername(userName)
-                                          .withPassword(password)
-                                          .build();
+  private BambooConfig bambooConfig =
+      BambooConfig.builder().bambooUrl("http://localhost:9095/").username(userName).password(password).build();
 
   @Before
   public void setUp() throws Exception {
