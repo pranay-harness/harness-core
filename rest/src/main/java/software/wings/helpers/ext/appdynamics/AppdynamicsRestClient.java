@@ -5,12 +5,12 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface AppdynamicsRestClient {
    * @return the call
    */
   @GET("rest/applications?output=json")
-  Call<List<AppdynamicsApplication>> listAllApplications(@Header("Authorization") String authorization);
+  Call<List<NewRelicApplication>> listAllApplications(@Header("Authorization") String authorization);
 
   /**
    * Lists all the tiers of an application in appdynamics

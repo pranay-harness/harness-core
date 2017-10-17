@@ -126,7 +126,11 @@ public class StateMachine extends Base {
       orchestrationWorkflow.setValid(true);
       orchestrationWorkflow.setValidationMessage(null);
     }
+
+    // Update Orchestration Workflow user variables
+    orchestrationWorkflow.updateUserVariables();
   }
+
   public StateMachine(
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     deepTransform(graph, stencilMap, orchestrationWorkflow);
@@ -308,7 +312,8 @@ public class StateMachine extends Base {
 
       if (orchestrationWorkflow != null) {
         if (state.getTemplateExpressions() != null) {
-          orchestrationWorkflow.addToUserVariables(state.getTemplateExpressions(), state.getStateType());
+          orchestrationWorkflow.addToUserVariables(
+              state.getTemplateExpressions(), state.getStateType(), state.getName());
         }
       }
       addState(state);

@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import com.google.common.collect.Sets;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang.StringUtils;
@@ -18,8 +20,15 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -76,23 +85,41 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public List<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
+  public Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
       throws IOException {
     final Call<NewRelicMetricResponse> request = getNewRelicRestClient(newRelicConfig).listMetricNames(newRelicAppId);
     final Response<NewRelicMetricResponse> response = request.execute();
     if (response.isSuccessful()) {
       List<NewRelicMetric> metrics = response.body().getMetrics();
-      List<NewRelicMetric> webTransactionMetrics = new ArrayList<>();
+      Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
 
       if (metrics == null) {
-        return webTransactionMetrics;
+        return Collections.emptyList();
       }
+
       for (NewRelicMetric metric : metrics) {
         if (metric.getName().startsWith("WebTransaction/")) {
-          webTransactionMetrics.add(metric);
+          webTransactionMetrics.put(metric.getName(), metric);
         }
       }
-      return webTransactionMetrics;
+
+      // find and remove metrics which have no data in last 24 hours
+      List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(newRelicConfig, newRelicAppId);
+      final long currentTime = System.currentTimeMillis();
+      Set<String> metricsWithNoData = Sets.newHashSet(webTransactionMetrics.keySet());
+      for (NewRelicApplicationInstance applicationInstance : applicationInstances) {
+        NewRelicMetricData metricData = getMetricData(newRelicConfig, newRelicAppId, applicationInstance.getId(),
+            metricsWithNoData, currentTime - TimeUnit.DAYS.toMillis(1), currentTime);
+        metricsWithNoData.removeAll(metricData.getMetrics_found());
+
+        if (metricsWithNoData.isEmpty()) {
+          break;
+        }
+      }
+      for (String metricName : metricsWithNoData) {
+        webTransactionMetrics.remove(metricName);
+      }
+      return webTransactionMetrics.values();
     }
 
     JSONObject errorObject = new JSONObject(response.errorBody().string());
@@ -101,7 +128,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      List<String> metricNames, long fromTime, long toTime) throws IOException {
+      Collection<String> metricNames, long fromTime, long toTime) throws IOException {
     String metricsToCollectString = "";
     for (String metricName : metricNames) {
       metricsToCollectString += "names[]=" + metricName + "&";

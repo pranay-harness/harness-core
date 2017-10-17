@@ -18,6 +18,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
@@ -39,13 +40,15 @@ import javax.ws.rs.QueryParam;
 public class NewRelicResource {
   @Inject private NewRelicService newRelicService;
 
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
   @GET
   @Path("/applications")
   @Timed
   @ExceptionMetered
   public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    return new RestResponse<>(newRelicService.getApplications(settingId));
+    return new RestResponse<>(newRelicService.getApplications(settingId, StateType.NEW_RELIC));
   }
 
   @POST
@@ -55,7 +58,7 @@ public class NewRelicResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
       @QueryParam("applicationId") String applicationId, List<NewRelicMetricDataRecord> metricData) throws IOException {
-    return new RestResponse<>(newRelicService.saveMetricData(accountId, applicationId, metricData));
+    return new RestResponse<>(metricDataAnalysisService.saveMetricData(accountId, applicationId, metricData));
   }
 
   @POST
@@ -83,7 +86,8 @@ public class NewRelicResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
-    return new RestResponse<>(newRelicService.getMetricsAnalysis(stateExecutionId, workflowExecutionId));
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricsAnalysis(StateType.NEW_RELIC, stateExecutionId, workflowExecutionId));
   }
 
   @POST

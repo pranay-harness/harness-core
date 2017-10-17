@@ -50,7 +50,6 @@ import software.wings.yaml.GoogleCloudPlatformYaml;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
-import software.wings.yaml.directory.DirectoryNode.NodeType;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.ServiceLevelYamlNode;
@@ -88,48 +87,53 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public DirectoryNode pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
-    if (!featureFlagService.isEnabled(GIT_SYNC, accountId)) {
-      return null;
+  public boolean pushDirectory(@NotEmpty String accountId, boolean filterCustomGitSync) {
+    if (!featureFlagService.isEnabled(GIT_SYNC.name(), accountId)) {
+      return false;
     }
 
     logger.info("******* pushDirectory");
 
     String setupEntityId = "setup";
-    FolderNode top = getDirectory(accountId, setupEntityId, filterCustomGitSync);
-
-    if (top.getType() != NodeType.FOLDER) {
-      // TODO - handle error
-      return null;
-    }
 
     YamlGitSync ygs = yamlGitSyncService.get(setupEntityId);
 
     if (ygs == null) {
       // TODO - handle error
-      return null;
+      return false;
+    }
+
+    // it needs to be enabled for us to proceed
+    if (!ygs.isEnabled()) {
+      return false;
+    }
+
+    // it needs to be enabled for us to proceed
+    if (!ygs.isEnabled()) {
+      return false;
     }
 
     // it needs to be HARNESS_TO_GIT or BOTH for us to proceed
     if (ygs.getSyncMode() == SyncMode.GIT_TO_HARNESS) {
-      return null;
+      return false;
     }
 
-    EntityUpdateListEvent eule =
-        EntityUpdateListEvent.Builder.anEntityUpdateListEvent().withAccountId(accountId).withTreeSync(true).build();
+    EntityUpdateListEvent eule = EntityUpdateListEvent.Builder.anEntityUpdateListEvent()
+                                     .withAccountId(accountId)
+                                     .withTreeSync(true)
+                                     .withSourceType(SourceType.ENTITY_UPDATE)
+                                     .withFilterCustomGitSync(false)
+                                     .build();
 
     Account account = accountService.get(accountId);
     // TODO - we may want to add a new SourceType for this scenario (?)
     eule.addEntityUpdateEvent(entityUpdateService.setupListUpdate(account, SourceType.ENTITY_UPDATE));
 
-    // traverse the directory and add all the files
-    eule = traverseDirectory(eule, top, "", SourceType.ENTITY_UPDATE);
-
     logger.info("******* about to queue EntityUpdateList");
 
     entityUpdateService.queueEntityUpdateList(eule);
 
-    return top;
+    return true;
   }
 
   public EntityUpdateListEvent traverseDirectory(

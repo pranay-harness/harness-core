@@ -1,22 +1,22 @@
 #!/usr/bin/env sh
 
-set -x
 # set session
 set -m
 
 # Set Environment Variables.
-WINGS_BACKUP_PATH=/tmp/backup
-export WINGS_BACKUP_PATH
-PORT=8080
-export PORT
-WINGS_RUNTIME_PATH=/tmp/runtime
-export WINGS_RUNTIME_PATH
-WINGS_SCRIPT_DIR=/tmp/ACTIVITY_ID
-export WINGS_SCRIPT_DIR
-ARTIFACT_FILE_NAME=artifact.war
-export ARTIFACT_FILE_NAME
-WINGS_STAGING_PATH=/tmp/staging
-export WINGS_STAGING_PATH
+export WINGS_BACKUP_PATH=/tmp/backup
+export PORT=8080
+export PASSWORD=aSecret
+export WINGS_RUNTIME_PATH=/tmp/runtime
+export WINGS_SCRIPT_DIR=/tmp/ACTIVITY_ID
+export ARTIFACT_FILE_NAME=artifact.war
+export WINGS_STAGING_PATH=/tmp/staging
+
+# Display Environment Variables.
+echo "export PORT=8080"
+echo "export PASSWORD=*****"
+
+set -x
 
 if [ "$#" -gt 1 ]
 then

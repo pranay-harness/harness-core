@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -87,7 +89,7 @@ public class InstanceHelper {
 
         for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
           List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
-          if (instanceStatusSummaries == null) {
+          if (isEmpty(instanceStatusSummaries)) {
             logger.debug("No instances to process");
             return;
           }
@@ -187,10 +189,8 @@ public class InstanceHelper {
   private void setInstanceInfoAndKey(
       Instance.Builder builder, HostElement host, String infraMappingType, String infraMappingId) {
     InstanceInfo instanceInfo = null;
-    HostInstanceKey hostInstanceKey = HostInstanceKey.Builder.aHostInstanceKey()
-                                          .withHostName(host.getHostName())
-                                          .withInfraMappingId(infraMappingId)
-                                          .build();
+    HostInstanceKey hostInstanceKey =
+        HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.withHostInstanceKey(hostInstanceKey);
 
     if (InfrastructureMappingType.AWS_SSH.getName().equals(infraMappingType)

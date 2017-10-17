@@ -379,8 +379,9 @@ public class YamlResource {
   @Path("/push-directory")
   @Timed
   @ExceptionMetered
-  public RestResponse<DirectoryNode> pushDirectory(
+  public RestResponse pushDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("filterCustomGitSync") boolean filterCustomGitSync) {
-    return new RestResponse<>(yamlDirectoryService.pushDirectory(accountId, filterCustomGitSync));
+    boolean success = yamlDirectoryService.pushDirectory(accountId, filterCustomGitSync);
+    return new RestResponse<>();
   }
 }

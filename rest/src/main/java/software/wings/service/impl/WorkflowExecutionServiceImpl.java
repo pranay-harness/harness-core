@@ -73,7 +73,6 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
@@ -98,7 +97,6 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
@@ -144,6 +142,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
@@ -230,6 +229,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     for (int i = 0; i < res.size(); i++) {
       WorkflowExecution workflowExecution = res.get(i);
+      refreshBreakdown(workflowExecution);
       if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
         // pipeline
         refreshPipelineExecution(workflowExecution);
@@ -246,11 +246,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         continue;
       }
       if (withBreakdownAndSummary) {
-        try {
-          refreshBreakdown(workflowExecution);
-        } catch (Exception e) {
-          logger.error("Failed to  prepare breakdown summary for the workflow execution {} ", workflowExecution, e);
-        }
         try {
           refreshSummaries(workflowExecution);
         } catch (Exception e) {
@@ -320,8 +315,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshPipelineExecution(WorkflowExecution workflowExecution) {
-    if (workflowExecution == null || workflowExecution.getPipelineExecution() == null
-        || workflowExecution.getPipelineExecution().getStatus().isFinalStatus()) {
+    if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
+      return;
+    }
+    if (workflowExecution.getPipelineExecution().getStatus().isFinalStatus()
+        && workflowExecution.getPipelineExecution()
+               .getPipelineStageExecutions()
+               .stream()
+               .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+               .allMatch(workflowExecution1 -> workflowExecution1.getStatus().isFinalStatus())) {
       return;
     }
 
@@ -375,8 +377,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
             if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
               EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-              WorkflowExecution workflowExecution2 =
-                  getExecutionDetails(workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+              WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
+                  workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+              if (!workflowExecution2.getStatus().isFinalStatus()) {
+                populateNodeHierarchyWithGraph(workflowExecution2);
+              }
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
               stageExecution.setStatus(workflowExecution2.getStatus());
             }
@@ -556,7 +561,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, StateExecutionInstance> allInstancesIdMap =
           allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-      if (!workflowExecution.isFailedStatus()) {
+      if (!workflowExecution.getStatus().isFinalStatus()) {
         if (allInstances.stream().anyMatch(
                 i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
           workflowExecution.setStatus(ExecutionStatus.PAUSED);
@@ -642,6 +647,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setWorkflowId(pipelineId);
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
+    workflowExecution.setName(pipeline.getName());
 
     // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
     pipeline.setUuid(UUIDGenerator.getUuid() + "_embedded");
@@ -676,8 +682,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .build());
       });
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
+      workflowExecution.setServiceIds(
+          pipeline.getServices().stream().map(Service::getUuid).collect(Collectors.toList()));
     }
 
+    Set<String> envIds = new HashSet<>();
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+        .forEach(pipelineStageElement -> {
+          if (pipelineStageElement.getType().equals(ENV_STATE.name())) {
+            if (pipelineStageElement.getProperties() != null
+                && pipelineStageElement.getProperties().get("envId") != null) {
+              envIds.add(String.valueOf(pipelineStageElement.getProperties().get("envId")));
+            }
+          }
+        });
+    workflowExecution.setEnvIds(new ArrayList<>(envIds));
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
@@ -740,13 +761,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       WorkflowExecution workflowExecution = new WorkflowExecution();
       workflowExecution.setAppId(appId);
       workflowExecution.setEnvId(envId);
+      workflowExecution.setEnvIds(asList(envId));
       workflowExecution.setWorkflowId(workflowId);
-      workflowExecution.setName(WORKFLOW_NAME_PREF + workflow.getName());
+      workflowExecution.setName(workflow.getName());
       workflowExecution.setWorkflowType(ORCHESTRATION);
       workflowExecution.setStateMachineId(stateMachine.getUuid());
       workflowExecution.setPipelineExecutionId(pipelineExecutionId);
       workflowExecution.setExecutionArgs(executionArgs);
-
+      workflowExecution.setServiceIds(
+          workflow.getServices().stream().map(Service::getUuid).collect(Collectors.toList()));
       WorkflowStandardParams stdParams;
       if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
           || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
@@ -1084,19 +1107,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  @Override
-  public List<WorkflowExecution> getWorkflowExecutionHistory(String serviceId, String envType, int limit) {
-    PageRequest pageRequest = Builder.aPageRequest()
-                                  .addFilter("serviceExecutionSummaries.contextElement.className", Operator.EQ,
-                                      "software.wings.api.ServiceElement")
-                                  .addFilter("serviceExecutionSummaries.contextElement.uuid", Operator.EQ, serviceId)
-                                  .addFilter("envType", Operator.EQ, EnvironmentType.PROD)
-                                  .addOrder("startTs", OrderType.DESC)
-                                  .withLimit(String.valueOf(limit))
-                                  .build();
-
-    return wingsPersistence.query(WorkflowExecution.class, pageRequest, true);
-  }
+  //  @Override
+  //  public List<WorkflowExecution> getWorkflowExecutionHistory(String serviceId, String envType, int limit) {
+  //    PageRequest pageRequest = Builder.aPageRequest()
+  //        .addFilter("serviceExecutionSummaries.contextElement.className",
+  //        Operator.EQ,"software.wings.api.ServiceElement") .addFilter("serviceExecutionSummaries.contextElement.uuid",
+  //        Operator.EQ, serviceId) .addFilter("envType", Operator.EQ, EnvironmentType.PROD) .addOrder("startTs",
+  //        OrderType.DESC).withLimit(String.valueOf(limit)).build();
+  //
+  //    return wingsPersistence.query(WorkflowExecution.class, pageRequest, true);
+  //  }
 
   /**
    * Trigger simple execution workflow execution.
@@ -1119,11 +1139,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
+    workflowExecution.setEnvIds(asList(envId));
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
     Service service = serviceResourceService.get(appId, executionArgs.getServiceId());
-    workflowExecution.setName(COMMAND_NAME_PREF + service.getName() + "/" + executionArgs.getCommandName());
+    workflowExecution.setServiceIds(asList(executionArgs.getServiceId()));
+    workflowExecution.setName(service.getName() + "/" + executionArgs.getCommandName());
     workflowExecution.setWorkflowId(workflow.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
@@ -1549,9 +1571,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return
    */
   private boolean isServiceTemplatized(Workflow workflow) {
-    if (!workflow.isTemplatized()) {
-      return false;
-    }
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
       return orchestrationWorkflow.isServiceTemplatized();
@@ -1565,9 +1584,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @return
    */
   private boolean isInfraMappingTemplatized(Workflow workflow) {
-    if (!workflow.isTemplatized()) {
-      return false;
-    }
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
       return orchestrationWorkflow.isInfraMappingTemplatized();

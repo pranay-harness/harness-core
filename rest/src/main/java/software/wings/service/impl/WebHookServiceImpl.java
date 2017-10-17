@@ -47,7 +47,8 @@ public class WebHookServiceImpl implements WebHookService {
 
       Artifact artifact = null;
       if (isNullOrEmpty(webHookRequest.getBuildNumber()) && isNullOrEmpty(webHookRequest.getDockerImageTag())) {
-        artifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
+        artifact = artifactService.fetchLatestArtifactForArtifactStream(
+            appId, artifactStreamId, artifactStream.getSourceName());
       } else {
         String requestBuildNumber = isNullOrEmpty(webHookRequest.getBuildNumber()) ? webHookRequest.getDockerImageTag()
                                                                                    : webHookRequest.getBuildNumber();

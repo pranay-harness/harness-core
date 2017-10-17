@@ -129,6 +129,16 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
     * JRE:  
         Default (1.8 - SDK of 'delegate' module)
         
+### Bash Profile
+
+Add the following to your `~/.bash_profile` to display the current git branch in the command prompt:
+```
+parse_git_branch() {
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+export PS1="\[\033[34m\]\w\[\033[36m\]\$(parse_git_branch)\[\033[31m\] $\[\033[0m\] "
+```
+
 ### Before you can use the client:
 
 1) Make sure your mongodb is running first.  

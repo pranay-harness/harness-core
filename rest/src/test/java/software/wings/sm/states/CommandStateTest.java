@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -94,7 +95,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -209,7 +209,7 @@ public class CommandStateTest extends WingsBaseTest {
                         .withServiceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
                         .build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
-    when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
+    when(context.getServiceVariables()).thenReturn(emptyMap());
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
@@ -259,7 +259,8 @@ public class CommandStateTest extends WingsBaseTest {
                                .withEnvId(ENV_ID)
                                .withHost(HOST)
                                .withServiceTemplateId(TEMPLATE_ID)
-                               .withServiceVariables(Collections.emptyMap())
+                               .withServiceVariables(emptyMap())
+                               .withSafeDisplayServiceVariables(emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)
@@ -276,6 +277,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context, times(1)).getServiceVariables();
+    verify(context, times(1)).getSafeDisplayServiceVariables();
     verify(context).getStateExecutionData();
 
     verify(context, times(4)).renderExpression(anyString());
@@ -362,7 +364,8 @@ public class CommandStateTest extends WingsBaseTest {
                                .withMetadata(artifact.getMetadata())
                                .withHost(HOST)
                                .withServiceTemplateId(TEMPLATE_ID)
-                               .withServiceVariables(Collections.emptyMap())
+                               .withServiceVariables(emptyMap())
+                               .withSafeDisplayServiceVariables(emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)
@@ -381,6 +384,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context, times(1)).getServiceVariables();
+    verify(context, times(1)).getSafeDisplayServiceVariables();
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
@@ -427,6 +431,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context, times(1)).getServiceVariables();
+    verify(context, times(1)).getSafeDisplayServiceVariables();
 
     verify(context, times(4)).renderExpression(anyString());
 

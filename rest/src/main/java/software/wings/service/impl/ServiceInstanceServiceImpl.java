@@ -4,11 +4,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
-import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.InfrastructureMapping;
@@ -19,9 +16,9 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.utils.Misc;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -32,7 +29,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -69,33 +65,32 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(ServiceTemplate template, InfrastructureMapping infraMapping,
-      List<Host> addedHosts, List<String> deletedPublicDnsNames) {
-    Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
-                                             .field("appId")
-                                             .equal(template.getAppId())
-                                             .field("serviceTemplate")
-                                             .equal(template.getUuid())
-                                             .field("publicDns")
-                                             .hasAnyOf(deletedPublicDnsNames);
-    wingsPersistence.delete(deleteQuery);
-
-    addedHosts.forEach(host -> {
-      ServiceInstance serviceInstance =
-          aServiceInstance()
-              .withAppId(template.getAppId())
-              .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
-              .withServiceTemplate(template)
-              .withHost(host)
-              .withInfraMappingId(infraMapping.getUuid())
-              .withInfraMappingType(infraMapping.getComputeProviderType())
-              .build();
-      try {
-        wingsPersistence.save(serviceInstance);
-      } catch (DuplicateKeyException ex) {
-        logger.warn("Reinserting an existing service instance ignore", ex);
-      }
-    });
+  public List<ServiceInstance> updateInstanceMappings(
+      ServiceTemplate template, InfrastructureMapping infraMapping, List<Host> hosts) {
+    return hosts.stream()
+        .map(host -> {
+          ServiceInstance serviceInstance = wingsPersistence.createQuery(ServiceInstance.class)
+                                                .field("infraMappingId")
+                                                .equal(infraMapping.getUuid())
+                                                .field("hostId")
+                                                .equal(host.getUuid())
+                                                .field("hostName")
+                                                .equal(host.getHostName())
+                                                .field("publicDns")
+                                                .equal(host.getPublicDns())
+                                                .get();
+          return serviceInstance != null ? serviceInstance
+                                         : wingsPersistence.saveAndGet(ServiceInstance.class,
+                                               aServiceInstance()
+                                                   .withAppId(template.getAppId())
+                                                   .withEnvId(template.getEnvId())
+                                                   .withServiceTemplate(template)
+                                                   .withHost(host)
+                                                   .withInfraMappingId(infraMapping.getUuid())
+                                                   .withInfraMappingType(infraMapping.getComputeProviderType())
+                                                   .build());
+        })
+        .collect(Collectors.toList());
   }
 
   /* (non-Javadoc)

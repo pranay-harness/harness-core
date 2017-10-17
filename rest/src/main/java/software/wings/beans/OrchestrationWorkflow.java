@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
@@ -14,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +86,11 @@ public abstract class OrchestrationWorkflow {
 
   public abstract List<String> getInfraMappingIds();
 
+  @JsonIgnore
+  public List<String> getTemplateVariables() {
+    return new ArrayList<>();
+  }
+
   /**
    * Checks if the workflow is templatized or not
    * @return
@@ -104,6 +114,8 @@ public abstract class OrchestrationWorkflow {
     return Arrays.asList();
   }
 
+  public void updateUserVariables() {}
+
   /**
    * Checks if any one of InfraMapping is templatized
    * @return
@@ -114,27 +126,18 @@ public abstract class OrchestrationWorkflow {
   }
 
   /**
-   * Checks if any one of InfraMapping is templatized
+   * Checks if any one of Env is templatized
    * @return
    */
   @JsonIgnore
   public boolean isInfraMappingTemplatized() {
     return false;
   }
-
-  /**
-   * Checks if any one of Environment is templatized
-   * @return
-   */
-  @JsonIgnore
-  public boolean isEnvironmentTemplatized() {
-    return false;
-  }
   /***
    * Add template expressions to workflow variables
    */
 
-  public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType) {
+  public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType, String name) {
     if (templateExpressions == null || templateExpressions.isEmpty()) {
       return;
     }
@@ -163,34 +166,26 @@ public abstract class OrchestrationWorkflow {
         }
       }
       if (matcher.matches()) {
-        String templateVariable = matcher.group(0);
-        templateVariable = templateVariable.substring(2, templateVariable.length() - 1);
-        templateVariable = getTemplateExpressionName(templateExpression, templateVariable, entityType, stateType);
-        if (!contains(getUserVariables(), templateVariable)) {
-          getUserVariables().add(aVariable()
-                                     .withName(templateVariable)
-                                     .withEntityType(entityType)
-                                     .withArtifactType(artifactType)
-                                     .withRelatedField(relatedField)
-                                     .withType(entityType != null ? ENTITY : TEXT)
-                                     .withMandatory(templateExpression.isMandatory())
-                                     .withDescription(templateExpression.getDescription())
-                                     .build());
-        }
+        expression = getTemplateExpressionName(
+            templateExpression, matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType, stateType);
       } else {
         expression = getTemplateExpressionName(templateExpression, expression, entityType, stateType);
-        if (!contains(getUserVariables(), expression)) {
-          getUserVariables().add(aVariable()
-                                     .withName(expression)
-                                     .withEntityType(entityType)
-                                     .withArtifactType(artifactType)
-                                     .withRelatedField(relatedField)
-                                     .withType(entityType != null ? ENTITY : TEXT)
-                                     .withMandatory(templateExpression.isMandatory())
-                                     .withDescription(templateExpression.getDescription())
-                                     .build());
-        }
       }
+      if (!contains(getUserVariables(), expression)) {
+        Variable variable = aVariable()
+                                .withName(expression)
+                                .withEntityType(entityType)
+                                .withArtifactType(artifactType)
+                                .withRelatedField(relatedField)
+                                .withType(entityType != null ? ENTITY : TEXT)
+                                .withMandatory(templateExpression.isMandatory())
+                                .build();
+
+        // Set the description
+        setVariableDescription(variable, name);
+        getUserVariables().add(variable);
+      }
+      getTemplateVariables().add(expression);
     }
   }
   /**
@@ -198,11 +193,13 @@ public abstract class OrchestrationWorkflow {
    * @param templateExpressions
    */
   public void addToUserVariables(List<TemplateExpression> templateExpressions) {
-    addToUserVariables(templateExpressions, null);
+    addToUserVariables(templateExpressions, null, null);
   }
 
   private boolean contains(List<Variable> userVariables, String name) {
-    return userVariables.stream().anyMatch(variable -> variable.getName().equals(name));
+    return userVariables != null
+        && userVariables.stream().anyMatch(
+               variable -> variable != null && variable.getName() != null && variable.getName().equals(name));
   }
 
   private String getTemplateExpressionName(
@@ -219,9 +216,35 @@ public abstract class OrchestrationWorkflow {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args",
             "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }
-    } else if (entityType == null && stateType != null) {
+    } else if (stateType != null) {
       // TODO: Check if it can contain other expressions
     }
     return templateVariable;
+  }
+
+  /**
+   * Set template descripton
+   * @param variable
+   * @param stateName
+   */
+  private void setVariableDescription(Variable variable, String stateName) {
+    EntityType entityType = variable.getEntityType();
+    if (entityType != null) {
+      if (entityType.equals(ENVIRONMENT)) {
+        variable.setDescription("Variable for Environment entity");
+      } else if (entityType.equals(SERVICE)) {
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
+          variable.setDescription("Variable for Service entity");
+        } else {
+          variable.setDescription("Variable for Service entity in " + stateName);
+        }
+      } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
+          variable.setDescription("Variable for Service Infra-strucuture entity");
+        } else {
+          variable.setDescription("Variable for Service Infra-strucuture entity " + stateName);
+        }
+      }
+    }
   }
 }

@@ -6,7 +6,6 @@ import com.google.common.collect.TreeBasedTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.newrelic.NewRelicApdex;
@@ -28,11 +27,9 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -41,7 +38,6 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
-  public static final String HARNESS_HEARTEAT_METRIC_NAME = "Harness heartbeat metric";
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDataCollectionTask.class);
   private static final int DURATION_TO_ASK_MINUTES = 3;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
@@ -85,14 +81,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private final NewRelicDataCollectionInfo dataCollectionInfo;
     private final List<NewRelicApplicationInstance> instances;
     private long collectionStartTime;
-    private final List<NewRelicMetric> metrics;
+    private Collection<NewRelicMetric> metrics;
     private int dataCollectionMinute;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo) throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
       this.instances = newRelicDelegateService.getApplicationInstances(
-          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
-      this.metrics = newRelicDelegateService.getMetricsNameToCollect(
           dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
       this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
@@ -102,6 +96,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     @Override
     public void run() {
       try {
+        if (metrics == null || metrics.isEmpty() || dataCollectionMinute % DURATION_TO_ASK_MINUTES == 0) {
+          metrics = newRelicDelegateService.getMetricsNameToCollect(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
+        }
         final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
         for (NewRelicApplicationInstance node : instances) {
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
@@ -109,6 +107,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           // HeartBeat
           records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
               NewRelicMetricDataRecord.builder()
+                  .stateType(getStateType())
                   .name(HARNESS_HEARTEAT_METRIC_NAME)
                   .applicationId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
@@ -121,8 +120,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .level(ClusterLevel.H0)
                   .build());
 
-          List<List<String>> metricBatches = batchMetricsToCollect();
-          for (List<String> metricNames : metricBatches) {
+          List<Collection<String>> metricBatches = batchMetricsToCollect();
+          for (Collection<String> metricNames : metricBatches) {
             try {
               NewRelicMetricData metricData =
                   newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
@@ -138,6 +137,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   metricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
                   metricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
                   metricDataRecord.setDataCollectionMinute(dataCollectionMinute);
+                  metricDataRecord.setStateType(getStateType());
 
                   // set from time to the timestamp
                   long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
@@ -212,6 +212,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 + dataCollectionMinute);
             records.clear();
           }
+          if (!records.isEmpty()) {
+            logger.warn(
+                "No metrics found for {}. Sending the heartbeat for minute {}. This happens when there is no metric with data in last 24 hours",
+                dataCollectionInfo, dataCollectionMinute);
+            metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
+                dataCollectionInfo.getApplicationId(), getAllMetricRecords(records));
+            records.clear();
+          }
         }
         dataCollectionMinute++;
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
@@ -228,8 +236,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
     }
 
-    private List<String> getApdexMetricNames(List<String> metricNames) {
-      final List<String> rv = new ArrayList<>();
+    private Collection<String> getApdexMetricNames(Collection<String> metricNames) {
+      final Collection<String> rv = new ArrayList<>();
       for (String metricName : metricNames) {
         rv.add(metricName.replace("WebTransaction", "Apdex"));
       }
@@ -237,8 +245,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return rv;
     }
 
-    private List<String> getErrorMetricNames(List<String> metricNames) {
-      final List<String> rv = new ArrayList<>();
+    private Collection<String> getErrorMetricNames(Collection<String> metricNames) {
+      final Collection<String> rv = new ArrayList<>();
       for (String metricName : metricNames) {
         rv.add("Errors/" + metricName);
       }
@@ -246,8 +254,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       return rv;
     }
 
-    private List<List<String>> batchMetricsToCollect() {
-      List<List<String>> rv = new ArrayList<>();
+    private List<Collection<String>> batchMetricsToCollect() {
+      List<Collection<String>> rv = new ArrayList<>();
 
       List<String> batchedMetrics = new ArrayList<>();
       for (NewRelicMetric metric : metrics) {
@@ -270,7 +278,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
       List<NewRelicMetricDataRecord> rv = new ArrayList<>();
       for (Cell<String, Long, NewRelicMetricDataRecord> cell : records.cellSet()) {
-        rv.add(cell.getValue());
+        NewRelicMetricDataRecord value = cell.getValue();
+        value.setName(value.getName().replace("WebTransaction/", ""));
+        rv.add(value);
       }
 
       return rv;

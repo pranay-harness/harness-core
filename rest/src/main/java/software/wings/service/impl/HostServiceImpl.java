@@ -92,19 +92,18 @@ public class HostServiceImpl implements HostService {
   @Override
   public Host saveHost(Host appHost) {
     Host applicationHost = wingsPersistence.createQuery(Host.class)
+                               .field("serviceTemplateId")
+                               .equal(appHost.getServiceTemplateId())
                                .field("hostName")
                                .equal(appHost.getHostName())
+                               .field("publicDns")
+                               .equal(appHost.getPublicDns())
                                .field("appId")
                                .equal(appHost.getAppId())
                                .field("envId")
                                .equal(appHost.getEnvId())
-                               .field("serviceTemplateId")
-                               .equal(appHost.getServiceTemplateId())
                                .get();
-    if (applicationHost == null) {
-      applicationHost = wingsPersistence.saveAndGet(Host.class, appHost);
-    }
-    return applicationHost;
+    return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
   }
 
   @Override

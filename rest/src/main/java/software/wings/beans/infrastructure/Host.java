@@ -6,10 +6,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
@@ -21,17 +18,15 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(fields = { @Field("serviceTemplateId")
-                           , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base {
-  @NotEmpty private String envId;
-  private String serviceTemplateId;
+  @Indexed @NotEmpty private String envId;
+  @Indexed private String serviceTemplateId;
   private String infraMappingId;
   private String computeProviderId;
-  @NotEmpty private String hostName;
+  @Indexed @NotEmpty private String hostName;
   // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
   // infrastructure mapping.
-  private String publicDns;
+  @Indexed private String publicDns;
   @NotNull private String hostConnAttr;
   private String bastionConnAttr;
 

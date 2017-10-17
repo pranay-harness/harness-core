@@ -22,18 +22,18 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public boolean isEnabled(FeatureName name, String accountId) {
-    if (name == null) {
+  public boolean isEnabled(String featureName, String accountId) {
+    if (featureName == null) {
       // we don't want to throw an exception - we just want to log the error
       logger.error("FeatureFlag name is null or missing!");
       return false;
     }
 
-    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(name).get();
+    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(featureName).get();
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag " + name.name() + " not found.");
+      logger.error("FeatureFlag " + featureName + " not found.");
       return false;
     }
 

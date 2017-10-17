@@ -235,6 +235,7 @@ public class CommandState extends State {
       Application application = appService.get(serviceInstance.getAppId());
 
       Map<String, String> serviceVariables = context.getServiceVariables();
+      Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
       Activity.Builder activityBuilder =
           anActivity()
@@ -274,6 +275,7 @@ public class CommandState extends State {
               .withStagingPath(stagingPath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
               .withServiceVariables(serviceVariables)
+              .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
               .withHost(host)
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
