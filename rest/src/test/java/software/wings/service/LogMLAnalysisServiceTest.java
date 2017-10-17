@@ -91,6 +91,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void testValidateSplunkConfig() throws Exception {
     Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
         .thenReturn(new SplunkDelegateServiceImpl());
