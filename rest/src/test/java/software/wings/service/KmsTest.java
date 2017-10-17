@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -23,6 +24,8 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
@@ -30,6 +33,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
@@ -49,8 +53,13 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.BoundedInputStream;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,6 +69,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -73,6 +83,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
+  @Inject private ConfigService configService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
@@ -86,6 +97,7 @@ public class KmsTest extends WingsBaseTest {
         .thenReturn(new KmsDelegateServiceImpl());
     Whitebox.setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
+    Whitebox.setInternalState(configService, "kmsService", kmsService);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
   }
@@ -1162,6 +1174,118 @@ public class KmsTest extends WingsBaseTest {
 
     Collection<UuidAware> uuidAwares = kmsService.listEncryptedValues(accountId);
     assertEquals(encryptedEntities.size(), uuidAwares.size());
+  }
+
+  @Test
+  @RealMongo
+  public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
+    final long seed = System.currentTimeMillis();
+    System.out.println("seed: " + seed);
+    Random r = new Random(seed);
+    final String accountId = UUID.randomUUID().toString();
+    final String appId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+    enableKmsFeatureFlag();
+
+    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    wingsPersistence.save(service);
+
+    ConfigFile configFile = ConfigFile.Builder.aConfigFile()
+                                .withTemplateId(UUID.randomUUID().toString())
+                                .withEnvId(UUID.randomUUID().toString())
+                                .withEntityType(EntityType.SERVICE)
+                                .withEntityId(service.getUuid())
+                                .withDescription(UUID.randomUUID().toString())
+                                .withParentConfigFileId(UUID.randomUUID().toString())
+                                .withRelativeFilePath(UUID.randomUUID().toString())
+                                .withTargetToAllEnv(r.nextBoolean())
+                                .withDefaultVersion(r.nextInt())
+                                .withEnvIdVersionMapString(UUID.randomUUID().toString())
+                                .withSetAsDefault(r.nextBoolean())
+                                .withNotes(UUID.randomUUID().toString())
+                                .withOverridePath(UUID.randomUUID().toString())
+                                .withConfigOverrideType(ConfigOverrideType.CUSTOM)
+                                .withConfigOverrideExpression(UUID.randomUUID().toString())
+                                .withAppId(appId)
+                                .withAccountId(accountId)
+                                .withFileName(UUID.randomUUID().toString())
+                                .withName(UUID.randomUUID().toString())
+                                .withEncrypted(false)
+                                .build();
+
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+
+    configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
+    File download = configService.download(appId, configFile.getUuid());
+    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+  }
+
+  @Test
+  @RealMongo
+  public void saveConfigFileWithEncryption() throws IOException, InterruptedException {
+    final long seed = System.currentTimeMillis();
+    System.out.println("seed: " + seed);
+    Random r = new Random(seed);
+    final String accountId = UUID.randomUUID().toString();
+    final String appId = UUID.randomUUID().toString();
+    KmsConfig fromConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, fromConfig);
+    enableKmsFeatureFlag();
+
+    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    wingsPersistence.save(service);
+
+    ConfigFile configFile = ConfigFile.Builder.aConfigFile()
+                                .withTemplateId(UUID.randomUUID().toString())
+                                .withEnvId(UUID.randomUUID().toString())
+                                .withEntityType(EntityType.SERVICE)
+                                .withEntityId(service.getUuid())
+                                .withDescription(UUID.randomUUID().toString())
+                                .withParentConfigFileId(UUID.randomUUID().toString())
+                                .withRelativeFilePath(UUID.randomUUID().toString())
+                                .withTargetToAllEnv(r.nextBoolean())
+                                .withDefaultVersion(r.nextInt())
+                                .withEnvIdVersionMapString(UUID.randomUUID().toString())
+                                .withSetAsDefault(r.nextBoolean())
+                                .withNotes(UUID.randomUUID().toString())
+                                .withOverridePath(UUID.randomUUID().toString())
+                                .withConfigOverrideType(ConfigOverrideType.CUSTOM)
+                                .withConfigOverrideExpression(UUID.randomUUID().toString())
+                                .withAppId(appId)
+                                .withAccountId(accountId)
+                                .withFileName(UUID.randomUUID().toString())
+                                .withName(UUID.randomUUID().toString())
+                                .withEncrypted(true)
+                                .build();
+
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+
+    configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
+    File download = configService.download(appId, configFile.getUuid());
+    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    assertEquals(1,
+        wingsPersistence.createQuery(EncryptedData.class)
+            .field("type")
+            .equal(SettingVariableTypes.CONFIG_FILE)
+            .asList()
+            .size());
+
+    // test update
+    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    configService.update(configFile, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    download = configService.download(appId, configFile.getUuid());
+    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(1,
+        wingsPersistence.createQuery(EncryptedData.class)
+            .field("type")
+            .equal(SettingVariableTypes.CONFIG_FILE)
+            .asList()
+            .size());
   }
 
   private KmsConfig getKmsConfig() throws IOException {

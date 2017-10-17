@@ -1,5 +1,6 @@
 package software.wings.settings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -52,6 +53,8 @@ public abstract class SettingValue implements ExtensionPoint {
     //
   }
 
+  @SchemaIgnore
+  @JsonIgnore
   public List<Field> getEncryptedFields() {
     return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }

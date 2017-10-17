@@ -3,7 +3,9 @@ package software.wings.service.intfc.security;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.UuidAware;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.utils.BoundedInputStream;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -29,4 +31,8 @@ public interface KmsService {
   boolean transitionKms(String accountId, String fromKmsId, String toKmsId);
 
   void changeKms(String accountId, String entityId, String fromKmsId, String toKmsId);
+
+  EncryptedData encryptFile(BoundedInputStream inputStream, String accountId);
+
+  File decryptFile(File file, String accountId, EncryptedData encryptedData);
 }

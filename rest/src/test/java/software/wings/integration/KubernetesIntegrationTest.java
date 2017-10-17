@@ -16,7 +16,6 @@
 
 package software.wings.integration;
 
-import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -29,6 +28,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -47,8 +47,8 @@ public class KubernetesIntegrationTest {
       aSettingAttribute()
           .withUuid("GCP_ID")
           .withValue(
-              aGcpConfig()
-                  .withServiceAccountKeyFileContent("{\n"
+              GcpConfig.builder()
+                  .serviceAccountKeyFileContent("{\n"
                       + "  \"type\": \"service_account\",\n"
                       + "  \"project_id\": \"exploration-161417\",\n"
                       + "  \"private_key_id\": \"c3cebea25120157ff4f16309f5a3894ae6aac964\",\n"
