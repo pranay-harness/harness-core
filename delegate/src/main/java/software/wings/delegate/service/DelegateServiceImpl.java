@@ -56,6 +56,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -304,11 +305,15 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
-    logger.info("Registering delegate....");
     try {
+      List<Integer> attempts = new ArrayList<>();
+      attempts.add(0);
       return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
         try {
+          attempts.set(0, attempts.get(0) + 1);
+          String attemptString = attempts.get(0) > 1 ? " (Attempt " + attempts.get(0) + ")" : "";
+          logger.info("Registering delegate." + attemptString);
           delegateResponse = execute(managerClient.registerDelegate(accountId,
               builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
@@ -317,7 +322,7 @@ public class DelegateServiceImpl implements DelegateService {
           Thread.sleep(55000);
           return null;
         }
-        if (delegateResponse == null) {
+        if (delegateResponse == null || delegateResponse.getResource() == null) {
           String msg = "Error occurred while registering Delegate [" + accountId
               + "] with manager. Please see the manager log for more information.";
           logger.error(msg);
