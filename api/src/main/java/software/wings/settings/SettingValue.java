@@ -1,8 +1,14 @@
 package software.wings.settings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.github.reinert.jjschema.SchemaIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;
+import software.wings.utils.WingsReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/16/16.
@@ -36,6 +42,21 @@ public abstract class SettingValue implements ExtensionPoint {
    */
   public void setType(String type) {
     this.type = type;
+  }
+
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.valueOf(type);
+  }
+
+  public void setSettingType(SettingVariableTypes type) {
+    //
+  }
+
+  @SchemaIgnore
+  @JsonIgnore
+  public List<Field> getEncryptedFields() {
+    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   /**
@@ -108,11 +129,6 @@ public abstract class SettingValue implements ExtensionPoint {
     ELB("Elastic Classic Load Balancer"),
 
     /**
-     * Application load balancer setting variable types.
-     */
-    ALB("Elastic Application Load Balancer"),
-
-    /**
      * Slack setting variable types.
      */
     SLACK("SLACK"),
@@ -163,11 +179,6 @@ public abstract class SettingValue implements ExtensionPoint {
     NEXUS("Nexus"),
 
     /**
-     * Encryption setting variable types.
-     */
-    ENCRYPTION,
-
-    /**
      * Artifactory setting variable types
      */
     ARTIFACTORY("Artifactory"),
@@ -175,7 +186,15 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Amazon S3 setting variable types
      */
-    AMAZON_S3("AmazonS3");
+    AMAZON_S3("AmazonS3"),
+
+    SSH_SESSION_CONFIG,
+
+    SERVICE_VARIABLE,
+
+    CONFIG_FILE,
+
+    KMS;
 
     private String displayName;
 

@@ -17,7 +17,6 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
@@ -65,6 +64,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
@@ -147,7 +147,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
-      aSettingAttribute().withValue(aGcpConfig().withServiceAccountKeyFileContent("keyFileContent").build()).build();
+      aSettingAttribute().withValue(GcpConfig.builder().serviceAccountKeyFileContent("keyFileContent").build()).build();
 
   private KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
       aKubernetesReplicationControllerDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();

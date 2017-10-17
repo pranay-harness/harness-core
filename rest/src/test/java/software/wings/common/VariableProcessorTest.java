@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -22,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.api.InstanceElement;
+import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -58,7 +58,7 @@ public class VariableProcessorTest {
   @Test
   public void shouldGetVariablesForInstanceElement() throws Exception {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID))
-        .thenReturn(asList(aServiceVariable().withName("PORT").withValue("8080".toCharArray()).build()));
+        .thenReturn(asList(ServiceVariable.builder().name("PORT").value("8080".toCharArray()).build()));
 
     WorkflowStandardParams workflowStandardParams =
         aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();

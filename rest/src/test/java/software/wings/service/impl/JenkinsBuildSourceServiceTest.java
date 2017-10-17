@@ -4,7 +4,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import org.junit.Before;
@@ -14,6 +13,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -60,11 +60,11 @@ public class JenkinsBuildSourceServiceTest extends WingsBaseTest {
                                   .withName(BaseIntegrationTest.HARNESS_JENKINS)
                                   .withCategory(Category.CONNECTOR)
                                   .withAccountId(accountId)
-                                  .withValue(aJenkinsConfig()
-                                                 .withAccountId(accountId)
-                                                 .withJenkinsUrl("https://jenkins.wings.software")
-                                                 .withUsername("wingsbuild")
-                                                 .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                  .withValue(JenkinsConfig.builder()
+                                                 .accountId(accountId)
+                                                 .jenkinsUrl("https://jenkins.wings.software")
+                                                 .username("wingsbuild")
+                                                 .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                                  .build())
                                   .build();
     wingsPersistence.save(jenkinsSettingAttribute);

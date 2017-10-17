@@ -13,7 +13,6 @@ import static software.wings.api.ContainerServiceElement.ContainerServiceElement
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -60,6 +59,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -142,11 +142,11 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider = aSettingAttribute().build();
   private SettingAttribute dockerConfigSettingAttribute = aSettingAttribute()
-                                                              .withValue(aDockerConfig()
-                                                                             .withDockerRegistryUrl("url")
-                                                                             .withUsername("name")
-                                                                             .withPassword("pass".toCharArray())
-                                                                             .withAccountId(ACCOUNT_ID)
+                                                              .withValue(DockerConfig.builder()
+                                                                             .dockerRegistryUrl("url")
+                                                                             .username("name")
+                                                                             .password("pass".toCharArray())
+                                                                             .accountId(ACCOUNT_ID)
                                                                              .build())
                                                               .build();
   private TaskDefinition taskDefinition;

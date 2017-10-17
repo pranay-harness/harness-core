@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -53,29 +52,33 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/9/16.
  */
 public class ServiceVariableServiceTest extends WingsBaseTest {
-  private static final ServiceVariable SERVICE_VARIABLE = aServiceVariable()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withUuid(SERVICE_VARIABLE_ID)
-                                                              .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                                              .withEntityId(TEMPLATE_ID)
-                                                              .withTemplateId(TEMPLATE_ID)
-                                                              .withName(SERVICE_VARIABLE_NAME)
-                                                              .withType(TEXT)
-                                                              .withValue("8080".toCharArray())
+  private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
+                                                              .envId(ENV_ID)
+                                                              .entityType(EntityType.SERVICE_TEMPLATE)
+                                                              .entityId(TEMPLATE_ID)
+                                                              .templateId(TEMPLATE_ID)
+                                                              .name(SERVICE_VARIABLE_NAME)
+                                                              .type(TEXT)
+                                                              .value("8080".toCharArray())
                                                               .build();
 
-  private static final ServiceVariable ENCRYPTED_SERVICE_VARIABLE = aServiceVariable()
-                                                                        .withAppId(APP_ID)
-                                                                        .withEnvId(ENV_ID)
-                                                                        .withUuid(SERVICE_VARIABLE_ID + "2")
-                                                                        .withEntityType(EntityType.SERVICE_TEMPLATE)
-                                                                        .withEntityId(TEMPLATE_ID)
-                                                                        .withTemplateId(TEMPLATE_ID)
-                                                                        .withName(SERVICE_VARIABLE_NAME + "2")
-                                                                        .withType(ENCRYPTED_TEXT)
-                                                                        .withValue("9090".toCharArray())
+  private static final ServiceVariable ENCRYPTED_SERVICE_VARIABLE = ServiceVariable.builder()
+                                                                        .envId(ENV_ID)
+                                                                        .entityType(EntityType.SERVICE_TEMPLATE)
+                                                                        .entityId(TEMPLATE_ID)
+                                                                        .templateId(TEMPLATE_ID)
+                                                                        .name(SERVICE_VARIABLE_NAME + "2")
+                                                                        .type(ENCRYPTED_TEXT)
+                                                                        .value("9090".toCharArray())
                                                                         .build();
+
+  static {
+    SERVICE_VARIABLE.setUuid(SERVICE_VARIABLE_ID);
+    SERVICE_VARIABLE.setAppId(APP_ID);
+
+    ENCRYPTED_SERVICE_VARIABLE.setUuid(SERVICE_VARIABLE_ID + "2");
+    ENCRYPTED_SERVICE_VARIABLE.setAppId(APP_ID);
+  }
   /**
    * The Query.
    */
@@ -148,18 +151,19 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.APPLICATION)
+                                          .entityId(TEMPLATE_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .type(TEXT)
+                                          .value("8080".toCharArray())
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
+
     Assertions.assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(()
-                        -> serviceVariableService.save(aServiceVariable()
-                                                           .withAppId(APP_ID)
-                                                           .withEnvId(ENV_ID)
-                                                           .withUuid(SERVICE_VARIABLE_ID)
-                                                           .withEntityType(EntityType.APPLICATION)
-                                                           .withEntityId(TEMPLATE_ID)
-                                                           .withTemplateId(TEMPLATE_ID)
-                                                           .withType(TEXT)
-                                                           .withValue("8080".toCharArray())
-                                                           .build()));
+        .isThrownBy(() -> serviceVariableService.save(serviceVariable));
   }
 
   /**
@@ -167,8 +171,10 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGet() {
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID))
-        .thenReturn(aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).build());
+    ServiceVariable variable = ServiceVariable.builder().build();
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     ServiceVariable serviceVariable = serviceVariableService.get(APP_ID, SERVICE_VARIABLE_ID);
     verify(wingsPersistence).get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID);
     assertThat(serviceVariable.getUuid()).isEqualTo(SERVICE_VARIABLE_ID);
@@ -204,16 +210,15 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdate() {
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID))
-        .thenReturn(aServiceVariable()
-                        .withAppId(APP_ID)
-                        .withUuid(SERVICE_VARIABLE_ID)
-                        .withEntityType(EntityType.SERVICE_TEMPLATE)
-                        .build());
+    ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(SERVICE_VARIABLE);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT), SERVICE_VARIABLE.getAccountId());
+            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT));
   }
 
   /**

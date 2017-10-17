@@ -50,7 +50,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
-import software.wings.beans.AwsConfig.Builder;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -360,7 +360,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
-        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     List<Host> newHosts = singletonList(aHost().withEc2Instance(new Instance().withPrivateDnsName(HOST_NAME)).build());
@@ -434,7 +434,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
-        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     when(awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>()))
@@ -486,7 +486,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
-        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     Host provisionedHost = aHost().withHostName(HOST_NAME).build();

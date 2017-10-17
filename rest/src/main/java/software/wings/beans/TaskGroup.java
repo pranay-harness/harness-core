@@ -21,5 +21,6 @@ public enum TaskGroup {
   LOGZ,
   SUMO,
   ARTIFACTORY,
-  HOST_VALIDATION
+  HOST_VALIDATION,
+  KMS
 }

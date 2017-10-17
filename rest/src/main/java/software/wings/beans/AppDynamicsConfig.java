@@ -10,7 +10,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
 import software.wings.jersey.JsonViews;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
@@ -34,6 +34,8 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new App dynamics config.
    */
@@ -41,13 +43,14 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
     super(StateType.APP_DYNAMICS.name());
   }
 
-  public AppDynamicsConfig(
-      String username, String accountname, char[] password, String controllerUrl, String accountId) {
-    super(StateType.APP_DYNAMICS.name());
+  public AppDynamicsConfig(String username, String accountname, char[] password, String controllerUrl, String accountId,
+      String encryptedPassword) {
+    this();
     this.username = username;
     this.accountname = accountname;
     this.password = password;
     this.controllerUrl = controllerUrl;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

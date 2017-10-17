@@ -106,6 +106,8 @@ public enum TaskType {
   ARTIFACTORY_COLLECTION(TaskGroup.ARTIFACTORY, ArtifactoryCollectionTask.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_SERVER(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class),
   ARTIFACTORY_VALIDATE_ARTIFACT_STREAM(TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class),
+  KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class),
+  KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class);
 
   private TaskGroup taskGroup;

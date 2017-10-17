@@ -14,7 +14,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -33,6 +32,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
+import com.newrelic.agent.utilization.AWS;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -76,7 +76,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
     when(settingsService.get(Base.GLOBAL_APP_ID, SETTING_ID))
         .thenReturn(aSettingAttribute()
-                        .withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
+                        .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
                         .build());
   }
 

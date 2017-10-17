@@ -4,6 +4,7 @@ import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.utils.WingsReflectionUtils.*;
 
 import com.google.inject.Singleton;
 
@@ -13,6 +14,7 @@ import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
@@ -21,6 +23,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -28,9 +32,12 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -40,6 +47,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -48,6 +56,8 @@ import javax.inject.Named;
  */
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
+  @Inject private KmsService kmsService;
+  @Inject private FeatureFlagService featureFlagService;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
 
@@ -107,22 +117,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
     T data = datastoreMap.get(readPref).get(cls, id);
-    if (SettingAttribute.class.isInstance(data)) {
-      this.decryptIfNecessary(((SettingAttribute) data).getValue());
-    } else if (data instanceof Encryptable) {
-      this.decryptIfNecessary(data);
-    }
+    decryptIfNecessary(data);
     return data;
   }
 
   @Override
   public <T extends Base> T executeGetOneQuery(Query<T> query) {
     T data = query.get();
-    if (SettingAttribute.class.isInstance(data)) {
-      this.decryptIfNecessary(((SettingAttribute) data).getValue());
-    } else if (data instanceof Encryptable) {
-      this.decryptIfNecessary(data);
-    }
+    decryptIfNecessary(data);
     return data;
   }
 
@@ -145,11 +147,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return null;
     }
     T data = res.get(0);
-    if (SettingAttribute.class.isInstance(data)) {
-      this.decryptIfNecessary(((SettingAttribute) data).getValue());
-    } else if (data instanceof Encryptable) {
-      this.decryptIfNecessary(data);
-    }
+    decryptIfNecessary(data);
     return data;
   }
 
@@ -164,18 +162,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> String save(T object) {
-    if (SettingAttribute.class.isInstance(object)) {
-      this.encryptIfNecessary(((SettingAttribute) object).getValue());
-    } else if (object instanceof Encryptable) {
-      this.encryptIfNecessary(object);
+    try {
+      encryptIfNecessary(object);
+      Key<T> key = primaryDatastore.save(object);
+      updateParentIfNecessary(object, (String) key.getId());
+      decryptIfNecessary(object);
+      return (String) key.getId();
+    } catch (Exception e) {
+      throw new WingsException("Error saving " + object, e);
     }
-    Key<T> key = primaryDatastore.save(object);
-    if (SettingAttribute.class.isInstance(object)) {
-      this.decryptIfNecessary(((SettingAttribute) object).getValue());
-    } else if (object instanceof Encryptable) {
-      this.decryptIfNecessary(object);
-    }
-    return (String) key.getId();
   }
 
   /**
@@ -188,22 +183,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       if (t == null) {
         iterator.remove();
       }
-      if (SettingAttribute.class.isInstance(t)) {
-        this.encryptIfNecessary(((SettingAttribute) t).getValue());
-      } else if (t instanceof Encryptable) {
-        this.encryptIfNecessary(t);
-      }
-    }
-    Iterable<Key<T>> keys = primaryDatastore.save(ts);
-    for (T t : ts) {
-      if (SettingAttribute.class.isInstance(t)) {
-        this.decryptIfNecessary(((SettingAttribute) t).getValue());
-      } else if (t instanceof Encryptable) {
-        this.decryptIfNecessary(t);
-      }
     }
     List<String> ids = new ArrayList<>();
-    keys.forEach(tKey -> ids.add((String) tKey.getId()));
+    for (T t : ts) {
+      ids.add(save(t));
+    }
     return ids;
   }
 
@@ -217,11 +201,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       if (t == null) {
         iterator.remove();
       }
-      if (SettingAttribute.class.isInstance(t)) {
-        this.encryptIfNecessary(((SettingAttribute) t).getValue());
-      } else if (t instanceof Encryptable) {
-        this.encryptIfNecessary(t);
-      }
+      this.encryptIfNecessary(t);
     }
     InsertOptions insertOptions = new InsertOptions();
     insertOptions.continueOnError(true);
@@ -232,11 +212,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       // ignore
     }
     for (T t : ts) {
-      if (SettingAttribute.class.isInstance(t)) {
-        this.decryptIfNecessary(((SettingAttribute) t).getValue());
-      } else if (t instanceof Encryptable) {
-        this.decryptIfNecessary(t);
-      }
+      this.decryptIfNecessary(t);
     }
     List<String> ids = new ArrayList<>();
     keys.forEach(tKey -> ids.add((String) tKey.getId()));
@@ -250,11 +226,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
     T data = createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
-    if (SettingAttribute.class.isInstance(data)) {
-      this.decryptIfNecessary(((SettingAttribute) data).getValue());
-    } else if (data instanceof Encryptable) {
-      this.decryptIfNecessary(data);
-    }
+    this.decryptIfNecessary(data);
     return data;
   }
 
@@ -337,13 +309,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
-    this.updateFields(cls, entityId, keyValuePairs, null);
-  }
-
-  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, String encryptionKey) {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
-    boolean encryptAfterUpdate = false;
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
     List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
@@ -351,7 +318,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
           && Encryptable.class.isInstance(value)) {
         Encryptable e = (Encryptable) value;
-        this.encrypt(e);
+        try {
+          encrypt(
+              e, (Encryptable) ((SettingAttribute) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId)).getValue());
+          updateParentIfNecessary(e, entityId);
+        } catch (IllegalAccessException ex) {
+          throw new WingsException("Failed to encrypt secret", ex);
+        }
         value = e;
       } else if (encryptable) {
         Field f = declaredAndInheritedFields.stream()
@@ -363,16 +336,29 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         }
         Encrypted a = f.getAnnotation(Encrypted.class);
         if (null != a) {
-          value = this.encryptChars((char[]) value, encryptionKey);
-          encryptAfterUpdate = true;
+          try {
+            Encryptable object = (Encryptable) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
+            deleteEncryptionReference(object, Collections.singleton(f.getName()));
+            String accountId = object.getAccountId();
+            if (shouldUseKms(accountId)) {
+              Field encryptedField = getEncryptedField(f, object);
+              String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
+              updateParentIfNecessary(object, entityId);
+              operations.set(encryptedField.getName(), encryptedId);
+              continue;
+            } else {
+              char[] outputChars = new SimpleEncryption(accountId).encryptChars((char[]) f.get(object));
+              value = outputChars;
+            }
+          } catch (IllegalAccessException ex) {
+            throw new WingsException("Failed to encrypt secret", ex);
+          }
         }
       }
       operations.set(entry.getKey(), value);
     }
 
     update(query, operations);
-    if (encryptAfterUpdate) {
-    }
   }
 
   /**
@@ -380,6 +366,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
+    if (cls.equals(SettingAttribute.class) || Encryptable.class.isAssignableFrom(cls)) {
+      Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(uuid);
+      return delete(query);
+    }
     WriteResult result = primaryDatastore.delete(cls, uuid);
     return !(result == null || result.getN() == 0);
   }
@@ -398,6 +388,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> boolean delete(Query<T> query) {
+    if (query.getEntityClass().equals(SettingAttribute.class)
+        || Encryptable.class.isAssignableFrom(query.getEntityClass())) {
+      List<T> objects = query.asList();
+      for (T object : objects) {
+        try {
+          deleteEncryptionReferenceIfNecessary(object);
+        } catch (IllegalAccessException e) {
+          throw new WingsException("Could not delete entity", e);
+        }
+      }
+    }
     WriteResult result = primaryDatastore.delete(query);
     return !(result == null || result.getN() == 0);
   }
@@ -407,6 +408,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> boolean delete(T object) {
+    if (SettingAttribute.class.isInstance(object) || Encryptable.class.isInstance(object)) {
+      try {
+        deleteEncryptionReferenceIfNecessary(object);
+      } catch (IllegalAccessException e) {
+        throw new WingsException("Could not delete entity", e);
+      }
+    }
     WriteResult result = primaryDatastore.delete(object);
     return !(result == null || result.getN() == 0);
   }
@@ -437,11 +445,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, false);
     for (T data : output.getResponse()) {
-      if (SettingAttribute.class.isInstance(data)) {
-        this.decryptIfNecessary(((SettingAttribute) data).getValue());
-      } else if (data instanceof Encryptable) {
-        this.decryptIfNecessary(data);
-      }
+      decryptIfNecessary(data);
     }
     return output;
   }
@@ -456,11 +460,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
     for (T data : output.getResponse()) {
-      if (SettingAttribute.class.isInstance(data)) {
-        this.decryptIfNecessary(((SettingAttribute) data).getValue());
-      } else if (data instanceof Encryptable) {
-        this.decryptIfNecessary(data);
-      }
+      decryptIfNecessary(data);
     }
     return output;
   }
@@ -620,15 +620,19 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    *
    * @param object the object to be encrypted
    */
-  private void encrypt(Encryptable object) {
+  private void encrypt(Encryptable object, Encryptable savedObject) {
     try {
-      List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(object.getClass());
-      for (Field f : declaredAndInheritedFields) {
-        Encrypted a = f.getAnnotation(Encrypted.class);
-        if (a != null && a.value()) {
-          f.setAccessible(true);
-          String accountId = object.getAccountId();
-          char[] outputChars = this.encryptChars((char[]) f.get(object), accountId);
+      List<Field> fieldsToEncrypt = object.getEncryptedFields();
+      for (Field f : fieldsToEncrypt) {
+        String accountId = object.getAccountId();
+        f.setAccessible(true);
+        char[] secret = (char[]) f.get(object);
+        if (shouldUseKms(accountId)) {
+          Field encryptedField = getEncryptedField(f, object);
+          encrypt(object, secret, encryptedField, savedObject);
+          f.set(object, null);
+        } else {
+          char[] outputChars = new SimpleEncryption(accountId).encryptChars((char[]) f.get(object));
           f.set(object, outputChars);
         }
       }
@@ -639,49 +643,117 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private char[] encryptChars(char[] content, String accountId) {
-    SimpleEncryption encryption = new SimpleEncryption(accountId);
-    return encryption.encryptChars(content);
+  private String encrypt(Encryptable object, char[] secret, Field encryptedField, Encryptable savedObject)
+      throws IllegalAccessException {
+    encryptedField.setAccessible(true);
+    final String accountId = object.getAccountId();
+    String encryptedId =
+        savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
+    EncryptedData encryptedData = StringUtils.isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
+    final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
+    EncryptedData encryptedPair = kmsService.encrypt(secret, accountId, kmsConfig);
+
+    if (encryptedData == null) {
+      encryptedData = encryptedPair;
+      encryptedData.setAccountId(accountId);
+      encryptedData.setType(object.getSettingType());
+    } else {
+      encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
+      encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
+    }
+
+    if (kmsConfig != null) {
+      encryptedData.setKmsId(kmsConfig.getUuid());
+    }
+    encryptedId = save(encryptedData);
+    encryptedField.set(object, encryptedId);
+    return encryptedId;
+  }
+
+  private void updateParent(Encryptable object, String parentId) throws IllegalAccessException {
+    List<Field> fieldsToEncrypt = object.getEncryptedFields();
+    for (Field f : fieldsToEncrypt) {
+      f.setAccessible(true);
+      // if the field was never encrypted using kms
+      if (f.get(object) != null) {
+        continue;
+      }
+      Field encryptedField = getEncryptedField(f, object);
+      encryptedField.setAccessible(true);
+      String encryptedId = (String) encryptedField.get(object);
+
+      if (StringUtils.isBlank(encryptedId)) {
+        continue;
+      }
+
+      EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
+      if (encryptedData == null) {
+        continue;
+      }
+
+      if (StringUtils.isBlank(encryptedData.getParentId()) || !encryptedData.getParentId().equals(parentId)) {
+        encryptedData.setParentId(parentId);
+        save(encryptedData);
+      }
+    }
+  }
+
+  private void deleteEncryptionReference(Object object, Set<String> fieldNames) throws IllegalAccessException {
+    List<Field> fieldsToEncrypt = getEncryptedFields(object.getClass());
+    for (Field f : fieldsToEncrypt) {
+      if ((fieldNames == null || fieldNames.contains(f.getName()))) {
+        f.setAccessible(true);
+        // if the field was never encrypted using kms
+        if (f.get(object) != null) {
+          continue;
+        }
+
+        Field encryptedField = getEncryptedField(f, (Encryptable) object);
+        encryptedField.setAccessible(true);
+        String encryptedId = (String) encryptedField.get(object);
+
+        if (StringUtils.isBlank(encryptedId)) {
+          continue;
+        }
+
+        EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
+        if (encryptedData == null) {
+          continue;
+        }
+
+        delete(encryptedData);
+      }
+    }
   }
 
   private void decrypt(Encryptable object) {
     try {
-      List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(object.getClass());
-      for (Field f : declaredAndInheritedFields) {
-        Encrypted a = f.getAnnotation(Encrypted.class);
-        if (a != null && a.value()) {
-          f.setAccessible(true);
-          char[] input = (char[]) f.get(object);
-          String accountId = object.getAccountId();
+      List<Field> encryptedFields = object.getEncryptedFields();
+      for (Field f : encryptedFields) {
+        f.setAccessible(true);
+        String accountId = object.getAccountId();
+        char[] input = (char[]) f.get(object);
+
+        char[] outputChars;
+        Field encryptedField = getEncryptedField(f, object);
+        encryptedField.setAccessible(true);
+        String encryptedId = (String) encryptedField.get(object);
+        final EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
+        // this was encrypted using kms
+        if (input == null && encryptedData != null) {
+          final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
+          outputChars = kmsService.decrypt(encryptedData, accountId, kmsConfig);
+        } else {
           SimpleEncryption encryption = new SimpleEncryption(accountId);
-          char[] outputChars = encryption.decryptChars(input);
-          // This is a quirk of Mongo where if we insert a char[] and then retrieve it, it's wrapped
-          // in quotes, so ['f'] becomes ['"', 'f', '"']. The logic is going to be moved out of the
-          // Mongo layer, so I'm not going to take the time to modify the Mongo config to make this
-          // stop happening.
-          if (outputChars != null && outputChars.length > 0 && outputChars[0] == '"'
-              && outputChars[outputChars.length - 1] == '"') {
-            char[] copy = new char[outputChars.length - 2];
-            System.arraycopy(outputChars, 1, copy, 0, outputChars.length - 2);
-            outputChars = copy;
-          }
-          f.set(object, outputChars);
+          outputChars = encryption.decryptChars(input);
         }
+        f.set(object, outputChars);
       }
     } catch (SecurityException e) {
       throw new WingsException("Security exception in encrypt", e);
     } catch (IllegalAccessException e) {
       throw new WingsException("Illegal access exception in encrypt", e);
     }
-  }
-
-  private List<Field> getDeclaredAndInheritedFields(Class<?> clazz) {
-    List<Field> declaredFields = new ArrayList<>();
-    while (clazz.getSuperclass() != null) {
-      Collections.addAll(declaredFields, clazz.getDeclaredFields());
-      clazz = clazz.getSuperclass();
-    }
-    return declaredFields;
   }
 
   /**
@@ -694,14 +766,74 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   private void decryptIfNecessary(Object o) {
+    if (SettingAttribute.class.isInstance(o)) {
+      o = ((SettingAttribute) o).getValue();
+    }
+
     if (Encryptable.class.isInstance(o)) {
       decrypt((Encryptable) o);
     }
   }
 
-  private void encryptIfNecessary(Object o) {
-    if (Encryptable.class.isInstance(o)) {
-      encrypt((Encryptable) o);
+  private <T extends Base> void encryptIfNecessary(T o) {
+    // if its an update
+    Object savedObject = null;
+    if (!StringUtils.isBlank(o.getUuid())
+        && (SettingAttribute.class.isInstance(o) || Encryptable.class.isInstance(o))) {
+      savedObject = datastoreMap.get(ReadPref.NORMAL).get((Class<T>) o.getClass(), o.getUuid());
     }
+    Object toEncrypt = o;
+    if (SettingAttribute.class.isInstance(o)) {
+      toEncrypt = ((SettingAttribute) o).getValue();
+      savedObject = savedObject == null ? null : ((SettingAttribute) savedObject).getValue();
+    }
+
+    if (Encryptable.class.isInstance(toEncrypt)) {
+      encrypt((Encryptable) toEncrypt, (Encryptable) savedObject);
+    }
+  }
+
+  private void updateParentIfNecessary(Object o, String parentId) throws IllegalAccessException {
+    if (SettingAttribute.class.isInstance(o)) {
+      o = ((SettingAttribute) o).getValue();
+    }
+
+    if (Encryptable.class.isInstance(o)) {
+      updateParent((Encryptable) o, parentId);
+    }
+  }
+
+  private <T extends Base> void deleteEncryptionReferenceIfNecessary(T o) throws IllegalAccessException {
+    if (StringUtils.isBlank(o.getUuid())) {
+      return;
+    }
+
+    Object toDelete = datastoreMap.get(ReadPref.NORMAL).get(o.getClass(), o.getUuid());
+    if (toDelete == null) {
+      return;
+    }
+    if (SettingAttribute.class.isInstance(toDelete)) {
+      toDelete = ((SettingAttribute) toDelete).getValue();
+    }
+
+    if (Encryptable.class.isInstance(toDelete)) {
+      deleteEncryptionReference(toDelete, null);
+    }
+  }
+
+  private Field getEncryptedField(Field f, Encryptable object) {
+    List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(object.getClass());
+    String enryptedFieldName = "encrypted" + StringUtils.capitalize(f.getName());
+    for (Field field : declaredAndInheritedFields) {
+      if (field.getName().equals(enryptedFieldName)) {
+        return field;
+      }
+    }
+    throw new IllegalStateException("No field with " + enryptedFieldName + " found in class " + object.getClass());
+  }
+
+  private boolean shouldUseKms(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.KMS.name(), accountId)
+        && kmsService.getKmsConfig(accountId) != null;
   }
 }

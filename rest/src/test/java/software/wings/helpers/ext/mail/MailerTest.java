@@ -2,7 +2,6 @@ package software.wings.helpers.ext.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
-import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -52,12 +51,12 @@ public class MailerTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendNormalEmail() throws EmailException, TemplateException, IOException, MessagingException {
-    mailer.send(aSmtpConfig()
-                    .withFromAddress(EMAIL)
-                    .withHost("localhost")
-                    .withPort(greenMail.getSmtp().getPort())
-                    .withUsername(EMAIL)
-                    .withPassword(PASSWORD)
+    mailer.send(SmtpConfig.builder()
+                    .fromAddress(EMAIL)
+                    .host("localhost")
+                    .port(greenMail.getSmtp().getPort())
+                    .username(EMAIL)
+                    .password(PASSWORD)
                     .build(),
         anEmailData()
             .withHasHtml(false)
@@ -86,12 +85,12 @@ public class MailerTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendHtmlEmail() throws MessagingException, EmailException, TemplateException, IOException {
-    mailer.send(aSmtpConfig()
-                    .withFromAddress(EMAIL)
-                    .withHost("localhost")
-                    .withPort(greenMail.getSmtp().getPort())
-                    .withUsername(EMAIL)
-                    .withPassword(PASSWORD)
+    mailer.send(SmtpConfig.builder()
+                    .fromAddress(EMAIL)
+                    .host("localhost")
+                    .port(greenMail.getSmtp().getPort())
+                    .username(EMAIL)
+                    .password(PASSWORD)
                     .build(),
         anEmailData()
             .withHasHtml(true)
@@ -120,12 +119,12 @@ public class MailerTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendTemplatedEmail() throws EmailException, TemplateException, IOException, MessagingException {
-    mailer.send(aSmtpConfig()
-                    .withFromAddress(EMAIL)
-                    .withHost("localhost")
-                    .withPort(greenMail.getSmtp().getPort())
-                    .withUsername(EMAIL)
-                    .withPassword(PASSWORD)
+    mailer.send(SmtpConfig.builder()
+                    .fromAddress(EMAIL)
+                    .host("localhost")
+                    .port(greenMail.getSmtp().getPort())
+                    .username(EMAIL)
+                    .password(PASSWORD)
                     .build(),
         anEmailData()
             .withHasHtml(false)

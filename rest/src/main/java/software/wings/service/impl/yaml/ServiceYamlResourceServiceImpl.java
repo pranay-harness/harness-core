@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
@@ -401,15 +400,15 @@ public class ServiceYamlResourceServiceImpl implements ServiceYamlResourceServic
   }
 
   private ServiceVariable createNewServiceVariable(String appId, String serviceId, ConfigVarYaml cv) {
-    ServiceVariable newServiceVariable = aServiceVariable()
-                                             .withName(cv.getName())
-                                             .withValue(cv.getValue().toCharArray())
-                                             .withEntityType(EntityType.SERVICE)
-                                             .withEntityId(serviceId)
-                                             .withTemplateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
-                                             .withType(Type.TEXT)
-                                             .withAppId(appId)
+    ServiceVariable newServiceVariable = ServiceVariable.builder()
+                                             .name(cv.getName())
+                                             .value(cv.getValue().toCharArray())
+                                             .entityType(EntityType.SERVICE)
+                                             .entityId(serviceId)
+                                             .templateId(ServiceVariable.DEFAULT_TEMPLATE_ID)
+                                             .type(Type.TEXT)
                                              .build();
+    newServiceVariable.setAppId(appId);
 
     return newServiceVariable;
   }

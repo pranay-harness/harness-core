@@ -15,6 +15,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceVariableService;
 
 import javax.ws.rs.BeanParam;
@@ -36,17 +37,8 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(ResourceType.APPLICATION)
 public class ServiceVariableResource {
-  private ServiceVariableService serviceVariablesService;
-
-  /**
-   * Instantiates a new Service variable resource.
-   *
-   * @param serviceVariablesService the service variables service
-   */
-  @Inject
-  public ServiceVariableResource(ServiceVariableService serviceVariablesService) {
-    this.serviceVariablesService = serviceVariablesService;
-  }
+  @Inject private ServiceVariableService serviceVariablesService;
+  @Inject private AppService appService;
 
   /**
    * List rest response.
@@ -73,6 +65,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
     serviceVariable.setAppId(appId);
+    serviceVariable.setAccountId(appService.get(appId).getAccountId());
     ServiceVariable savedServiceVariable = serviceVariablesService.save(serviceVariable);
     if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
       serviceVariable.setValue("******".toCharArray());

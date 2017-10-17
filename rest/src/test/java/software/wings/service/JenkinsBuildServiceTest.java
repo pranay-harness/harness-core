@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -19,11 +18,9 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import com.offbytwo.jenkins.model.Artifact;
-import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -51,11 +48,11 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/13/16.
  */
 public class JenkinsBuildServiceTest extends WingsBaseTest {
-  private static final JenkinsConfig jenkinsConfig = aJenkinsConfig()
-                                                         .withJenkinsUrl("http://jenkins")
-                                                         .withUsername("username")
-                                                         .withPassword("password".toCharArray())
-                                                         .withAccountId(ACCOUNT_ID)
+  private static final JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                                         .jenkinsUrl("http://jenkins")
+                                                         .username("username")
+                                                         .password("password".toCharArray())
+                                                         .accountId(ACCOUNT_ID)
                                                          .build();
 
   @Mock private JenkinsFactory jenkinsFactory;
@@ -148,11 +145,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateInvalidUrl() throws IOException {
-    JenkinsConfig jenkinsConfig = aJenkinsConfig()
-                                      .withJenkinsUrl("BAD_URL")
-                                      .withUsername("username")
-                                      .withPassword("password".toCharArray())
-                                      .withAccountId(ACCOUNT_ID)
+    JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                      .jenkinsUrl("BAD_URL")
+                                      .username("username")
+                                      .password("password".toCharArray())
+                                      .accountId(ACCOUNT_ID)
                                       .build();
     try {
       jenkinsBuildService.validateArtifactServer(jenkinsConfig);
