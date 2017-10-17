@@ -1,9 +1,12 @@
 package software.wings.service.impl.security;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -26,7 +29,10 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.BoundedInputStream;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -260,6 +266,42 @@ public class KmsServiceImpl implements KmsService {
     encryptedData.setEncryptedValue(encrypted.getEncryptedValue());
 
     wingsPersistence.save(encryptedData);
+  }
+
+  @Override
+  public EncryptedData encryptFile(BoundedInputStream inputStream, String accountId) {
+    try {
+      KmsConfig kmsConfig = getKmsConfig(accountId);
+      Preconditions.checkNotNull(kmsConfig);
+      byte[] bytes = ByteStreams.toByteArray(inputStream);
+      EncryptedData fileData = encrypt(new String(bytes).toCharArray(), accountId, kmsConfig);
+      fileData.setAccountId(accountId);
+      fileData.setType(SettingVariableTypes.CONFIG_FILE);
+      char[] encryptedValue = fileData.getEncryptedValue();
+      fileData.setEncryptedValue(null);
+      wingsPersistence.save(fileData);
+
+      fileData.setEncryptedValue(encryptedValue);
+      return fileData;
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  @Override
+  public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
+    try {
+      KmsConfig kmsConfig = getKmsConfig(accountId);
+      Preconditions.checkNotNull(kmsConfig);
+      Preconditions.checkNotNull(encryptedData);
+      byte[] bytes = Files.toByteArray(file);
+      encryptedData.setEncryptedValue(new String(bytes).toCharArray());
+      char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
+      Files.write(new String(decrypt).getBytes(), file);
+      return file;
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
   }
 
   private void validateKms(String accountId, KmsConfig kmsConfig) {

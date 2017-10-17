@@ -851,9 +851,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             }
 
             settingAttribute.setName(gcpYaml.getName());
-            config = GcpConfig.GcpConfigBuilder.aGcpConfig()
-                         .withServiceAccountKeyFileContent(gcpYaml.getServiceAccountKeyFileContent())
-                         .build();
+            config =
+                GcpConfig.builder().serviceAccountKeyFileContent(gcpYaml.getServiceAccountKeyFileContent()).build();
             settingAttribute.setValue(config);
             break;
           case PHYSICAL_DATA_CENTER:

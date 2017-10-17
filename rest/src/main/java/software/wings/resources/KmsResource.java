@@ -77,7 +77,7 @@ public class KmsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> transitionKms(@QueryParam("accountId") final String accountId,
-      @QueryParam("fromKmsId") String fromKmsId, @QueryParam("fromKmsId") String toKmsId) {
+      @QueryParam("fromKmsId") String fromKmsId, @QueryParam("toKmsId") String toKmsId) {
     return new RestResponse<>(kmsService.transitionKms(accountId, fromKmsId, toKmsId));
   }
 }

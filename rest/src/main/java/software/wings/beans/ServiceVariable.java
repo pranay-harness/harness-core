@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -81,6 +82,8 @@ public class ServiceVariable extends Base implements Encryptable {
   }
 
   @Override
+  @JsonIgnore
+  @SchemaIgnore
   public List<java.lang.reflect.Field> getEncryptedFields() {
     if (type != Type.ENCRYPTED_TEXT) {
       return Collections.emptyList();
