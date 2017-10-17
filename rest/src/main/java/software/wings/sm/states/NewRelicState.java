@@ -35,9 +35,6 @@ import java.util.Set;
  * Created by rsingh on 8/28/17.
  */
 public class NewRelicState extends AbstractMetricAnalysisState {
-  private static final int SMOOTH_WINDOW = 3;
-  private static final int TOLERANCE = 1;
-
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(NewRelicState.class);
 
   @EnumData(enumDataProvider = NewRelicSettingProvider.class)

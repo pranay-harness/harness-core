@@ -45,11 +45,9 @@ def run_analysis(filename, make_nan=False):
                                        metric_data['test'],
                                        get_deviation_type(metric_name))
 
-            print(txn_name, metric_name)
             results = shd.compute_dist()
             if 'results' in metric_data:
                 for index, (host, host_data) in enumerate(metric_data['results'].items()):
-                    print(host_data['test_cuts'], results['test_cuts'][index])
                     assert str_equal(host_data['test_cuts'], results['test_cuts'][index])
                     assert str_equal(host_data['control_cuts'], results['control_cuts'][index])
                     assert compare(host_data['risk'], results['risk'][index])
@@ -68,10 +66,10 @@ def test_2():
     run_analysis('tests/resources/ts/ts_out_harness_2.json')
 
 def test_3():
-    run_analysis('resources/ts/ts_out_harness_3.json', True)
+    run_analysis('tests/resources/ts/ts_out_harness_3.json', True)
 
 def test_4():
-    run_analysis('resources/ts/ts_out_harness_4.json')
+    run_analysis('tests/resources/ts/ts_out_harness_4.json')
 
 
 def main(args):

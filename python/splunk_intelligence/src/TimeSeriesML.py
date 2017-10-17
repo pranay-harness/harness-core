@@ -62,101 +62,6 @@ class TSAnomlyDetector(object):
                             = np.nan
         return txns
 
-    def create_response(self, test_txn_dict, control_txn_dict):
-        result = {}
-        if test_txn_dict is None:
-            return result
-        i = 0
-        for txn_name, txn_data_dict in test_txn_dict.items():
-            metric_data = {}
-            j = 0
-            for metric_name, metric_data_dict in txn_data_dict.items():
-                host_metric_data = {}
-                k = 0
-                for host, metric_host_data_dict in metric_data_dict.items():
-                    metric_host_data_dict['data_sm'] = smooth(self._options.smooth_window,
-                                                              metric_host_data_dict['data'], metric_name)
-                    ma = np.ma.masked_array(metric_host_data_dict['data_sm'],
-                                            np.isnan(metric_host_data_dict['data_sm']))
-                    ma = ma.filled(0)
-                    ma1 = np.ma.masked_array(metric_host_data_dict['data'], np.isnan(metric_host_data_dict['data']))
-                    ma1 = ma1.filled(0)
-                    if len(np.where(np.isfinite(metric_host_data_dict['data_sm']))[0]) == 0:
-                        host_metric_data[k] = dict(host=host,
-                                                   x=[],
-                                                   y=[],
-                                                   y_orig=[])
-                    else:
-                        host_metric_data[k] = dict(host=host,
-                                                   x=range(0, len(ma)),
-                                                   y=ma.tolist(),
-                                                   y_orig=ma1.tolist())
-                        if 'distance' in metric_host_data_dict:
-                            host_metric_data[k]['distance'] = metric_host_data_dict['distance']
-                            host_metric_data[k]['nn'] = metric_host_data_dict['nn']
-                            host_metric_data[k]['risk'] = metric_host_data_dict['risk']
-                            host_metric_data[k]['score'] = metric_host_data_dict['score']
-                            if 'cuts' in metric_host_data_dict:
-                                host_metric_data[k]['cuts'] = metric_host_data_dict['cuts'].tolist()
-                                host_metric_data[k]['optimal_cuts'] = list(metric_host_data_dict['optimal_cuts'])
-                                host_metric_data[k]['optimal_data'] = metric_host_data_dict['optimal_data'].tolist()
-                                host_metric_data[k]['control_cuts'] = metric_host_data_dict['control_cuts'].tolist()
-                    k += 1
-                metric_data[j] = dict(metric=metric_name, hosts=host_metric_data)
-                j += 1
-            result[i] = dict(txnName=txn_name, metrics=metric_data)
-            i += 1
-        return result
-
-    # This is required since mongo does not support keys
-    # with dot, which will happen if txn names or metric
-    # names are keys. So converting the maps to lists
-    def convert_metric_dict_to_list(self, txn_dict):
-        result = {}
-        if txn_dict is None:
-            return result
-        i = 0
-        for txn_name, txn_data_dict in txn_dict.items():
-            metric_data = {}
-            j = 0
-            for metric_name, metric_data_dict in txn_data_dict.items():
-                host_metric_data = {}
-                k = 0
-                for host, metric_host_data_dict in metric_data_dict.items():
-                    metric_host_data_dict['data_sm'] = smooth(self._options.smooth_window,
-                                                              metric_host_data_dict['data'], metric_name)
-                    ma = np.ma.masked_array(metric_host_data_dict['data_sm'],
-                                            np.isnan(metric_host_data_dict['data_sm']))
-                    ma = ma.filled(0)
-                    ma1 = np.ma.masked_array(metric_host_data_dict['data'], np.isnan(metric_host_data_dict['data']))
-                    ma1 = ma1.filled(0)
-                    if len(np.where(np.isfinite(metric_host_data_dict['data_sm']))[0]) == 0:
-                        host_metric_data[k] = dict(host=host,
-                                                   x=[],
-                                                   y=[],
-                                                   y_orig=[])
-                    else:
-                        host_metric_data[k] = dict(host=host,
-                                                   x=range(0, len(ma)),
-                                                   y=ma.tolist(),
-                                                   y_orig=ma1.tolist())
-                        if 'distance' in metric_host_data_dict:
-                            host_metric_data[k]['distance'] = metric_host_data_dict['distance']
-                            host_metric_data[k]['nn'] = metric_host_data_dict['nn']
-                            host_metric_data[k]['risk'] = metric_host_data_dict['risk']
-                            host_metric_data[k]['score'] = metric_host_data_dict['score']
-                            if 'cuts' in metric_host_data_dict:
-                                host_metric_data[k]['cuts'] = metric_host_data_dict['cuts'].tolist()
-                                host_metric_data[k]['optimal_cuts'] = list(metric_host_data_dict['optimal_cuts'])
-                                host_metric_data[k]['optimal_data'] = metric_host_data_dict['optimal_data'].tolist()
-                                host_metric_data[k]['control_cuts'] = metric_host_data_dict['control_cuts'].tolist()
-                    k += 1
-                metric_data[j] = dict(metric=metric_name, hosts=host_metric_data)
-                j += 1
-            result[i] = dict(txnName=txn_name, metrics=metric_data)
-            i += 1
-        return result
-
     @staticmethod
     def get_metrics_data(metric_name, txn_data_dict):
 
@@ -183,9 +88,9 @@ class TSAnomlyDetector(object):
                         data_type=MetricType.HISTOGRAM)
 
     @staticmethod
-    def validate(txn_name, metric_name, control_data, test_data):
-        control_valid = len(control_data) > 0 and len(np.where(np.isfinite(control_data.flatten()))[0]) > 0
-        test_valid = len(test_data) > 0 and len(np.where(np.isfinite(test_data.flatten()))[0]) > 0
+    def validate(txn_name, metric_name, control_dict, test_dict):
+        control_valid = 'data' in control_dict and len(np.where(np.isfinite(control_dict['data'].flatten()))[0]) > 0
+        test_valid = 'data' in test_dict and len(np.where(np.isfinite(test_dict['data'].flatten()))[0]) > 0
         # No useful control or test data.
         if not control_valid and not test_valid:
             logger.warn(
@@ -216,10 +121,10 @@ class TSAnomlyDetector(object):
         control_data_dict = self.get_metrics_data(metric_name, control_txn_data_dict)
         test_data_dict = self.get_metrics_data(metric_name, test_txn_data_dict)
 
-        response = {'results': {}}
+        response = {'results': {}, 'max_risk': -1, 'control_avg': -1, 'test_avg': -1}
 
         if self.validate(txn_name, metric_name,
-                         control_data_dict['data'], test_data_dict['data']):
+                         control_data_dict, test_data_dict):
 
             tsd = SAXHMMDistanceFinder(metric_name=metric_name,
                                        smooth_window=self._options.smooth_window,
@@ -230,7 +135,6 @@ class TSAnomlyDetector(object):
 
             result = tsd.compute_dist()
 
-            response['max_risk'] = -1
             for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
                 response['results'][host] = {}
                 response['results'][host]['control_data'] = np.ma.masked_array(result['control_values'][index],
@@ -255,13 +159,14 @@ class TSAnomlyDetector(object):
                 response['results'][host]['control_index'] = result['nn'][index]
                 response['results'][host]['test_index'] = index
 
-        response['control_avg'] = simple_average(control_data_dict['data'].flatten(), -1)
-        response['test_avg'] = simple_average(test_data_dict['data'].flatten(), -1)
-        response['max_risk'] = -1 if response['control_avg'] == -1 \
-                                     or response['test_avg'] == -1 \
-            else response['max_risk']
-        response['control'] = self.make_jsonable(control_data_dict)
-        response['test'] = self.make_jsonable(test_data_dict)
+        if 'data' in control_data_dict:
+            response['control_avg'] = simple_average(control_data_dict['data'].flatten(), -1)
+            response['control'] = self.make_jsonable(control_data_dict)
+
+        if 'data' in test_data_dict:
+            response['test_avg'] = simple_average(test_data_dict['data'].flatten(), -1)
+            response['test'] = self.make_jsonable(test_data_dict)
+
         response['metric_name'] = metric_name
 
         return response
@@ -274,7 +179,7 @@ class TSAnomlyDetector(object):
 
         if len(control_txn_groups) == 0 or len(test_txn_groups) == 0:
             logger.warn(
-                "No control or test data given for minute " + self._options.analysis_minute + ". Skipping analysis!!")
+                "No control or test data given for minute " + str(self._options.analysis_minute) + ". Skipping analysis!!")
         else:
 
             for txn_ind, (txn_name, test_txn_data_dict) in enumerate(test_txn_groups.items()):
@@ -283,10 +188,6 @@ class TSAnomlyDetector(object):
                     control_txn_data_dict = control_txn_groups[txn_name]
                 else:
                     control_txn_data_dict = {}
-
-                # if len(control_txn_data_dict) == 0 or len(test_txn_data_dict) == 0:
-                #     logger.warn("No control or test data given for txn " + txn_name + ". Skipping analysis!!")
-                #     continue
 
                 for metric_ind, metric_name in enumerate(self.metric_names):
 

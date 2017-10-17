@@ -20,29 +20,5 @@ import javax.validation.constraints.NotNull;
  */
 public interface NewRelicService {
   void validateConfig(@NotNull SettingAttribute settingAttribute, @NotNull StateType stateType);
-
   List<NewRelicApplication> getApplications(@NotNull String settingId, @NotNull StateType stateType);
-
-  @ValidationGroups(Create.class)
-  boolean saveMetricData(@NotNull String accountId, String applicationId,
-      @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
-
-  @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
-
-  @ValidationGroups(Create.class)
-  boolean saveAnalysisRecordsML(@Valid TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord);
-
-  List<NewRelicMetricDataRecord> getRecords(String workflowExecutionId, String stateExecutionId, String workflowId,
-      String serviceId, Set<String> nodes, int analysisMinute);
-
-  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String workflowId, String serviceId, int analysisMinute);
-
-  NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId);
-
-  boolean isStateValid(String appdId, String stateExecutionID);
-
-  int getCollectionMinuteToProcess(String stateExecutionId, String workflowExecutionId, String serviceId);
-
-  void bumpCollectionMinuteToProcess(
-      String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute);
 }

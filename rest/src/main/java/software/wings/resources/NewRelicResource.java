@@ -69,12 +69,12 @@ public class NewRelicResource {
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
     if (compareCurrent) {
-      return new RestResponse<>(
-          newRelicService.getRecords(request.getWorkflowExecutionId(), request.getStateExecutionId(),
-              request.getWorkflowId(), request.getServiceId(), request.getNodes(), request.getAnalysisMinute()));
+      return new RestResponse<>(metricDataAnalysisService.getRecords(StateType.NEW_RELIC,
+          request.getWorkflowExecutionId(), request.getStateExecutionId(), request.getWorkflowId(),
+          request.getServiceId(), request.getNodes(), request.getAnalysisMinute()));
     } else {
-      return new RestResponse<>(newRelicService.getPreviousSuccessfulRecords(
-          request.getWorkflowId(), request.getServiceId(), request.getAnalysisMinute()));
+      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(
+          StateType.NEW_RELIC, request.getWorkflowId(), request.getServiceId(), request.getAnalysisMinute()));
     }
   }
 
@@ -104,6 +104,6 @@ public class NewRelicResource {
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setAnalysisMinute(analysisMinute);
-    return new RestResponse<>(newRelicService.saveAnalysisRecordsML(mlAnalysisResponse));
+    return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(mlAnalysisResponse));
   }
 }
