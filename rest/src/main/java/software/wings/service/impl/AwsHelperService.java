@@ -301,9 +301,9 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon s3 client
    */
-  private AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey) {
+  private AmazonS3Client getAmazonS3Client(String accessKey, char[] secretKey, String region) {
     return (AmazonS3Client) AmazonS3ClientBuilder.standard()
-        .withRegion("us-east-1")
+        .withRegion(region)
         .withCredentials(
             new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, String.valueOf(secretKey))))
         .build();
@@ -512,7 +512,7 @@ public class AwsHelperService {
 
   public List<Bucket> listS3Buckets(AwsConfig awsConfig) {
     try {
-      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).listBuckets();
+      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey(), "us-east-1").listBuckets();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -521,7 +521,9 @@ public class AwsHelperService {
 
   public S3Object getObjectFromS3(AwsConfig awsConfig, String bucketName, String key) {
     try {
-      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObject(bucketName, key);
+      return getAmazonS3Client(
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), getBucketRegion(awsConfig, bucketName))
+          .getObject(bucketName, key);
 
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -531,7 +533,9 @@ public class AwsHelperService {
 
   public ObjectMetadata getObjectMetadataFromS3(AwsConfig awsConfig, String bucketName, String key) {
     try {
-      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getObjectMetadata(bucketName, key);
+      return getAmazonS3Client(
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), getBucketRegion(awsConfig, bucketName))
+          .getObjectMetadata(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -540,7 +544,8 @@ public class AwsHelperService {
 
   public ListObjectsV2Result listObjectsInS3(AwsConfig awsConfig, ListObjectsV2Request listObjectsV2Request) {
     try {
-      AmazonS3Client amazonS3Client = getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonS3Client amazonS3Client = getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+          getBucketRegion(awsConfig, listObjectsV2Request.getBucketName()));
       return amazonS3Client.listObjectsV2(listObjectsV2Request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1389,24 +1394,37 @@ public class AwsHelperService {
     return new InvokeResult();
   }
 
-  public String getResourceUrl(AwsConfig awsConfig, String bucketName, String key) {
-    try {
-      return getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey()).getResourceUrl(bucketName, key);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return null;
-  }
-
   public boolean isVersioningEnabledForBucket(AwsConfig awsConfig, String bucketName) {
     try {
       BucketVersioningConfiguration bucketVersioningConfiguration =
-          getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey(), getBucketRegion(awsConfig, bucketName))
               .getBucketVersioningConfiguration(bucketName);
       return "ENABLED".equals(bucketVersioningConfiguration.getStatus());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
     return false;
+  }
+
+  private String getBucketRegion(AwsConfig awsConfig, String bucketName) {
+    try {
+      // You can query the bucket location using any region, it returns the result. So, using the default
+      String region = getAmazonS3Client(awsConfig.getAccessKey(), awsConfig.getSecretKey(), "us-east-1")
+                          .getBucketLocation(bucketName);
+      // Aws returns US if the bucket was created in the default region. Not sure why it doesn't return just the region
+      // name in all cases. Also, their documentation says it would return empty string if its in the default region.
+      // http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html But it returns US. Added additional
+      // checks based on other stuff
+      if (region == "US" || region == null) {
+        return "us-east-1";
+      } else if (region == "EU") {
+        return "eu-west-1";
+      }
+
+      return region;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return null;
   }
 }
