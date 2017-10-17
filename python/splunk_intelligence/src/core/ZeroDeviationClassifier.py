@@ -10,9 +10,8 @@ to detect anomalies
 
 class ZeroDeviationClassifier(object):
     klassifier = {}
-    tolerance = 5
     #TODO values should be a 1d array
-    def fit_transform(self, label, values, threshold):
+    def fit_transform(self, label, values, threshold, tolerance = 5):
 
         """
 
@@ -23,7 +22,7 @@ class ZeroDeviationClassifier(object):
         """
         vals = map(int, values[:, 1])
         np_values = np.array(vals)
-        self.klassifier[label] = [np.mean(np_values, axis=0), threshold]
+        self.klassifier[label] = [np.mean(np_values, axis=0), threshold, tolerance]
 
     #TODO values should be a 1d array
     def predict(self, label, values, flag=0):
@@ -38,19 +37,20 @@ class ZeroDeviationClassifier(object):
         """
         mean = self.klassifier[label][0]
         threshold = self.klassifier[label][1]
+        tolerance = self.klassifier[label][2]
         vals = map(int, values[:, 1])
         score = 0.0
         predictions = np.array([1] * len(vals))
         for i, value in enumerate(vals):
             anomaly = False
-            if math.floor(abs(value - mean)) > self.tolerance:
+            if math.floor(abs(value - mean)) > tolerance:
                 anomaly = True
             # Higher is bad
             if flag == 0:
                 anomaly &= math.floor(value - mean)  > math.ceil(threshold * mean)
             # Lower is bad
             elif flag == 1:
-                anomaly &= math.floor(value - mean) < math.ceil(threshold * mean)
+                anomaly &= math.floor(mean - value) > math.ceil(threshold * mean)
             # Both are bad
             else:
                 anomaly &= math.floor(abs(value - mean)) > math.ceil(threshold * mean)
