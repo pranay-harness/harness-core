@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -43,7 +42,9 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,7 +120,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   @Repeat(times = 5, successes = 1)
   public void testValidateSumoLogicConfig() throws Exception {
     Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
@@ -437,13 +437,18 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
     final WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setStateMachineId(UUID.randomUUID().toString());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(workflowExecution);
+    StateMachine stateMachine = new StateMachine();
+    stateMachine.setInitialStateName("some-state");
+    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
+    stateMachine.setUuid(workflowExecution.getStateMachineId());
+    wingsPersistence.save(stateMachine);
     Assert.assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
         StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId, null));
   }
@@ -483,7 +488,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Ignore
   public void testIsBaseLineCreate() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(appId);
@@ -492,10 +496,16 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     wingsPersistence.save(stateExecutionInstance);
 
     final WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setStateMachineId(UUID.randomUUID().toString());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
     workflowExecutionId = wingsPersistence.save(workflowExecution);
+    StateMachine stateMachine = new StateMachine();
+    stateMachine.setInitialStateName("some-state");
+    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
+    stateMachine.setUuid(workflowExecution.getStateMachineId());
+    wingsPersistence.save(stateMachine);
 
     final List<LogElement> logElements = new ArrayList<>();
     final String query = UUID.randomUUID().toString();
