@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -41,11 +40,8 @@ public class ArtifactoryServiceTest {
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
-                                                    .withArtifactoryUrl(url)
-                                                    .withUsername("admin")
-                                                    .withPassword("dummy123!".toCharArray())
-                                                    .build();
+  private ArtifactoryConfig artifactoryConfig =
+      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
 
   @Test
   public void shouldGetMavenRepositories() {

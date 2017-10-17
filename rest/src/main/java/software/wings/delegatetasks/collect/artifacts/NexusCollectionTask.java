@@ -1,23 +1,16 @@
 package software.wings.delegatetasks.collect.artifacts;
 
-import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
-import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +51,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
-      NexusConfig nexusConfig =
-          aNexusConfig().withNexusUrl(nexusUrl).withUsername(username).withPassword(password).build();
+      NexusConfig nexusConfig = NexusConfig.builder().nexusUrl(nexusUrl).username(username).password(password).build();
       for (String artifactPath : artifactPaths) {
         logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
         Pair<String, InputStream> fileInfo =

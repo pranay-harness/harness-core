@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.DockerConfig.Builder.aDockerConfig;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -51,10 +50,10 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetLastSuccessfulBuild() {
-    DockerConfig dockerConfig = aDockerConfig()
-                                    .withDockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                                    .withUsername("anubhaw")
-                                    .withPassword("anubhaw@Dhub".toCharArray())
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                    .username("anubhaw")
+                                    .password("anubhaw@Dhub".toCharArray())
                                     .build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
     System.out.println(builds);
@@ -62,10 +61,10 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateInvalidUrl() {
-    DockerConfig dockerConfig = aDockerConfig()
-                                    .withDockerRegistryUrl("invalid_url")
-                                    .withUsername("anubhaw")
-                                    .withPassword("anubhaw@Dhub".toCharArray())
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl("invalid_url")
+                                    .username("anubhaw")
+                                    .password("anubhaw@Dhub".toCharArray())
                                     .build();
     try {
       dockerBuildService.validateArtifactServer(dockerConfig);
@@ -78,10 +77,10 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateCredentials() {
-    DockerConfig dockerConfig = aDockerConfig()
-                                    .withDockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                                    .withUsername("invalid")
-                                    .withPassword("anubhaw@Dhub".toCharArray())
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                    .username("invalid")
+                                    .password("anubhaw@Dhub".toCharArray())
                                     .build();
     try {
       dockerRegistryService.validateCredentials(dockerConfig);

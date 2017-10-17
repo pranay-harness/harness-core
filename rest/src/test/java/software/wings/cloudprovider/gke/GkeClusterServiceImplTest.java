@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -34,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GcpHelperService;
@@ -66,7 +66,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
-          .withValue(aGcpConfig().withServiceAccountKeyFileContent("{\"project_id\": \"project-a\"}").build())
+          .withValue(GcpConfig.builder().serviceAccountKeyFileContent("{\"project_id\": \"project-a\"}").build())
           .build();
   private static final String ZONE_CLUSTER = "zone-a/foo-bar";
   private static final ImmutableMap<String, String> CREATE_CLUSTER_PARAMS = ImmutableMap.<String, String>builder()

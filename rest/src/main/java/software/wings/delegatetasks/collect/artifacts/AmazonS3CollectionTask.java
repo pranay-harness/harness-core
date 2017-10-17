@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.collect.artifacts;
 
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +47,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNot
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
-      AwsConfig awsConfig =
-          anAwsConfig().withAccountId(accountId).withAccessKey(accessKey).withSecretKey(secretKey).build();
+      AwsConfig awsConfig = AwsConfig.builder().accountId(accountId).accessKey(accessKey).secretKey(secretKey).build();
       amazonS3Service.downloadArtifacts(
           awsConfig, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {

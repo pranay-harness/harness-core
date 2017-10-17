@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -34,11 +33,8 @@ public class NexusServiceTest {
 
   private NexusService nexusService = new NexusServiceImpl();
 
-  private NexusConfig nexusConfig = aNexusConfig()
-                                        .withNexusUrl(DEFAULT_NEXUS_URL)
-                                        .withUsername("admin")
-                                        .withPassword("admin123".toCharArray())
-                                        .build();
+  private NexusConfig nexusConfig =
+      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
 
   @Test
   public void shouldGetRepositories() {

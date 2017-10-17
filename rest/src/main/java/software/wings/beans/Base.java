@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.utils.validation.Update;
 
 import javax.validation.constraints.NotNull;
@@ -71,11 +72,13 @@ public class Base implements UuidAware {
                          .build();
     }
 
-    if (createdBy == null && !(this instanceof Account)) {
-      createdBy = embeddedUser;
-    }
-
     lastUpdatedAt = currentTimeMillis();
     lastUpdatedBy = embeddedUser;
+
+    if (createdBy == null && !(this instanceof Account)) {
+      createdBy = embeddedUser;
+    } else if (getClass().equals(EncryptedData.class)) {
+      ((EncryptedData) this).addToUpdatedBy(lastUpdatedAt, lastUpdatedBy);
+    }
   }
 }

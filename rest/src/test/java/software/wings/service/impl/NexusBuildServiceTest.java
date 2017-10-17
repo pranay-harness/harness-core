@@ -44,11 +44,8 @@ public class NexusBuildServiceTest extends WingsBaseTest {
 
   private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
 
-  private NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
-                                        .withNexusUrl(DEFAULT_NEXUS_URL)
-                                        .withUsername("admin")
-                                        .withPassword("admin123".toCharArray())
-                                        .build();
+  private NexusConfig nexusConfig =
+      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
 
   private static final NexusArtifactStream nexusArtifactStream =
       NexusArtifactStream.Builder.aNexusArtifactStream()
@@ -97,11 +94,11 @@ public class NexusBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateInvalidUrl() {
-    NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
-                                  .withNexusUrl("BAD_URL")
-                                  .withUsername("username")
-                                  .withPassword("password".toCharArray())
-                                  .withAccountId(ACCOUNT_ID)
+    NexusConfig nexusConfig = NexusConfig.builder()
+                                  .nexusUrl("BAD_URL")
+                                  .username("username")
+                                  .password("password".toCharArray())
+                                  .accountId(ACCOUNT_ID)
                                   .build();
     try {
       nexusBuildService.validateArtifactServer(nexusConfig);

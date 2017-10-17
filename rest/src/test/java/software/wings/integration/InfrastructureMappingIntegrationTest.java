@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.Service.Builder.aService;
@@ -19,6 +18,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
@@ -176,9 +176,9 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute()
             .withAppId(app.getUuid())
-            .withValue(anAwsConfig()
-                           .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                           .withSecretKey("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".toCharArray())
+            .withValue(AwsConfig.builder()
+                           .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                           .secretKey("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".toCharArray())
                            .build())
             .build());
 
@@ -225,9 +225,9 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute()
             .withAppId(app.getUuid())
-            .withValue(anAwsConfig()
-                           .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                           .withSecretKey("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".toCharArray())
+            .withValue(AwsConfig.builder()
+                           .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                           .secretKey("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".toCharArray())
                            .build())
             .build());
 

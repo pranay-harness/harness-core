@@ -120,6 +120,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final String DOCKER_USERNAME = "wingsplugins";
   protected static final char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
   public static final String HARNESS_JENKINS = "Harness Jenkins";
+  public static final String HARNESS_KMS = "Harness KMS";
 
   //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 

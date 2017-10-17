@@ -6,10 +6,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -17,6 +18,10 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.mockito.AdditionalAnswers;
+import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.Whitebox;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -25,10 +30,12 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ResourceTestRule;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.UUID;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -37,27 +44,36 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 9/27/16.
  */
 public class ServiceVariableResourceTest {
+  private static final String ACCOUNT_ID = UUID.randomUUID().toString();
   private static final ServiceVariableService VARIABLE_SERVICE = mock(ServiceVariableService.class);
+  private static final AppService APP_SERVICE = mock(AppService.class);
+  private static final ServiceVariableResource VARIABLE_RESOURCE = new ServiceVariableResource();
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new ServiceVariableResource(VARIABLE_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder().addResource(VARIABLE_RESOURCE).addProvider(WingsExceptionMapper.class).build();
 
-  private static final ServiceVariable SERVICE_VARIABLE = aServiceVariable()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withUuid(WingsTestConstants.SERVICE_VARIABLE_ID)
-                                                              .withEntityType(EntityType.ENVIRONMENT)
-                                                              .withEntityId(TEMPLATE_ID)
-                                                              .withTemplateId(TEMPLATE_ID)
-                                                              .withType(Type.TEXT)
-                                                              .withValue("8080".toCharArray())
+  private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
+                                                              .envId(ENV_ID)
+                                                              .entityType(EntityType.ENVIRONMENT)
+                                                              .entityId(TEMPLATE_ID)
+                                                              .templateId(TEMPLATE_ID)
+                                                              .type(Type.TEXT)
+                                                              .value("8080".toCharArray())
+                                                              .accountId(ACCOUNT_ID)
                                                               .build();
+  static {
+    when(VARIABLE_SERVICE.save(anyObject())).then(AdditionalAnswers.returnsFirstArg());
+    when(APP_SERVICE.get(anyString()))
+        .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+    setInternalState(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE);
+    setInternalState(VARIABLE_RESOURCE, "appService", APP_SERVICE);
+    SERVICE_VARIABLE.setUuid(WingsTestConstants.SERVICE_VARIABLE_ID);
+    SERVICE_VARIABLE.setAppId(APP_ID);
+  }
 
   /**
    * Should list variables.

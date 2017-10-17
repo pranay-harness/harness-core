@@ -2,7 +2,6 @@ package software.wings.collect;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
@@ -70,11 +70,11 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
                                                      .build();
 
   private final SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
-                                                         .withValue(aJenkinsConfig()
-                                                                        .withJenkinsUrl(JENKINS_URL)
-                                                                        .withUsername(USER_NAME)
-                                                                        .withPassword(PASSWORD)
-                                                                        .withAccountId(ACCOUNT_ID)
+                                                         .withValue(JenkinsConfig.builder()
+                                                                        .jenkinsUrl(JENKINS_URL)
+                                                                        .username(USER_NAME)
+                                                                        .password(PASSWORD)
+                                                                        .accountId(ACCOUNT_ID)
                                                                         .build())
                                                          .build();
 

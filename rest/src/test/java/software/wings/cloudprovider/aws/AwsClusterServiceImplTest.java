@@ -3,7 +3,6 @@ package software.wings.cloudprovider.aws;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -22,6 +21,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 
@@ -35,7 +35,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private AwsClusterService awsClusterService;
 
   private SettingAttribute cloudProviderSetting =
-      aSettingAttribute().withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build()).build();
+      aSettingAttribute().withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build()).build();
   private AwsClusterConfiguration clusterConfiguration = anAwsClusterConfiguration()
                                                              .withName(CLUSTER_NAME)
                                                              .withSize(5)

@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
@@ -29,6 +29,7 @@ public class LogzConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedToken;
   /**
    * Instantiates a new Splunk config.
    */

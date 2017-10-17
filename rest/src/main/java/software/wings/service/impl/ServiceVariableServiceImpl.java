@@ -127,8 +127,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
 
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
-        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()),
-        serviceVariable.getAccountId());
+        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()));
 
     //-------------------
     // we need this method if we are supporting individual file or sub-directory git sync

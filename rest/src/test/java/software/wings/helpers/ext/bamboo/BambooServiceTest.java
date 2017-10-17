@@ -30,10 +30,10 @@ public class BambooServiceTest extends WingsBaseTest {
 
   private BambooService bambooService = new BambooServiceImpl();
 
-  private BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                          .withBambooUrl("http://localhost:9095/")
-                                          .withUsername("admin")
-                                          .withPassword("admin".toCharArray())
+  private BambooConfig bambooConfig = BambooConfig.builder()
+                                          .bambooUrl("http://localhost:9095/")
+                                          .username("admin")
+                                          .password("admin".toCharArray())
                                           .build();
 
   @Test

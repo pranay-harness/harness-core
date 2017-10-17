@@ -174,11 +174,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
                                             .withCategory(Category.CONNECTOR)
-                                            .withValue(JenkinsConfig.Builder.aJenkinsConfig()
-                                                           .withJenkinsUrl(JENKINS_URL)
-                                                           .withPassword(PASSWORD)
-                                                           .withUsername(USER_NAME)
-                                                           .withAccountId("ACCOUNT_ID")
+                                            .withValue(JenkinsConfig.builder()
+                                                           .jenkinsUrl(JENKINS_URL)
+                                                           .password(PASSWORD)
+                                                           .username(USER_NAME)
+                                                           .accountId("ACCOUNT_ID")
                                                            .build())
                                             .build();
     when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
@@ -195,11 +195,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
                                             .withCategory(Category.CONNECTOR)
-                                            .withValue(JenkinsConfig.Builder.aJenkinsConfig()
-                                                           .withJenkinsUrl(JENKINS_URL)
-                                                           .withPassword(PASSWORD)
-                                                           .withUsername(USER_NAME)
-                                                           .withAccountId("ACCOUNT_ID")
+                                            .withValue(JenkinsConfig.builder()
+                                                           .jenkinsUrl(JENKINS_URL)
+                                                           .password(PASSWORD)
+                                                           .username(USER_NAME)
+                                                           .accountId("ACCOUNT_ID")
                                                            .build())
                                             .build();
     when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
@@ -221,7 +221,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withAccountId("ACCOUNT_ID")
                                             .withName("SETTING_NAME")
                                             .withCategory(Category.CLOUD_PROVIDER)
-                                            .withValue(AwsConfig.Builder.anAwsConfig().build())
+                                            .withValue(AwsConfig.builder().build())
                                             .build();
     when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(infrastructureMappingService.list(any(PageRequest.class)))
