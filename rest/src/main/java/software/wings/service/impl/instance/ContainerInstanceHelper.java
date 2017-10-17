@@ -77,7 +77,6 @@ public class ContainerInstanceHelper {
 
   @Inject @Named("KubernetesInstanceSync") private ContainerSync kubernetesSyncService;
   @Inject @Named("EcsInstanceSync") private ContainerSync ecsSyncService;
-  @Inject private InfrastructureMappingService infraMappingService;
 
   // This queue is used to asynchronously process all the container deployment information that the workflow touched
   // upon.
@@ -346,8 +345,7 @@ public class ContainerInstanceHelper {
         getContainerFilter(containerSvcNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId);
     Validator.notNullCheck("ContainerFilter", containerFilter);
 
-    ContainerSyncRequest instanceSyncRequest =
-        ContainerSyncRequest.Builder.aContainerSyncRequest().withFilter(containerFilter).build();
+    ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
       return kubernetesSyncService.getInstances(instanceSyncRequest);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
@@ -363,14 +361,14 @@ public class ContainerInstanceHelper {
       String infraMappingId, String clusterName, String computeProviderId) {
     ContainerFilter containerFilter;
     Validator.notNullCheck("InstanceType", instanceType);
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      containerFilter = KubernetesFilter.Builder.aKubernetesFilter()
-                            .withClusterName(clusterName)
-                            .withReplicationControllerNameSet(containerSvcNameSet)
-                            .withKubernetesConfig(getKubernetesConfig(infrastructureMapping))
+      containerFilter = KubernetesFilter.builder()
+                            .replicationControllerNameSet(containerSvcNameSet)
+                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping))
                             .build();
+      containerFilter.setClusterName(clusterName);
 
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
       if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
@@ -379,12 +377,12 @@ public class ContainerInstanceHelper {
         throw new WingsException(msg);
       }
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      containerFilter = EcsFilter.Builder.anEcsFilter()
-                            .withClusterName(clusterName)
-                            .withServiceNameSet(containerSvcNameSet)
-                            .withAwsComputeProviderId(computeProviderId)
-                            .withRegion(ecsInfrastructureMapping.getRegion())
+      containerFilter = EcsFilter.builder()
+                            .serviceNameSet(containerSvcNameSet)
+                            .awsComputeProviderId(computeProviderId)
+                            .region(ecsInfrastructureMapping.getRegion())
                             .build();
+      ecsInfrastructureMapping.setClusterName(clusterName);
 
     } else {
       String msg = "Unsupported container instance type:" + instanceType;

@@ -42,7 +42,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
-    elkConfig.setUrl("some url");
+    elkConfig.setElkUrl("some url");
     elkConfig.setUsername("someuser");
 
     final SettingAttribute settingAttribute =
@@ -62,7 +62,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
-    elkConfig.setUrl("some url");
+    elkConfig.setElkUrl("some url");
     elkConfig.setPassword("somepwd".toCharArray());
 
     final SettingAttribute settingAttribute =
@@ -82,7 +82,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
-    elkConfig.setUrl("some url");
+    elkConfig.setElkUrl("some url");
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();
@@ -101,7 +101,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
-    elkConfig.setUrl("https://ec2-34-207-78-53.compute-1.amazonaws.com:9200");
+    elkConfig.setElkUrl("https://ec2-34-207-78-53.compute-1.amazonaws.com:9200");
     elkConfig.setUsername("elastic");
     elkConfig.setPassword("W!ngs@elastic".toCharArray());
 

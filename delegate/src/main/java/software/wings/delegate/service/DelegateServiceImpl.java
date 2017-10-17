@@ -56,6 +56,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -75,6 +76,7 @@ import javax.net.ssl.SSLException;
 public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 100;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
+  private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
@@ -88,6 +90,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AsyncHttpClient asyncHttpClient;
   private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
+  private static long lastHeartbeatSentAt = System.currentTimeMillis();
+  private static long lastHeartbeatReceivedAt = System.currentTimeMillis();
 
   private Socket socket;
   private RequestBuilder request;
@@ -256,8 +260,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void handleMessage(String message, String delegateId, String accountId) {
-    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
-    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+    if (!StringUtils.startsWith(message, "[X]")) { // Ignore heartbeats
+      logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
@@ -268,6 +272,12 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         System.out.println(message);
         logger.error("Exception while decoding task", e);
+      }
+    } else {
+      String receivedId = message.substring(3); // Remove the "[X]"
+      logger.info("Received heartbeat for delegate: " + receivedId);
+      if (delegateId.equals(receivedId)) {
+        lastHeartbeatReceivedAt = System.currentTimeMillis();
       }
     }
   }
@@ -295,11 +305,15 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
-    logger.info("Registering delegate....");
     try {
+      List<Integer> attempts = new ArrayList<>();
+      attempts.add(0);
       return await().with().timeout(Duration.FOREVER).pollInterval(Duration.FIVE_SECONDS).until(() -> {
         RestResponse<Delegate> delegateResponse;
         try {
+          attempts.set(0, attempts.get(0) + 1);
+          String attemptString = attempts.get(0) > 1 ? " (Attempt " + attempts.get(0) + ")" : "";
+          logger.info("Registering delegate." + attemptString);
           delegateResponse = execute(managerClient.registerDelegate(accountId,
               builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
         } catch (Exception e) {
@@ -308,7 +322,7 @@ public class DelegateServiceImpl implements DelegateService {
           Thread.sleep(55000);
           return null;
         }
-        if (delegateResponse == null) {
+        if (delegateResponse == null || delegateResponse.getResource() == null) {
           String msg = "Error occurred while registering Delegate [" + accountId
               + "] with manager. Please see the manager log for more information.";
           logger.error(msg);
@@ -334,6 +348,10 @@ public class DelegateServiceImpl implements DelegateService {
       upgradeService.doRestart();
     } catch (Exception ex) {
       logger.error("Exception while restarting", ex);
+    } finally {
+      // Reset timeout so that next attempt is made after 15 minutes
+      lastHeartbeatSentAt = System.currentTimeMillis();
+      lastHeartbeatReceivedAt = System.currentTimeMillis();
     }
   }
 
@@ -364,21 +382,36 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(() -> {
-      logger.debug("sending heartbeat...");
+    heartbeatExecutor.scheduleAtFixedRate(()
+                                              -> executorService.submit(() -> {
       try {
-        if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
-          socket.fire(JsonUtils.asJson(
-              builder.but()
-                  .withLastHeartBeat(System.currentTimeMillis())
-                  .withConnected(true)
-                  .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
-                  .build()));
+        if (doRestartDelegate()) {
+          restartDelegate();
         }
+        sendHeartbeat(builder, socket);
       } catch (Exception ex) {
         logger.error("Exception while sending heartbeat", ex);
       }
-    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+    }),
+        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+  }
+
+  private boolean doRestartDelegate() {
+    long now = System.currentTimeMillis();
+    return (now - lastHeartbeatSentAt) > MAX_HB_TIMEOUT || (now - lastHeartbeatReceivedAt) > MAX_HB_TIMEOUT;
+  }
+
+  private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
+    logger.debug("sending heartbeat...");
+    if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
+      socket.fire(JsonUtils.asJson(
+          builder.but()
+              .withLastHeartBeat(System.currentTimeMillis())
+              .withConnected(true)
+              .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
+              .build()));
+      lastHeartbeatSentAt = System.currentTimeMillis();
+    }
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {

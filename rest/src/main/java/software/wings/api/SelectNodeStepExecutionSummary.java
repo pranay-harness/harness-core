@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class SelectNodeStepExecutionSummary extends StepExecutionSummary {
   private List<ServiceInstance> serviceInstanceList;
+  private boolean excludeSelectedHostsFromFuturePhases;
 
   public List<ServiceInstance> getServiceInstanceList() {
     return serviceInstanceList;
@@ -17,5 +18,13 @@ public class SelectNodeStepExecutionSummary extends StepExecutionSummary {
 
   public void setServiceInstanceList(List<ServiceInstance> serviceInstanceList) {
     this.serviceInstanceList = serviceInstanceList;
+  }
+
+  public boolean isExcludeSelectedHostsFromFuturePhases() {
+    return excludeSelectedHostsFromFuturePhases;
+  }
+
+  public void setExcludeSelectedHostsFromFuturePhases(boolean excludeSelectedHostsFromFuturePhases) {
+    this.excludeSelectedHostsFromFuturePhases = excludeSelectedHostsFromFuturePhases;
   }
 }

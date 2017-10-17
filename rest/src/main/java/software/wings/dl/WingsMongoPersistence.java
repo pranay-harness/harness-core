@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -182,7 +183,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<String> save(List<T> ts) {
-    for (T t : ts) {
+    for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
+      T t = iterator.next();
+      if (t == null) {
+        iterator.remove();
+      }
       if (SettingAttribute.class.isInstance(t)) {
         this.encryptIfNecessary(((SettingAttribute) t).getValue());
       } else if (t instanceof Encryptable) {
@@ -207,7 +212,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
-    for (T t : ts) {
+    for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
+      T t = iterator.next();
+      if (t == null) {
+        iterator.remove();
+      }
       if (SettingAttribute.class.isInstance(t)) {
         this.encryptIfNecessary(((SettingAttribute) t).getValue());
       } else if (t instanceof Encryptable) {

@@ -15,6 +15,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
+import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.io.IOException;
@@ -31,10 +32,10 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   private static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";
 
   @Override
-  public List<AppdynamicsApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
-    final Call<List<AppdynamicsApplication>> request =
+  public List<NewRelicApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
+    final Call<List<NewRelicApplication>> request =
         getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
-    final Response<List<AppdynamicsApplication>> response = request.execute();
+    final Response<List<NewRelicApplication>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
     } else {
@@ -44,7 +45,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId) throws IOException {
+  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
     final Call<List<AppdynamicsTier>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listTiers(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
@@ -58,7 +59,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId)
+  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
       throws IOException {
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
@@ -187,9 +188,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     if (!validUrl(appDynamicsConfig.getControllerUrl())) {
       throw new RuntimeException("AppDynamics Controller URL must be a valid URL");
     }
-    Response<List<AppdynamicsApplication>> response = null;
+    Response<List<NewRelicApplication>> response = null;
     try {
-      final Call<List<AppdynamicsApplication>> request =
+      final Call<List<NewRelicApplication>> request =
           getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
       response = request.execute();
       if (response.isSuccessful()) {

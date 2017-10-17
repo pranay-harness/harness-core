@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -271,8 +272,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
-    stateExecutionInstance.getStateExecutionMap().entrySet().forEach(
-        entry -> { context.put(normalizeStateName(entry.getKey()), entry.getValue()); });
+    stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
 
     context.put(CURRENT_STATE, normalizeStateName(getStateExecutionInstance().getStateName()));
 
@@ -389,6 +389,15 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   @Override
   public Map<String, String> getServiceVariables() {
+    return getServiceVariables(true);
+  }
+
+  @Override
+  public Map<String, String> getSafeDisplayServiceVariables() {
+    return getServiceVariables(false);
+  }
+
+  private Map<String, String> getServiceVariables(boolean withEncryptedValues) {
     Map<String, String> variables = new HashMap<>();
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement == null || phaseElement.getServiceElement() == null
@@ -408,8 +417,10 @@ public class ExecutionContextImpl implements ExecutionContext {
     List<ServiceVariable> serviceVariables =
         serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid());
     serviceVariables.forEach(serviceVariable
-        -> variables.put(
-            renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));
+        -> variables.put(renderExpression(serviceVariable.getName()),
+            withEncryptedValues || serviceVariable.getType() != ENCRYPTED_TEXT
+                ? renderExpression(new String(serviceVariable.getValue()))
+                : "*****"));
 
     return variables;
   }

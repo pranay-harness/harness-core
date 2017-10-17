@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
@@ -20,25 +21,27 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
+
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
+
 import javax.inject.Inject;
 
 /**
@@ -48,33 +51,57 @@ public class NewRelicServiceImpl implements NewRelicService {
   private static final Logger logger = LoggerFactory.getLogger(NewRelicServiceImpl.class);
 
   @Inject private SettingsService settingsService;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public void validateConfig(SettingAttribute settingAttribute) {
+  public void validateConfig(SettingAttribute settingAttribute, StateType stateType) {
+    ErrorCode errorCode = null;
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .validateConfig((NewRelicConfig) settingAttribute.getValue());
+      switch (stateType) {
+        case NEW_RELIC:
+          errorCode = ErrorCode.NEWRELIC_CONFIGURATION_ERROR;
+          delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+              .validateConfig((NewRelicConfig) settingAttribute.getValue());
+          break;
+        case APP_DYNAMICS:
+          errorCode = ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR;
+          delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+              .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
+          break;
+        default:
+          throw new IllegalStateException("Invalid state" + stateType);
+      }
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, "reason", e.getMessage());
+      throw new WingsException(errorCode, "reason", e.getMessage());
     }
   }
 
   @Override
-  public List<NewRelicApplication> getApplications(String settingId) {
+  public List<NewRelicApplication> getApplications(String settingId, StateType stateType) {
+    ErrorCode errorCode = null;
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .getAllApplications((NewRelicConfig) settingAttribute.getValue());
+      switch (stateType) {
+        case NEW_RELIC:
+          errorCode = ErrorCode.NEWRELIC_ERROR;
+          return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+              .getAllApplications((NewRelicConfig) settingAttribute.getValue());
+        case APP_DYNAMICS:
+          errorCode = ErrorCode.APPDYNAMICS_ERROR;
+          return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+              .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
+        default:
+          throw new IllegalStateException("Invalid state" + stateType);
+      }
+
     } catch (Exception e) {
-      throw new WingsException(
-          ErrorCode.NEWRELIC_ERROR, "message", "Error in getting new relic applications. " + e.getMessage());
+      throw new WingsException(errorCode, "message", "Error in getting new relic applications. " + e.getMessage());
     }
   }
 
@@ -302,54 +329,6 @@ public class NewRelicServiceImpl implements NewRelicService {
     }
     return analysisRecord;
   }
-
-  //  @Override
-  //  public NewRelicMetricAnalysisRecord getMetricsAnalysis(String stateExecutionId, String workflowExecutionId) {
-  //    Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
-  //        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).field("stateExecutionId").equal(stateExecutionId).field("workflowExecutionId")
-  //            .equal(workflowExecutionId);
-  //    NewRelicMetricAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
-  //    if (analysisRecord == null) {
-  //      return null;
-  //    }
-  //
-  //    if (analysisRecord.getMetricAnalyses() == null) {
-  //      return NewRelicMetricAnalysisRecord.builder().message(
-  //          "Could not get metric data from new relic. Please make sure that the new relic account is a paid account
-  //          and metrics can be pulled using rest API") .build();
-  //    }
-  //
-  //    int highRisk = 0;
-  //    int mediumRisk = 0;
-  //    for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-  //      switch (metricAnalysis.getRiskLevel()) {
-  //        case HIGH:
-  //          highRisk++;
-  //          break;
-  //        case MEDIUM:
-  //          mediumRisk++;
-  //          break;
-  //      }
-  //    }
-  //
-  //    if (highRisk == 0 && mediumRisk == 0) {
-  //      analysisRecord.setMessage("No problems found");
-  //    } else {
-  //      String message = "";
-  //      if (highRisk > 0) {
-  //        message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
-  //      }
-  //
-  //      if (mediumRisk > 0) {
-  //        message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
-  //      }
-  //
-  //      analysisRecord.setMessage(message);
-  //    }
-  //
-  //    Collections.sort(analysisRecord.getMetricAnalyses());
-  //    return analysisRecord;
-  //  }
 
   @Override
   public boolean isStateValid(String appdId, String stateExecutionID) {

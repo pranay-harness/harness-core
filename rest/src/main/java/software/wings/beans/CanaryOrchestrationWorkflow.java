@@ -7,9 +7,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
-import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.Constants.POST_DEPLOYMENT;
 import static software.wings.common.Constants.PRE_DEPLOYMENT;
@@ -72,6 +70,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private Set<EntityType> requiredEntityTypes;
 
+  @Transient @JsonIgnore private List<String> templateVariables = new ArrayList<>();
+
   public PhaseStep getPreDeploymentSteps() {
     return preDeploymentSteps;
   }
@@ -118,6 +118,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public void setSystemVariables(List<Variable> systemVariables) {
     this.systemVariables = systemVariables;
+  }
+
+  @Override
+  public List<String> getTemplateVariables() {
+    return templateVariables;
   }
 
   @Override
@@ -240,15 +245,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         workflowPhase.setName(PHASE_NAME_PREFIX + ++i);
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
-        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
-        if (templateExpressions != null) {
-          templateExpressions.stream().forEach(templateExpression -> {
-            templateExpression.setExpressionAllowed(false);
-            templateExpression.setMandatory(true);
-            setTemplateDescription(templateExpression, workflowPhase.getName());
-          });
-          addToUserVariables(templateExpressions);
-        }
         populatePhaseStepIds(workflowPhase);
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
@@ -262,36 +258,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setGraph(generateGraph());
   }
 
-  /**
-   * Set template descripton
-   * @param templateExpression
-   */
-  private void setTemplateDescription(TemplateExpression templateExpression, String phaseName) {
-    EntityType entityType = templateExpression.getEntityType();
-    Map<String, Object> metadata = templateExpression.getMetadata();
-    if (metadata != null) {
-      if (metadata.get(ENTITY_TYPE) != null) {
-        entityType = EntityType.valueOf((String) metadata.get(ENTITY_TYPE));
-      }
-    }
-    if (entityType != null) {
-      if (entityType.equals(ENVIRONMENT)) {
-        templateExpression.setDescription("Variable for Environment entity");
-      } else if (entityType.equals(SERVICE)) {
-        if (getOrchestrationWorkflowType().equals(BASIC)) {
-          templateExpression.setDescription("Variable for Service entity");
-        } else {
-          templateExpression.setDescription("Variable for Service entity in " + phaseName);
-        }
-      } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
-        if (getOrchestrationWorkflowType().equals(BASIC)) {
-          templateExpression.setDescription("Variable for Service Infra-strucuture entity");
-        } else {
-          templateExpression.setDescription("Variable for Service Infra-strucuture entity " + phaseName);
-        }
-      }
-    }
-  }
   /**
    * Invoked after loading document from mongo by morphia.
    */
@@ -328,7 +294,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (entityVariables != null) {
         for (Variable variable : entityVariables) {
           EntityType entityType = variable.getEntityType();
-          if (entityType != null && entityType.equals(ENVIRONMENT)) {
+          if (entityType.equals(ENVIRONMENT)) {
             reorderVariables.add(variable);
             break;
           }
@@ -365,6 +331,29 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     userVariables = reorderVariables;
+  }
+
+  @Override
+  public void updateUserVariables() {
+    List<String> templateVariables = getTemplateVariables();
+    List<Variable> newVariables = new ArrayList<>();
+    if (userVariables != null) {
+      // First get all Entity type user variables
+      // First get all Entity type user variables
+      List<Variable> entityVariables =
+          userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
+      List<Variable> nonEntityVariables =
+          userVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+      if (entityVariables != null) {
+        for (Variable variable : entityVariables) {
+          if (templateVariables.contains(variable.getName())) {
+            newVariables.add(variable);
+          }
+        }
+      }
+      newVariables.addAll(nonEntityVariables);
+    }
+    userVariables = newVariables;
   }
 
   public void populatePhaseStepIds(WorkflowPhase workflowPhase) {

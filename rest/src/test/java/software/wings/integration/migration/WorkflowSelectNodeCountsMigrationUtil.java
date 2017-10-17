@@ -25,7 +25,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
@@ -42,7 +41,6 @@ import java.util.Set;
 public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Test
   public void setSelectNodeCounts() {
@@ -56,6 +54,7 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
       return;
     }
     System.out.println("Updating " + apps.size() + " applications.");
+    StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
                                      .listWorkflows(aPageRequest()
@@ -125,9 +124,15 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
         }
       }
       if (candidateCount > 0) {
-        System.out.println("Application migrated: " + app.getName() + ". Updated " + updateCount + " workflows out of "
-            + candidateCount + " candidates.");
+        result.append("Application migrated: ")
+            .append(app.getName())
+            .append(". Updated ")
+            .append(updateCount)
+            .append(" workflows out of ")
+            .append(candidateCount)
+            .append(" candidates.\n");
       }
     }
+    System.out.println(result.toString());
   }
 }

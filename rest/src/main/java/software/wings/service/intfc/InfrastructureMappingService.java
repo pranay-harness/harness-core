@@ -8,6 +8,7 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -61,19 +62,17 @@ public interface InfrastructureMappingService {
    * Delete.
    *
    * @param appId          the app id
-   * @param envId          the env id
    * @param infraMappingId the infra mapping id
    */
-  void delete(String appId, String envId, String infraMappingId);
+  void delete(String appId, String infraMappingId);
 
   /**
    * Delete by service template.
    *
    * @param appId             the app id
-   * @param envId             the env id
    * @param serviceTemplateId the service template id
    */
-  void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId);
+  void deleteByServiceTemplate(String appId, String serviceTemplateId);
 
   /**
    * Gets infra mapping stencils.
@@ -92,7 +91,8 @@ public interface InfrastructureMappingService {
    * @param computeProviderId the compute provider id
    * @return the list
    */
-  List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
+  List<String> listComputeProviderHostDisplayNames(
+      String appId, String envId, String serviceId, String computeProviderId);
 
   /**
    * Gets infra mapping by compute provider and service id.
@@ -113,18 +113,7 @@ public interface InfrastructureMappingService {
    * @param infraMappingId     the infra mapping id
    * @return the list
    */
-  List<ServiceInstance> getAutoScaleGroupNodes(String appId, String infraMappingId);
-
-  /**
-   * De provision nodes.
-   *
-   * @param appId             the app id
-   * @param serviceId         the service id
-   * @param envId             the env id
-   * @param computeProviderId the compute provider id
-   * @param hostNames         the host names
-   */
-  void deProvisionNodes(String appId, String serviceId, String envId, String computeProviderId, List<String> hostNames);
+  List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId);
 
   /**
    * List types map.
@@ -140,13 +129,12 @@ public interface InfrastructureMappingService {
    * Select service instances list.
    *
    * @param appId                          the app id
-   * @param envId                          the env id
    * @param infraMappingId                 the infra mapping id
-   * @param serviceInstanceSelectionParams the service instance selection params
+   * @param selectionParams the service instance selection params
    * @return the list
    */
   List<ServiceInstance> selectServiceInstances(
-      String appId, String envId, String infraMappingId, ServiceInstanceSelectionParams serviceInstanceSelectionParams);
+      String appId, String infraMappingId, ServiceInstanceSelectionParams selectionParams);
 
   /**
    * List clusters list.
@@ -347,7 +335,7 @@ public interface InfrastructureMappingService {
    * @param infraMappingId the infra mapping id
    * @return the list
    */
-  List<String> listHosts(String appId, String infraMappingId);
+  List<String> listHostDisplayNames(String appId, String infraMappingId);
 
   /**
    * List aws iam roles map.

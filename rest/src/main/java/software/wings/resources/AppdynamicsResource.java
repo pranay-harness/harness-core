@@ -5,27 +5,23 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import retrofit2.http.Query;
 import software.wings.beans.RestResponse;
-import software.wings.metrics.MetricSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.PublicApi;
-import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
-import software.wings.service.impl.appdynamics.AppdynamicsDataRequest;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -40,11 +36,13 @@ import javax.ws.rs.QueryParam;
 public class AppdynamicsResource {
   @Inject private AppdynamicsService appdynamicsService;
 
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
   @GET
   @Path("/applications")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<AppdynamicsApplication>> getAllApplications(
+  public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     return new RestResponse<>(appdynamicsService.getApplications(settingId));
   }
@@ -54,7 +52,7 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") int appdynamicsAppId)
+      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId)
       throws IOException {
     return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
   }
@@ -64,8 +62,8 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsNode>> getAllNodes(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") int appdynamicsAppId,
-      @QueryParam("tierId") int tierId) throws IOException {
+      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId,
+      @QueryParam("tierId") long tierId) throws IOException {
     return new RestResponse<>(appdynamicsService.getNodes(settingId, appdynamicsAppId, tierId));
   }
 
@@ -75,7 +73,7 @@ public class AppdynamicsResource {
   @ExceptionMetered
   public RestResponse<List<AppdynamicsBusinessTransaction>> getAllBusinessTransactions(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") int appdynamicsAppId) throws IOException {
+      @QueryParam("appdynamicsAppId") long appdynamicsAppId) throws IOException {
     return new RestResponse<>(appdynamicsService.getBusinessTransactions(settingId, appdynamicsAppId));
   }
 
@@ -84,7 +82,7 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetric>> getTierBTMetrics(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId)
+      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId)
       throws IOException, InterruptedException {
     return new RestResponse<>(appdynamicsService.getTierBTMetrics(settingId, appdynamicsAppId, tierId));
   }
@@ -94,41 +92,21 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
+      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId,
       @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durationInMinutes) throws IOException {
     return new RestResponse<>(
         appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durationInMinutes));
-  }
-
-  @POST
-  @Path("/save-metrics")
-  @Timed
-  @DelegateAuth
-  @ExceptionMetered
-  public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
-      List<AppdynamicsMetricData> metricData) throws IOException {
-    return new RestResponse<>(appdynamicsService.saveMetricData(
-        accountId, applicationId, stateExecutionId, appdynamicsAppId, tierId, metricData));
-  }
-
-  @POST
-  @Path("/get-metrics")
-  @Timed
-  @ExceptionMetered
-  @PublicApi
-  public RestResponse<List<AppdynamicsMetricDataRecord>> getAppdynamicsData(
-      @QueryParam("accountId") String accountId, AppdynamicsDataRequest dataRequest) throws IOException {
-    return new RestResponse<>(appdynamicsService.getMetricData(dataRequest));
   }
 
   @GET
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered
-  public RestResponse<MetricSummary> generateMetrics(@QueryParam("stateExecutionId") final String stateExecutionId,
-      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
-    return new RestResponse<>(appdynamicsService.generateMetrics(stateExecutionId, accountId, appId));
+  public RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
+      @QueryParam("stateExecutionId") final String stateExecutionId,
+      @QueryParam("workflowExecutionId") final String workflowExecutionId,
+      @QueryParam("accountId") final String accountId) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getMetricsAnalysis(StateType.APP_DYNAMICS, stateExecutionId, workflowExecutionId));
   }
 }

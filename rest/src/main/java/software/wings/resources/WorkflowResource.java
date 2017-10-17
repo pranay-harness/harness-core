@@ -180,24 +180,6 @@ public class WorkflowResource {
   }
 
   /**
-   * Template workflow rest response.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   * @param workflow   the workflow
-   * @return the rest response
-   */
-  @POST
-  @Path("{workflowId}/templatize")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Workflow> templatizeWorkflow(
-      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
-    workflow.setAppId(appId);
-    return new RestResponse<>(workflowService.templatizeWorkflow(appId, workflowId, workflow));
-  }
-
-  /**
    * Clone workflow rest response.
    *
    * @param appId      the app id

@@ -68,6 +68,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -93,6 +94,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;
   @Mock private NotificationService notificationService;
   @Mock private ActivityService activityService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Inject @InjectMocks private StatisticsService statisticsService;
 
@@ -402,58 +404,16 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
-    String instanceUuid = getUuid();
-    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
-        anElementExecutionSummary()
-            .withInstanceStatusSummaries(
-                asList(anInstanceStatusSummary()
-                           .withStatus(SUCCESS)
-                           .withInstanceElement(
-                               anInstanceElement()
-                                   .withUuid(instanceUuid)
-                                   .withServiceTemplateElement(
-                                       aServiceTemplateElement()
-                                           .withName(SERVICE_NAME)
-                                           .withUuid(SERVICE_ID)
-                                           .withServiceElement(
-                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
-                                           .build())
-                                   .build())
-                           .build(),
-                    anInstanceStatusSummary()
-                        .withStatus(FAILED)
-                        .withInstanceElement(
-                            anInstanceElement()
-                                .withUuid(instanceUuid)
-                                .withServiceTemplateElement(
-                                    aServiceTemplateElement()
-                                        .withName(SERVICE_NAME)
-                                        .withUuid(SERVICE_ID)
-                                        .withServiceElement(
-                                            aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
-                                        .build())
-                                .build())
-                        .build()))
-            .build());
-
-    List<ElementExecutionSummary> serviceFailureExecutionSummaries = asList(
-        anElementExecutionSummary()
-            .withInstanceStatusSummaries(
-                asList(anInstanceStatusSummary()
-                           .withStatus(FAILED)
-                           .withInstanceElement(
-                               anInstanceElement()
-                                   .withUuid(getUuid())
-                                   .withServiceTemplateElement(
-                                       aServiceTemplateElement()
-                                           .withName(SERVICE_NAME)
-                                           .withUuid(SERVICE_ID)
-                                           .withServiceElement(
-                                               aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
-                                           .build())
-                                   .build())
-                           .build()))
-            .build());
+    List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withStatus(SUCCESS)
+                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .build());
+    List<ElementExecutionSummary> serviceFailureExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withStatus(FAILED)
+                   .withContextElement(aServiceElement().withName(SERVICE_NAME).withUuid(SERVICE_ID).build())
+                   .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
@@ -499,8 +459,8 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                        .withAppName(APP_NAME)
                                        .withServiceId(SERVICE_ID)
                                        .withServiceName(SERVICE_NAME)
-                                       .withSuccessfulActivityCount(0)
-                                       .withFailedActivityCount(2)
+                                       .withSuccessfulActivityCount(2)
+                                       .withFailedActivityCount(0)
                                        .withTotalCount(2)
                                        .build());
     ;

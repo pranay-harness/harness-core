@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.eclipse.jetty.util.StringUtil.isNotBlank;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -20,16 +21,15 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ec2.model.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,12 +61,10 @@ import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -79,17 +77,14 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.HostValidationService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -104,15 +99,12 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
-  private static final String stencilsPath = "/templates/inframapping/";
-  private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private SettingsService settingsService;
-  @Inject private HostService hostService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private StencilPostProcessor stencilPostProcessor;
@@ -174,17 +166,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validateGcpInfraMapping((GcpKubernetesInfrastructureMapping) infraMapping, computeProviderSetting);
     }
 
-    InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
-
-    if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
-      savedInfraMapping = syncPhysicalHostsAndServiceInstances(savedInfraMapping, serviceTemplate, new ArrayList<>());
+    if (infraMapping instanceof PhysicalInfrastructureMapping) {
+      validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
     }
-    return savedInfraMapping;
+
+    return wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
   }
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
+      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER.name(), computeProviderSetting.getAccountId())) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for ECS.");
       }
@@ -194,65 +185,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private void validateGcpInfraMapping(
       GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
+      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER.name(), computeProviderSetting.getAccountId())) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }
     }
-  }
-
-  /**
-   * Sync physical hosts and service instances infrastructure mapping.
-   *
-   * @param infrastructureMapping the infrastructure mapping
-   * @param serviceTemplate       the service template
-   * @param existingHostNames     the existing host names
-   * @return the infrastructure mapping
-   */
-  public InfrastructureMapping syncPhysicalHostsAndServiceInstances(
-      InfrastructureMapping infrastructureMapping, ServiceTemplate serviceTemplate, List<String> existingHostNames) {
-    PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
-
-    List<String> distinctHostNames = pyInfraMapping.getHostNames()
-                                         .stream()
-                                         .map(String::trim)
-                                         .filter(Objects::nonNull)
-                                         .distinct()
-                                         .collect(Collectors.toList());
-
-    if (distinctHostNames.size() < ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames().size()) {
-      logger.info("Duplicate hosts {} ", pyInfraMapping.getHostNames().size() - distinctHostNames.size());
-      ((PhysicalInfrastructureMapping) infrastructureMapping).setHostNames(distinctHostNames);
-    }
-
-    wingsPersistence.updateField(
-        InfrastructureMapping.class, infrastructureMapping.getUuid(), "hostNames", distinctHostNames);
-
-    List<String> removedHosts = existingHostNames.stream()
-                                    .filter(hostName -> !distinctHostNames.contains(hostName))
-                                    .collect(Collectors.toList());
-
-    List<Host> savedHosts =
-        distinctHostNames.stream()
-            .map(hostName -> {
-              Host host = aHost()
-                              .withAppId(pyInfraMapping.getAppId())
-                              .withEnvId(pyInfraMapping.getEnvId())
-                              .withInfraMappingId(infrastructureMapping.getUuid())
-                              .withServiceTemplateId(pyInfraMapping.getServiceTemplateId())
-                              .withComputeProviderId(pyInfraMapping.getComputeProviderSettingId())
-                              .withHostConnAttr(pyInfraMapping.getHostConnectionAttrs())
-                              .withHostName(hostName)
-                              .build();
-              return getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name()).saveHost(host);
-            })
-            .collect(Collectors.toList());
-
-    removedHosts.forEach(hostName
-        -> getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name())
-               .deleteHost(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostName));
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts, removedHosts);
-    return infrastructureMapping;
   }
 
   @Override
@@ -332,8 +269,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       updateOperations.set("role", lambdaInfraStructureMapping.getRole());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      validatePyInfraMapping((PhysicalInfrastructureMapping) infrastructureMapping);
       updateOperations.set(
           "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      updateOperations.set("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           ((CodeDeployInfrastructureMapping) infrastructureMapping);
@@ -345,17 +284,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
 
-    if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
-      ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(savedInfraMapping.getAppId(), savedInfraMapping.getServiceTemplateId());
-      Validator.notNullCheck("Service Template", serviceTemplate);
-      syncPhysicalHostsAndServiceInstances(
-          infrastructureMapping, serviceTemplate, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
-    }
     return get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
   }
 
-  public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
+  private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
+    List<String> hostNames = pyInfraMapping.getHostNames()
+                                 .stream()
+                                 .map(String::trim)
+                                 .filter(StringUtils::isNotEmpty)
+                                 .distinct()
+                                 .collect(Collectors.toList());
+    if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Host names must be unique");
+    }
+  }
+  private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (lambdaInfraStructureMapping.getVpcId() != null) {
       if (lambdaInfraStructureMapping.getSubnetIds().size() == 0) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one subnet must be provided");
@@ -367,10 +310,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void delete(String appId, String envId, String infraMappingId) {
+  public void delete(String appId, String infraMappingId) {
+    delete(appId, infraMappingId, false);
+  }
+
+  private void delete(String appId, String infraMappingId, boolean forceDelete) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     if (infrastructureMapping != null) {
-      ensureInfraMappingSafeToDelete(infrastructureMapping);
+      if (!forceDelete) {
+        ensureInfraMappingSafeToDelete(infrastructureMapping);
+      }
       boolean deleted = wingsPersistence.delete(infrastructureMapping);
       if (deleted) {
         InfrastructureProvider infrastructureProvider =
@@ -412,14 +361,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void deleteByServiceTemplate(String appId, String envId, String serviceTemplateId) {
+  public void deleteByServiceTemplate(String appId, String serviceTemplateId) {
     List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                 .field("appId")
                                                 .equal(appId)
                                                 .field("serviceTemplateId")
                                                 .equal(serviceTemplateId)
                                                 .asKeyList();
-    keys.forEach(key -> delete(appId, envId, key.toString()));
+    keys.forEach(key -> delete(appId, key.toString(), true));
   }
 
   @Override
@@ -430,42 +379,77 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> selectServiceInstances(String appId, String envId, String infraMappingId,
-      ServiceInstanceSelectionParams serviceInstanceSelectionParams) {
+  public List<ServiceInstance> selectServiceInstances(
+      String appId, String infraMappingId, ServiceInstanceSelectionParams selectionParams) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
-    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    Validator.notNullCheck("Compute Provider", computeProviderSetting);
-
-    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      syncAwsHostsAndUpdateInstances(
-          infrastructureMapping, computeProviderSetting); // TODO:: instead of on-demand do it periodically?
+    List<Host> hosts;
+    if (infrastructureMapping instanceof AwsInfrastructureMapping
+        && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
+      hosts = getAutoScaleGroupNodes(appId, infraMappingId);
+    } else {
+      hosts = listHosts(infrastructureMapping)
+                  .stream()
+                  .filter(host
+                      -> !selectionParams.isSelectSpecificHosts()
+                          || selectionParams.getHostNames().contains(host.getPublicDns()))
+                  .collect(Collectors.toList());
     }
-    return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
-        infrastructureMapping.getUuid(), serviceInstanceSelectionParams);
+
+    return syncHostsAndUpdateInstances(infrastructureMapping, hosts)
+        .stream()
+        .filter(serviceInstance -> !selectionParams.getExcludedServiceInstanceIds().contains(serviceInstance.getUuid()))
+        .limit(selectionParams.isSelectSpecificHosts() ? selectionParams.getHostNames().size()
+                                                       : selectionParams.getCount())
+        .collect(Collectors.toList());
   }
 
-  private List<ServiceInstance> selectServiceInstancesByInfraMapping(
-      String appId, String serviceTemplateId, String infraMappingId, ServiceInstanceSelectionParams selectionParams) {
-    Builder requestBuilder = aPageRequest()
-                                 .addFilter("appId", Operator.EQ, appId)
-                                 .addFilter("serviceTemplateId", Operator.EQ, serviceTemplateId)
-                                 .addFilter("infraMappingId", Operator.EQ, infraMappingId);
-
-    if (selectionParams.getExcludedServiceInstanceIds().size() > 0) {
-      requestBuilder.addFilter(
-          Mapper.ID_KEY, Operator.NOT_IN, selectionParams.getExcludedServiceInstanceIds().toArray());
-    }
-
-    if (selectionParams.isSelectSpecificHosts()) {
-      requestBuilder.addFilter("publicDns", Operator.IN, selectionParams.getHostNames().toArray());
+  private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
+    if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
+      List<String> hostNames = pyInfraMapping.getHostNames()
+                                   .stream()
+                                   .map(String::trim)
+                                   .filter(StringUtils::isNotEmpty)
+                                   .distinct()
+                                   .collect(Collectors.toList());
+      return hostNames.stream()
+          .map(hostName -> aHost().withHostName(hostName).withPublicDns(hostName).build())
+          .collect(Collectors.toList());
+    } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      AwsInfrastructureMapping awsInfraMapping = (AwsInfrastructureMapping) infrastructureMapping;
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      SettingAttribute computeProviderSetting = settingsService.get(awsInfraMapping.getComputeProviderSettingId());
+      Validator.notNullCheck("Compute Provider", computeProviderSetting);
+      return infrastructureProvider.listHosts(awsInfraMapping, computeProviderSetting, new PageRequest<>())
+          .getResponse();
     } else {
-      requestBuilder.withLimit(selectionParams.getCount().toString());
+      throw new WingsException(INVALID_REQUEST, "message",
+          "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
     }
+  }
 
-    List response = serviceInstanceService.list(requestBuilder.build()).getResponse();
-    return response;
+  private List<ServiceInstance> syncHostsAndUpdateInstances(
+      InfrastructureMapping infrastructureMapping, List<Host> hosts) {
+    InfrastructureProvider infrastructureProvider =
+        getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType());
+    ServiceTemplate serviceTemplate =
+        serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
+
+    List<Host> savedHosts = hosts.stream()
+                                .map(host -> {
+                                  host.setAppId(infrastructureMapping.getAppId());
+                                  host.setEnvId(infrastructureMapping.getEnvId());
+                                  host.setHostConnAttr(infrastructureMapping.getHostConnectionAttrs());
+                                  host.setInfraMappingId(infrastructureMapping.getUuid());
+                                  host.setServiceTemplateId(infrastructureMapping.getServiceTemplateId());
+                                  return infrastructureProvider.saveHost(host);
+                                })
+                                .collect(Collectors.toList());
+
+    return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }
 
   @Override
@@ -776,60 +760,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return ImmutableList.of();
   }
 
-  private void syncAwsHostsAndUpdateInstances(
-      InfrastructureMapping infrastructureMapping, SettingAttribute computeProviderSetting) {
-    AwsInfrastructureProvider awsInfrastructureProvider =
-        (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-    AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-    List<Host> hosts =
-        awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
-            .getResponse();
-    PageRequest<Host> pageRequest = aPageRequest()
-                                        .withLimit(UNLIMITED)
-                                        .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
-                                        .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
-                                        .build();
-    List<String> existingDnsNames =
-        hostService.list(pageRequest).getResponse().stream().map(Host::getPublicDns).collect(Collectors.toList());
-
-    ListIterator<Host> hostListIterator = hosts.listIterator();
-
-    while (hostListIterator.hasNext()) {
-      Host host = hostListIterator.next();
-      if (existingDnsNames.contains(host.getPublicDns())) {
-        hostListIterator.remove();
-        existingDnsNames.remove(host.getPublicDns());
-      }
-    }
-    updateHostsAndServiceInstances(awsInfrastructureMapping, hosts, existingDnsNames);
-  }
-
-  private void updateHostsAndServiceInstances(
-      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedDnsNames) {
-    InfrastructureProvider awsInfrastructureProvider =
-        getInfrastructureProviderByComputeProviderType(infraMapping.getComputeProviderType());
-
-    deletedDnsNames.forEach(
-        dnsName -> awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), dnsName));
-
-    List<Host> savedHosts = activeHosts.stream()
-                                .map(host -> {
-                                  host.setAppId(infraMapping.getAppId());
-                                  host.setEnvId(infraMapping.getEnvId());
-                                  host.setHostConnAttr(infraMapping.getHostConnectionAttrs());
-                                  host.setInfraMappingId(infraMapping.getUuid());
-                                  host.setServiceTemplateId(infraMapping.getServiceTemplateId());
-                                  return awsInfrastructureProvider.saveHost(host);
-                                })
-                                .collect(Collectors.toList());
-
-    ServiceTemplate serviceTemplate =
-        serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedDnsNames);
+  @Override
+  public List<String> listHostDisplayNames(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
   }
 
   @Override
-  public List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId) {
+  public List<String> listComputeProviderHostDisplayNames(
+      String appId, String envId, String serviceId, String computeProviderId) {
     Object serviceTemplateId =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
     InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
@@ -844,10 +784,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .get();
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
-    return getInfrastructureMappingHosts(infrastructureMapping);
+    return getInfrastructureMappingHostDisplayNames(infrastructureMapping);
   }
 
-  private List<String> getInfrastructureMappingHosts(InfrastructureMapping infrastructureMapping) {
+  private List<String> getInfrastructureMappingHostDisplayNames(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
@@ -857,20 +797,26 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
-          .getResponse()
-          .stream()
-          .map(Host::getPublicDns)
-          .collect(Collectors.toList());
+      List<Host> hosts =
+          infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
+              .getResponse();
+      List<String> hostDisplayNames = new ArrayList<>();
+      for (Host host : hosts) {
+        String displayName = host.getPublicDns();
+        if (host.getEc2Instance() != null) {
+          Optional<Tag> optNameTag =
+              host.getEc2Instance().getTags().stream().filter(tag -> tag.getKey().equals("Name")).findFirst();
+          if (optNameTag.isPresent() && isNotBlank(optNameTag.get().getValue())) {
+            // UI checks for " [" in the name to get dns name only. If you change here then also update
+            // NodeSelectModal.js
+            displayName += " [" + optNameTag.get().getValue() + "]";
+          }
+        }
+        hostDisplayNames.add(displayName);
+      }
+      return hostDisplayNames;
     }
     return emptyList();
-  }
-
-  @Override
-  public List<String> listHosts(String appId, String infraMappingId) {
-    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-    return getInfrastructureMappingHosts(infrastructureMapping);
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
@@ -897,7 +843,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> getAutoScaleGroupNodes(String appId, String infraMappingId) {
+  public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -911,55 +857,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               infrastructureMapping.getComputeProviderType());
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
-      List<Host> hosts = awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
+      return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
           awsInfrastructureMapping, computeProviderSetting);
-      updateHostsAndServiceInstances(infrastructureMapping, hosts, emptyList());
-
-      return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
-          infrastructureMapping.getUuid(),
-          ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams()
-              .withSelectSpecificHosts(true)
-              .withHostNames(hosts.stream().map(Host::getPublicDns).collect(Collectors.toList()))
-              .build());
     } else {
       throw new WingsException(
           INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");
-    }
-  }
-
-  @Override
-  public void deProvisionNodes(
-      String appId, String serviceId, String envId, String computeProviderId, List<String> hostNames) {
-    String serviceTemplateId =
-        (String) serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .field("appId")
-                                                      .equal(appId)
-                                                      .field("envId")
-                                                      .equal(envId)
-                                                      .field("serviceTemplateId")
-                                                      .equal(serviceTemplateId)
-                                                      .field("computeProviderSettingId")
-                                                      .equal(computeProviderId)
-                                                      .get();
-    Validator.notNullCheck("Infra Mapping", infrastructureMapping);
-
-    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-      Validator.notNullCheck("Compute Provider", computeProviderSetting);
-
-      AwsInfrastructureProvider awsInfrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(
-              infrastructureMapping.getComputeProviderType());
-      AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-
-      awsInfrastructureProvider.deProvisionHosts(appId, infrastructureMapping.getUuid(), computeProviderSetting,
-          awsInfrastructureMapping.getRegion(), hostNames);
-      updateHostsAndServiceInstances(infrastructureMapping, ImmutableList.of(), hostNames);
-    } else {
-      throw new WingsException(
-          INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
     }
   }
 
@@ -982,23 +884,5 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
     return infraTypes;
-  }
-
-  private Object readUiSchema(String type) {
-    try {
-      return readResource(stencilsPath + type + uiSchemaSuffix);
-    } catch (Exception e) {
-      return new HashMap<String, Object>();
-    }
-  }
-
-  private Object readResource(String file) {
-    try {
-      URL url = this.getClass().getResource(file);
-      String json = Resources.toString(url, Charsets.UTF_8);
-      return JsonUtils.asObject(json, HashMap.class);
-    } catch (Exception exception) {
-      throw new WingsException("Error reading ui schema - " + file, exception);
-    }
   }
 }

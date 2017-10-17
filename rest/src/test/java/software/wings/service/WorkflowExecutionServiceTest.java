@@ -30,10 +30,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
-import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.waitnotify.NotifyEventListener;
 
@@ -50,12 +48,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
 
-  @Inject private WorkflowService workflowService;
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Mock private ServiceResourceService serviceResourceServiceMock;
-  @Mock private ServiceInstanceService serviceInstanceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
 
   /**

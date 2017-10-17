@@ -6,6 +6,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -30,6 +31,8 @@ public class WorkflowExecution extends Base {
 
   private String stateMachineId;
   @Indexed private String envId;
+  @Indexed private List<String> envIds;
+  @Indexed private List<String> serviceIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;
@@ -65,6 +68,13 @@ public class WorkflowExecution extends Base {
    * @return the name
    */
   public String getName() {
+    if (StringUtils.isBlank(name)) {
+      if (pipelineExecution != null && pipelineExecution.getPipeline() != null
+          && StringUtils.isNotBlank(pipelineExecution.getPipeline().getName())) {
+        return pipelineExecution.getPipeline().getName();
+      }
+      return String.valueOf(workflowType);
+    }
     return name;
   }
 
@@ -464,6 +474,22 @@ public class WorkflowExecution extends Base {
     this.triggeredBy = triggeredBy;
   }
 
+  public List<String> getEnvIds() {
+    return envIds;
+  }
+
+  public void setEnvIds(List<String> envIds) {
+    this.envIds = envIds;
+  }
+
+  public List<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  public void setServiceIds(List<String> serviceIds) {
+    this.serviceIds = serviceIds;
+  }
+
   public PipelineSummary getPipelineSummary() {
     return pipelineSummary;
   }
@@ -502,6 +528,8 @@ public class WorkflowExecution extends Base {
     private EmbeddedUser triggeredBy;
     private Map<String, InfraMappingSummary> infraMappingSummary;
     private PipelineSummary pipelineSummary;
+    private List<String> serviceIds;
+    private List<String> envIds;
 
     private WorkflowExecutionBuilder() {}
 
@@ -653,6 +681,16 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withServiceIds(List<String> serviceIds) {
+      this.serviceIds = serviceIds;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEnvIds(List<String> envIds) {
+      this.envIds = envIds;
+      return this;
+    }
+
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
@@ -696,7 +734,9 @@ public class WorkflowExecution extends Base {
           .withLastUpdatedAt(lastUpdatedAt)
           .withTriggeredBy(triggeredBy)
           .withPipelineSummary(pipelineSummary)
-          .withInfraMappingSummary(infraMappingSummary);
+          .withInfraMappingSummary(infraMappingSummary)
+          .withServiceIds(serviceIds)
+          .withEnvIds(envIds);
     }
 
     public WorkflowExecution build() {
@@ -729,6 +769,8 @@ public class WorkflowExecution extends Base {
       workflowExecution.setLastUpdatedAt(lastUpdatedAt);
       workflowExecution.setTriggeredBy(triggeredBy);
       workflowExecution.setPipelineSummary(pipelineSummary);
+      workflowExecution.setServiceIds(serviceIds);
+      workflowExecution.setEnvIds(envIds);
       return workflowExecution;
     }
   }

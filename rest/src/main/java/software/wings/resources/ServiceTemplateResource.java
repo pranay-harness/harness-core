@@ -132,7 +132,7 @@ public class ServiceTemplateResource {
   @ExceptionMetered
   public RestResponse delete(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId) {
-    serviceTemplateService.delete(appId, envId, serviceTemplateId);
+    serviceTemplateService.delete(appId, serviceTemplateId);
     return new RestResponse();
   }
 

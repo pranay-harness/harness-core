@@ -5,10 +5,11 @@ import com.google.common.math.Stats;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang.WordUtils;
-import software.wings.metrics.MetricDefinition.Threshold;
-import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
+import software.wings.metrics.ThresholdType;
+import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 
 import java.lang.reflect.InvocationTargetException;
@@ -24,19 +25,19 @@ import java.util.Map;
 @Data
 @Builder
 public class NewRelicMetricValueDefinition {
-  public static Map<String, List<Threshold>> VALUES_TO_ANALYZE = new HashMap<>();
+  public static Map<String, List<Threshold>> NEW_RELIC_VALUES_TO_ANALYZE = new HashMap<>();
 
   static {
     // throughput
-    VALUES_TO_ANALYZE.put("throughput", new ArrayList<>());
-    VALUES_TO_ANALYZE.get("throughput")
+    NEW_RELIC_VALUES_TO_ANALYZE.put("throughput", new ArrayList<>());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("throughput")
         .add(Threshold.builder()
                  .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
                  .comparisonType(ThresholdComparisonType.RATIO)
                  .high(0.5)
                  .medium(0.75)
                  .build());
-    VALUES_TO_ANALYZE.get("throughput")
+    NEW_RELIC_VALUES_TO_ANALYZE.get("throughput")
         .add(Threshold.builder()
                  .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                  .comparisonType(ThresholdComparisonType.DELTA)
@@ -45,15 +46,15 @@ public class NewRelicMetricValueDefinition {
                  .build());
 
     // averageResponseTime
-    VALUES_TO_ANALYZE.put("averageResponseTime", new ArrayList<>());
-    VALUES_TO_ANALYZE.get("averageResponseTime")
+    NEW_RELIC_VALUES_TO_ANALYZE.put("averageResponseTime", new ArrayList<>());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("averageResponseTime")
         .add(Threshold.builder()
                  .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                  .comparisonType(ThresholdComparisonType.RATIO)
                  .high(1.5)
                  .medium(1.25)
                  .build());
-    VALUES_TO_ANALYZE.get("averageResponseTime")
+    NEW_RELIC_VALUES_TO_ANALYZE.get("averageResponseTime")
         .add(Threshold.builder()
                  .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                  .comparisonType(ThresholdComparisonType.DELTA)
@@ -62,28 +63,103 @@ public class NewRelicMetricValueDefinition {
                  .build());
 
     // error
-    VALUES_TO_ANALYZE.put("error", new ArrayList<>());
-    VALUES_TO_ANALYZE.get("error").add(Threshold.builder()
-                                           .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                                           .comparisonType(ThresholdComparisonType.RATIO)
-                                           .high(1.5)
-                                           .medium(1.25)
-                                           .build());
-    VALUES_TO_ANALYZE.get("error").add(Threshold.builder()
-                                           .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
-                                           .comparisonType(ThresholdComparisonType.DELTA)
-                                           .high(10)
-                                           .medium(5)
-                                           .build());
+    NEW_RELIC_VALUES_TO_ANALYZE.put("error", new ArrayList<>());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("error").add(Threshold.builder()
+                                                     .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                                                     .comparisonType(ThresholdComparisonType.RATIO)
+                                                     .high(1.5)
+                                                     .medium(1.25)
+                                                     .build());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("error").add(Threshold.builder()
+                                                     .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                                                     .comparisonType(ThresholdComparisonType.DELTA)
+                                                     .high(10)
+                                                     .medium(5)
+                                                     .build());
 
     // apdexScore
-    VALUES_TO_ANALYZE.put("apdexScore", new ArrayList<>());
-    VALUES_TO_ANALYZE.get("apdexScore")
+    NEW_RELIC_VALUES_TO_ANALYZE.put("apdexScore", new ArrayList<>());
+    NEW_RELIC_VALUES_TO_ANALYZE.get("apdexScore")
         .add(Threshold.builder()
                  .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
                  .comparisonType(ThresholdComparisonType.ABSOLUTE)
                  .high(0.5)
                  .medium(0.75)
+                 .build());
+  }
+
+  public static Map<String, List<Threshold>> APP_DYNAMICS_VALUES_TO_ANALYZE = new HashMap<>();
+  static {
+    // 95th percentile response time
+    String metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.RESPONSE_TIME_95);
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName, new ArrayList<>());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.RATIO)
+                 .high(1.5)
+                 .medium(1.25)
+                 .build());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.DELTA)
+                 .high(10)
+                 .medium(5)
+                 .build());
+
+    // slow calls
+    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.NUMBER_OF_SLOW_CALLS);
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName, new ArrayList<>());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.DELTA)
+                 .high(100)
+                 .medium(50)
+                 .build());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.RATIO)
+                 .high(1.5)
+                 .medium(1.25)
+                 .build());
+
+    // error
+    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.ERRORS_PER_MINUTE);
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName, new ArrayList<>());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.RATIO)
+                 .high(1.5)
+                 .medium(1.25)
+                 .build());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.DELTA)
+                 .high(10)
+                 .medium(5)
+                 .build());
+
+    // stalls
+    metricName = AppdynamicsConstants.METRIC_NAMES_TO_VARIABLES.get(AppdynamicsConstants.STALL_COUNT);
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName, new ArrayList<>());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.DELTA)
+                 .high(10)
+                 .medium(5)
+                 .build());
+    APP_DYNAMICS_VALUES_TO_ANALYZE.get(metricName)
+        .add(Threshold.builder()
+                 .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                 .comparisonType(ThresholdComparisonType.RATIO)
+                 .high(1.5)
+                 .medium(1.25)
                  .build());
   }
 

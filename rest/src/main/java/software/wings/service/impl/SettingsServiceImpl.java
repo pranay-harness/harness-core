@@ -18,7 +18,10 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -28,12 +31,10 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.Encryptable;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
@@ -50,13 +51,13 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
+  private static final Logger logger = LoggerFactory.getLogger(SettingsServiceImpl.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingValidationService settingValidationService;
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private AccountService accountService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
   /* (non-Javadoc)
@@ -64,7 +65,12 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req) {
-    return wingsPersistence.query(SettingAttribute.class, req);
+    try {
+      return wingsPersistence.query(SettingAttribute.class, req);
+    } catch (Exception e) {
+      logger.error("Error getting setting attributes. " + e.getMessage(), e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", e.getMessage(), e);
+    }
   }
 
   /* (non-Javadoc)

@@ -325,8 +325,8 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
   }
 
   public boolean handleEntityUpdateListEvent(EntityUpdateListEvent entityUpdateListEvent) {
-    logger.info(
-        "*************** handleTreeSync: entityUpdateListEvent.isTreeSync() = " + entityUpdateListEvent.isTreeSync());
+    logger.info("*************** handleEntityUpdateListEvent: entityUpdateListEvent.isTreeSync() = "
+        + entityUpdateListEvent.isTreeSync());
 
     if (entityUpdateListEvent.isTreeSync()) {
       if (entityUpdateListEvent.getEntityUpdateEvents().size() == 1) {
@@ -375,6 +375,13 @@ public class YamlGitSyncServiceImpl implements YamlGitSyncService {
 
   public boolean handleTreeSync(EntityUpdateListEvent entityUpdateListEvent) {
     logger.info("*************** handleTreeSync");
+
+    // this was moved here so that it occurs AFTER the event is queued
+    String setupEntityId = "setup";
+    FolderNode top = yamlDirectoryService.getDirectory(
+        entityUpdateListEvent.getAccountId(), setupEntityId, entityUpdateListEvent.isFilterCustomGitSync());
+    entityUpdateListEvent =
+        yamlDirectoryService.traverseDirectory(entityUpdateListEvent, top, "", entityUpdateListEvent.getSourceType());
 
     List<EntityUpdateEvent> entityUpdateEvents = entityUpdateListEvent.getEntityUpdateEvents();
 

@@ -25,6 +25,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,6 +179,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
                                                     .workflowExecutionId(workflowExecutionId)
                                                     .stateExecutionId(stateExecutionId)
                                                     .applicationId(applicationId)
+                                                    .stateType(StateType.NEW_RELIC)
                                                     .metricAnalyses(new ArrayList<>())
                                                     .build();
 

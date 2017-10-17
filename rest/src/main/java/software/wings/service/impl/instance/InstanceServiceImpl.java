@@ -315,10 +315,21 @@ public class InstanceServiceImpl implements InstanceService {
     query.field("containerSvcName").in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
 
+    String fieldName;
+    if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
+      fieldName = "instanceInfo.replicationControllerName";
+    } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instanceType)) {
+      fieldName = "instanceInfo.serviceName";
+    } else {
+      String msg = "Unsupported container instanceType:" + instanceType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
     query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     query.field("appId").equal(appId);
     query.field("instanceType").equal(instanceType);
-    query.field("containerInstanceKey.containerId").in(containerSvcNameSetToBeDeleted);
+    query.field(fieldName).in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
   }
 
@@ -352,7 +363,7 @@ public class InstanceServiceImpl implements InstanceService {
           existingContainerInfo.getReplicationControllerName());
 
     } else {
-      throw new WingsException("Unsupported container type");
+      throw new WingsException("Unsupported container type" + containerInfo.getClass());
     }
   }
 
