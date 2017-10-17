@@ -28,7 +28,7 @@ public class TimeSeriesMLAnalysisRecordsTests extends WingsBaseTest {
     assert (records.getTransactions().get("0").getMetrics().get("2").getTest().getWeights().size() > 0);
     assert (records.getTransactions().get("0").getMetrics().get("2").getResults().size() == 1);
     TimeSeriesMLHostSummary data =
-        records.getTransactions().get("0").getMetrics().get("2").getResults().get("ip-172-31-0-38");
+        records.getTransactions().get("0").getMetrics().get("2").getResults().get("ip-172-31-0-38.harness.io");
     assert (data.getControl_cuts().size() > 0);
     assert (data.getTest_cuts().size() > 0);
     assert (data.getDistance().size() > 0);
