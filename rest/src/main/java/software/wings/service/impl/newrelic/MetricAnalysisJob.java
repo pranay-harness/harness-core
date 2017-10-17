@@ -88,7 +88,7 @@ public class MetricAnalysisJob implements Job {
     }
   }
 
-  private class MetricAnalysisGenerator implements Runnable {
+  public class MetricAnalysisGenerator implements Runnable {
     public static final int PYTHON_JOB_RETRIES = 3;
     public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
@@ -101,7 +101,7 @@ public class MetricAnalysisJob implements Job {
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
 
-    private MetricAnalysisGenerator(
+    public MetricAnalysisGenerator(
         AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId, UUID uuid) {
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
       Preconditions.checkState(!StringUtils.isBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");

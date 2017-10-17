@@ -8,19 +8,35 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.quartz.JobExecutionContext;
 import software.wings.WingsBaseTest;
+import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.RiskLevel;
 import software.wings.resources.NewRelicResource;
+import software.wings.scheduler.JobScheduler;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.newrelic.MetricAnalysisJob;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +60,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   @Inject private NewRelicResource newRelicResource;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   @Before
   public void setup() throws IOException {
@@ -58,25 +75,67 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   }
 
   @Test
-  public void testSaveAnalysis() throws IOException {
+  public void testSaveMLAnalysis() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
     String jsonTxt = IOUtils.toString(is);
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
     newRelicResource.saveMLAnalysisRecords(accountId, appId, stateExecutionId, workflowExecutionId, 0, record);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    assertEquals(analysisRecord.getMetricAnalyses().size(), 1);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "WebTransaction/Servlet/Register");
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().size(), 1);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName(), "requestsPerMinute");
   }
 
   @Test
-  public void testSaveMetricRecords() throws IOException {
-    InputStream is = getClass().getClassLoader().getResourceAsStream("./verification/TimeSeriesNRControlInput.json");
+  public void testSaveAnalysis() throws IOException {
+    NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
+                                                          .name("requestsPerMinute")
+                                                          .riskLevel(RiskLevel.HIGH)
+                                                          .controlValue(100)
+                                                          .testValue(2000)
+                                                          .build();
+    NewRelicMetricAnalysis newRelicMetricAnalysis = NewRelicMetricAnalysis.builder()
+                                                        .metricName("index.jsp")
+                                                        .metricValues(Collections.singletonList(metricAnalysisValue))
+                                                        .riskLevel(RiskLevel.MEDIUM)
+                                                        .build();
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("1 high risk anomaly")
+            .stateType(StateType.NEW_RELIC)
+            .build();
+
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    assertEquals(analysisRecord.getMetricAnalyses().size(), 1);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "index.jsp");
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().size(), 1);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName(), "requestsPerMinute");
+  }
+
+  private List<NewRelicMetricDataRecord> loadMetrics(String fileName) throws IOException {
+    InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
     String jsonTxt = IOUtils.toString(is);
-    List<NewRelicMetricDataRecord> controlRecords =
-        JsonUtils.asList(jsonTxt, new TypeReference<List<NewRelicMetricDataRecord>>() {});
+    return JsonUtils.asList(jsonTxt, new TypeReference<List<NewRelicMetricDataRecord>>() {});
+  }
+
+  private Set<String> setIdsGetNodes(
+      List<NewRelicMetricDataRecord> records, String workflowExecutionId, String stateExecutionId) {
     Set<String> nodes = new HashSet<>();
-    for (Iterator<NewRelicMetricDataRecord> it = controlRecords.iterator(); it.hasNext();) {
+    for (Iterator<NewRelicMetricDataRecord> it = records.iterator(); it.hasNext();) {
       NewRelicMetricDataRecord record = it.next();
       if (record.getDataCollectionMinute() != 0) {
         it.remove();
       }
+      record.setStateType(StateType.NEW_RELIC);
       record.setApplicationId(appId);
       record.setWorkflowId(workflowId);
       record.setWorkflowExecutionId(workflowExecutionId);
@@ -85,6 +144,13 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
       record.setTimeStamp(record.getDataCollectionMinute());
       nodes.add(record.getHost());
     }
+    return nodes;
+  }
+
+  @Test
+  public void testSaveMetricRecords() throws IOException {
+    List<NewRelicMetricDataRecord> controlRecords = loadMetrics("./verification/TimeSeriesNRControlInput.json");
+    Set<String> nodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
     newRelicResource.saveMetricData(accountId, appId, controlRecords);
     List<NewRelicMetricDataRecord> results = newRelicResource
                                                  .getMetricData(accountId, true,
@@ -98,6 +164,37 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
                                                          .nodes(nodes)
                                                          .build())
                                                  .getResource();
+
     assertEquals(results.size(), controlRecords.size());
   }
+
+  //  @Test
+  //  public void testAnalysis() throws IOException {
+  //    List<NewRelicMetricDataRecord> controlRecords = loadMetrics("./verification/TimeSeriesNRControlInput.json");
+  //    List<NewRelicMetricDataRecord> testRecords = loadMetrics("./verification/TimeSeriesNRTestInput.json");
+  //    UUID workFlowExecutionId = UUID.randomUUID();
+  //    UUID stateExecutionId = UUID.randomUUID();
+  //    Set<String> controlNodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
+  //    Set<String> testNodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
+  //    newRelicResource.saveMetricData(accountId, appId, controlRecords);
+  //    newRelicResource.saveMetricData(accountId, appId, controlRecords);
+  //
+  //    JobExecutionContext context = Mockito.mock(JobExecutionContext.class);
+  //    AnalysisContext analysisContext = AnalysisContext.builder().accountId(accountId)
+  //        .appId(appId)
+  //        .accountId(accountId)
+  //        .tolerance(1)
+  //        .smooth_window(3)
+  //        .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+  //        .serviceId(serviceId)
+  //        .stateExecutionId(stateExecutionId)
+  //        .stateType(StateType.NEW_RELIC)
+  //        .stateBaseUrl("newrelic")
+  //        .workflowExecutionId(workflowExecutionId)
+  //        .appPort(9090)
+  //        .isSSL(true)
+  //        .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+  //    MetricAnalysisJob.MetricAnalysisGenerator metricAnalysisGenerator = new
+  //    MetricAnalysisJob.MetricAnalysisGenerator(context)
+  //  }
 }
