@@ -311,12 +311,12 @@ def main(args):
 
         control_metrics = load_from_harness_server(options.control_input_url, options.control_nodes, options)
         logger.info('control events = ' + str(len(control_metrics)))
-        write_to_file("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json",
-                      control_metrics)
+        # write_to_file("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/control_live.json",
+        #               control_metrics)
         test_metrics = load_from_harness_server(options.test_input_url, options.test_nodes, options)
         logger.info('test_events = ' + str(len(test_metrics)))
-        write_to_file("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json",
-                      test_metrics)
+        # write_to_file("/Users/sriram_parthasarathy/wings/python/splunk_intelligence/time_series/test_live.json",
+        #               test_metrics)
         anomaly_detector = TSAnomlyDetector(options, control_metrics, test_metrics)
         result = anomaly_detector.analyze()
         post_to_wings_server(options, result)
