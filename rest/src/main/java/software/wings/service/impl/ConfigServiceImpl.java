@@ -13,6 +13,7 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
@@ -224,7 +225,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
-        toWrite = getEncryptedInputStream(inputConfigFile, uploadedInputStream);
+        toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream);
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -240,6 +241,7 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
       updateMap.put("encrypted", inputConfigFile.isEncrypted());
+      updateMap.put("encryptedFileId", savedConfigFile.getEncryptedFileId());
     }
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
@@ -264,6 +266,9 @@ public class ConfigServiceImpl implements ConfigService {
 
   private InputStream getEncryptedInputStream(ConfigFile configFile, BoundedInputStream inputStream) {
     if (shouldUseKms(configFile.getAccountId())) {
+      if (!StringUtils.isBlank(configFile.getUuid())) {
+        wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
+      }
       EncryptedData encryptedData = kmsService.encryptFile(inputStream, configFile.getAccountId());
       configFile.setEncryptedFileId(encryptedData.getUuid());
       return new ByteArrayInputStream(new String(encryptedData.getEncryptedValue()).getBytes());

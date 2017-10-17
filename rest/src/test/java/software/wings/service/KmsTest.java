@@ -1275,14 +1275,18 @@ public class KmsTest extends WingsBaseTest {
             .size());
 
     // test update
-    //    File fileToUpdate = new
-    //    File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    //    configService.update(configFileBuilder.withUuid(configFileId).but().build(), new BoundedInputStream(new
-    //    FileInputStream(fileToUpdate))); download = configService.download(appId, configFileId);
-    //    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
-    //    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
-    //    assertEquals(1,
-    //    wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.CONFIG_FILE).asList().size());
+    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    configService.update(configFileBuilder.withUuid(configFileId).but().build(),
+        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    download = configService.download(appId, configFileId);
+    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    assertEquals(1,
+        wingsPersistence.createQuery(EncryptedData.class)
+            .field("type")
+            .equal(SettingVariableTypes.CONFIG_FILE)
+            .asList()
+            .size());
   }
 
   private KmsConfig getKmsConfig() throws IOException {
