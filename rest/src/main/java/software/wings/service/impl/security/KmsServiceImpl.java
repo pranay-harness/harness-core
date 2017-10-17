@@ -162,12 +162,14 @@ public class KmsServiceImpl implements KmsService {
     arnKeyData.setParentId(parentId);
     wingsPersistence.save(arnKeyData);
 
-    if (!savedConfigs.isEmpty()) {
+    if (kmsConfig.isDefault() && !savedConfigs.isEmpty()) {
       for (KmsConfig savedConfig : savedConfigs) {
+        if (kmsConfig.getUuid().equals(savedConfig.getUuid())) {
+          continue;
+        }
         savedConfig.setDefault(false);
+        wingsPersistence.save(savedConfig);
       }
-
-      wingsPersistence.save(Lists.newArrayList(savedConfigs));
     }
 
     return true;
