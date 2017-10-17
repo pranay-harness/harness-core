@@ -898,6 +898,90 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  public void listKmsConfigMultiple() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig kmsConfig1 = getKmsConfig();
+    kmsConfig1.setDefault(true);
+    kmsConfig1.setName(UUID.randomUUID().toString());
+    kmsService.saveKmsConfig(accountId, kmsConfig1);
+    kmsConfig1.setAccessKey(getKmsConfig().getAccessKey());
+    kmsConfig1.setKmsArn(getKmsConfig().getKmsArn());
+
+    KmsConfig kmsConfig2 = getKmsConfig();
+    kmsConfig2.setDefault(false);
+    kmsConfig2.setName(UUID.randomUUID().toString());
+    kmsService.saveKmsConfig(accountId, kmsConfig2);
+    kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
+    kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(2, kmsConfigs.size());
+
+    int defaultConfig = 0;
+    int nonDefaultConfig = 0;
+
+    for (KmsConfig actualConfig : kmsConfigs) {
+      if (actualConfig.isDefault()) {
+        defaultConfig++;
+        assertEquals(kmsConfig1.getName(), actualConfig.getName());
+        assertEquals(kmsConfig1.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig1.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+        assertEquals(accountId, actualConfig.getAccountId());
+      } else {
+        nonDefaultConfig++;
+        assertEquals(kmsConfig2.getName(), actualConfig.getName());
+        assertEquals(kmsConfig2.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig2.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+        assertEquals(accountId, actualConfig.getAccountId());
+      }
+    }
+
+    assertEquals(1, defaultConfig);
+    assertEquals(1, nonDefaultConfig);
+
+    kmsConfig2.setSecretKey(getKmsConfig().getSecretKey());
+    kmsConfig2.setName(UUID.randomUUID().toString());
+    kmsConfig2.setDefault(true);
+
+    kmsService.saveKmsConfig(accountId, kmsConfig2);
+    kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
+    kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
+
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(2, kmsConfigs.size());
+
+    defaultConfig = 0;
+    nonDefaultConfig = 0;
+    for (KmsConfig actualConfig : kmsConfigs) {
+      if (actualConfig.isDefault()) {
+        defaultConfig++;
+        assertEquals(kmsConfig2.getName(), actualConfig.getName());
+        assertEquals(kmsConfig2.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig2.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+        assertEquals(accountId, actualConfig.getAccountId());
+      } else {
+        nonDefaultConfig++;
+        assertEquals(kmsConfig1.getName(), actualConfig.getName());
+        assertEquals(kmsConfig1.getAccessKey(), actualConfig.getAccessKey());
+        assertEquals(kmsConfig1.getKmsArn(), actualConfig.getKmsArn());
+        assertEquals(KmsServiceImpl.SECRET_MASK, actualConfig.getSecretKey());
+        assertFalse(StringUtils.isEmpty(actualConfig.getUuid()));
+        assertEquals(accountId, actualConfig.getAccountId());
+      }
+    }
+
+    assertEquals(1, defaultConfig);
+    assertEquals(1, nonDefaultConfig);
+  }
+
+  @Test
+  @RealMongo
   public void listKmsConfigHasDefault() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig globalKmsConfig = getKmsConfig();
