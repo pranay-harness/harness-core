@@ -129,7 +129,7 @@ Annotations->Mark field as implicitly written if annotated by) Click add, then s
     * JRE:  
         Default (1.8 - SDK of 'delegate' module)
         
-### Bash Profile
+### Show current git branch in command prompt
 
 Add the following to your `~/.bash_profile` to display the current git branch in the command prompt:
 ```
@@ -138,6 +138,8 @@ parse_git_branch() {
 }
 export PS1="\[\033[34m\]\w\[\033[36m\]\$(parse_git_branch)\[\033[31m\] $\[\033[0m\] "
 ```
+
+Alternatively, use Fish shell: `brew install fish` then set iterms command to `/usr/local/bin/fish`
 
 ### Before you can use the client:
 
