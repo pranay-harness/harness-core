@@ -14,7 +14,7 @@ import java.io.InputStream;
  * Created by sriram_parthasarathy on 10/14/17.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class TimeSeriesMLAnalysisRecordsTests extends WingsBaseTest {
+public class TimeSeriesMLAnalysisRecordsTest extends WingsBaseTest {
   @Test
   public void testJsonParsing() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
