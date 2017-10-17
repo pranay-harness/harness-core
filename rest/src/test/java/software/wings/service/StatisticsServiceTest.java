@@ -19,6 +19,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.stats.ActivityStatusAggregation.Builder.anActivityStatusAggregation;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
@@ -620,6 +621,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                                     .withAppId(APP_ID)
                                                     .withEnvType(PROD)
                                                     .withStatus(SUCCESS)
+                                                    .withWorkflowType(ORCHESTRATION)
                                                     .withServiceExecutionSummaries(serviceExecutionSummaries)
                                                     .withCreatedAt(endEpoch)
                                                     .build(),
@@ -627,6 +629,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withEnvType(PROD)
             .withStatus(SUCCESS)
+            .withWorkflowType(ORCHESTRATION)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(endEpoch)
             .build(),
@@ -634,6 +637,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
+            .withWorkflowType(ORCHESTRATION)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build(),
@@ -641,6 +645,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withEnvType(NON_PROD)
             .withStatus(ExecutionStatus.FAILED)
+            .withWorkflowType(ORCHESTRATION)
             .withServiceExecutionSummaries(serviceExecutionSummaries)
             .withCreatedAt(startEpoch)
             .build());
