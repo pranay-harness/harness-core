@@ -29,5 +29,5 @@ public class FeatureFlag extends Base {
   private boolean obsolete;
   private Set<String> accountIds;
 
-  public enum FeatureName { GIT_SYNC, ECS_CREATE_CLUSTER, KUBERNETES_CREATE_CLUSTER }
+  public enum FeatureName { GIT_SYNC, ECS_CREATE_CLUSTER, KUBERNETES_CREATE_CLUSTER, TIME_SERIES_ML }
 }

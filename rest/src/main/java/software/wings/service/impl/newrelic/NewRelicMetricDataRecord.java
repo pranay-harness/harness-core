@@ -60,7 +60,8 @@ public class NewRelicMetricDataRecord extends Base {
   private double throughput = -1;
   private double averageResponseTime = -1;
   private double apdexScore = -1;
-
+  private long callCount = 0;
+  private double requestsPerMinute = -1;
   // appdynamics metrics
   private double response95th = -1;
   private double stalls = -1;

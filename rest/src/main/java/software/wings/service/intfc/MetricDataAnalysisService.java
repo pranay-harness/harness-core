@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
@@ -21,6 +22,9 @@ public interface MetricDataAnalysisService {
       @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
 
   @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
+
+  @ValidationGroups(Create.class)
+  boolean saveAnalysisRecordsML(@Valid TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord);
 
   List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId, String stateExecutionId,
       String workflowId, String serviceId, Set<String> nodes, int analysisMinute);

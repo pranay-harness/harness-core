@@ -29,7 +29,8 @@ def test_timeout():
         print('test post timeout')
         SplunkHarnessLoader.send_request('http://localhost:18080', dict(message='Dummy'), headers=None)
         print('test get timeout')
-        SplunkHarnessLoader.get_request('http://localhost:18080', 1)
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        SplunkHarnessLoader.get_request('http://localhost:18080', headers=headers)
         print('finish')
     except:
         server.shutdown()

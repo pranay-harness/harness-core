@@ -40,6 +40,9 @@ import javax.inject.Named;
  * Created by rsingh on 9/25/17.
  */
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
+  protected static final int SMOOTH_WINDOW = 3;
+  protected static final int TOLERANCE = 1;
+
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
   @Transient @Inject private MetricDataAnalysisService metricAnalysisService;
@@ -206,6 +209,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .authToken(generateAuthToken())
           .analysisServerConfigId(getAnalysisServerConfigId())
           .correlationId(correlationId)
+          .smooth_window(SMOOTH_WINDOW)
+          .tolerance(TOLERANCE)
           .build();
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);

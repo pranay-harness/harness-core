@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 
 class SplunkHarnessLoader(object):
     @staticmethod
-    def get_request(url, max_retries=1):
+    def get_request(url, headers, max_retries=1):
         sleep_time = 1
         try:
             while max_retries > 0:
-                r = requests.get(url, verify=False, timeout=30)
+                r = requests.get(url, headers=headers, verify=False, timeout=30)
                 if r.status_code != 500 and r.status_code != 503:
                     return json.loads(r.text), r.status_code
                 else:
@@ -80,6 +80,26 @@ class SplunkHarnessLoader(object):
         payload = dict(applicationId=app_id, workflowId=workflow_id, stateExecutionId=state_execution_id,
                        serviceId=service_id, logCollectionMinute=log_collection_minute, nodes=nodes,
                        query=query)
+        logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
+        text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
+        if status_code != 200:
+            logger.error(
+                "Failed to fetch data from Harness manager. Got status_code = " + str(
+                    status_code) + ' for ' + json.dumps(
+                    payload))
+            sys.exit(-1)
+        data = json.loads(text)
+        if data is None or data['resource'] is None:
+            logging.error("Server returned no data for " + json.dumps(payload))
+            sys.exit(1)
+
+        return data
+
+    #TODO replace the load_from_harness_raw with this when working on Splunk
+    @staticmethod
+    def load_from_harness_raw_new(url, auth_token, payload):
+        headers = {"Accept": "application/json", "Content-Type": "application/json",
+                   "Authorization": "ExternalService " + auth_token}
         logger.info('Fetching data from Harness Manager for ' + json.dumps(payload))
         text, status_code = SplunkHarnessLoader.send_request(url, json.dumps(payload), headers, False, 3)
         if status_code != 200:
