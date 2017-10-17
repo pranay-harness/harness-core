@@ -47,11 +47,10 @@ public interface AmazonS3Service {
    * @param config aws cloud provider config
    * @param bucketName bucket name
    * @param key   artifact path / key
-   * @param isExpression is key an expression
    * @return
    */
   BuildDetails getArtifactBuildDetails(
-      AwsConfig config, String bucketName, String key, boolean isExpression, boolean versioningEnabledForBucket);
+      AwsConfig config, String bucketName, String key, boolean versioningEnabledForBucket);
 
   List<BuildDetails> getArtifactsBuildDetails(
       AwsConfig awsConfig, String bucketName, List<String> artifactPaths, boolean isExpression);
