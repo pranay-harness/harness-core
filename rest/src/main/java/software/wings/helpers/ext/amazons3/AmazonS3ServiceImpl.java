@@ -93,14 +93,13 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
               .map(S3ObjectSummary::getKey)
               .collect(Collectors.toList());
       for (String key : keyList) {
-        BuildDetails artifactMetadata =
-            getArtifactBuildDetails(awsConfig, bucketName, key, isExpression, versioningEnabledForBucket);
+        BuildDetails artifactMetadata = getArtifactBuildDetails(awsConfig, bucketName, key, versioningEnabledForBucket);
         buildDetailsList.add(artifactMetadata);
       }
 
     } else {
       BuildDetails artifactMetadata =
-          getArtifactBuildDetails(awsConfig, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
+          getArtifactBuildDetails(awsConfig, bucketName, artifactPath, versioningEnabledForBucket);
       buildDetailsList.add(artifactMetadata);
     }
 
@@ -156,16 +155,16 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
   @Override
   public BuildDetails getArtifactBuildDetails(
-      AwsConfig awsConfig, String bucketName, String key, boolean isExpression, boolean versioningEnabledForBucket) {
+      AwsConfig awsConfig, String bucketName, String key, boolean versioningEnabledForBucket) {
     Map<String, String> map = new HashMap<>();
     String versionId = null;
     String resourceUrl =
         new StringBuilder("https://s3.amazonaws.com/").append(bucketName).append("/").append(key).toString();
-    if (!isExpression && versioningEnabledForBucket) {
+    if (versioningEnabledForBucket) {
       ObjectMetadata objectMetadata = awsHelperService.getObjectMetadataFromS3(awsConfig, bucketName, key);
 
       if (objectMetadata != null) {
-        versionId = objectMetadata.getVersionId();
+        versionId = key + ":" + objectMetadata.getVersionId();
       }
     }
     if (versionId == null) {

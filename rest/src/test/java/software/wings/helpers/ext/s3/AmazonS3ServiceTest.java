@@ -123,8 +123,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
 
     when(awsHelperService.getObjectMetadataFromS3(any(AwsConfig.class), any(), any())).thenReturn(objectMetadata);
 
-    BuildDetails artifactBuildDetails =
-        amazonS3Service.getArtifactBuildDetails(awsConfig, "bucket1", "key1", false, false);
+    BuildDetails artifactBuildDetails = amazonS3Service.getArtifactBuildDetails(awsConfig, "bucket1", "key1", false);
     assertThat(artifactBuildDetails.getArtifactPath().equals("key1"));
   }
 
