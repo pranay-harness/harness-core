@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.validation.Create;

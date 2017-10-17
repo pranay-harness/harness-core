@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
-import software.wings.security.annotations.Encrypted;
+import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
@@ -33,6 +33,8 @@ public class SplunkConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @SchemaIgnore private String encryptedPassword;
+
   /**
    * Instantiates a new Splunk config.
    */
@@ -40,11 +42,12 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.SPLUNK.name());
   }
 
-  public SplunkConfig(String splunkUrl, String username, char[] password, String accountId) {
-    super(SettingVariableTypes.SPLUNK.name());
+  public SplunkConfig(String splunkUrl, String username, char[] password, String accountId, String encryptedPassword) {
+    this();
     this.splunkUrl = splunkUrl;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
+    this.encryptedPassword = encryptedPassword;
   }
 }

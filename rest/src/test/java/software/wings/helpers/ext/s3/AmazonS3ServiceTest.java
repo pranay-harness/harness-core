@@ -41,11 +41,8 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   @Inject private AmazonS3Service amazonS3Service;
   @Inject @InjectMocks private DelegateFileManager delegateFileManager;
 
-  private static final AwsConfig awsConfig = AwsConfig.Builder.anAwsConfig()
-                                                 .withAccessKey("access")
-                                                 .withSecretKey("secret".toCharArray())
-                                                 .withAccountId("accountId")
-                                                 .build();
+  private static final AwsConfig awsConfig =
+      AwsConfig.builder().accessKey("access").secretKey("secret".toCharArray()).accountId("accountId").build();
 
   @Test
   public void shouldGetBuckets() {

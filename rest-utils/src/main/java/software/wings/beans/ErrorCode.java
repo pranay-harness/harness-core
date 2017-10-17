@@ -452,7 +452,9 @@ public enum ErrorCode {
   GENERAL_YAML_INFO("GENERAL_YAML_INFO"), /**
                                            * Artifact server
                                            */
-  ARTIFACT_SERVER_ERROR("ARTIFACT_SERVER_ERROR");
+  ARTIFACT_SERVER_ERROR("ARTIFACT_SERVER_ERROR"),
+
+  KMS_OPERATION_ERROR("KMS_OPERATION_ERROR");
 
   /**
    * The constant ARGS_NAME.

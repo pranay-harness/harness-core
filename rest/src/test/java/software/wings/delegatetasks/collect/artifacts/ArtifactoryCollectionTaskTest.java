@@ -6,7 +6,6 @@ import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.config.ArtifactoryConfig.Builder.anArtifactoryConfig;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -36,11 +35,8 @@ public class ArtifactoryCollectionTaskTest {
 
   String url = "http://localhost:8881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig = anArtifactoryConfig()
-                                                    .withArtifactoryUrl(url)
-                                                    .withUsername("admin")
-                                                    .withPassword("dummy123!".toCharArray())
-                                                    .build();
+  private ArtifactoryConfig artifactoryConfig =
+      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
   private DelegateTask collectionTask =
       DelegateTask.Builder.aDelegateTask()
           .withTaskType(TaskType.ARTIFACTORY_COLLECTION)

@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
 import com.google.common.base.Joiner;
@@ -64,7 +63,7 @@ public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooE
     String errorMessage = null;
     try {
       BambooConfig bambooConfig =
-          aBambooConfig().withBambooUrl(bambooUrl).withUsername(username).withPassword(password).build();
+          BambooConfig.builder().bambooUrl(bambooUrl).username(username).password(password).build();
       Map<String, String> evaluatedParameters = Maps.newLinkedHashMap();
       if (isNotEmpty(parameterEntries)) {
         parameterEntries.forEach(

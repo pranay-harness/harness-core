@@ -10,7 +10,6 @@ import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionD
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.sm.states.JenkinsState.JenkinsExecutionResponse.Builder.aJenkinsExecutionResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -32,6 +31,7 @@ import org.mockito.junit.MockitoRule;
 import software.wings.CurrentThreadExecutor;
 import software.wings.beans.Activity;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.JenkinsConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -66,11 +66,11 @@ public class JenkinsStateTest {
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
     when(executionContext.getSettingValue(SETTING_ID, SettingVariableTypes.JENKINS.name()))
-        .thenReturn(aJenkinsConfig()
-                        .withJenkinsUrl("http://jenkins")
-                        .withUsername("username")
-                        .withPassword("password".toCharArray())
-                        .withAccountId(ACCOUNT_ID)
+        .thenReturn(JenkinsConfig.builder()
+                        .jenkinsUrl("http://jenkins")
+                        .username("username")
+                        .password("password".toCharArray())
+                        .accountId(ACCOUNT_ID)
                         .build());
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));

@@ -267,7 +267,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
-    AwsConfig awsConfig = AwsConfig.Builder.anAwsConfig().withAccessKey(accessKey).withSecretKey(secretKey).build();
+    AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
     return awsHelperService.listApplicationLoadBalancers(awsConfig, region);
   }
 
