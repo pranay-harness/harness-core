@@ -40,6 +40,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -475,12 +476,32 @@ public class StatisticsServiceImpl implements StatisticsService {
         failureCount = (int) wflExecutions.stream()
                            .filter(workflowExecution -> workflowExecution.getStatus().equals(FAILED))
                            .count();
-        instanceCount = wflExecutions.stream()
-                            .filter(wex -> wex.getServiceExecutionSummaries() != null)
-                            .flatMap(wex -> wex.getServiceExecutionSummaries().stream())
-                            .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
-                            .mapToInt(i -> i)
-                            .sum();
+        for (WorkflowExecution workflowExecution : workflowExecutions) {
+          if ((workflowExecution.getWorkflowType() == ORCHESTRATION || workflowExecution.getWorkflowType() == SIMPLE)
+              && workflowExecution.getServiceExecutionSummaries() != null) {
+            instanceCount += workflowExecution.getServiceExecutionSummaries()
+                                 .stream()
+                                 .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                                 .mapToInt(i -> i)
+                                 .sum();
+          } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
+              && workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+            for (PipelineStageExecution pipelineStageExecution :
+                workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
+              if (pipelineStageExecution == null || pipelineStageExecution.getWorkflowExecutions() == null) {
+                continue;
+              }
+              instanceCount +=
+                  pipelineStageExecution.getWorkflowExecutions()
+                      .stream()
+                      .filter(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries() != null)
+                      .flatMap(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries().stream())
+                      .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                      .mapToInt(i -> i)
+                      .sum();
+            }
+          }
+        }
       }
 
       dayStats.add(new DayStat(totalCount, failureCount, instanceCount, timeOffset));
@@ -551,11 +572,26 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
     for (WorkflowExecution execution : wflExecutions) {
       if ((execution.getStatus() != SUCCESS && execution.getStatus() != FAILED && execution.getStatus() != ABORTED
-              && execution.getStatus() != ERROR)
-          || execution.getServiceExecutionSummaries() == null) {
+              && execution.getStatus() != ERROR)) {
         continue;
       }
-      for (ElementExecutionSummary serviceExecutionSummary : execution.getServiceExecutionSummaries()) {
+      final List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
+      if (execution.getWorkflowType() == PIPELINE && execution.getPipelineExecution() != null
+          && execution.getPipelineExecution().getPipelineStageExecutions() != null) {
+        execution.getPipelineExecution()
+            .getPipelineStageExecutions()
+            .stream()
+            .filter(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions() != null)
+            .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+            .filter(workflowExecution -> workflowExecution.getServiceExecutionSummaries() != null)
+            .forEach(workflowExecution -> {
+              serviceExecutionSummaries.addAll(workflowExecution.getServiceExecutionSummaries());
+            });
+      } else if (execution.getServiceExecutionSummaries() != null) {
+        serviceExecutionSummaries.addAll(execution.getServiceExecutionSummaries());
+      }
+
+      for (ElementExecutionSummary serviceExecutionSummary : serviceExecutionSummaries) {
         if (serviceExecutionSummary.getContextElement() == null) {
           continue;
         }
