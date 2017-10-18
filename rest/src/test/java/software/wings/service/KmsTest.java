@@ -961,6 +961,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
