@@ -1,6 +1,10 @@
 package software.wings.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
@@ -18,14 +22,18 @@ import org.mockito.Mock;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.Builder;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
@@ -47,8 +55,10 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Mock private JobScheduler jobScheduler;
   @Inject private ConfigService configService;
   @Inject @InjectMocks private AppService appService;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
+  @Inject private KmsService kmsService;
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Application app;
@@ -60,6 +70,10 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   public void setUp() throws Exception {
     loginAdminUser();
     deleteAllDocuments(Arrays.asList(Application.class, ConfigFile.class, Service.class));
+
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
+    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(configService, "kmsService", kmsService);
 
     app = appService.save(anApplication().withAccountId(accountId).withName("AppA").build());
     service =

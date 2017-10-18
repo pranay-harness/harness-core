@@ -7,6 +7,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -93,12 +98,11 @@ public class KmsTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new KmsDelegateServiceImpl());
-    Whitebox.setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    Whitebox.setInternalState(wingsPersistence, "kmsService", kmsService);
-    Whitebox.setInternalState(configService, "kmsService", kmsService);
+    initMocks(this);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
+    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(wingsPersistence, "kmsService", kmsService);
+    setInternalState(configService, "kmsService", kmsService);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
   }
@@ -1525,11 +1529,11 @@ public class KmsTest extends WingsBaseTest {
   }
 
   private Thread startTransitionListener() {
-    Whitebox.setInternalState(kmsService, "transitionKmsQueue", transitionKmsQueue);
+    setInternalState(kmsService, "transitionKmsQueue", transitionKmsQueue);
     final KmsTransitionEventListener transitionEventListener = new KmsTransitionEventListener();
-    Whitebox.setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
-    Whitebox.setInternalState(transitionEventListener, "queue", transitionKmsQueue);
-    Whitebox.setInternalState(transitionEventListener, "kmsService", kmsService);
+    setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
+    setInternalState(transitionEventListener, "queue", transitionKmsQueue);
+    setInternalState(transitionEventListener, "kmsService", kmsService);
 
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();
