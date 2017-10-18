@@ -1307,6 +1307,76 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
+  public void saveUpdateConfigFileNoKms() throws IOException, InterruptedException {
+    final long seed = System.currentTimeMillis();
+    System.out.println("seed: " + seed);
+    Random r = new Random(seed);
+    final String accountId = UUID.randomUUID().toString();
+    final String appId = UUID.randomUUID().toString();
+
+    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    wingsPersistence.save(service);
+
+    ConfigFile.Builder configFileBuilder = ConfigFile.Builder.aConfigFile()
+                                               .withTemplateId(UUID.randomUUID().toString())
+                                               .withEnvId(UUID.randomUUID().toString())
+                                               .withEntityType(EntityType.SERVICE)
+                                               .withEntityId(service.getUuid())
+                                               .withDescription(UUID.randomUUID().toString())
+                                               .withParentConfigFileId(UUID.randomUUID().toString())
+                                               .withRelativeFilePath(UUID.randomUUID().toString())
+                                               .withTargetToAllEnv(r.nextBoolean())
+                                               .withDefaultVersion(r.nextInt())
+                                               .withEnvIdVersionMapString(UUID.randomUUID().toString())
+                                               .withSetAsDefault(r.nextBoolean())
+                                               .withNotes(UUID.randomUUID().toString())
+                                               .withOverridePath(UUID.randomUUID().toString())
+                                               .withConfigOverrideType(ConfigOverrideType.CUSTOM)
+                                               .withConfigOverrideExpression(UUID.randomUUID().toString())
+                                               .withAppId(appId)
+                                               .withAccountId(accountId)
+                                               .withFileName(UUID.randomUUID().toString())
+                                               .withName(UUID.randomUUID().toString())
+                                               .withEncrypted(false);
+
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+
+    String configFileId =
+        configService.save(configFileBuilder.but().build(), new BoundedInputStream(new FileInputStream(fileToSave)));
+    File download = configService.download(appId, configFileId);
+    assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+    ConfigFile savedConfigFile = configService.get(appId, configFileId);
+    assertFalse(savedConfigFile.isEncrypted());
+    assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
+
+    // now make the same file encrypted
+    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    configService.update(configFileBuilder.withUuid(configFileId).withEncrypted(true).but().build(),
+        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    download = configService.download(appId, configFileId);
+    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    savedConfigFile = configService.get(appId, configFileId);
+    assertTrue(savedConfigFile.isEncrypted());
+    assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
+
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    // now make the same file not encrypted
+    fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    configService.update(configFileBuilder.withUuid(configFileId).withEncrypted(false).but().build(),
+        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    download = configService.download(appId, configFileId);
+    assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
+    savedConfigFile = configService.get(appId, configFileId);
+    assertFalse(savedConfigFile.isEncrypted());
+    assertTrue(StringUtils.isEmpty(savedConfigFile.getEncryptedFileId()));
+
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+  }
+
+  @Test
+  @RealMongo
   public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);
