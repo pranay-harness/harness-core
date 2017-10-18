@@ -103,7 +103,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getKmsConfigGlobal() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -121,7 +120,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void validateConfig() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -137,7 +135,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void getKmsConfigForAccount() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -197,7 +194,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void localEncryptionWhileSaving() {
     String password = UUID.randomUUID().toString();
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -227,7 +223,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionWhileSavingFeatureDisabled() {
     final String accountId = UUID.randomUUID().toString();
     String password = UUID.randomUUID().toString();
@@ -258,7 +253,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionWhileSaving() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -304,7 +298,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionSaveMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -351,7 +344,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionUpdateObject() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -440,7 +432,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -562,7 +553,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveServiceVariableNoEncryption() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -592,7 +582,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionSaveServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -622,7 +611,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -679,7 +667,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -723,7 +710,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -782,7 +768,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -832,7 +817,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void kmsEncryptionSaveGlobalConfig() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -857,7 +841,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void listEncryptedValues() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -897,7 +880,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
@@ -981,7 +963,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void listKmsConfigHasDefault() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig globalKmsConfig = getKmsConfig();
@@ -1026,7 +1007,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void listKmsConfig() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -1087,7 +1067,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void transitionKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1167,7 +1146,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void transitionAndDeleteKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1227,7 +1205,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveAwsConfig() throws IOException, InterruptedException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
