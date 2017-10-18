@@ -685,6 +685,14 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(serviceVariable, savedAttribute);
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    Collection<UuidAware> uuidAwares = kmsService.listEncryptedValues(accountId);
+    assertEquals(1, uuidAwares.size());
+    ServiceVariable listedVariable = (ServiceVariable) uuidAwares.iterator().next();
+    assertEquals(KmsServiceImpl.SECRET_MASK, new String(listedVariable.getValue()));
+    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
+    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
+    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
   }
 
   @Test
