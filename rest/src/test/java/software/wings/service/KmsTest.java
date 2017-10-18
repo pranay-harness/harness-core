@@ -1485,13 +1485,12 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToSave), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
-    assertEquals(1,
-        wingsPersistence.createQuery(EncryptedData.class)
-            .field("type")
-            .equal(SettingVariableTypes.CONFIG_FILE)
-            .asList()
-            .size());
-
+    List<EncryptedData> encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
+                                                .field("type")
+                                                .equal(SettingVariableTypes.CONFIG_FILE)
+                                                .asList();
+    assertEquals(1, encryptedFileData.size());
+    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
     // test update
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     configService.update(configFileBuilder.withUuid(configFileId).but().build(),
@@ -1499,12 +1498,13 @@ public class KmsTest extends WingsBaseTest {
     download = configService.download(appId, configFileId);
     assertEquals(FileUtils.readFileToString(fileToUpdate), FileUtils.readFileToString(download));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
-    assertEquals(1,
-        wingsPersistence.createQuery(EncryptedData.class)
-            .field("type")
-            .equal(SettingVariableTypes.CONFIG_FILE)
-            .asList()
-            .size());
+
+    encryptedFileData = wingsPersistence.createQuery(EncryptedData.class)
+                            .field("type")
+                            .equal(SettingVariableTypes.CONFIG_FILE)
+                            .asList();
+    assertEquals(1, encryptedFileData.size());
+    assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
   }
 
   private KmsConfig getKmsConfig() throws IOException {

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Base;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
@@ -355,6 +356,9 @@ public class KmsServiceImpl implements KmsService {
 
       case SERVICE_VARIABLE:
         return wingsPersistence.get(ServiceVariable.class, data.getParentId());
+
+      case CONFIG_FILE:
+        return wingsPersistence.get(ConfigFile.class, data.getParentId());
 
       default:
         return wingsPersistence.get(SettingAttribute.class, data.getParentId());
