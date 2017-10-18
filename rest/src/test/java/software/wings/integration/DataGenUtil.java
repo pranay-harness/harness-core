@@ -3,6 +3,11 @@ package software.wings.integration;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -27,17 +32,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -46,11 +54,15 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.impl.security.KmsDelegateServiceImpl;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -96,6 +108,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
   @Inject private SystemCatalogService systemCatalogService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private KmsService kmsService;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
 
   /**
    * Generated Data for across the API use.
@@ -104,6 +119,8 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Before
   public void setUp() throws Exception {
+    initMocks(this);
+
     assertThat(NUM_APPS).isBetween(1, 1000);
     assertThat(NUM_APP_CONTAINER_PER_APP).isBetween(1, 1000);
     assertThat(NUM_SERVICES_PER_APP).isBetween(1, 1000);
@@ -112,6 +129,8 @@ public class DataGenUtil extends BaseIntegrationTest {
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
     dropDBAndEnsureIndexes();
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
+    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
   }
 
   /**
@@ -136,6 +155,15 @@ public class DataGenUtil extends BaseIntegrationTest {
       createAppSettings(application.getAccountId());
     }
     verifyAccountAndApplicationSetup(apps);
+    featureFlagService.initializeFeatureFlags();
+    kmsService.saveKmsConfig(accountId,
+        KmsConfig.builder()
+            .accountId(accountId)
+            .name("Account_kms")
+            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+            .secretKey("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")
+            .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
+            .build());
   }
 
   private void verifyAccountAndApplicationSetup(List<Application> apps) {
