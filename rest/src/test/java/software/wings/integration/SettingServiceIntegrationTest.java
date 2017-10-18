@@ -8,6 +8,7 @@ import static software.wings.beans.ResponseMessage.ResponseTypeEnum.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
@@ -132,6 +133,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   @Repeat(times = 5, successes = 1)
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
