@@ -24,8 +24,12 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -79,6 +83,29 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public List<TimeSeriesMLScores> getTimeSeriesMLScores(
+      String applicationId, String workflowId, int analysisMinute, int limit) {
+    List<String> workflowExecutionIds = getLastSuccessfulWorkflowExecutionIds(workflowId);
+    return wingsPersistence.createQuery(TimeSeriesMLScores.class)
+        .field("workflowId")
+        .equal(workflowId)
+        .field("applicationId")
+        .equal(applicationId)
+        .field("analysisMinute")
+        .equal(analysisMinute)
+        .field("workflowExecutionIds")
+        .in(workflowExecutionIds)
+        .order("-createdAt")
+        .limit(limit)
+        .asList();
+  }
+
+  @Override
+  public void saveTimeSeriesMLScores(TimeSeriesMLScores scores) {
+    wingsPersistence.save(scores);
+  }
+
+  @Override
   public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId,
       String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
@@ -95,7 +122,26 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("host")
                                                 .hasAnyOf(nodes)
                                                 .field("level")
-                                                .notEqual(ClusterLevel.H0)
+                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
+                                                .field("dataCollectionMinute")
+                                                .lessThanOrEq(analysisMinute);
+    return query.asList();
+  }
+
+  @Override
+  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
+      StateType stateType, String workflowId, String workflowExecutionID, String serviceId, int analysisMinute) {
+    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                .field("stateType")
+                                                .equal(stateType)
+                                                .field("workflowId")
+                                                .equal(workflowId)
+                                                .field("workflowExecutionId")
+                                                .equal(workflowExecutionID)
+                                                .field("serviceId")
+                                                .equal(serviceId)
+                                                .field("level")
+                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
     return query.asList();
@@ -116,14 +162,32 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                 .field("serviceId")
                                                 .equal(serviceId)
                                                 .field("level")
-                                                .notEqual(ClusterLevel.H0)
+                                                .notIn(Arrays.asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
     return query.asList();
   }
 
-  private String getLastSuccessfulWorkflowExecutionIdWithData(
-      StateType stateType, String workflowId, String serviceId) {
+  @Override
+  public int getMaxControlMinute(StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .field("stateType")
+                                                            .equal(stateType)
+                                                            .field("workflowId")
+                                                            .equal(workflowId)
+                                                            .field("workflowExecutionId")
+                                                            .equal(workflowExecutionId)
+                                                            .field("serviceId")
+                                                            .equal(serviceId)
+                                                            .order("-dataCollectionMinute")
+                                                            .limit(1)
+                                                            .get();
+
+    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
+
+  @Override
+  public String getLastSuccessfulWorkflowExecutionIdWithData(StateType stateType, String workflowId, String serviceId) {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(workflowId);
     for (String successfulExecution : successfulExecutions) {
       Query<NewRelicMetricDataRecord> lastSuccessfulRecordQuery =
@@ -147,7 +211,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return null;
   }
 
-  private List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId) {
+  @Override
+  public List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId) {
     final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
@@ -173,6 +238,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .field("stateType")
+            .equal(stateType)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("workflowExecutionId")
@@ -278,60 +345,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
       Collections.sort(analysisRecord.getMetricAnalyses());
     }
-    return analysisRecord;
-  }
-
-  public NewRelicMetricAnalysisRecord _getMetricsAnalysis(
-      StateType stateType, String stateExecutionId, String workflowExecutionId) {
-    Query<NewRelicMetricAnalysisRecord> splunkLogMLAnalysisRecords =
-        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-            .field("stateType")
-            .equal(stateType)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("workflowExecutionId")
-            .equal(workflowExecutionId);
-    NewRelicMetricAnalysisRecord analysisRecord = wingsPersistence.executeGetOneQuery(splunkLogMLAnalysisRecords);
-    if (analysisRecord == null) {
-      return null;
-    }
-
-    if (analysisRecord.getMetricAnalyses() == null) {
-      return NewRelicMetricAnalysisRecord.builder()
-          .message(
-              "Could not get metric data from new relic. Please make sure that the new relic account is a paid account and metrics can be pulled using rest API")
-          .build();
-    }
-
-    int highRisk = 0;
-    int mediumRisk = 0;
-    for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-      switch (metricAnalysis.getRiskLevel()) {
-        case HIGH:
-          highRisk++;
-          break;
-        case MEDIUM:
-          mediumRisk++;
-          break;
-      }
-    }
-
-    if (highRisk == 0 && mediumRisk == 0) {
-      analysisRecord.setMessage("No problems found");
-    } else {
-      String message = "";
-      if (highRisk > 0) {
-        message = highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ";
-      }
-
-      if (mediumRisk > 0) {
-        message += mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.";
-      }
-
-      analysisRecord.setMessage(message);
-    }
-
-    Collections.sort(analysisRecord.getMetricAnalyses());
     return analysisRecord;
   }
 

@@ -81,6 +81,16 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      String prevWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+          analysisContext.getStateType(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
+      if (prevWorkflowExecutionId == null) {
+        getLogger().warn("No previous execution found. This will be the baseline run");
+        prevWorkflowExecutionId = "-1";
+      }
+      analysisContext.setPrevWorkflowExecutionId(prevWorkflowExecutionId);
+    }
+
     final MetricAnalysisExecutionData executionData =
         MetricAnalysisExecutionData.builder()
             .workflowExecutionId(context.getWorkflowExecutionId())
