@@ -62,7 +62,7 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(EcrConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(EcrConfig config, ArtifactType artifactType, String repositoryType) {
     return getPlans(config);
   }
 

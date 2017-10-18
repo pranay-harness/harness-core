@@ -19,6 +19,8 @@ import java.util.List;
  */
 @JsonTypeName("ARTIFACTORY")
 public class ArtifactoryArtifactStream extends ArtifactStream {
+  private String repositoryType = "any";
+
   @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
 
   @SchemaIgnore private String groupId;
@@ -33,6 +35,14 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
+  }
+
+  public String getRepositoryType() {
+    return repositoryType;
+  }
+
+  public void setRepositoryType(String repositoryType) {
+    this.repositoryType = repositoryType;
   }
 
   public ArtifactoryArtifactStream() {
@@ -160,6 +170,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withGroupId(getGroupId())
         .withArtifactPattern(artifactPattern)
         .withArtifactName(artifactPaths == null ? "" : artifactPaths.get(0))
+        .withRepositoryType(repositoryType)
+        .withMetadataOnly(isMetadataOnly())
         .build();
   }
 
@@ -176,6 +188,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withMetadataOnly(getMetadataOnly())
         .withGroupId(getGroupId())
         .withImageName(getImageName())
+        .withRepositoryType(getRepositoryType())
         .build();
   }
 
@@ -200,6 +213,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String artifactPattern;
     private String groupId;
     private String imageName;
+    private String repositoryType;
 
     private Builder() {}
 
@@ -386,6 +400,14 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       return this;
     }
 
+    /***
+     * With repository type
+     */
+    public Builder withRepositoryType(String repositoryType) {
+      this.repositoryType = repositoryType;
+      return this;
+    }
+
     /**
      * But builder.
      * @return the builder
@@ -409,7 +431,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
           .withArtifactPattern(artifactPattern)
           .withMetadataOnly(metadataOnly)
           .withImageName(imageName)
-          .withGroupId(groupId);
+          .withGroupId(groupId)
+          .withRepositoryType(repositoryType);
     }
 
     /**
@@ -433,6 +456,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       artifactoryArtifactStream.setMetadataOnly(metadataOnly);
       artifactoryArtifactStream.setArtifactPattern(artifactPattern);
       artifactoryArtifactStream.setImageName(imageName);
+      artifactoryArtifactStream.setRepositoryType(repositoryType);
       return artifactoryArtifactStream;
     }
   }

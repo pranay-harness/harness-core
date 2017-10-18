@@ -13,6 +13,12 @@ import java.util.Map;
  */
 public interface ArtifactoryService {
   /**
+   *
+   * @param artifactoryConfig
+   * @return
+   */
+  Map<String, String> getRepositoryTypes(ArtifactoryConfig artifactoryConfig);
+  /**
    * Gets docker images
    *
    * @param artifactoryConfig  the artifactory config
@@ -28,12 +34,11 @@ public interface ArtifactoryService {
    * Get versions
    * @param artifactoryConfig
    * @param repoKey
-   * @param artifactName
-   * @param artifactType
+   * @param artifactPath
    * @return
    */
-  List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
-      String artifactName, ArtifactType artifactType, int maxVersions);
+  List<BuildDetails> getFilePaths(
+      ArtifactoryConfig artifactoryConfig, String repoKey, String artifactPath, String repositoryType, int maxVersions);
 
   /**
    * Get versions
@@ -66,6 +71,12 @@ public interface ArtifactoryService {
    * @return map RepoId and Name
    */
   Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType);
+
+  /**
+   * Get Repositories
+   * @return map RepoId and Name
+   */
+  Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, String packageType);
 
   /***
    * Get GroupId paths
@@ -106,4 +117,7 @@ public interface ArtifactoryService {
   ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig, String repoType, String groupId,
       List<String> artifactIds, String artifactPattern, Map<String, String> metadata, String delegateId, String taskId,
       String accountId);
+
+  boolean validateArtifactPath(
+      ArtifactoryConfig artifactoryConfig, String repoType, String artifactPath, String repositoryType);
 }

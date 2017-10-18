@@ -66,12 +66,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Map<String, String> getPlans(String appId, String settingId, String serviceId, String artifactStreamType) {
+  public Map<String, String> getPlans(
+      String appId, String settingId, String serviceId, String artifactStreamType, String repositoryType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     Service service = serviceResourceService.get(appId, serviceId);
     notNullCheck("Service", service);
-    return getBuildService(settingAttribute, appId).getPlans(settingAttribute.getValue(), service.getArtifactType());
+    return getBuildService(settingAttribute, appId)
+        .getPlans(settingAttribute.getValue(), service.getArtifactType(), repositoryType);
   }
 
   @Override

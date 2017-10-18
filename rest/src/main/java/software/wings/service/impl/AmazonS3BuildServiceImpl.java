@@ -53,7 +53,7 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType, String repositoryType) {
     return null;
   }
 

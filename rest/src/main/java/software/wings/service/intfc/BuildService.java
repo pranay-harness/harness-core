@@ -72,7 +72,7 @@ public interface BuildService<T> {
    * @param config
    * @return the plans
    */
-  Map<String, String> getPlans(T config, ArtifactType artifactType);
+  Map<String, String> getPlans(T config, ArtifactType artifactType, String repositoryType);
 
   /**
    * Gets group Id paths.

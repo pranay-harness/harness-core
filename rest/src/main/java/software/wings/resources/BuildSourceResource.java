@@ -59,11 +59,11 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("appId") String appId,
       @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId,
-      @QueryParam("streamType") String streamType) {
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType) {
     if (StringUtils.isBlank(serviceId)) {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
     }
-    return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType));
+    return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryType));
   }
 
   /**

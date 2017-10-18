@@ -18,6 +18,7 @@ import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.utils.ArtifactType.*;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -194,7 +195,8 @@ public class ArtifactCollectionJob implements Job {
             newArtifacts.add(artifactService.create(artifact));
           }
         });
-      } else if (artifactType.equals(ArtifactType.RPM)) {
+      } else if (artifactStream.getArtifactStreamAttributes().getRepositoryType() == null
+          || !artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("maven")) {
         logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
             artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
         List<BuildDetails> builds =
@@ -220,7 +222,7 @@ public class ArtifactCollectionJob implements Job {
                     .withMetadata(ImmutableMap.of(ARTIFACT_PATH, buildDetails.getArtifactPath(), ARTIFACT_FILE_NAME,
                         buildDetails.getNumber(), BUILD_NO, buildDetails.getNumber()))
                     .build();
-            newArtifacts.add(artifactService.create(artifact));
+            newArtifacts.add(artifactService.create(artifact, RPM));
           }
         });
       } else {

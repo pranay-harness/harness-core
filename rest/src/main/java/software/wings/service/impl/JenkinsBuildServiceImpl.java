@@ -132,7 +132,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(JenkinsConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(JenkinsConfig config, ArtifactType artifactType, String repositoryType) {
     return getPlans(config);
   }
 

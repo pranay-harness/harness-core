@@ -23,7 +23,8 @@ import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics
 import static software.wings.dl.PageRequest.Builder;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.sm.ExecutionStatus.*;
+import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 

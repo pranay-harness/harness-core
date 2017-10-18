@@ -1,12 +1,9 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.utils.HttpUtil.connectableHttpUrl;
-import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.exception.WingsException;
@@ -64,7 +61,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType, String repositoryType) {
     return getPlans(config);
   }
 
