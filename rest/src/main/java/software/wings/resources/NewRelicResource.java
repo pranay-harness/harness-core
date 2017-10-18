@@ -10,22 +10,23 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalServiceAuth;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
+import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -74,14 +75,19 @@ public class NewRelicResource {
   @ExternalServiceAuth
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
+      @QueryParam("workflowExecutionId") String workFlowExecutionId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
     if (compareCurrent) {
       return new RestResponse<>(metricDataAnalysisService.getRecords(StateType.NEW_RELIC,
           request.getWorkflowExecutionId(), request.getStateExecutionId(), request.getWorkflowId(),
           request.getServiceId(), request.getNodes(), request.getAnalysisMinute()));
     } else {
-      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(
-          StateType.NEW_RELIC, request.getWorkflowId(), request.getServiceId(), request.getAnalysisMinute()));
+      if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
+        return new RestResponse<>(new ArrayList<>());
+      }
+
+      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(StateType.NEW_RELIC,
+          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute()));
     }
   }
 
@@ -105,23 +111,68 @@ public class NewRelicResource {
   public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("analysisMinute") Integer analysisMinute, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
-      throws IOException {
+      @QueryParam("workflowId") final String workflowId, @QueryParam("analysisMinute") Integer analysisMinute,
+      TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
+    mlAnalysisResponse.setStateType(StateType.NEW_RELIC);
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setAnalysisMinute(analysisMinute);
+
+    TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
+                                                .applicationId(applicationId)
+                                                .stateExecutionId(stateExecutionId)
+                                                .workflowExecutionId(workflowExecutionId)
+                                                .workflowId(workflowId)
+                                                .analysisMinute(analysisMinute)
+                                                .stateType(StateType.NEW_RELIC)
+                                                .scoresMap(new HashMap<>())
+                                                .build();
+
+    int txnId = 0;
+    int metricId;
     for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
+      TimeSeriesMLTxnScores txnScores =
+          TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
+      timeSeriesMLScores.getScoresMap().put(String.valueOf(txnId), txnScores);
+
+      metricId = 0;
       for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-        Iterator<Entry<String, TimeSeriesMLHostSummary>> it = mlMetricSummary.getResults().entrySet().iterator();
-        Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
-        while (it.hasNext()) {
-          Entry<String, TimeSeriesMLHostSummary> pair = (Map.Entry) it.next();
-          timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
+        if (mlMetricSummary.getResults() != null) {
+          TimeSeriesMLMetricScores mlMetricScores = TimeSeriesMLMetricScores.builder()
+                                                        .metricName(mlMetricSummary.getMetric_name())
+                                                        .scores(new ArrayList<>())
+                                                        .build();
+          txnScores.getScoresMap().put(String.valueOf(metricId), mlMetricScores);
+
+          Iterator<Entry<String, TimeSeriesMLHostSummary>> it = mlMetricSummary.getResults().entrySet().iterator();
+          Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
+          while (it.hasNext()) {
+            Entry<String, TimeSeriesMLHostSummary> pair = it.next();
+            timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
+            mlMetricScores.getScores().add(pair.getValue().getScore());
+          }
+          mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
+          ++metricId;
         }
-        mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
       }
+      ++txnId;
     }
+
+    metricDataAnalysisService.saveTimeSeriesMLScores(timeSeriesMLScores);
+
     return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(mlAnalysisResponse));
+  }
+
+  @POST
+  @Path("/get-scores")
+  @Timed
+  @ExceptionMetered
+  @ExternalServiceAuth
+  public RestResponse<List<TimeSeriesMLScores>> getScores(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String applicationId, @QueryParam("workFlowId") String workflowId,
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) throws IOException {
+    return new RestResponse<>(
+        metricDataAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, analysisMinute, limit));
   }
 }

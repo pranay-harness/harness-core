@@ -195,12 +195,15 @@ public class MetricAnalysisJob implements Job {
       String serverUrl = protocol + "://localhost:" + context.getAppPort();
 
       String testInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
-          + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=true";
+          + "/get-metrics?accountId=" + context.getAccountId()
+          + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
       String controlInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
           + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=";
-      controlInputUrl = context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-          ? controlInputUrl + true
-          : controlInputUrl + false;
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+      } else {
+        controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
 
       final String logAnalysisSaveUrl = serverUrl + "/api/" + context.getStateBaseUrl()
           + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
@@ -294,7 +297,17 @@ public class MetricAnalysisJob implements Job {
         if (context.getStateType() == StateType.NEW_RELIC
             && featureFlagService.isEnabled(FeatureName.TIME_SERIES_ML.name(), context.getAccountId())) {
           if (context.getControlNodes() != null && context.getControlNodes().size() > 0) {
-            timeSeriesML(analysisMinute);
+            int maxControlMinute = Integer.MAX_VALUE;
+            if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+              maxControlMinute = analysisService.getMaxControlMinute(context.getStateType(), context.getServiceId(),
+                  context.getWorkflowId(), context.getPrevWorkflowExecutionId());
+            }
+            if (analysisMinute <= maxControlMinute) {
+              timeSeriesML(analysisMinute);
+            } else {
+              logger.warn("Not enough control data. analysis minute = " + analysisMinute
+                  + " , max control minute = " + maxControlMinute);
+            }
           } else {
             analysisService.saveAnalysisRecords(NewRelicMetricAnalysisRecord.builder()
                                                     .analysisMinute(analysisMinute)
