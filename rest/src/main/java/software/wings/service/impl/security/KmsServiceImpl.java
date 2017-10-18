@@ -355,7 +355,9 @@ public class KmsServiceImpl implements KmsService {
         return getKmsConfig(data.getAccountId());
 
       case SERVICE_VARIABLE:
-        return wingsPersistence.get(ServiceVariable.class, data.getParentId());
+        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, data.getParentId());
+        serviceVariable.setValue(SECRET_MASK.toCharArray());
+        return serviceVariable;
 
       case CONFIG_FILE:
         return wingsPersistence.get(ConfigFile.class, data.getParentId());
