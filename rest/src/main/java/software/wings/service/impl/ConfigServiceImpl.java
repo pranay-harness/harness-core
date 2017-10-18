@@ -117,10 +117,11 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private void updateParentForEncryptedData(ConfigFile configFile) {
-    Preconditions.checkState(!StringUtils.isBlank(configFile.getEncryptedFileId()));
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-    encryptedData.setParentId(configFile.getUuid());
-    wingsPersistence.save(encryptedData);
+    if (!StringUtils.isBlank(configFile.getEncryptedFileId())) {
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+      encryptedData.setParentId(configFile.getUuid());
+      wingsPersistence.save(encryptedData);
+    }
   }
 
   private void validateEntity(String appId, String entityId, EntityType entityType) {
