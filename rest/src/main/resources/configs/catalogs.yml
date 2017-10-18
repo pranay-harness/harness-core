@@ -339,22 +339,22 @@ CONNECTOR_TYPES:
       value: BAMBOO
     - name: Docker
       value: DOCKER REGISTRY
-    - name: NEXUS
-      value: Nexus
-    - name: ARTIFACTORY
-      value: Artifactory
-    - name: APP_DYNAMICS
-      value: AppDynamics
-    - name: NEW_RELIC
-      value: NewRelic
-    - name: SPLUNK
-      value: Splunk
+    - name: Nexus
+      value: NEXUS
+    - name: Artifactory
+      value: ARTIFACTORY
+    - name: AppDynamics
+      value: APP_DYNAMICS
+    - name: NewRelic
+      value: NEW_RELIC
+    - name:  Splunk
+      value: SPLUNK
     - name: ELK
       value: ELK
     - name: LOGZ
       value: LOGZ
-    - name: SUMO
-      value: SumoLogic
+    - name: SumoLogic
+      value: SUMO
     - name: SMTP
       value: SMTP
     - name: SLACK
