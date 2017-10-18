@@ -331,3 +331,32 @@ ELK_CONNECTOR_TYPE:
       value: ELASTIC_SEARCH_SERVER
     - name: Kibana Server
       value: KIBANA_SERVER
+
+CONNECTOR_TYPES:
+    - name: Jenkins
+      value: JENKINS
+    - name: Bamboo
+      value: BAMBOO
+    - name: Docker
+      value: DOCKER REGISTRY
+    - name: NEXUS
+      value: Nexus
+    - name: ARTIFACTORY
+      value: Artifactory
+    - name: APP_DYNAMICS
+      value: AppDynamics
+    - name: NEW_RELIC
+      value: NewRelic
+    - name: SPLUNK
+      value: Splunk
+    - name: ELK
+      value: ELK
+    - name: LOGZ
+      value: LOGZ
+    - name: SUMO
+      value: SumoLogic
+    - name: SMTP
+      value: SMTP
+    - name: SLACK
+      value: SLACK
+
