@@ -108,9 +108,19 @@ public class ConfigServiceImpl implements ConfigService {
     String id = wingsPersistence.save(configFile);
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
+    if (configFile.isEncrypted()) {
+      updateParentForEncryptedData(configFile);
+    }
 
     fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
     return id;
+  }
+
+  private void updateParentForEncryptedData(ConfigFile configFile) {
+    Preconditions.checkState(!StringUtils.isBlank(configFile.getEncryptedFileId()));
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+    encryptedData.setParentId(configFile.getUuid());
+    wingsPersistence.save(encryptedData);
   }
 
   private void validateEntity(String appId, String entityId, EntityType entityType) {
@@ -270,6 +280,10 @@ public class ConfigServiceImpl implements ConfigService {
         wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
       }
       EncryptedData encryptedData = kmsService.encryptFile(inputStream, configFile.getAccountId());
+      if (!StringUtils.isBlank(configFile.getUuid())) {
+        encryptedData.setParentId(configFile.getUuid());
+        wingsPersistence.save(encryptedData);
+      }
       configFile.setEncryptedFileId(encryptedData.getUuid());
       updateMap.put("encryptedFileId", encryptedData.getUuid());
       return new ByteArrayInputStream(new String(encryptedData.getEncryptedValue()).getBytes());
