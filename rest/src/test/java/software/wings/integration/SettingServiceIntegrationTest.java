@@ -132,6 +132,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))

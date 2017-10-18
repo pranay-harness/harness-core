@@ -3,6 +3,7 @@ package software.wings.integration;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 
 import org.junit.Assert;
@@ -17,7 +18,9 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,8 +140,14 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
                                               .withStatus(ExecutionStatus.SUCCESS)
                                               .withWorkflowId(workflowId)
                                               .withAppId(applicationId)
+                                              .withStateMachineId(UUID.randomUUID().toString())
                                               .build();
     wingsPersistence.save(workflowExecution);
+    StateMachine stateMachine = new StateMachine();
+    stateMachine.setInitialStateName("some-state");
+    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
+    stateMachine.setUuid(workflowExecution.getStateMachineId());
+    wingsPersistence.save(stateMachine);
     Set<String> hosts = new HashSet<>();
 
     for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {

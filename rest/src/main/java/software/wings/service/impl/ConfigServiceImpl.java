@@ -226,6 +226,7 @@ public class ConfigServiceImpl implements ConfigService {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
         toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream);
+        updateMap.put("encryptedFileId", savedConfigFile.getEncryptedFileId());
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -241,7 +242,6 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("size", uploadedInputStream.getTotalBytesRead());
       updateMap.put("fileName", inputConfigFile.getFileName());
       updateMap.put("encrypted", inputConfigFile.isEncrypted());
-      updateMap.put("encryptedFileId", savedConfigFile.getEncryptedFileId());
     }
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
