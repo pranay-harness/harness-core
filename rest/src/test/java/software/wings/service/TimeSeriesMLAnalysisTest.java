@@ -79,7 +79,8 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");
     String jsonTxt = IOUtils.toString(is);
     TimeSeriesMLAnalysisRecord record = JsonUtils.asObject(jsonTxt, TimeSeriesMLAnalysisRecord.class);
-    newRelicResource.saveMLAnalysisRecords(accountId, appId, stateExecutionId, workflowExecutionId, 0, record);
+    newRelicResource.saveMLAnalysisRecords(
+        accountId, appId, stateExecutionId, workflowExecutionId, workflowId, 0, record);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
     assertEquals(analysisRecord.getMetricAnalyses().size(), 1);
@@ -153,7 +154,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     Set<String> nodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
     newRelicResource.saveMetricData(accountId, appId, controlRecords);
     List<NewRelicMetricDataRecord> results = newRelicResource
-                                                 .getMetricData(accountId, true,
+                                                 .getMetricData(accountId, workflowExecutionId, true,
                                                      TSRequest.builder()
                                                          .applicationId(appId)
                                                          .workflowId(workflowId)

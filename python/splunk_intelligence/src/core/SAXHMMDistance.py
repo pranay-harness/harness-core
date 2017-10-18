@@ -58,7 +58,7 @@ class SAXHMMDistance(object):
     @staticmethod
     def get_adjusted_distance(metric_deviation_type, apply_sax, x, y, a, b):
         if SAXHMMDistance.high_deviation(metric_deviation_type, x, y):
-            return 3
+            return 2
         if SAXHMMDistance.low_deviation(metric_deviation_type, x, y):
             return 0
         if apply_sax:
@@ -72,10 +72,10 @@ class SAXHMMDistance(object):
         if not np.isnan(x) and not np.isnan(y):
             # Higher is bad
             if metric_deviation_type == MetricToDeviationType.HIGHER:
-                return y > 3 * x if x != 0 else y > 10
+                return y > 10 * x if x != 0 else y > 10
             # Lower is bad
             elif metric_deviation_type == MetricToDeviationType.LOWER:
-                return x > 3 * y if y != 0 else x > 10
+                return x > 10 * y if y != 0 else x > 10
             # Both are bad
             else:
                 return SAXHMMDistance.high_deviation(MetricToDeviationType.HIGHER, x, y) or \

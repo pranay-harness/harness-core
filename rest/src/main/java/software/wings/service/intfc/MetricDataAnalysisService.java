@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
@@ -26,11 +27,21 @@ public interface MetricDataAnalysisService {
   @ValidationGroups(Create.class)
   boolean saveAnalysisRecordsML(@Valid TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord);
 
+  @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
+
+  List<TimeSeriesMLScores> getTimeSeriesMLScores(
+      String applicationId, String workflowId, int analysisMinute, int limit);
+
   List<NewRelicMetricDataRecord> getRecords(StateType stateType, String workflowExecutionId, String stateExecutionId,
       String workflowId, String serviceId, Set<String> nodes, int analysisMinute);
 
   List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
       StateType stateType, String workflowId, String serviceId, int analysisMinute);
+
+  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
+      StateType stateType, String workflowId, String workflowExecutionID, String serviceId, int analysisMinute);
+
+  List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId);
 
   NewRelicMetricAnalysisRecord getMetricsAnalysis(
       StateType stateType, String stateExecutionId, String workflowExecutionId);
@@ -42,4 +53,8 @@ public interface MetricDataAnalysisService {
 
   void bumpCollectionMinuteToProcess(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute);
+
+  int getMaxControlMinute(StateType stateType, String serviceId, String workflowId, String workflowExecutionId);
+
+  String getLastSuccessfulWorkflowExecutionIdWithData(StateType stateType, String workflowId, String serviceId);
 }

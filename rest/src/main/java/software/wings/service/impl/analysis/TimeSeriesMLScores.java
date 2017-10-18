@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -10,26 +10,25 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.metrics.RiskLevel;
-import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
-import java.util.List;
 import java.util.Map;
 
 /**
- * Created by sriram_parthasarathy on 9/22/17.
+ * Created by sriram_parthasarathy on 10/17/17.
  */
-@Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields =
-    { @Field("applicationId")
-      , @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("stateType") },
-    options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
-public class TimeSeriesMLAnalysisRecord extends Base {
+@Builder
+@Entity(value = "timeSeriesMLScores", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("applicationId")
+                           , @Field("workflowId"), @Field("stateType") },
+    options = @IndexOptions(name = "ScoresUniqueIdx")))
+public class TimeSeriesMLScores extends Base {
   @NotEmpty @Indexed private StateType stateType;
 
   @NotEmpty @Indexed private String applicationId;
+
+  @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
 
@@ -37,5 +36,5 @@ public class TimeSeriesMLAnalysisRecord extends Base {
 
   @NotEmpty @Indexed private int analysisMinute;
 
-  private Map<String, TimeSeriesMLTxnSummary> transactions;
+  private Map<String, TimeSeriesMLTxnScores> scoresMap;
 }
