@@ -100,7 +100,7 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
     if (configFile.isEncrypted()) {
-      toWrite = getEncryptedInputStream(configFile, inputStream);
+      toWrite = getEncryptedInputStream(configFile, inputStream, new HashMap<>());
     }
 
     String fileId = fileService.saveFile(configFile, toWrite, CONFIGS);
@@ -225,8 +225,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       InputStream toWrite = uploadedInputStream;
       if (inputConfigFile.isEncrypted()) {
-        toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream);
-        updateMap.put("encryptedFileId", savedConfigFile.getEncryptedFileId());
+        toWrite = getEncryptedInputStream(savedConfigFile, uploadedInputStream, updateMap);
       }
       String fileId = fileService.saveFile(inputConfigFile, toWrite, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -264,13 +263,15 @@ public class ConfigServiceImpl implements ConfigService {
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
   }
 
-  private InputStream getEncryptedInputStream(ConfigFile configFile, BoundedInputStream inputStream) {
+  private InputStream getEncryptedInputStream(
+      ConfigFile configFile, BoundedInputStream inputStream, Map<String, Object> updateMap) {
     if (shouldUseKms(configFile.getAccountId())) {
       if (!StringUtils.isBlank(configFile.getUuid())) {
         wingsPersistence.delete(EncryptedData.class, configFile.getEncryptedFileId());
       }
       EncryptedData encryptedData = kmsService.encryptFile(inputStream, configFile.getAccountId());
       configFile.setEncryptedFileId(encryptedData.getUuid());
+      updateMap.put("encryptedFileId", encryptedData.getUuid());
       return new ByteArrayInputStream(new String(encryptedData.getEncryptedValue()).getBytes());
     } else {
       return EncryptionUtils.encrypt(inputStream, configFile.getAccountId());
