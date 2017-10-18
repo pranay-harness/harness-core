@@ -34,7 +34,7 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_PLANS) Map<String, String> getPlans(ArtifactoryConfig artifactoryConfig);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_PLANS)
-  Map<String, String> getPlans(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType);
+  Map<String, String> getPlans(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType, String repositoryType);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_ARTIFACTORY_PATHS)
   public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config);

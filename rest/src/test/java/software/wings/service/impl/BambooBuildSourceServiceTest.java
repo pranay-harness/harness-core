@@ -91,7 +91,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
         Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
     wingsPersistence.save(service);
     Map<String, String> plans =
-        buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name());
+        buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), "");
     assertTrue(plans.size() > 0);
   }
 

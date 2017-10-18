@@ -138,7 +138,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public ArtifactStream create(ArtifactStream artifactStream) {
     if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
         || ECR.name().equals(artifactStream.getArtifactStreamType())
-        || GCR.name().equals(artifactStream.getArtifactStreamType())) {
+        || GCR.name().equals(artifactStream.getArtifactStreamType())
+        || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
@@ -175,7 +176,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
         || ECR.name().equals(artifactStream.getArtifactStreamType())
-        || GCR.name().equals(artifactStream.getArtifactStreamType())) {
+        || GCR.name().equals(artifactStream.getArtifactStreamType())
+        || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }

@@ -60,7 +60,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(GcpConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(GcpConfig config, ArtifactType artifactType, String reposiotoryType) {
     return getPlans(config);
   }
 

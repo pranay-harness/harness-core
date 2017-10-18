@@ -92,7 +92,7 @@ public class JenkinsBuildSourceServiceTest extends WingsBaseTest {
         Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
     wingsPersistence.save(service);
     Map<String, String> plans = buildSourceService.getPlans(
-        appId, jenkinsSettingAttribute.getUuid(), service.getUuid(), ArtifactStreamType.JENKINS.name());
+        appId, jenkinsSettingAttribute.getUuid(), service.getUuid(), ArtifactStreamType.JENKINS.name(), "");
     assertTrue(plans.size() > 0);
   }
 

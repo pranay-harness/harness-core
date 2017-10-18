@@ -18,6 +18,8 @@ public class ArtifactStreamAttributes {
   private ArtifactType artifactType;
   private String artifactPattern;
   private String region;
+  private String repositoryType;
+  private boolean metadataOnly;
 
   /**
    * Gets job name.
@@ -179,6 +181,22 @@ public class ArtifactStreamAttributes {
     this.region = region;
   }
 
+  public String getRepositoryType() {
+    return repositoryType;
+  }
+
+  public void setRepositoryType(String repositoryType) {
+    this.repositoryType = repositoryType;
+  }
+
+  public void setMedatadataOnly(boolean metadataOnly) {
+    this.metadataOnly = metadataOnly;
+  }
+
+  public boolean isMetadataOnly() {
+    return metadataOnly;
+  }
+
   /**
    * The type Builder.
    */
@@ -193,6 +211,8 @@ public class ArtifactStreamAttributes {
     private ArtifactType artifactType;
     private String artifactPattern;
     private String region;
+    private String repositoryType;
+    private boolean metadataOnly;
 
     private Builder() {}
 
@@ -300,6 +320,16 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withRepositoryType(String repositoryType) {
+      this.repositoryType = repositoryType;
+      return this;
+    }
+
+    public Builder withMetadataOnly(boolean metadataOnly) {
+      this.metadataOnly = metadataOnly;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -316,7 +346,9 @@ public class ArtifactStreamAttributes {
           .withArtifactName(artifactName)
           .withArtifactType(artifactType)
           .withArtifactPattern(artifactPattern)
-          .withRegion(region);
+          .withRegion(region)
+          .withRepositoryType(repositoryType)
+          .withMetadataOnly(metadataOnly);
     }
 
     /**
@@ -336,6 +368,8 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setArtifactType(artifactType);
       artifactStreamAttributes.setArtifactPattern(artifactPattern);
       artifactStreamAttributes.setRegion(region);
+      artifactStreamAttributes.setRepositoryType(repositoryType);
+      artifactStreamAttributes.setMedatadataOnly(metadataOnly);
       return artifactStreamAttributes;
     }
   }

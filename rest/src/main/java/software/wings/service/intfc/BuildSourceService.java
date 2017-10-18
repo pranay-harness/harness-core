@@ -43,8 +43,8 @@ public interface BuildSourceService {
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
-  Map<String, String> getPlans(
-      @NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId, String artifactStreamType);
+  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String serviceId,
+      String artifactStreamType, String repositoryType);
 
   /**
    * Gets artifact paths.

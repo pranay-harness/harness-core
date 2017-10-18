@@ -59,7 +59,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(DockerConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(DockerConfig config, ArtifactType artifactType, String repositoryType) {
     return getPlans(config);
   }
 

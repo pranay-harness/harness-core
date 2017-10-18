@@ -38,7 +38,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(NexusConfig config, ArtifactType artifactType) {
+  public Map<String, String> getPlans(NexusConfig config, ArtifactType artifactType, String repositoryType) {
     return getPlans(config);
   }
 
