@@ -27,6 +27,8 @@ import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
@@ -38,6 +40,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -338,17 +341,21 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (null != a) {
           try {
             Encryptable object = (Encryptable) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
-            deleteEncryptionReference(object, Collections.singleton(f.getName()));
-            String accountId = object.getAccountId();
-            if (shouldUseKms(accountId)) {
-              Field encryptedField = getEncryptedField(f, object);
-              String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
-              updateParentIfNecessary(object, entityId);
-              operations.set(encryptedField.getName(), encryptedId);
-              continue;
-            } else {
-              char[] outputChars = new SimpleEncryption(accountId).encryptChars((char[]) f.get(object));
-              value = outputChars;
+
+            if (shouldEncryptWhileUpdating(f, object, keyValuePairs)) {
+              deleteEncryptionReference(object, Collections.singleton(f.getName()));
+              String accountId = object.getAccountId();
+              if (shouldUseKms(accountId)) {
+                Field encryptedField = getEncryptedField(f, object);
+                String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
+                updateParentIfNecessary(object, entityId);
+                operations.set(encryptedField.getName(), encryptedId);
+                operations.unset(f.getName());
+                continue;
+              } else {
+                char[] outputChars = new SimpleEncryption(accountId).encryptChars((char[]) value);
+                value = outputChars;
+              }
             }
           } catch (IllegalAccessException ex) {
             throw new WingsException("Failed to encrypt secret", ex);
@@ -361,6 +368,21 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     update(query, operations);
   }
 
+  private boolean shouldEncryptWhileUpdating(Field f, Encryptable object, Map<String, Object> keyValuePairs)
+      throws IllegalAccessException {
+    List<Field> encryptedFields = object.getEncryptedFields();
+    if (object.getClass().equals(ServiceVariable.class)) {
+      if (keyValuePairs.containsKey("type")) {
+        if (keyValuePairs.get("type").equals(Type.ENCRYPTED_TEXT)) {
+          return true;
+        } else {
+          deleteEncryptionReference(object, Collections.singleton(f.getName()));
+          return false;
+        }
+      }
+    }
+    return encryptedFields.contains(f);
+  }
   /**
    * {@inheritDoc}
    */
@@ -698,8 +720,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
   }
 
-  private void deleteEncryptionReference(Object object, Set<String> fieldNames) throws IllegalAccessException {
-    List<Field> fieldsToEncrypt = getEncryptedFields(object.getClass());
+  private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames) throws IllegalAccessException {
+    List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
       if ((fieldNames == null || fieldNames.contains(f.getName()))) {
         f.setAccessible(true);
@@ -708,7 +730,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
           continue;
         }
 
-        Field encryptedField = getEncryptedField(f, (Encryptable) object);
+        Field encryptedField = getEncryptedField(f, object);
         encryptedField.setAccessible(true);
         String encryptedId = (String) encryptedField.get(object);
 
@@ -817,7 +839,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
 
     if (Encryptable.class.isInstance(toDelete)) {
-      deleteEncryptionReference(toDelete, null);
+      deleteEncryptionReference((Encryptable) toDelete, null);
     }
   }
 

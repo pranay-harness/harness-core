@@ -553,6 +553,53 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  public void saveServiceVariableNoKMS() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertEquals(serviceVariable, savedAttribute);
+    assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    // update to encrypt the variable
+    Map<String, Object> keyValuePairs = new HashMap<>();
+    keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
+    keyValuePairs.put("value", "newValue".toCharArray());
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
+    savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+
+    assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
+    assertEquals("newValue", new String(savedAttribute.getValue()));
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    keyValuePairs = new HashMap<>();
+    keyValuePairs.put("type", Type.TEXT);
+    keyValuePairs.put("value", "unencrypted".toCharArray());
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
+    savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+
+    assertEquals(Type.TEXT, savedAttribute.getType());
+    assertEquals("unencrypted", new String(savedAttribute.getValue()));
+    assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+  }
+
+  @Test
   public void saveServiceVariableNoEncryption() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -578,6 +625,27 @@ public class KmsTest extends WingsBaseTest {
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(serviceVariable, savedAttribute);
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    // update to encrypt the variable
+    Map<String, Object> keyValuePairs = new HashMap<>();
+    keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
+    keyValuePairs.put("value", "newValue".toCharArray());
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
+    savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+
+    assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
+    assertEquals("newValue", new String(savedAttribute.getValue()));
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    keyValuePairs = new HashMap<>();
+    keyValuePairs.put("type", Type.TEXT);
+    keyValuePairs.put("value", "unencrypted".toCharArray());
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), keyValuePairs);
+    savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+
+    assertEquals(Type.TEXT, savedAttribute.getType());
+    assertEquals("unencrypted", new String(savedAttribute.getValue()));
     assertEquals(numOfEncryptedValsForKms, wingsPersistence.createQuery(EncryptedData.class).asList().size());
   }
 
