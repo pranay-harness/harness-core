@@ -158,6 +158,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     featureFlagService.initializeFeatureFlags();
     kmsService.saveKmsConfig(accountId,
         KmsConfig.builder()
+            .isDefault(true)
             .accountId(accountId)
             .name("Account_kms")
             .accessKey("AKIAJLEKM45P4PO5QUFQ")
