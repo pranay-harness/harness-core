@@ -477,7 +477,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         failureCount = (int) wflExecutions.stream()
                            .filter(workflowExecution -> workflowExecution.getStatus().equals(FAILED))
                            .count();
-        for (WorkflowExecution workflowExecution : workflowExecutions) {
+        for (WorkflowExecution workflowExecution : wflExecutions) {
           if ((workflowExecution.getWorkflowType() == ORCHESTRATION || workflowExecution.getWorkflowType() == SIMPLE)
               && workflowExecution.getServiceExecutionSummaries() != null) {
             instanceCount += workflowExecution.getServiceExecutionSummaries()
