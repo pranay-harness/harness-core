@@ -60,6 +60,7 @@ import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
@@ -1546,7 +1547,33 @@ public class KmsTest extends WingsBaseTest {
     assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
   }
 
-  private KmsConfig getKmsConfig() throws IOException {
+  @Test
+  public void retrialsTest() throws IOException {
+    KmsDelegateService delegateService = new KmsDelegateServiceImpl();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setKmsArn("invalid krn");
+    String toEncrypt = UUID.randomUUID().toString();
+    try {
+      delegateService.encrypt(toEncrypt.toCharArray(), kmsConfig);
+      fail("should have been failed");
+    } catch (IOException e) {
+      assertEquals("Encryption failed after " + KmsDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    }
+
+    kmsConfig = getKmsConfig();
+    try {
+      delegateService.decrypt(EncryptedData.builder()
+                                  .encryptionKey(UUID.randomUUID().toString())
+                                  .encryptedValue(toEncrypt.toCharArray())
+                                  .build(),
+          kmsConfig);
+      fail("should have been failed");
+    } catch (IOException e) {
+      assertEquals("Decryption failed after " + KmsDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    }
+  }
+
+  private KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
