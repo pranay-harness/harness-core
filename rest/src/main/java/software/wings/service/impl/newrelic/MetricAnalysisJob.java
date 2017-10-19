@@ -295,7 +295,7 @@ public class MetricAnalysisJob implements Job {
           return;
         }
         if (context.getStateType() == StateType.NEW_RELIC
-            && featureFlagService.isEnabled(FeatureName.TIME_SERIES_ML.name(), context.getAccountId())) {
+            && featureFlagService.isEnabled(FeatureName.TIME_SERIES_ML, context.getAccountId())) {
           if (context.getControlNodes() != null && context.getControlNodes().size() > 0) {
             int maxControlMinute = Integer.MAX_VALUE;
             if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
