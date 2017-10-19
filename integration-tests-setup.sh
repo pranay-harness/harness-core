@@ -8,6 +8,8 @@ export HOSTNAME
 export SPLUNKML_ROOT=$(pwd)/python/splunk_intelligence
 export SPLUNKML_ENVIRONMENT=REMOTE
 
+mongo harness --eval "db.dropDatabase();"
+
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   echo "SERVER_BUILD_DIR not set, building server code"
   mvn clean install -DskipTests=true
@@ -40,8 +42,6 @@ then
   echo 'server failed to start'
   exit 1
 fi
-
-mongo harness --eval "db.dropDatabase();"
 
 #run data gen to load test data
 mvn test -pl rest -Dtest=software.wings.integration.DataGenUtil
