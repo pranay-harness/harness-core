@@ -4,7 +4,7 @@ import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.utils.WingsReflectionUtils.*;
+import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 
 import com.google.inject.Singleton;
 
@@ -22,6 +22,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import software.wings.annotation.Encrypted;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureFlag.FeatureName;
 import software.wings.beans.KmsConfig;
@@ -34,13 +35,11 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
-import software.wings.annotation.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -855,7 +854,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   private boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS.name(), accountId)
-        && kmsService.getKmsConfig(accountId) != null;
+    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && kmsService.getKmsConfig(accountId) != null;
   }
 }

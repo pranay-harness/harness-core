@@ -175,7 +175,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER.name(), computeProviderSetting.getAccountId())) {
+      if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for ECS.");
       }
@@ -185,7 +185,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private void validateGcpInfraMapping(
       GcpKubernetesInfrastructureMapping infraMapping, SettingAttribute computeProviderSetting) {
     if (Constants.RUNTIME.equals(infraMapping.getClusterName())) {
-      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER.name(), computeProviderSetting.getAccountId())) {
+      if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, computeProviderSetting.getAccountId())) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Creating a cluster at runtime is not yet supported for Kubernetes.");
       }

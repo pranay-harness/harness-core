@@ -111,9 +111,9 @@ public abstract class ContainerServiceSetup extends State {
       if (!(infrastructureMapping instanceof DirectKubernetesInfrastructureMapping)
           && Constants.RUNTIME.equals(clusterName)) {
         if ((infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-                && featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER.name(), app.getAccountId()))
+                && featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, app.getAccountId()))
             || (infrastructureMapping instanceof EcsInfrastructureMapping
-                   && featureFlagService.isEnabled(ECS_CREATE_CLUSTER.name(), app.getAccountId()))) {
+                   && featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId()))) {
           clusterName = getClusterNameFromContextElement(context);
         } else {
           throw new WingsException(

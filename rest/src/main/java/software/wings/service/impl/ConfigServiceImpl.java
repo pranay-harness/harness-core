@@ -402,7 +402,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private boolean shouldUseKms(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.KMS.name(), accountId)
-        && kmsService.getKmsConfig(accountId) != null;
+    return featureFlagService.isEnabled(FeatureName.KMS, accountId) && kmsService.getKmsConfig(accountId) != null;
   }
 }

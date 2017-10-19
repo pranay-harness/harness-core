@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -22,18 +23,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public boolean isEnabled(String featureName, String accountId) {
-    if (featureName == null) {
-      // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag name is null or missing!");
-      return false;
-    }
-
-    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(featureName).get();
+  public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(featureName.name()).get();
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag " + featureName + " not found.");
+      logger.error("FeatureFlag " + featureName.name() + " not found.");
       return false;
     }
 
@@ -43,7 +39,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
     if (isEmpty(accountId)) {
       // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag accountId is null or missing!");
+      logger.error("FeatureFlag isEnabled check without accountId");
       return false;
     }
 
