@@ -13,9 +13,6 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Set;
 
-/**
- * Created by bsollish on 10/04/17
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
