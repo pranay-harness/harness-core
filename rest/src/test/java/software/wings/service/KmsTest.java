@@ -1058,6 +1058,33 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
+  public void listKmsConfigOrder() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    int numOfKms = 10;
+    for (int i = 1; i <= numOfKms; i++) {
+      KmsConfig kmsConfig = getKmsConfig();
+      kmsConfig.setDefault(true);
+      kmsConfig.setName("kms" + i);
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+    }
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms, kmsConfigs.size());
+
+    int kmsNum = numOfKms;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsNum == numOfKms) {
+        assertTrue(kmsConfig.isDefault());
+      } else {
+        assertFalse(kmsConfig.isDefault());
+      }
+      assertEquals("kms" + kmsNum, kmsConfig.getName());
+      kmsNum--;
+    }
+  }
+
+  @Test
   public void listKmsConfigHasDefault() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig globalKmsConfig = getKmsConfig();
