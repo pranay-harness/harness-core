@@ -260,7 +260,13 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void handleMessage(String message, String delegateId, String accountId) {
-    if (!StringUtils.startsWith(message, "[X]")) { // Ignore heartbeats
+    if (StringUtils.startsWith(message, "[X]")) {
+      String receivedId = message.substring(3); // Remove the "[X]"
+      logger.info("Received heartbeat for delegate: " + receivedId);
+      if (delegateId.equals(receivedId)) {
+        lastHeartbeatReceivedAt = System.currentTimeMillis();
+      }
+    } else if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
@@ -272,12 +278,6 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         System.out.println(message);
         logger.error("Exception while decoding task", e);
-      }
-    } else {
-      String receivedId = message.substring(3); // Remove the "[X]"
-      logger.info("Received heartbeat for delegate: " + receivedId);
-      if (delegateId.equals(receivedId)) {
-        lastHeartbeatReceivedAt = System.currentTimeMillis();
       }
     }
   }
