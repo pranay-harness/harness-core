@@ -41,6 +41,7 @@ then
   exit 1
 fi
 
+mongo harness --eval "db.dropDatabase();"
 
 #run data gen to load test data
 mvn test -pl rest -Dtest=software.wings.integration.DataGenUtil
