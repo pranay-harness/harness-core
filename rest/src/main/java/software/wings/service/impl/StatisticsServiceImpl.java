@@ -591,11 +591,15 @@ public class StatisticsServiceImpl implements StatisticsService {
       } else if (execution.getServiceExecutionSummaries() != null) {
         serviceExecutionSummaries.addAll(execution.getServiceExecutionSummaries());
       }
-
+      Map<String, ElementExecutionSummary> serviceExecutionStatusMap = new HashMap<>();
       for (ElementExecutionSummary serviceExecutionSummary : serviceExecutionSummaries) {
         if (serviceExecutionSummary.getContextElement() == null) {
           continue;
         }
+        String serviceId = serviceExecutionSummary.getContextElement().getUuid();
+        serviceExecutionStatusMap.put(serviceId, serviceExecutionSummary);
+      }
+      for (ElementExecutionSummary serviceExecutionSummary : serviceExecutionStatusMap.values()) {
         String serviceId = serviceExecutionSummary.getContextElement().getUuid();
         ExecutionStatus serviceExecutionStatus = serviceExecutionSummary.getStatus();
         if (serviceExecutionStatus == null) {
