@@ -19,9 +19,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -53,7 +50,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
@@ -126,7 +122,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void validateConfig() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -142,7 +137,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void getKmsConfigForAccount() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -190,7 +184,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
@@ -262,7 +255,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionWhileSaving() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -308,7 +300,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionSaveMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -355,7 +346,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateObject() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -444,7 +434,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -663,7 +652,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionSaveServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -701,7 +689,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -758,7 +745,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -802,7 +788,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -861,7 +846,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -935,7 +919,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void listEncryptedValues() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -963,6 +946,7 @@ public class KmsTest extends WingsBaseTest {
                                               .build();
 
       wingsPersistence.save(settingAttribute);
+      appDynamicsConfig.setPassword(null);
       encryptedEntities.add(settingAttribute);
     }
 
@@ -975,7 +959,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
@@ -1251,7 +1234,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void transitionKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1331,7 +1313,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void transitionAndDeleteKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1391,7 +1372,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void saveAwsConfig() throws IOException, InterruptedException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
@@ -1542,7 +1522,6 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Repeat(times = 5, successes = 1)
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);

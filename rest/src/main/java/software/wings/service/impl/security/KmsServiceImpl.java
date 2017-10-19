@@ -210,6 +210,11 @@ public class KmsServiceImpl implements KmsService {
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
+        UuidAware parent = fetchParent(data);
+        if (parent == null) {
+          logger.error("No parent found for {}", data);
+          continue;
+        }
         rv.put(data.getParentId(), fetchParent(data));
       }
     }
@@ -376,15 +381,36 @@ public class KmsServiceImpl implements KmsService {
         return getKmsConfig(data.getAccountId());
 
       case SERVICE_VARIABLE:
-        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, data.getParentId());
-        serviceVariable.setValue(SECRET_MASK.toCharArray());
-        return serviceVariable;
+        Iterator<ServiceVariable> serviceVaribaleQuery = wingsPersistence.createQuery(ServiceVariable.class)
+                                                             .field("_id")
+                                                             .equal(data.getParentId())
+                                                             .fetch(new FindOptions().limit(1));
+        if (serviceVaribaleQuery.hasNext()) {
+          ServiceVariable serviceVariable = serviceVaribaleQuery.next();
+          serviceVariable.setValue(SECRET_MASK.toCharArray());
+          return serviceVariable;
+        }
+        return null;
 
       case CONFIG_FILE:
-        return wingsPersistence.get(ConfigFile.class, data.getParentId());
+        Iterator<ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
+                                                   .field("_id")
+                                                   .equal(data.getParentId())
+                                                   .fetch(new FindOptions().limit(1));
+        if (configFileQuery.hasNext()) {
+          return configFileQuery.next();
+        }
+        return null;
 
       default:
-        return wingsPersistence.get(SettingAttribute.class, data.getParentId());
+        Iterator<SettingAttribute> settingAttributeQuery = wingsPersistence.createQuery(SettingAttribute.class)
+                                                               .field("_id")
+                                                               .equal(data.getParentId())
+                                                               .fetch(new FindOptions().limit(1));
+        if (settingAttributeQuery.hasNext()) {
+          return settingAttributeQuery.next();
+        }
+        return null;
     }
   }
 }
