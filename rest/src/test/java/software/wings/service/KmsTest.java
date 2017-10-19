@@ -1059,7 +1059,68 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
+  public void listKmsGlobalDefault() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setName("Global config");
+
+    globalKmsConfig.setDefault(false);
+    kmsService.saveGlobalKmsConfig(accountId, globalKmsConfig);
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(1, kmsConfigs.size());
+    assertTrue(kmsConfigs.iterator().next().isDefault());
+
+    int numOfKms = 10;
+    for (int i = 1; i <= numOfKms; i++) {
+      KmsConfig kmsConfig = getKmsConfig();
+      kmsConfig.setDefault(true);
+      kmsConfig.setName("kms" + i);
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+    }
+
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms + 1, kmsConfigs.size());
+
+    int kmsNum = numOfKms;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        assertFalse(kmsConfig.isDefault());
+        assertEquals("Global config", kmsConfig.getName());
+      } else {
+        assertEquals("kms" + kmsNum, kmsConfig.getName());
+      }
+      if (kmsNum == numOfKms) {
+        assertTrue(kmsConfig.isDefault());
+      } else {
+        assertFalse(kmsConfig.isDefault());
+      }
+      kmsNum--;
+    }
+
+    // delete the default and global should become default
+    kmsService.deleteKmsConfig(accountId, kmsConfigs.iterator().next().getUuid());
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms, kmsConfigs.size());
+
+    int defaultSet = 0;
+    kmsNum = numOfKms - 1;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        assertTrue(kmsConfig.isDefault());
+        assertEquals("Global config", kmsConfig.getName());
+        defaultSet++;
+      } else {
+        assertFalse(kmsConfig.isDefault());
+        assertEquals("kms" + kmsNum, kmsConfig.getName());
+      }
+      kmsNum--;
+    }
+
+    assertEquals(1, defaultSet);
+  }
+
+  @Test
   public void listKmsConfigOrder() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     int numOfKms = 10;
