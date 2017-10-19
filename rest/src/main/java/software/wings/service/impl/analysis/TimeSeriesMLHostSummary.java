@@ -20,6 +20,6 @@ public class TimeSeriesMLHostSummary {
   private int control_index;
   private int test_index;
   private String nn;
-  private double risk;
+  private int risk;
   private double score;
 }

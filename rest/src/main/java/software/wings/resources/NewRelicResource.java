@@ -20,6 +20,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -174,5 +175,19 @@ public class NewRelicResource {
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) throws IOException {
     return new RestResponse<>(
         metricDataAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, analysisMinute, limit));
+  }
+
+  @POST
+  @Path("/get-tooltip")
+  @Timed
+  @ExceptionMetered
+  @ExternalServiceAuth
+  public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
+      @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("workFlowExecutionId") String workFlowExecutionId,
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
+      @QueryParam("metricName") String metricName) throws IOException {
+    return new RestResponse<>(metricDataAnalysisService.getToolTip(
+        stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName));
   }
 }

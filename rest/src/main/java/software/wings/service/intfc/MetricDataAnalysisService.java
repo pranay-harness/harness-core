@@ -4,6 +4,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 import software.wings.utils.validation.Create;
@@ -57,4 +58,7 @@ public interface MetricDataAnalysisService {
   int getMaxControlMinute(StateType stateType, String serviceId, String workflowId, String workflowExecutionId);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(StateType stateType, String workflowId, String serviceId);
+
+  List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
+      int analysisMinute, String transactionName, String metricName);
 }

@@ -21,9 +21,8 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields =
-    { @Field("applicationId")
-      , @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("stateType") },
+@Indexes(@Index(fields = { @Field("workflowExecutionId")
+                           , @Field("stateExecutionId"), @Field("analysisMinute") },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
 public class TimeSeriesMLAnalysisRecord extends Base {
