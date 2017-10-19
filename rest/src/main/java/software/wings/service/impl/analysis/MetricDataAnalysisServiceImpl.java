@@ -14,6 +14,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -231,6 +232,85 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     return workflowExecutionIds;
   }
 
+  private RiskLevel getRiskLevel(int risk) {
+    RiskLevel riskLevel;
+    switch (risk) {
+      case -1:
+        riskLevel = RiskLevel.NA;
+        break;
+      case 0:
+        riskLevel = RiskLevel.LOW;
+        break;
+      case 1:
+        riskLevel = RiskLevel.MEDIUM;
+        break;
+      case 2:
+        riskLevel = RiskLevel.HIGH;
+        break;
+      default:
+        throw new RuntimeException("Unknown risk level " + risk);
+    }
+    return riskLevel;
+  }
+
+  @Override
+  public List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
+      int analysisMinute, String transactionName, String metricName) {
+    Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .field("stateExecutionId")
+            .equal(stateExecutionId)
+            .field("workflowExecutionId")
+            .equal(workflowExecutionId)
+            .field("analysisMinute")
+            .equal(analysisMinute);
+
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
+    if (timeSeriesMLAnalysisRecord == null) {
+      return null;
+    }
+
+    Map<String, String> txnNameToIdMap = new HashMap<>();
+
+    for (Entry<String, TimeSeriesMLTxnSummary> txnSummaryEntry :
+        timeSeriesMLAnalysisRecord.getTransactions().entrySet()) {
+      txnNameToIdMap.put(txnSummaryEntry.getValue().getTxn_name(), txnSummaryEntry.getKey());
+    }
+
+    if (!txnNameToIdMap.containsKey(transactionName)) {
+      return null;
+    }
+
+    TimeSeriesMLTxnSummary txnSummary =
+        timeSeriesMLAnalysisRecord.getTransactions().get(txnNameToIdMap.get(transactionName));
+
+    Map<String, String> metricNameToIdMap = new HashMap<>();
+    for (Entry<String, TimeSeriesMLMetricSummary> mlMetricSummaryEntry : txnSummary.getMetrics().entrySet()) {
+      metricNameToIdMap.put(mlMetricSummaryEntry.getValue().getMetric_name(), mlMetricSummaryEntry.getKey());
+    }
+
+    if (!metricNameToIdMap.containsKey(metricName)) {
+      return null;
+    }
+
+    Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap =
+        txnSummary.getMetrics().get(metricNameToIdMap.get(metricName)).getResults();
+    List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = new ArrayList<>();
+
+    if (timeSeriesMLHostSummaryMap != null) {
+      for (Entry<String, TimeSeriesMLHostSummary> mlHostSummaryEntry : timeSeriesMLHostSummaryMap.entrySet())
+        hostAnalysisValues.add(NewRelicMetricHostAnalysisValue.builder()
+                                   .testHostName(mlHostSummaryEntry.getKey())
+                                   .controlHostName(mlHostSummaryEntry.getValue().getNn())
+                                   .controlValues(mlHostSummaryEntry.getValue().getControl_data())
+                                   .testValues(mlHostSummaryEntry.getValue().getTest_data())
+                                   .riskLevel(getRiskLevel(mlHostSummaryEntry.getValue().getRisk()))
+                                   .build());
+    }
+    return hostAnalysisValues;
+  }
+
   @Override
   public NewRelicMetricAnalysisRecord getMetricsAnalysis(
       StateType stateType, String stateExecutionId, String workflowExecutionId) {
@@ -238,12 +318,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .field("stateType")
-            .equal(stateType)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("workflowExecutionId")
             .equal(workflowExecutionId);
+
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
     if (timeSeriesMLAnalysisRecord != null) {
@@ -252,23 +331,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
         RiskLevel globalRisk = RiskLevel.NA;
         for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-          RiskLevel riskLevel;
-          switch (mlMetricSummary.getMax_risk()) {
-            case -1:
-              riskLevel = RiskLevel.NA;
-              break;
-            case 0:
-              riskLevel = RiskLevel.LOW;
-              break;
-            case 1:
-              riskLevel = RiskLevel.MEDIUM;
-              break;
-            case 2:
-              riskLevel = RiskLevel.HIGH;
-              break;
-            default:
-              throw new RuntimeException("Unknown risk level " + mlMetricSummary.getMax_risk());
-          }
+          RiskLevel riskLevel = getRiskLevel(mlMetricSummary.getMax_risk());
+
           if (riskLevel.compareTo(globalRisk) < 0) {
             globalRisk = riskLevel;
           }
@@ -287,25 +351,26 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
       analysisRecord = NewRelicMetricAnalysisRecord.builder()
                            .applicationId(timeSeriesMLAnalysisRecord.getApplicationId())
+                           .stateType(stateType)
                            .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
                            .metricAnalyses(metricAnalysisList)
                            .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
                            .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
                            .build();
+
     } else {
       Query<NewRelicMetricAnalysisRecord> metricAnalysisRecordQuery =
           wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
               .field("stateExecutionId")
               .equal(stateExecutionId)
               .field("workflowExecutionId")
-              .equal(workflowExecutionId)
-              .field("stateType")
-              .equal(stateType);
+              .equal(workflowExecutionId);
 
       analysisRecord = wingsPersistence.executeGetOneQuery(metricAnalysisRecordQuery);
-      if (analysisRecord == null) {
-        return null;
-      }
+    }
+
+    if (analysisRecord == null) {
+      return null;
     }
 
     if (analysisRecord.getMetricAnalyses() != null) {
