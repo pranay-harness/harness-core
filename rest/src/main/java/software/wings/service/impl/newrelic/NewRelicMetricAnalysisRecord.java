@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 public class NewRelicMetricAnalysisRecord extends Base {
-  @NotNull @Indexed private StateType stateType;
+  @NotEmpty @Indexed private StateType stateType;
 
   @NotEmpty private String message;
 
@@ -81,5 +81,16 @@ public class NewRelicMetricAnalysisRecord extends Base {
     private RiskLevel riskLevel;
     private double testValue;
     private double controlValue;
+    private List<NewRelicMetricHostAnalysisValue> hostAnalysisValues;
+  }
+
+  @Data
+  @Builder
+  public static class NewRelicMetricHostAnalysisValue {
+    private RiskLevel riskLevel;
+    private String testHostName;
+    private String controlHostName;
+    private List<Double> testValues;
+    private List<Double> controlValues;
   }
 }
