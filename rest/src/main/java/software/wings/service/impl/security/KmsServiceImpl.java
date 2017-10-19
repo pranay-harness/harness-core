@@ -216,6 +216,7 @@ public class KmsServiceImpl implements KmsService {
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
                                     .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                    .order("-createdAt")
                                     .fetch();
     while (query.hasNext()) {
       KmsConfig kmsConfig = query.next();
