@@ -159,7 +159,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.setAppId(appId);
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
-    newRelicResource.saveMetricData(accountId, appId, delegateTaskId, controlRecords);
+    newRelicResource.saveMetricData(accountId, appId, stateExecutionId, delegateTaskId, controlRecords);
     List<NewRelicMetricDataRecord> results = newRelicResource
                                                  .getMetricData(accountId, workflowExecutionId, true,
                                                      TSRequest.builder()
