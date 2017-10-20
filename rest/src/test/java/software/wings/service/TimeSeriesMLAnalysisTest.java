@@ -152,7 +152,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   public void testSaveMetricRecords() throws IOException {
     List<NewRelicMetricDataRecord> controlRecords = loadMetrics("./verification/TimeSeriesNRControlInput.json");
     Set<String> nodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
-    newRelicResource.saveMetricData(accountId, appId, controlRecords);
+    newRelicResource.saveMetricData(accountId, appId, delegateTaskId, controlRecords);
     List<NewRelicMetricDataRecord> results = newRelicResource
                                                  .getMetricData(accountId, workflowExecutionId, true,
                                                      TSRequest.builder()
