@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 public interface MetricDataAnalysisService {
   @ValidationGroups(Create.class)
   boolean saveMetricData(@NotNull String accountId, String applicationId,
-      @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
+      @Valid List<NewRelicMetricDataRecord> metricData, String delegateTaskId) throws IOException;
 
   @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
 

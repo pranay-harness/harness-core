@@ -91,35 +91,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final Response<NewRelicMetricResponse> response = request.execute();
     if (response.isSuccessful()) {
       List<NewRelicMetric> metrics = response.body().getMetrics();
-      Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
-
       if (metrics == null) {
         return Collections.emptyList();
       }
-
+      List<NewRelicMetric> newRelicMetrics = new ArrayList<>();
       for (NewRelicMetric metric : metrics) {
         if (metric.getName().startsWith("WebTransaction/")) {
-          webTransactionMetrics.put(metric.getName(), metric);
+          newRelicMetrics.add(metric);
         }
       }
-
-      // find and remove metrics which have no data in last 24 hours
-      List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(newRelicConfig, newRelicAppId);
-      final long currentTime = System.currentTimeMillis();
-      Set<String> metricsWithNoData = Sets.newHashSet(webTransactionMetrics.keySet());
-      for (NewRelicApplicationInstance applicationInstance : applicationInstances) {
-        NewRelicMetricData metricData = getMetricData(newRelicConfig, newRelicAppId, applicationInstance.getId(),
-            metricsWithNoData, currentTime - TimeUnit.DAYS.toMillis(1), currentTime);
-        metricsWithNoData.removeAll(metricData.getMetrics_found());
-
-        if (metricsWithNoData.isEmpty()) {
-          break;
-        }
-      }
-      for (String metricName : metricsWithNoData) {
-        webTransactionMetrics.remove(metricName);
-      }
-      return webTransactionMetrics.values();
+      return newRelicMetrics;
     }
 
     JSONObject errorObject = new JSONObject(response.errorBody().string());

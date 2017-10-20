@@ -76,7 +76,7 @@ public abstract class AbstractDelegateDataCollectionTask
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(getStateType())
-          .errorMessage("Unable to connect to server : " + e.getMessage())
+          .errorMessage("Data collection from NewRelic failed : " + e.getMessage())
           .build();
     }
   }
