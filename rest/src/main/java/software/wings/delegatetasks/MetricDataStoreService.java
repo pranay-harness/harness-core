@@ -12,5 +12,6 @@ public interface MetricDataStoreService {
   boolean saveAppDynamicsMetrics(String accountId, String applicationId, String stateExecutionId, long appId,
       long tierId, List<AppdynamicsMetricData> metricData);
 
-  boolean saveNewRelicMetrics(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData);
+  boolean saveNewRelicMetrics(
+      String accountId, String applicationId, String delegateTaskID, List<NewRelicMetricDataRecord> metricData);
 }
