@@ -208,7 +208,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return successfulExecution;
       }
     }
-    logger.error("Could not get a successful workflow to find control nodes");
+    logger.warn("Could not get a successful workflow to find control nodes");
     return null;
   }
 
