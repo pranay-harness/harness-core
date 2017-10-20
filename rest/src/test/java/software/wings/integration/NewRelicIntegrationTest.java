@@ -25,10 +25,13 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -105,6 +108,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     final String serviceId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
     final String applicationId = UUID.randomUUID().toString();
+    final String delegateTaskId = UUID.randomUUID().toString();
 
     Random r = new Random();
 
@@ -156,8 +160,14 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
         }
       }
 
-      WebTarget target =
-          client.target(API_BASE + "/newrelic/save-metrics?accountId=" + accountId + "&applicationId=" + applicationId);
+      StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+      stateExecutionInstance.setUuid(stateExecutionId);
+      stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+      stateExecutionInstance.setAppId(applicationId);
+      wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+
+      WebTarget target = client.target(API_BASE + "/newrelic/save-metrics?accountId=" + accountId
+          + "&applicationId=" + applicationId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
           Entity.entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       Assert.assertTrue(restResponse.getResource());
