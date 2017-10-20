@@ -7,6 +7,6 @@
   "awsInstanceFilter":{
     "ui:order":["vpcIds","tags","subnetIds","securityGroupIds"]
   },
-  "ui:order": [  "deploymentType","computeProviderSettingId", "region", "hostConnectionAttrs", "usePublicDns",
-    "infraMappingType","computeProviderType", "loadBalancerId", "customName", "provisionInstances", "awsInstanceFilter", "autoScalingGroupName","setDesiredCapacity","desiredCapacity"]
+  "ui:order": [  "deploymentType","computeProviderSettingId", "customName", "region", "loadBalancerId", "usePublicDns",
+    "infraMappingType","computeProviderType", "hostConnectionAttrs" , "provisionInstances", "awsInstanceFilter", "autoScalingGroupName","setDesiredCapacity","desiredCapacity"]
 }
