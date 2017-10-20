@@ -47,12 +47,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject protected DelegateServiceImpl delegateService;
 
   @Override
-  public boolean saveMetricData(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData,
-      String delegateTaskId) throws IOException {
-    if (metricData == null || metricData.size() == 0) {
-      return true;
-    }
-    if (!isStateValid(applicationId, metricData.get(0).getStateExecutionId())) {
+  public boolean saveMetricData(String accountId, String applicationId, String stateExecutionId, String delegateTaskId,
+      List<NewRelicMetricDataRecord> metricData) throws IOException {
+    if (!isStateValid(applicationId, stateExecutionId)) {
       logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
           + ". Sending delegate abort request " + delegateTaskId);
       delegateService.abortTask(accountId, delegateTaskId);

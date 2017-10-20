@@ -66,10 +66,11 @@ public class NewRelicResource {
   @DelegateAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("delegateTaskId") String delegateTaskId,
-      List<NewRelicMetricDataRecord> metricData) throws IOException {
-    return new RestResponse<>(
-        metricDataAnalysisService.saveMetricData(accountId, applicationId, metricData, delegateTaskId));
+      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData)
+      throws IOException {
+    return new RestResponse<>(metricDataAnalysisService.saveMetricData(
+        accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
   }
 
   @POST
