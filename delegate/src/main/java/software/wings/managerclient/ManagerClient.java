@@ -83,7 +83,8 @@ public interface ManagerClient {
 
   @POST("newrelic/save-metrics")
   Call<RestResponse<Boolean>> saveNewRelicMetrics(@Query("accountId") String accountId,
-      @Query("applicationId") String applicationId, @Body List<NewRelicMetricDataRecord> metricData);
+      @Query("applicationId") String applicationId, @Query("delegateTaskId") String delegateTaskId,
+      @Body List<NewRelicMetricDataRecord> metricData);
 
   @POST(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveSplunkLogs(@Query("accountId") String accountId, @Query("appId") String appId,

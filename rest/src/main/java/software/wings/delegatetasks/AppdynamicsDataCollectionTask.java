@@ -177,7 +177,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         }
         List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
         metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
-            dataCollectionInfo.getApplicationId(), recordsToSave);
+            dataCollectionInfo.getApplicationId(), getTaskId(), recordsToSave);
         logger.info("Sent {} appdynamics metric records to the server for minute {}", recordsToSave.size(),
             dataCollectionMinute);
 
