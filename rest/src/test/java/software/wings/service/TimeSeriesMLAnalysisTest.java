@@ -29,6 +29,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.utils.JsonUtils;
@@ -152,7 +154,12 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   public void testSaveMetricRecords() throws IOException {
     List<NewRelicMetricDataRecord> controlRecords = loadMetrics("./verification/TimeSeriesNRControlInput.json");
     Set<String> nodes = setIdsGetNodes(controlRecords, workflowExecutionId, stateExecutionId);
-    newRelicResource.saveMetricData(accountId, appId, controlRecords);
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    stateExecutionInstance.setAppId(appId);
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
+    newRelicResource.saveMetricData(accountId, appId, delegateTaskId, controlRecords);
     List<NewRelicMetricDataRecord> results = newRelicResource
                                                  .getMetricData(accountId, workflowExecutionId, true,
                                                      TSRequest.builder()
