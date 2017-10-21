@@ -14,6 +14,8 @@ import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
+import software.wings.service.impl.ExecutionEvent;
+import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.instance.ContainerDeploymentEventListener;
 import software.wings.service.impl.instance.InstanceChangeEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
@@ -53,6 +55,8 @@ public class QueueModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(EntityUpdateListEvent.class, datastore, 60));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
         .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
+    bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
@@ -62,5 +66,6 @@ public class QueueModule extends AbstractModule {
     bind(new TypeLiteral<AbstractQueueListener<ContainerDeploymentEvent>>() {})
         .to(ContainerDeploymentEventListener.class);
     bind(new TypeLiteral<AbstractQueueListener<EntityUpdateListEvent>>() {}).to(EntityUpdateListEventListener.class);
+    bind(new TypeLiteral<AbstractQueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
   }
 }
