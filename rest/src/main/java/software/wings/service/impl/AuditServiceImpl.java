@@ -143,12 +143,12 @@ public class AuditServiceImpl implements AuditService {
    */
   @Override
   public void deleteAuditRecords(long retentionMillis) {
-    int batchSize = 1000;
-    int limit = 5000;
-    long days = retentionMillis / (24 * 60 * 60 * 1000L);
-    logger.info("Start: Deleting  audit records older than {} time", (System.currentTimeMillis() - retentionMillis));
+    final int batchSize = 1000;
+    final int limit = 5000;
+    final long days = retentionMillis / (24 * 60 * 60 * 1000L);
+    logger.info("Start: Deleting audit records older than {} time", (System.currentTimeMillis() - retentionMillis));
     try {
-      logger.info("Start: Deleting audit records less than {} days: ", days);
+      logger.info("Start: Deleting audit records older than {} days", days);
       with().pollInterval(2L, TimeUnit.SECONDS).await().atMost(TEN_MINUTES).until(() -> {
         List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class)
                                              .limit(limit)
@@ -161,7 +161,7 @@ public class AuditServiceImpl implements AuditService {
           return true;
         }
         try {
-          logger.info("Deleting audit records of size: {} ", auditHeaders.size());
+          logger.info("Deleting {} audit records", auditHeaders.size());
 
           List<String> auditHeaderIds = auditHeaders.stream().map(AuditHeader::getUuid).collect(Collectors.toList());
           List<ObjectId> requestPayloadIds =
@@ -192,17 +192,14 @@ public class AuditServiceImpl implements AuditService {
           }
 
         } catch (Exception ex) {
-          logger.info("Failed to delete audit audit records of size: " + auditHeaders.size(), ex);
+          logger.warn("Failed to delete {} audit audit records", auditHeaders.size(), ex);
         }
-        logger.info("Deleting audit records of size: {} success", auditHeaders.size());
-        if (auditHeaders.size() < limit) {
-          return true;
-        }
-        return false;
+        logger.info("Successfully deleted {} audit records", auditHeaders.size());
+        return auditHeaders.size() < limit;
       });
     } catch (Exception ex) {
-      logger.info(String.format("Failed to delete audit records older than last %s days within 10 minutes.", days), ex);
+      logger.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }
-    logger.info("Deleted audit records  older than {} days", days);
+    logger.info("Deleted audit records older than {} days", days);
   }
 }

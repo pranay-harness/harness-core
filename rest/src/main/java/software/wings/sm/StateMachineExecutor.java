@@ -6,7 +6,9 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.alerts.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.FeatureFlag.FeatureName.MANUAL_INTERVENTION_ALERTS;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -39,9 +41,11 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.cache.ResponseCodeCache;
@@ -52,7 +56,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
@@ -88,6 +94,8 @@ public class StateMachineExecutor {
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private DelegateService delegateService;
+  @Inject private AlertService alertService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("waitStateResumer") private ScheduledExecutorService scheduledExecutorService;
 
@@ -473,6 +481,9 @@ public class StateMachineExecutor {
               "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, status: {}, existingExecutionStatus: {}, stateParams: {}",
               stateExecutionInstance.getUuid(), status, existingExecutionStatus, executionEventAdvice.getStateParams());
         }
+        // Open an alert
+        openAnAlert(context, stateExecutionInstance);
+
         break;
       }
       case ROLLBACK: {
@@ -514,6 +525,25 @@ public class StateMachineExecutor {
     }
 
     return stateExecutionInstance;
+  }
+
+  private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
+    try {
+      Application app = context.getApp();
+      if (featureFlagService.isEnabled(MANUAL_INTERVENTION_ALERTS, app.getAccountId())) {
+        ManualInterventionNeededAlert manualInterventionNeededAlert =
+            ManualInterventionNeededAlert.builder()
+                .envId(context.getEnv().getUuid())
+                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                .executionId(context.getWorkflowExecutionId())
+                .name(context.getWorkflowExecutionName())
+                .build();
+        alertService.openAlert(
+            app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
+      }
+    } catch (Exception e) {
+      logger.error("Failed to open an alarm", e);
+    }
   }
 
   private String scheduleWaitNotify(int waitInterval) {
