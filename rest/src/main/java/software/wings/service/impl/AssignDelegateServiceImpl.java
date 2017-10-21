@@ -63,17 +63,18 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                  environmentService.get(task.getAppId(), task.getEnvId(), false).getEnvironmentType());
     }
     if (match && delegateScope.getTaskTypes() != null && !delegateScope.getTaskTypes().isEmpty()) {
-      match = delegateScope.getTaskTypes().contains(task.getTaskType().getTaskGroup());
+      match = task.getTaskType() != null && delegateScope.getTaskTypes().contains(task.getTaskType().getTaskGroup());
     }
     if (match && delegateScope.getApplications() != null && !delegateScope.getApplications().isEmpty()) {
-      match = delegateScope.getApplications().contains(task.getAppId());
+      match = task.getAppId() != null && delegateScope.getApplications().contains(task.getAppId());
     }
     if (match && delegateScope.getEnvironments() != null && !delegateScope.getEnvironments().isEmpty()) {
-      match = delegateScope.getEnvironments().contains(task.getEnvId());
+      match = task.getEnvId() != null && delegateScope.getEnvironments().contains(task.getEnvId());
     }
     if (match && delegateScope.getServiceInfrastructures() != null
         && !delegateScope.getServiceInfrastructures().isEmpty()) {
-      match = delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
+      match = task.getInfrastructureMappingId() != null
+          && delegateScope.getServiceInfrastructures().contains(task.getInfrastructureMappingId());
     }
 
     return match;

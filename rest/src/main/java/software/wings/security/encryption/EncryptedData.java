@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -30,6 +31,7 @@ import java.util.TreeSet;
 @AllArgsConstructor
 @Builder
 @Entity(value = "encryptedRecords", noClassnameStored = true)
+@ToString(exclude = "encryptionKey")
 public class EncryptedData extends Base {
   @NotEmpty private String encryptionKey;
   @NotEmpty private char[] encryptedValue;

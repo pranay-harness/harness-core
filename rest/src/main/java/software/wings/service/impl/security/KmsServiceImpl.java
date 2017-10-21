@@ -63,7 +63,7 @@ public class KmsServiceImpl implements KmsService {
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).encrypt(value, kmsConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e.getMessage(), e);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
 
@@ -76,7 +76,7 @@ public class KmsServiceImpl implements KmsService {
     try {
       return delegateProxyFactory.get(KmsDelegateService.class, syncTaskContext).decrypt(data, kmsConfig);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e.getMessage(), e);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", e.getMessage());
     }
   }
 
@@ -125,7 +125,12 @@ public class KmsServiceImpl implements KmsService {
 
   @Override
   public boolean saveKmsConfig(String accountId, KmsConfig kmsConfig) {
-    validateKms(accountId, kmsConfig);
+    try {
+      validateKms(accountId, kmsConfig);
+    } catch (Exception e) {
+      throw new WingsException(
+          ErrorCode.KMS_OPERATION_ERROR, "reason", "Validation failed. Please check your credentials");
+    }
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
 
@@ -186,8 +191,9 @@ public class KmsServiceImpl implements KmsService {
                                         .fetch(new FindOptions().limit(1));
 
     if (query.hasNext()) {
-      throw new WingsException("Can not delete the kms configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new kms and then try again");
+      String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
+          + "Please transition your secrets to a new kms and then try again";
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, "reason", message);
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
@@ -204,6 +210,11 @@ public class KmsServiceImpl implements KmsService {
     while (query.hasNext()) {
       EncryptedData data = query.next();
       if (data.getType() != SettingVariableTypes.KMS) {
+        UuidAware parent = fetchParent(data);
+        if (parent == null) {
+          logger.error("No parent found for {}", data);
+          continue;
+        }
         rv.put(data.getParentId(), fetchParent(data));
       }
     }
@@ -216,9 +227,20 @@ public class KmsServiceImpl implements KmsService {
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
                                     .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                    .order("-createdAt")
                                     .fetch();
+
+    KmsConfig globalConfig = null;
+    boolean defaultSet = false;
     while (query.hasNext()) {
       KmsConfig kmsConfig = query.next();
+      if (kmsConfig.isDefault()) {
+        defaultSet = true;
+      }
+
+      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        globalConfig = kmsConfig;
+      }
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
       Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
       kmsConfig.setAccessKey(new String(decrypt(accessKeyData, null, null)));
@@ -229,6 +251,10 @@ public class KmsServiceImpl implements KmsService {
 
       kmsConfig.setSecretKey(SECRET_MASK);
       rv.add(kmsConfig);
+    }
+
+    if (!defaultSet && globalConfig != null) {
+      globalConfig.setDefault(true);
     }
     return rv;
   }
@@ -315,7 +341,7 @@ public class KmsServiceImpl implements KmsService {
     KmsConfig kmsConfig = null;
     Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                     .field("accountId")
-                                    .equal(accountId)
+                                    .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
                                     .field("_id")
                                     .equal(entityId)
                                     .fetch(new FindOptions().limit(1));
@@ -355,15 +381,36 @@ public class KmsServiceImpl implements KmsService {
         return getKmsConfig(data.getAccountId());
 
       case SERVICE_VARIABLE:
-        ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, data.getParentId());
-        serviceVariable.setValue(SECRET_MASK.toCharArray());
-        return serviceVariable;
+        Iterator<ServiceVariable> serviceVaribaleQuery = wingsPersistence.createQuery(ServiceVariable.class)
+                                                             .field("_id")
+                                                             .equal(data.getParentId())
+                                                             .fetch(new FindOptions().limit(1));
+        if (serviceVaribaleQuery.hasNext()) {
+          ServiceVariable serviceVariable = serviceVaribaleQuery.next();
+          serviceVariable.setValue(SECRET_MASK.toCharArray());
+          return serviceVariable;
+        }
+        return null;
 
       case CONFIG_FILE:
-        return wingsPersistence.get(ConfigFile.class, data.getParentId());
+        Iterator<ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
+                                                   .field("_id")
+                                                   .equal(data.getParentId())
+                                                   .fetch(new FindOptions().limit(1));
+        if (configFileQuery.hasNext()) {
+          return configFileQuery.next();
+        }
+        return null;
 
       default:
-        return wingsPersistence.get(SettingAttribute.class, data.getParentId());
+        Iterator<SettingAttribute> settingAttributeQuery = wingsPersistence.createQuery(SettingAttribute.class)
+                                                               .field("_id")
+                                                               .equal(data.getParentId())
+                                                               .fetch(new FindOptions().limit(1));
+        if (settingAttributeQuery.hasNext()) {
+          return settingAttributeQuery.next();
+        }
+        return null;
     }
   }
 }

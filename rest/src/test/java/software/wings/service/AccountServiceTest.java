@@ -1,6 +1,8 @@
 package software.wings.service;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 
@@ -11,6 +13,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
@@ -25,6 +28,7 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
+  @Mock private JobScheduler jobScheduler;
 
   @InjectMocks @Inject private AccountService accountService;
 
@@ -36,6 +40,7 @@ public class AccountServiceTest extends WingsBaseTest {
         anAccount().withCompanyName("Harness").withAccountName("Harness").withAccountKey("ACCOUNT_KEY").build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
     verify(settingsService).createDefaultAccountSettings(account.getUuid());
+    verify(jobScheduler).deleteJob(eq(account.getUuid()), anyString());
   }
 
   @Test
@@ -45,6 +50,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
     verify(settingsService).deleteByAccountId(accountId);
+    verify(jobScheduler).deleteJob(eq(accountId), anyString());
   }
 
   @Test

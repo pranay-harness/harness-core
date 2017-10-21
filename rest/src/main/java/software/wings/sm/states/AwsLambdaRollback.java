@@ -45,11 +45,13 @@ public class AwsLambdaRollback extends AwsLambdaState {
   }
 
   @SchemaIgnore
+  @Override
   public List<String> getAliases() {
     return super.getAliases();
   }
 
   @SchemaIgnore
+  @Override
   public String getCommandName() {
     return super.getCommandName();
   }

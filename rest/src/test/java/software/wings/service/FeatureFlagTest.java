@@ -2,13 +2,10 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -63,26 +60,15 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(FeatureFlag.class)).thenReturn(query);
-    when(query.field(eq("name"))).thenReturn(end);
+    when(query.field("name")).thenReturn(end);
+    when(end.equal(FEATURE.name())).thenReturn(query);
 
     ffPageRequest.addFilter("name", FEATURE.name(), SearchFilter.Operator.EQ);
     ffPageRequestTypeNull.addFilter("name", null, SearchFilter.Operator.EQ);
   }
 
-  /**
-   * Tear down.
-   */
-  @After
-  public void tearDown() {
-    // we have to reset the mock after each test because of the
-    // @ClassRule, or use a @Rule as mentioned below.
-    reset(wingsPersistence);
-  }
-
   @Test
   public void testFlagTrueAccountIdMissing() {
-    when(end.equal(FEATURE.name())).thenReturn(query);
-
     when(query.get()).thenReturn(ffTrueEmpty);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
 
@@ -104,8 +90,6 @@ public class FeatureFlagTest extends WingsBaseTest {
 
   @Test
   public void testFlagTrueAccountIdEmpty() {
-    when(end.equal(FEATURE.name())).thenReturn(query);
-
     when(query.get()).thenReturn(ffTrueEmpty);
     assertThat(featureFlagService.isEnabled(FEATURE, "")).isTrue();
 
@@ -127,8 +111,6 @@ public class FeatureFlagTest extends WingsBaseTest {
 
   @Test
   public void testNameAccountIdAndWhiteListing() {
-    when(end.equal(FEATURE.name())).thenReturn(query);
-
     when(query.get()).thenReturn(ffTrueEmpty);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
 

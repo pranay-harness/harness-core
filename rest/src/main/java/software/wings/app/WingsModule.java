@@ -61,6 +61,7 @@ import software.wings.scheduler.VerificationJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
+import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -137,6 +138,7 @@ import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -323,6 +325,7 @@ public class WingsModule extends AbstractModule {
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
+    bind(AlertService.class).to(AlertServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

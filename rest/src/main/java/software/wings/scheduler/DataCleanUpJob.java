@@ -5,9 +5,9 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
-import software.wings.utils.Misc;
 
 import javax.inject.Inject;
 
@@ -19,15 +19,18 @@ public class DataCleanUpJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(DataCleanUpJob.class);
   private static final long ARTIFACT_RETENTION_SIZE = 25L;
   private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
+  private static final long ALERT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
 
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
+  @Inject private AlertService alertService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     logger.info("Running Data Cleanup Job");
     deleteArtifacts();
     deleteAuditRecords();
+    deleteAlerts();
     logger.info("Running Data Cleanup Job complete");
   }
   private void deleteArtifacts() {
@@ -46,6 +49,15 @@ public class DataCleanUpJob implements Job {
       logger.info("Deleting audit records success");
     } catch (Exception e) {
       logger.warn("Deleting audit records failed.", e);
+    }
+  }
+  private void deleteAlerts() {
+    try {
+      logger.info("Deleting alerts");
+      alertService.deleteOldAlerts(ALERT_RETENTION_TIME);
+      logger.info("Deleting alerts success");
+    } catch (Exception e) {
+      logger.warn("Deleting alerts failed.", e);
     }
   }
 }

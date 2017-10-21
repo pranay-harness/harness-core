@@ -13,8 +13,14 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
+import com.google.inject.name.Named;
 
 import org.apache.commons.codec.binary.Hex;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -30,14 +36,16 @@ import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
+import software.wings.scheduler.AlertCheckJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
-import software.wings.utils.Misc;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -56,6 +64,9 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
+  private static final String ALERT_CHECK_CRON_GROUP = "ALERT_CHECK_CRON_GROUP";
+  private static final int ALERT_CHECK_POLL_INTERVAL = 600;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
@@ -67,6 +78,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AppService appService;
   @Inject private AppContainerService appContainerService;
   @Inject private SystemCatalogService systemCatalogService;
+  @Inject private AlertService alertService;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public Account save(@Valid Account account) {
@@ -74,6 +87,7 @@ public class AccountServiceImpl implements AccountService {
     // licenseManager.setLicense(account);
     wingsPersistence.save(account);
     createDefaultAccountEntites(account);
+    addCronForAlertChecks(account);
     return account;
   }
 
@@ -117,6 +131,23 @@ public class AccountServiceImpl implements AccountService {
                              .build()));
   }
 
+  void addCronForAlertChecks(Account account) {
+    jobScheduler.deleteJob(account.getUuid(), ALERT_CHECK_CRON_GROUP);
+    JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
+                        .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
+                        .usingJobData("accountId", account.getUuid())
+                        .build();
+
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(account.getUuid(), ALERT_CHECK_CRON_GROUP)
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(ALERT_CHECK_POLL_INTERVAL).repeatForever())
+            .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+  }
+
   @Override
   public Account get(String accountId) {
     return wingsPersistence.get(Account.class, accountId);
@@ -129,8 +160,14 @@ public class AccountServiceImpl implements AccountService {
       executorService.submit(() -> {
         settingsService.deleteByAccountId(accountId);
         appService.deleteByAccountId(accountId);
+        alertService.deleteByAccountId(accountId);
       });
+      deleteCronForAlertChecks(accountId);
     }
+  }
+
+  void deleteCronForAlertChecks(String accountId) {
+    jobScheduler.deleteJob(accountId, ALERT_CHECK_CRON_GROUP);
   }
 
   //  @Override
