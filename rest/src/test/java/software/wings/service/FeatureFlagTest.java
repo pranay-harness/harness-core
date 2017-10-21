@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -40,8 +41,8 @@ public class FeatureFlagTest extends WingsBaseTest {
   private Set<String> listWith = new HashSet<>(asList(TEST_ACCOUNT_ID, TEST_ACCOUNT_ID_X));
   private Set<String> listWithout = new HashSet<>(asList(TEST_ACCOUNT_ID_X, TEST_ACCOUNT_ID_Y));
 
-  private FeatureFlag ffTrueEmpty = FeatureFlag.builder().name(FEATURE.name()).enabled(true).build();
-  private FeatureFlag ffFalseEmpty = FeatureFlag.builder().name(FEATURE.name()).enabled(false).build();
+  private FeatureFlag ffTrue = FeatureFlag.builder().name(FEATURE.name()).enabled(true).build();
+  private FeatureFlag ffFalse = FeatureFlag.builder().name(FEATURE.name()).enabled(false).build();
   private FeatureFlag ffTrueWith =
       FeatureFlag.builder().name(FEATURE.name()).enabled(true).accountIds(listWith).build();
   private FeatureFlag ffFalseWith =
@@ -68,11 +69,23 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
-  public void testFlagTrueAccountIdMissing() {
-    when(query.get()).thenReturn(ffTrueEmpty);
+  public void shouldBeEnabledWhenTrue() {
+    when(query.get()).thenReturn(ffTrue);
+    assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isTrue();
+  }
+
+  @Test
+  public void shouldBeDisabledWhenFalse() {
+    when(query.get()).thenReturn(ffFalse);
+    assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isFalse();
+  }
+
+  @Test
+  public void shouldWorkWhenAccountIdMissing() {
+    when(query.get()).thenReturn(ffTrue);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
 
-    when(query.get()).thenReturn(ffFalseEmpty);
+    when(query.get()).thenReturn(ffFalse);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
 
     when(query.get()).thenReturn(ffTrueWith);
@@ -89,34 +102,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
-  public void testFlagTrueAccountIdEmpty() {
-    when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isTrue();
-
-    when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isFalse();
-
-    when(query.get()).thenReturn(ffTrueWith);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isTrue();
-
-    when(query.get()).thenReturn(ffFalseWith);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isFalse();
-
-    when(query.get()).thenReturn(ffTrueWithout);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isTrue();
-
-    when(query.get()).thenReturn(ffFalseWithout);
-    assertThat(featureFlagService.isEnabled(FEATURE, "")).isFalse();
-  }
-
-  @Test
-  public void testNameAccountIdAndWhiteListing() {
-    when(query.get()).thenReturn(ffTrueEmpty);
-    assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
-
-    when(query.get()).thenReturn(ffFalseEmpty);
-    assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isFalse();
-
+  public void shouldBeEnabledWhenWhiteListed() {
     when(query.get()).thenReturn(ffTrueWith);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
 
