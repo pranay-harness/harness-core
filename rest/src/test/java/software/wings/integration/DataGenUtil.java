@@ -57,6 +57,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SystemCatalogService;
@@ -81,6 +82,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/6/16.
  */
+@SetupScheduler
 public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */

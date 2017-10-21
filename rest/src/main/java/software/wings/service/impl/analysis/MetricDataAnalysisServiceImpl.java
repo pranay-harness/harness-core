@@ -11,6 +11,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -43,10 +44,17 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject protected DelegateServiceImpl delegateService;
 
   @Override
-  public boolean saveMetricData(String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData)
-      throws IOException {
+  public boolean saveMetricData(String accountId, String applicationId, String stateExecutionId, String delegateTaskId,
+      List<NewRelicMetricDataRecord> metricData) throws IOException {
+    if (!isStateValid(applicationId, stateExecutionId)) {
+      logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
+          + ". Sending delegate abort request " + delegateTaskId);
+      delegateService.abortTask(accountId, delegateTaskId);
+      return false;
+    }
     logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
     wingsPersistence.saveIgnoringDuplicateKeys(metricData);
     logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
@@ -208,7 +216,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return successfulExecution;
       }
     }
-    logger.error("Could not get a successful workflow to find control nodes");
+    logger.warn("Could not get a successful workflow to find control nodes");
     return null;
   }
 
@@ -325,7 +333,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
-    if (timeSeriesMLAnalysisRecord != null) {
+    if (timeSeriesMLAnalysisRecord != null && timeSeriesMLAnalysisRecord.getTransactions() != null) {
       List<NewRelicMetricAnalysis> metricAnalysisList = new ArrayList<>();
       for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
         List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
@@ -356,6 +364,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                            .metricAnalyses(metricAnalysisList)
                            .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
                            .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+                           .showTimeSeries(true)
                            .build();
 
     } else {

@@ -37,10 +37,12 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
   }
 
   @Override
-  public boolean saveNewRelicMetrics(
-      String accountId, String applicationId, List<NewRelicMetricDataRecord> metricData) {
+  public boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId,
+      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
     try {
-      return execute(managerClient.saveNewRelicMetrics(accountId, applicationId, metricData)).getResource();
+      return execute(
+          managerClient.saveNewRelicMetrics(accountId, applicationId, stateExecutionId, delegateTaskId, metricData))
+          .getResource();
     } catch (IOException e) {
       logger.error("error saving new relic metrics", e);
       return false;

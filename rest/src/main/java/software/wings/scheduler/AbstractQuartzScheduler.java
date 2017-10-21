@@ -97,7 +97,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
     try {
       return scheduler.scheduleJob(jobDetail, trigger);
     } catch (SchedulerException ex) {
-      logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString());
+      logger.error("Couldn't schedule cron for job {} with trigger {}", jobDetail.toString(), trigger.toString(), ex);
     }
     return null;
   }

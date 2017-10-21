@@ -1,6 +1,8 @@
 package software.wings.security.encryption;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -15,5 +17,8 @@ public interface Encryptable {
 
   SettingVariableTypes getSettingType();
 
-  List<Field> getEncryptedFields();
+  @JsonIgnore
+  default List<Field> getEncryptedFields() {
+    return WingsReflectionUtils.getEncryptedFields(this.getClass());
+  }
 }

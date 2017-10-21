@@ -293,6 +293,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", workflowExecutionId,
           approvalDetails.getApprovalId());
       executionData = anApprovalStateExecutionData()
+                          .withApprovalId(approvalDetails.getApprovalId())
                           .withStatus(ExecutionStatus.SUCCESS)
                           .withApprovedBy(approvalDetails.getApprovedBy())
                           .withComments(approvalDetails.getComments())
@@ -301,6 +302,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       logger.debug("Notifying to reject the pipeline execution {} for approval id {} ", workflowExecutionId,
           approvalDetails.getApprovalId());
       executionData = anApprovalStateExecutionData()
+                          .withApprovalId(approvalDetails.getApprovalId())
                           .withStatus(ExecutionStatus.ABORTED)
                           .withApprovedBy(approvalDetails.getApprovedBy())
                           .withComments(approvalDetails.getComments())

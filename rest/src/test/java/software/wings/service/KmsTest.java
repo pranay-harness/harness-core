@@ -19,9 +19,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -53,13 +50,13 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
@@ -125,7 +122,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void validateConfig() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -141,7 +137,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void getKmsConfigForAccount() throws IOException {
     String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -189,7 +184,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
@@ -261,7 +255,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionWhileSaving() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -307,7 +300,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionSaveMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -354,7 +346,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateObject() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -443,7 +434,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -662,7 +652,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionSaveServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -700,7 +689,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -757,7 +745,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -801,7 +788,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -860,7 +846,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -934,7 +919,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void listEncryptedValues() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
@@ -962,6 +946,7 @@ public class KmsTest extends WingsBaseTest {
                                               .build();
 
       wingsPersistence.save(settingAttribute);
+      appDynamicsConfig.setPassword(null);
       encryptedEntities.add(settingAttribute);
     }
 
@@ -974,7 +959,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
@@ -1055,6 +1039,94 @@ public class KmsTest extends WingsBaseTest {
 
     assertEquals(1, defaultConfig);
     assertEquals(1, nonDefaultConfig);
+  }
+
+  @Test
+  public void listKmsGlobalDefault() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    KmsConfig globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setName("Global config");
+
+    globalKmsConfig.setDefault(false);
+    kmsService.saveGlobalKmsConfig(accountId, globalKmsConfig);
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(1, kmsConfigs.size());
+    assertTrue(kmsConfigs.iterator().next().isDefault());
+
+    int numOfKms = 10;
+    for (int i = 1; i <= numOfKms; i++) {
+      KmsConfig kmsConfig = getKmsConfig();
+      kmsConfig.setDefault(true);
+      kmsConfig.setName("kms" + i);
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+    }
+
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms + 1, kmsConfigs.size());
+
+    int kmsNum = numOfKms;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        assertFalse(kmsConfig.isDefault());
+        assertEquals("Global config", kmsConfig.getName());
+      } else {
+        assertEquals("kms" + kmsNum, kmsConfig.getName());
+      }
+      if (kmsNum == numOfKms) {
+        assertTrue(kmsConfig.isDefault());
+      } else {
+        assertFalse(kmsConfig.isDefault());
+      }
+      kmsNum--;
+    }
+
+    // delete the default and global should become default
+    kmsService.deleteKmsConfig(accountId, kmsConfigs.iterator().next().getUuid());
+    kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms, kmsConfigs.size());
+
+    int defaultSet = 0;
+    kmsNum = numOfKms - 1;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+        assertTrue(kmsConfig.isDefault());
+        assertEquals("Global config", kmsConfig.getName());
+        defaultSet++;
+      } else {
+        assertFalse(kmsConfig.isDefault());
+        assertEquals("kms" + kmsNum, kmsConfig.getName());
+      }
+      kmsNum--;
+    }
+
+    assertEquals(1, defaultSet);
+  }
+
+  @Test
+  public void listKmsConfigOrder() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    int numOfKms = 10;
+    for (int i = 1; i <= numOfKms; i++) {
+      KmsConfig kmsConfig = getKmsConfig();
+      kmsConfig.setDefault(true);
+      kmsConfig.setName("kms" + i);
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+    }
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(numOfKms, kmsConfigs.size());
+
+    int kmsNum = numOfKms;
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsNum == numOfKms) {
+        assertTrue(kmsConfig.isDefault());
+      } else {
+        assertFalse(kmsConfig.isDefault());
+      }
+      assertEquals("kms" + kmsNum, kmsConfig.getName());
+      kmsNum--;
+    }
   }
 
   @Test
@@ -1162,7 +1234,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void transitionKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1242,7 +1313,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void transitionAndDeleteKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     final String accountId = UUID.randomUUID().toString();
@@ -1302,7 +1372,6 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
   public void saveAwsConfig() throws IOException, InterruptedException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
@@ -1453,7 +1522,6 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Repeat(times = 5, successes = 1)
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);
@@ -1519,7 +1587,33 @@ public class KmsTest extends WingsBaseTest {
     assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
   }
 
-  private KmsConfig getKmsConfig() throws IOException {
+  @Test
+  public void retrialsTest() throws IOException {
+    KmsDelegateService delegateService = new KmsDelegateServiceImpl();
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsConfig.setKmsArn("invalid krn");
+    String toEncrypt = UUID.randomUUID().toString();
+    try {
+      delegateService.encrypt(toEncrypt.toCharArray(), kmsConfig);
+      fail("should have been failed");
+    } catch (IOException e) {
+      assertEquals("Encryption failed after " + KmsDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    }
+
+    kmsConfig = getKmsConfig();
+    try {
+      delegateService.decrypt(EncryptedData.builder()
+                                  .encryptionKey(UUID.randomUUID().toString())
+                                  .encryptedValue(toEncrypt.toCharArray())
+                                  .build(),
+          kmsConfig);
+      fail("should have been failed");
+    } catch (IOException e) {
+      assertEquals("Decryption failed after " + KmsDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    }
+  }
+
+  private KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");

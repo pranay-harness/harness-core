@@ -42,6 +42,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.ContainerSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -101,6 +102,7 @@ public class AppServiceImpl implements AppService {
   @Inject private PipelineService pipelineService;
   @Inject private InstanceService instanceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private AlertService alertService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -347,6 +349,7 @@ public class AppServiceImpl implements AppService {
         pipelineService.deletePipelineByApplication(appId);
         serviceResourceService.deleteByApp(appId);
         instanceService.deleteByApp(appId);
+        alertService.deleteByApp(appId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())
