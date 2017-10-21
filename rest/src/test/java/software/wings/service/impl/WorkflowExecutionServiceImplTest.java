@@ -92,6 +92,7 @@ import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.rules.RealMongo;
 import software.wings.rules.RepeatRule.Repeat;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -126,12 +127,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Mock private JobScheduler jobScheduler;
+  @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Mock private ArtifactService artifactService;
-  @Inject private AccountService accountService;
 
   @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -154,6 +156,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Before
   public void setup() {
+    when(jobScheduler.deleteJob(any(), any())).thenReturn(false);
+    when(jobScheduler.scheduleJob(any(), any())).thenReturn(null);
     account = accountService.save(
         Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withAccountName(ACCOUNT_NAME).build());
     app = wingsPersistence.saveAndGet(

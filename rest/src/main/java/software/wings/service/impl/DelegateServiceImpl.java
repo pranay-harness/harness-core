@@ -8,6 +8,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.alerts.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
@@ -38,6 +39,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.alerts.AlertType;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -48,6 +50,8 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.alert.NoActiveDelegatesAlert;
+import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -56,6 +60,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.CacheHelper;
@@ -97,6 +102,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
+  @Inject private AlertService alertService;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -134,7 +140,11 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
-    return updateDelegate(delegate, updateOperations);
+    Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
+    if (System.currentTimeMillis() - updatedDelegate.getLastHeartBeat() < 2 * 60 * 1000) {
+      alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+    }
+    return updatedDelegate;
   }
 
   private Delegate updateDelegate(Delegate delegate, UpdateOperations<Delegate> updateOperations) {
@@ -167,8 +177,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
-    Delegate updatedDelegate = get(delegate.getAccountId(), delegate.getUuid());
-    return updatedDelegate;
+    return get(delegate.getAccountId(), delegate.getUuid());
   }
 
   @Override
@@ -349,18 +358,20 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("accountId", EQ, delegate.getAccountId())
             .addFieldsExcluded("supportedTaskTypes")
             .build());
+    Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding: {}", delegate.getUuid());
-      return add(delegate);
+      registeredDelegate = add(delegate);
     } else {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
-      Delegate updatedDelegate = update(delegate);
+      registeredDelegate = update(delegate);
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
           .broadcast("[X]" + delegate.getUuid());
-      return updatedDelegate;
     }
+    alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
+    return registeredDelegate;
   }
 
   @Override
@@ -418,9 +429,15 @@ public class DelegateServiceImpl implements DelegateService {
             .filter(delegateKey -> assignDelegateService.canAssign(task, delegateKey.getId().toString()))
             .collect(toList());
 
-    if (eligibleDelegates.size() == 0) {
-      logger.warn("{} delegates active, no delegates are eligible to execute task [{}:{}] for the accountId: {}",
+    if (activeDelegates.size() == 0) {
+      logger.warn("No delegates are active for the account: {}", task.getAccountId());
+      alertService.openAlert(
+          task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates, NoActiveDelegatesAlert.builder().build());
+    } else if (eligibleDelegates.size() == 0) {
+      logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
+      alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+          NoEligibleDelegatesAlert.builder().task(task).build());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
 
@@ -456,6 +473,10 @@ public class DelegateServiceImpl implements DelegateService {
         logger.warn("Delegate task {} is null (async)", taskId);
       } else if (!assignDelegateService.canAssign(task, delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
+        if (System.currentTimeMillis() - task.getCreatedAt() > 3 * 60 * 1000) {
+          alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+              NoEligibleDelegatesAlert.builder().task(task).build());
+        }
       } else {
         logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
         UpdateOperations<DelegateTask> updateOperations =
@@ -470,6 +491,10 @@ public class DelegateServiceImpl implements DelegateService {
         delegateTask = null;
       } else if (!assignDelegateService.canAssign(delegateTask, delegateId)) {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
+        if (System.currentTimeMillis() - delegateTask.getCreatedAt() > 30 * 1000) {
+          alertService.openAlert(delegateTask.getAccountId(), delegateTask.getAppId(), NoEligibleDelegates,
+              NoEligibleDelegatesAlert.builder().task(delegateTask).build());
+        }
         delegateTask = null;
       } else {
         logger.info("Assigning task {} to delegate {}", taskId, delegateId);
