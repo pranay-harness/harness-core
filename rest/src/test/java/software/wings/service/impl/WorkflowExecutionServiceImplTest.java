@@ -1012,6 +1012,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
+    Thread.sleep(1000);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
     assertThat(execution.getExecutionNode())
