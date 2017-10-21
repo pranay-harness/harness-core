@@ -1136,7 +1136,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (
-        execution.getStatus() != ExecutionStatus.PAUSED && execution.getExecutionNode().getGroup() == null && i < 15);
+        (execution.getStatus() != ExecutionStatus.PAUSED && i < 15) || execution.getExecutionNode().getGroup() == null);
 
     Thread.sleep(2000);
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
@@ -1403,8 +1403,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       i++;
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while (
-        execution.getStatus() != ExecutionStatus.ABORTED && execution.getExecutionNode().getGroup() == null && i < 15);
+    } while ((execution.getStatus() != ExecutionStatus.ABORTED && i < 15)
+        || execution.getExecutionNode().getGroup() == null);
     Thread.sleep(1000);
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
