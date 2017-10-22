@@ -124,11 +124,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
     PageResponse pageResponse = aPageResponse().withResponse(singletonList(physicalInfrastructureMapping)).build();
-    when(wingsPersistence.query(InfrastructureMapping.class, pageRequest)).thenReturn(pageResponse);
+    when(wingsPersistence.query(InfrastructureMapping.class, pageRequest, false)).thenReturn(pageResponse);
 
     PageResponse<InfrastructureMapping> infrastructureMappings = infrastructureMappingService.list(pageRequest);
     assertThat(infrastructureMappings).hasSize(1).containsExactly(physicalInfrastructureMapping);
-    verify(wingsPersistence).query(InfrastructureMapping.class, pageRequest);
+    verify(wingsPersistence).query(InfrastructureMapping.class, pageRequest, false);
   }
 
   @Test
