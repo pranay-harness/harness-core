@@ -17,11 +17,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.alerts.AlertType;
-import software.wings.beans.CatalogItem;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
-import software.wings.beans.alert.ApprovalAlert;
-import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.dl.PageRequest;
@@ -29,7 +26,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
-import software.wings.service.intfc.CatalogService;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +40,6 @@ public class AlertServiceImpl implements AlertService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
-  @Inject private CatalogService catalogService;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -68,16 +63,14 @@ public class AlertServiceImpl implements AlertService {
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
-      AlertData transformedData = transformAlertData(alertType, alertData);
-      String title = buildTitle(alertType, transformedData);
       Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
           anAlert()
               .withAppId(appId)
               .withAccountId(accountId)
               .withType(alertType)
-              .withAlertData(transformedData)
               .withStatus(Open)
-              .withTitle(title)
+              .withAlertData(alertData)
+              .withTitle(alertData.getTitle())
               .withCategory(alertType.getCategory())
               .withSeverity(alertType.getSeverity())
               .build());
@@ -108,8 +101,7 @@ public class AlertServiceImpl implements AlertService {
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
     query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
                                                          : query.field("appId").equal(appId);
-    AlertData transformedData = transformAlertData(alertType, alertData);
-    return query.asList().stream().filter(alert -> transformedData.matches(alert.getAlertData())).findFirst();
+    return query.asList().stream().filter(alert -> alertData.matches(alert.getAlertData())).findFirst();
   }
 
   private void close(Alert alert) {
@@ -123,39 +115,6 @@ public class AlertServiceImpl implements AlertService {
                                 .equal(alert.getUuid()),
         alertUpdateOperations);
     logger.info("Alert closed: {}", alert);
-  }
-
-  private String buildTitle(AlertType alertType, AlertData alertData) {
-    switch (alertType) {
-      case ApprovalNeeded:
-        return String.format(alertType.getTitle(), ((ApprovalAlert) alertData).getName());
-      case ManualInterventionNeeded:
-        return String.format(alertType.getTitle(), ((ManualInterventionNeededAlert) alertData).getName());
-      case NoEligibleDelegates:
-        return String.format(alertType.getTitle(), getTaskTypeDisplayName((NoEligibleDelegatesAlert) alertData));
-      default:
-        return alertType.getTitle();
-    }
-  }
-
-  private String getTaskTypeDisplayName(NoEligibleDelegatesAlert alertData) {
-    List<CatalogItem> taskTypes = catalogService.getCatalogItems("TASK_TYPES");
-    String taskTypeValue = alertData.getTask().getTaskType().getTaskGroup().name();
-    Optional<CatalogItem> taskTypeCatalogItem =
-        taskTypes.stream().filter(taskType -> taskType.getValue().equals(taskTypeValue)).findFirst();
-    return taskTypeCatalogItem.isPresent() ? taskTypeCatalogItem.get().getDisplayText() : taskTypeValue;
-  }
-
-  private AlertData transformAlertData(AlertType alertType, AlertData alertData) {
-    switch (alertType) {
-      case NoEligibleDelegates:
-        NoEligibleDelegatesAlert noEligibleDelegatesData = (NoEligibleDelegatesAlert) alertData;
-        Optional.ofNullable(noEligibleDelegatesData.getTask().getTaskType())
-            .ifPresent(taskType -> noEligibleDelegatesData.setTaskType(taskType.getTaskGroup()));
-        return noEligibleDelegatesData;
-      default:
-        return alertData;
-    }
   }
 
   @Override

@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.alerts.AlertType;
 
 /**
  * Created by sgurubelli on 10/18/17.
@@ -17,5 +18,10 @@ public class ManualInterventionNeededAlert implements AlertData {
   @Override
   public boolean matches(AlertData alertData) {
     return stateExecutionInstanceId.equals(((ManualInterventionNeededAlert) alertData).getStateExecutionInstanceId());
+  }
+
+  @Override
+  public String getTitle() {
+    return String.format(AlertType.ManualInterventionNeeded.getTitle(), name);
   }
 }

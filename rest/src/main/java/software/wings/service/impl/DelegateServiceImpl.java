@@ -15,6 +15,7 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -51,7 +52,6 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -437,7 +437,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-          NoEligibleDelegatesAlert.builder().task(task).build());
+          aNoEligibleDelegatesAlert().withTask(task).build());
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
 
@@ -475,7 +475,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
         if (System.currentTimeMillis() - task.getCreatedAt() > 3 * 60 * 1000) {
           alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-              NoEligibleDelegatesAlert.builder().task(task).build());
+              aNoEligibleDelegatesAlert().withTask(task).build());
         }
       } else {
         logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
@@ -493,7 +493,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
         if (System.currentTimeMillis() - delegateTask.getCreatedAt() > 30 * 1000) {
           alertService.openAlert(delegateTask.getAccountId(), delegateTask.getAppId(), NoEligibleDelegates,
-              NoEligibleDelegatesAlert.builder().task(delegateTask).build());
+              aNoEligibleDelegatesAlert().withTask(delegateTask).build());
         }
         delegateTask = null;
       } else {
