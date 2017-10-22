@@ -15,7 +15,7 @@ public class NoActiveDelegatesAlert implements AlertData {
   }
 
   @Override
-  public String getTitle() {
+  public String buildTitle() {
     return AlertType.NoActiveDelegates.getTitle();
   }
 }

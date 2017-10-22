@@ -70,7 +70,7 @@ public class AlertServiceImpl implements AlertService {
               .withType(alertType)
               .withStatus(Open)
               .withAlertData(alertData)
-              .withTitle(alertData.getTitle())
+              .withTitle(alertData.buildTitle())
               .withCategory(alertType.getCategory())
               .withSeverity(alertType.getSeverity())
               .build());
