@@ -118,7 +118,7 @@ public class MetricAnalysisJob implements Job {
     }
 
     private NewRelicMetricAnalysisRecord analyzeLocal(int analysisMinute) {
-      logger.info("running new relic analysis for minute {}", analysisMinute);
+      logger.info("running " + context.getStateType().name() + " for minute {}", analysisMinute);
       final List<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? analysisService.getPreviousSuccessfulRecords(
@@ -270,6 +270,8 @@ public class MetricAnalysisJob implements Job {
 
     @Override
     public void run() {
+      logger.info("Starting analysis for " + context.getStateExecutionId());
+
       boolean completeCron = false;
       UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
       if (!uuid.equals(this.uuid)) {
@@ -289,6 +291,8 @@ public class MetricAnalysisJob implements Job {
 
         final int analysisMinute = analysisService.getCollectionMinuteToProcess(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
+
+        logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
 
         if (analysisMinute > context.getTimeDuration() - 1) {
           logger.info("time series analysis finished after running for {minutes}", analysisMinute);
@@ -324,6 +328,7 @@ public class MetricAnalysisJob implements Job {
         }
         analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
             context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
+        logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
       } catch (Exception ex) {
         completeCron = true;
         logger.warn("analysis failed", ex);
