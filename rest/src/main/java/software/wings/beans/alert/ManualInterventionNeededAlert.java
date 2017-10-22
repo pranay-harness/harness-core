@@ -2,7 +2,6 @@ package software.wings.beans.alert;
 
 import lombok.Builder;
 import lombok.Data;
-import software.wings.alerts.AlertType;
 
 /**
  * Created by sgurubelli on 10/18/17.
@@ -22,6 +21,6 @@ public class ManualInterventionNeededAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    return String.format(AlertType.ManualInterventionNeeded.getTitle(), name);
+    return name + " requires manual action";
   }
 }

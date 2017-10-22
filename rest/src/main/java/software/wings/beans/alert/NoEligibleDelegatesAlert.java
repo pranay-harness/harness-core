@@ -2,7 +2,6 @@ package software.wings.beans.alert;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.alerts.AlertType;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskGroup;
@@ -40,7 +39,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    return String.format(AlertType.NoEligibleDelegates.getTitle(), getTaskTypeDisplayName());
+    return String.format("No delegates are eligible to execute %s tasks", getTaskTypeDisplayName());
   }
 
   private String getTaskTypeDisplayName() {
