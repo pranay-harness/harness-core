@@ -91,7 +91,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.rules.RealMongo;
-import software.wings.rules.RepeatRule.Repeat;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -121,7 +120,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-@Listeners(NotifyEventListener.class)
+@Listeners({NotifyEventListener.class, ExecutionEventListener.class})
 @RealMongo
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -831,6 +830,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
+    System.out.println("shouldUpdateFailedCount test done");
   }
 
   /**
@@ -1012,6 +1012,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
+    Thread.sleep(1000);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
     assertThat(execution.getExecutionNode())
@@ -1059,7 +1062,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
@@ -1117,7 +1119,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    Thread.sleep(1000);
+    Thread.sleep(2000);
 
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -1131,9 +1133,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     int i = 0;
     do {
       i++;
-      Thread.sleep(1500);
+      Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
+    } while (
+        (execution.getStatus() != ExecutionStatus.PAUSED && i < 15) || execution.getExecutionNode().getGroup() == null);
+
+    Thread.sleep(2000);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
     List<Node> wait1List = execution.getExecutionNode()
                                .getGroup()
@@ -1281,6 +1287,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
+    Thread.sleep(1000);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
     assertThat(execution.getExecutionNode())
@@ -1379,7 +1387,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    Thread.sleep(1000);
+    Thread.sleep(3000);
 
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
@@ -1395,7 +1403,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       i++;
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while (execution.getStatus() != ExecutionStatus.ABORTED && i < 5);
+    } while ((execution.getStatus() != ExecutionStatus.ABORTED && i < 15)
+        || execution.getExecutionNode().getGroup() == null);
+    Thread.sleep(1000);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
     assertThat(execution)
         .isNotNull()
@@ -1591,13 +1602,17 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private List<Node> getNodes(String executionId) throws InterruptedException {
     WorkflowExecution execution;
     int i = 0;
-    List<Node> installNodes;
-    boolean paused;
+    List<Node> installNodes = null;
+    boolean paused = false;
     do {
       i++;
       Thread.sleep(1000);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
+      if (execution.getExecutionNode() == null || execution.getExecutionNode().getGroup() == null
+          || execution.getExecutionNode().getGroup().getElements() == null) {
+        continue;
+      }
       installNodes = execution.getExecutionNode()
                          .getGroup()
                          .getElements()

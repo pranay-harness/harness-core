@@ -4,7 +4,13 @@
 
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
+import static software.wings.sm.ExecutionStatus.NEW;
+import static software.wings.sm.ExecutionStatus.QUEUED;
+import static software.wings.sm.ExecutionStatus.RUNNING;
+import static software.wings.sm.ExecutionStatus.STARTING;
 
 import com.google.inject.Inject;
 
@@ -14,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
@@ -21,9 +28,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The Class WorkflowExecutionUpdate.
@@ -40,6 +44,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @javax.inject.Inject private Queue<ExecutionEvent> executionEventQueue;
 
   /**
    * Instantiates a new workflow execution update.
@@ -99,35 +104,36 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    List<ExecutionStatus> runningStatuses = new ArrayList<>();
-    runningStatuses.add(ExecutionStatus.NEW);
-    runningStatuses.add(ExecutionStatus.STARTING);
-    runningStatuses.add(ExecutionStatus.RUNNING);
-
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field("appId")
                                          .equal(appId)
                                          .field(ID_KEY)
                                          .equal(workflowExecutionId)
                                          .field("status")
-                                         .in(runningStatuses);
+                                         .in(asList(NEW, QUEUED, STARTING, RUNNING));
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set("status", status)
                                                         .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
-    handlePostExecution();
+    handlePostExecution(context);
 
     if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
-      waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+      if (needToNotifyPipeline) {
+        waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+      }
     }
   }
 
-  protected void handlePostExecution() {
+  protected void handlePostExecution(ExecutionContext context) {
     try {
-      workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
+      WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
+      if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+        executionEventQueue.send(
+            anExecutionEvent().withAppId(context.getAppId()).withWorkflowId(workflowExecution.getWorkflowId()).build());
+      }
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
     }

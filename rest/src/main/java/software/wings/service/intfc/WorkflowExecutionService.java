@@ -118,6 +118,8 @@ public interface WorkflowExecutionService {
    */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
+  void startQueuedExecution(String appId, String workflowId);
+
   /**
    * Trigger env execution workflow execution.
    *

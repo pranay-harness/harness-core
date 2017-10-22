@@ -67,6 +67,7 @@ public class Notifier implements Runnable {
       // process distinct set of wait instanceIds
       waitQueuesResponse.stream()
           .map(WaitQueue::getWaitInstanceId)
+          .distinct()
           .forEach(waitInstanceId
               -> notifyQueue.send(
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
