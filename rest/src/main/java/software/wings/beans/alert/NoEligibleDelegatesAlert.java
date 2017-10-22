@@ -39,7 +39,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
   }
 
   @Override
-  public String getTitle() {
+  public String buildTitle() {
     return String.format(AlertType.NoEligibleDelegates.getTitle(), getTaskTypeDisplayName());
   }
 

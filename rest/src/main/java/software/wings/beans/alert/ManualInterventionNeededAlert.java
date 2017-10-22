@@ -21,7 +21,7 @@ public class ManualInterventionNeededAlert implements AlertData {
   }
 
   @Override
-  public String getTitle() {
+  public String buildTitle() {
     return String.format(AlertType.ManualInterventionNeeded.getTitle(), name);
   }
 }

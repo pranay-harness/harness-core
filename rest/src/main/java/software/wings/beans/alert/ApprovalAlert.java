@@ -20,7 +20,7 @@ public class ApprovalAlert implements AlertData {
   }
 
   @Override
-  public String getTitle() {
+  public String buildTitle() {
     return String.format(AlertType.ApprovalNeeded.getTitle(), name);
   }
 }
