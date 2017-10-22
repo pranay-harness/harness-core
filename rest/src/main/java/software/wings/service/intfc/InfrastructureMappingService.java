@@ -25,13 +25,9 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 1/10/17.
  */
 public interface InfrastructureMappingService {
-  /**
-   * List page response.
-   *
-   * @param pageRequest the page request
-   * @return the page response
-   */
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
+
+  PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation);
 
   /**
    * Save infrastructure mapping.

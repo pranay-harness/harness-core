@@ -115,7 +115,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
-    PageResponse<InfrastructureMapping> pageResponse = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
+    return list(pageRequest, false);
+  }
+
+  @Override
+  public PageResponse<InfrastructureMapping> list(
+      PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation) {
+    PageResponse<InfrastructureMapping> pageResponse =
+        wingsPersistence.query(InfrastructureMapping.class, pageRequest, disableValidation);
     if (pageResponse != null && pageResponse.getResponse() != null) {
       for (InfrastructureMapping infrastructureMapping : pageResponse.getResponse()) {
         try {

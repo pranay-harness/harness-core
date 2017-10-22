@@ -10,7 +10,6 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
@@ -207,10 +206,10 @@ public class SettingsServiceImpl implements SettingsService {
       List<InfrastructureMapping> infrastructureMappings =
           infrastructureMappingService
               .list(aPageRequest()
-                        .addFilter("infraMappingType", EQ, AWS_SSH.getName())
                         .addFilter("loadBalancerId", EQ, connectorSetting.getUuid())
                         .withLimit(PageRequest.UNLIMITED)
-                        .build())
+                        .build(),
+                  true)
               .getResponse();
       if (infrastructureMappings.size() > 0) {
         List<String> infraMappingNames =
