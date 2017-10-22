@@ -209,27 +209,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-            // TODO Only collect for the nodes of interest
-            // This will simply fail because we wont sent any
-            // heartbeat if no application instances are found
-            // so everything hangs
             for (NewRelicApplicationInstance node : instances) {
-              // HeartBeat
-              records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
-                  NewRelicMetricDataRecord.builder()
-                      .stateType(getStateType())
-                      .name(HARNESS_HEARTEAT_METRIC_NAME)
-                      .applicationId(dataCollectionInfo.getApplicationId())
-                      .workflowId(dataCollectionInfo.getWorkflowId())
-                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                      .serviceId(dataCollectionInfo.getServiceId())
-                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                      .dataCollectionMinute(dataCollectionMinute)
-                      .host(node.getHost())
-                      .timeStamp(collectionStartTime)
-                      .level(ClusterLevel.H0)
-                      .build());
-
               List<Collection<String>> metricBatches = batchMetricsToCollect();
 
               for (Collection<String> metricNames : metricBatches) {
@@ -245,6 +225,27 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   + dataCollectionMinute);
               records.clear();
             }
+
+            // HeartBeat
+            records.put(HARNESS_HEARTEAT_METRIC_NAME, 0l,
+                NewRelicMetricDataRecord.builder()
+                    .stateType(getStateType())
+                    .name(HARNESS_HEARTEAT_METRIC_NAME)
+                    .applicationId(dataCollectionInfo.getApplicationId())
+                    .workflowId(dataCollectionInfo.getWorkflowId())
+                    .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+                    .serviceId(dataCollectionInfo.getServiceId())
+                    .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+                    .dataCollectionMinute(dataCollectionMinute)
+                    .timeStamp(collectionStartTime)
+                    .level(ClusterLevel.H0)
+                    .build());
+
+            metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
+                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(),
+                getAllMetricRecords(records));
+            records.clear();
+
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
             dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
