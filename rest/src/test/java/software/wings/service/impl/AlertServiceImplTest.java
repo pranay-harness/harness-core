@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
+import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -32,7 +33,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.alerts.AlertType;
-import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.ApprovalAlert;
@@ -69,10 +69,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   private final NoActiveDelegatesAlert noActiveDelegatesAlert =
       NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build();
   private final NoEligibleDelegatesAlert noEligibleDelegatesAlert =
-      NoEligibleDelegatesAlert.builder()
-          .taskType(TaskGroup.JENKINS)
-          .task(aDelegateTask().withTaskType(TaskType.JENKINS).build())
-          .build();
+      aNoEligibleDelegatesAlert().withTask(aDelegateTask().withTaskType(TaskType.JENKINS).build()).build();
 
   private final Alert noActive = anAlert()
                                      .withAccountId(ACCOUNT_ID)
