@@ -11,6 +11,9 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "1") private String threadCount = "1";
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
   @JsonProperty(defaultValue = "true") private String autoStart = "true";
+  @JsonProperty(defaultValue = "automation_scheduler") private String schedulerName = "automation_scheduler";
+  @JsonProperty(defaultValue = "automation") private String instanceId = "automation";
+  @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
 
   public String getJobstoreclass() {
     return jobstoreclass;
@@ -42,5 +45,29 @@ public class SchedulerConfig {
 
   public void setAutoStart(String autoStart) {
     this.autoStart = autoStart;
+  }
+
+  public String getSchedulerName() {
+    return schedulerName;
+  }
+
+  public void setSchedulerName(String schedulerName) {
+    this.schedulerName = schedulerName;
+  }
+
+  public String getInstanceId() {
+    return instanceId;
+  }
+
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
+
+  public String getTablePrefix() {
+    return tablePrefix;
+  }
+
+  public void setTablePrefix(String tablePrefix) {
+    this.tablePrefix = tablePrefix;
   }
 }
