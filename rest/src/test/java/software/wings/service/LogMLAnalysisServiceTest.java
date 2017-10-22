@@ -754,7 +754,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void deleteClusterLevel() throws Exception {
     String query = UUID.randomUUID().toString();
     int numOfHosts = 1 + r.nextInt(10);

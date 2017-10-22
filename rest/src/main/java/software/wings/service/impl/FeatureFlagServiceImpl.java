@@ -29,7 +29,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error
-      logger.error("FeatureFlag " + featureName.name() + " not found.");
+      logger.info("FeatureFlag " + featureName.name() + " not found.");
       return false;
     }
 
