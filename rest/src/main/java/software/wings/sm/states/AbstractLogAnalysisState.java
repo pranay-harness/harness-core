@@ -193,12 +193,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                         .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
                         .build();
 
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).repeatForever())
-            .startAt(startDate)
-            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(60)
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                          .startAt(startDate)
+                          .build();
 
     jobScheduler.scheduleJob(job, trigger);
   }
@@ -214,12 +216,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                         .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
                         .build();
 
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).repeatForever())
-            .startAt(startDate)
-            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(60)
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                          .startAt(startDate)
+                          .build();
 
     jobScheduler.scheduleJob(job, trigger);
   }

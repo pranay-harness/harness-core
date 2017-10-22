@@ -160,7 +160,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                           .withIdentity(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(ARTIFACT_STREAM_POLL_INTERVAL)
-                                            .repeatForever())
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
