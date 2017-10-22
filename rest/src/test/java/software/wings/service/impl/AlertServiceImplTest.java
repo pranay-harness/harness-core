@@ -134,7 +134,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
     assertThat(savedAlert.getType()).isEqualTo(AlertType.NoActiveDelegates);
     assertThat(savedAlert.getCategory()).isEqualTo(AlertType.NoActiveDelegates.getCategory());
     assertThat(savedAlert.getSeverity()).isEqualTo(AlertType.NoActiveDelegates.getSeverity());
-    assertThat(savedAlert.getTitle()).isEqualTo(AlertType.NoActiveDelegates.getTitle());
+    assertThat(savedAlert.getTitle()).isEqualTo("No delegates are available");
   }
 
   @Test
