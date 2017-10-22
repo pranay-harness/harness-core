@@ -132,7 +132,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     Trigger trigger =
         TriggerBuilder.newTrigger()
             .withIdentity(context.getStateExecutionId(), getStateType().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60).repeatForever())
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                              .withIntervalInSeconds(60)
+                              .withMisfireHandlingInstructionNowWithExistingCount()
+                              .repeatForever())
             .startAt(startDate)
             .build();
 
