@@ -7,23 +7,17 @@ import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
 public enum AlertType {
-  ApprovalNeeded(Approval, Warning, "%s needs approval"),
-  ManualInterventionNeeded(ManualIntervention, Warning, "%s requires manual action"),
-  NoActiveDelegates(Setup, Error, "No delegates are available"),
-  NoEligibleDelegates(Setup, Error, "No delegates are eligible to execute %s tasks");
+  ApprovalNeeded(Approval, Warning),
+  ManualInterventionNeeded(ManualIntervention, Warning),
+  NoActiveDelegates(Setup, Error),
+  NoEligibleDelegates(Setup, Error);
 
-  private String title;
   private AlertCategory category;
   private AlertSeverity severity;
 
-  AlertType(AlertCategory category, AlertSeverity severity, String title) {
+  AlertType(AlertCategory category, AlertSeverity severity) {
     this.category = category;
     this.severity = severity;
-    this.title = title;
-  }
-
-  public String getTitle() {
-    return title;
   }
 
   public AlertCategory getCategory() {
@@ -32,9 +26,5 @@ public enum AlertType {
 
   public AlertSeverity getSeverity() {
     return severity;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
   }
 }
