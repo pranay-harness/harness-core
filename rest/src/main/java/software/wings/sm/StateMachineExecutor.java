@@ -9,7 +9,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.FeatureFlag.FeatureName.MANUAL_INTERVENTION_ALERTS;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -578,19 +577,20 @@ public class StateMachineExecutor {
   private void openAnAlert(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     try {
       Application app = context.getApp();
-      if (featureFlagService.isEnabled(MANUAL_INTERVENTION_ALERTS, app.getAccountId())) {
-        ManualInterventionNeededAlert manualInterventionNeededAlert =
-            ManualInterventionNeededAlert.builder()
-                .envId(context.getEnv().getUuid())
-                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-                .executionId(context.getWorkflowExecutionId())
-                .name(context.getWorkflowExecutionName())
-                .build();
-        alertService.openAlert(
-            app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
-      }
+
+      ManualInterventionNeededAlert manualInterventionNeededAlert =
+          ManualInterventionNeededAlert.builder()
+              .envId(context.getEnv().getUuid())
+              .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+              .executionId(context.getWorkflowExecutionId())
+              .name(context.getWorkflowExecutionName())
+              .build();
+      alertService.openAlert(
+          app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
+
     } catch (Exception e) {
-      logger.error("Failed to open an alarm", e);
+      logger.warn("Failed to open ManualInterventionNeeded alarm for  executionId {} and name ",
+          context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
     }
   }
 

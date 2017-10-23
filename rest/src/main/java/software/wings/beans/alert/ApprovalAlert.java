@@ -15,7 +15,9 @@ public class ApprovalAlert implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    return approvalId.equals(((ApprovalAlert) alertData).getApprovalId());
+    ApprovalAlert approvalAlert = (ApprovalAlert) alertData;
+    return approvalId == null ? executionId.equals(approvalAlert.getExecutionId())
+                              : approvalId.equals(approvalAlert.getApprovalId());
   }
 
   @Override

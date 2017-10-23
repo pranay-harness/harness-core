@@ -9,6 +9,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
 
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -24,9 +25,15 @@ public class DataCleanUpJob implements Job {
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
   @Inject private AlertService alertService;
+  @Inject private ExecutorService executorService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+    logger.info("Running Data Cleanup Job asynchronously and returning");
+    executorService.submit(() -> executeInternal());
+  }
+
+  private void executeInternal() {
     logger.info("Running Data Cleanup Job");
     deleteArtifacts();
     deleteAuditRecords();
