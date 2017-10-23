@@ -4,7 +4,6 @@
 
 package software.wings.sm;
 
-import static software.wings.alerts.AlertType.ApprovalNeeded;
 import static software.wings.alerts.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
@@ -34,7 +33,6 @@ import com.google.inject.Injector;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.alert.ApprovalAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -183,16 +181,7 @@ public class ExecutionInterruptManager {
     try {
       switch (executionInterrupt.getExecutionInterruptType()) {
         case ABORT_ALL: {
-          // Close approval alert
-          alertService.closeAlert(
-              null, appId, ApprovalNeeded, ApprovalAlert.builder().executionId(executionId).build());
-          // Close ManualIntervention alert
-          ManualInterventionNeededAlert manualInterventionNeededAlert =
-              ManualInterventionNeededAlert.builder()
-                  .executionId(executionId)
-                  .stateExecutionInstanceId(stateExecutionInstanceId)
-                  .build();
-          alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
+          alertService.deploymentAborted(appId, executionId);
           break;
         }
         case RESUME:
@@ -215,7 +204,7 @@ public class ExecutionInterruptManager {
       }
     } catch (Exception e) {
       logger.error(
-          "Failed to close the ManualInterventionNeeded alarm for appId, executionId  ", appId, executionId, e);
+          "Failed to close the ManualNeededAlert/ ApprovalAlert  for appId, executionId  ", appId, executionId, e);
     }
   }
 

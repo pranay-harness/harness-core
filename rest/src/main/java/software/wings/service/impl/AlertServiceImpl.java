@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.awaitility.Awaitility.with;
 import static org.awaitility.Duration.TEN_MINUTES;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
+import static software.wings.alerts.AlertType.ApprovalNeeded;
+import static software.wings.alerts.AlertType.ManualInterventionNeeded;
 import static software.wings.alerts.AlertType.NoActiveDelegates;
 import static software.wings.alerts.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -19,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.alerts.AlertType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
+import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.dl.PageRequest;
@@ -59,6 +64,28 @@ public class AlertServiceImpl implements AlertService {
   @Override
   public void activeDelegateUpdated(String accountId, String delegateId) {
     executorService.submit(() -> activeDelegateUpdatedInternal(accountId, delegateId));
+  }
+
+  @Override
+  public void deploymentAborted(String appId, String executionId) {
+    executorService.submit(() -> deploymentAbortedInternal(appId, executionId));
+  }
+
+  private void deploymentAbortedInternal(String appId, String executionId) {
+    wingsPersistence.createQuery(Alert.class)
+        .field("appId")
+        .equal(appId)
+        .field("type")
+        .in(asList(ApprovalNeeded, ManualInterventionNeeded))
+        .field("status")
+        .equal(Open)
+        .asList()
+        .stream()
+        .filter(alert
+            -> executionId.equals(alert.getType().equals(ApprovalNeeded)
+                    ? ((ApprovalAlert) alert.getAlertData()).getExecutionId()
+                    : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId()))
+        .forEach(this ::close);
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {

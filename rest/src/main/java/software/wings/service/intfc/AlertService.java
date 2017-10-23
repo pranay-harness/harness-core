@@ -15,6 +15,8 @@ public interface AlertService {
 
   void activeDelegateUpdated(String accountId, String delegateId);
 
+  void deploymentAborted(String appId, String executionId);
+
   void deleteByAccountId(String accountId);
 
   void deleteByApp(String appId);
