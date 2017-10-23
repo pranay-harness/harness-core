@@ -40,33 +40,34 @@ then
 fi
 
 
-if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+if [[ $1 == "restart" ]]
 then
-  echo "Delegate already running"
-else
+  echo "Restart"
   export HOSTNAME
-  export CAPSULE_CACHE_DIR="$DIR/.cache"
-  rm -rf "$CAPSULE_CACHE_DIR"
-  if [[ $1 == "restart" ]]
+  $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml restart
+else
+  if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
   then
-    echo "Restart"
-    $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml restart
+    echo "Delegate already running"
   else
+    export HOSTNAME
+    export CAPSULE_CACHE_DIR="$DIR/.cache"
+    rm -rf "$CAPSULE_CACHE_DIR"
     nohup $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
-  fi
-  sleep 1
-  if [ -s nohup.out ]
-  then
-    echo "Failed to start Delegate."
-    echo "$(cat nohup.out)"
-  else
-    sleep 3
-    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+    sleep 1
+    if [ -s nohup.out ]
     then
-      echo "Delegate started"
-    else
       echo "Failed to start Delegate."
-      echo "$(tail -n 30 delegate.log)"
+      echo "$(cat nohup.out)"
+    else
+      sleep 3
+      if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+      then
+        echo "Delegate started"
+      else
+        echo "Failed to start Delegate."
+        echo "$(tail -n 30 delegate.log)"
+      fi
     fi
   fi
 fi
