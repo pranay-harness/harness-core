@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
@@ -55,6 +56,7 @@ public class QueueListenerTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Ignore
   public void shouldProcessWhenRecievedMessageFromQueue() throws Exception {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
