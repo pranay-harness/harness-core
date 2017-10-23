@@ -16,10 +16,7 @@ public class ManualInterventionNeededAlert implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    ManualInterventionNeededAlert manualInterventionNeededAlert = (ManualInterventionNeededAlert) alertData;
-    return stateExecutionInstanceId == null
-        ? executionId.equals(manualInterventionNeededAlert.getExecutionId())
-        : stateExecutionInstanceId.equals(manualInterventionNeededAlert.getStateExecutionInstanceId());
+    return stateExecutionInstanceId.equals(((ManualInterventionNeededAlert) alertData).getStateExecutionInstanceId());
   }
 
   @Override

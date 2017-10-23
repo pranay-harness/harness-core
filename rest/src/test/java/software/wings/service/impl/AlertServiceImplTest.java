@@ -10,6 +10,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.alerts.AlertType.ApprovalNeeded;
+import static software.wings.alerts.AlertType.ManualInterventionNeeded;
+import static software.wings.alerts.AlertType.NoActiveDelegates;
+import static software.wings.alerts.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
@@ -32,10 +36,10 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
-import software.wings.alerts.AlertType;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.dl.PageRequest;
@@ -75,25 +79,37 @@ public class AlertServiceImplTest extends WingsBaseTest {
                                      .withAccountId(ACCOUNT_ID)
                                      .withAppId(GLOBAL_APP_ID)
                                      .withAlertData(noActiveDelegatesAlert)
-                                     .withType(AlertType.NoActiveDelegates)
+                                     .withType(NoActiveDelegates)
                                      .withStatus(AlertStatus.Open)
                                      .build();
   private final Alert noEligible = anAlert()
                                        .withAccountId(ACCOUNT_ID)
                                        .withAppId(GLOBAL_APP_ID)
                                        .withAlertData(noEligibleDelegatesAlert)
-                                       .withType(AlertType.NoEligibleDelegates)
+                                       .withType(NoEligibleDelegates)
                                        .withStatus(AlertStatus.Open)
                                        .build();
   private final Alert approval =
       anAlert()
           .withAccountId(ACCOUNT_ID)
           .withAppId(APP_ID)
-          .withType(AlertType.ApprovalNeeded)
+          .withType(ApprovalNeeded)
           .withAlertData(
               ApprovalAlert.builder().approvalId("approvalId").executionId("executionId").name("name").build())
           .withStatus(AlertStatus.Open)
           .build();
+
+  private final Alert manualIntervention = anAlert()
+                                               .withAccountId(ACCOUNT_ID)
+                                               .withAppId(APP_ID)
+                                               .withType(ManualInterventionNeeded)
+                                               .withAlertData(ManualInterventionNeededAlert.builder()
+                                                                  .stateExecutionInstanceId("stateExecutionId")
+                                                                  .executionId("executionId")
+                                                                  .name("name")
+                                                                  .build())
+                                               .withStatus(AlertStatus.Open)
+                                               .build();
 
   @Before
   public void setUp() {
@@ -104,6 +120,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
+    when(end.in(any())).thenReturn(query);
     when(query.limit(anyInt())).thenReturn(query);
     when(query.batchSize(anyInt())).thenReturn(query);
   }
@@ -124,16 +141,16 @@ public class AlertServiceImplTest extends WingsBaseTest {
   public void shouldOpenAlert() {
     when(query.asList()).thenReturn(emptyList());
 
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.NoActiveDelegates, noActiveDelegatesAlert);
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
 
     ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
     verify(wingsPersistence).saveAndGet(eq(Alert.class), alertCaptor.capture());
     Alert savedAlert = alertCaptor.getValue();
     assertThat(savedAlert.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedAlert.getAppId()).isEqualTo(GLOBAL_APP_ID);
-    assertThat(savedAlert.getType()).isEqualTo(AlertType.NoActiveDelegates);
-    assertThat(savedAlert.getCategory()).isEqualTo(AlertType.NoActiveDelegates.getCategory());
-    assertThat(savedAlert.getSeverity()).isEqualTo(AlertType.NoActiveDelegates.getSeverity());
+    assertThat(savedAlert.getType()).isEqualTo(NoActiveDelegates);
+    assertThat(savedAlert.getCategory()).isEqualTo(NoActiveDelegates.getCategory());
+    assertThat(savedAlert.getSeverity()).isEqualTo(NoActiveDelegates.getSeverity());
     assertThat(savedAlert.getTitle()).isEqualTo("No delegates are available");
   }
 
@@ -141,7 +158,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   public void shouldNotOpenMatchingAlert() {
     when(query.asList()).thenReturn(singletonList(noEligible));
 
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.NoEligibleDelegates, noEligibleDelegatesAlert);
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
 
     verify(wingsPersistence, times(0)).saveAndGet(any(), any());
   }
@@ -150,7 +167,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   public void shouldCloseAlert() {
     when(query.asList()).thenReturn(singletonList(noEligible));
 
-    alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.NoEligibleDelegates, noEligibleDelegatesAlert);
+    alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
 
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
   }
@@ -159,7 +176,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   public void shouldNotCloseAlertNoneFound() {
     when(query.asList()).thenReturn(emptyList());
 
-    alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.NoEligibleDelegates, noEligibleDelegatesAlert);
+    alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
 
     verify(wingsPersistence, times(0)).update(any(Query.class), any(UpdateOperations.class));
   }
@@ -174,6 +191,13 @@ public class AlertServiceImplTest extends WingsBaseTest {
     verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
   }
 
+  @Test
+  public void shouldCloseAlertsWhenDeploymentAborted() {
+    when(query.asList()).thenReturn(asList(approval, manualIntervention));
+    alertService.deploymentAborted(APP_ID, "executionId");
+
+    verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
+  }
   @Test
   public void shouldDeleteOldAlerts() {
     when(query.asList()).thenReturn(asList(noActive, noEligible));
