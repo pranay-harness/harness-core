@@ -484,6 +484,7 @@ public class DelegateServiceImpl implements DelegateService {
                 });
         injector.injectMembers(delegateRunnableTask);
         currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+        executorService.submit(() -> enforceDelegateTaskTimeout(delegateTask));
         logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
       } else {
         logger.info("DelegateTask already executing - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
@@ -492,6 +493,26 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (IOException e) {
       logger.error("Unable to acquire task", e);
+    }
+  }
+
+  private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
+    long startTime = System.currentTimeMillis();
+    boolean stillRunning = true;
+    while (stillRunning && System.currentTimeMillis() - startTime < delegateTask.getTimeout()) {
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        logger.warn("Time limiter thread interrupted.", e);
+      }
+
+      Future taskFuture = currentlyExecutingFutures.get(delegateTask.getUuid());
+      stillRunning = taskFuture != null && !taskFuture.isDone() && !taskFuture.isCancelled();
+    }
+    if (stillRunning) {
+      logger.info("Task timed out: {}", delegateTask.getUuid());
+      Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
+          .ifPresent(future -> future.cancel(true));
     }
   }
 
