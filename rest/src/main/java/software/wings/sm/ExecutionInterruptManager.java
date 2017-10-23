@@ -4,6 +4,8 @@
 
 package software.wings.sm;
 
+import static software.wings.alerts.AlertType.ApprovalNeeded;
+import static software.wings.alerts.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
@@ -32,11 +34,14 @@ import com.google.inject.Injector;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.alert.ApprovalAlert;
+import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.WorkflowNotificationHelper;
+import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
@@ -56,6 +61,7 @@ public class ExecutionInterruptManager {
 
   @Inject private Injector injector;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private AlertService alertService;
 
   /**
    * Register execution event execution event.
@@ -64,6 +70,7 @@ public class ExecutionInterruptManager {
    * @return the execution event
    */
   public ExecutionInterrupt registerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    StateExecutionInstance stateExecutionInstance = null;
     ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
     if (executionInterruptType == PAUSE || executionInterruptType == IGNORE
         || executionInterruptType == ExecutionInterruptType.RETRY || executionInterruptType == ABORT
@@ -72,8 +79,8 @@ public class ExecutionInterruptManager {
         throw new WingsException(INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
       }
 
-      StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
-          executionInterrupt.getAppId(), executionInterrupt.getStateExecutionInstanceId());
+      stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, executionInterrupt.getAppId(),
+          executionInterrupt.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
         throw new WingsException(INVALID_ARGUMENT, "args",
             "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
@@ -140,7 +147,7 @@ public class ExecutionInterruptManager {
     stateMachineExecutor.handleInterrupt(executionInterrupt);
 
     sendNotificationIfRequired(executionInterrupt);
-
+    closeAlertsIfOpened(stateExecutionInstance, executionInterrupt);
     return executionInterrupt;
   }
 
@@ -158,6 +165,57 @@ public class ExecutionInterruptManager {
         sendNotification(executionInterrupt, ExecutionStatus.ABORTED);
         break;
       }
+    }
+  }
+
+  /**
+   * Closes alerts if any opened
+   * @param stateExecutionInstance
+   * @param executionInterrupt
+   */
+  private void closeAlertsIfOpened(
+      StateExecutionInstance stateExecutionInstance, ExecutionInterrupt executionInterrupt) {
+    String stateExecutionInstanceId = stateExecutionInstance != null ? stateExecutionInstance.getUuid()
+                                                                     : executionInterrupt.getStateExecutionInstanceId();
+    String executionId = stateExecutionInstance != null ? stateExecutionInstance.getExecutionUuid()
+                                                        : executionInterrupt.getExecutionUuid();
+    String appId = stateExecutionInstance != null ? stateExecutionInstance.getAppId() : executionInterrupt.getAppId();
+    try {
+      switch (executionInterrupt.getExecutionInterruptType()) {
+        case ABORT_ALL: {
+          // Close approval alert
+          alertService.closeAlert(
+              null, appId, ApprovalNeeded, ApprovalAlert.builder().executionId(executionId).build());
+          // Close ManualIntervention alert
+          ManualInterventionNeededAlert manualInterventionNeededAlert =
+              ManualInterventionNeededAlert.builder()
+                  .executionId(executionId)
+                  .stateExecutionInstanceId(stateExecutionInstanceId)
+                  .build();
+          alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
+          break;
+        }
+        case RESUME:
+        case RETRY:
+        case IGNORE:
+        case ROLLBACK:
+        case ABORT:
+        case RESUME_ALL:
+        case MARK_SUCCESS:
+        case MARK_FAILED: {
+          // Close ManualIntervention alert
+          ManualInterventionNeededAlert manualInterventionNeededAlert =
+              ManualInterventionNeededAlert.builder()
+                  .executionId(executionId)
+                  .stateExecutionInstanceId(stateExecutionInstanceId)
+                  .build();
+          alertService.closeAlert(null, appId, ManualInterventionNeeded, manualInterventionNeededAlert);
+          break;
+        }
+      }
+    } catch (Exception e) {
+      logger.error(
+          "Failed to close the ManualInterventionNeeded alarm for appId, executionId  ", appId, executionId, e);
     }
   }
 

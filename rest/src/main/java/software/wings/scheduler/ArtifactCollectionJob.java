@@ -18,7 +18,7 @@ import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.utils.ArtifactType.*;
+import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -45,6 +45,7 @@ import software.wings.utils.Validator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -56,14 +57,20 @@ public class ArtifactCollectionJob implements Job {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ExecutorService executorService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
-    List<Artifact> artifacts = null;
+    logger.info("Received artifact collection job request for appId {} artifactStreamId {}", appId, artifactStreamId);
+    executorService.submit(() -> executeJobAsync(appId, artifactStreamId));
+    logger.info("Submitted request successfully");
+  }
 
+  private void executeJobAsync(String appId, String artifactStreamId) {
+    List<Artifact> artifacts = null;
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("Artifact Stream", artifactStream);
     try {
@@ -292,6 +299,8 @@ public class ArtifactCollectionJob implements Job {
       });
 
     } else {
+      logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       BuildDetails lastSuccessfulBuild =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (lastSuccessfulBuild != null) {
@@ -320,7 +329,8 @@ public class ArtifactCollectionJob implements Job {
                   .build();
           newArtifacts.add(artifactService.create(artifact));
         } else {
-          logger.info("Artifact of the version {} already collected.", buildNo);
+          logger.info("Artifact of the version {} already collected. Artifact status {}", buildNo,
+              lastCollectedArtifact.getStatus());
         }
       }
     }
