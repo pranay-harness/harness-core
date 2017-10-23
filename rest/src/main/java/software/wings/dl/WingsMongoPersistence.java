@@ -24,7 +24,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;

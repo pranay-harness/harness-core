@@ -6,7 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 

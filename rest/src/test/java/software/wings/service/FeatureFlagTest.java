@@ -15,7 +15,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;

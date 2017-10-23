@@ -13,7 +13,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.api.MetricDataAnalysisResponse;
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -32,7 +32,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
