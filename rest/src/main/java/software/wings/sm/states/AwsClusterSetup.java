@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
-import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
+import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 

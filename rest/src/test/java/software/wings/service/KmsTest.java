@@ -33,7 +33,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;

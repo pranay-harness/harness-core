@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static software.wings.beans.FeatureFlag.FeatureName.GIT_SYNC;
+import static software.wings.beans.FeatureName.GIT_SYNC;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 

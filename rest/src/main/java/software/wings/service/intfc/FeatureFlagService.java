@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.FeatureFlag.FeatureName;
+import software.wings.beans.FeatureName;
 
 public interface FeatureFlagService {
   boolean isEnabled(FeatureName featureName, String accountId);

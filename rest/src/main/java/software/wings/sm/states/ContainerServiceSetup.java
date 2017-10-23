@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static software.wings.beans.FeatureFlag.FeatureName.ECS_CREATE_CLUSTER;
-import static software.wings.beans.FeatureFlag.FeatureName.KUBERNETES_CREATE_CLUSTER;
+import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
+import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
