@@ -270,6 +270,18 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @PUT
+  @Path("{delegateId}/upgrading")
+  @Timed
+  @ExceptionMetered
+  public RestResponse setUpgradePending(@Context HttpServletRequest request,
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("upgrading") boolean upgrading) throws IOException, TemplateException {
+    delegateService.setUpgradePending(accountId, delegateId, upgrading);
+    return new RestResponse();
+  }
+
+  @DelegateAuth
   @GET
   @Path("{delegateId}/upgrade-check")
   @Timed

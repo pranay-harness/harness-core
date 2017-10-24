@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,19 +38,20 @@ public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
   @Inject private TimeLimiter timeLimiter;
-
+  @Inject private DelegateService delegateService;
   @Inject private SignalService signalService;
 
   @Override
   public void doUpgrade(DelegateScripts delegateScripts, String version)
       throws IOException, TimeoutException, InterruptedException {
-    logger.info("Replace run scripts");
+    logger.info("[Old] Replace run scripts");
     replaceRunScripts(delegateScripts);
-    logger.info("Run scripts downloaded");
+    logger.info("[Old] Run scripts downloaded");
 
+    File goaheadFile = new File("goahead");
     StartedProcess process = null;
     try {
-      logger.info("Starting new delegate process");
+      logger.info("[Old] Starting new delegate process");
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
@@ -62,24 +62,49 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
-      logger.info("upgrade script executed " + process.getProcess().isAlive());
+      logger.info("[Old] Upgrade script executed: {}", process.getProcess().isAlive());
 
-      logger.info("Wait for process to start");
+      logger.info("[Old] Waiting for process to start.");
       boolean processStarted = timeLimiter.callWithTimeout(
           ()
               -> streamContainsString(new InputStreamReader(pipedInputStream), "botstarted"),
-          30, TimeUnit.MINUTES, false);
+          15, TimeUnit.MINUTES, false);
       if (processStarted) {
         try {
-          logger.info("New Delegate started. Pause old delegate");
+          logger.info("[Old] New delegate process started.");
+          while (delegateService.getRunningTaskCount() > 0) {
+            logger.info("[Old] Delegate blocking new delegate while completing {} tasks.",
+                delegateService.getRunningTaskCount());
+            Thread.sleep(1000);
+          }
+          logger.info("[Old] Delegate finished with tasks, pausing.");
           signalService.pause();
-          logger.info("Old delegate paused");
-          new PrintWriter(process.getProcess().getOutputStream(), true).println("goahead");
-          removeDelegateVersionFromCapsule(delegateScripts, version);
-          cleanupOldDelegateVersionFromBackup(delegateScripts, version);
+          logger.info("[Old] Delegate paused.");
 
-          signalService.stop();
+          if (goaheadFile.createNewFile()) {
+            logger.info("[Old] Sent go ahead to new delegate.");
+            boolean goaheadReceived = timeLimiter.callWithTimeout(
+                ()
+                    -> streamContainsString(new InputStreamReader(pipedInputStream), "proceeding"),
+                15, TimeUnit.MINUTES, false);
+
+            if (goaheadReceived) {
+              logger.info("[Old] Handshake complete with new delegate. Shutting down.");
+              removeDelegateVersionFromCapsule(delegateScripts, version);
+              cleanupOldDelegateVersionFromBackup(delegateScripts, version);
+
+              signalService.stop();
+            } else {
+              process.getProcess().destroy();
+              process.getProcess().waitFor();
+            }
+          } else {
+            logger.error("[Old] Could not create go ahead file.");
+          }
         } finally {
+          if (!goaheadFile.delete()) {
+            logger.error("[Old] Could not delete go ahead file.");
+          }
           signalService.resume();
         }
       } else {
@@ -88,7 +113,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("Exception while upgrading", e);
+      logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -104,7 +129,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("ALERT: Couldn't kill forcibly.", ex);
+          logger.error("[Old] ALERT: Couldn't kill forcibly.", ex);
         }
       }
     }
@@ -114,9 +139,9 @@ public class UpgradeServiceImpl implements UpgradeService {
   public void doRestart() throws IOException, TimeoutException, InterruptedException {
     StartedProcess process = null;
     try {
-      logger.info("Restarting the delegate.");
+      logger.info("[Old] Restarting the delegate.");
       signalService.pause();
-      logger.info("Previous delegate paused.");
+      logger.info("[Old] Previous delegate paused.");
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
                     .timeout(5, TimeUnit.MINUTES)
@@ -129,17 +154,17 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .start();
       try {
         if (process.getProcess().isAlive()) {
-          logger.info("Delegate restarted. Stopping previous delegate.");
+          logger.info("[Old] New delegate restarted. Stopping.");
           signalService.stop();
         } else {
-          logger.error("Failed to restart delegate.");
+          logger.error("[Old] Failed to restart delegate.");
         }
       } finally {
         signalService.resume();
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("Exception while restarting", e);
+      logger.error("[Old] Exception while restarting", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -155,7 +180,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             }
           }
         } catch (Exception ex) {
-          logger.error("ALERT: Couldn't kill forcibly.", ex);
+          logger.error("[Old] ALERT: Couldn't kill forcibly.", ex);
         }
       }
     }
@@ -191,13 +216,13 @@ public class UpgradeServiceImpl implements UpgradeService {
           writer.write(script, 0, script.length());
           writer.flush();
         }
-        logger.info("Done replacing file [{}]. Set User and Group permission", scriptFile);
+        logger.info("[Old] Done replacing file [{}]. Set User and Group permission", scriptFile);
         Files.setPosixFilePermissions(scriptFile.toPath(),
             Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
                 PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-        logger.info("Done setting file permissions");
+        logger.info("[Old] Done setting file permissions");
       } else {
-        logger.error("Couldn't find script for file [{}]", scriptFile);
+        logger.error("[Old] Couldn't find script for file [{}]", scriptFile);
       }
     }
   }
@@ -207,7 +232,6 @@ public class UpgradeServiceImpl implements UpgradeService {
     int numCharsRead;
     int count = 0;
     while ((numCharsRead = reader.read(buffer)) > 0) {
-      logger.info("String on stream [{}]", new String(buffer));
       for (int c = 0; c < numCharsRead; c++) {
         if (buffer[c] == searchString.charAt(count))
           count++;
@@ -223,7 +247,7 @@ public class UpgradeServiceImpl implements UpgradeService {
   private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
     FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
       if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
-        logger.info("File Name to be deleted = " + file.getAbsolutePath());
+        logger.info("[Old] File Name to be deleted = " + file.getAbsolutePath());
         FileUtils.deleteQuietly(file);
       }
     });
