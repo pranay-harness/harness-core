@@ -16,6 +16,7 @@ public class Delegate extends Base {
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
   private boolean connected;
+  private boolean upgrading;
   private String ip;
   private String hostName;
   private long lastHeartBeat;
@@ -205,12 +206,21 @@ public class Delegate extends Base {
     this.supportedTaskTypes = supportedTaskTypes;
   }
 
+  public boolean isUpgrading() {
+    return upgrading;
+  }
+
+  public void setUpgrading(boolean upgrading) {
+    this.upgrading = upgrading;
+  }
+
   public enum Status { ENABLED, DISABLED }
 
   public static final class Builder {
     private String accountId;
     private Status status = Status.ENABLED;
     private boolean connected;
+    private boolean upgrading;
     private String ip;
     private String hostName;
     private long lastHeartBeat;
@@ -244,6 +254,11 @@ public class Delegate extends Base {
 
     public Builder withConnected(boolean connected) {
       this.connected = connected;
+      return this;
+    }
+
+    public Builder withUpgrading(boolean upgrading) {
+      this.upgrading = upgrading;
       return this;
     }
 
@@ -332,6 +347,7 @@ public class Delegate extends Base {
           .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
           .withUuid(uuid)
           .withAppId(appId)
+          .withUpgrading(upgrading)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -343,6 +359,7 @@ public class Delegate extends Base {
       delegate.setAccountId(accountId);
       delegate.setStatus(status);
       delegate.setConnected(connected);
+      delegate.setUpgrading(upgrading);
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setLastHeartBeat(lastHeartBeat);
@@ -364,9 +381,9 @@ public class Delegate extends Base {
   @Override
   public String toString() {
     return "Delegate{"
-        + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", ip='" + ip + '\''
-        + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat + ", version='" + version + '\''
-        + ", supportedTaskTypes=" + supportedTaskTypes + ", includeScopes=" + includeScopes
-        + ", excludeScopes=" + excludeScopes + '}';
+        + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", upgrading="
+        + upgrading + ", ip='" + ip + '\'' + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat
+        + ", version='" + version + '\'' + ", supportedTaskTypes=" + supportedTaskTypes
+        + ", includeScopes=" + includeScopes + ", excludeScopes=" + excludeScopes + '}';
   }
 }

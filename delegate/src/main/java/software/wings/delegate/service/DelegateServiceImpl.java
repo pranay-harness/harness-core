@@ -13,8 +13,6 @@ import com.google.inject.Singleton;
 
 import com.ning.http.client.AsyncHttpClient;
 import okhttp3.ResponseBody;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
@@ -49,6 +47,7 @@ import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -88,20 +87,48 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
-  private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
-  private ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
   private static long lastHeartbeatSentAt = System.currentTimeMillis();
   private static long lastHeartbeatReceivedAt = System.currentTimeMillis();
 
   private Socket socket;
   private RequestBuilder request;
+  private final List<Boolean> upgradePending = new ArrayList<>();
+  private String delegateId;
+  private String accountId;
 
   @Override
   public void run(boolean upgrade, boolean restart) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
-      String accountId = delegateConfiguration.getAccountId();
+      accountId = delegateConfiguration.getAccountId();
+
+      if (upgrade) {
+        logger.info("[New] Upgraded delegate process started. Sending confirmation.");
+        System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
+
+        logger.info("[New] Waiting for go ahead from old delegate.");
+        int secs = 0;
+        File goaheadFile = new File("goahead");
+        while (!goaheadFile.exists() && secs < 5) { // TODO(brett) - Remove the 5 second check once all delegates have
+                                                    // been upgraded to use go ahead file.
+          logger.info("[New] Waiting for go ahead... ({} secs)", secs++);
+          Thread.sleep(1000);
+        }
+
+        logger.info("[New] Go ahead received from old delegate. Sending confirmation.");
+        System.out.println("proceeding"); // Don't remove this. It is used as message in upgrade flow.
+      } else if (restart) {
+        logger.info("[New] Restarted delegate process started");
+      } else {
+        logger.info("Delegate process started");
+      }
+
+      URI uri = new URI(delegateConfiguration.getManagerUrl());
+
+      long start = System.currentTimeMillis();
       Delegate.Builder builder = aDelegate()
                                      .withIp(ip)
                                      .withAccountId(accountId)
@@ -111,24 +138,8 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withIncludeScopes(new ArrayList<>())
                                      .withExcludeScopes(new ArrayList<>());
 
-      if (upgrade) {
-        System.out.println("botstarted"); // Don't remove this. It is used as message in upgrade flow.
-        logger.info("Received Delegate upgrade request");
-        LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
-        String line = "";
-        while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
-          logger.info("Message received [{}]", line);
-          line = it.nextLine();
-        }
-      } else if (restart) {
-        logger.info("Received Delegate restart request");
-      }
-
-      URI uri = new URI(delegateConfiguration.getManagerUrl());
-
-      long start = System.currentTimeMillis();
-      String delegateId = registerDelegate(accountId, builder);
-      logger.info("Delegate registered in {} ms", (System.currentTimeMillis() - start));
+      delegateId = registerDelegate(builder);
+      logger.info("[New] Delegate registered in {} ms", (System.currentTimeMillis() - start));
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
@@ -164,7 +175,7 @@ public class DelegateServiceImpl implements DelegateService {
               new Function<String>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(String message) {
-                  handleMessageSubmit(message, fixedThreadPool, delegateId, accountId);
+                  handleMessageSubmit(message, fixedThreadPool);
                 }
               })
           .on(Event.ERROR,
@@ -188,14 +199,19 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
+      logger.info("[New] Setting delegate {} upgrade pending: {}", delegateId, false);
+      upgradePending.add(false);
+      execute(managerClient.setUpgradePending(delegateId, accountId, false));
       socket.open(request.build());
 
       startHeartbeat(builder, socket);
 
-      startUpgradeCheck(accountId, delegateId, getVersion());
+      startUpgradeCheck(getVersion());
 
       if (upgrade) {
-        logger.info("Delegate upgraded.");
+        logger.info("[New] Delegate upgraded.");
+      } else if (restart) {
+        logger.info("[New] Delegate restarted.");
       } else {
         logger.info("Delegate started.");
       }
@@ -254,26 +270,27 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void handleMessageSubmit(
-      String message, ExecutorService fixedThreadPool, String delegateId, String accountId) {
-    fixedThreadPool.submit(() -> { handleMessage(message, delegateId, accountId); });
+  private void handleMessageSubmit(String message, ExecutorService fixedThreadPool) {
+    fixedThreadPool.submit(() -> handleMessage(message));
   }
 
-  private void handleMessage(String message, String delegateId, String accountId) {
+  private void handleMessage(String message) {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId = message.substring(3); // Remove the "[X]"
-      logger.info("Received heartbeat for delegate: " + receivedId);
       if (delegateId.equals(receivedId)) {
+        logger.info("Delegate {} received heartbeat response", receivedId);
         lastHeartbeatReceivedAt = System.currentTimeMillis();
+      } else {
+        logger.info("Delegate {} received heartbeat response for another delegate, {}", delegateId, receivedId);
       }
-    } else if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+    } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
           abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
         } else {
-          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+          dispatchDelegateTask(delegateTaskEvent);
         }
       } catch (Exception e) {
         System.out.println(message);
@@ -291,6 +308,9 @@ public class DelegateServiceImpl implements DelegateService {
   public void resume() {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+      logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, false);
+      upgradePending.set(0, false);
+      execute(managerClient.setUpgradePending(accountId, delegateId, false));
     } catch (IOException e) {
       logger.error("Failed to resume.", e);
       stop();
@@ -304,7 +324,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private String registerDelegate(String accountId, Builder builder) throws IOException {
+  private String registerDelegate(Builder builder) throws IOException {
     try {
       List<Integer> attempts = new ArrayList<>();
       attempts.add(0);
@@ -323,9 +343,9 @@ public class DelegateServiceImpl implements DelegateService {
           return null;
         }
         if (delegateResponse == null || delegateResponse.getResource() == null) {
-          String msg = "Error occurred while registering Delegate [" + accountId
-              + "] with manager. Please see the manager log for more information.";
-          logger.error(msg);
+          logger.error(
+              "Error occurred while registering elegate with manager for account {}. Please see the manager log for more information.",
+              accountId);
           Thread.sleep(55000);
           return null;
         }
@@ -355,7 +375,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void startUpgradeCheck(String accountId, String delegateId, String version) {
+  private void startUpgradeCheck(String version) {
     if (!delegateConfiguration.isDoUpgrade()) {
       logger.info("Auto upgrade is disabled in configuration.");
       logger.info("Delegate stays on version: [{}]", version);
@@ -364,20 +384,38 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     upgradeExecutor.scheduleWithFixedDelay(() -> {
-      logger.info("Checking for upgrade");
-      try {
-        RestResponse<DelegateScripts> restResponse =
-            execute(managerClient.checkForUpgrade(version, delegateId, accountId));
-        if (restResponse.getResource().isDoUpgrade()) {
-          logger.info("Upgrading delegate...");
-          upgradeService.doUpgrade(restResponse.getResource(), getVersion());
-        } else {
-          logger.info("Delegate up to date");
+      if (upgradePending.get(0)) {
+        logger.info("[Old] Upgrade is pending...");
+      } else {
+        logger.info("Checking for upgrade");
+        try {
+          RestResponse<DelegateScripts> restResponse =
+              execute(managerClient.checkForUpgrade(version, delegateId, accountId));
+          if (restResponse.getResource().isDoUpgrade()) {
+            logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, true);
+            upgradePending.set(0, true);
+            execute(managerClient.setUpgradePending(delegateId, accountId, true));
+            logger.info("[Old] Upgrading delegate...");
+            upgradeService.doUpgrade(restResponse.getResource(), getVersion());
+          } else {
+            logger.info("Delegate up to date");
+          }
+        } catch (Exception e) {
+          try {
+            logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, false);
+            upgradePending.set(0, false);
+            execute(managerClient.setUpgradePending(delegateId, accountId, false));
+          } catch (IOException e1) {
+            logger.error("[Old] Exception while setting upgrade pending", e1);
+          }
+          logger.error("[Old] Exception while checking for upgrade", e);
         }
-      } catch (Exception e) {
-        logger.error("Exception while checking for upgrade", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+  }
+
+  public long getRunningTaskCount() {
+    return currentlyExecutingTasks.size();
   }
 
   private void startHeartbeat(Builder builder, Socket socket) {
@@ -415,12 +453,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
-    logger.info("Aborting task " + delegateTaskEvent);
+    logger.info("Aborting task {}", delegateTaskEvent);
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
   }
 
-  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
+  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
     if (delegateTaskEvent.getDelegateTaskId() != null
         && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
@@ -429,14 +467,13 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try {
-      // TODO(brett): Check whether to acquire based on task attributes
-      logger.info("DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
-          delegateTaskEvent.getAccountId());
+      logger.info(
+          "DelegateTask trying to acquire - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(), accountId);
       DelegateTask delegateTask =
           execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
       if (delegateTask != null) {
-        logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
-            delegateTask.getAccountId(), delegateTask.getTaskType());
+        logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
+            delegateTask.getTaskType());
         DelegateRunnableTask delegateRunnableTask =
             delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask,
                 notifyResponseData

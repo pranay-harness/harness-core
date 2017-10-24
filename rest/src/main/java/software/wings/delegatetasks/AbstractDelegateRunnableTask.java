@@ -1,5 +1,9 @@
 package software.wings.delegatetasks;
 
+import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -10,6 +14,8 @@ import java.util.function.Supplier;
  * Created by peeyushaggarwal on 12/7/16.
  */
 public abstract class AbstractDelegateRunnableTask<T extends NotifyResponseData> implements DelegateRunnableTask<T> {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   private String delegateId;
   private String accountId;
   private String taskId;
@@ -30,9 +36,20 @@ public abstract class AbstractDelegateRunnableTask<T extends NotifyResponseData>
   @Override
   public void run() {
     if (preExecute.get()) {
-      T result = run(parameters);
-      if (consumer != null) {
-        consumer.accept(result);
+      T result = null;
+      try {
+        result = run(parameters);
+      } catch (Throwable t) {
+        logger.error("Unexpected error executing delegate task.", t);
+        result = (T) anErrorNotifyResponseData().withErrorMessage(t.getMessage()).build();
+      } finally {
+        if (consumer != null) {
+          if (result == null) {
+            logger.error("Null result executing delegate task.");
+            result = (T) anErrorNotifyResponseData().withErrorMessage("No response from delegate task.").build();
+          }
+          consumer.accept(result);
+        }
       }
     }
   }

@@ -63,6 +63,10 @@ public interface ManagerClient {
   Call<RestResponse<DelegateScripts>> checkForUpgrade(
       @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
+  @PUT("delegates/{delegateId}/upgrading")
+  Call<RestResponse> setUpgradePending(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
+      @Query("upgrading") Boolean upgrading);
+
   @GET("delegates/{delegateId}/upgrade-check")
   Call<RestResponse<DelegateScripts>> checkForUpgradeScripts(
       @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);

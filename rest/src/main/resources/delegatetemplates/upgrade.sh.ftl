@@ -36,7 +36,6 @@ fi
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
-rm -rf "$CAPSULE_CACHE_DIR"
 echo "Delegate upgrading to version $REMOTE_DELEGATE_VERSION"
 $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml upgrade
 sleep 3
