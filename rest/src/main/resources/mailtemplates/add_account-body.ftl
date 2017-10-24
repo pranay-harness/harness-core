@@ -1,46 +1,55 @@
-<div class="content" style="margin: auto;background-color: #F0F0F0;width: 100%;font-family: Arial, sans-serif;color: #4c4c4c;">
-    <table style="width: 1000px;">
-        <tr>
-            <td>&nbsp;</td>
-            <td class="center" align="center">
-                <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png?v=1); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"></div>
+<div style="margin: auto; background-color: #EFEFF1; width: 100%; font-family: Arial, sans-serif; color: #4c4c4c;   border-spacing: 0;">
+  <table style="width: 100%;">
+    <tr>
+      <td>&nbsp;</td>
+      <td align="center">
+        <table style="border-spacing: 0; border: none; border-width: 0; width: 100%; max-width: 550px;">
+          <tr>
+            <td height="134px">
+              <img src="https://s3.amazonaws.com/wings-assets/email-assets/logo.png" width="141px" height="30px" title="Harness"/>
             </td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td class="center" align="center">
-                <table bgcolor="#fff" width="550px">
-                    <tr>
-                        <td background="https://s3.amazonaws.com/wings-assets/emailimage.png?v=1" width="550px" height="250px">
-                            &nbsp;
-                        </td>
-                    </tr>
-                    <tr>
-                        <td align="center">
-                            <div class="contentText" style="padding-bottom: 50px;font-size: 1.6em;">
-                                <div class="salutation">Hi ${(name!"there")?capitalize},</div>
-                                <div>Welcome to ${company} account</div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td align="center">
-                            <div class="light" style="color: #CDD3D4;">Click below to access your account.</div>
-                            <a class="button" href="${url!}" style="margin: auto;display: block;padding: 10px 16px;text-decoration: none;border-radius: 2px;border: 1px solid;text-align: center;vertical-align: middle;font-weight: bold;white-space: nowrap;background: #ffffff;border-color: #3a4449;background-color: #3a4449;color: #ffffff;border-top-width: 1px;width: 50%;">ACCESS YOUR ${(company)?upper_case} ACCOUNT</a>
-                            <br />
-                            <br />
-                        </td>
-                    </tr>
-                </table>
+          </tr>
+          <tr>
+            <td>
+              <img src="https://s3.amazonaws.com/wings-assets/email-assets/background.png" width="100%" title="Move fast and don't break things."/>
             </td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td class="center" style="text-align: center;"> <div class="logo" style="background-image: url(https://s3.amazonaws.com/wings-assets/logoimage.png?v=1); background-repeat: no-repeat;text-indent: -9999px;width: 310px;height: 90px;display: inline-block;margin: auto;zoom: 0.5;"> </div> </td>
-            <td>&nbsp;</td>
-        </tr>
-    </table>
-    <div class="footer light" style="color: #CDD3D4;margin-top: 50px;padding-top: 20px;border-top: 1px solid #CDD3D4;font-size: small;text-align: center;padding-bottom: 50px;">&copy;  HARNESS INC</div>
+          </tr>
+          <tr style="background-color: #fff; height: 280px;">
+            <td align="center" style="line-height: 35px; vertical-align: middle; height: 150px; font-size: 24px; color: #77787b; font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;">
+              Hi ${(name!"there")?capitalize},<br/>Welcome to ${company} account!<br/>
+              <p style="font-size: 14px; line-height: 18px;">
+              Click below to access your account.
+              </p>
+              <a href="${url!}" style="height: 44px; font-size: 16px; font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif; margin: auto; padding: 15px 20px; text-decoration: none; border-radius: 2px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #000; color: #fff;">ACCESS YOUR ${(company)?upper_case} ACCOUNT</a>
+            </td>
+          </tr>
+          <tr style="height: 87px;">
+            <td style="border-bottom: 1px solid #dbdcdd;">
+              <table style="border-spacing: 0; border: none; border-width: 0; width: 100%;">
+                <tr>
+                  <td width="1px">
+                    <a title="Harness" style="text-decoration: none; color: #00ade4;" href="https://www.harness.io">www.harness.io</a>
+                  </td>
+                  <td align="right">
+                    <a title="Follow us on Twitter" style="text-decoration: none; display: inline-block; margin-right: 10px;" href="https://twitter.com/harnessio">
+                      <img src="https://s3.amazonaws.com/wings-assets/email-assets/twitter.png"/>
+                    </a>                  
+                    <a title="Follow us on LinkedIn" style="text-decoration: none; display: inline-block; margin-right: 10px;" href="https://www.linkedin.com/company/18249313/">
+                      <img src="https://s3.amazonaws.com/wings-assets/email-assets/linkedin.png"/>
+                    </a>              
+                    <a title="Follow us on Facebook" style="text-decoration: none;" href="https://www.facebook.com/harness.io">
+                      <img src="https://s3.amazonaws.com/wings-assets/email-assets/facebook.png"/>
+                    </a>                    
+                  </td>
+                </tr>
+              </table>
+            <td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td height="50px"></td>
+    </tr>
+  </table>
 </div>
