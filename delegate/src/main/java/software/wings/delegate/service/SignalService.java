@@ -15,50 +15,36 @@ import javax.inject.Inject;
 public class SignalService {
   private static final Logger logger = LoggerFactory.getLogger(SignalService.class);
 
-  AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
+  private AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
 
   @Inject private DelegateService delegateService;
 
-  public void pause() {
+  void pause() {
     if (state.compareAndSet(State.RUNNING, State.PAUSE)) {
-      logger.info("Setting state to pause from running");
+      logger.info("[Old] Setting state to pause from running");
       delegateService.pause();
-      logger.info("Delegate paused");
+      logger.info("[Old] Delegate paused");
     }
   }
 
-  public void resume() {
+  void resume() {
     if (state.compareAndSet(State.PAUSE, State.RUNNING)) {
-      logger.info("Setting state to running from pause");
+      logger.info("[Old] Setting state to running from pause");
       delegateService.resume();
-      logger.info("Delegate resumed");
+      logger.info("[Old] Delegate resumed");
     }
     if (state.compareAndSet(State.PAUSED, State.RUNNING)) {
-      logger.info("Setting state to running from paused");
+      logger.info("[Old] Setting state to running from paused");
       delegateService.resume();
-      logger.info("Delegate running");
+      logger.info("[Old] Delegate running");
     }
   }
 
-  public void stop() {
+  void stop() {
     state.set(State.STOP);
-    logger.info("Setting state to stopped");
+    logger.info("[Old] Setting state to stopped");
     delegateService.stop();
-    logger.info("Setting state to stopped");
-  }
-
-  public void paused() {
-    if (state.compareAndSet(State.PAUSE, State.PAUSED)) {
-      logger.info("Setting state to paused from pause");
-    }
-  }
-
-  public boolean shouldStop() {
-    return state.get() == State.STOP;
-  }
-
-  public boolean shouldRun() {
-    return state.get() == State.RUNNING;
+    logger.info("[Old] Delegate stopped");
   }
 
   public enum State { RUNNING, PAUSE, PAUSED, STOP }
