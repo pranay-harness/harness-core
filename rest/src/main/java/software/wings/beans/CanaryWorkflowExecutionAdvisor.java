@@ -4,6 +4,7 @@ import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailu
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
+import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -89,7 +90,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
       // nothing to do for regular phase with non-error
       if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != FAILED
-          && executionEvent.getExecutionStatus() != ERROR) {
+          && executionEvent.getExecutionStatus() != ERROR && executionEvent.getExecutionStatus() != ABORTED) {
         return null;
       }
 
@@ -97,7 +98,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != SUCCESS) {
         return null;
       }
-
     } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
       return null;
     }
