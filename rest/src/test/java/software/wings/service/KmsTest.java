@@ -50,6 +50,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
@@ -1042,6 +1043,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void listKmsGlobalDefault() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig globalKmsConfig = getKmsConfig();
