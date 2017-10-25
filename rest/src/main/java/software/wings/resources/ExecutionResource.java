@@ -78,7 +78,8 @@ public class ExecutionResource {
       @QueryParam("appId") List<String> appIds, @QueryParam("envId") String envId,
       @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
       @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph,
-      @QueryParam("workflowType") List<String> workflowTypes) {
+      @QueryParam("workflowType") List<String> workflowTypes,
+      @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
 
@@ -102,8 +103,10 @@ public class ExecutionResource {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
     }
 
-    // No need to show child executions
-    pageRequest.addFilter(aSearchFilter().withField("pipelineExecutionId", Operator.NOT_EXISTS).build());
+    // No need to show child executions unless includeIndirectExecutions is true
+    if (!includeIndirectExecutions) {
+      pageRequest.addFilter(aSearchFilter().withField("pipelineExecutionId", Operator.NOT_EXISTS).build());
+    }
 
     if (StringUtils.isNotBlank(orchestrationId)) {
       filter = new SearchFilter();
