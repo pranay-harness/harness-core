@@ -3,6 +3,7 @@ import logging
 import sys
 
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 from SplunkFileSource import SplunkFileSource
 from SplunkHarnessLoader import SplunkHarnessLoader
@@ -20,6 +21,8 @@ class SplunkDatasetNew(object):
         self.anomalies = []
         self.anom_clusters = {}
         self.new_data = True
+        self.score = 0.0
+        self.cluster_scores = {'unknown': {}, 'test': {}}
 
     def add_event(self, event, event_type):
 
@@ -98,14 +101,14 @@ class SplunkDatasetNew(object):
         test_events = None
         if options.test_nodes and options.test_input_url:
             test_events = SplunkHarnessLoader.load_from_wings_server(options.test_input_url,
-                                                                 options.auth_token,
-                                                                 options.application_id,
-                                                                 options.workflow_id,
-                                                                 options.state_execution_id,
-                                                                 options.service_id,
-                                                                 options.log_collection_minute,
-                                                                 options.test_nodes,
-                                                                 options.query)
+                                                                     options.auth_token,
+                                                                     options.application_id,
+                                                                     options.workflow_id,
+                                                                     options.state_execution_id,
+                                                                     options.service_id,
+                                                                     options.log_collection_minute,
+                                                                     options.test_nodes,
+                                                                     options.query)
         else:
             logger.info("No test url or nodes provided. This is a baseline run")
 
@@ -213,6 +216,7 @@ class SplunkDatasetNew(object):
 
         raw_events = SplunkFileSource.load_data(test_file)
         for idx, event in enumerate(raw_events):
+            minute = event.get('logCollectionMinute')
             if test_window[0] <= minute <= test_window[1]:
                 self.add_event(event, 'test_prod')
 
@@ -269,7 +273,6 @@ class SplunkDatasetNew(object):
 
         return texts
 
-
     def get_control_clusters(self):
         return self.control_clusters
 
@@ -296,19 +299,19 @@ class SplunkDatasetNew(object):
         index = 0
         for key, value in self.control_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index,0]
+                val['x'] = dist_matrix[index, 0]
                 val['y'] = dist_matrix[index, 1]
             index = index + 1
 
         for key, value in self.test_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index,0]
+                val['x'] = dist_matrix[index, 0]
                 val['y'] = dist_matrix[index, 1]
             index = index + 1
 
         for key, value in self.anom_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index,0]
+                val['x'] = dist_matrix[index, 0]
                 val['y'] = dist_matrix[index, 1]
             index = index + 1
 
@@ -316,22 +319,54 @@ class SplunkDatasetNew(object):
         for index, anomal in enumerate(self.anomalies):
             if clusters[index] not in self.anom_clusters:
                 self.anom_clusters[clusters[index]] = {}
+                self.cluster_scores['unknown'][clusters[index]] = {'control_score': 1.0, 'test_score': 1.0}
             for anom in anomal:
                 host = anom.get('message_frequencies')[0].get('host')
                 if host not in self.anom_clusters[clusters[index]]:
                     self.anom_clusters[clusters[index]][host] = dict(text=anom.get('text'),
-                                                                     cluster_label=anom.get('cluster_label'),
-                                                                     message_frequencies=[])
+                                                                                 cluster_label=anom.get(
+                                                                                     'cluster_label'),
+                                                                                 message_frequencies=[],
+                                                                                 test_scores=[],
+                                                                                 control_score=anom.get(
+                                                                                     'control_score'),
+                                                                                 test_score=0
+                                                                                 )
 
+                self.anom_clusters[clusters[index]][host]['test_scores'].append(
+                    [anom.get('test_score'),
+                     np.mean(np.asarray([val['count'] for val in anom.get('message_frequencies')]))])
                 self.anom_clusters[clusters[index]][host].get('message_frequencies').extend(
                     anom.get('message_frequencies'))
+
+        self.score_unknown_events()
 
     def get_anom_clusters(self):
         return self.anom_clusters
 
+    def score_unknown_events(self):
+        for cluster_index, anom_cluster in self.anom_clusters.items():
+            max_deviation = 0.0
+            for host_data in anom_cluster.values():
+                numerator = 0.0
+                denominator = 0.0
+                for scores_tuple in host_data.get('test_scores'):
+                    numerator += scores_tuple[0] * scores_tuple[1]
+                    denominator += scores_tuple[1]
+                    score = numerator / denominator
+
+                if abs(host_data['control_score'] - score) > max_deviation:
+                    self.cluster_scores['unknown'][cluster_index]['control_score'] = host_data['control_score']
+                    max_deviation = abs(host_data['control_score'] - score)
+                    self.cluster_scores['unknown'][cluster_index]['test_score'] = round(max_deviation, 2)
+
+                host_data['test_score'] = round(host_data['control_score'] - score, 2)
+
+                del host_data['test_scores']
+
     def create_clusters(self, clusters, centroids,
                         feature_names,
-                        predictions, anomalies):
+                        predictions):
         for index, (key, value) in enumerate(self.control_events.items()):
             for val in value:
                 val['cluster_label'] = clusters[index]
@@ -356,8 +391,11 @@ class SplunkDatasetNew(object):
         for index, (key, value) in enumerate(self.test_events.items()):
             anomal = []
             for val in value:
-                if anomalies[index] == 1:
-                    val['cluster_label'] = predictions[index]
+                val['test_score'] = predictions[index].get('score')
+                val['control_score'] = predictions[index].get('cluster_score')
+
+                if predictions[index].get('anomaly') == 1:
+                    val['cluster_label'] = predictions[index].get('cluster_label')
                 else:
                     val['cluster_label'] = anomaly_index
                     anomaly_index = anomaly_index + 1
@@ -375,6 +413,9 @@ class SplunkDatasetNew(object):
                             message_frequencies=[],
                             anomalous_counts=[],
                             unexpected_freq=False,
+                            control_score=val.get('control_score'),
+                            test_score=val.get('test_score'),
+                            freq_score=0.0,
                             tags=self.get_cluster_tags(
                                 val.get('cluster_label'),
                                 centroids,
@@ -386,8 +427,10 @@ class SplunkDatasetNew(object):
 
                 else:
                     anomal.append(dict(text=val.get('text'),
-                                       cluster_label=predictions[index],
-                                       message_frequencies=val.get('message_frequencies')))
+                                       cluster_label=predictions[index].get('cluster_label'),
+                                       message_frequencies=val.get('message_frequencies'),
+                                       control_score=val.get('control_score'),
+                                       test_score=val.get('test_score')))
             if len(anomal) > 0:
                 self.anomalies.append(anomal)
 
@@ -396,7 +439,9 @@ class SplunkDatasetNew(object):
         return json.dumps(dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
                                unknown_events=self.anomalies,
                                control_clusters=self.control_clusters, test_clusters=self.test_clusters,
-                               unknown_clusters=self.anom_clusters
+                               unknown_clusters=self.anom_clusters,
+                               cluster_scores=self.cluster_scores,
+                               score=self.score
                                ))
 
     @property
@@ -405,7 +450,9 @@ class SplunkDatasetNew(object):
         return json.dumps(dict(control_events=self.control_events, test_events=self.test_events,
                                unknown_events=self.anomalies,
                                control_clusters=self.control_clusters, test_clusters=self.test_clusters,
-                               unknown_clusters=self.anom_clusters
+                               unknown_clusters=self.anom_clusters,
+                               cluster_scores=self.cluster_scores,
+                               score=self.score
                                ))
 
     def control_scatter_plot(self):

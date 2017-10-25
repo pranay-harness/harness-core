@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -33,8 +34,12 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
+import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
@@ -46,7 +51,10 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState;
+import software.wings.utils.JsonUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -808,5 +816,39 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     analysisCluster.setMessage_frequencies(frequencyMapList);
     return analysisCluster;
+  }
+
+  @Test
+  public void loadPythonResponse() throws IOException {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    String jsonTxt = IOUtils.toString(is);
+    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
+    assertEquals(records.getUnknown_events().size(), 7);
+    assertEquals(records.getTest_events().size(), 33);
+    assertEquals(records.getControl_events().size(), 31);
+    assertEquals(records.getControl_clusters().size(), 31);
+    assertEquals(records.getTest_clusters().size(), 26);
+    assertEquals(records.getUnknown_clusters().size(), 4);
+    assertEquals(records.getCluster_scores().getTest().size(), 0);
+    assertEquals(records.getCluster_scores().getUnknown().size(), 4);
+  }
+
+  @Test
+  public void checkClusterScores() throws IOException {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    String jsonTxt = IOUtils.toString(is);
+    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
+    records.setStateType(StateType.ELK);
+    records.setApplicationId(appId);
+    String stateExecutionId = UUID.randomUUID().toString();
+    records.setStateExecutionId(stateExecutionId);
+    records.setAnalysisSummaryMessage("10");
+    analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2);
+    LogMLAnalysisSummary analysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertEquals(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100), 0);
+    for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
+      assert (clusterSummary.getScore() > 0);
+    }
   }
 }

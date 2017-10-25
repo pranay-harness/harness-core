@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
@@ -35,10 +36,12 @@ public class LogMLAnalysisRecord extends Base {
 
   private String query;
   private String analysisSummaryMessage;
+  private double score;
   private List<List<SplunkAnalysisCluster>> unknown_events;
   private Map<String, List<SplunkAnalysisCluster>> test_events;
   private Map<String, List<SplunkAnalysisCluster>> control_events;
   private Map<String, Map<String, SplunkAnalysisCluster>> control_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
+  private LogMLClusterScores cluster_scores;
 }
