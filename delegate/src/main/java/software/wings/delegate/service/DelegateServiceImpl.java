@@ -112,9 +112,8 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("[New] Waiting for go ahead from old delegate.");
         int secs = 0;
         File goaheadFile = new File("goahead");
-        while (!goaheadFile.exists() && secs < 5) { // TODO(brett) - Remove the 5 second check once all delegates have
-                                                    // been upgraded to use go ahead file.
-          logger.info("[New] Waiting for go ahead... ({} secs)", secs++);
+        while (!goaheadFile.exists()) {
+          logger.info("[New] Waiting for go ahead... ({} sec)", ++secs);
           Thread.sleep(1000);
         }
 
