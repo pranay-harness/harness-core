@@ -114,7 +114,7 @@ public class DelegateServiceImpl implements DelegateService {
         int secs = 0;
         File goaheadFile = new File("goahead");
         while (!goaheadFile.exists() && secs++ < MAX_UPGRADE_WAIT_SECS) {
-          logger.info("[New] Waiting for go ahead... ({} sec)", secs);
+          logger.info("[New] Waiting for go ahead... ({} seconds elapsed)", secs);
           Thread.sleep(1000);
         }
 

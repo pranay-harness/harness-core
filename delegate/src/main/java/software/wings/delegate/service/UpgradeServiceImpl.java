@@ -70,8 +70,8 @@ public class UpgradeServiceImpl implements UpgradeService {
           logger.info("[Old] New delegate process started.");
           int secs = 0;
           while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
-            logger.info(
-                "[Old] Blocking new delegate while completing {} tasks.", delegateService.getRunningTaskCount());
+            logger.info("[Old] Blocking new delegate while completing {} tasks... ({} seconds elapsed)",
+                delegateService.getRunningTaskCount(), secs);
             Thread.sleep(1000);
           }
 
@@ -86,7 +86,7 @@ public class UpgradeServiceImpl implements UpgradeService {
             if (waitForStringOnStream(reader, "proceeding", 5)) {
               logger.info("[Old] Handshake with new delegate complete. Pausing.");
               signalService.pause();
-              logger.info("[Old] Delegate paused. Shutting down.");
+              logger.info("[Old] Shutting down.");
 
               removeDelegateVersionFromCapsule(delegateScripts, version);
               cleanupOldDelegateVersionFromBackup(delegateScripts, version);
