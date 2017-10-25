@@ -277,7 +277,7 @@ public class DelegateResource {
   public RestResponse setUpgradePending(@Context HttpServletRequest request,
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("upgrading") boolean upgrading) throws IOException, TemplateException {
-    delegateService.setUpgradePending(accountId, delegateId, upgrading);
+    // TODO(brett) - Remove this method once delegates have all upgraded past 1.0.235
     return new RestResponse();
   }
 

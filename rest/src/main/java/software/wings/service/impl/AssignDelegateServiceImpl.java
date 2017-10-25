@@ -25,12 +25,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private EnvironmentService environmentService;
 
   @Override
-  public boolean isUpgrading(String accountId, String delegateId) {
-    Delegate delegate = delegateService.get(accountId, delegateId);
-    return delegate != null && delegate.isUpgrading();
-  }
-
-  @Override
   public boolean canAssign(DelegateTask task, String delegateId) {
     Delegate delegate = delegateService.get(task.getAccountId(), delegateId);
     if (delegate == null) {

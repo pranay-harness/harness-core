@@ -67,8 +67,6 @@ public interface DelegateService {
   DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException;
 
-  void setUpgradePending(String accountId, String delegateId, boolean upgrading) throws IOException, TemplateException;
-
   /**
    * Download file.
    *
