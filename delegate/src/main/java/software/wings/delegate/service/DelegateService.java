@@ -11,4 +11,6 @@ public interface DelegateService {
   void resume();
 
   void stop();
+
+  long getRunningTaskCount();
 }

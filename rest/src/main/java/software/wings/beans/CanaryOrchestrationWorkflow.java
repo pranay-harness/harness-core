@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/21/16.
@@ -181,11 +180,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhaseIdMap == null) {
       return null;
     }
-    return workflowPhaseIdMap.values()
-        .stream()
-        .map(WorkflowPhase::getServiceId)
-        .distinct()
-        .collect(Collectors.toList());
+    return workflowPhaseIdMap.values().stream().map(WorkflowPhase::getServiceId).distinct().collect(toList());
   }
 
   @Override
@@ -193,11 +188,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhaseIdMap == null) {
       return null;
     }
-    return workflowPhaseIdMap.values()
-        .stream()
-        .map(WorkflowPhase::getInfraMappingId)
-        .distinct()
-        .collect(Collectors.toList());
+    return workflowPhaseIdMap.values().stream().map(WorkflowPhase::getInfraMappingId).distinct().collect(toList());
   }
 
   @Override
@@ -433,7 +424,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       List<String> invalidChildren = workflowPhases.stream()
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
-                                         .collect(Collectors.toList());
+                                         .collect(toList());
       if (invalidChildren != null && !invalidChildren.isEmpty()) {
         setValid(false);
         invalid += invalidChildren.toString();
@@ -518,7 +509,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
     }
-    return templatizedServiceIds;
+    return templatizedServiceIds.stream().distinct().collect(toList());
   }
 
   @Override
@@ -538,7 +529,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
     }
-    return templatizedInfraMappingIds;
+    return templatizedInfraMappingIds.stream().distinct().collect(toList());
   }
 
   /**

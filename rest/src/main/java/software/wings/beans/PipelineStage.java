@@ -12,7 +12,8 @@ public class PipelineStage {
   private String name;
   private boolean parallel;
   private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
-
+  private boolean valid = true;
+  private String validationMessage;
   /**
    * Instantiates a new Pipeline stage.
    */
@@ -61,6 +62,22 @@ public class PipelineStage {
     this.pipelineStageElements = pipelineStageElements;
   }
 
+  public boolean isValid() {
+    return valid;
+  }
+
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public String getValidationMessage() {
+    return validationMessage;
+  }
+
+  public void setValidationMessage(String validationMessage) {
+    this.validationMessage = validationMessage;
+  }
+
   /**
    * The type Pipeline stage element.
    */
@@ -69,6 +86,10 @@ public class PipelineStage {
     private String type;
     private Map<String, Object> properties = new HashMap<>();
     private Map<String, String> workflowVariables = new HashMap<>();
+
+    private boolean valid = true;
+    private String validationMessage;
+
     /**
      * Instantiates a new Pipeline stage element.
      */
@@ -87,6 +108,20 @@ public class PipelineStage {
       this.properties = properties;
     }
 
+    /**
+     * Instantiates a new Pipeline stage element.
+     *
+     * @param name       the name
+     * @param type       the type
+     * @param properties the properties
+     */
+    public PipelineStageElement(
+        String name, String type, Map<String, Object> properties, Map<String, String> workflowVariables) {
+      this.name = name;
+      this.type = type;
+      this.properties = properties;
+      this.workflowVariables = workflowVariables;
+    }
     /**
      * Gets name.
      *
@@ -143,6 +178,7 @@ public class PipelineStage {
 
     /**
      * Get workflow variables
+     *
      * @return
      */
     public Map<String, String> getWorkflowVariables() {
@@ -151,10 +187,27 @@ public class PipelineStage {
 
     /**
      * Set workflow variables
+     *
      * @param workflowVariables
      */
     public void setWorkflowVariables(Map<String, String> workflowVariables) {
       this.workflowVariables = workflowVariables;
+    }
+
+    public boolean isValid() {
+      return valid;
+    }
+
+    public void setValid(boolean valid) {
+      this.valid = valid;
+    }
+
+    public String getValidationMessage() {
+      return validationMessage;
+    }
+
+    public void setValidationMessage(String validationMessage) {
+      this.validationMessage = validationMessage;
     }
   }
 }
