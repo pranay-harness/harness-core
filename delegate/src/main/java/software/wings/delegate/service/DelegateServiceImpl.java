@@ -73,6 +73,7 @@ import javax.net.ssl.SSLException;
  */
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
+  static final int MAX_UPGRADE_WAIT_SECS = 2 * 60 * 60; // 2 hours max
   private static final int MAX_CONNECT_ATTEMPTS = 100;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
@@ -112,13 +113,16 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("[New] Waiting for go ahead from old delegate.");
         int secs = 0;
         File goaheadFile = new File("goahead");
-        while (!goaheadFile.exists() && secs < 5) { // TODO(brett) - Remove the 5 second check once all delegates have
-                                                    // been upgraded to use go ahead file.
-          logger.info("[New] Waiting for go ahead... ({} secs)", secs++);
+        while (!goaheadFile.exists() && secs++ < MAX_UPGRADE_WAIT_SECS) {
+          logger.info("[New] Waiting for go ahead... ({} seconds elapsed)", secs);
           Thread.sleep(1000);
         }
 
-        logger.info("[New] Go ahead received from old delegate. Sending confirmation.");
+        if (secs < MAX_UPGRADE_WAIT_SECS) {
+          logger.info("[New] Go ahead received from old delegate. Sending confirmation.");
+        } else {
+          logger.info("[New] Timed out waiting for go ahead. Proceeding anyway.");
+        }
         System.out.println("proceeding"); // Don't remove this. It is used as message in upgrade flow.
       } else if (restart) {
         logger.info("[New] Restarted delegate process started");
