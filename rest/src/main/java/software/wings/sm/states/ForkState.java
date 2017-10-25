@@ -65,6 +65,7 @@ public class ForkState extends State {
     for (String state : forkStateNames) {
       ForkElement element = aForkElement().withStateName(state).withParentId(stateExecutionInstance.getUuid()).build();
       StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+      childStateExecutionInstance.setStateParams(null);
 
       childStateExecutionInstance.setContextElement(element);
       childStateExecutionInstance.setStateName(state);

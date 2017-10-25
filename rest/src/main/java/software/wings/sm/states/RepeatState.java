@@ -34,7 +34,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KryoUtils;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -227,6 +226,7 @@ public class RepeatState extends State {
       SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
     StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+    childStateExecutionInstance.setStateParams(null);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
     childStateExecutionInstance.setPrevInstanceId(null);

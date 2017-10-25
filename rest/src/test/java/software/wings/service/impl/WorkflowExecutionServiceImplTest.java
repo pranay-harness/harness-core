@@ -1336,6 +1336,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void shouldAbortAllStates() throws InterruptedException {
     Service service1 = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
