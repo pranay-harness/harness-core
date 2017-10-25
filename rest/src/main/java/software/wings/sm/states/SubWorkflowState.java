@@ -65,6 +65,7 @@ public class SubWorkflowState extends State {
 
   protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
     StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+    childStateExecutionInstance.setStateParams(null);
 
     childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
     childStateExecutionInstance.setStateName(null);

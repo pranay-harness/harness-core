@@ -184,6 +184,7 @@ public class StateMachineExecutionSimulator {
       State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
       repeatElements.forEach(repeatElement -> {
         StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        cloned.setStateParams(null);
         cloned.setStateName(repeat.getName());
         cloned.setContextElement(repeatElement);
         ExecutionContextImpl childContext =
@@ -196,6 +197,7 @@ public class StateMachineExecutionSimulator {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
         State child = stateMachine.getState(null, childStateName);
         StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        cloned.setStateParams(null);
         cloned.setStateName(child.getName());
         cloned.setContextElement(
             aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
