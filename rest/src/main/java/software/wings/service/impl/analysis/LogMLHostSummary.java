@@ -15,4 +15,5 @@ public class LogMLHostSummary {
   private double xCordinate;
   private double yCordinate;
   private boolean unexpectedFreq;
+  private List<Integer> frequencies;
 }

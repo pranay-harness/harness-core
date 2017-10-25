@@ -29,6 +29,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.splunk.LogMLClusterScores;
+import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -355,9 +357,15 @@ public class AnalysisServiceImpl implements AnalysisService {
     LogMLAnalysisRecord analysisRecord = iteratorAnalysisRecord.next();
     final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
     analysisSummary.setQuery(analysisRecord.getQuery());
-    analysisSummary.setControlClusters(computeCluster(analysisRecord.getControl_clusters()));
-    analysisSummary.setTestClusters(computeCluster(analysisRecord.getTest_clusters()));
-    analysisSummary.setUnknownClusters(computeCluster(analysisRecord.getUnknown_clusters()));
+    analysisSummary.setScore(analysisRecord.getScore() * 100);
+    analysisSummary.setControlClusters(
+        computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
+    LogMLClusterScores logMLClusterScores =
+        analysisRecord.getCluster_scores() != null ? analysisRecord.getCluster_scores() : new LogMLClusterScores();
+    analysisSummary.setTestClusters(
+        computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
+    analysisSummary.setUnknownClusters(
+        computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
 
     RiskLevel riskLevel = RiskLevel.LOW;
     String analysisSummaryMsg =
@@ -458,7 +466,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
   }
 
-  private List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster) {
+  private List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
+      Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type) {
     if (cluster == null) {
       return Collections.emptyList();
     }
@@ -473,9 +482,21 @@ public class AnalysisServiceImpl implements AnalysisService {
         hostSummary.setYCordinate(sprinkalizedCordinate(analysisCluster.getY()));
         hostSummary.setUnexpectedFreq((analysisCluster.isUnexpected_freq()));
         hostSummary.setCount(computeCountFromFrequencies(analysisCluster));
+        hostSummary.setFrequencies(getFrequencies(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
         clusterSummary.getHostSummary().put(hostEntry.getKey(), hostSummary);
+        if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {
+          switch (cluster_type) {
+            case TEST:
+              clusterSummary.setScore(clusterScores.get(labelEntry.getKey()).getFreq_score() * 100);
+              break;
+            case UNKNOWN:
+              clusterSummary.setScore(clusterScores.get(labelEntry.getKey()).getTest_score() * 100);
+              break;
+            default:
+          }
+        }
       }
       analysisSummaries.add(clusterSummary);
     }
@@ -494,6 +515,19 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     return count;
+  }
+
+  private List<Integer> getFrequencies(SplunkAnalysisCluster analysisCluster) {
+    List<Integer> counts = new ArrayList<>();
+    for (Map frequency : analysisCluster.getMessage_frequencies()) {
+      if (!frequency.containsKey("count")) {
+        continue;
+      }
+
+      counts.add((Integer) frequency.get("count"));
+    }
+
+    return counts;
   }
 
   private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
@@ -653,36 +687,6 @@ public class AnalysisServiceImpl implements AnalysisService {
       }
 
       return nodes.isEmpty() ? logCollectionMinute : -1;
-
-      // logCollectionMinute =  nodes.isEmpty() ? logCollectionMinute : -1;
-
-      //      /**
-      //       * Get the data records for the found heartbeat.
-      //       */
-      //      Iterator<LogDataRecord> logDataRecordsIterator =
-      //          wingsPersistence.createQuery(LogDataRecord.class)
-      //              .field("applicationId").equal(appdId)
-      //              .field("stateExecutionId").equal(stateExecutionId)
-      //              .field("stateType").equal(StateType.valueOf(type))
-      //              .field("clusterLevel").equal(ClusterLevel.L1)
-      //              .field("logCollectionMinute").equal(logCollectionMinute)
-      //              .field("query").equal(query)
-      //              .field("host").in(hosts)
-      //              .fetch(new FindOptions().limit(1));
-      //
-      //      /**
-      //       * Heartbeat has no associated log records. Mark heartbeat as processed.
-      //       * Move on.
-      //       */
-      //      if(!logDataRecordsIterator.hasNext()) {
-      //        // TODO - we assume that L1 => L2 and analysis happen synchronously, which is
-      //        // TODO - why bump the heartbeat to final.
-      //        bumpClusterLevel(type, stateExecutionId, appdId,
-      //            query,  hosts, logCollectionMinute, heartBeat, ClusterLevel.getFinal());
-      //        continue;
-      //      }
-      //
-      //      return logCollectionMinute;
     }
   }
 
@@ -772,4 +776,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
     return false;
   }
+
+  private enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
 }
