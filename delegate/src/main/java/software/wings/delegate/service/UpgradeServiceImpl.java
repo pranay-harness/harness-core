@@ -2,13 +2,14 @@ package software.wings.delegate.service;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static software.wings.delegate.service.DelegateServiceImpl.MAX_UPGRADE_WAIT_SECS;
 
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -16,13 +17,13 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.beans.DelegateScripts;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -37,7 +38,6 @@ import javax.inject.Inject;
 public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
-  @Inject private TimeLimiter timeLimiter;
   @Inject private DelegateService delegateService;
   @Inject private SignalService signalService;
 
@@ -62,34 +62,32 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
-      logger.info("[Old] Upgrade script executed: {}", process.getProcess().isAlive());
+      logger.info("[Old] Upgrade script executed: {}. Waiting for process to start.", process.getProcess().isAlive());
 
-      logger.info("[Old] Waiting for process to start.");
-      boolean processStarted = timeLimiter.callWithTimeout(
-          ()
-              -> streamContainsString(new InputStreamReader(pipedInputStream), "botstarted"),
-          15, TimeUnit.MINUTES, false);
-      if (processStarted) {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
+      if (waitForStringOnStream(reader, "botstarted", 15)) {
         try {
           logger.info("[Old] New delegate process started.");
-          while (delegateService.getRunningTaskCount() > 0) {
-            logger.info("[Old] Delegate blocking new delegate while completing {} tasks.",
-                delegateService.getRunningTaskCount());
+          int secs = 0;
+          while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+            logger.info("[Old] Blocking new delegate while completing {} tasks... ({} seconds elapsed)",
+                delegateService.getRunningTaskCount(), secs);
             Thread.sleep(1000);
           }
-          logger.info("[Old] Delegate finished with tasks, pausing.");
-          signalService.pause();
-          logger.info("[Old] Delegate paused.");
 
+          if (secs < MAX_UPGRADE_WAIT_SECS) {
+            logger.info("[Old] Delegate finished with tasks. Sending go ahead.");
+          } else {
+            logger.info("[Old] Timed out waiting to complete tasks. Sending go ahead anyway.");
+          }
           if (goaheadFile.createNewFile()) {
             logger.info("[Old] Sent go ahead to new delegate.");
-            boolean goaheadReceived = timeLimiter.callWithTimeout(
-                ()
-                    -> streamContainsString(new InputStreamReader(pipedInputStream), "proceeding"),
-                15, TimeUnit.MINUTES, false);
 
-            if (goaheadReceived) {
-              logger.info("[Old] Handshake complete with new delegate. Shutting down.");
+            if (waitForStringOnStream(reader, "proceeding", 5)) {
+              logger.info("[Old] Handshake with new delegate complete. Pausing.");
+              signalService.pause();
+              logger.info("[Old] Shutting down.");
+
               removeDelegateVersionFromCapsule(delegateScripts, version);
               cleanupOldDelegateVersionFromBackup(delegateScripts, version);
 
@@ -113,7 +111,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      logger.error("[Old] Exception while upgrading", e);
+      logger.error("[Old] Exception while upgrading.", e);
       if (process != null) {
         try {
           process.getProcess().destroy();
@@ -227,19 +225,14 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
-  private boolean streamContainsString(Reader reader, String searchString) throws IOException {
-    char[] buffer = new char[1024];
-    int numCharsRead;
-    int count = 0;
-    while ((numCharsRead = reader.read(buffer)) > 0) {
-      for (int c = 0; c < numCharsRead; c++) {
-        if (buffer[c] == searchString.charAt(count))
-          count++;
-        else
-          count = 0;
-        if (count == searchString.length())
-          return true;
+  private boolean waitForStringOnStream(BufferedReader reader, String searchString, int maxMinutes)
+      throws IOException, InterruptedException {
+    int maxWaitSecs = 60 * maxMinutes;
+    while (maxWaitSecs-- > 0) {
+      if (StringUtils.contains(reader.readLine(), searchString)) {
+        return true;
       }
+      Thread.sleep(1000);
     }
     return false;
   }
