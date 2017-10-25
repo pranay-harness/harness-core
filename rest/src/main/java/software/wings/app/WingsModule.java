@@ -215,6 +215,8 @@ import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import javax.inject.Singleton;
+
 /**
  * Guice Module for initializing all beans.
  *
@@ -358,7 +360,8 @@ public class WingsModule extends AbstractModule {
     bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class);
     bind(QuartzScheduler.class)
         .annotatedWith(Names.named("VerificationJobScheduler"))
-        .toProvider(VerificationJobScheduler.JobSchedulerProvider.class);
+        .toProvider(VerificationJobScheduler.JobSchedulerProvider.class)
+        .in(Singleton.class);
 
     bind(ContainerSync.class)
         .annotatedWith(Names.named("KubernetesInstanceSync"))
