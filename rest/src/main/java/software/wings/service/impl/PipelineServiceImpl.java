@@ -313,17 +313,17 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     Set<String> pseWkflwVariableNames = pseWorkflowVariables.keySet();
-    Set<String> wrkflowVariableNames = new HashSet<>();
-    if (workflow.getOrchestrationWorkflow() != null) {
-      List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-      if (userVariables != null) {
-        wrkflowVariableNames = userVariables.stream().map(variable -> variable.getName()).collect(toSet());
+    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    Set<String> wrkflowVariableNames = userVariables == null
+        ? new HashSet<>()
+        : userVariables.stream().map(variable -> variable.getName()).collect(toSet());
+    for (String pseWkflwVariable : pseWkflwVariableNames) {
+      if (!wrkflowVariableNames.contains(pseWkflwVariable)) {
+        pipelineStageElement.setValid(false);
+        pipelineStageElement.setValidationMessage("Workflow variables updated or deleted");
+        invalidWorkflows.add(workflow.getName());
+        break;
       }
-    }
-    if (!pseWkflwVariableNames.containsAll(wrkflowVariableNames)) {
-      pipelineStageElement.setValid(false);
-      pipelineStageElement.setValidationMessage("Workflow variables updated or deleted");
-      invalidWorkflows.add(workflow.getName());
     }
   }
 
