@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static software.wings.delegate.service.DelegateServiceImpl.MAX_UPGRADE_WAIT_SECS;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
@@ -67,20 +68,26 @@ public class UpgradeServiceImpl implements UpgradeService {
       if (waitForStringOnStream(reader, "botstarted", 15)) {
         try {
           logger.info("[Old] New delegate process started.");
-          while (delegateService.getRunningTaskCount() > 0) {
-            logger.info("[Old] Delegate blocking new delegate while completing {} tasks.",
-                delegateService.getRunningTaskCount());
+          int secs = 0;
+          while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+            logger.info(
+                "[Old] Blocking new delegate while completing {} tasks.", delegateService.getRunningTaskCount());
             Thread.sleep(1000);
           }
-          logger.info("[Old] Delegate finished with tasks, pausing.");
-          signalService.pause();
-          logger.info("[Old] Delegate paused. Sending go ahead.");
 
+          if (secs < MAX_UPGRADE_WAIT_SECS) {
+            logger.info("[Old] Delegate finished with tasks. Sending go ahead.");
+          } else {
+            logger.info("[Old] Timed out waiting to complete tasks. Sending go ahead anyway.");
+          }
           if (goaheadFile.createNewFile()) {
             logger.info("[Old] Sent go ahead to new delegate.");
 
-            if (waitForStringOnStream(reader, "proceeding", 15)) {
-              logger.info("[Old] Handshake complete with new delegate. Shutting down.");
+            if (waitForStringOnStream(reader, "proceeding", 5)) {
+              logger.info("[Old] Handshake with new delegate complete. Pausing.");
+              signalService.pause();
+              logger.info("[Old] Delegate paused. Shutting down.");
+
               removeDelegateVersionFromCapsule(delegateScripts, version);
               cleanupOldDelegateVersionFromBackup(delegateScripts, version);
 
