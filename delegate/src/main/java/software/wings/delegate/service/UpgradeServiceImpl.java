@@ -68,23 +68,26 @@ public class UpgradeServiceImpl implements UpgradeService {
       if (waitForStringOnStream(reader, "botstarted", 15)) {
         try {
           logger.info("[Old] New delegate process started.");
-          int secs = 0;
-          while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
-            logger.info("[Old] Blocking new delegate while completing {} tasks... ({} seconds elapsed)",
-                delegateService.getRunningTaskCount(), secs);
-            Thread.sleep(1000);
-          }
-
-          if (secs < MAX_UPGRADE_WAIT_SECS) {
-            logger.info("[Old] Delegate finished with tasks. Sending go ahead.");
-          } else {
-            logger.info("[Old] Timed out waiting to complete tasks. Sending go ahead anyway.");
-          }
           if (goaheadFile.createNewFile()) {
             logger.info("[Old] Sent go ahead to new delegate.");
 
             if (waitForStringOnStream(reader, "proceeding", 5)) {
-              logger.info("[Old] Handshake with new delegate complete. Pausing.");
+              logger.info("[Old] Handshake with new delegate complete. Stop acquiring all tasks.");
+
+              delegateService.setAcquireTasks(false);
+              int secs = 0;
+              while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+                logger.info(
+                    "[Old] Completing {} tasks... ({} seconds elapsed)", delegateService.getRunningTaskCount(), secs);
+                Thread.sleep(1000);
+              }
+
+              if (secs < MAX_UPGRADE_WAIT_SECS) {
+                logger.info("[Old] Delegate finished with tasks. Pausing.");
+              } else {
+                logger.info("[Old] Timed out waiting to complete tasks. Pausing.");
+              }
+
               signalService.pause();
               logger.info("[Old] Shutting down.");
 
