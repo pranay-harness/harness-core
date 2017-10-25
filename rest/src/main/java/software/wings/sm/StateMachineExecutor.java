@@ -781,6 +781,7 @@ public class StateMachineExecutor {
         for (StateExecutionInstance childStateExecutionInstance :
             spawningExecutionResponse.getStateExecutionInstanceList()) {
           childStateExecutionInstance.setUuid(null);
+          childStateExecutionInstance.setStateParams(null);
           childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
           childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
           childStateExecutionInstance.setNotifyElements(null);
@@ -819,6 +820,7 @@ public class StateMachineExecutor {
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
     cloned.setUuid(null);
+    cloned.setStateParams(null);
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
     cloned.setContextTransition(false);
