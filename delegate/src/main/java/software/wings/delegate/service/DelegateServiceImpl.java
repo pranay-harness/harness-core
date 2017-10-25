@@ -95,7 +95,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private Socket socket;
   private RequestBuilder request;
-  private final List<Boolean> upgradePending = new ArrayList<>();
+  private boolean upgradePending;
   private String delegateId;
   private String accountId;
 
@@ -203,9 +203,7 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
-      logger.info("[New] Setting delegate {} upgrade pending: {}", delegateId, false);
-      upgradePending.add(false);
-      execute(managerClient.setUpgradePending(delegateId, accountId, false));
+      setUpgradePending(false);
       socket.open(request.build());
 
       startHeartbeat(builder, socket);
@@ -312,9 +310,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void resume() {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
-      logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, false);
-      upgradePending.set(0, false);
-      execute(managerClient.setUpgradePending(accountId, delegateId, false));
+      setUpgradePending(false);
     } catch (IOException e) {
       logger.error("Failed to resume.", e);
       stop();
@@ -388,7 +384,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     upgradeExecutor.scheduleWithFixedDelay(() -> {
-      if (upgradePending.get(0)) {
+      if (isUpgradePending()) {
         logger.info("[Old] Upgrade is pending...");
       } else {
         logger.info("Checking for upgrade");
@@ -396,22 +392,14 @@ public class DelegateServiceImpl implements DelegateService {
           RestResponse<DelegateScripts> restResponse =
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
           if (restResponse.getResource().isDoUpgrade()) {
-            logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, true);
-            upgradePending.set(0, true);
-            execute(managerClient.setUpgradePending(delegateId, accountId, true));
+            setUpgradePending(true);
             logger.info("[Old] Upgrading delegate...");
             upgradeService.doUpgrade(restResponse.getResource(), getVersion());
           } else {
             logger.info("Delegate up to date");
           }
         } catch (Exception e) {
-          try {
-            logger.info("[Old] Setting delegate {} upgrade pending: {}", delegateId, false);
-            upgradePending.set(0, false);
-            execute(managerClient.setUpgradePending(delegateId, accountId, false));
-          } catch (IOException e1) {
-            logger.error("[Old] Exception while setting upgrade pending", e1);
-          }
+          setUpgradePending(false);
           logger.error("[Old] Exception while checking for upgrade", e);
         }
       }
@@ -467,6 +455,13 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegateTaskEvent.getDelegateTaskId() != null
         && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
       logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+      return;
+    }
+
+    if (isUpgradePending()
+        && (!delegateTaskEvent.isSync()
+               || currentlyExecutingTasks.values().stream().noneMatch(DelegateTask::isAsync))) {
+      logger.info("Upgrade pending, won't acquire task {}", delegateTaskEvent.getDelegateTaskId());
       return;
     }
 
@@ -535,6 +530,15 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (IOException e) {
       logger.error("Unable to acquire task", e);
     }
+  }
+
+  private boolean isUpgradePending() {
+    return upgradePending;
+  }
+
+  private void setUpgradePending(boolean upgradePending) {
+    logger.info("[New] Setting delegate {} upgrade pending: {}", delegateId, upgradePending);
+    this.upgradePending = upgradePending;
   }
 
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
