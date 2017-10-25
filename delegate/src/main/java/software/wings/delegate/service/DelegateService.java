@@ -13,4 +13,6 @@ public interface DelegateService {
   void stop();
 
   long getRunningTaskCount();
+
+  void setAcquireTasks(boolean acquireTasks);
 }

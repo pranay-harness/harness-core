@@ -96,6 +96,7 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private boolean upgradePending;
+  private boolean acquireTasks;
   private String delegateId;
   private String accountId;
 
@@ -204,6 +205,7 @@ public class DelegateServiceImpl implements DelegateService {
           });
 
       setUpgradePending(false);
+      setAcquireTasks(true);
       socket.open(request.build());
 
       startHeartbeat(builder, socket);
@@ -311,6 +313,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
       setUpgradePending(false);
+      setAcquireTasks(true);
     } catch (IOException e) {
       logger.error("Failed to resume.", e);
       stop();
@@ -393,13 +396,14 @@ public class DelegateServiceImpl implements DelegateService {
               execute(managerClient.checkForUpgrade(version, delegateId, accountId));
           if (restResponse.getResource().isDoUpgrade()) {
             setUpgradePending(true);
-            logger.info("[Old] Upgrading delegate...");
+            logger.info("[Old] Upgrading delegate. Stop acquiring async tasks.");
             upgradeService.doUpgrade(restResponse.getResource(), getVersion());
           } else {
             logger.info("Delegate up to date");
           }
         } catch (Exception e) {
           setUpgradePending(false);
+          setAcquireTasks(true);
           logger.error("[Old] Exception while checking for upgrade", e);
         }
       }
@@ -452,16 +456,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
-    if (delegateTaskEvent.getDelegateTaskId() != null
-        && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
-      logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+
+    if (!isAcquireTasks()) {
+      logger.info("[Old] Upgraded process is running. Won't acquire task {} while completing other tasks",
+          delegateTaskEvent.getDelegateTaskId());
       return;
     }
 
-    if (isUpgradePending()
-        && (!delegateTaskEvent.isSync()
-               || currentlyExecutingTasks.values().stream().noneMatch(DelegateTask::isAsync))) {
-      logger.info("Upgrade pending, won't acquire task {}", delegateTaskEvent.getDelegateTaskId());
+    if (isUpgradePending() && !delegateTaskEvent.isSync()) {
+      logger.info("[Old] Upgrade pending, won't acquire async task {}", delegateTaskEvent.getDelegateTaskId());
+      return;
+    }
+
+    if (delegateTaskEvent.getDelegateTaskId() != null
+        && currentlyExecutingTasks.containsKey(delegateTaskEvent.getDelegateTaskId())) {
+      logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
       return;
     }
 
@@ -539,6 +548,14 @@ public class DelegateServiceImpl implements DelegateService {
   private void setUpgradePending(boolean upgradePending) {
     logger.info("[New] Setting delegate {} upgrade pending: {}", delegateId, upgradePending);
     this.upgradePending = upgradePending;
+  }
+
+  private boolean isAcquireTasks() {
+    return acquireTasks;
+  }
+
+  public void setAcquireTasks(boolean acquireTasks) {
+    this.acquireTasks = acquireTasks;
   }
 
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
