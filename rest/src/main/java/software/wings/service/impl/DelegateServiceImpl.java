@@ -215,6 +215,22 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateScripts;
   }
 
+  @Override
+  public void setUpgradePending(String accountId, String delegateId, boolean upgrading)
+      throws IOException, TemplateException {
+    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    setUnset(updateOperations, "upgrading", upgrading);
+
+    logger.info("Setting delegate {} upgrade pending: {}", delegateId, upgrading);
+    Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+                            .field("accountId")
+                            .equal(accountId)
+                            .field(ID_KEY)
+                            .equal(delegateId)
+                            .get();
+    updateDelegate(delegate, updateOperations);
+  }
+
   private ImmutableMap<Object, Object> getJarAndScriptRunTimeParamMap(
       String accountId, String version, String managerHost) {
     String latestVersion = null;
@@ -471,6 +487,8 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateTask task = wingsPersistence.executeGetOneQuery(query);
       if (task == null) {
         logger.warn("Delegate task {} is null (async)", taskId);
+      } else if (assignDelegateService.isUpgrading(accountId, delegateId)) {
+        logger.info("Delegate {} has upgrade pending, not executing async task {}", delegateId, taskId);
       } else if (!assignDelegateService.canAssign(task, delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
         if (System.currentTimeMillis() - task.getCreatedAt() > 3 * 60 * 1000) {

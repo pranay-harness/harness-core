@@ -3,13 +3,20 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -30,18 +37,17 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.Service;
-import software.wings.beans.Variable;
+import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
@@ -62,6 +68,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<PipelineExecution> query;
   @Mock private FieldEnd end;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Inject @InjectMocks private PipelineService pipelineService;
 
@@ -104,7 +111,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .build());
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
-        .thenReturn(aWorkflow().withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build())).build());
+        .thenReturn(aWorkflow().withServices(asList(aService().withUuid(SERVICE_ID).build())).build());
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
@@ -113,31 +120,37 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetPipelineWithWorkflowVariables() {
+  public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
-                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement("SE",
+                            ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID),
+                            ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID))))))
                         .build());
 
-    CanaryOrchestrationWorkflow orchestrationWorkflow =
-        aCanaryOrchestrationWorkflow()
-            .withUserVariables(
-                asList(Variable.VariableBuilder.aVariable().withName("httpUrl").withValue("google.com").build()))
-            .build();
-
+    when(serviceResourceService.list(any(), anyBoolean(), anyBoolean()))
+        .thenReturn(aPageResponse().withResponse(asList(aService().withUuid(SERVICE_ID).build())).build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
-        .thenReturn(aWorkflow().withUuid(WORKFLOW_ID).withOrchestrationWorkflow(orchestrationWorkflow).build());
+        .thenReturn(
+            aWorkflow()
+                .withOrchestrationWorkflow(
+                    aCanaryOrchestrationWorkflow()
+                        .withUserVariables(asList(
+                            aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .build())
+                .withServices(asList(aService().withUuid(SERVICE_ID).build()))
+                .build());
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
-    assertThat(pipeline.getWorkflowDetails()).hasSize(1).extracting("workflowId").isEqualTo(asList(WORKFLOW_ID));
-    assertThat(pipeline.getWorkflowDetails()).hasSize(1).extracting("pipelineStageName").isEqualTo(asList("SE"));
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    ;
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
-
   @Test
   public void shouldDeletePipeline() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))

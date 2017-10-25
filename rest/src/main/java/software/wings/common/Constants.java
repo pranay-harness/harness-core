@@ -285,6 +285,11 @@ public interface Constants {
       "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
 
   /**
+   * The constant PIPELINE_ENV_STATE_VALIDATION_MESSAGE.
+   */
+  String PIPELINE_ENV_STATE_VALIDATION_MESSAGE = "Some workflows %s are found to be invalid/incomplete.";
+
+  /**
    * The constant WAIT_RESUME_GROUP.
    */
   String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
