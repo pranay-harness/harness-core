@@ -5,6 +5,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static software.wings.delegate.service.DelegateServiceImpl.MAX_UPGRADE_WAIT_SECS;
 
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
 import org.apache.commons.io.FileUtils;
@@ -40,6 +41,7 @@ public class UpgradeServiceImpl implements UpgradeService {
 
   @Inject private DelegateService delegateService;
   @Inject private SignalService signalService;
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public void doUpgrade(DelegateScripts delegateScripts, String version)
@@ -72,14 +74,14 @@ public class UpgradeServiceImpl implements UpgradeService {
             logger.info("[Old] Sent go ahead to new delegate.");
 
             if (waitForStringOnStream(reader, "proceeding", 5)) {
-              logger.info("[Old] Handshake with new delegate complete. Stop acquiring all tasks.");
+              logger.info("[Old] Handshake with new delegate complete. Stop acquiring tasks.");
 
               delegateService.setAcquireTasks(false);
               int secs = 0;
               while (delegateService.getRunningTaskCount() > 0 && secs++ < MAX_UPGRADE_WAIT_SECS) {
+                Thread.sleep(1000);
                 logger.info(
                     "[Old] Completing {} tasks... ({} seconds elapsed)", delegateService.getRunningTaskCount(), secs);
-                Thread.sleep(1000);
               }
 
               if (secs < MAX_UPGRADE_WAIT_SECS) {
@@ -228,16 +230,20 @@ public class UpgradeServiceImpl implements UpgradeService {
     }
   }
 
-  private boolean waitForStringOnStream(BufferedReader reader, String searchString, int maxMinutes)
-      throws IOException, InterruptedException {
-    int maxWaitSecs = 60 * maxMinutes;
-    while (maxWaitSecs-- > 0) {
-      if (StringUtils.contains(reader.readLine(), searchString)) {
-        return true;
-      }
-      Thread.sleep(1000);
+  private boolean waitForStringOnStream(BufferedReader reader, String searchString, int maxMinutes) {
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          if (StringUtils.contains(line, searchString)) {
+            return true;
+          }
+        }
+        return false;
+      }, maxMinutes, TimeUnit.MINUTES, true);
+    } catch (Exception e) {
+      return false;
     }
-    return false;
   }
 
   private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
