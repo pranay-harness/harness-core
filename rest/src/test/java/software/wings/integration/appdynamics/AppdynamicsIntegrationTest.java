@@ -1,5 +1,6 @@
 package software.wings.integration.appdynamics;
 
+import static org.junit.Assert.assertEquals;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import org.apache.commons.lang.StringUtils;
@@ -58,7 +59,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   public void testGetAllApplications() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
+    assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -66,7 +67,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
-    Assert.assertEquals(0, restResponse.getResponseMessages().size());
+    assertEquals(0, restResponse.getResponseMessages().size());
     Assert.assertTrue(restResponse.getResource().size() > 0);
 
     for (NewRelicApplication app : restResponse.getResource()) {
@@ -80,7 +81,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   public void testGetAllTiers() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
+    assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -109,70 +110,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       Assert.assertFalse(StringUtils.isBlank(tier.getName()));
       Assert.assertFalse(StringUtils.isBlank(tier.getType()));
       Assert.assertFalse(StringUtils.isBlank(tier.getAgentType()));
-      Assert.assertTrue(tier.getNumberOfNodes() > 0);
-    }
-  }
-
-  @Test
-  @Repeat(times = 5, successes = 1)
-  public void testGetAllNodes() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
-
-    // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<NewRelicApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
-
-    long appId = 0;
-
-    for (NewRelicApplication application : restResponse.getResource()) {
-      if (application.getName().equalsIgnoreCase("MyApp")) {
-        appId = application.getId();
-        break;
-      }
-    }
-
-    Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
-    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
-        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
-    RestResponse<List<AppdynamicsTier>> tierRestResponse =
-        getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
-    Assert.assertTrue(tierRestResponse.getResource().size() > 0);
-
-    for (AppdynamicsTier tier : tierRestResponse.getResource()) {
-      Assert.assertTrue(tier.getId() > 0);
-      Assert.assertFalse(StringUtils.isBlank(tier.getName()));
-      Assert.assertFalse(StringUtils.isBlank(tier.getType()));
-      Assert.assertFalse(StringUtils.isBlank(tier.getAgentType()));
-      Assert.assertTrue(tier.getNumberOfNodes() > 0);
-
-      WebTarget nodeTarget =
-          client.target(API_BASE + "/appdynamics/nodes?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
-
-      RestResponse<List<AppdynamicsNode>> nodeRestResponse =
-          getRequestBuilderWithAuthHeader(nodeTarget).get(new GenericType<RestResponse<List<AppdynamicsNode>>>() {});
-
-      Assert.assertTrue(nodeRestResponse.getResource().size() > 0);
-      for (AppdynamicsNode node : nodeRestResponse.getResource()) {
-        Assert.assertTrue(node.getId() > 0);
-        Assert.assertFalse(StringUtils.isBlank(node.getName()));
-        Assert.assertFalse(StringUtils.isBlank(node.getType()));
-        Assert.assertTrue(node.getTierId() > 0);
-        Assert.assertFalse(StringUtils.isBlank(node.getTierName()));
-        Assert.assertTrue(node.getMachineId() > 0);
-        Assert.assertFalse(StringUtils.isBlank(node.getMachineName()));
-        Assert.assertFalse(StringUtils.isBlank(node.getMachineOSType()));
-        Assert.assertFalse(StringUtils.isBlank(node.getAppAgentVersion()));
-        Assert.assertFalse(StringUtils.isBlank(node.getAgentType()));
-        Assert.assertTrue(node.getIpAddresses().size() > 0);
-
-        Assert.assertTrue(node.getIpAddresses().containsKey("ipAddresses"));
-        Assert.assertTrue(node.getIpAddresses().get("ipAddresses").size() > 0);
-      }
+      assertEquals(tier.getName(), "MyTier");
     }
   }
 
@@ -181,7 +119,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   public void testGetAllBusinessTransactions() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
+    assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -221,7 +159,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   public void testGetAllTierBTMetrics() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
+    assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -262,7 +200,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
         for (AppdynamicsMetric leafMetric : btMetric.getChildMetrices()) {
           Assert.assertFalse(StringUtils.isBlank(leafMetric.getName()));
-          Assert.assertEquals(
+          assertEquals(
               "failed for " + btMetric.getName() + "|" + leafMetric.getName(), 0, leafMetric.getChildMetrices().size());
         }
       }
@@ -274,7 +212,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   public void testGetBTMetricData() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    Assert.assertEquals(1, appdynamicsSettings.size());
+    assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
