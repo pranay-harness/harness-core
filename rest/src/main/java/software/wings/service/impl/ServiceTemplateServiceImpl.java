@@ -229,7 +229,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private void populateServiceAndOverrideServiceVariables(ServiceTemplate template, boolean maskEncryptedFields) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId(), maskEncryptedFields);
+        template.getAppId(), template.getServiceId(), maskEncryptedFields);
     template.setServiceVariables(serviceVariables);
 
     List<ServiceVariable> overrideServiceVariables = serviceVariableService.getServiceVariablesByTemplate(
@@ -349,12 +349,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return new ArrayList<>();
     }
 
-    List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-        appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), false);
+    List<ServiceVariable> serviceVariables =
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), false);
     List<ServiceVariable> allServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, envId, false);
+        serviceVariableService.getServiceVariablesForEntity(appId, envId, false);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getUuid(), false);
+        serviceVariableService.getServiceVariablesByTemplate(appId, templateId, serviceTemplate, false);
 
     return overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);

@@ -177,7 +177,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public List<ServiceVariable> getServiceVariablesForEntity(
-      String appId, String templateId, String entityId, boolean maskEncryptedFields) {
+      String appId, String entityId, boolean maskEncryptedFields) {
     PageRequest<ServiceVariable> request =
         aPageRequest()
             .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
@@ -204,17 +204,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
     }
     return variables;
-  }
-
-  @Override
-  public void deleteByEntityId(String appId, String templateId, String entityId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("templateId")
-                                .equal(templateId)
-                                .field("entityId")
-                                .equal(entityId));
   }
 
   @Override

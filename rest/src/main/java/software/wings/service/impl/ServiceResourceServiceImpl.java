@@ -395,8 +395,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service != null && includeDetails) {
       service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-      service.setServiceVariables(
-          serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid(), false));
+      service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
       service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
       service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
       service.getServiceCommands().forEach(serviceCommand

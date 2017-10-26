@@ -27,7 +27,6 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -79,7 +78,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -364,7 +362,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     ServiceVariable serviceVariable = ServiceVariable.builder().build();
     serviceVariable.setAppId(APP_ID);
     serviceVariable.setUuid(SERVICE_VARIABLE_ID);
-    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false))
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, false))
         .thenReturn(asList(serviceVariable));
 
     when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any(Boolean.class)))
@@ -398,7 +396,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(configService).download(APP_ID, "CONFIG_FILE_ID");
     verify(configService).save(any(ConfigFile.class), new BoundedInputStream(any(InputStream.class)));
-    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID, false);
+    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, SERVICE_ID, false);
     verify(serviceVariableService).save(any(ServiceVariable.class));
   }
 

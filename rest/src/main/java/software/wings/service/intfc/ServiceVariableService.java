@@ -80,13 +80,11 @@ public interface ServiceVariableService {
    * Gets service variables for entity.
    *
    * @param appId      the app id
-   * @param templateId the template id
    * @param entityId   the entity id
    * @param maskEncryptedFields the boolean
    * @return the service variables for entity
    */
-  List<ServiceVariable> getServiceVariablesForEntity(
-      String appId, String templateId, String entityId, boolean maskEncryptedFields);
+  List<ServiceVariable> getServiceVariablesForEntity(String appId, String entityId, boolean maskEncryptedFields);
 
   /**
    * Gets service variables by template.
@@ -98,15 +96,6 @@ public interface ServiceVariableService {
    */
   List<ServiceVariable> getServiceVariablesByTemplate(
       String appId, String envId, ServiceTemplate serviceTemplate, boolean maskEncryptedFields);
-
-  /**
-   * Delete by entity id.
-   *
-   * @param appId      the app id
-   * @param templateId the template id
-   * @param entityId   the entity id
-   */
-  void deleteByEntityId(String appId, String templateId, String entityId);
 
   /**
    * Delete by template id.
