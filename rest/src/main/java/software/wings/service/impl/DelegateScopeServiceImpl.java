@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
+import software.wings.beans.ErrorCode;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -47,6 +49,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   @Override
   public DelegateScope update(DelegateScope delegateScope) {
+    if (!delegateScope.isValid()) {
+      logger.warn("Delegate scope cannot be empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
+    }
     UpdateOperations<DelegateScope> updateOperations = wingsPersistence.createUpdateOperations(DelegateScope.class);
     setUnset(updateOperations, "name", delegateScope.getName());
     setUnset(updateOperations, "taskTypes", delegateScope.getTaskTypes());
@@ -55,7 +61,6 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     setUnset(updateOperations, "environments", delegateScope.getEnvironments());
     setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
 
-    logger.info("Updating delegate scope: {}", delegateScope.getUuid());
     Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
                                      .field("accountId")
                                      .equal(delegateScope.getAccountId())
@@ -63,6 +68,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
                                      .equal(delegateScope.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
+    logger.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
 
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
                                    .field("accountId")
@@ -101,9 +107,14 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   @Override
   public DelegateScope add(DelegateScope delegateScope) {
-    logger.info("Adding delegate scope: {}", delegateScope.getUuid());
+    if (!delegateScope.isValid()) {
+      logger.warn("Delegate scope cannot be empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Delegate scope cannot be empty.");
+    }
     delegateScope.setAppId(GLOBAL_APP_ID);
-    return wingsPersistence.saveAndGet(DelegateScope.class, delegateScope);
+    DelegateScope persistedScope = wingsPersistence.saveAndGet(DelegateScope.class, delegateScope);
+    logger.info("Added delegate scope: {}", persistedScope.getUuid());
+    return persistedScope;
   }
 
   @Override
