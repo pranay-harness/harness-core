@@ -21,8 +21,6 @@ public interface AppdynamicsService {
 
   List<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
 
-  List<AppdynamicsNode> getNodes(String settingId, long appdynamicsAppId, long tierId) throws IOException;
-
   List<AppdynamicsBusinessTransaction> getBusinessTransactions(@NotNull String settingId, @Valid long appdynamicsAppId)
       throws IOException;
 

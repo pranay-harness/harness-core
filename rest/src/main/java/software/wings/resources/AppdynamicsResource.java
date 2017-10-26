@@ -58,16 +58,6 @@ public class AppdynamicsResource {
   }
 
   @GET
-  @Path("/nodes")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsNode>> getAllNodes(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId,
-      @QueryParam("tierId") long tierId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getNodes(settingId, appdynamicsAppId, tierId));
-  }
-
-  @GET
   @Path("/business-transactions")
   @Timed
   @ExceptionMetered
