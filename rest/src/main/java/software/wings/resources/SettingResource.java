@@ -94,9 +94,12 @@ public class SettingResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> save(
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, SettingAttribute variable) {
+  public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, SettingAttribute variable) {
     variable.setAppId(appId);
+    if (accountId != null) {
+      variable.setAccountId(accountId);
+    }
     if (variable.getValue() != null) {
       if (variable.getValue() instanceof Encryptable) {
         ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
