@@ -8,5 +8,11 @@ nltk
 scipy
 sklearn
 plotly
+debacl
+cython
+hdbscan
+statsmodels
+hmmlearn
+pymongo; sys_platform == 'darwin'
 ipython==5.0; sys_platform == 'darwin'
 jupyter; sys_platform == 'darwin'

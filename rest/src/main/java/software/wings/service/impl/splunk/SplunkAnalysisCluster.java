@@ -1,5 +1,6 @@
 package software.wings.service.impl.splunk;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
@@ -19,4 +20,8 @@ public class SplunkAnalysisCluster {
   private double x;
   private double y;
   private List<String> diff_tags;
+  private double alert_score;
+  private double test_score;
+  private double control_score;
+  private double freq_score;
 }
