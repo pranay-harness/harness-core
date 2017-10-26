@@ -168,12 +168,13 @@ public class DelegateServiceImpl implements DelegateService {
               })
               .transport(TRANSPORT.WEBSOCKET);
 
-      Options clientOptions = client.newOptionsBuilder()
-                                  .runtime(asyncHttpClient, true)
-                                  .reconnect(true)
-                                  .reconnectAttempts(MAX_CONNECT_ATTEMPTS)
-                                  .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
-                                  .build();
+      Options clientOptions =
+          client.newOptionsBuilder()
+              .runtime(asyncHttpClient, true)
+              .reconnect(true)
+              .reconnectAttempts(new File("run.sh").exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+              .pauseBeforeReconnectInSeconds(CONNECT_INTERVAL_SECONDS)
+              .build();
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
@@ -432,7 +433,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private boolean doRestartDelegate() {
     long now = System.currentTimeMillis();
-    return (now - lastHeartbeatSentAt) > MAX_HB_TIMEOUT || (now - lastHeartbeatReceivedAt) > MAX_HB_TIMEOUT;
+    return new File("run.sh").exists()
+        && ((now - lastHeartbeatSentAt) > MAX_HB_TIMEOUT || (now - lastHeartbeatReceivedAt) > MAX_HB_TIMEOUT);
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
