@@ -142,6 +142,11 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute) {
+    SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+    Validator.notNullCheck("Setting", existingSetting);
+    settingAttribute.setAccountId(existingSetting.getAccountId());
+    settingAttribute.setAppId(existingSetting.getAppId());
+
     settingValidationService.validate(settingAttribute);
 
     ImmutableMap.Builder<String, Object> fields =

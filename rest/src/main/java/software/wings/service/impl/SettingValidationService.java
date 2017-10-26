@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
@@ -58,6 +59,8 @@ public class SettingValidationService {
             .equal(settingAttribute.getAppId())
             .field("envId")
             .equal(settingAttribute.getEnvId())
+            .field(Mapper.ID_KEY)
+            .notEqual(settingAttribute.getUuid())
             .field("name")
             .equal(settingAttribute.getName())
             .field("value.type")
@@ -65,7 +68,7 @@ public class SettingValidationService {
             .get()
         != null) {
       throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " is already in use.");
+          ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " already exists.");
     }
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential(((GcpConfig) settingValue).getServiceAccountKeyFileContent());
