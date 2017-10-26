@@ -74,7 +74,7 @@ import javax.net.ssl.SSLException;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   static final int MAX_UPGRADE_WAIT_SECS = 2 * 60 * 60; // 2 hours max
-  private static final int MAX_CONNECT_ATTEMPTS = 100;
+  private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int CONNECT_INTERVAL_SECONDS = 10;
   private static final long MAX_HB_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
