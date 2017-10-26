@@ -166,8 +166,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
       stateExecutionInstance.setAppId(applicationId);
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
-      WebTarget target = client.target(API_BASE + "/newrelic/save-metrics?accountId=" + accountId
-          + "&applicationId=" + applicationId + "&delegateTaskId=" + delegateTaskId);
+      WebTarget target = client.target(API_BASE + "/newrelic/save-metrics?accountId=" + accountId + "&applicationId="
+          + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
           Entity.entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       Assert.assertTrue(restResponse.getResource());

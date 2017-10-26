@@ -140,7 +140,7 @@ public class LogAnalysisManagerJob implements Job {
     @Override
     public void run() {
       boolean completeCron = false;
-
+      boolean error = false;
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
         UUID uuid = stateExecutionLocks.get(context.getStateExecutionId());
@@ -193,6 +193,7 @@ public class LogAnalysisManagerJob implements Job {
 
       } catch (Exception ex) {
         completeCron = true;
+        error = true;
         logger.warn("analysis failed", ex);
       } finally {
         try {
@@ -201,7 +202,7 @@ public class LogAnalysisManagerJob implements Job {
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             try {
               delegateService.abortTask(context.getAccountId(), delegateTaskId);
-              sendStateNotification(context);
+              sendStateNotification(context, error);
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
@@ -218,22 +219,21 @@ public class LogAnalysisManagerJob implements Job {
       }
     }
 
-    private void sendStateNotification(AnalysisContext context) {
+    private void sendStateNotification(AnalysisContext context, boolean error) {
+      final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
       final LogAnalysisExecutionData executionData =
           LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
               .withStateExecutionInstanceId(context.getStateExecutionId())
               .withServerConfigID(context.getAnalysisServerConfigId())
               .withQueries(context.getQueries())
               .withAnalysisDuration(context.getTimeDuration())
-              .withStatus(ExecutionStatus.SUCCESS)
+              .withStatus(status)
               .withCanaryNewHostNames(context.getTestNodes())
               .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
               .withCorrelationId(context.getCorrelationId())
               .build();
-      final LogAnalysisResponse response = aLogAnalysisResponse()
-                                               .withLogAnalysisExecutionData(executionData)
-                                               .withExecutionStatus(ExecutionStatus.SUCCESS)
-                                               .build();
+      final LogAnalysisResponse response =
+          aLogAnalysisResponse().withLogAnalysisExecutionData(executionData).withExecutionStatus(status).build();
       waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
     }
   }

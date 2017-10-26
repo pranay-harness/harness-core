@@ -14,4 +14,5 @@ public class LogMLClusterSummary {
   private Map<String, LogMLHostSummary> hostSummary;
   private String logText;
   private List<String> tags;
+  private double score;
 }

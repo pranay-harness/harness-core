@@ -12,7 +12,8 @@ from core.TFIDFVectorizer import TFIDFVectorizer
 from core.Tokenizer import Tokenizer
 from sources.SplunkDatasetNew import SplunkDatasetNew
 from core.JaccardDistance import jaccard_difference, jaccard_text_similarity
-from multiprocessing import Process
+from sklearn.metrics.pairwise import euclidean_distances
+
 
 format = "%(asctime)-15s %(levelname)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=format)
@@ -78,6 +79,7 @@ class SplunkIntelOptimized(object):
                 for host, anomaly in anomalies.items():
                     score = jaccard_text_similarity([control_clusters[anomaly['cluster_label']].values()[0]['text']],
                                                     anomaly['text'])
+                    anomaly['alert_score'] = score[0]
                     if 0.9 > score[0] > 0.5:
                         anomaly['diff_tags'] = []
                         anomaly['diff_tags'].extend(
@@ -122,7 +124,7 @@ class SplunkIntelOptimized(object):
             values_control = np.column_stack(([idx] * len(values), values))
 
             classifier.fit_transform(idx, values_control)
-
+            max_score = 0.0
             for host, data in group.items():
                 values_test = np.array([freq.get('count') for freq in data.get('message_frequencies')])
                 # print(values_test)
@@ -135,23 +137,47 @@ class SplunkIntelOptimized(object):
                     print('values_test=', values_test)
                     print(anomalous_counts)
                     data['unexpected_freq'] = True
+                    data['freq_score'] = round(1 - score, 2)
+                    if data['freq_score'] > max_score:
+                        if idx not in self.splunkDatasetNew.cluster_scores['test']:
+                            self.splunkDatasetNew.cluster_scores['test'][idx] = {}
+                        self.splunkDatasetNew.cluster_scores['test'][idx]['unexpected_freq'] = True
+                        self.splunkDatasetNew.cluster_scores['test'][idx]['freq_score'] = data['freq_score']
+                        max_score = data['freq_score']
 
         logger.info("Finish detect count Anomalies....")
+
+    def global_score(self):
+        control_scores = []
+        test_scores = []
+
+        for anom_cluster in self.splunkDatasetNew.cluster_scores['unknown'].values():
+            control_scores.append(anom_cluster['control_score'])
+            test_scores.append(1 - anom_cluster['test_score'])
+
+        for test_cluster in self.splunkDatasetNew.cluster_scores['test'].values():
+            if test_cluster['unexpected_freq']:
+                control_scores.append(1.0)
+                test_scores.append(1 - test_cluster['freq_score'])
+
+        if len(control_scores) > 0:
+            self.splunkDatasetNew.score = round(
+                euclidean_distances(control_scores, test_scores).flatten()[0], 2)
+
+
+
 
     def detect_unknown_events(self, vectorizer, kmeans):
         logging.info("Detect unknown events")
         predictions = []
-        anomalies = []
         if bool(self.splunkDatasetNew.test_events):
             tfidf_matrix_test = vectorizer.transform(np.array(self.splunkDatasetNew.get_test_events_text_as_np()))
-            newAnomDetector = KmeansAnomalyDetector()
-
-            predictions, anomalies = np.array(
-                newAnomDetector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
+            new_anom_detector = KmeansAnomalyDetector()
+            predictions = np.array(
+                new_anom_detector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
                                                                   kmeans, self._options.sim_threshold))
-
         logging.info("Finish detect unknown events")
-        return predictions, anomalies
+        return predictions
 
     def run(self):
 
@@ -165,19 +191,22 @@ class SplunkIntelOptimized(object):
 
         vectorizer, kmeans = self.cluster_input()
 
-        predictions, anomalies = self.detect_unknown_events(vectorizer, kmeans)
+        predictions = self.detect_unknown_events(vectorizer, kmeans)
 
         self.splunkDatasetNew.create_clusters(kmeans.get_clusters(), kmeans.get_centriods(),
                                               vectorizer.get_feature_names(),
-                                              predictions, anomalies)
+                                              predictions)
 
         self.create_anom_clusters()
 
         self.detect_count_anomalies()
 
+        self.global_score()
+
         self.set_xy()
 
         logger.info("done. time taken " + str(time.time() - start_time) + " seconds")
+        print(self.splunkDatasetNew.score)
         return self.splunkDatasetNew
 
     @staticmethod
@@ -242,7 +271,7 @@ def run_debug_live_traffic(options):
 def run_debug_prev_run(options):
     control_start = 1
     test_start = 1
-
+    print(options)
     prev_out_file = None
     while control_start <= 1 or test_start < 1:
 
@@ -255,8 +284,6 @@ def run_debug_prev_run(options):
             [control_start, control_start],
             '/Users/sriram_parthasarathy/wings/python/splunk_intelligence/data_prod/prev_run/test.json',
             [test_start, test_start], prev_out_file)
-
-        print(options)
 
         if splunk_dataset.new_data:
             splunk_intel = SplunkIntelOptimized(splunk_dataset, options)
@@ -279,6 +306,7 @@ def main(args):
 
     if options.debug:
         run_debug_live_traffic(options)
+        return
 
     splunk_dataset = SplunkDatasetNew()
 
