@@ -8,6 +8,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesConfig;
@@ -18,6 +19,8 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -43,10 +46,27 @@ public class SettingValidationService {
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private AnalysisService analysisService;
   @Inject private ElkAnalysisService elkAnalysisService;
+  @Inject private WingsPersistence wingsPersistence;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
 
+    if (wingsPersistence.createQuery(SettingAttribute.class)
+            .field("accountId")
+            .equal(settingAttribute.getAccountId())
+            .field("appId")
+            .equal(settingAttribute.getAppId())
+            .field("envId")
+            .equal(settingAttribute.getEnvId())
+            .field("name")
+            .equal(settingAttribute.getName())
+            .field("value.type")
+            .equal(settingValue.getType())
+            .get()
+        != null) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " is already in use.");
+    }
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential(((GcpConfig) settingValue).getServiceAccountKeyFileContent());
     } else if (settingValue instanceof AwsConfig) {
