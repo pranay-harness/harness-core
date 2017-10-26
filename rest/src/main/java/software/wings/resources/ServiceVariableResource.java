@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import com.google.inject.Inject;
@@ -10,7 +9,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -20,7 +18,6 @@ import software.wings.service.intfc.ServiceVariableService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -142,7 +139,6 @@ public class ServiceVariableResource {
    * Delete by entity rest response.
    *
    * @param appId      the app id
-   * @param templateId the template id
    * @param entityId   the entity id
    * @return the rest response
    */
@@ -150,10 +146,8 @@ public class ServiceVariableResource {
   @Path("/entity/{entityId}")
   @Timed
   @ExceptionMetered
-  public RestResponse deleteByEntity(@QueryParam("appId") String appId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
-      @PathParam("entityId") String entityId) {
-    serviceVariablesService.deleteByEntityId(appId, templateId, entityId);
+  public RestResponse deleteByEntity(@QueryParam("appId") String appId, @PathParam("entityId") String entityId) {
+    serviceVariablesService.deleteByEntityId(appId, entityId);
     return new RestResponse();
   }
 }

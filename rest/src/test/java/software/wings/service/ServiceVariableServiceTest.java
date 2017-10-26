@@ -249,7 +249,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
 
-    serviceVariableService.getServiceVariablesForEntity(APP_ID, TEMPLATE_ID, "ENTITY_ID", false);
+    serviceVariableService.getServiceVariablesForEntity(APP_ID, "ENTITY_ID", false);
     verify(wingsPersistence).query(ServiceVariable.class, pageRequest);
   }
 
@@ -272,7 +272,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
 
-    serviceVariableService.deleteByEntityId(APP_ID, TEMPLATE_ID, "ENTITY_ID");
+    serviceVariableService.deleteByEntityId(APP_ID, "ENTITY_ID");
     verify(wingsPersistence).delete(query);
   }
 

@@ -6,12 +6,12 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyObject;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -19,8 +19,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.AdditionalAnswers;
-import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
@@ -179,6 +177,6 @@ public class ServiceVariableResourceTest {
                                 .request()
                                 .delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
-    verify(VARIABLE_SERVICE).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, TEMPLATE_ID);
+    verify(VARIABLE_SERVICE).deleteByEntityId(APP_ID, TEMPLATE_ID);
   }
 }
