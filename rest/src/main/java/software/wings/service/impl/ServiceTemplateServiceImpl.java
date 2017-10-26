@@ -354,7 +354,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> allServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, envId, false);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesByTemplate(appId, templateId, serviceTemplate, false);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
 
     return overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);
