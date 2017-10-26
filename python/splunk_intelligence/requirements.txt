@@ -10,7 +10,6 @@ sklearn
 plotly
 debacl
 cython
-hdbscan
 statsmodels
 hmmlearn
 pymongo; sys_platform == 'darwin'
