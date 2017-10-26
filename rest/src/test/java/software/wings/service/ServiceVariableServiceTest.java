@@ -244,7 +244,6 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageRequest<ServiceVariable> pageRequest =
         aPageRequest()
             .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
             .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
             .build();
 
@@ -266,7 +265,6 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageRequest<ServiceVariable> pageRequest =
         aPageRequest()
             .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
             .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
             .build();
 
