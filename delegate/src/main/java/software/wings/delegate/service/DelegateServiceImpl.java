@@ -518,6 +518,7 @@ public class DelegateServiceImpl implements DelegateService {
                       if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
                         logger.error(
                             "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
+                        return false;
                       }
                       currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
                     }
