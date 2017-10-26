@@ -181,7 +181,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     PageRequest<ServiceVariable> request =
         aPageRequest()
             .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
             .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
             .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
