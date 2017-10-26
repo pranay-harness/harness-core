@@ -94,20 +94,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Test
   @RealMongo
   @Repeat(times = 5, successes = 1)
-  public void getNodes() throws IOException {
-    NewRelicApplication application = getDemoApp();
-    List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), application.getId());
-    assertFalse(tiers.isEmpty());
-    for (AppdynamicsTier tier : tiers) {
-      List<AppdynamicsNode> nodes =
-          appdynamicsService.getNodes(settingAttribute.getUuid(), application.getId(), tier.getId());
-      assertFalse(nodes.isEmpty());
-    }
-  }
-
-  @Test
-  @RealMongo
-  @Repeat(times = 5, successes = 1)
   public void getBusinessTransactions() throws IOException {
     NewRelicApplication application = getDemoApp();
     List<AppdynamicsBusinessTransaction> businessTransactions =

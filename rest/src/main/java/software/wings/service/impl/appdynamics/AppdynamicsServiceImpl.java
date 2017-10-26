@@ -59,15 +59,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(String settingId, long appdynamicsAppId, long tierId) throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getNodes((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
-  }
-
-  @Override
   public List<AppdynamicsBusinessTransaction> getBusinessTransactions(String settingId, long appdynamicsAppId)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
