@@ -1,5 +1,7 @@
 package software.wings.beans.alert;
 
+import com.google.inject.Injector;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,12 +16,12 @@ public class ApprovalAlert implements AlertData {
   private String name;
 
   @Override
-  public boolean matches(AlertData alertData) {
+  public boolean matches(AlertData alertData, Injector injector) {
     return approvalId.equals(((ApprovalAlert) alertData).getApprovalId());
   }
 
   @Override
-  public String buildTitle() {
+  public String buildTitle(Injector injector) {
     return name + " needs approval";
   }
 }

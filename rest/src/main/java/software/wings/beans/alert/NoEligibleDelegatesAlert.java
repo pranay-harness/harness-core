@@ -1,27 +1,24 @@
 package software.wings.beans.alert;
 
-import com.github.reinert.jjschema.SchemaIgnore;
-import org.mongodb.morphia.annotations.Transient;
+import com.google.inject.Injector;
+
 import software.wings.beans.CatalogItem;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskGroup;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.inject.Inject;
 
 public class NoEligibleDelegatesAlert implements AlertData {
-  @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
-
-  @Inject @Transient @SchemaIgnore private transient CatalogService catalogService;
-
   private DelegateTask task;
   private TaskGroup taskType;
 
   @Override
-  public boolean matches(AlertData alertData) {
+  public boolean matches(AlertData alertData, Injector injector) {
+    EnvironmentService environmentService = injector.getInstance(EnvironmentService.class);
     NoEligibleDelegatesAlert otherAlertData = (NoEligibleDelegatesAlert) alertData;
     DelegateTask otherTask = otherAlertData.getTask();
 
@@ -38,17 +35,21 @@ public class NoEligibleDelegatesAlert implements AlertData {
   }
 
   @Override
-  public String buildTitle() {
-    return String.format("No delegates are eligible to execute %s tasks", getTaskTypeDisplayName());
+  public String buildTitle(Injector injector) {
+    return String.format("No delegates can execute %s tasks", getTaskTypeDisplayName(injector));
   }
 
-  private String getTaskTypeDisplayName() {
-    Optional<CatalogItem> taskTypeCatalogItem =
-        catalogService.getCatalogItems("TASK_TYPES")
-            .stream()
-            .filter(catalogItem -> catalogItem.getValue().equals(taskType.name()))
-            .findFirst();
-    return taskTypeCatalogItem.isPresent() ? taskTypeCatalogItem.get().getDisplayText() : taskType.name();
+  private String getTaskTypeDisplayName(Injector injector) {
+    CatalogService catalogService = injector.getInstance(CatalogService.class);
+    List<CatalogItem> taskTypes = catalogService.getCatalogItems("TASK_TYPES");
+    if (taskTypes != null) {
+      Optional<CatalogItem> taskTypeCatalogItem =
+          taskTypes.stream().filter(catalogItem -> catalogItem.getValue().equals(taskType.name())).findFirst();
+      if (taskTypeCatalogItem.isPresent()) {
+        return taskTypeCatalogItem.get().getDisplayText();
+      }
+    }
+    return taskType.name();
   }
 
   public DelegateTask getTask() {

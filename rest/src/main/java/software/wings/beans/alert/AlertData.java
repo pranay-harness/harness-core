@@ -1,7 +1,9 @@
 package software.wings.beans.alert;
 
-public interface AlertData {
-  boolean matches(AlertData alertData);
+import com.google.inject.Injector;
 
-  String buildTitle();
+public interface AlertData {
+  boolean matches(AlertData alertData, Injector injector);
+
+  String buildTitle(Injector injector);
 }

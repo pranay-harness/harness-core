@@ -14,6 +14,8 @@ import static software.wings.alerts.AlertType.NoEligibleDelegates;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.alert.Alert.AlertBuilder.anAlert;
 
+import com.google.inject.Injector;
+
 import com.mongodb.BasicDBObject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -45,6 +47,7 @@ public class AlertServiceImpl implements AlertService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
+  @Inject private Injector injector;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -97,7 +100,7 @@ public class AlertServiceImpl implements AlertService {
               .withType(alertType)
               .withStatus(Open)
               .withAlertData(alertData)
-              .withTitle(alertData.buildTitle())
+              .withTitle(alertData.buildTitle(injector))
               .withCategory(alertType.getCategory())
               .withSeverity(alertType.getSeverity())
               .build());
@@ -128,7 +131,7 @@ public class AlertServiceImpl implements AlertService {
         wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
     query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
                                                          : query.field("appId").equal(appId);
-    return query.asList().stream().filter(alert -> alertData.matches(alert.getAlertData())).findFirst();
+    return query.asList().stream().filter(alert -> alertData.matches(alert.getAlertData(), injector)).findFirst();
   }
 
   private void close(Alert alert) {
