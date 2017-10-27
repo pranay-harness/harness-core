@@ -51,6 +51,7 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -63,6 +64,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -103,6 +105,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -436,8 +439,10 @@ public class DelegateServiceImpl implements DelegateService {
     } else if (eligibleDelegates.size() == 0) {
       logger.warn("{} delegates active but no delegates are eligible to execute task [{}:{}] for the accountId: {}",
           activeDelegates.size(), task.getUuid(), task.getTaskType(), task.getAccountId());
-      alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-          aNoEligibleDelegatesAlert().withTask(task).build());
+      if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, task.getAccountId())) {
+        alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+            aNoEligibleDelegatesAlert().withTask(task).build());
+      }
       throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
     }
 
@@ -474,8 +479,10 @@ public class DelegateServiceImpl implements DelegateService {
       } else if (!assignDelegateService.canAssign(task, delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
         if (System.currentTimeMillis() - task.getCreatedAt() > 3 * 60 * 1000) {
-          alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-              aNoEligibleDelegatesAlert().withTask(task).build());
+          if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, accountId)) {
+            alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+                aNoEligibleDelegatesAlert().withTask(task).build());
+          }
         }
       } else {
         logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
@@ -492,8 +499,10 @@ public class DelegateServiceImpl implements DelegateService {
       } else if (!assignDelegateService.canAssign(delegateTask, delegateId)) {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
         if (System.currentTimeMillis() - delegateTask.getCreatedAt() > 30 * 1000) {
-          alertService.openAlert(delegateTask.getAccountId(), delegateTask.getAppId(), NoEligibleDelegates,
-              aNoEligibleDelegatesAlert().withTask(delegateTask).build());
+          if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, accountId)) {
+            alertService.openAlert(delegateTask.getAccountId(), delegateTask.getAppId(), NoEligibleDelegates,
+                aNoEligibleDelegatesAlert().withTask(delegateTask).build());
+          }
         }
         delegateTask = null;
       } else {
