@@ -194,7 +194,7 @@ public class AlertServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldCloseAlertsWhenDeploymentAborted() {
     when(query.asList()).thenReturn(asList(approval, manualIntervention));
-    alertService.deploymentAborted(APP_ID, "executionId");
+    alertService.deploymentCompleted(APP_ID, "executionId");
 
     verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
   }

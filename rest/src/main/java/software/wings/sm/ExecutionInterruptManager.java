@@ -180,10 +180,6 @@ public class ExecutionInterruptManager {
     String appId = stateExecutionInstance != null ? stateExecutionInstance.getAppId() : executionInterrupt.getAppId();
     try {
       switch (executionInterrupt.getExecutionInterruptType()) {
-        case ABORT_ALL: {
-          alertService.deploymentAborted(appId, executionId);
-          break;
-        }
         case RESUME:
         case RETRY:
         case IGNORE:

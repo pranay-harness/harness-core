@@ -22,6 +22,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -45,6 +46,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @javax.inject.Inject private Queue<ExecutionEvent> executionEventQueue;
+  @javax.inject.Inject private AlertService alertService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -124,6 +126,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       if (needToNotifyPipeline) {
         waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
       }
+    }
+    if (status.isFinalStatus()) {
+      alertService.deploymentCompleted(appId, context.getWorkflowExecutionId());
     }
   }
 
