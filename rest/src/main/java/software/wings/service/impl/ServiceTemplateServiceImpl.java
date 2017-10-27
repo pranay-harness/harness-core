@@ -36,6 +36,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -132,7 +133,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate save(ServiceTemplate serviceTemplate) {
-    return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
+    return Validator.duplicateCheck(
+        () -> wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate), "name", serviceTemplate.getName());
   }
 
   /* (non-Javadoc)
@@ -299,6 +301,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                     .withEnvId(env.getUuid())
                     .withServiceId(service.getUuid())
                     .withName(service.getName())
+                    .withDefaultServiceTemplate(true)
                     .build()));
   }
 

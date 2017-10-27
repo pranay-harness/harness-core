@@ -144,6 +144,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(wingsPersistence)
         .saveAndGet(ServiceTemplate.class,
             aServiceTemplate()
+                .withDefaultServiceTemplate(true)
                 .withAppId(APP_ID)
                 .withEnvId(ENV_ID)
                 .withServiceId(service.getUuid())

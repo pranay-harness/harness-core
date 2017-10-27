@@ -173,7 +173,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service save(Service service) {
-    Service savedService = wingsPersistence.saveAndGet(Service.class, service);
+    Service savedService =
+        Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
     savedService = addDefaultCommands(savedService);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
@@ -213,7 +214,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
 
-    Service savedCloneService = wingsPersistence.saveAndGet(Service.class, clonedService);
+    Service savedCloneService = Validator.duplicateCheck(
+        () -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
 
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();

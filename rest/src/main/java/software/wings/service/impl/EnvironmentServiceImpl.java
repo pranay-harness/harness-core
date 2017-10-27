@@ -382,7 +382,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       clonedEnvironment = save(clonedEnvironment);
 
       // Copy templates
-      // TODO: It is not working
       List<ServiceTemplate> serviceTemplates = sourceEnvironment.getServiceTemplates();
       if (serviceTemplates != null) {
         for (ServiceTemplate serviceTemplate : serviceTemplates) {
