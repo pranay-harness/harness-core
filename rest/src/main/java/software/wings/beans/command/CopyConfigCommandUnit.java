@@ -11,6 +11,10 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,19 +103,15 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
           result = FAILURE;
           break;
         }
-        //        result = (context).copyGridFsFiles(path, FileBucket.CONFIGS, Collections.singletonList(Pair.of(fileId,
-        //        destFile.getName()))) == FAILURE ?
-        //            FAILURE :
-        //            CommandExecutionStatus.SUCCESS;
-        ConfigFileMetaData configFileMetaData = ConfigFileMetaData.newBuilder()
-                                                    .withDestinationDirectoryPath(path)
-                                                    .withFileBucket(FileBucket.CONFIGS)
-                                                    .withFileId(fileId)
-                                                    .withFilename(destFile.getName())
-                                                    .withLength(configFile.getSize())
-                                                    .withEncrypted(configFile.isEncrypted())
+        ConfigFileMetaData configFileMetaData = ConfigFileMetaData.builder()
+                                                    .destinationDirectoryPath(path)
+                                                    .fileId(configFile.getUuid())
+                                                    .filename(destFile.getName())
+                                                    .length(configFile.getSize())
+                                                    .encrypted(configFile.isEncrypted())
+                                                    .activityId(context.getActivityId())
                                                     .build();
-        result = (context).copyConfigFiles(configFileMetaData) == FAILURE ? FAILURE : CommandExecutionStatus.SUCCESS;
+        result = context.copyConfigFiles(configFileMetaData) == FAILURE ? FAILURE : CommandExecutionStatus.SUCCESS;
         if (FAILURE == result) {
           break;
         }
@@ -120,6 +120,10 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     return result;
   }
 
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @Builder
   public static class ConfigFileMetaData {
     private String fileId;
     private Long length;
@@ -127,135 +131,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     private String destinationDirectoryPath;
     private FileBucket fileBucket;
     private boolean encrypted;
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("fileId", fileId)
-          .add("length", length)
-          .add("filename", filename)
-          .add("destinationDirectoryPath", destinationDirectoryPath)
-          .add("fileBucket", fileBucket)
-          .add("encrypted", encrypted)
-          .toString();
-    }
-
-    private ConfigFileMetaData(Builder builder) {
-      setFileId(builder.fileId);
-      setLength(builder.length);
-      setFilename(builder.filename);
-      setDestinationDirectoryPath(builder.destinationDirectoryPath);
-      setFileBucket(builder.fileBucket);
-      setEncrypted(builder.encrypted);
-    }
-
-    public static Builder newBuilder() {
-      return new Builder();
-    }
-
-    public static Builder newBuilder(ConfigFileMetaData copy) {
-      Builder builder = new Builder();
-      builder.fileId = copy.fileId;
-      builder.length = copy.length;
-      builder.filename = copy.filename;
-      builder.destinationDirectoryPath = copy.destinationDirectoryPath;
-      builder.fileBucket = copy.fileBucket;
-      builder.encrypted = copy.encrypted;
-      return builder;
-    }
-
-    public String getFileId() {
-      return fileId;
-    }
-
-    public void setFileId(String fileId) {
-      this.fileId = fileId;
-    }
-
-    public Long getLength() {
-      return length;
-    }
-
-    public void setLength(Long length) {
-      this.length = length;
-    }
-
-    public String getFilename() {
-      return filename;
-    }
-
-    public void setFilename(String filename) {
-      this.filename = filename;
-    }
-
-    public String getDestinationDirectoryPath() {
-      return destinationDirectoryPath;
-    }
-
-    public void setDestinationDirectoryPath(String destinationDirectoryPath) {
-      this.destinationDirectoryPath = destinationDirectoryPath;
-    }
-
-    public FileBucket getFileBucket() {
-      return fileBucket;
-    }
-
-    public void setFileBucket(FileBucket fileBucket) {
-      this.fileBucket = fileBucket;
-    }
-
-    public boolean isEncrypted() {
-      return encrypted;
-    }
-
-    public void setEncrypted(boolean encrypted) {
-      this.encrypted = encrypted;
-    }
-
-    public static final class Builder {
-      private String fileId;
-      private Long length;
-      private String filename;
-      private String destinationDirectoryPath;
-      private FileBucket fileBucket;
-      private boolean encrypted;
-
-      private Builder() {}
-
-      public Builder withFileId(String fileId) {
-        this.fileId = fileId;
-        return this;
-      }
-
-      public Builder withLength(Long length) {
-        this.length = length;
-        return this;
-      }
-
-      public Builder withFilename(String filename) {
-        this.filename = filename;
-        return this;
-      }
-
-      public Builder withDestinationDirectoryPath(String destinationDirectoryPath) {
-        this.destinationDirectoryPath = destinationDirectoryPath;
-        return this;
-      }
-
-      public Builder withFileBucket(FileBucket fileBucket) {
-        this.fileBucket = fileBucket;
-        return this;
-      }
-
-      public Builder withEncrypted(boolean encrypted) {
-        this.encrypted = encrypted;
-        return this;
-      }
-
-      public ConfigFileMetaData build() {
-        return new ConfigFileMetaData(this);
-      }
-    }
+    private String activityId;
   }
 
   /**

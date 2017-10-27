@@ -94,8 +94,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
         throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
-      this.instances = newRelicDelegateService.getApplicationInstances(
-          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
+      this.instances = newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
+          dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
       this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
@@ -108,7 +108,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       try {
         NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, collectionStartTime, endTime);
+            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+            metricNames, collectionStartTime, endTime);
 
         for (NewRelicMetricSlice metric : metricData.getMetrics()) {
           for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
@@ -146,8 +147,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       // get error metrics
       try {
         NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getNewRelicAppId(), node.getId(), getErrorMetricNames(metricNames), collectionStartTime,
-            endTime);
+            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+            getErrorMetricNames(metricNames), collectionStartTime, endTime);
         for (NewRelicMetricSlice metric : metricData.getMetrics()) {
           for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
             long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -170,8 +171,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       // get apdex metrics
       try {
         NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-            dataCollectionInfo.getNewRelicAppId(), node.getId(), getApdexMetricNames(metricNames), collectionStartTime,
-            endTime);
+            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+            getApdexMetricNames(metricNames), collectionStartTime, endTime);
         for (NewRelicMetricSlice metric : metricData.getMetrics()) {
           for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
             long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -201,8 +202,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         while (!completed.get() && retry > 0) {
           try {
             if (metrics == null || metrics.isEmpty() || dataCollectionMinute % DURATION_TO_ASK_MINUTES == 0) {
-              metrics = newRelicDelegateService.getMetricsNameToCollect(
-                  dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getNewRelicAppId());
+              metrics = newRelicDelegateService.getMetricsNameToCollect(dataCollectionInfo.getNewRelicConfig(),
+                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
               metrics = getMetricsWithDataIn24Hrs();
             }
             final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
@@ -304,8 +305,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         for (NewRelicApplicationInstance node : instances) {
           // find and remove metrics which have no data in last 24 hours
           NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, currentTime - TimeUnit.DAYS.toMillis(1),
-              currentTime);
+              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+              metricNames, currentTime - TimeUnit.DAYS.toMillis(1), currentTime);
           metricsWithNoData.removeAll(metricData.getMetrics_found());
 
           if (metricsWithNoData.isEmpty()) {

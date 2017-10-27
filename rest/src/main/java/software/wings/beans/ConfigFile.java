@@ -3,11 +3,9 @@ package software.wings.beans;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -18,7 +16,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 
@@ -150,6 +148,16 @@ public class ConfigFile extends BaseFile implements Encryptable {
   @SchemaIgnore
   public List<java.lang.reflect.Field> getEncryptedFields() {
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean isDecrypted() {
+    return false;
+  }
+
+  @Override
+  public void setDecrypted(boolean decrypted) {
+    //
   }
 
   /**

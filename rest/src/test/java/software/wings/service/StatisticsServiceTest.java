@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
@@ -47,6 +46,7 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
@@ -681,7 +681,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                         .withResponse(asList(anInformationNotification().build(), anInformationNotification().build()))
                         .build());
     when(activityService.list(any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().withResponse(asList(anActivity().build())).build());
+        .thenReturn(PageResponse.Builder.aPageResponse().withResponse(asList(Activity.builder().build())).build());
 
     NotificationCount notificationCount = statisticsService.getNotificationCount(ACCOUNT_ID, asList(APP_ID), 30);
     assertThat(notificationCount)

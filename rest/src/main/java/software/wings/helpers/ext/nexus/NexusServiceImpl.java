@@ -4,6 +4,7 @@ import static org.awaitility.Awaitility.with;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import okhttp3.Credentials;
@@ -32,6 +33,8 @@ import software.wings.helpers.ext.nexus.model.Data;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
@@ -53,15 +56,17 @@ import javax.xml.stream.XMLStreamException;
 @Singleton
 public class NexusServiceImpl implements NexusService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private EncryptionService encryptionService;
 
-  public Map<String, String> getRepositories(final NexusConfig nexusConfig) {
+  public Map<String, String> getRepositories(
+      final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         try {
           logger.info("Retrieving repositories");
           final Map<String, String> repos = new HashMap<>();
           final Call<RepositoryListResourceResponse> request =
-              getRestClient(nexusConfig)
+              getRestClient(nexusConfig, encryptionDetails)
                   .getAllRepositories(
                       Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
           final Response<RepositoryListResourceResponse> response = request.execute();
@@ -91,10 +96,11 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getArtifactPaths(NexusConfig nexusConfig, String repoId) {
+  public List<String> getArtifactPaths(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
     try {
       final Call<ContentListResourceResponse> request =
-          getRestClient(nexusConfig)
+          getRestClient(nexusConfig, encryptionDetails)
               .getRepositoryContents(
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
       return getArtifactPaths(request);
@@ -109,13 +115,14 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getArtifactPaths(NexusConfig nexusConfig, String repoId, String name) {
+  public List<String> getArtifactPaths(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name) {
     try {
       if (name.startsWith("/")) {
         name = name.substring(1);
       }
       final Call<ContentListResourceResponse> request =
-          getRestClient(nexusConfig)
+          getRestClient(nexusConfig, encryptionDetails)
               .getRepositoryContents(
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId, name);
       return getArtifactPaths(request);
@@ -130,22 +137,24 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public Pair<String, InputStream> downloadArtifact(
-      NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version) {
+  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName,
+      String version) {
     // First Get the maven
     logger.info(
         "Downloading artifact of repo {} group {} artifact {} and version  ", repoType, groupId, artifactName, version);
-    final Project project = getPomModel(nexusConfig, repoType, groupId, artifactName, version);
+    final Project project = getPomModel(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
     final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/"
         + (project.getVersion() != null ? project.getVersion() : project.getParent().getVersion()) + "/";
     final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
     try {
-      final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
+      final Response<IndexBrowserTreeViewResponse> response =
+          getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
       if (isSuccessful(response)) {
         final IndexBrowserTreeViewResponse treeViewResponse = response.body();
         final Data data = treeViewResponse.getData();
         final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
-        return getUrlInputStream(nexusConfig, project, treeNodes, repoType);
+        return getUrlInputStream(nexusConfig, encryptionDetails, project, treeNodes, repoType);
       }
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
@@ -153,8 +162,9 @@ public class NexusServiceImpl implements NexusService {
     return null;
   }
 
-  private Pair<String, InputStream> getUrlInputStream(
-      NexusConfig nexusConfig, Project project, List<IndexBrowserTreeNode> treeNodes, String repoType) {
+  private Pair<String, InputStream> getUrlInputStream(NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, Project project, List<IndexBrowserTreeNode> treeNodes,
+      String repoType) {
     Map<String, String> artifactToUrls = new HashMap<>();
     for (IndexBrowserTreeNode treeNode : treeNodes) {
       List<IndexBrowserTreeNode> children = treeNode.getChildren();
@@ -168,6 +178,7 @@ public class NexusServiceImpl implements NexusService {
                   getBaseUrl(nexusConfig) + "service/local/repositories/" + repoType + "/content" + artifact.getPath();
               logger.info("Resource url " + resourceUrl);
               try {
+                encryptionService.decrypt(nexusConfig, encryptionDetails);
                 Authenticator.setDefault(
                     new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
@@ -185,18 +196,19 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public Pair<String, InputStream> downloadArtifact(
-      NexusConfig nexusConfig, String repoType, String groupId, String artifactName) {
+  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName) {
     // First Get the maven pom model
-    return downloadArtifact(nexusConfig, repoType, groupId, artifactName, null);
+    return downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, null);
   }
 
-  public void getGroupIdPaths(NexusConfig nexusConfig, String repoId, String path, List<String> groupIds) {
+  public void getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String path, List<String> groupIds) {
     logger.info("Retrieving groupId paths");
     try {
       final String url = getIndexContentPathUrl(nexusConfig, repoId, path);
       final Response<IndexBrowserTreeViewResponse> response =
-          getIndexBrowserTreeViewResponseResponse(nexusConfig, url.toString());
+          getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url.toString());
       // Check if response successful or not
       if (isSuccessful(response)) {
         final IndexBrowserTreeViewResponse treeViewResponse = response.body();
@@ -207,7 +219,7 @@ public class NexusServiceImpl implements NexusService {
             String groupId = treeNode.getPath();
             groupId = groupId.replace("/", ".");
             groupIds.add(groupId.substring(1, groupId.length() - 1));
-            getGroupIdPaths(nexusConfig, repoId, treeNode.getPath(), groupIds);
+            getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
           } else {
             return;
           }
@@ -227,12 +239,13 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getGroupIdPaths(NexusConfig nexusConfig, String repoId) {
+  public List<String> getGroupIdPaths(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
     logger.info("Retrieving groupId paths");
     List<String> groupIds = new ArrayList<>();
     try {
       final Call<IndexBrowserTreeViewResponse> request =
-          getRestClient(nexusConfig)
+          getRestClient(nexusConfig, encryptionDetails)
               .getIndexContent(
                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
       final Response<IndexBrowserTreeViewResponse> response = request.execute();
@@ -249,7 +262,7 @@ public class NexusServiceImpl implements NexusService {
             String groupId = treeNode.getPath();
             groupId = groupId.replace("/", ".");
             groupIds.add(groupId.substring(1, groupId.length() - 1));
-            getGroupIdPaths(nexusConfig, repoId, treeNode.getPath(), groupIds);
+            getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
           }
         }
 
@@ -268,13 +281,15 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path) {
+  public List<String> getArtifactNames(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String path) {
     logger.info("Retrieving Artifact Names");
     final List<String> artifactNames = new ArrayList<>();
     String modifiedPath = getGroupId(path);
     final String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     try {
-      final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
+      final Response<IndexBrowserTreeViewResponse> response =
+          getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
       // Check if response successful or not
       if (isSuccessful(response)) {
         final IndexBrowserTreeViewResponse treeViewResponse = response.body();
@@ -307,14 +322,16 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
+  public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String groupId, String artifactName) {
     logger.info("Retrieving versions");
     String modifiedPath = getGroupId(groupId);
     String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     url = url + artifactName + "/";
     List<BuildDetails> buildDetails = new ArrayList<>();
     try {
-      final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
+      final Response<IndexBrowserTreeViewResponse> response =
+          getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
       // Check if response successful or not
       if (isSuccessful(response)) {
         final IndexBrowserTreeViewResponse treeViewResponse = response.body();
@@ -351,9 +368,10 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
+  public BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String groupId, String artifactName) {
     logger.info("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
-    Project project = getPomModel(nexusConfig, repoId, groupId, artifactName, "LATEST");
+    Project project = getPomModel(nexusConfig, encryptionDetails, repoId, groupId, artifactName, "LATEST");
     String version = project.getVersion() != null ? project.getVersion() : project.getParent().getVersion();
     // final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/" + version + "/";
     logger.info("Retrieving the latest version {}", project);
@@ -361,9 +379,9 @@ public class NexusServiceImpl implements NexusService {
   }
 
   private Response<IndexBrowserTreeViewResponse> getIndexBrowserTreeViewResponseResponse(
-      NexusConfig nexusConfig, String url) throws IOException {
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String url) throws IOException {
     final Call<IndexBrowserTreeViewResponse> request =
-        getRestClient(nexusConfig)
+        getRestClient(nexusConfig, encryptionDetails)
             .getIndexContentByUrl(
                 Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
     return request.execute();
@@ -387,8 +405,8 @@ public class NexusServiceImpl implements NexusService {
     return artifactPaths;
   }
 
-  private Project getPomModel(
-      NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version) {
+  private Project getPomModel(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoType,
+      String groupId, String artifactName, String version) {
     Project project = null;
     if (StringUtils.isBlank(version)) {
       version = "LATEST";
@@ -400,7 +418,7 @@ public class NexusServiceImpl implements NexusService {
     queryParams.put("a", artifactName);
     queryParams.put("v", version);
     Call<Project> request =
-        getRestClient(nexusConfig)
+        getRestClient(nexusConfig, encryptionDetails)
             .getPomModel(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
                 resolveUrl, queryParams);
     try {
@@ -419,7 +437,8 @@ public class NexusServiceImpl implements NexusService {
     return project;
   }
 
-  private NexusRestClient getRestClient(final NexusConfig nexusConfig) {
+  private NexusRestClient getRestClient(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(nexusConfig, encryptionDetails);
     final String baseUrl = getBaseUrl(nexusConfig);
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)

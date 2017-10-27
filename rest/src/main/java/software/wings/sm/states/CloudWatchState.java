@@ -7,10 +7,10 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.SampleCount;
 import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -33,10 +33,12 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -50,6 +52,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +67,7 @@ public class CloudWatchState extends State {
   @Transient @Inject private SettingsService settingsService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private AwsHelperService awsHelperService;
+  @Transient @Inject private KmsService kmsService;
 
   @EnumData(enumDataProvider = AwsSettingProvider.class)
   @Attributes(required = true, title = "AWS account")
@@ -112,7 +116,7 @@ public class CloudWatchState extends State {
       throw new StateExecutionException("AWS account setting not found");
     }
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId());
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHost();
@@ -155,7 +159,8 @@ public class CloudWatchState extends State {
     getMetricRequest.setStartTime(new Date(startEpoch));
     getMetricRequest.setEndTime(new Date(endEpoch));
 
-    Datapoint datapoint = awsHelperService.getCloudWatchMetricStatistics(awsConfig, region, getMetricRequest);
+    Datapoint datapoint =
+        awsHelperService.getCloudWatchMetricStatistics(awsConfig, encryptionDetails, region, getMetricRequest);
 
     stateExecutionData.setDatapoint(datapoint);
 
@@ -324,32 +329,37 @@ public class CloudWatchState extends State {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
-    Activity.Builder activityBuilder =
-        anActivity()
-            .withAppId(app.getUuid())
-            .withApplicationName(app.getName())
-            .withEnvironmentId(env.getUuid())
-            .withEnvironmentName(env.getName())
-            .withEnvironmentType(env.getEnvironmentType())
-            .withCommandName(getName())
-            .withType(Type.Verification)
-            .withWorkflowType(executionContext.getWorkflowType())
-            .withWorkflowExecutionName(executionContext.getWorkflowExecutionName())
-            .withStateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .withStateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .withCommandType(getStateType())
-            .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
+    Activity.ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .environmentId(env.getUuid())
+            .environmentName(env.getName())
+            .environmentType(env.getEnvironmentType())
+            .commandName(getName())
+            .type(Type.Verification)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(Collections.emptyList())
+            .serviceVariables(Maps.newHashMap())
+            .status(ExecutionStatus.RUNNING);
 
     if (instanceElement != null) {
-      activityBuilder.withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
-          .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
-          .withServiceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
-          .withServiceInstanceId(instanceElement.getUuid())
-          .withHostName(instanceElement.getHost().getHostName());
+      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .serviceInstanceId(instanceElement.getUuid())
+          .hostName(instanceElement.getHost().getHostName());
     }
 
-    return activityService.save(activityBuilder.build()).getUuid();
+    Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
   }
 
   /**

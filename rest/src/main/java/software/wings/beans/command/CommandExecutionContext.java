@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,9 +42,12 @@ public class CommandExecutionContext {
   private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
   private Map<String, String> envVariables = Maps.newHashMap();
   private SettingAttribute hostConnectionAttributes;
+  private List<EncryptedDataDetail> hostConnectionCredentials;
   private SettingAttribute bastionConnectionAttributes;
+  private List<EncryptedDataDetail> bastionConnectionCredentials;
   private ArtifactStreamAttributes artifactStreamAttributes;
   private SettingAttribute cloudProviderSetting;
+  private List<EncryptedDataDetail> cloudProviderCredentials;
   private String clusterName;
   private String namespace;
   private String serviceName;
@@ -78,9 +82,12 @@ public class CommandExecutionContext {
     this.safeDisplayServiceVariables = other.safeDisplayServiceVariables;
     this.envVariables = other.envVariables;
     this.hostConnectionAttributes = other.hostConnectionAttributes;
+    this.hostConnectionCredentials = other.hostConnectionCredentials;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
+    this.bastionConnectionCredentials = other.bastionConnectionCredentials;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.cloudProviderSetting = other.cloudProviderSetting;
+    this.cloudProviderCredentials = other.cloudProviderCredentials;
     this.clusterName = other.clusterName;
     this.namespace = other.namespace;
     this.serviceName = other.serviceName;
@@ -138,9 +145,12 @@ public class CommandExecutionContext {
     private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
     private Map<String, String> envVariables = Maps.newHashMap();
     private SettingAttribute hostConnectionAttributes;
+    private List<EncryptedDataDetail> hostConnectionCredentials;
     private SettingAttribute bastionConnectionAttributes;
+    private List<EncryptedDataDetail> bastionConnectionCredentials;
     private ArtifactStreamAttributes artifactStreamAttributes;
     private SettingAttribute cloudProviderSetting;
+    private List<EncryptedDataDetail> cloudProviderCredentials;
     private String clusterName;
     private String namespace;
     private String serviceName;
@@ -237,8 +247,18 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withHostConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+      this.hostConnectionCredentials = encryptedDataDetails;
+      return this;
+    }
+
     public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
       this.bastionConnectionAttributes = bastionConnectionAttributes;
+      return this;
+    }
+
+    public Builder withBastionConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+      this.bastionConnectionCredentials = encryptedDataDetails;
       return this;
     }
 
@@ -249,6 +269,11 @@ public class CommandExecutionContext {
 
     public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
       this.cloudProviderSetting = cloudProviderSetting;
+      return this;
+    }
+
+    public Builder withCloudProviderCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
+      this.cloudProviderCredentials = encryptedDataDetails;
       return this;
     }
 
@@ -315,8 +340,11 @@ public class CommandExecutionContext {
           .withEnvVariables(envVariables)
           .withHostConnectionAttributes(hostConnectionAttributes)
           .withBastionConnectionAttributes(bastionConnectionAttributes)
+          .withHostConnectionCredentials(hostConnectionCredentials)
+          .withBastionConnectionCredentials(bastionConnectionCredentials)
           .withArtifactStreamAttributes(artifactStreamAttributes)
           .withCloudProviderSetting(cloudProviderSetting)
+          .withCloudProviderCredentials(cloudProviderCredentials)
           .withClusterName(clusterName)
           .withNamespace(namespace)
           .withServiceName(serviceName)
@@ -347,9 +375,12 @@ public class CommandExecutionContext {
       commandExecutionContext.setSafeDisplayServiceVariables(safeDisplayServiceVariables);
       commandExecutionContext.setEnvVariables(envVariables);
       commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
+      commandExecutionContext.setHostConnectionCredentials(hostConnectionCredentials);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
+      commandExecutionContext.setBastionConnectionCredentials(bastionConnectionCredentials);
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
       commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
+      commandExecutionContext.setCloudProviderCredentials(cloudProviderCredentials);
       commandExecutionContext.setClusterName(clusterName);
       commandExecutionContext.setNamespace(namespace);
       commandExecutionContext.setServiceName(serviceName);

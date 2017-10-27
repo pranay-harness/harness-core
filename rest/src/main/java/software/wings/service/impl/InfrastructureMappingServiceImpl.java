@@ -33,6 +33,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -64,6 +65,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -112,6 +115,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private WorkflowService workflowService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private KmsService kmsService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -387,14 +391,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public List<ServiceInstance> selectServiceInstances(
-      String appId, String infraMappingId, ServiceInstanceSelectionParams selectionParams) {
+      String appId, String infraMappingId, String workflowId, ServiceInstanceSelectionParams selectionParams) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
     List<Host> hosts;
     if (infrastructureMapping instanceof AwsInfrastructureMapping
         && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-      hosts = getAutoScaleGroupNodes(appId, infraMappingId);
+      hosts = getAutoScaleGroupNodes(appId, infraMappingId, workflowId);
     } else {
       hosts = listHosts(infrastructureMapping)
                   .stream()
@@ -430,7 +434,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting = settingsService.get(awsInfraMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listHosts(awsInfraMapping, computeProviderSetting, new PageRequest<>())
+      return infrastructureProvider
+          .listHosts(awsInfraMapping, computeProviderSetting,
+              kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null),
+              new PageRequest<>())
           .getResponse();
     } else {
       throw new WingsException(INVALID_REQUEST, "message",
@@ -472,7 +479,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (GCP.name().equals(type)) {
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
-      return infrastructureProvider.listClusterNames(computeProviderSetting);
+      return infrastructureProvider.listClusterNames(computeProviderSetting,
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
     }
     return emptyList();
   }
@@ -719,12 +727,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
-
+    List<EncryptedDataDetail> encryptionDetails =
+        kmsService.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(hostConnectionSetting.getAccountId()).withAppId(validationRequest.getAppId()).build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
-        .validateHost(
-            validationRequest.getHostNames(), hostConnectionSetting, validationRequest.getExecutionCredential());
+        .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
+            validationRequest.getExecutionCredential());
   }
 
   @Override
@@ -740,7 +749,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listApplications(region, computeProviderSetting);
+      return awsCodeDeployService.listApplications(region, computeProviderSetting,
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
     }
     return ImmutableList.of();
   }
@@ -751,7 +761,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting);
+      return awsCodeDeployService.listDeploymentGroup(region, applicationName, computeProviderSetting,
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
     }
     return ImmutableList.of();
   }
@@ -762,7 +773,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting);
+      return awsCodeDeployService.listDeploymentConfiguration(region, computeProviderSetting,
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null));
     }
     return ImmutableList.of();
   }
@@ -804,9 +816,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      List<Host> hosts =
-          infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>())
-              .getResponse();
+      List<Host> hosts = infrastructureProvider
+                             .listHosts(awsInfrastructureMapping, computeProviderSetting,
+                                 kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null),
+                                 new PageRequest<>())
+                             .getResponse();
       List<String> hostDisplayNames = new ArrayList<>();
       for (Host host : hosts) {
         String displayName = host.getPublicDns();
@@ -850,7 +864,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId) {
+  public List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
@@ -865,7 +879,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
 
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-          awsInfrastructureMapping, computeProviderSetting);
+          workflowId, awsInfrastructureMapping, computeProviderSetting);
     } else {
       throw new WingsException(
           INVALID_REQUEST, "message", "Auto Scale groups are only supported for AWS infrastructure mapping");

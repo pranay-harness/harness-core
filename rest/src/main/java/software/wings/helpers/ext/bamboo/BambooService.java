@@ -2,6 +2,7 @@ package software.wings.helpers.ext.bamboo;
 
 import software.wings.beans.BambooConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.InputStream;
 import java.util.List;
@@ -18,7 +19,7 @@ public interface BambooService {
    * @param planKey      the plan key
    * @return the job keys
    */
-  List<String> getJobKeys(BambooConfig bambooConfig, String planKey);
+  List<String> getJobKeys(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey);
 
   /**
    * Gets plan keys.
@@ -26,7 +27,7 @@ public interface BambooService {
    * @param bambooConfig the bamboo config
    * @return the plan keys
    */
-  Map<String, String> getPlanKeys(BambooConfig bambooConfig);
+  Map<String, String> getPlanKeys(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Gets last successful build.
@@ -35,7 +36,8 @@ public interface BambooService {
    * @param planKey      the jobname
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String planKey);
+  BuildDetails getLastSuccessfulBuild(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey);
 
   /**
    * Gets builds for job.
@@ -45,7 +47,8 @@ public interface BambooService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds for job
    */
-  List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, int maxNumberOfBuilds);
 
   /**
    * Gets artifact path.
@@ -54,7 +57,7 @@ public interface BambooService {
    * @param planKey      the job name
    * @return the artifact path
    */
-  List<String> getArtifactPath(BambooConfig bambooConfig, String planKey);
+  List<String> getArtifactPath(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey);
 
   /**
    * Download artifact pair.
@@ -65,8 +68,8 @@ public interface BambooService {
    * @param artifactPathRegex the artifact path regex
    * @return the pair
    */
-  org.apache.commons.lang3.tuple.Pair<String, InputStream> downloadArtifact(
-      BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex);
+  org.apache.commons.lang3.tuple.Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
+      List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber, String artifactPathRegex);
 
   /**
    * Is running boolean.
@@ -74,7 +77,7 @@ public interface BambooService {
    * @param bambooConfig the bamboo config
    * @return the boolean
    */
-  boolean isRunning(BambooConfig bambooConfig);
+  boolean isRunning(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Triggers Project Plan
@@ -83,21 +86,25 @@ public interface BambooService {
    * @param parameters the parameters
    * @return Build Result Key {projectKey}-{buildKey}-{buildNumber}
    */
-  String triggerPlan(BambooConfig bambooConfig, String planKey, Map<String, String> parameters);
+  String triggerPlan(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey,
+      Map<String, String> parameters);
 
   /**
    * Retrieves the bamboo build result
-   * @param bambooConfig BambooConfig
+   *
+   * @param bambooConfig   BambooConfig
    * @param buildResultKey Build result key {projectKey}-{buildKey}-{buildNumber}
    * @return
    */
-  Result getBuildResult(BambooConfig bambooConfig, String buildResultKey);
+  Result getBuildResult(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey);
 
   /**
    * Retrieves the bamboo build running result status
-   * @param bambooConfig BambooConfig
-   * @param buildResultKey  Build result key {projectKey}-{buildKey}-{buildNumber}
+   *
+   * @param bambooConfig   BambooConfig
+   * @param buildResultKey Build result key {projectKey}-{buildKey}-{buildNumber}
    * @return
    */
-  Status getBuildResultStatus(BambooConfig bambooConfig, String buildResultKey);
+  Status getBuildResultStatus(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey);
 }

@@ -6,7 +6,6 @@ import javax.crypto.SecretKey;
  * Created by mike@ on 4/24/17.
  */
 public interface EncryptionInterface {
-  EncryptionType getEncryptionType();
   SecretKey getSecretKey();
 
   byte[] getSalt();

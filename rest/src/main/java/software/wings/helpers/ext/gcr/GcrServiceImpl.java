@@ -18,8 +18,8 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -65,13 +65,14 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(
-      GcpConfig gcpConfig, ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     String imageName = artifactStreamAttributes.getImageName();
     try {
-      Response<GcrImageTagResponse> response = getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
-                                                   .listImageTags(getBasicAuthHeader(gcpConfig), imageName)
-                                                   .execute();
+      Response<GcrImageTagResponse> response =
+          getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
+              .listImageTags(getBasicAuthHeader(gcpConfig, encryptionDetails), imageName)
+              .execute();
       checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
@@ -97,17 +98,20 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(GcpConfig gcpConfig, String imageName) {
+  public BuildDetails getLastSuccessfulBuild(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyImageName(GcpConfig gcpConfig, ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean verifyImageName(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     try {
       String imageName = artifactStreamAttributes.getImageName();
-      Response<GcrImageTagResponse> response = getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
-                                                   .listImageTags(getBasicAuthHeader(gcpConfig), imageName)
-                                                   .execute();
+      Response<GcrImageTagResponse> response =
+          getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
+              .listImageTags(getBasicAuthHeader(gcpConfig, encryptionDetails), imageName)
+              .execute();
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
         logger.warn("Image name [" + imageName + "] does not exist in Google Container Registry.");
@@ -122,10 +126,11 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public boolean validateCredentials(GcpConfig gcpConfig, ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean validateCredentials(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     try {
       GcrRestClient registryRestClient = getGcrRestClient(artifactStreamAttributes.getRegistryHostName());
-      String basicAuthHeader = getBasicAuthHeader(gcpConfig);
+      String basicAuthHeader = getBasicAuthHeader(gcpConfig, encryptionDetails);
       Response response =
           registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
       return isSuccessful(response);
@@ -136,9 +141,9 @@ public class GcrServiceImpl implements GcrService {
     }
   }
 
-  private String getBasicAuthHeader(GcpConfig gcpConfig) throws IOException {
-    GoogleCredential gc =
-        gcpHelperService.getGoogleCredential(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()));
+  private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
+    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
 
     if (gc.refreshToken()) {
       return Credentials.basic("_token", gc.getAccessToken());

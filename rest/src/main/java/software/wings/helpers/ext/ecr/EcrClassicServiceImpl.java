@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,15 +25,17 @@ import java.util.List;
 @Singleton
 public class EcrClassicServiceImpl implements EcrClassicService {
   @Inject private AwsHelperService awsHelperService;
+  @Inject private EncryptionService encryptionService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public List<BuildDetails> getBuilds(EcrConfig ecrConfig, String imageName, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(
+      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails = new ArrayList<>();
     ListImagesResult listImagesResult;
     ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
     do {
-      listImagesResult = awsHelperService.listEcrImages(ecrConfig, listImagesRequest);
+      listImagesResult = awsHelperService.listEcrImages(ecrConfig, encryptionDetails, listImagesRequest);
       listImagesResult.getImageIds()
           .stream()
           .filter(imageIdentifier
@@ -46,28 +50,32 @@ public class EcrClassicServiceImpl implements EcrClassicService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(EcrConfig ecrConfig, String imageName) {
+  public BuildDetails getLastSuccessfulBuild(
+      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyRepository(EcrConfig ecrConfig, String repositroyName) {
-    return listEcrRegistry(ecrConfig).contains(repositroyName);
+  public boolean verifyRepository(
+      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String repositroyName) {
+    return listEcrRegistry(ecrConfig, encryptionDetails).contains(repositroyName);
   }
 
   @Override
-  public boolean validateCredentials(EcrConfig ecrConfig) {
+  public boolean validateCredentials(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(ecrConfig, encryptionDetails);
     awsHelperService.validateAwsAccountCredential(ecrConfig.getAccessKey(), ecrConfig.getSecretKey());
     return true;
   }
 
   @Override
-  public List<String> listEcrRegistry(EcrConfig ecrConfig) {
+  public List<String> listEcrRegistry(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
     List<String> repoNames = new ArrayList<>();
     DescribeRepositoriesRequest describeRepositoriesRequest = new DescribeRepositoriesRequest();
     DescribeRepositoriesResult describeRepositoriesResult;
     do {
-      describeRepositoriesResult = awsHelperService.listRepositories(ecrConfig, describeRepositoriesRequest);
+      describeRepositoriesResult =
+          awsHelperService.listRepositories(ecrConfig, encryptionDetails, describeRepositoriesRequest);
       describeRepositoriesResult.getRepositories().forEach(repository -> repoNames.add(repository.getRepositoryName()));
       describeRepositoriesRequest.setNextToken(describeRepositoriesResult.getNextToken());
     } while (describeRepositoriesRequest.getNextToken() != null);

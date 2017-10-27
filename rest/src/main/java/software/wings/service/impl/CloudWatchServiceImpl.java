@@ -9,6 +9,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.StateExecutionException;
 
 import java.util.List;
@@ -22,10 +23,12 @@ import javax.inject.Inject;
 public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private KmsService kmsService;
 
   @Override
   public List<String> listNamespaces(String settingId, String region) {
-    return awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region)
+    AwsConfig awsConfig = getAwsConfig(settingId);
+    return awsHelperService.getCloudWatchMetrics(awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region)
         .stream()
         .map(Metric::getNamespace)
         .distinct()
@@ -36,7 +39,9 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   public List<String> listMetrics(String settingId, String region, String namespace) {
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.setNamespace(namespace);
-    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region, listMetricsRequest);
+    AwsConfig awsConfig = getAwsConfig(settingId);
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
+        awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region, listMetricsRequest);
     return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
   }
 
@@ -44,7 +49,9 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   public List<String> listDimensions(String settingId, String region, String namespace, String metricName) {
     ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     listMetricsRequest.withNamespace(namespace).withMetricName(metricName);
-    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(getAwsConfig(settingId), region, listMetricsRequest);
+    AwsConfig awsConfig = getAwsConfig(settingId);
+    List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
+        awsConfig, kmsService.getEncryptionDetails(awsConfig, null), region, listMetricsRequest);
     return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()
@@ -59,12 +66,4 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     return awsConfig;
   }
-
-  /*
-  https://console.aws.amazon.com/cloudwatch/home?
-  region=us-east-1#metricsV2:graph=~(metrics~(~(~%27AWS*2fLambda~%27Errors))~period~300~stat~%27Sum~start~%27-P1D~end~%27P0D~yAxis~(left~null~right~null)~region~%27us-east-1)
-
-  https://console.aws.amazon.com/cloudwatch/home?
-  region=us-east-1#metricsV2:graph=~(metrics~(~(~%27AWS*2fLambda~%27Invocations))~period~300~stat~%27Sum~start~%27-P1D~end~%27P0D~yAxis~(left~null~right~null)~region~%27us-east-1)
-   */
 }

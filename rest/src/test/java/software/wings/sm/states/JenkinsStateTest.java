@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.JENKINS;
@@ -34,6 +33,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -47,6 +47,11 @@ import java.util.concurrent.ExecutorService;
  * Created by peeyushaggarwal on 10/25/16.
  */
 public class JenkinsStateTest {
+  private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
+
+  static {
+    ACTIVITY_WITH_ID.setUuid(ACTIVITY_ID);
+  }
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ExecutorService executorService;
@@ -54,6 +59,7 @@ public class JenkinsStateTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
+  @Mock private KmsService kmsService;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
 
@@ -64,7 +70,7 @@ public class JenkinsStateTest {
     jenkinsState.setJobName("testjob");
     when(executionContext.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
-    when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
+    when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
     when(executionContext.getSettingValue(SETTING_ID, SettingVariableTypes.JENKINS.name()))
         .thenReturn(JenkinsConfig.builder()
                         .jenkinsUrl("http://jenkins")

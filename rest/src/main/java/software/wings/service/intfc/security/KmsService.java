@@ -2,16 +2,21 @@ package software.wings.service.intfc.security;
 
 import software.wings.beans.KmsConfig;
 import software.wings.beans.UuidAware;
+import software.wings.annotation.Encryptable;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by rsingh on 9/29/17.
  */
 public interface KmsService {
+  boolean shouldUseKms(String accountId);
+
   EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig);
 
   char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig);
@@ -35,4 +40,11 @@ public interface KmsService {
   EncryptedData encryptFile(BoundedInputStream inputStream, String accountId);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
+
+  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String workFlowId);
+
+  String getEncryptedYamlRef(Encryptable object, String appId, String fieldName, String entityName)
+      throws IllegalAccessException;
+
+  char[] decryptYamlRef(String encryptedYamlRef) throws NoSuchFieldException, IllegalAccessException;
 }

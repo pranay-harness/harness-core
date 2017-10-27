@@ -17,9 +17,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +36,9 @@ public class JenkinsTaskTest {
   @Mock private Jenkins jenkins;
   @Mock private Build build;
   @Mock private BuildWithDetails buildWithDetails;
+  @Mock private EncryptionService encryptionService;
 
+  private JenkinsConfig jenkinsConfig;
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";
   private char[] password = "pass1".toCharArray();
@@ -52,12 +56,13 @@ public class JenkinsTaskTest {
     when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
     when(build.details()).thenReturn(buildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);
+    jenkinsConfig = JenkinsConfig.builder().jenkinsUrl(jenkinsUrl).username(userName).password(password).build();
   }
 
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsUrl, userName, password, jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -66,7 +71,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
-    jenkinsTask.run(jenkinsUrl, userName, password, jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -75,7 +80,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldAssertArtifacts() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsUrl, userName, password, jobName, parameters, assertions);
+    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));

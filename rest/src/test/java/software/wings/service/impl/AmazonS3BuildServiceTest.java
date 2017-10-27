@@ -57,25 +57,26 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   public void shouldGetBuilds() {
     ArrayList<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
-    when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
+    when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds =
-        amazonS3BuildService.getBuilds(APP_ID, amazonS3ArtifactStream.getArtifactStreamAttributes(), awsConfig);
+        amazonS3BuildService.getBuilds(APP_ID, amazonS3ArtifactStream.getArtifactStreamAttributes(), awsConfig, null);
     assertThat(builds).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("10");
     assertThat(builds).extracting(BuildDetails::getArtifactPath).containsExactly("artifact1");
   }
 
   @Test
   public void shouldGetPlans() {
-    when(amazonS3Service.getBuckets(awsConfig)).thenReturn(ImmutableMap.of("bucket1", "bucket1", "bucket2", "bucket2"));
-    Map<String, String> plans = amazonS3BuildService.getPlans(awsConfig);
+    when(amazonS3Service.getBuckets(awsConfig, null))
+        .thenReturn(ImmutableMap.of("bucket1", "bucket1", "bucket2", "bucket2"));
+    Map<String, String> plans = amazonS3BuildService.getPlans(awsConfig, null);
     assertThat(plans).hasSize(2).containsKeys("bucket1", "bucket2");
   }
 
   @Test
   public void shouldGetArtifactPaths() {
-    when(amazonS3Service.getArtifactPaths(any(), any())).thenReturn(Lists.newArrayList("path1"));
+    when(amazonS3Service.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));
 
-    List<String> artifactPaths = amazonS3BuildService.getArtifactPaths(BUILD_JOB_NAME, null, awsConfig);
+    List<String> artifactPaths = amazonS3BuildService.getArtifactPaths(BUILD_JOB_NAME, null, awsConfig, null);
     assertThat(artifactPaths.size()).isEqualTo(1);
   }
 }

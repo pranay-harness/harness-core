@@ -3,12 +3,12 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -35,6 +35,8 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -80,6 +82,8 @@ public class HttpState extends State {
 
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject protected EncryptionService encryptionService;
+  @Inject protected KmsService kmsService;
 
   @Inject @Transient private transient ActivityService activityService;
 
@@ -422,32 +426,37 @@ public class HttpState extends State {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
-    Activity.Builder activityBuilder =
-        anActivity()
-            .withAppId(app.getUuid())
-            .withApplicationName(app.getName())
-            .withEnvironmentId(env.getUuid())
-            .withEnvironmentName(env.getName())
-            .withEnvironmentType(env.getEnvironmentType())
-            .withCommandName(getName())
-            .withType(Type.Verification)
-            .withWorkflowType(executionContext.getWorkflowType())
-            .withWorkflowExecutionName(executionContext.getWorkflowExecutionName())
-            .withStateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .withStateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .withCommandType(getStateType())
-            .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
+    Activity.ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .environmentId(env.getUuid())
+            .environmentName(env.getName())
+            .environmentType(env.getEnvironmentType())
+            .commandName(getName())
+            .type(Type.Verification)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(Collections.emptyList())
+            .serviceVariables(Maps.newHashMap())
+            .status(ExecutionStatus.RUNNING);
 
     if (instanceElement != null && instanceElement.getServiceTemplateElement() != null) {
-      activityBuilder.withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
-          .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
-          .withServiceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
-          .withServiceInstanceId(instanceElement.getUuid())
-          .withHostName(instanceElement.getHost().getHostName());
+      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .serviceInstanceId(instanceElement.getUuid())
+          .hostName(instanceElement.getHost().getHostName());
     }
 
-    return activityService.save(activityBuilder.build()).getUuid();
+    Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
   }
 
   /**

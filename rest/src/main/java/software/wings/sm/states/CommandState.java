@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -23,6 +22,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
@@ -67,6 +67,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -129,6 +130,8 @@ public class CommandState extends State {
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
   @Transient @Inject private transient ArtifactService artifactService;
+
+  @Transient @Inject private transient KmsService kmsService;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateEnumDataProvider.class)
@@ -237,30 +240,31 @@ public class CommandState extends State {
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
-      Activity.Builder activityBuilder =
-          anActivity()
-              .withAppId(application.getUuid())
-              .withApplicationName(application.getName())
-              .withEnvironmentId(environment.getUuid())
-              .withEnvironmentName(environment.getName())
-              .withEnvironmentType(environment.getEnvironmentType())
-              .withServiceTemplateId(serviceTemplateId)
-              .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
-              .withServiceId(service.getUuid())
-              .withServiceName(service.getName())
-              .withCommandName(command.getName())
-              .withType(Type.Command)
-              .withServiceInstanceId(serviceInstance.getUuid())
-              .withWorkflowExecutionId(context.getWorkflowExecutionId())
-              .withWorkflowType(context.getWorkflowType())
-              .withWorkflowExecutionName(context.getWorkflowExecutionName())
-              .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-              .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-              .withCommandType(command.getCommandUnitType().name())
-              .withHostName(host.getHostName())
-              .withPublicDns(host.getPublicDns())
-              .withCommandUnits(getFlattenCommandUnits(appId, envId, service, command))
-              .withServiceVariables(serviceVariables);
+      Activity.ActivityBuilder activityBuilder =
+          Activity.builder()
+              .applicationName(application.getName())
+              .environmentId(environment.getUuid())
+              .environmentName(environment.getName())
+              .environmentType(environment.getEnvironmentType())
+              .serviceTemplateId(serviceTemplateId)
+              .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+              .serviceId(service.getUuid())
+              .serviceName(service.getName())
+              .commandName(command.getName())
+              .type(Type.Command)
+              .serviceInstanceId(serviceInstance.getUuid())
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .workflowType(context.getWorkflowType())
+              .workflowId(context.getWorkflowId())
+              .workflowExecutionName(context.getWorkflowExecutionName())
+              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+              .commandType(command.getCommandUnitType().name())
+              .hostName(host.getHostName())
+              .publicDns(host.getPublicDns())
+              .commandUnits(getFlattenCommandUnits(appId, envId, service, command))
+              .serviceVariables(serviceVariables)
+              .status(ExecutionStatus.RUNNING);
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
@@ -282,10 +286,16 @@ public class CommandState extends State {
               .withAccountId(application.getAccountId());
 
       if (isNotEmpty(host.getHostConnAttr())) {
-        commandExecutionContextBuilder.withHostConnectionAttributes(settingsService.get(host.getHostConnAttr()));
+        SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
+        commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
+        commandExecutionContextBuilder.withHostConnectionCredentials(
+            kmsService.getEncryptionDetails((Encryptable) hostConnectionAttribute.getValue(), context.getWorkflowId()));
       }
       if (isNotEmpty(host.getBastionConnAttr())) {
-        commandExecutionContextBuilder.withBastionConnectionAttributes(settingsService.get(host.getBastionConnAttr()));
+        SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
+        commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
+        commandExecutionContextBuilder.withBastionConnectionCredentials(kmsService.getEncryptionDetails(
+            (Encryptable) bastionConnectionAttribute.getValue(), context.getWorkflowId()));
       }
 
       if (command.isArtifactNeeded()) {
@@ -304,15 +314,17 @@ public class CommandState extends State {
           commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
         }
 
-        activityBuilder.withArtifactStreamId(artifactStream.getUuid())
-            .withArtifactStreamName(artifactStream.getSourceName())
-            .withArtifactName(artifact.getDisplayName())
-            .withArtifactId(artifact.getUuid());
+        activityBuilder.artifactStreamId(artifactStream.getUuid())
+            .artifactStreamName(artifactStream.getSourceName())
+            .artifactName(artifact.getDisplayName())
+            .artifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       }
 
-      Activity activity = activityService.save(activityBuilder.build());
+      Activity act = activityBuilder.build();
+      act.setAppId(application.getUuid());
+      Activity activity = activityService.save(act);
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);

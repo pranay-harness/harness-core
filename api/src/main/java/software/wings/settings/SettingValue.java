@@ -17,6 +17,8 @@ import java.util.List;
 public abstract class SettingValue implements ExtensionPoint {
   private String type;
 
+  private boolean decrypted = false;
+
   /**
    * Instantiates a new setting value.
    *
@@ -51,6 +53,15 @@ public abstract class SettingValue implements ExtensionPoint {
 
   public void setSettingType(SettingVariableTypes type) {
     //
+  }
+
+  @SchemaIgnore
+  public boolean isDecrypted() {
+    return decrypted;
+  }
+
+  public void setDecrypted(boolean decrypted) {
+    this.decrypted = decrypted;
   }
 
   @SchemaIgnore

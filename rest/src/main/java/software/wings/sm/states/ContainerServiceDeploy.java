@@ -8,7 +8,6 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
@@ -24,6 +23,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
@@ -54,12 +54,14 @@ import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -89,6 +91,8 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
+
+  @Inject @Transient protected transient KmsService kmsService;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -142,8 +146,8 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
-    Optional<Integer> previousDesiredCount =
-        getServiceDesiredCount(contextData.settingAttribute, contextData.region, contextData.containerElement);
+    Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData.settingAttribute,
+        contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           "Service setup not done, service name: " + contextData.containerElement.getName());
@@ -169,8 +173,8 @@ public abstract class ContainerServiceDeploy extends State {
   private int getNewInstancesDesiredCount(ContextData contextData) {
     if (getInstanceUnitType() == PERCENTAGE) {
       int percent = Math.min(getInstanceCount(), 100);
-      LinkedHashMap<String, Integer> activeServiceCounts =
-          getActiveServiceCounts(contextData.settingAttribute, contextData.region, contextData.containerElement);
+      LinkedHashMap<String, Integer> activeServiceCounts = getActiveServiceCounts(contextData.settingAttribute,
+          contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
       int totalActiveInstances = activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum();
       int totalInstancesAvailable = Math.max(contextData.containerElement.getMaxInstances(), totalActiveInstances);
       int instanceCount = Long.valueOf(Math.round(percent * totalInstancesAvailable / 100.0)).intValue();
@@ -182,8 +186,8 @@ public abstract class ContainerServiceDeploy extends State {
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
-    LinkedHashMap<String, Integer> previousCounts =
-        getActiveServiceCounts(contextData.settingAttribute, contextData.region, contextData.containerElement);
+    LinkedHashMap<String, Integer> previousCounts = getActiveServiceCounts(contextData.settingAttribute,
+        contextData.encryptedDataDetails, contextData.region, contextData.containerElement);
     previousCounts.remove(newServiceData.getName());
     int downsizeCount = Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
     for (String serviceName : previousCounts.keySet()) {
@@ -317,34 +321,37 @@ public abstract class ContainerServiceDeploy extends State {
 
   public abstract String getCommandName();
 
-  protected abstract Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement);
+  protected abstract Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement);
 
-  protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement);
+  protected abstract LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement);
 
   private Activity buildActivity(ExecutionContext context, ContextData contextData) {
-    return activityService.save(
-        anActivity()
-            .withAppId(contextData.appId)
-            .withApplicationName(contextData.app.getName())
-            .withEnvironmentId(contextData.env.getUuid())
-            .withEnvironmentName(contextData.env.getName())
-            .withEnvironmentType(contextData.env.getEnvironmentType())
-            .withServiceId(contextData.service.getUuid())
-            .withServiceName(contextData.service.getName())
-            .withCommandName(contextData.command.getName())
-            .withType(Type.Command)
-            .withWorkflowExecutionId(context.getWorkflowExecutionId())
-            .withWorkflowType(context.getWorkflowType())
-            .withWorkflowExecutionName(context.getWorkflowExecutionName())
-            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-            .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
-                contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
-            .withCommandType(contextData.command.getCommandUnitType().name())
-            .withServiceVariables(context.getServiceVariables())
-            .build());
+    Activity activity = Activity.builder()
+                            .applicationName(contextData.app.getName())
+                            .environmentId(contextData.env.getUuid())
+                            .environmentName(contextData.env.getName())
+                            .environmentType(contextData.env.getEnvironmentType())
+                            .serviceId(contextData.service.getUuid())
+                            .serviceName(contextData.service.getName())
+                            .commandName(contextData.command.getName())
+                            .type(Type.Command)
+                            .workflowExecutionId(context.getWorkflowExecutionId())
+                            .workflowType(context.getWorkflowType())
+                            .workflowId(context.getWorkflowId())
+                            .workflowExecutionName(context.getWorkflowExecutionName())
+                            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                            .commandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
+                                contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
+                            .commandType(contextData.command.getCommandUnitType().name())
+                            .serviceVariables(context.getServiceVariables())
+                            .status(ExecutionStatus.RUNNING)
+                            .build();
+
+    activity.setAppId(contextData.appId);
+    return activityService.save(activity);
   }
 
   private ExecutionResponse buildEndStateExecution(CommandStateExecutionData executionData, ExecutionStatus status) {
@@ -416,6 +423,7 @@ public abstract class ContainerServiceDeploy extends State {
         .withRegion(contextData.region)
         .withActivityId(activityId)
         .withCloudProviderSetting(contextData.settingAttribute)
+        .withCloudProviderCredentials(contextData.encryptedDataDetails)
         .withDesiredCounts(desiredCounts)
         .withEcsServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .build();
@@ -434,6 +442,7 @@ public abstract class ContainerServiceDeploy extends State {
     final ContainerServiceElement containerElement;
     final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
+    List<EncryptedDataDetail> encryptedDataDetails;
     final String appId;
     final String serviceId;
     final String region;
@@ -460,6 +469,8 @@ public abstract class ContainerServiceDeploy extends State {
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()
           : containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      encryptedDataDetails = containerServiceDeploy.kmsService.getEncryptionDetails(
+          (Encryptable) settingAttribute.getValue(), context.getWorkflowId());
       region = infrastructureMapping instanceof EcsInfrastructureMapping
           ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
           : "";

@@ -1,5 +1,9 @@
 package software.wings.service;
 
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.*;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,9 +16,12 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
 import java.util.UUID;
@@ -28,18 +35,21 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private AnalysisService analysisService;
+  @Inject private ElkDelegateService elkDelegateService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setup() {
     accountId = UUID.randomUUID().toString();
     MockitoAnnotations.initMocks(this);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(elkDelegateService);
+    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(elkDelegateService, "encryptionService", encryptionService);
   }
 
   @Test
   public void testElkConfigNoPassword() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new ElkDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -57,9 +67,6 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   public void testElkConfigNoUserName() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new ElkDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -77,9 +84,6 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   public void testInvalidUrl() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new ElkDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("some url");
@@ -96,9 +100,6 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   public void testValidConfig() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new ElkDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("https://ec2-34-207-78-53.compute-1.amazonaws.com:9200");

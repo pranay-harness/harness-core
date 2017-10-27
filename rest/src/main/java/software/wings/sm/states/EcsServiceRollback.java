@@ -4,11 +4,13 @@ import com.github.reinert.jjschema.Attributes;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,14 +27,14 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   }
 
   @Override
-  protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     return Optional.empty();
   }
 
   @Override
-  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     return new LinkedHashMap<>();
   }
 

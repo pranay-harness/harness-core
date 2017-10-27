@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -24,13 +25,13 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.encryption.EncryptionUtils;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.InputStream;
-import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -51,14 +52,9 @@ import javax.ws.rs.core.StreamingOutput;
 public class DelegateFileResource {
   private final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
 
-  private FileService fileService;
-  private MainConfiguration configuration;
-
-  @Inject
-  public DelegateFileResource(FileService fileService, MainConfiguration configuration) {
-    this.fileService = fileService;
-    this.configuration = configuration;
-  }
+  @Inject private FileService fileService;
+  @Inject private MainConfiguration configuration;
+  @Inject private ConfigService configService;
 
   @DelegateAuth
   @POST
@@ -94,6 +90,22 @@ public class DelegateFileResource {
       @QueryParam("accountId") @NotEmpty String accountId) {
     logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId, fileBucket, version);
     return new RestResponse<>(fileService.getFileIdByVersion(entityId, version, fileBucket));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("downloadConfig")
+  @Timed
+  @ExceptionMetered
+  public StreamingOutput downloadConfigFile(@QueryParam("fileId") @NotEmpty String fileId,
+      @QueryParam("appId") @NotEmpty String appId, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("activityId") @NotEmpty String activityId) {
+    return output -> {
+      File configFile = configService.downloadForActivity(appId, fileId, activityId);
+      byte[] bytes = Files.toByteArray(configFile);
+      output.write(bytes, 0, bytes.length);
+      output.flush();
+    };
   }
 
   @DelegateAuth

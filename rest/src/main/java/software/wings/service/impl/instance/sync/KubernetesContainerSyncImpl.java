@@ -14,6 +14,7 @@ import software.wings.service.impl.instance.sync.request.KubernetesFilter;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,24 +26,27 @@ public class KubernetesContainerSyncImpl implements ContainerSync {
   @Inject private KubernetesContainerService kubernetesContainerService;
 
   @Override
-  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
+  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId) {
     KubernetesFilter filter = (KubernetesFilter) syncRequest.getFilter();
     List<ContainerInfo> result = new ArrayList<>();
     Set<String> replicationControllerNameSet = filter.getReplicationControllerNameSet();
 
     for (String replicationControllerName : replicationControllerNameSet) {
-      ReplicationController replicationController =
-          kubernetesContainerService.getController(filter.getKubernetesConfig(), replicationControllerName);
+      ReplicationController replicationController = kubernetesContainerService.getController(
+          filter.getKubernetesConfig(), Collections.emptyList(), replicationControllerName);
       if (replicationController != null) {
         Map<String, String> labels = replicationController.getMetadata().getLabels();
         List<Service> services =
-            kubernetesContainerService.getServices(filter.getKubernetesConfig(), labels).getItems();
+            kubernetesContainerService.getServices(filter.getKubernetesConfig(), Collections.emptyList(), labels)
+                .getItems();
         String serviceName = services.size() > 0 ? services.get(0).getMetadata().getName() : "None";
-        for (Pod pod : kubernetesContainerService.getPods(filter.getKubernetesConfig(), labels).getItems()) {
+        for (Pod pod : kubernetesContainerService.getPods(filter.getKubernetesConfig(), Collections.emptyList(), labels)
+                           .getItems()) {
           if (pod.getStatus().getPhase().equals("Running")) {
-            List<ReplicationController> rcs =
-                kubernetesContainerService.getControllers(filter.getKubernetesConfig(), pod.getMetadata().getLabels())
-                    .getItems();
+            List<ReplicationController> rcs = kubernetesContainerService
+                                                  .getControllers(filter.getKubernetesConfig(), Collections.emptyList(),
+                                                      pod.getMetadata().getLabels())
+                                                  .getItems();
             String rcName = rcs.size() > 0 ? rcs.get(0).getMetadata().getName() : "None";
 
             KubernetesContainerInfo kubernetesContainerInfo = Builder.aKubernetesContainerInfo()

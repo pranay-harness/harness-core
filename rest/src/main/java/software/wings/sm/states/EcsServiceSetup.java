@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
@@ -33,13 +34,11 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsContainerTask.PortMapping;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.EcsConvention;
@@ -101,7 +100,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
 
     TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName, taskFamily,
-        region, settingAttribute, context.getServiceVariables());
+        region, settingAttribute, context.getServiceVariables(), context.getWorkflowId());
 
     String containerServiceName = EcsConvention.getServiceName(taskFamily, taskDefinition.getRevision());
 
@@ -136,17 +135,19 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     }
 
     logger.info("Creating ECS service {} in cluster {}", containerServiceName, clusterName);
-    awsClusterService.createService(region, settingAttribute, createServiceRequest);
+    awsClusterService.createService(region, settingAttribute,
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), context.getWorkflowId()),
+        createServiceRequest);
 
     logger.info("Cleaning up old versions");
-    cleanup(settingAttribute, region, containerServiceName, clusterName);
+    cleanup(settingAttribute, region, containerServiceName, clusterName, context.getWorkflowId());
 
     return buildExecutionData(clusterName, dockerImageName, exposePort, containerServiceName);
   }
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(PhaseElement phaseElement, String serviceId,
-      ContainerInfrastructureMapping infrastructureMapping, String containerServiceName) {
+      String workflowId, ContainerInfrastructureMapping infrastructureMapping, String containerServiceName) {
     return aContainerServiceElement()
         .withUuid(serviceId)
         .withName(containerServiceName)
@@ -190,7 +191,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,
       String dockerImageName, String taskFamily, String region, SettingAttribute settingAttribute,
-      Map<String, String> serviceVariables) {
+      Map<String, String> serviceVariables, String workflowId) {
     String configTemplate;
     if (StringUtils.isNotEmpty(ecsContainerTask.getAdvancedConfig())) {
       configTemplate = ecsContainerTask.fetchAdvancedConfigNoComments();
@@ -228,16 +229,20 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             .withVolumes(taskDefinition.getVolumes());
 
     logger.info("Creating task definition {} with container image {}", taskFamily, dockerImageName);
-    return awsClusterService.createTask(region, settingAttribute, registerTaskDefinitionRequest);
+    return awsClusterService.createTask(region, settingAttribute,
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId),
+        registerTaskDefinitionRequest);
   }
 
-  private void cleanup(
-      SettingAttribute settingAttribute, String region, String containerServiceName, String clusterName) {
+  private void cleanup(SettingAttribute settingAttribute, String region, String containerServiceName,
+      String clusterName, String workflowId) {
     int revision = getRevisionFromServiceName(containerServiceName);
     if (revision > KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision - KEEP_N_REVISIONS;
       String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
-      awsClusterService.getServices(region, settingAttribute, clusterName)
+      awsClusterService
+          .getServices(region, settingAttribute,
+              kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId), clusterName)
           .stream()
           .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
           .collect(Collectors.toList())
@@ -245,7 +250,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             String oldServiceName = s.getServiceName();
             if (getRevisionFromServiceName(oldServiceName) < minRevisionToKeep) {
               logger.info("Deleting old version: " + oldServiceName);
-              awsClusterService.deleteService(region, settingAttribute, clusterName, oldServiceName);
+              awsClusterService.deleteService(region, settingAttribute,
+                  kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId), clusterName,
+                  oldServiceName);
             }
           });
     }
