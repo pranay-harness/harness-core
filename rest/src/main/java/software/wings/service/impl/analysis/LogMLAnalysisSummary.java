@@ -15,6 +15,9 @@ public class LogMLAnalysisSummary {
   private RiskLevel riskLevel;
   private String analysisSummaryMessage;
   private double score;
+  private int highRiskClusters;
+  private int mediumRiskClusters;
+  private int lowRiskClusters;
   private List<LogMLClusterSummary> controlClusters;
   private List<LogMLClusterSummary> testClusters;
   private List<LogMLClusterSummary> unknownClusters;

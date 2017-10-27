@@ -27,6 +27,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -53,6 +54,7 @@ import java.util.stream.Stream;
 public abstract class AbstractAnalysisState extends State {
   protected String timeDuration;
   protected String comparisonStrategy;
+  protected String tolerance;
 
   @Transient @Inject protected WorkflowExecutionService workflowExecutionService;
 

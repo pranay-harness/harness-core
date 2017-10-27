@@ -21,6 +21,7 @@ import software.wings.scheduler.LogClusterManagerJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -160,6 +161,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
         getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
         executionStatus = ExecutionStatus.FAILED;
+      } else if (analysisSummary.getRiskLevel() == RiskLevel.MEDIUM
+          && getAnalysisTolerance().compareTo(AnalysisTolerance.MEDIUM) <= 0) {
+        getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
+        executionStatus = ExecutionStatus.FAILED;
+      } else if (analysisSummary.getRiskLevel() == RiskLevel.LOW
+          && getAnalysisTolerance().compareTo(AnalysisTolerance.LOW) == 0) {
+        getLogger().info(analysisSummary.getAnalysisSummaryMessage() + " Marking it failed.");
+        executionStatus = ExecutionStatus.FAILED;
       }
 
       executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
@@ -292,5 +301,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public abstract AnalysisTolerance getAnalysisTolerance();
+
+  public void setAnalysisTolerance(String tolerance) {
+    this.tolerance = tolerance;
   }
 }

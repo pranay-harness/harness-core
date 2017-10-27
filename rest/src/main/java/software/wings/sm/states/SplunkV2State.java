@@ -20,6 +20,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkSettingProvider;
@@ -45,6 +47,16 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
+  }
+
+  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
+  @Attributes(required = true, title = "Failure Criteria")
+  @DefaultValue("LOW")
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (StringUtils.isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @EnumData(enumDataProvider = AnalysisComparisonStrategyProvider.class)
