@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from core.SAXHMMDistance import SAXHMMDistanceFinder
-from core.TimeSeriesUtils import MetricType, get_deviation_type, smooth, simple_average
+from core.TimeSeriesUtils import MetricType, get_deviation_type, smooth, simple_average, get_deviation_min_threshold
 from sources.NewRelicSource import NewRelicSource
 from sources.SplunkHarnessLoader import SplunkHarnessLoader
 
@@ -131,7 +131,8 @@ class TSAnomlyDetector(object):
                                        tolerance=self._options.tolerance,
                                        control_data_dict=control_data_dict,
                                        test_data_dict=test_data_dict,
-                                       metric_deviation_type=get_deviation_type(metric_name))
+                                       metric_deviation_type=get_deviation_type(metric_name),
+                                       min_metric_threshold=get_deviation_min_threshold(metric_name))
 
             result = tsd.compute_dist()
 

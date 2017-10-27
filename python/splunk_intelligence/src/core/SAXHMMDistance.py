@@ -56,11 +56,11 @@ class SAXHMMDistance(object):
         return [threshold / 3, threshold / 2]
 
     @staticmethod
-    def get_adjusted_distance(metric_deviation_type, apply_sax, x, y, a, b):
+    def get_adjusted_distance(metric_deviation_type, min_threshold, apply_sax, x, y, a, b):
+        if SAXHMMDistance.low_deviation(metric_deviation_type, min_threshold, x, y):
+            return 0
         if SAXHMMDistance.high_deviation(metric_deviation_type, x, y):
             return 2
-        if SAXHMMDistance.low_deviation(metric_deviation_type, x, y):
-            return 0
         if apply_sax:
             return SAXHMMDistance.get_bucket_dist(metric_deviation_type, SAXHMMDistance.inverted_alphabet[a],
                                                   SAXHMMDistance.inverted_alphabet[b])
@@ -78,15 +78,16 @@ class SAXHMMDistance(object):
                 return x > 10 * y if y != 0 else x > 10
             # Both are bad
             else:
-                return SAXHMMDistance.high_deviation(MetricToDeviationType.HIGHER, x, y) or \
-                       SAXHMMDistance.high_deviation(MetricToDeviationType.LOWER, x, y)
+                return SAXHMMDistance.high_deviation(MetricToDeviationType.LOWER, x, y) or \
+                       SAXHMMDistance.high_deviation(MetricToDeviationType.HIGHER, x, y)
+
         else:
             return False
 
     @staticmethod
-    def low_deviation(metric_deviation_type, x, y):
+    def low_deviation(metric_deviation_type, min_threshold, x, y):
         if not np.isnan(x) and not np.isnan(y):
-            return abs(y - x) < 0.2 * min(x, y)
+            return abs(y - x) < min_threshold or abs(y - x) < 0.5 * min(x, y)
         else:
             return False
 
@@ -138,11 +139,13 @@ class SAXHMMDistance(object):
 
 
 class SAXHMMDistanceFinder(object):
-    def __init__(self, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_deviation_type):
+    def __init__(self, metric_name, smooth_window, tolerance, control_data_dict, test_data_dict, metric_deviation_type,
+                 min_metric_threshold):
         self.metric_name = metric_name
         self.smooth_window = smooth_window
         self.thresholds = SAXHMMDistance.thresholds * tolerance
         self.metric_deviation_type = metric_deviation_type
+        self.min_metric_threshold = min_metric_threshold
         self.control_data_dict = control_data_dict
         self.test_data_dict = test_data_dict
         self.apply_sax = True
@@ -160,6 +163,7 @@ class SAXHMMDistanceFinder(object):
 
     def get_dist_value_letter(self, control_val, test_val, control_letter, test_letter):
         return SAXHMMDistance.get_adjusted_distance(self.metric_deviation_type,
+                                                    self.min_metric_threshold,
                                                     self.apply_sax,
                                                     control_val, test_val,
                                                     control_letter,
