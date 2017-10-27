@@ -13,6 +13,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -47,11 +48,12 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     if (isNotEmpty(containerServiceElement.getName())) {
       Optional<Service> service =
-          awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
+          awsClusterService
+              .getServices(region, settingAttribute, encryptedDataDetails, containerServiceElement.getClusterName())
               .stream()
               .filter(svc -> svc.getServiceName().equals(containerServiceElement.getName()))
               .findFirst();
@@ -63,12 +65,13 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceElement.getName());
     List<Service> activeOldServices =
-        awsClusterService.getServices(region, settingAttribute, containerServiceElement.getClusterName())
+        awsClusterService
+            .getServices(region, settingAttribute, encryptedDataDetails, containerServiceElement.getClusterName())
             .stream()
             .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
             .collect(Collectors.toList());

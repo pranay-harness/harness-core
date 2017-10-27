@@ -17,16 +17,19 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.NotSupportedException;
 
 /**
  * Created by sgurubelli on 6/28/17.
@@ -38,43 +41,47 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Inject private ArtifactoryService artifactoryService;
 
   @Override
-  public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
-      return artifactoryService.getBuilds(
-          artifactoryConfig, artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), 50);
+      return artifactoryService.getBuilds(artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+          artifactStreamAttributes.getImageName(), 50);
     } else {
       if (artifactStreamAttributes.isMetadataOnly()) {
-        return artifactoryService.getFilePaths(artifactoryConfig, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType(), 50);
+        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
+            artifactStreamAttributes.getRepositoryType(), 50);
       } else {
-        return artifactoryService.getFilePaths(artifactoryConfig, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType(), 25);
+        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
+            artifactStreamAttributes.getRepositoryType(), 25);
       }
     }
   }
 
   @Override
-  public List<JobDetails> getJobs(ArtifactoryConfig config, Optional<String> parentJobName) {
-    return null;
+  public List<JobDetails> getJobs(
+      ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
+    throw new NotSupportedException();
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, String groupId, ArtifactoryConfig config) {
+  public List<String> getArtifactPaths(
+      String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     if (StringUtils.isEmpty(groupId)) {
       logger.info("Retrieving {} repo paths.", jobName);
-      List<String> repoPaths = artifactoryService.getRepoPaths(config, jobName);
+      List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
       logger.info("Retrieved {} repo paths.", repoPaths.size());
       return repoPaths;
     } else {
-      return artifactoryService.getArtifactIds(config, jobName, groupId);
+      return artifactoryService.getArtifactIds(config, encryptionDetails, jobName, groupId);
     }
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, ArtifactoryConfig artifactoryConfig) {
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     String[] artifactPaths = artifactStreamAttributes.getArtifactPattern().split("/");
     if (artifactPaths.length < 4) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, "message",
@@ -84,7 +91,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
         getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(Collectors.toList()));
     String artifactId = artifactPaths[artifactPaths.length - 3];
     return artifactoryService.getLatestVersion(
-        artifactoryConfig, artifactStreamAttributes.getJobName(), groupId, artifactId);
+        artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(), groupId, artifactId);
   }
 
   private String getGroupId(List<String> pathElems) {
@@ -99,22 +106,24 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(ArtifactoryConfig config) {
-    return artifactoryService.getRepositories(config);
+  public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return artifactoryService.getRepositories(config, encryptionDetails);
   }
 
   @Override
-  public Map<String, String> getPlans(ArtifactoryConfig config, ArtifactType artifactType, String repositoryType) {
+  public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactType artifactType, String repositoryType) {
     if (artifactType.equals(DOCKER)) {
-      return artifactoryService.getRepositories(config, artifactType);
+      return artifactoryService.getRepositories(config, encryptionDetails, artifactType);
     }
-    return artifactoryService.getRepositories(config, repositoryType);
+    return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
   }
 
   @Override
-  public List<String> getGroupIds(String repoType, ArtifactoryConfig config) {
+  public List<String> getGroupIds(
+      String repoType, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     logger.info("Retrieving {} Group Ids.", repoType);
-    List<String> repoPaths = artifactoryService.getRepoPaths(config, repoType);
+    List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repoType);
     logger.info("Retrieved {} Group Ids.", repoPaths.size());
     return repoPaths;
   }
@@ -128,13 +137,14 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
           "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
     }
-    return artifactoryService.getRepositories(config) != null;
+    return artifactoryService.getRepositories(config, Collections.emptyList()) != null;
   }
 
   @Override
-  public boolean validateArtifactSource(ArtifactoryConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean validateArtifactSource(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     if (artifactStreamAttributes.getArtifactPattern() != null) {
-      return artifactoryService.validateArtifactPath(config, artifactStreamAttributes.getJobName(),
+      return artifactoryService.validateArtifactPath(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType());
     }
     return true;

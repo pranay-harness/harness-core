@@ -2,6 +2,8 @@ package software.wings.service.impl.appdynamics;
 
 import static software.wings.utils.HttpUtil.validUrl;
 
+import com.google.common.base.Preconditions;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -14,15 +16,18 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -30,11 +35,14 @@ import java.util.List;
 public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
   private static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";
+  @Inject private EncryptionService encryptionService;
 
   @Override
-  public List<NewRelicApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
+  public List<NewRelicApplication> getAllApplications(
+      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final Call<List<NewRelicApplication>> request =
-        getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails));
     final Response<List<NewRelicApplication>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -45,10 +53,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
+  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final Call<List<AppdynamicsTier>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listTiers(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+            .listTiers(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId);
     final Response<List<AppdynamicsTier>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -59,11 +68,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
-      throws IOException {
+  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listNodes(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
+            .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
     final Response<List<AppdynamicsNode>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -74,11 +83,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(
-      AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
+  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(AppDynamicsConfig appDynamicsConfig,
+      long appdynamicsAppId, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final Call<List<AppdynamicsBusinessTransaction>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listBusinessTransactions(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+            .listBusinessTransactions(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId);
     final Response<List<AppdynamicsBusinessTransaction>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -90,13 +99,14 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsMetric> getTierBTMetrics(
-      AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId) throws IOException {
-    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
+  public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      long tierId, List<EncryptedDataDetail> encryptionDetails) throws IOException {
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listMetrices(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierBTsPath);
+            .listMetrices(
+                getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
     final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
     if (!tierBTResponse.isSuccessful()) {
@@ -106,8 +116,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     List<AppdynamicsMetric> rv = tierBTResponse.body();
     for (AppdynamicsMetric appdynamicsTierMetric : rv) {
-      appdynamicsTierMetric.setChildMetrices(
-          getChildMetrics(appDynamicsConfig, appdynamicsAppId, appdynamicsTierMetric, tierBTsPath + "|"));
+      appdynamicsTierMetric.setChildMetrices(getChildMetrics(
+          appDynamicsConfig, appdynamicsAppId, appdynamicsTierMetric, tierBTsPath + "|", encryptionDetails));
     }
 
     return rv;
@@ -115,15 +125,16 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, String btName, int durantionInMinutes) throws IOException {
+      long tierId, String btName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
     logger.debug("getting AppDynamics metric data");
-    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
         + "Individual Nodes|*|*";
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .getMetricData(
-                getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, metricPath, durantionInMinutes);
+            .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,
+                durantionInMinutes);
 
     final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
     if (tierBTMResponse.isSuccessful()) {
@@ -135,11 +146,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     }
   }
 
-  private AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
-      throws IOException {
+  private AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final Call<List<AppdynamicsTier>> tierDetail =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
+            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
     final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
     if (!tierResponse.isSuccessful()) {
       logger.error("Request not successful. Reason: {}", tierResponse);
@@ -150,7 +161,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
-      AppdynamicsMetric appdynamicsMetric, String parentMetricPath) throws IOException {
+      AppdynamicsMetric appdynamicsMetric, String parentMetricPath, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
     if (appdynamicsMetric.getType() != AppdynamicsMetricType.folder) {
       return Collections.emptyList();
     }
@@ -158,7 +170,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
     Call<List<AppdynamicsMetric>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listMetrices(getHeaderWithCredentials(appDynamicsConfig), applicationId, childMetricPath);
+            .listMetrices(
+                getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
     final Response<List<AppdynamicsMetric>> response = request.execute();
     if (response.isSuccessful()) {
       final List<AppdynamicsMetric> allMetrices = response.body();
@@ -174,7 +187,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           continue;
         }
 
-        metric.setChildMetrices(getChildMetrics(appDynamicsConfig, applicationId, metric, childMetricPath));
+        metric.setChildMetrices(
+            getChildMetrics(appDynamicsConfig, applicationId, metric, childMetricPath, encryptionDetails));
       }
       return allMetrices;
     } else {
@@ -191,7 +205,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     Response<List<NewRelicApplication>> response = null;
     try {
       final Call<List<NewRelicApplication>> request =
-          getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
+          getAppdynamicsRestClient(appDynamicsConfig)
+              .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, Collections.emptyList()));
       response = request.execute();
       if (response.isSuccessful()) {
         return;
@@ -216,7 +231,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     return retrofit.create(AppdynamicsRestClient.class);
   }
 
-  private String getHeaderWithCredentials(AppDynamicsConfig appDynamicsConfig) {
+  private String getHeaderWithCredentials(
+      AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(appDynamicsConfig, encryptionDetails);
     return "Basic "
         + Base64.encodeBase64String(
               String

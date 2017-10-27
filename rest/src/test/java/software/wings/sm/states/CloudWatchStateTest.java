@@ -8,15 +8,17 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Activity.Builder.anActivity;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ASSERTION;
@@ -32,7 +34,6 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
-import com.newrelic.agent.utilization.AWS;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,11 +47,13 @@ import software.wings.beans.Base;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -59,6 +62,12 @@ import java.util.List;
  * Created by anubhaw on 12/6/16.
  */
 public class CloudWatchStateTest extends WingsBaseTest {
+  private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
+
+  static {
+    ACTIVITY_WITH_ID.setUuid(ACTIVITY_ID);
+  }
+
   public static final String PERCENTILE = "p90";
   @Mock private SettingsService settingsService;
   @Mock private ActivityService activityService;
@@ -66,6 +75,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
 
   @Mock private ExecutionContextImpl context;
   @Mock private AmazonCloudWatchClient amazonCloudWatchClient;
+  @Mock private KmsService kmsService;
 
   @InjectMocks private CloudWatchState cloudWatchState = new CloudWatchState(StateType.CLOUD_WATCH.name());
 
@@ -73,11 +83,13 @@ public class CloudWatchStateTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(context.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
-    when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
+    when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
     when(settingsService.get(Base.GLOBAL_APP_ID, SETTING_ID))
         .thenReturn(aSettingAttribute()
                         .withValue(AwsConfig.builder().accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
                         .build());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(cloudWatchState, "kmsService", kmsService);
   }
 
   @Test
@@ -85,7 +97,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(context.evaluateExpression(eq(ASSERTION), any(Datapoint.class))).thenReturn(true);
     ArgumentCaptor<GetMetricStatisticsRequest> argumentCaptor =
         ArgumentCaptor.forClass(GetMetricStatisticsRequest.class);
-    when(awsHelperService.getCloudWatchMetricStatistics(any(AwsConfig.class), anyString(), argumentCaptor.capture()))
+    when(awsHelperService.getCloudWatchMetricStatistics(
+             any(AwsConfig.class), any(), anyString(), argumentCaptor.capture()))
         .thenReturn(new Datapoint());
 
     cloudWatchState.setAwsCredentialsConfigId(SETTING_ID);

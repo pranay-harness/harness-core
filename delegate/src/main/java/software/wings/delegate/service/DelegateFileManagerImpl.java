@@ -100,6 +100,20 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
+  public InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
+      throws IOException {
+    Response<ResponseBody> response = null;
+    try {
+      response = managerClient.downloadFile(fileId, accountId, appId, activityId).execute();
+      return response.body().byteStream();
+    } finally {
+      if (response != null && !response.isSuccessful()) {
+        response.errorBody().close();
+      }
+    }
+  }
+
+  @Override
   public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
     return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
   }

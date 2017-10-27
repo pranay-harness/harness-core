@@ -55,7 +55,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                     .username("anubhaw")
                                     .password("anubhaw@Dhub".toCharArray())
                                     .build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
     System.out.println(builds);
   }
 
@@ -83,7 +83,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                     .password("anubhaw@Dhub".toCharArray())
                                     .build();
     try {
-      dockerRegistryService.validateCredentials(dockerConfig);
+      dockerRegistryService.validateCredentials(dockerConfig, null);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();

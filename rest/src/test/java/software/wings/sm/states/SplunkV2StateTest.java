@@ -41,6 +41,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -78,6 +79,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private MainConfiguration configuration;
+  @Inject private KmsService kmsService;
   @Mock private QuartzScheduler jobScheduler;
   private SplunkV2State splunkState;
 
@@ -120,6 +122,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(splunkState, "delegateService", delegateService);
     setInternalState(splunkState, "jobScheduler", jobScheduler);
+    setInternalState(splunkState, "kmsService", kmsService);
   }
 
   @Test
@@ -235,7 +238,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     final SplunkDataCollectionInfo expectedCollectionInfo =
         new SplunkDataCollectionInfo(splunkConfig, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
             serviceId, Sets.newHashSet(splunkState.getQuery().split(",")), 0, 0,
-            Integer.parseInt(splunkState.getTimeDuration()), Collections.singleton("test"));
+            Integer.parseInt(splunkState.getTimeDuration()), Collections.singleton("test"), Collections.emptyList());
     final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);

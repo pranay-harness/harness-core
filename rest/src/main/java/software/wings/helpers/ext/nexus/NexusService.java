@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.io.InputStream;
 import java.util.List;
@@ -14,37 +15,43 @@ import java.util.Map;
 public interface NexusService {
   /**
    * Get Repositories
+   *
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(final NexusConfig nexusConfig);
+  Map<String, String> getRepositories(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Get Artifact paths under repository
+   *
    * @param repoId
    * @return List<String> artifact paths
    */
-  List<String> getArtifactPaths(NexusConfig nexusConfig, String repoId);
+  List<String> getArtifactPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId);
 
   /**
    * Get Artifact paths for a given repo from the given relative path
+   *
    * @param repoId
    * @return List<String> artifact paths
    */
-  List<String> getArtifactPaths(NexusConfig nexusConfig, String repoId, String name);
+  List<String> getArtifactPaths(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name);
 
   /**
    * Download artifact pair
+   *
    * @param nexusConfig
    * @param repoType
    * @param groupId
    * @param artifactNames
    * @return Input stream
    */
-  Pair<String, InputStream> downloadArtifact(
-      NexusConfig nexusConfig, String repoType, String groupId, String artifactNames);
+  Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoType, String groupId, String artifactNames);
 
   /**
    * Download artifact pair
+   *
    * @param nexusConfig
    * @param repoType
    * @param groupId
@@ -52,8 +59,8 @@ public interface NexusService {
    * @param version
    * @return Input stream
    */
-  Pair<String, InputStream> downloadArtifact(
-      NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version);
+  Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoType, String groupId, String artifactName, String version);
 
   /***
    * Get GroupId paths
@@ -61,7 +68,7 @@ public interface NexusService {
    * @param repoId
    * @return
    */
-  List<String> getGroupIdPaths(NexusConfig nexusConfig, String repoId);
+  List<String> getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId);
 
   /***
    *
@@ -70,25 +77,28 @@ public interface NexusService {
    * @param path the path
    * @return
    */
-  List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path);
+  List<String> getArtifactNames(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String path);
 
   /**
    * @param nexusConfig
-   * @param repoId Repository Type
-   * @param groupId Group Id
-   * @param  artifactName artifact name
+   * @param repoId       Repository Type
+   * @param groupId      Group Id
+   * @param artifactName artifact name
    * @return list of versions
-   *
    */
-  List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName);
+  List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName);
 
   /**
    * Gets the latest version of the given artifact
+   *
    * @param nexusConfig
    * @param repoId
    * @param groupId
    * @param artifactName
    * @return
    */
-  BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName);
+  BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName);
 }

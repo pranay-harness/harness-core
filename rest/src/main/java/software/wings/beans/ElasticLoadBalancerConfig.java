@@ -11,7 +11,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.annotation.Encrypted;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 

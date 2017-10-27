@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encrypted;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue;
 
 /**

@@ -12,15 +12,19 @@ import com.offbytwo.jenkins.model.QueueReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.JenkinsConfig;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -33,6 +37,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private JenkinsFactory jenkinsFactory;
+  @Inject private EncryptionService encryptionService;
 
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> postExecute,
       Supplier<Boolean> preExecute) {
@@ -41,17 +46,20 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
 
   @Override
   public JenkinsExecutionResponse run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
-        (Map<String, String>) parameters[4], (Map<String, String>) parameters[5]);
+    return run((JenkinsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+        (Map<String, String>) parameters[3], (Map<String, String>) parameters[4]);
   }
 
-  public JenkinsExecutionResponse run(String jenkinsUrl, String username, char[] password, String finalJobName,
-      Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion) {
+  public JenkinsExecutionResponse run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String finalJobName, Map<String, String> evaluatedParameters,
+      Map<String, String> evaluatedFilePathsForAssertion) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage;
     try {
-      Jenkins jenkins = jenkinsFactory.create(jenkinsUrl, username, password);
+      encryptionService.decrypt(jenkinsConfig, encryptedDataDetails);
+      Jenkins jenkins = jenkinsFactory.create(
+          jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
       QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
 

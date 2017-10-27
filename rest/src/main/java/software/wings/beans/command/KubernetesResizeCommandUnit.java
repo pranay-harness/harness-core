@@ -9,6 +9,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -27,15 +28,16 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
+      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     KubernetesConfig kubernetesConfig;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
     } else {
-      kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName, namespace);
+      kubernetesConfig =
+          gkeClusterService.getCluster(cloudProviderSetting, encryptedDataDetails, clusterName, namespace);
     }
-    return kubernetesContainerService.setControllerPodCount(
-        kubernetesConfig, clusterName, serviceName, previousCount, desiredCount, executionLogCallback);
+    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails, clusterName,
+        serviceName, previousCount, desiredCount, executionLogCallback);
   }
 }

@@ -6,13 +6,16 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.encryption.EncryptedDataDetail;
+
+import java.util.List;
 
 /**
  * Created by anubhaw on 10/4/16.
  */
 public interface InfrastructureProvider {
   PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
-      SettingAttribute computeProviderSetting, PageRequest<Host> req);
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req);
 
   /**
    * Save host host.

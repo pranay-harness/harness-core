@@ -49,11 +49,13 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
   @SchemaIgnore
   public KubernetesConfig createKubernetesConfig() {
-    return KubernetesConfig.builder()
-        .masterUrl(masterUrl)
-        .username(username)
-        .password(password)
-        .namespace(isNotEmpty(namespace) ? namespace : "default")
-        .build();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl(masterUrl)
+                                            .username(username)
+                                            .password(password)
+                                            .namespace(isNotEmpty(namespace) ? namespace : "default")
+                                            .build();
+    kubernetesConfig.setDecrypted(true);
+    return kubernetesConfig;
   }
 }

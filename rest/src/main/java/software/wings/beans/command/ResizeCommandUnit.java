@@ -7,6 +7,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -23,9 +24,9 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
 
   @Override
   protected List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    return awsClusterService.resizeCluster(region, cloudProviderSetting, clusterName, serviceName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
+      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    return awsClusterService.resizeCluster(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceName,
+        previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }
 }

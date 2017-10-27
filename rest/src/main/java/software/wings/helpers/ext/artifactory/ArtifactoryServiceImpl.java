@@ -20,6 +20,7 @@ import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import groovyx.net.http.HttpResponseException;
@@ -43,10 +44,13 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,40 +80,44 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-
-  @Inject ExecutorService executorService;
+  @Inject private ExecutorService executorService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
-  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig) {
-    return getRepositories(artifactoryConfig, EnumSet.of(docker));
+  public Map<String, String> getRepositories(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(docker));
   }
 
   @Override
-  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, ArtifactType artifactType) {
+  public Map<String, String> getRepositories(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType) {
     switch (artifactType) {
       case DOCKER:
-        return getRepositories(artifactoryConfig);
+        return getRepositories(artifactoryConfig, encryptionDetails);
       case RPM:
-        return getRepositories(artifactoryConfig, EnumSet.of(rpm, yum, maven, generic));
+        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(rpm, yum, maven, generic));
       default:
-        return getRepositories(artifactoryConfig, EnumSet.of(maven, generic));
+        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(maven, generic));
     }
   }
 
   @Override
-  public Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, String packageType) {
+  public Map<String, String> getRepositories(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String packageType) {
     switch (packageType) {
       case "maven":
-        return getRepositories(artifactoryConfig, EnumSet.of(maven));
+        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(maven));
       default:
-        return getRepositories(artifactoryConfig, EnumSet.of(generic, rpm, maven, yum));
+        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(generic, rpm, maven, yum));
     }
   }
 
-  private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, EnumSet<PackageType> packageTypes) {
+  private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, EnumSet<PackageType> packageTypes) {
     logger.info("Retrieving repositories for packages {}", packageTypes.toArray());
     Map<String, String> repositories = new HashMap<>();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     ArtifactoryRequest repositoryRequest =
         new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
     try {
@@ -147,9 +155,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public List<String> getRepoPaths(ArtifactoryConfig artifactoryConfig, String repoKey) {
+  public List<String> getRepoPaths(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey) {
     logger.info("Retrieving repo paths for repoKey {}", repoKey);
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     PackageType packageType = null;
     try {
       Repository repository = artifactory.repository(repoKey).get();
@@ -195,18 +204,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public Map<String, String> getRepositoryTypes(ArtifactoryConfig artifactoryConfig) {
-    Map<String, String> repositoryTypes = new HashMap<>();
-    repositoryTypes.putAll(ImmutableMap.of(maven.name(), "Maven", generic.name(), "Generic"));
-    return repositoryTypes;
-  }
-
-  @Override
-  public List<BuildDetails> getBuilds(
-      ArtifactoryConfig artifactoryConfig, String repoKey, String imageName, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoKey, String imageName, int maxNumberOfBuilds) {
     logger.info("Retrieving docker tags for repoKey {} imageName {} ", repoKey, imageName);
     List<BuildDetails> buildDetails = new ArrayList<>();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
       ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
                                                  .apiUrl("api/docker/" + repoKey + "/v2/" + imageName + "/tags/list")
@@ -231,11 +233,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, String repoKey, String artifactPath,
-      String repositoryType, int maxVersions) {
+  public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoKey, String artifactPath, String repositoryType,
+      int maxVersions) {
     logger.info("Retrieving file paths for repoKey {} arthifactPath {}", repoKey, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     String artifactName;
     try {
       String aclQuery = "api/search/aql";
@@ -540,16 +543,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return folderPaths;
   }
 
-  @Override
-  public BuildDetails getLatestFilePath(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId,
-      String artifactName, ArtifactType artifactType) {
-    List<BuildDetails> buildDetails = getFilePaths(artifactoryConfig, repoKey, artifactName, "any", 1);
-    if (!CollectionUtils.isEmpty(buildDetails) && buildDetails.size() > 0) {
-      return buildDetails.get(0);
-    }
-    return null;
-  }
-
   /**
    * Gets the latest version of the given artifact
    *
@@ -560,9 +553,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    * @return
    */
   @Override
-  public BuildDetails getLatestVersion(
-      ArtifactoryConfig artifactoryConfig, String repoId, String groupId, String artifactId) {
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+  public BuildDetails getLatestVersion(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String groupId, String artifactId) {
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
       String msg = "latest version for artifactory server [" + artifactoryConfig.getArtifactoryUrl() + "] repoId ["
           + repoId + "] groupId [" + groupId + "] artifactId [" + artifactId + "]";
@@ -636,11 +629,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public List<String> getArtifactIds(ArtifactoryConfig artifactoryConfig, String repoKey, String groupId) {
+  public List<String> getArtifactIds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoKey, String groupId) {
     logger.info("Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {}",
         artifactoryConfig.getArtifactoryUrl(), repoKey, groupId);
     List<String> artifactIds = new ArrayList<>();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
       List<RepoPath> results =
           artifactory.searches().artifactsByGavc().groupId(groupId).repositories(repoKey).doSearch();
@@ -672,15 +666,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig, String repoType, String groupId,
-      List<String> artifactPaths, String artifactPattern, Map<String, String> metadata, String delegateId,
-      String taskId, String accountId) {
+  public ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, List<String> artifactPaths,
+      String artifactPattern, Map<String, String> metadata, String delegateId, String taskId, String accountId) {
     ListNotifyResponseData res = new ListNotifyResponseData();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     try {
       if (metadata.get(ARTIFACT_PATH) != null) {
         logger.info("Downloading the file for generic repo");
-        return downloadArtifacts(artifactoryConfig, repoType, metadata, delegateId, taskId, accountId);
+        return downloadArtifacts(
+            artifactoryConfig, encryptionDetails, repoType, metadata, delegateId, taskId, accountId);
       }
       if (artifactPattern == null) {
         throw new WingsException(ARTIFACT_SERVER_ERROR, "message", "Artifct pattern is Empty");
@@ -753,8 +748,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public boolean validateArtifactPath(
-      ArtifactoryConfig artifactoryConfig, String repoType, String artifactPath, String repositoryType) {
+  public boolean validateArtifactPath(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoType, String artifactPath, String repositoryType) {
     logger.info(
         "Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repoType, repositoryType);
     if (StringUtils.isBlank(artifactPath)) {
@@ -763,7 +758,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     List<BuildDetails> filePaths;
     if (!repositoryType.equals(maven.name())) {
       try {
-        filePaths = getFilePaths(artifactoryConfig, repoType, artifactPath, repositoryType, 1);
+        filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repoType, artifactPath, repositoryType, 1);
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
@@ -797,7 +792,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       try {
         logger.info("Validating maven style repo by fetching the version");
-        BuildDetails buildDetails = getLatestVersion(artifactoryConfig, repoType, groupId, artifactId);
+        BuildDetails buildDetails =
+            getLatestVersion(artifactoryConfig, encryptionDetails, repoType, groupId, artifactId);
         logger.info("Validation success. Version {}", buildDetails.getNumber());
         if (buildDetails == null) {
           throw new WingsException(INVALID_ARTIFACT_SERVER, "message", "No version found or not defined");
@@ -810,10 +806,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return true;
   }
 
-  private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig, String repoKey,
-      Map<String, String> metadata, String delegateId, String taskId, String accountId) {
+  private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoKey, Map<String, String> metadata, String delegateId,
+      String taskId, String accountId) {
     ListNotifyResponseData res = new ListNotifyResponseData();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     Set<String> artifactNames = new HashSet<>();
     String artifactPath = metadata.get(ARTIFACT_PATH).replace(repoKey, "").substring(1);
     String artifactName = metadata.get(ARTIFACT_FILE_NAME);
@@ -839,7 +836,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(ArtifactoryConfig artifactoryConfig, String repositoryPath) {
+  public BuildDetails getLastSuccessfulBuild(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryPath) {
     return null;
   }
 
@@ -850,7 +848,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    * @return Artifactory returns artifactory client
    */
 
-  private Artifactory getArtifactoryClient(ArtifactoryConfig artifactoryConfig) {
+  private Artifactory getArtifactoryClient(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(artifactoryConfig, encryptionDetails);
     try {
       ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
       builder.setUrl(getBaseUrl(artifactoryConfig));

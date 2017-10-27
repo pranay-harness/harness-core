@@ -3,6 +3,7 @@ package software.wings.service.intfc.newrelic;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
@@ -22,16 +23,18 @@ public interface NewRelicDelegateService {
   void validateConfig(@NotNull NewRelicConfig newRelicConfig) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_APP_TASK)
-  List<NewRelicApplication> getAllApplications(@NotNull NewRelicConfig newRelicConfig) throws IOException;
+  List<NewRelicApplication> getAllApplications(
+      @NotNull NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_APP_INSTANCES_TASK)
-  List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig, long newRelicApplicationId)
-      throws IOException;
+  List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_METRICES_DATA)
-  NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      Collection<String> metricNames, long fromTime, long toTime) throws IOException;
-
-  Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
+  NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicApplicationId, long instanceId, Collection<String> metricNames, long fromTime, long toTime)
       throws IOException;
+
+  Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException;
 }

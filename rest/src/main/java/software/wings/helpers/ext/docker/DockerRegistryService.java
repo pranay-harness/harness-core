@@ -2,6 +2,7 @@ package software.wings.helpers.ext.docker;
 
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -17,7 +18,8 @@ public interface DockerRegistryService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
@@ -26,19 +28,22 @@ public interface DockerRegistryService {
    * @param imageName    the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
+  BuildDetails getLastSuccessfulBuild(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
 
   /**
    * Validates the Image
+   *
    * @param dockerConfig
    * @param imageName
    */
-  boolean verifyImageName(DockerConfig dockerConfig, String imageName);
+  boolean verifyImageName(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
 
   /**
    * Validate the credentials
+   *
    * @param dockerConfig
    * @return
    */
-  boolean validateCredentials(DockerConfig dockerConfig);
+  boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails);
 }

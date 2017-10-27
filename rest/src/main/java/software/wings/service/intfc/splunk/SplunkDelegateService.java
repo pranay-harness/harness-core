@@ -3,7 +3,9 @@ package software.wings.service.intfc.splunk;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
+import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -11,5 +13,5 @@ import javax.validation.constraints.NotNull;
  */
 public interface SplunkDelegateService {
   @DelegateTaskType(TaskType.SPLUNK_CONFIGURATION_VALIDATE_TASK)
-  void validateConfig(@NotNull SplunkConfig splunkConfig);
+  void validateConfig(@NotNull SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 }

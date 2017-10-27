@@ -30,6 +30,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
+import java.util.Collections;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -70,8 +71,9 @@ public class SettingValidationService {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " already exists.");
     }
+
     if (settingValue instanceof GcpConfig) {
-      gcpHelperService.validateCredential(String.valueOf(((GcpConfig) settingValue).getServiceAccountKeyFileContent()));
+      gcpHelperService.validateCredential(((GcpConfig) settingValue));
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
@@ -89,8 +91,8 @@ public class SettingValidationService {
       if (((ElkConfig) settingValue).getElkConnector() == ElkConnector.KIBANA_SERVER) {
         try {
           ((ElkConfig) settingValue)
-              .setKibanaVersion(
-                  elkAnalysisService.getVersion(settingAttribute.getAccountId(), ((ElkConfig) settingValue)));
+              .setKibanaVersion(elkAnalysisService.getVersion(
+                  settingAttribute.getAccountId(), ((ElkConfig) settingValue), Collections.emptyList()));
         } catch (Exception ex) {
           logger.warn("Unable to validate ELK via Kibana", ex);
           return false;

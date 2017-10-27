@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 
@@ -15,14 +16,17 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.util.Arrays;
@@ -47,9 +51,14 @@ public class ArtifactoryServiceTest {
   private ArtifactoryConfig artifactoryConfig =
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
 
+  @Before
+  public void setUp() {
+    setInternalState(artifactoryService, "encryptionService", new EncryptionServiceImpl());
+  }
+
   @Test
   public void shouldGetMavenRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, WAR);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-maven");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -57,7 +66,7 @@ public class ArtifactoryServiceTest {
 
   @Test
   public void shouldGetDockerRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
@@ -65,21 +74,22 @@ public class ArtifactoryServiceTest {
 
   @Test
   public void shouldGetRpmRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RPM);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RPM);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-rpm");
   }
 
   @Test
   public void shouldGetDockerImages() {
-    List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, "docker");
+    List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, null, "docker");
     assertThat(repositories).isNotNull();
     assertThat(repositories).contains("wingsplugins/todolist");
   }
 
   @Test
   public void shouldGetDockerTags() {
-    List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, "docker", "wingsplugins/todolist", 50);
+    List<BuildDetails> builds =
+        artifactoryService.getBuilds(artifactoryConfig, null, "docker", "wingsplugins/todolist", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("latest");
   }
@@ -87,14 +97,14 @@ public class ArtifactoryServiceTest {
   @Test
   public void shouldGetRpmFilePaths() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", "todolist*", "generic", 50);
+        artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*", "generic", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("todolist-1.0-2.x86_64.rpm");
   }
 
   @Test
   public void shouldGetGroupIds() {
-    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, "harness-maven");
+    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, null, "harness-maven");
     assertThat(groupIds).isNotNull();
     assertThat(groupIds).contains("io.harness");
     assertThat(groupIds).contains("io.harness.portal");
@@ -105,7 +115,7 @@ public class ArtifactoryServiceTest {
     stubFor(get(urlPathEqualTo("/artifactory/api/storage/harness-maven-snapshots"))
                 .withQueryParam("deep", containing("1"))
                 .willReturn(aResponse().withStatus(403)));
-    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, "harness-maven-snapshots");
+    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, null, "harness-maven-snapshots");
     assertThat(groupIds).isNotNull();
     //    assertThat(groupIds).contains("io.harness");
     //  assertThat(groupIds).contains("io.harness");
@@ -114,14 +124,14 @@ public class ArtifactoryServiceTest {
   @Test
   public void shouldGetArtifactIds() {
     List<String> groupIds =
-        artifactoryService.getArtifactIds(artifactoryConfig, "harness-maven-snapshots", "io.harness");
+        artifactoryService.getArtifactIds(artifactoryConfig, null, "harness-maven-snapshots", "io.harness");
     assertThat(groupIds).isEmpty();
   }
 
   @Test
   public void shouldGetLatestVersion() {
-    BuildDetails buildDetails =
-        artifactoryService.getLatestVersion(artifactoryConfig, "harness-maven", "io.harness.todolist", "todolist");
+    BuildDetails buildDetails = artifactoryService.getLatestVersion(
+        artifactoryConfig, null, "harness-maven", "io.harness.todolist", "todolist");
     assertThat(buildDetails).isNotNull();
     assertThat(buildDetails.getNumber()).isEqualTo("1.1");
   }
@@ -129,14 +139,14 @@ public class ArtifactoryServiceTest {
   @Test
   public void shouldGetLatestSnapshotVersion() {
     BuildDetails buildDetails = artifactoryService.getLatestVersion(
-        artifactoryConfig, "harness-maven-snapshots", "io.harness.todolist", "snapshot");
+        artifactoryConfig, null, "harness-maven-snapshots", "io.harness.todolist", "snapshot");
     assertThat(buildDetails).isNotNull();
     assertThat(buildDetails.getNumber()).isEqualTo("1.1");
   }
 
   @Test
   public void shouldDownloadArtifacts() {
-    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig,
+    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
         "harness-maven-snapshots", "io.harness.todolist", Arrays.asList("todolist"), "io/harness/todolist",
         ImmutableMap.of("buildNo", "1.1"), "delegateId", "taskId", "ACCOUNT_ID");
 
@@ -145,7 +155,7 @@ public class ArtifactoryServiceTest {
 
   @Test(expected = WingsException.class)
   public void shouldDownloadRpmArtifacts() {
-    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig,
+    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
         "harness-rpm", "io.harness.todolist", Arrays.asList("todolist"), "io/harness/todolist",
         ImmutableMap.of(
             ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"),
@@ -155,17 +165,17 @@ public class ArtifactoryServiceTest {
 
   @Test
   public void shouldValidateArtifactPath() {
-    artifactoryService.validateArtifactPath(artifactoryConfig, "harness-rpm", "todolist*", "generic");
+    artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic");
   }
 
   @Test(expected = WingsException.class)
   public void shouldValidateArtifactPathEmpty() {
-    artifactoryService.validateArtifactPath(artifactoryConfig, "harness-rpm", "", "generic");
+    artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "", "generic");
   }
 
   @Test
   public void shouldValidateArtifactPathMaven() {
     artifactoryService.validateArtifactPath(
-        artifactoryConfig, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
+        artifactoryConfig, null, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
   }
 }

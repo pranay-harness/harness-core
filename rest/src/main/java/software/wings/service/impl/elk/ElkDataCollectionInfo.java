@@ -5,9 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.ElkConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.sm.StateType;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,9 +30,9 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
       String hostnameField, String messageField, String timestampField, String timestampFieldFormat, long startTime,
-      int startMinute, int collectionTime, Set<String> hosts) {
+      int startMinute, int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
-        startMinute, collectionTime, hosts, StateType.ELK);
+        startMinute, collectionTime, hosts, StateType.ELK, encryptedDataDetails);
     this.elkConfig = elkConfig;
     this.indices = indices;
     this.hostnameField = hostnameField;

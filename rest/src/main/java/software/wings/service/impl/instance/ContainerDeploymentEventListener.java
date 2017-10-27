@@ -48,6 +48,7 @@ public class ContainerDeploymentEventListener extends AbstractQueueListener<Cont
         String computeProviderId = containerDeploymentEvent.getComputeProviderId();
         String containerSvcNameNoRevision = containerDeploymentEvent.getContainerSvcNameNoRevision();
         Set<String> containerSvcNameSet = containerDeploymentEvent.getContainerSvcNameSet();
+        String workflowId = containerDeploymentEvent.getWorkflowId();
 
         Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
 
@@ -72,7 +73,7 @@ public class ContainerDeploymentEventListener extends AbstractQueueListener<Cont
         // This includes the service names that were involved in the event update and the ones in the db
         ContainerSyncResponse instanceSyncResponse =
             containerInstanceHelper.getLatestInstancesFromContainerServer(containerSvcNameDeploymentInfoMap.keySet(),
-                instanceType, appId, infraMappingId, clusterName, computeProviderId);
+                instanceType, appId, infraMappingId, clusterName, computeProviderId, workflowId);
         Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
 
         List<ContainerInfo> containerInfoList = instanceSyncResponse.getContainerInfoList();

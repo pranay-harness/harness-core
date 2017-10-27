@@ -1,4 +1,4 @@
-package software.wings.security.encryption;
+package software.wings.annotation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -21,4 +21,8 @@ public interface Encryptable {
   default List<Field> getEncryptedFields() {
     return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
+
+  boolean isDecrypted();
+
+  void setDecrypted(boolean decrypted);
 }

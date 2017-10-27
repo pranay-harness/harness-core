@@ -137,19 +137,19 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateActivity() {
     long createdAt = System.currentTimeMillis();
-    Activity activity = Activity.Builder.anActivity()
-                            .withAppId(APP_ID)
-                            .withUuid(ACTIVITY_ID)
-                            .withServiceInstanceId(SERVICE_INSTANCE_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withArtifactStreamName(ARTIFACT_STREAM_NAME)
-                            .withArtifactId(ARTIFACT_ID)
-                            .withArtifactName(ARTIFACT_NAME)
-                            .withStatus(ExecutionStatus.SUCCESS)
-                            .withCommandName(COMMAND_NAME)
-                            .withCommandType(COMMAND_UNIT_TYPE)
-                            .withCreatedAt(createdAt)
+    Activity activity = Activity.builder()
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .artifactStreamId(ARTIFACT_STREAM_ID)
+                            .artifactStreamName(ARTIFACT_STREAM_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .status(ExecutionStatus.SUCCESS)
+                            .commandName(COMMAND_NAME)
+                            .commandType(COMMAND_UNIT_TYPE)
                             .build();
+    activity.setCreatedAt(createdAt);
+    activity.setUuid(ACTIVITY_ID);
+    activity.setAppId(APP_ID);
     serviceInstanceService.updateActivity(activity);
 
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
