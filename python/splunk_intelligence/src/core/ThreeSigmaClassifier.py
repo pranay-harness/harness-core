@@ -23,11 +23,11 @@ class ThreeSigmaClassifier(object):
             if math.floor(abs(value - mean)) > self.tolerance:
                 anomaly = True
             if flag == 0:
-                anomaly &= math.floor(value - mean) > math.ceil(3 * std)
+                anomaly &= math.floor(value - mean) > math.ceil(5 * std)
             elif flag == 1:
-                anomaly &= math.floor(value - mean) < math.ceil(3 * std)
+                anomaly &= math.floor(value - mean) < math.ceil(5 * std)
             else:
-                anomaly &= math.floor(abs(value - mean)) > math.ceil(3 * std)
+                anomaly &= math.floor(abs(value - mean)) > math.ceil(5 * std)
 
             if anomaly:
                 predictions[i] = -1
@@ -36,9 +36,9 @@ class ThreeSigmaClassifier(object):
 
 
 # zdc = ThreeSigmaClassifier()
-# zdc.fit_transform(1, np.array([[1, 1],
-#                                    [1, 1],
-#                                    [1, 1],
-#                                    [1,2]]))
-# predictions, score = zdc.predict(1, np.array([[1, 8], [1,8]]))
+# zdc.fit_transform(1, np.array([[1, 65],
+#                                    [1, 55],
+#                                    [1, 63]]
+#                                    ))
+# predictions, score = zdc.predict(1, np.array([[1, 74], [1,76], [1,77]]))
 # print(predictions, score)

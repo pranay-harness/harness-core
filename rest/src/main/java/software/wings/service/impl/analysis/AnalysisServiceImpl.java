@@ -65,6 +65,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class AnalysisServiceImpl implements AnalysisService {
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
+  private static final double HIGH_RISK_THRESHOLD = 50;
+  private static final double MEDIUM_RISK_THRESHOLD = 25;
+
   private final Random random = new Random();
 
   public static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
@@ -367,24 +370,47 @@ public class AnalysisServiceImpl implements AnalysisService {
     analysisSummary.setUnknownClusters(
         computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
 
-    RiskLevel riskLevel = RiskLevel.LOW;
+    RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg =
         analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
         ? "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
     int unknownClusters = 0;
+    int highRiskClusters = 0;
+    int mediumRiskCluster = 0;
+    int lowRiskClusters = 0;
     if (analysisSummary.getUnknownClusters() != null && analysisSummary.getUnknownClusters().size() > 0) {
-      riskLevel = RiskLevel.HIGH;
+      for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
+        if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
+          ++highRiskClusters;
+        } else if (clusterSummary.getScore() > MEDIUM_RISK_THRESHOLD) {
+          ++mediumRiskCluster;
+        } else if (clusterSummary.getScore() > 0) {
+          ++lowRiskClusters;
+        }
+      }
+      riskLevel = highRiskClusters > 0
+          ? RiskLevel.HIGH
+          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+
       unknownClusters = analysisSummary.getUnknownClusters().size();
+      analysisSummary.setHighRiskClusters(highRiskClusters);
+      analysisSummary.setMediumRiskClusters(mediumRiskCluster);
+      analysisSummary.setLowRiskClusters(lowRiskClusters);
     }
 
     int unknownFrequency = getUnexpectedFrequency(analysisRecord.getTest_clusters());
     if (unknownFrequency > 0) {
+      analysisSummary.setHighRiskClusters(analysisSummary.getHighRiskClusters() + unknownFrequency);
       riskLevel = RiskLevel.HIGH;
     }
 
-    if (unknownClusters > 0 || unknownFrequency > 0) {
+    if (highRiskClusters > 0 || mediumRiskCluster > 0 || lowRiskClusters > 0) {
+      analysisSummaryMsg = analysisSummary.getHighRiskClusters() + " high risk, "
+          + analysisSummary.getMediumRiskClusters() + " medium risk, " + analysisSummary.getLowRiskClusters()
+          + " low risk anomalous cluster(s) found";
+    } else if (unknownClusters > 0 || unknownFrequency > 0) {
       final int totalAnomalies = unknownClusters + unknownFrequency;
       analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
                                                : totalAnomalies + " anomalous clusters found";
@@ -486,13 +512,20 @@ public class AnalysisServiceImpl implements AnalysisService {
         clusterSummary.setLogText(analysisCluster.getText());
         clusterSummary.setTags(analysisCluster.getTags());
         clusterSummary.getHostSummary().put(hostEntry.getKey(), hostSummary);
+        double score = 0.0;
         if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {
           switch (cluster_type) {
             case TEST:
-              clusterSummary.setScore(clusterScores.get(labelEntry.getKey()).getFreq_score() * 100);
+              score = clusterScores.get(labelEntry.getKey()).getFreq_score() * 100;
+              clusterSummary.setScore(score);
+              clusterSummary.setRiskLevel(RiskLevel.HIGH);
               break;
             case UNKNOWN:
-              clusterSummary.setScore(clusterScores.get(labelEntry.getKey()).getTest_score() * 100);
+              score = clusterScores.get(labelEntry.getKey()).getTest_score() * 100;
+              clusterSummary.setScore(score);
+              clusterSummary.setRiskLevel(score > HIGH_RISK_THRESHOLD
+                      ? RiskLevel.HIGH
+                      : score > MEDIUM_RISK_THRESHOLD ? RiskLevel.MEDIUM : RiskLevel.LOW);
               break;
             default:
           }

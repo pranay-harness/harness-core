@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import lombok.Data;
+import software.wings.metrics.RiskLevel;
 
 import java.util.List;
 import java.util.Map;
@@ -15,4 +16,5 @@ public class LogMLClusterSummary {
   private String logText;
   private List<String> tags;
   private double score;
+  private RiskLevel riskLevel;
 }
