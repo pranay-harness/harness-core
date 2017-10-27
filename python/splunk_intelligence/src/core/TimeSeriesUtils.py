@@ -26,6 +26,15 @@ def get_deviation_type(metric_name):
 
     return type
 
+def get_deviation_min_threshold(metric_name):
+    if 'averageResponseTime' == metric_name:
+        return 50
+    elif 'throughput' == metric_name:
+        return 0.3
+    elif 'apdexScore' == metric_name:
+        return 0.3
+    elif 'requestsPerMinute' == metric_name:
+        return 20
 
 def normalize_metric(control_data, test_data):
     """
