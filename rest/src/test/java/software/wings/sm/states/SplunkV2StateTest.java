@@ -143,7 +143,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
@@ -167,7 +167,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
@@ -192,7 +192,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(response.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
@@ -304,7 +304,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(splunkState.getQuery(), analysisSummary.getQuery());
     assertEquals(executionResponse.getErrorMessage(), analysisSummary.getAnalysisSummaryMessage());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
