@@ -36,11 +36,14 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Singleton;
 
 /**
@@ -52,6 +55,7 @@ public class WorkflowNotificationHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final DateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
@@ -143,8 +147,8 @@ public class WorkflowNotificationHelper {
   }
 
   private String getDateString(Long startTs) {
-    Date date = new Date(startTs);
-    return date.toString(); // TODO:: format
+    Date date = new Date(Optional.ofNullable(startTs).orElse(System.currentTimeMillis()));
+    return dateFormat.format(date); // TODO:: format
   }
 
   public void sendWorkflowPhaseStatusChangeNotification(ExecutionContext context, ExecutionStatus status,
