@@ -162,7 +162,7 @@ class SplunkIntelOptimized(object):
 
         if len(control_scores) > 0:
             self.splunkDatasetNew.score = round(
-                euclidean_distances(control_scores, test_scores).flatten()[0], 2)
+                euclidean_distances([control_scores], [test_scores]).flatten()[0], 2)
 
 
 

@@ -21,6 +21,8 @@ import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
+import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.logz.LogzSettingProvider;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
@@ -57,6 +59,16 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
+  }
+
+  @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
+  @Attributes(required = true, title = "Failure Criteria")
+  @DefaultValue("LOW")
+  public AnalysisTolerance getAnalysisTolerance() {
+    if (StringUtils.isBlank(tolerance)) {
+      return AnalysisTolerance.LOW;
+    }
+    return AnalysisTolerance.valueOf(tolerance);
   }
 
   @Attributes(required = true, title = "Search Keywords")
