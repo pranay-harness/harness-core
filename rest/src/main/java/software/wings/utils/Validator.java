@@ -72,6 +72,9 @@ public class Validator {
     } catch (DuplicateKeyException e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
     } catch (Exception e) {
+      if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
+      }
       throw Throwables.propagate(e);
     }
   }
