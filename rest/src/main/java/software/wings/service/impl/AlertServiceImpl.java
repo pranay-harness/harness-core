@@ -70,7 +70,7 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void deploymentAborted(String appId, String executionId) {
+  public void deploymentCompleted(String appId, String executionId) {
     executorService.submit(() -> deploymentAbortedInternal(appId, executionId));
   }
 
