@@ -264,14 +264,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName) {
+    /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
+       Fetch the latest */
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
             .field("stateExecutionId")
             .equal(stateExecutionId)
             .field("workflowExecutionId")
             .equal(workflowExecutionId)
-            .field("analysisMinute")
-            .equal(analysisMinute);
+            .order("-analysisMinute")
+            .limit(1);
 
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
