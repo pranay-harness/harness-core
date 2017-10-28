@@ -607,7 +607,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
-    assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.LOW, analysisSummary.getRiskLevel());
+    assertEquals(numOfUnexpectedFreq > 0 ? RiskLevel.HIGH : RiskLevel.NA, analysisSummary.getRiskLevel());
     assertEquals(numOfTestClusters, analysisSummary.getTestClusters().size());
     assertTrue(analysisSummary.getUnknownClusters().isEmpty());
     assertTrue(analysisSummary.getControlClusters().isEmpty());
