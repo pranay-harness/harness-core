@@ -80,7 +80,11 @@ public class Mailer {
       }
 
       email.setSubject(subject);
-      email.setMsg(body);
+      if (emailData.isHasHtml()) {
+        ((HtmlEmail) email).setHtmlMsg(body);
+      } else {
+        email.setMsg(body);
+      }
 
       email.send();
     } catch (EmailException | IOException e) {
