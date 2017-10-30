@@ -123,7 +123,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
         : commandExecutionStatus;
     Properties properties = new Properties();
     try {
-      properties.load(new StringReader(envVariablesFromHost.toString()));
+      properties.load(new StringReader(envVariablesFromHost.toString().replaceAll("\\\\", "\\\\\\\\")));
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
