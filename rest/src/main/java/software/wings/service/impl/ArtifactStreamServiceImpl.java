@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -42,7 +43,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WebHookRequest;
@@ -57,7 +57,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -71,6 +70,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -121,6 +121,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
+  @Inject private TriggerService triggerService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -184,7 +185,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
-    artifactStream = create(artifactStream);
+    artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
     if (!artifactStream.isAutoDownload()) {
       jobScheduler.deleteJob(savedArtifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP);
     }
@@ -498,9 +499,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {
-    PageRequest pageRequest = Builder.aPageRequest()
-                                  .addFilter("appId", Operator.EQ, appId)
-                                  .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+    PageRequest pageRequest = aPageRequest()
+                                  .addFilter("appId", EQ, appId)
+                                  .addFilter("status", EQ, ExecutionStatus.SUCCESS)
                                   .addOrder("createdAt", OrderType.DESC)
                                   .withLimit("1")
                                   .build();
@@ -508,7 +509,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String artifactId = null;
 
     if (artifactStreamAction.getWorkflowType().equals(PIPELINE)) {
-      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), Operator.EQ);
+      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), EQ);
       List<WorkflowExecution> response = workflowExecutionService.listExecutions(pageRequest, false).getResponse();
       if (response.size() == 1 && response.get(0).getExecutionArgs() != null
           && response.get(0).getExecutionArgs().getArtifacts() != null
@@ -517,8 +518,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         artifactId = response.get(0).getExecutionArgs().getArtifacts().get(0).getUuid();
       }
     } else {
-      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), Operator.EQ);
-      pageRequest.addFilter("envId", artifactStreamAction.getEnvId(), Operator.EQ);
+      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), EQ);
+      pageRequest.addFilter("envId", artifactStreamAction.getEnvId(), EQ);
       List<WorkflowExecution> response = workflowExecutionService.listExecutions(pageRequest, false).getResponse();
       if (response.size() == 1) {
         artifactId = response.get(0).getExecutionArgs().getArtifactIdNames().keySet().stream().findFirst().orElse(null);
@@ -653,7 +654,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return (Map<String, String>) list(aPageRequest().addFilter("appId", Operator.EQ, appId).build())
+    return (Map<String, String>) list(aPageRequest().addFilter("appId", EQ, appId).build())
         .getResponse()
         .stream()
         .collect(Collectors.toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
