@@ -5,6 +5,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
+import com.amazonaws.util.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +17,9 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -35,8 +38,20 @@ public class UpgradeServiceImpl implements UpgradeService {
   @Inject private TimeLimiter timeLimiter;
 
   @Override
-  public void doUpgrade(String version, String newVersion) throws IOException, TimeoutException, InterruptedException {
+  public void doUpgrade(InputStream newVersionJarStream, String version, String newVersion)
+      throws IOException, TimeoutException, InterruptedException {
     // TODO - replace run script
+
+    File watcherJarFile = new File("watcher.jar");
+    if (watcherJarFile.exists()) {
+      if (!watcherJarFile.delete()) {
+        logger.error("Could not delete file.");
+      }
+    }
+    if (!watcherJarFile.createNewFile()) {
+      logger.error("Could not create file.");
+    }
+    IOUtils.copy(newVersionJarStream, new FileOutputStream(watcherJarFile));
 
     StartedProcess process = null;
     try {
