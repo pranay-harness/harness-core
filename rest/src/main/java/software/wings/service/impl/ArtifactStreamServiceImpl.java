@@ -469,7 +469,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
           latestArtifactBuildNo, lastDeployedArtifactBuildNo);
       logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
-      triggerStreamAction(latestArtifact, artifactStreamAction);
+      triggerStreamAction(appId, latestArtifact, artifactStreamAction);
     } else {
       logger.info(
           "latest collected artifact build#{}, last successfully deployed artifact build#{} are the same or less. So, not triggering deployment",
@@ -522,37 +522,52 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .forEach(artifactStreamAction -> {
           logger.info("Triggering Post Artifact Collection action for app Id {} and stream Id {}", artifact.getAppId(),
               artifact.getArtifactStreamId());
-          triggerStreamAction(artifact, artifactStreamAction);
+          triggerStreamAction(artifact.getAppId(), artifact, artifactStreamAction);
           logger.info("Post Artifact Collection action triggered");
         });
   }
 
   @Override
-  public WorkflowExecution triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+  public WorkflowExecution triggerStreamAction(
+      String appId, Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    return triggerStreamAction(appId, artifact, artifactStreamAction, null);
+  }
+
+  @Override
+  public WorkflowExecution triggerStreamAction(
+      String appId, Artifact artifact, ArtifactStreamAction artifactStreamAction, Map<String, String> parameters) {
     WorkflowExecution workflowExecution = null;
-    if (artifactFilterMatches(artifact, artifactStreamAction)) {
-      ExecutionArgs executionArgs = new ExecutionArgs();
+    if (!artifactFilterMatches(artifact, artifactStreamAction)) {
+      logger.warn("Skipping execution - no matching artifact: {}", artifact);
+      return workflowExecution;
+    }
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    if (artifact != null) {
       executionArgs.setArtifacts(asList(artifact));
-      executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
-      executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
-      executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
-      if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
-        logger.info("Triggering Workflow execution of appId {}  with workflow id {}", artifact.getAppId(),
-            artifactStreamAction.getWorkflowId());
-        executionArgs.setWorkflowType(ORCHESTRATION);
-        workflowExecution = workflowExecutionService.triggerEnvExecution(
-            artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
-        logger.info("Workflow execution of appId {} with workflow id {} triggered", artifact.getAppId(),
-            artifactStreamAction.getWorkflowId());
-      } else {
-        logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", artifact.getAppId(),
-            artifactStreamAction.getWorkflowId());
-        executionArgs.setWorkflowType(PIPELINE);
-        workflowExecution = workflowExecutionService.triggerPipelineExecution(
-            artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
-        logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered",
-            artifact.getAppId(), artifactStreamAction.getWorkflowId());
-      }
+    }
+    executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
+    executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
+    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
+    if (parameters != null) {
+      executionArgs.setWorkflowVariables(parameters);
+    }
+    if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
+      logger.info("Triggering Workflow execution of appId {}  with workflow id {}", appId,
+          artifactStreamAction.getWorkflowId());
+      executionArgs.setWorkflowType(ORCHESTRATION);
+      workflowExecution =
+          workflowExecutionService.triggerEnvExecution(appId, artifactStreamAction.getEnvId(), executionArgs);
+      logger.info(
+          "Workflow execution of appId {} with workflow id {} triggered", appId, artifactStreamAction.getWorkflowId());
+    } else {
+      logger.info("Triggering Pipeline execution of appId {} with stream pipeline id {}", appId,
+          artifactStreamAction.getWorkflowId());
+      executionArgs.setWorkflowType(PIPELINE);
+      workflowExecution =
+          workflowExecutionService.triggerPipelineExecution(appId, artifactStreamAction.getWorkflowId(), executionArgs);
+      logger.info("Pipeline execution of appId {} of  {} type with stream pipeline id {} triggered", appId,
+          artifactStreamAction.getWorkflowId());
     }
     return workflowExecution;
   }

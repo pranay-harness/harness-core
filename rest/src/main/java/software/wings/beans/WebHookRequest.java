@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.Map;
+
 /**
  * The type Web hook request.
  */
@@ -14,4 +16,5 @@ public class WebHookRequest {
   @NotEmpty private String artifactSource;
   private String buildNumber;
   private String dockerImageTag;
+  private Map<String, String> parameters;
 }
