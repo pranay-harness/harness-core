@@ -71,7 +71,7 @@ public class SettingValidationService {
           ErrorCode.INVALID_ARGUMENT, "args", "The name " + settingAttribute.getName() + " already exists.");
     }
     if (settingValue instanceof GcpConfig) {
-      gcpHelperService.validateCredential(((GcpConfig) settingValue).getServiceAccountKeyFileContent());
+      gcpHelperService.validateCredential(String.valueOf(((GcpConfig) settingValue).getServiceAccountKeyFileContent()));
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());

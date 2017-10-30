@@ -147,7 +147,9 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
-      aSettingAttribute().withValue(GcpConfig.builder().serviceAccountKeyFileContent("keyFileContent").build()).build();
+      aSettingAttribute()
+          .withValue(GcpConfig.builder().serviceAccountKeyFileContent("keyFileContent".toCharArray()).build())
+          .build();
 
   private KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
       aKubernetesReplicationControllerDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();

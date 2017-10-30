@@ -129,7 +129,8 @@ public class SettingResource {
 
     SettingValue value = null;
     if (GCP.name().equals(type)) {
-      value = GcpConfig.builder().serviceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+      value =
+          GcpConfig.builder().serviceAccountKeyFileContent(IOUtils.toString(uploadedInputStream).toCharArray()).build();
     }
     if (null != value) {
       if (value instanceof Encryptable) {
@@ -203,7 +204,7 @@ public class SettingResource {
     String credentials = IOUtils.toString(uploadedInputStream);
     SettingValue value = null;
     if (GCP.name().equals(type) && !isNullOrEmpty(credentials)) {
-      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
+      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials.toCharArray()).build();
     }
     SettingAttribute.Builder settingAttribute =
         aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId);
