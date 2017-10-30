@@ -16,6 +16,7 @@
         <module>api</module>
         <module>serialization-utils</module>
         <module>delegate</module>
+        <module>watcher</module>
         <module>rest-utils</module>
         <module>dbmigrations</module>
         <module>logging</module>

@@ -67,7 +67,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       logger.info("[Old] Upgrade script executed: {}. Waiting for process to start.", process.getProcess().isAlive());
 
       BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
-      if (waitForStringOnStream(reader, "botstarted", 15)) {
+      if (process.getProcess().isAlive() && waitForStringOnStream(reader, "botstarted", 15)) {
         try {
           logger.info("[Old] New delegate process started.");
           if (goaheadFile.createNewFile()) {
@@ -155,15 +155,17 @@ public class UpgradeServiceImpl implements UpgradeService {
                     .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
-      try {
-        if (process.getProcess().isAlive()) {
-          logger.info("[Old] New delegate restarted. Stopping.");
+      if (process.getProcess().isAlive()) {
+        logger.info("[Old] New delegate restarted. Stopping.");
+        try {
           signalService.stop();
-        } else {
-          logger.error("[Old] Failed to restart delegate.");
+        } finally {
+          signalService.resume();
         }
-      } finally {
-        signalService.resume();
+      } else {
+        logger.error("[Old] Failed to restart delegate.");
+        process.getProcess().destroy();
+        process.getProcess().waitFor();
       }
     } catch (Exception e) {
       e.printStackTrace();
