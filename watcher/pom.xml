@@ -18,7 +18,11 @@
             <artifactId>logging</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>rest-utils</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
@@ -38,6 +42,16 @@
             <groupId>org.zeroturnaround</groupId>
             <artifactId>zt-exec</artifactId>
             <version>1.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.18</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
         </dependency>
 
     </dependencies>
