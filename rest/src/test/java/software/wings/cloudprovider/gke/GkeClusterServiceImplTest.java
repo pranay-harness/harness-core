@@ -66,7 +66,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
-          .withValue(GcpConfig.builder().serviceAccountKeyFileContent("{\"project_id\": \"project-a\"}").build())
+          .withValue(
+              GcpConfig.builder().serviceAccountKeyFileContent("{\"project_id\": \"project-a\"}".toCharArray()).build())
           .build();
   private static final String ZONE_CLUSTER = "zone-a/foo-bar";
   private static final ImmutableMap<String, String> CREATE_CLUSTER_PARAMS = ImmutableMap.<String, String>builder()

@@ -33,7 +33,7 @@ public class GcpConfigEncryptionUtil extends WingsBaseTest {
       System.out.println("accountId: " + accountId);
       GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
 
-      System.out.println("value:" + gcpConfig.getServiceAccountKeyFileContent());
+      System.out.println("value:" + String.valueOf(gcpConfig.getServiceAccountKeyFileContent()));
       updated++;
 
       //      wingsPersistence.save(settingAttribute);
