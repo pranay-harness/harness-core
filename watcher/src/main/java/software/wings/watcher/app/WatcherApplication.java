@@ -1,5 +1,7 @@
 package software.wings.watcher.app;
 
+import com.google.common.io.CharStreams;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -10,8 +12,10 @@ import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import software.wings.utils.YamlUtils;
 import software.wings.watcher.service.WatcherService;
 
+import java.io.FileReader;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,8 +44,9 @@ public class WatcherApplication {
   }
 
   public static void main(String... args) throws Exception {
+    String configFile = args[0];
     boolean upgrade = false;
-    if (args.length > 0 && StringUtils.equals(args[0], "upgrade")) {
+    if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
     }
 
@@ -52,11 +57,17 @@ public class WatcherApplication {
     logger.info("Starting Watcher");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     WatcherApplication watcherApplication = new WatcherApplication();
-    watcherApplication.run(upgrade);
+    watcherApplication.run(
+        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), WatcherConfiguration.class), upgrade);
   }
 
-  private void run(boolean upgrade) throws Exception {
-    Injector injector = Guice.createInjector(new WatcherModule());
+  private void run(WatcherConfiguration configuration, boolean upgrade) throws Exception {
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(WatcherConfiguration.class).toInstance(configuration);
+      }
+    }, new WatcherModule());
     WatcherService watcherService = injector.getInstance(WatcherService.class);
     watcherService.run(upgrade);
 
