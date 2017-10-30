@@ -95,7 +95,7 @@
                         </entry>
                         <entry>
                             <key>Application-Version</key>
-                            <value>1.0.10</value>
+                            <value>version=1.0.10</value>
                         </entry>
                         <entry>
                             <key>System-Properties</key>
