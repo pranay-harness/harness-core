@@ -53,6 +53,9 @@ smtp:
 
 logging:
   level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
   appenders:
     - type: console
       threshold: TRACE

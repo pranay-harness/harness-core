@@ -102,11 +102,12 @@ public interface ArtifactStreamService {
   /**
    * Trigger stream action.
    *
+   * @param appId             the appId
    * @param artifact             the artifact
    * @param artifactStreamAction the artifact stream action
    * @return the workflow execution
    */
-  WorkflowExecution triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction);
+  WorkflowExecution triggerStreamAction(String appId, Artifact artifact, ArtifactStreamAction artifactStreamAction);
 
   /**
    * Trigger stream action.
@@ -132,6 +133,9 @@ public interface ArtifactStreamService {
    * @return the artifact stream schema
    */
   List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
+
+  WorkflowExecution triggerStreamAction(
+      String appId, Artifact artifact, ArtifactStreamAction artifactStreamAction, Map<String, String> parameters);
 
   /**
    * Gets build source.

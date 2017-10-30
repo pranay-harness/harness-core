@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
 import org.slf4j.Logger;
@@ -55,11 +54,14 @@ public class WebHookServiceImpl implements WebHookService {
         artifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId, requestBuildNumber);
         if (artifact == null) {
           // do collection and then run
-          logger.error("Artifact not found for webhook request " + webHookRequest);
-          return WebHookResponse.builder().status(ERROR.name()).error("Artifact doesn't exist").build();
+          logger.warn("Artifact not found for webhook request " + webHookRequest);
+
+          // commenting as trigger can happen to collect artifact.
+          // return WebHookResponse.builder().status(ERROR.name()).error("Artifact doesn't exist").build();
         }
       }
-      WorkflowExecution workflowExecution = artifactStreamService.triggerStreamAction(artifact, streamAction);
+      WorkflowExecution workflowExecution =
+          artifactStreamService.triggerStreamAction(appId, artifact, streamAction, webHookRequest.getParameters());
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
