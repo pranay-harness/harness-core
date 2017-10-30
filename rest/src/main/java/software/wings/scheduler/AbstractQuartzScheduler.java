@@ -10,6 +10,7 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,5 +131,15 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
       }
     }
     return false;
+  }
+
+  @Override
+  public Date rescheduleJob(TriggerKey triggerKey, Trigger newTrigger) {
+    try {
+      return scheduler.rescheduleJob(triggerKey, newTrigger);
+    } catch (SchedulerException e) {
+      logger.error("Couldn't reschedule cron for trigger {} with trigger {}", triggerKey, newTrigger);
+    }
+    return null;
   }
 }
