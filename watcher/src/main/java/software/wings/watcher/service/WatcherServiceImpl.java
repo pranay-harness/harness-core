@@ -77,29 +77,33 @@ public class WatcherServiceImpl implements WatcherService {
   public void stop() {}
 
   private void startUpgradeCheck() {
-    upgradeExecutor.scheduleWithFixedDelay(() -> {
-      logger.info("Checking for upgrade");
-      try {
-        String checkLocationKey = watcherConfiguration.getUpgradeCheckLocation();
-        S3Object obj = amazonS3Client.getObject("wingswatchers", checkLocationKey);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-        String[] tokens = reader.readLine().split(" ");
-        String newVersion = tokens[0];
-        String version = getVersion();
-        boolean upgrade = !StringUtils.equals(version, newVersion);
-        if (upgrade) {
-          logger.info("[Old] Upgrading watcher.");
-          String newVersionJarKey = tokens[1];
-          S3Object newVersionJarObj = amazonS3Client.getObject("wingswatchers", newVersionJarKey);
+    upgradeExecutor.scheduleWithFixedDelay(
+        ()
+            -> {
+          logger.info("Checking for upgrade");
+          try {
+            String checkLocationKey = watcherConfiguration.getUpgradeCheckLocation();
+            S3Object obj = amazonS3Client.getObject("wingswatchers", checkLocationKey);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
+            String[] tokens = reader.readLine().split(" ");
+            String newVersion = tokens[0];
+            String version = getVersion();
+            boolean upgrade = !StringUtils.equals(version, newVersion);
+            if (upgrade) {
+              logger.info("[Old] Upgrading watcher.");
+              String newVersionJarKey = tokens[1];
+              S3Object newVersionJarObj = amazonS3Client.getObject("wingswatchers", newVersionJarKey);
 
-          upgradeService.doUpgrade(newVersionJarObj.getObjectContent(), getVersion(), newVersion);
-        } else {
-          logger.info("Watcher up to date");
-        }
-      } catch (Exception e) {
-        logger.error("[Old] Exception while checking for upgrade", e);
-      }
-    }, 0, watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
+              upgradeService.doUpgrade(newVersionJarObj.getObjectContent(), getVersion(), newVersion);
+            } else {
+              logger.info("Watcher up to date");
+            }
+          } catch (Exception e) {
+            logger.error("[Old] Exception while checking for upgrade", e);
+          }
+        },
+        watcherConfiguration.getUpgradeCheckIntervalSeconds(), watcherConfiguration.getUpgradeCheckIntervalSeconds(),
+        TimeUnit.SECONDS);
   }
 
   private void startWatcher() {
