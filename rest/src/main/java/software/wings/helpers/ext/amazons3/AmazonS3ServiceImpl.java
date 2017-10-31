@@ -18,6 +18,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.waitnotify.ListNotifyResponseData;
 
@@ -40,16 +41,17 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Override
-  public Map<String, String> getBuckets(AwsConfig awsConfig) {
-    List<Bucket> bucketList = awsHelperService.listS3Buckets(awsConfig);
+  public Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    List<Bucket> bucketList = awsHelperService.listS3Buckets(awsConfig, encryptionDetails);
     return bucketList.stream().collect(Collectors.toMap(Bucket::getName, Bucket::getName, (a, b) -> b));
   }
 
   @Override
-  public List<String> getArtifactPaths(AwsConfig awsConfig, String bucketName) {
+  public List<String> getArtifactPaths(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
     listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
-    ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, listObjectsV2Request);
+    ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
     List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
     // in descending order. The most recent one comes first
     Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
@@ -61,27 +63,28 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   @Override
-  public List<BuildDetails> getArtifactsBuildDetails(
-      AwsConfig awsConfig, String bucketName, List<String> artifactPaths, boolean isExpression) {
-    boolean versioningEnabledForBucket = awsHelperService.isVersioningEnabledForBucket(awsConfig, bucketName);
+  public List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, List<String> artifactPaths, boolean isExpression) {
+    boolean versioningEnabledForBucket =
+        awsHelperService.isVersioningEnabledForBucket(awsConfig, encryptionDetails, bucketName);
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     for (String artifactPath : artifactPaths) {
-      List<BuildDetails> buildDetailsListForArtifactPath =
-          getArtifactsBuildDetails(awsConfig, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
+      List<BuildDetails> buildDetailsListForArtifactPath = getArtifactsBuildDetails(
+          awsConfig, encryptionDetails, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
       buildDetailsList.addAll(buildDetailsListForArtifactPath);
     }
     return buildDetailsList;
   }
 
-  private List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, String bucketName, String artifactPath,
-      boolean isExpression, boolean versioningEnabledForBucket) {
+  private List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     if (isExpression) {
       Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
       ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
       listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
-      ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, listObjectsV2Request);
+      ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
       List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
       // in descending order. The most recent one comes first
       Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
@@ -93,13 +96,14 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
               .map(S3ObjectSummary::getKey)
               .collect(Collectors.toList());
       for (String key : keyList) {
-        BuildDetails artifactMetadata = getArtifactBuildDetails(awsConfig, bucketName, key, versioningEnabledForBucket);
+        BuildDetails artifactMetadata =
+            getArtifactBuildDetails(awsConfig, encryptionDetails, bucketName, key, versioningEnabledForBucket);
         buildDetailsList.add(artifactMetadata);
       }
 
     } else {
       BuildDetails artifactMetadata =
-          getArtifactBuildDetails(awsConfig, bucketName, artifactPath, versioningEnabledForBucket);
+          getArtifactBuildDetails(awsConfig, encryptionDetails, bucketName, artifactPath, versioningEnabledForBucket);
       buildDetailsList.add(artifactMetadata);
     }
 
@@ -107,24 +111,26 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   @Override
-  public ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, String bucketName, List<String> artifactPaths,
-      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException {
+  public ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, List<String> artifactPaths, String delegateId, String taskId, String accountId)
+      throws IOException, URISyntaxException {
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     for (String artifactPath : artifactPaths) {
-      downloadArtifactsUsingFilter(awsConfig, bucketName, artifactPath, res, delegateId, taskId, accountId);
+      downloadArtifactsUsingFilter(
+          awsConfig, encryptionDetails, bucketName, artifactPath, res, delegateId, taskId, accountId);
     }
     return res;
   }
 
-  private void downloadArtifactsUsingFilter(AwsConfig awsConfig, String bucketName, String artifactpathRegex,
-      ListNotifyResponseData res, String delegateId, String taskId, String accountId)
-      throws IOException, URISyntaxException {
+  private void downloadArtifactsUsingFilter(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, String artifactpathRegex, ListNotifyResponseData res, String delegateId, String taskId,
+      String accountId) throws IOException, URISyntaxException {
     Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
     ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
     listObjectsV2Request.withBucketName(bucketName).withMaxKeys(500);
-    ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, listObjectsV2Request);
+    ListObjectsV2Result result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
     List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
     // in descending order. The most recent one comes first
     Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
@@ -139,14 +145,16 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     // We are not using stream here since addDataToResponse throws a bunch of exceptions and we want to throw them back
     // to the caller.
     for (String objectKey : objectKeyList) {
-      Pair<String, InputStream> stringInputStreamPair = downloadArtifact(awsConfig, bucketName, objectKey);
+      Pair<String, InputStream> stringInputStreamPair =
+          downloadArtifact(awsConfig, encryptionDetails, bucketName, objectKey);
       artifactCollectionTaskHelper.addDataToResponse(
           stringInputStreamPair, artifactpathRegex, res, delegateId, taskId, accountId);
     }
   }
 
-  private Pair<String, InputStream> downloadArtifact(AwsConfig awsConfig, String bucketName, String key) {
-    S3Object object = awsHelperService.getObjectFromS3(awsConfig, bucketName, key);
+  private Pair<String, InputStream> downloadArtifact(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
+    S3Object object = awsHelperService.getObjectFromS3(awsConfig, encryptionDetails, bucketName, key);
     if (object != null) {
       return Pair.of(object.getKey(), object.getObjectContent());
     }
@@ -154,14 +162,15 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   @Override
-  public BuildDetails getArtifactBuildDetails(
-      AwsConfig awsConfig, String bucketName, String key, boolean versioningEnabledForBucket) {
+  public BuildDetails getArtifactBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, String key, boolean versioningEnabledForBucket) {
     Map<String, String> map = new HashMap<>();
     String versionId = null;
     String resourceUrl =
         new StringBuilder("https://s3.amazonaws.com/").append(bucketName).append("/").append(key).toString();
     if (versioningEnabledForBucket) {
-      ObjectMetadata objectMetadata = awsHelperService.getObjectMetadataFromS3(awsConfig, bucketName, key);
+      ObjectMetadata objectMetadata =
+          awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, key);
 
       if (objectMetadata != null) {
         versionId = key + ":" + objectMetadata.getVersionId();

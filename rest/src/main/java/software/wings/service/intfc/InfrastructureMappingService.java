@@ -107,9 +107,10 @@ public interface InfrastructureMappingService {
    *
    * @param appId              the app id
    * @param infraMappingId     the infra mapping id
+   * @param workflowId
    * @return the list
    */
-  List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId);
+  List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowId);
 
   /**
    * List types map.
@@ -126,11 +127,11 @@ public interface InfrastructureMappingService {
    *
    * @param appId                          the app id
    * @param infraMappingId                 the infra mapping id
-   * @param selectionParams the service instance selection params
-   * @return the list
+   * @param workflowId
+   *@param selectionParams the service instance selection params  @return the list
    */
   List<ServiceInstance> selectServiceInstances(
-      String appId, String infraMappingId, ServiceInstanceSelectionParams selectionParams);
+      String appId, String infraMappingId, String workflowId, ServiceInstanceSelectionParams selectionParams);
 
   /**
    * List clusters list.

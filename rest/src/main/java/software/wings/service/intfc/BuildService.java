@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 
 import java.util.Collection;
@@ -21,12 +22,13 @@ public interface BuildService<T> {
   /**
    * Gets builds.
    *
-   * @param appId                     the app id
+   * @param appId                    the app id
    * @param artifactStreamAttributes the build service request params
-   * @param config                    the jenkins config
+   * @param config                   the jenkins config
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config);
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
+      List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Gets jobs.
@@ -35,27 +37,29 @@ public interface BuildService<T> {
    * @param parentJobName parent job name if any
    * @return the jobs
    */
-  List<JobDetails> getJobs(T jenkinsConfig, Optional<String> parentJobName);
+  List<JobDetails> getJobs(
+      T jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName);
 
   /**
    * Gets artifact paths.
    *
    * @param jobName the job name
-   * @param  groupId the Group Id
+   * @param groupId the Group Id
    * @param config  the jenkins config
    * @return the artifact paths
    */
-  List<String> getArtifactPaths(String jobName, String groupId, T config);
+  List<String> getArtifactPaths(String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Gets last successful build.
    *
-   * @param appId                     the app id
+   * @param appId                    the app id
    * @param artifactStreamAttributes the build service request params
-   * @param config                    the jenkins config
+   * @param config                   the jenkins config
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config);
+  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config,
+      List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Gets plans.
@@ -63,7 +67,7 @@ public interface BuildService<T> {
    * @param config the jenkins config
    * @return the plans
    */
-  Map<String, String> getPlans(T config);
+  Map<String, String> getPlans(T config, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Gets plans.
@@ -72,19 +76,21 @@ public interface BuildService<T> {
    * @param config
    * @return the plans
    */
-  Map<String, String> getPlans(T config, ArtifactType artifactType, String repositoryType);
+  Map<String, String> getPlans(
+      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType);
 
   /**
    * Gets group Id paths.
    *
-   * @param repoType   The repo type
-   * @param config  the config
+   * @param repoType The repo type
+   * @param config   the config
    * @return the groupId paths
    */
-  List<String> getGroupIds(String repoType, T config);
+  List<String> getGroupIds(String repoType, T config, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Validates Artifact Server
+   *
    * @param config
    * @throws software.wings.exception.WingsException if not valid
    */
@@ -92,10 +98,12 @@ public interface BuildService<T> {
 
   /**
    * Validates Artifact Stream
+   *
    * @param artifactStreamAttributes
    * @throws software.wings.exception.WingsException if not valid
    */
-  boolean validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
+  boolean validateArtifactSource(
+      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
 
   default List
     <JobDetails> wrapJobNameWithJobDetails(Collection<String> jobNames) {

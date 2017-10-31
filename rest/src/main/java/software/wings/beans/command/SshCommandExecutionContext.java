@@ -30,7 +30,7 @@ public class SshCommandExecutionContext extends CommandExecutionContext {
 
   public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
     configFileMetaData.setDestinationDirectoryPath(evaluateVariable(configFileMetaData.getDestinationDirectoryPath()));
-    return sshExecutor.copyGridFsFiles(configFileMetaData);
+    return sshExecutor.copyConfigFiles(configFileMetaData);
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {

@@ -54,35 +54,35 @@ public class BambooBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetBuilds() {
-    when(bambooService.getBuilds(bambooConfig, BUILD_JOB_NAME, 50))
+    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, 50))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));
     List<BuildDetails> builds =
-        bambooBuildService.getBuilds(APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig);
+        bambooBuildService.getBuilds(APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig, null);
     assertThat(builds).hasSize(2).extracting(BuildDetails::getNumber).containsExactly("10", "9");
   }
 
   @Test
   public void shouldGetPlans() {
-    when(bambooService.getPlanKeys(bambooConfig))
+    when(bambooService.getPlanKeys(bambooConfig, null))
         .thenReturn(ImmutableMap.of("PlanAKey", "PlanAName", "PlanBKey", "PlanBName"));
-    List<JobDetails> jobs = bambooBuildService.getJobs(bambooConfig, Optional.empty());
+    List<JobDetails> jobs = bambooBuildService.getJobs(bambooConfig, null, Optional.empty());
     List<String> jobNames = bambooBuildService.extractJobNameFromJobDetails(jobs);
     assertThat(jobNames).hasSize(2).containsExactlyInAnyOrder("PlanAKey", "PlanBKey");
   }
 
   @Test
   public void shouldGetArtifactPaths() {
-    List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig);
+    List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig, null);
     assertThat(artifactPaths.size()).isEqualTo(0);
   }
 
   @Test
   public void shouldGetLastSuccessfulBuild() {
-    when(bambooService.getLastSuccessfulBuild(bambooConfig, BUILD_JOB_NAME))
+    when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
         .thenReturn(aBuildDetails().withNumber("10").build());
     BuildDetails lastSuccessfulBuild = bambooBuildService.getLastSuccessfulBuild(
-        APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig);
+        APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig, null);
     assertThat(lastSuccessfulBuild.getNumber()).isEqualTo("10");
   }
 

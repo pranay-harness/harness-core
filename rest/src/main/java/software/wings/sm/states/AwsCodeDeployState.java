@@ -6,7 +6,6 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -24,7 +23,9 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -45,6 +46,7 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.common.Constants;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -52,6 +54,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -117,6 +120,8 @@ public class AwsCodeDeployState extends State {
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
 
+  @Inject @Transient protected transient KmsService kmsService;
+
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
   }
@@ -146,29 +151,34 @@ public class AwsCodeDeployState extends State {
             app.getUuid(), phaseElement.getInfraMappingId());
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    List<EncryptedDataDetail> encryptedDataDetails =
+        kmsService.getEncryptionDetails((Encryptable) cloudProviderSetting.getValue(), context.getWorkflowId());
     String region = infrastructureMapping.getRegion();
 
-    Activity.Builder activityBuilder = anActivity()
-                                           .withAppId(app.getUuid())
-                                           .withApplicationName(app.getName())
-                                           .withEnvironmentId(envId)
-                                           .withEnvironmentName(env.getName())
-                                           .withEnvironmentType(env.getEnvironmentType())
-                                           .withServiceId(service.getUuid())
-                                           .withServiceName(service.getName())
-                                           .withCommandName(command.getName())
-                                           .withType(Type.Command)
-                                           .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                                           .withWorkflowType(context.getWorkflowType())
-                                           .withWorkflowExecutionName(context.getWorkflowExecutionName())
-                                           .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                           .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                           .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
-                                               app.getUuid(), serviceId, envId, command.getName()))
-                                           .withCommandType(command.getCommandUnitType().name())
-                                           .withServiceVariables(context.getServiceVariables());
+    Activity act = Activity.builder()
+                       .applicationName(app.getName())
+                       .environmentId(envId)
+                       .environmentName(env.getName())
+                       .environmentType(env.getEnvironmentType())
+                       .serviceId(service.getUuid())
+                       .serviceName(service.getName())
+                       .commandName(command.getName())
+                       .type(Type.Command)
+                       .workflowExecutionId(context.getWorkflowExecutionId())
+                       .workflowId(context.getWorkflowId())
+                       .workflowType(context.getWorkflowType())
+                       .workflowExecutionName(context.getWorkflowExecutionName())
+                       .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                       .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                       .commandUnits(serviceResourceService.getFlattenCommandUnitList(
+                           app.getUuid(), serviceId, envId, command.getName()))
+                       .commandType(command.getCommandUnitType().name())
+                       .serviceVariables(context.getServiceVariables())
+                       .status(ExecutionStatus.RUNNING)
+                       .build();
 
-    Activity activity = activityService.save(activityBuilder.build());
+    act.setAppId(app.getUuid());
+    Activity activity = activityService.save(act);
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -176,8 +186,8 @@ public class AwsCodeDeployState extends State {
         .withCommandName(getCommandName())
         .withActivityId(activity.getUuid());
 
-    CodeDeployParams codeDeployParams =
-        prepareCodeDeployParams(context, infrastructureMapping, cloudProviderSetting, executionDataBuilder);
+    CodeDeployParams codeDeployParams = prepareCodeDeployParams(
+        context, infrastructureMapping, cloudProviderSetting, encryptedDataDetails, executionDataBuilder);
 
     CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .withAccountId(app.getAccountId())
@@ -187,6 +197,7 @@ public class AwsCodeDeployState extends State {
                                                           .withRegion(region)
                                                           .withActivityId(activity.getUuid())
                                                           .withCloudProviderSetting(cloudProviderSetting)
+                                                          .withCloudProviderCredentials(encryptedDataDetails)
                                                           .withCodeDeployParams(codeDeployParams)
                                                           .build();
 
@@ -211,7 +222,7 @@ public class AwsCodeDeployState extends State {
 
   protected CodeDeployParams prepareCodeDeployParams(ExecutionContext context,
       CodeDeployInfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting,
-      CommandStateExecutionData.Builder executionDataBuilder) {
+      List<EncryptedDataDetail> encryptedDataDetails, Builder executionDataBuilder) {
     String key = context.renderExpression(this.key);
     String bucket = context.renderExpression(this.bucket);
 
@@ -231,7 +242,8 @@ public class AwsCodeDeployState extends State {
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
     RevisionLocation revisionLocation = awsCodeDeployService.getApplicationRevisionList(codeDeployParams.getRegion(),
-        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName(), cloudProviderSetting);
+        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName(), cloudProviderSetting,
+        encryptedDataDetails);
     if (revisionLocation != null && revisionLocation.getS3Location() != null) {
       S3Location s3Location = revisionLocation.getS3Location();
       CodeDeployParams oldCodeDeployParams =

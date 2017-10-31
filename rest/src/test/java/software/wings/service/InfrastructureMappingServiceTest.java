@@ -6,9 +6,12 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
@@ -74,9 +77,11 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -99,6 +104,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
   @Mock private WorkflowService workflowService;
   @Mock private FieldEnd end;
+  @Mock private KmsService kmsService;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -110,6 +116,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(infrastructureMappingService, "kmsService", kmsService);
   }
 
   @Test
@@ -335,7 +343,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             aPageResponse().withResponse(asList(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build())).build());
 
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-        APP_ID, INFRA_MAPPING_ID, aServiceInstanceSelectionParams().withCount(Integer.MAX_VALUE).build());
+        APP_ID, INFRA_MAPPING_ID, null, aServiceInstanceSelectionParams().withCount(Integer.MAX_VALUE).build());
 
     assertThat(serviceInstances).hasSize(1);
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
@@ -365,7 +373,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     List<Host> newHosts = singletonList(aHost().withEc2Instance(new Instance().withPrivateDnsName(HOST_NAME)).build());
 
-    when(awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>()))
+    when(awsInfrastructureProvider.listHosts(
+             awsInfrastructureMapping, computeProviderSetting, Collections.emptyList(), new PageRequest<>()))
         .thenReturn(aPageResponse().withResponse(newHosts).build());
 
     when(awsInfrastructureProvider.saveHost(newHosts.get(0))).thenReturn(newHosts.get(0));
@@ -379,12 +388,13 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             aPageResponse().withResponse(asList(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build())).build());
 
     List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-        APP_ID, INFRA_MAPPING_ID, aServiceInstanceSelectionParams().withCount(Integer.MAX_VALUE).build());
+        APP_ID, INFRA_MAPPING_ID, null, aServiceInstanceSelectionParams().withCount(Integer.MAX_VALUE).build());
 
     assertThat(serviceInstances).hasSize(1);
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>());
+    verify(awsInfrastructureProvider)
+        .listHosts(awsInfrastructureMapping, computeProviderSetting, Collections.emptyList(), new PageRequest<>());
     verify(awsInfrastructureProvider).saveHost(newHosts.get(0));
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, awsInfrastructureMapping, newHosts);
@@ -437,7 +447,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
-    when(awsInfrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>()))
+    when(awsInfrastructureProvider.listHosts(
+             awsInfrastructureMapping, computeProviderSetting, Collections.emptyList(), new PageRequest<>()))
         .thenReturn(
             aPageResponse()
                 .withResponse(asList(aHost().withHostName("host1").build(),
@@ -461,7 +472,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(hostNames).hasSize(4).containsExactly("host1", "host2", "host3", "host4 [Host 4]");
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).listHosts(awsInfrastructureMapping, computeProviderSetting, new PageRequest<>());
+    verify(awsInfrastructureProvider)
+        .listHosts(awsInfrastructureMapping, computeProviderSetting, Collections.emptyList(), new PageRequest<>());
   }
 
   @Test
@@ -491,7 +503,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     Host provisionedHost = aHost().withHostName(HOST_NAME).build();
     when(awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-             awsInfrastructureMapping, computeProviderSetting))
+             null, awsInfrastructureMapping, computeProviderSetting))
         .thenReturn(singletonList(provisionedHost));
 
     when(awsInfrastructureProvider.saveHost(provisionedHost)).thenReturn(provisionedHost);
@@ -505,14 +517,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             aPageResponse().withResponse(asList(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build())).build());
 
     List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(APP_ID, INFRA_MAPPING_ID,
+        infrastructureMappingService.selectServiceInstances(APP_ID, INFRA_MAPPING_ID, null,
             aServiceInstanceSelectionParams().withCount(1).withExcludedServiceInstanceIds(emptyList()).build());
 
     assertThat(serviceInstances).hasSize(1);
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider)
-        .maybeSetAutoScaleCapacityAndGetHosts(awsInfrastructureMapping, computeProviderSetting);
+        .maybeSetAutoScaleCapacityAndGetHosts(null, awsInfrastructureMapping, computeProviderSetting);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)

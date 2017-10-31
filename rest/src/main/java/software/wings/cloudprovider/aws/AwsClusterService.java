@@ -8,6 +8,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -18,33 +19,37 @@ public interface AwsClusterService {
   /**
    * Create cluster.
    */
-  void createCluster(String region, SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration);
+  void createCluster(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, ClusterConfiguration clusterConfiguration);
 
   /**
    * Resize cluster.
    */
-  List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, int previousCount, int desiredSize, int serviceSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback);
+  List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
+      int desiredSize, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   /**
    * Delete service.
    */
-  void deleteService(String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  void deleteService(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName);
 
   /**
    * Gets services.
    */
-  List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName);
+  List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName);
 
   /**
    * Create service.
    */
-  void createService(String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
+  void createService(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, CreateServiceRequest clusterConfiguration);
 
   /**
    * Create task task definition.
    */
-  TaskDefinition createTask(
-      String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
+  TaskDefinition createTask(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 }

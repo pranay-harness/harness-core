@@ -6,12 +6,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
-import software.wings.api.LoadBalancer;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
@@ -33,7 +31,6 @@ import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
-import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.bamboo.BambooService;
@@ -127,7 +124,10 @@ import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.EcsContainerSyncImpl;
 import software.wings.service.impl.instance.sync.KubernetesContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
+import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
+import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
 import software.wings.service.impl.yaml.ServiceYamlResourceServiceImpl;
@@ -171,7 +171,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
-import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NexusBuildService;
@@ -201,6 +200,10 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.ServiceYamlResourceService;
@@ -328,6 +331,9 @@ public class WingsModule extends AbstractModule {
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(AlertService.class).to(AlertServiceImpl.class);
+    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(KmsDelegateService.class).to(KmsDelegateServiceImpl.class);
+    bind(SecretManager.class).to(SecretManagerImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -353,8 +359,6 @@ public class WingsModule extends AbstractModule {
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
-    Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
-    loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
 
     bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class);

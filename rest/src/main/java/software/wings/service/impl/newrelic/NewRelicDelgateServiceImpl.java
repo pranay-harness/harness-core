@@ -1,7 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import com.google.common.collect.Sets;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang.StringUtils;
@@ -15,7 +13,9 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.NewRelicConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -23,12 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -38,19 +34,21 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
 
   private static final Logger logger = LoggerFactory.getLogger(NewRelicDelgateServiceImpl.class);
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public void validateConfig(NewRelicConfig newRelicConfig) throws IOException {
-    getAllApplications(newRelicConfig);
+    getAllApplications(newRelicConfig, Collections.emptyList());
   }
 
   @Override
-  public List<NewRelicApplication> getAllApplications(NewRelicConfig newRelicConfig) throws IOException {
+  public List<NewRelicApplication> getAllApplications(
+      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
     List<NewRelicApplication> rv = new ArrayList<>();
     int pageCount = 1;
     while (true) {
       final Call<NewRelicApplicationsResponse> request =
-          getNewRelicRestClient(newRelicConfig).listAllApplications(pageCount);
+          getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAllApplications(pageCount);
       final Response<NewRelicApplicationsResponse> response = request.execute();
       if (response.isSuccessful()) {
         List<NewRelicApplication> applications = response.body().getApplications();
@@ -71,10 +69,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public List<NewRelicApplicationInstance> getApplicationInstances(
-      NewRelicConfig newRelicConfig, long newRelicApplicationId) throws IOException {
+  public List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId) throws IOException {
     final Call<NewRelicApplicationInstancesResponse> request =
-        getNewRelicRestClient(newRelicConfig).listAppInstances(newRelicApplicationId);
+        getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAppInstances(newRelicApplicationId);
     final Response<NewRelicApplicationInstancesResponse> response = request.execute();
     if (response.isSuccessful()) {
       return response.body().getApplication_instances();
@@ -85,9 +83,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig, long newRelicAppId)
-      throws IOException {
-    final Call<NewRelicMetricResponse> request = getNewRelicRestClient(newRelicConfig).listMetricNames(newRelicAppId);
+  public Collection<NewRelicMetric> getMetricsNameToCollect(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId) throws IOException {
+    final Call<NewRelicMetricResponse> request =
+        getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
     final Response<NewRelicMetricResponse> response = request.execute();
     if (response.isSuccessful()) {
       List<NewRelicMetric> metrics = response.body().getMetrics();
@@ -108,8 +107,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, long newRelicApplicationId, long instanceId,
-      Collection<String> metricNames, long fromTime, long toTime) throws IOException {
+  public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      long newRelicApplicationId, long instanceId, Collection<String> metricNames, long fromTime, long toTime)
+      throws IOException {
     String metricsToCollectString = "";
     for (String metricName : metricNames) {
       metricsToCollectString += "names[]=" + metricName + "&";
@@ -122,7 +122,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId
         + "/metrics/data.json?" + metricsToCollectString;
     final Call<NewRelicMetricDataResponse> request =
-        getNewRelicRestClient(newRelicConfig)
+        getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
             .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
     final Response<NewRelicMetricDataResponse> response = request.execute();
     if (response.isSuccessful()) {
@@ -133,7 +133,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     throw new WingsException(errorObject.getJSONObject("error").getString("title"));
   }
 
-  private NewRelicRestClient getNewRelicRestClient(final NewRelicConfig newRelicConfig) {
+  private NewRelicRestClient getNewRelicRestClient(
+      final NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
     OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();

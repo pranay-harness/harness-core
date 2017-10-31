@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,8 @@ public interface KubernetesContainerService {
    * @param definition       the definition
    * @return the replication controller
    */
-  ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition);
+  ReplicationController createController(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, ReplicationController definition);
 
   /**
    * Gets a replication controller.
@@ -33,16 +35,20 @@ public interface KubernetesContainerService {
    * @param name             the name
    * @return the controller
    */
-  ReplicationController getController(KubernetesConfig kubernetesConfig, String name);
+  ReplicationController getController(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  ReplicationControllerList getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
+  ReplicationControllerList getControllers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+
   /**
    * Lists replication controllers.
    *
    * @param kubernetesConfig the kubernetes config
    * @return the replication controller list
    */
-  ReplicationControllerList listControllers(KubernetesConfig kubernetesConfig);
+  ReplicationControllerList listControllers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Deletes a replication controller.
@@ -50,7 +56,7 @@ public interface KubernetesContainerService {
    * @param kubernetesConfig the kubernetes config
    * @param name             the name
    */
-  void deleteController(KubernetesConfig kubernetesConfig, String name);
+  void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   /**
    * Scales controller to specified number of nodes.
@@ -58,13 +64,14 @@ public interface KubernetesContainerService {
    * @param kubernetesConfig          the kubernetes config
    * @param clusterName               the cluster name
    * @param replicationControllerName the replication controller name
-   * @param previousCount                    the previous count
-   * @param count                    the count
+   * @param previousCount             the previous count
+   * @param count                     the count
    * @param executionLogCallback      the execution log callback
    * @return the controller pod count
    */
-  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
-      String replicationControllerName, int previousCount, int count, ExecutionLogCallback executionLogCallback);
+  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String replicationControllerName,
+      int previousCount, int count, ExecutionLogCallback executionLogCallback);
 
   /**
    * Gets the pod count of a replication controller.
@@ -73,7 +80,8 @@ public interface KubernetesContainerService {
    * @param name             the name
    * @return the controller pod count
    */
-  int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
+  int getControllerPodCount(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   /**
    * Creates a service.
@@ -82,7 +90,8 @@ public interface KubernetesContainerService {
    * @param definition       the definition
    * @return the service
    */
-  Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
+  Service createOrReplaceService(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
 
   /**
    * Gets a service.
@@ -91,9 +100,10 @@ public interface KubernetesContainerService {
    * @param name             the name
    * @return the service
    */
-  Service getService(KubernetesConfig kubernetesConfig, String name);
+  Service getService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  ServiceList getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels);
+  ServiceList getServices(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 
   /**
    * Lists services.
@@ -101,7 +111,7 @@ public interface KubernetesContainerService {
    * @param kubernetesConfig the kubernetes config
    * @return the service list
    */
-  ServiceList listServices(KubernetesConfig kubernetesConfig);
+  ServiceList listServices(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Deletes a service.
@@ -109,9 +119,10 @@ public interface KubernetesContainerService {
    * @param kubernetesConfig the kubernetes config
    * @param name             the name
    */
-  void deleteService(KubernetesConfig kubernetesConfig, String name);
+  void deleteService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig);
+  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
   /**
    * Gets secret.
    *
@@ -119,7 +130,8 @@ public interface KubernetesContainerService {
    * @param secretName       the secret name
    * @return the secret
    */
-  Secret getSecret(KubernetesConfig kubernetesConfig, String secretName);
+  Secret getSecret(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName);
 
   /**
    * Create secret secret.
@@ -128,7 +140,9 @@ public interface KubernetesContainerService {
    * @param secret           the secret
    * @return the secret
    */
-  Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret);
+  Secret createOrReplaceSecret(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Secret secret);
 
-  PodList getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels);
+  PodList getPods(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
 }

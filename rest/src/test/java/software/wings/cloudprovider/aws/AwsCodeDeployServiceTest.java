@@ -7,12 +7,14 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.service.impl.AwsHelperService;
 
+import java.util.Collections;
 import javax.inject.Inject;
 
 /**
@@ -33,17 +35,16 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListApplication() {
-    awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider).forEach(application -> {
-      System.out.println(application.toString());
-    });
+    awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
+        .forEach(application -> { System.out.println(application.toString()); });
 
-    awsCodeDeployService.listDeploymentGroup(Regions.US_EAST_1.getName(), "todolistwar", cloudProvider).forEach(dg -> {
-      System.out.println(dg.toString());
-    });
+    awsCodeDeployService
+        .listDeploymentGroup(Regions.US_EAST_1.getName(), "todolistwar", cloudProvider, Collections.emptyList())
+        .forEach(dg -> { System.out.println(dg.toString()); });
 
-    awsCodeDeployService.listDeploymentConfiguration(Regions.US_EAST_1.getName(), cloudProvider).forEach(dc -> {
-      System.out.println(dc.toString());
-    });
+    awsCodeDeployService
+        .listDeploymentConfiguration(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
+        .forEach(dc -> { System.out.println(dc.toString()); });
 
     CreateDeploymentRequest createDeploymentRequest =
         new CreateDeploymentRequest()
@@ -55,15 +56,16 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
                     .withBucket("harnessapps")
                     .withBundleType("zip")
                     .withKey("todolist_war/19/codedeploysample.zip")));
-    CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
-        Regions.US_EAST_1.getName(), cloudProvider, createDeploymentRequest, new ExecutionLogCallback());
+    CodeDeployDeploymentInfo codeDeployDeploymentInfo =
+        awsCodeDeployService.deployApplication(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList(),
+            createDeploymentRequest, new ExecutionLogCallback());
     System.out.println(codeDeployDeploymentInfo);
   }
 
   @Test
   public void shouldListApplicationRevisions() {
     System.out.println(awsCodeDeployService.getApplicationRevisionList(
-        Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG", cloudProvider));
+        Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG", cloudProvider, Collections.emptyList()));
   }
 
   //    CreateDeploymentResult srinivasApplication = codeDeployClient

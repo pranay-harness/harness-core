@@ -36,6 +36,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.rules.Integration;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Integration
@@ -93,7 +94,7 @@ public class KubernetesYamlIntegrationTest {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
-    List<String> clusters = gkeClusterService.listClusters(COMPUTE_PROVIDER_SETTING);
+    List<String> clusters = gkeClusterService.listClusters(COMPUTE_PROVIDER_SETTING, Collections.emptyList());
     logger.info("Available clusters: {}", clusters);
 
     //    KubernetesConfig config = gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER,
@@ -104,13 +105,14 @@ public class KubernetesYamlIntegrationTest {
     //            .put("masterPwd", "foo!!bar$$")
     //            .build());
 
-    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "default");
+    KubernetesConfig config =
+        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
 
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 4, 8);
     //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, false, 4, 8);
 
     NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null);
+        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
     logger.info("Autoscale setting: {}", autoscaling);
 
     //    kubernetesService.cleanup(config);
@@ -161,7 +163,8 @@ public class KubernetesYamlIntegrationTest {
 
     String rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
-      kubernetesService.createController(config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+      kubernetesService.createController(
+          config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -188,7 +191,8 @@ public class KubernetesYamlIntegrationTest {
         + "    app: \"testApp\"\n"
         + "    tier: \"backend\"\n";
     try {
-      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceService(
+          config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -237,7 +241,8 @@ public class KubernetesYamlIntegrationTest {
         + "      volumes: []\n";
     rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
-      kubernetesService.createController(config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+      kubernetesService.createController(
+          config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -265,29 +270,31 @@ public class KubernetesYamlIntegrationTest {
         + "    tier: \"backend\"\n"
         + "  type: \"LoadBalancer\"";
     try {
-      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceService(
+          config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       e.printStackTrace();
     }
 
-    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
+    kubernetesService.setControllerPodCount(
+        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, new ExecutionLogCallback());
 
-    int backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
-    int frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");
+    int backendCount = kubernetesService.getControllerPodCount(config, Collections.emptyList(), "backend-ctrl");
+    int frontendCount = kubernetesService.getControllerPodCount(config, Collections.emptyList(), "frontend-ctrl");
     logger.info("Controller backend-ctrl has {} instances", backendCount);
     logger.info("Controller frontend-ctrl has {} instances", frontendCount);
 
-    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
 
-    kubernetesService.deleteService(config, "frontend-service");
-    kubernetesService.deleteService(config, "backend-service");
+    kubernetesService.deleteService(config, Collections.emptyList(), "frontend-service");
+    kubernetesService.deleteService(config, Collections.emptyList(), "backend-service");
 
-    kubernetesService.deleteController(config, "frontend-ctrl");
-    kubernetesService.deleteController(config, "backend-ctrl");
+    kubernetesService.deleteController(config, Collections.emptyList(), "frontend-ctrl");
+    kubernetesService.deleteController(config, Collections.emptyList(), "backend-ctrl");
 
-    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
 
     //    gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
   }

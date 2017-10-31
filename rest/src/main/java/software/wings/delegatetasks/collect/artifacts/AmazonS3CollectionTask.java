@@ -7,6 +7,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -33,8 +34,8 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNot
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
     try {
-      return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
-          (List<String>) parameters[4]);
+      return run((AwsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+          (List<String>) parameters[3]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting S3 artifacts", e);
       return new ListNotifyResponseData();
@@ -42,14 +43,13 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask<ListNot
   }
 
   public ListNotifyResponseData run(
-      String accountId, String accessKey, char[] secretKey, String bucketName, List<String> artifactPaths) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, List<String> artifactPaths) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
-      AwsConfig awsConfig = AwsConfig.builder().accountId(accountId).accessKey(accessKey).secretKey(secretKey).build();
       amazonS3Service.downloadArtifacts(
-          awsConfig, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
+          awsConfig, encryptionDetails, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
       logger.error("Exception occurred while collecting S3 artifacts" + e.getMessage(), e);
       // TODO: Change list

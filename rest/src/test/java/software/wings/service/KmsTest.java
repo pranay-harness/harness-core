@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
+import clojure.lang.IFn.LO;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,7 +23,9 @@ import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.annotation.Encryptable;
 import software.wings.api.KmsTransitionEvent;
+import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
@@ -43,6 +46,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.beans.UuidAware;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest.Builder;
@@ -53,12 +57,15 @@ import software.wings.rules.RealMongo;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
@@ -85,18 +92,24 @@ import javax.inject.Inject;
  */
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
+  @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject private ConfigService configService;
+  @Inject private EncryptionService encryptionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
+  private String workflowId;
+  private String workflowName;
 
   @Before
   public void setup() {
     initMocks(this);
+    workflowName = UUID.randomUUID().toString();
+    workflowId = wingsPersistence.save(WorkflowBuilder.aWorkflow().withName(workflowName).build());
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(new KmsDelegateServiceImpl());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(wingsPersistence, "kmsService", kmsService);
@@ -219,6 +232,8 @@ public class KmsTest extends WingsBaseTest {
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     appDynamicsConfig.setPassword(password.toCharArray());
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
+        kmsService.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId));
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -247,12 +262,51 @@ public class KmsTest extends WingsBaseTest {
                                             .build();
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
-    appDynamicsConfig.setPassword(password.toCharArray());
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
-    assertEquals(appDynamicsConfig, savedAttribute.getValue());
-    assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
+    appDynamicsConfig.setPassword(password.toCharArray());
+    AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
+    assertNull((savedConfig).getEncryptedPassword());
+    encryptionService.decrypt(savedConfig, kmsService.getEncryptionDetails(savedConfig, workflowId));
+    assertEquals(appDynamicsConfig, savedConfig);
+
+    assertEquals(password, new String(savedConfig.getPassword()));
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
     assertTrue(query.asList().isEmpty());
+  }
+
+  @Test
+  public void enableKmsAfterSaving() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(password.toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withValue(appDynamicsConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(UUID.randomUUID().toString())
+                                            .build();
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    assertNotEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
+    assertEquals(appDynamicsConfig, savedAttribute.getValue());
+    assertTrue(StringUtils.isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
+    enableKmsFeatureFlag();
+    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
+        kmsService.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId));
+    assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
   }
 
   @Test
@@ -301,6 +355,47 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  public void secretUsageLog() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(UUID.randomUUID().toString().toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withValue(appDynamicsConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(UUID.randomUUID().toString())
+                                            .build();
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+
+    Query<EncryptedData> encryptedDataQuery =
+        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(settingAttribute.getUuid());
+    assertEquals(1, encryptedDataQuery.asList().size());
+    EncryptedData encryptedData = encryptedDataQuery.asList().get(0);
+
+    kmsService.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowId);
+    Query<SecretUsageLog> query = wingsPersistence.createQuery(SecretUsageLog.class);
+    assertEquals(1, query.asList().size());
+    SecretUsageLog usageLog = query.asList().get(0);
+    assertEquals(accountId, usageLog.getAccountId());
+    assertEquals(workflowId, usageLog.getWorkflowId());
+    assertEquals(encryptedData.getUuid(), usageLog.getEncryptedDataId());
+  }
+
+  @Test
   public void kmsEncryptionSaveMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
@@ -339,11 +434,19 @@ public class KmsTest extends WingsBaseTest {
       String id = settingAttributes.get(i).getUuid();
       SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, id);
       assertEquals(settingAttributes.get(i), savedAttribute);
-      assertEquals("password" + i, new String(((AppDynamicsConfig) settingAttributes.get(i).getValue()).getPassword()));
+      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttributes.get(i).getValue();
+      assertNull(appDynamicsConfig.getPassword());
+
+      encryptionService.decrypt(appDynamicsConfig, kmsService.getEncryptionDetails(appDynamicsConfig, workflowId));
+      assertEquals("password" + i, new String(appDynamicsConfig.getPassword()));
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(id);
       assertEquals(1, query.asList().size());
       assertEquals(kmsConfig.getUuid(), query.asList().get(0).getKmsId());
     }
+
+    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId);
+    assertEquals(1, kmsConfigs.size());
+    assertEquals(numOfSettingAttributes, kmsConfigs.iterator().next().getNumOfEncryptedValue());
   }
 
   @Test
@@ -520,7 +623,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(updatedAppId, updatedAttribute.getAppId());
     assertEquals(updatedName, updatedAttribute.getName());
 
-    newAppDynamicsConfig.setPassword(newPassWord.toCharArray());
+    newAppDynamicsConfig.setPassword(null);
     assertEquals(newAppDynamicsConfig, updatedAttribute.getValue());
 
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
@@ -588,6 +691,8 @@ public class KmsTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
     assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
+    assertNotEquals("newValue", new String(savedAttribute.getValue()));
+    encryptionService.decrypt(savedAttribute, kmsService.getEncryptionDetails(savedAttribute, workflowId));
     assertEquals("newValue", new String(savedAttribute.getValue()));
     assertEquals(0, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
@@ -638,6 +743,8 @@ public class KmsTest extends WingsBaseTest {
     savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
 
     assertEquals(Type.ENCRYPTED_TEXT, savedAttribute.getType());
+    assertNull(savedAttribute.getValue());
+    encryptionService.decrypt(savedAttribute, kmsService.getEncryptionDetails(savedAttribute, workflowId));
     assertEquals("newValue", new String(savedAttribute.getValue()));
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
@@ -740,6 +847,8 @@ public class KmsTest extends WingsBaseTest {
     updatedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     assertEquals(updatedEnvId, updatedAttribute.getEnvId());
     assertEquals(updatedName, updatedAttribute.getName());
+    assertNull(updatedAttribute.getValue());
+    encryptionService.decrypt(updatedAttribute, kmsService.getEncryptionDetails(updatedAttribute, workflowId));
     assertEquals(new String(updatedValue), new String(updatedAttribute.getValue()));
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -1265,7 +1374,7 @@ public class KmsTest extends WingsBaseTest {
                                               .build();
 
       wingsPersistence.save(settingAttribute);
-      appDynamicsConfig.setPassword(password.toCharArray());
+      appDynamicsConfig.setPassword(null);
       encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
     }
 
@@ -1524,7 +1633,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveConfigFileWithEncryption() throws IOException, InterruptedException {
+  public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     System.out.println("seed: " + seed);
     Random r = new Random(seed);
@@ -1536,6 +1645,10 @@ public class KmsTest extends WingsBaseTest {
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
     wingsPersistence.save(service);
+
+    Activity activity = Activity.builder().workflowId(workflowId).build();
+    activity.setAppId(appId);
+    wingsPersistence.save(activity);
 
     ConfigFile.Builder configFileBuilder = ConfigFile.Builder.aConfigFile()
                                                .withTemplateId(UUID.randomUUID().toString())
@@ -1587,6 +1700,18 @@ public class KmsTest extends WingsBaseTest {
                             .asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(StringUtils.isBlank(encryptedFileData.get(0).getParentId()));
+
+    int numOfAccess = 7;
+    for (int i = 0; i < numOfAccess; i++) {
+      configService.downloadForActivity(appId, configFileId, activity.getUuid());
+    }
+    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(configFileId, SettingVariableTypes.CONFIG_FILE);
+    assertEquals(numOfAccess, usageLogs.size());
+
+    for (SecretUsageLog usageLog : usageLogs) {
+      assertEquals(workflowName, usageLog.getWorkflowName());
+      assertEquals(accountId, usageLog.getAccountId());
+    }
   }
 
   @Test
@@ -1612,6 +1737,236 @@ public class KmsTest extends WingsBaseTest {
       fail("should have been failed");
     } catch (IOException e) {
       assertEquals("Decryption failed after " + KmsDelegateServiceImpl.NUM_OF_RETRIES + " retries", e.getMessage());
+    }
+  }
+
+  @Test
+  public void localEncryptionYaml() throws IllegalAccessException, NoSuchFieldException {
+    String password = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String name = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(password.toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(appDynamicsConfig.getAccountId())
+                                            .withValue(appDynamicsConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(name)
+                                            .build();
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    appDynamicsConfig.setPassword(password.toCharArray());
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+
+    String encryptedYamlRef =
+        kmsService.getEncryptedYamlRef((Encryptable) savedAttribute.getValue(), Base.GLOBAL_APP_ID, "password", name);
+    char[] decryptedPassword = kmsService.decryptYamlRef(encryptedYamlRef);
+    assertEquals(password, new String(decryptedPassword));
+
+    password = UUID.randomUUID().toString();
+    name = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(name)
+                                                .value(password.toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+    serviceVariable.setAppId(appId);
+
+    savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedServiceVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    encryptedYamlRef = kmsService.getEncryptedYamlRef(savedServiceVariable, appId, "value", name);
+    decryptedPassword = kmsService.decryptYamlRef(encryptedYamlRef);
+    assertEquals(password, new String(decryptedPassword));
+  }
+
+  @Test
+  public void kmsEncryptionYaml() throws IllegalAccessException, NoSuchFieldException {
+    String password = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String name = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(password.toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(appDynamicsConfig.getAccountId())
+                                            .withValue(appDynamicsConfig)
+                                            .withAppId(UUID.randomUUID().toString())
+                                            .withCategory(Category.CONNECTOR)
+                                            .withEnvId(UUID.randomUUID().toString())
+                                            .withName(name)
+                                            .build();
+
+    String savedAttributeId = wingsPersistence.save(settingAttribute);
+    appDynamicsConfig.setPassword(password.toCharArray());
+    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+
+    String encryptedYamlRef =
+        kmsService.getEncryptedYamlRef((Encryptable) savedAttribute.getValue(), Base.GLOBAL_APP_ID, "password", name);
+    char[] decryptedPassword = kmsService.decryptYamlRef(encryptedYamlRef);
+    assertEquals(password, new String(decryptedPassword));
+
+    password = UUID.randomUUID().toString();
+    name = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(name)
+                                                .value(password.toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+    serviceVariable.setAppId(appId);
+
+    savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedServiceVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    encryptedYamlRef = kmsService.getEncryptedYamlRef(savedServiceVariable, appId, "value", name);
+    decryptedPassword = kmsService.decryptYamlRef(encryptedYamlRef);
+    assertEquals(password, new String(decryptedPassword));
+  }
+
+  @Test
+  public void getUsageLogs() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(UUID.randomUUID().toString())
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    List<SecretUsageLog> usageLogs =
+        secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    assertEquals(0, usageLogs.size());
+
+    ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    kmsService.getEncryptionDetails(savedAttribute, workflowId);
+    usageLogs = secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    assertEquals(1, usageLogs.size());
+    assertEquals(workflowName, usageLogs.get(0).getWorkflowName());
+    assertEquals(accountId, usageLogs.get(0).getAccountId());
+
+    kmsService.getEncryptionDetails(savedAttribute, workflowId);
+    kmsService.getEncryptionDetails(savedAttribute, workflowId);
+    usageLogs = secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    assertEquals(3, usageLogs.size());
+
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(UUID.randomUUID().toString().toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute appDAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                         .withAccountId(appDynamicsConfig.getAccountId())
+                                         .withValue(appDynamicsConfig)
+                                         .withAppId(UUID.randomUUID().toString())
+                                         .withCategory(Category.CONNECTOR)
+                                         .withEnvId(UUID.randomUUID().toString())
+                                         .withName(UUID.randomUUID().toString())
+                                         .build();
+
+    String appDAttributeId = wingsPersistence.save(appDAttribute);
+    usageLogs = secretManager.getUsageLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(0, usageLogs.size());
+    int numOfAccess = 13;
+    for (int i = 0; i < numOfAccess; i++) {
+      kmsService.getEncryptionDetails((Encryptable) appDAttribute.getValue(), workflowId);
+    }
+    usageLogs = secretManager.getUsageLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(numOfAccess, usageLogs.size());
+    for (SecretUsageLog usageLog : usageLogs) {
+      assertEquals(workflowName, usageLog.getWorkflowName());
+      assertEquals(accountId, usageLog.getAccountId());
+    }
+  }
+
+  @Test
+  public void getChangeLogs() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                    .accountId(accountId)
+                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .username(UUID.randomUUID().toString())
+                                                    .password(UUID.randomUUID().toString().toCharArray())
+                                                    .accountname(UUID.randomUUID().toString())
+                                                    .build();
+
+    SettingAttribute appDAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                         .withAccountId(appDynamicsConfig.getAccountId())
+                                         .withValue(appDynamicsConfig)
+                                         .withAppId(UUID.randomUUID().toString())
+                                         .withCategory(Category.CONNECTOR)
+                                         .withEnvId(UUID.randomUUID().toString())
+                                         .withName(UUID.randomUUID().toString())
+                                         .build();
+
+    String appDAttributeId = wingsPersistence.save(appDAttribute);
+    int numOfUpdates = 13;
+    for (int i = 0; i < numOfUpdates; i++) {
+      appDynamicsConfig.setPassword(UUID.randomUUID().toString().toCharArray());
+      wingsPersistence.save(appDAttribute);
+    }
+
+    List<Pair<Long, EmbeddedUser>> changeLogs =
+        secretManager.getChangeLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(numOfUpdates, changeLogs.size());
+    for (Pair<Long, EmbeddedUser> changeLog : changeLogs) {
+      assertEquals(userName, changeLog.getValue().getName());
+      assertEquals(userEmail, changeLog.getValue().getEmail());
     }
   }
 

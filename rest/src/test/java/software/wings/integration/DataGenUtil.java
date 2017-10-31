@@ -89,7 +89,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
-  private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   public static final String HARNESS_NEXUS = "Harness Nexus";
@@ -244,17 +243,18 @@ public class DataGenUtil extends BaseIntegrationTest {
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
 
-    SettingAttribute dockerSettingAttribute = aSettingAttribute()
-                                                  .withName(HARNESS_DOCKER_REGISTRY)
-                                                  .withCategory(Category.CONNECTOR)
-                                                  .withAccountId(accountId)
-                                                  .withValue(DockerConfig.builder()
-                                                                 .accountId(accountId)
-                                                                 .dockerRegistryUrl("https://index.docker.io/v1/")
-                                                                 .username("wingsplugins")
-                                                                 .password("W!ngs@DockerHub".toCharArray())
-                                                                 .build())
-                                                  .build();
+    SettingAttribute dockerSettingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_DOCKER_REGISTRY)
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(DockerConfig.builder()
+                           .accountId(accountId)
+                           .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                           .username("wingsplugins")
+                           .password("W!ngs@DockerHub".toCharArray())
+                           .build())
+            .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, dockerSettingAttribute);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()

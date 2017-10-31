@@ -10,13 +10,13 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,21 +32,21 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
   private static final long APPDYNAMICS_CALL_TIMEOUT = TimeUnit.MINUTES.toMillis(1L);
 
-  @com.google.inject.Inject private SettingsService settingsService;
-
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private SettingsService settingsService;
 
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
-  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private KmsService kmsService;
 
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
+        .getAllApplications(appDynamicsConfig, encryptionDetails);
   }
 
   @Override
@@ -54,8 +54,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTiers((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
+        .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
   }
 
   @Override
@@ -65,8 +67,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
 
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getBusinessTransactions((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
+        .getBusinessTransactions(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
   }
 
   @Override
@@ -76,8 +80,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTierBTMetrics((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
+        .getTierBTMetrics(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
   }
 
   @Override
@@ -87,9 +93,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = kmsService.getEncryptionDetails(appDynamicsConfig, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTierBTMetricData(
-            (AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId, btName, durantionInMinutes);
+            appDynamicsConfig, appdynamicsAppId, tierId, btName, durantionInMinutes, encryptionDetails);
   }
 
   @Override
@@ -97,8 +105,8 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-          .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
+      AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+      delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext).validateConfig(appDynamicsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, "reason", e.getMessage());
     }

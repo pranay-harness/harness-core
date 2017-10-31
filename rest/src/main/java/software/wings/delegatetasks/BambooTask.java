@@ -15,6 +15,7 @@ import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.FilePathAssertionEntry;
@@ -46,8 +47,8 @@ public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooE
     BambooExecutionResponse bambooExecutionResponse = new BambooExecutionResponse();
     logger.info("In Bamboo Task run method");
     try {
-      bambooExecutionResponse = run((String) parameters[0], (String) parameters[1], (char[]) parameters[2],
-          (String) parameters[3], (List<ParameterEntry>) parameters[4], (List<FilePathAssertionEntry>) parameters[5]);
+      bambooExecutionResponse = run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
+          (String) parameters[2], (List<ParameterEntry>) parameters[3], (List<FilePathAssertionEntry>) parameters[4]);
     } catch (Exception e) {
       logger.warn("Failed to execute Bamboo verification task: " + e.getMessage(), e);
       bambooExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
@@ -56,22 +57,20 @@ public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooE
     return bambooExecutionResponse;
   }
 
-  public BambooExecutionResponse run(String bambooUrl, String username, char[] password, String planKey,
-      List<ParameterEntry> parameterEntries, List<FilePathAssertionEntry> filePathAssertionEntries) {
+  public BambooExecutionResponse run(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String planKey, List<ParameterEntry> parameterEntries, List<FilePathAssertionEntry> filePathAssertionEntries) {
     BambooExecutionResponse bambooExecutionResponse = new BambooExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage = null;
     try {
-      BambooConfig bambooConfig =
-          BambooConfig.builder().bambooUrl(bambooUrl).username(username).password(password).build();
       Map<String, String> evaluatedParameters = Maps.newLinkedHashMap();
       if (isNotEmpty(parameterEntries)) {
         parameterEntries.forEach(
             parameterEntry -> { evaluatedParameters.put(parameterEntry.getKey(), parameterEntry.getValue()); });
       }
-      String buildResultKey = bambooService.triggerPlan(bambooConfig, planKey, evaluatedParameters);
+      String buildResultKey = bambooService.triggerPlan(bambooConfig, encryptionDetails, planKey, evaluatedParameters);
       // waitForBuildStartExecution(bambooConfig, buildResultKey);
-      Result result = waitForBuildExecutionToFinish(bambooConfig, buildResultKey);
+      Result result = waitForBuildExecutionToFinish(bambooConfig, encryptionDetails, buildResultKey);
       String buildState = result.getBuildState();
       if (result == null || buildState == null) {
         executionStatus = ExecutionStatus.FAILED;
@@ -80,8 +79,8 @@ public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooE
         if (buildState != null) {
           if (!buildState.equalsIgnoreCase("Successful")) {
             executionStatus = ExecutionStatus.FAILED;
-            logger.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}", bambooUrl,
-                planKey, buildResultKey, result);
+            logger.info("Build result for Bamboo url {}, plan key {}, build key {} is Failed. Result {}",
+                bambooConfig.getBambooUrl(), planKey, buildResultKey, result);
           }
         }
         bambooExecutionResponse.setProjectName(result.getProjectName());
@@ -112,12 +111,13 @@ public class BambooTask extends AbstractDelegateRunnableTask<BambooState.BambooE
     return bambooExecutionResponse;
   }
 
-  private Result waitForBuildExecutionToFinish(BambooConfig bambooConfig, String buildResultKey) throws IOException {
+  private Result waitForBuildExecutionToFinish(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String buildResultKey) throws IOException {
     Result result;
     do {
       logger.info("Waiting for build execution {} to finish", buildResultKey);
       Misc.sleepWithRuntimeException(5000);
-      result = bambooService.getBuildResult(bambooConfig, buildResultKey);
+      result = bambooService.getBuildResult(bambooConfig, encryptionDetails, buildResultKey);
       logger.info("Build result for build key {} is {}", buildResultKey, result);
     } while (result.getBuildState() == null || result.getBuildState().equalsIgnoreCase("Unknown"));
 

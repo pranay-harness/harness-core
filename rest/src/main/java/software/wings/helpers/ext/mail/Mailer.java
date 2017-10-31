@@ -14,9 +14,13 @@ import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -25,6 +29,7 @@ public class Mailer {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
   public static final Logger logger = LoggerFactory.getLogger(Mailer.class);
 
+  @Inject private EncryptionService encryptionService;
   /**
    * Instantiates a new mailer.
    */
@@ -41,8 +46,9 @@ public class Mailer {
    * @throws IOException       Signals that an I/O exception has occurred.
    * @throws TemplateException the template exception
    */
-  public void send(SmtpConfig smtpConfig, EmailData emailData) {
+  public void send(SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptedDataDetails, EmailData emailData) {
     try {
+      encryptionService.decrypt(smtpConfig, encryptedDataDetails);
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());

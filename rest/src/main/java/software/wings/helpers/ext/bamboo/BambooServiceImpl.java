@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +26,8 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
@@ -50,9 +53,11 @@ import java.util.stream.Collectors;
 @Singleton
 public class BambooServiceImpl implements BambooService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private EncryptionService encryptionService;
 
-  private BambooRestClient getBambooClient(BambooConfig bambooConfig) {
+  private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
+      encryptionService.decrypt(bambooConfig, encryptionDetails);
       String bambooUrl = bambooConfig.getBambooUrl();
       if (bambooUrl != null && !bambooUrl.endsWith("/")) {
         bambooUrl = bambooUrl + "/";
@@ -72,10 +77,11 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<String> getJobKeys(BambooConfig bambooConfig, String planKey) {
+  public List<String> getJobKeys(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     logger.info("Retrieving job keys for plan key {}", planKey);
     Call<JsonNode> request =
-        getBambooClient(bambooConfig)
+        getBambooClient(bambooConfig, encryptionDetails)
             .listPlanWithJobDetails(
                 Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), planKey);
     Response<JsonNode> response = null;
@@ -93,9 +99,11 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String planKey) {
+  public BuildDetails getLastSuccessfulBuild(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), planKey);
+        getBambooClient(bambooConfig, encryptionDetails)
+            .lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey);
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
@@ -123,21 +131,23 @@ public class BambooServiceImpl implements BambooService {
    * @param bambooConfig the bamboo config
    * @return the basic auth credentials
    */
-  public String getBasicAuthCredentials(BambooConfig bambooConfig) {
+  public String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(bambooConfig, encryptionDetails);
     return Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword()));
   }
 
   @Override
-  public Map<String, String> getPlanKeys(BambooConfig bambooConfig) {
-    return getPlanKeys(bambooConfig, 10000);
+  public Map<String, String> getPlanKeys(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return getPlanKeys(bambooConfig, encryptionDetails, 10000);
   }
 
-  public Map<String, String> getPlanKeys(BambooConfig bambooConfig, int maxResults) {
+  public Map<String, String> getPlanKeys(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int maxResults) {
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
         Call<JsonNode> request =
-            getBambooClient(bambooConfig)
+            getBambooClient(bambooConfig, encryptionDetails)
                 .listProjectPlans(
                     Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
         Map<String, String> planNameMap = new HashMap<>();
@@ -191,13 +201,14 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, int maxNumberOfBuilds) {
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         List<BuildDetails> buildDetailsList = new ArrayList<>();
         Call<JsonNode> request =
-            getBambooClient(bambooConfig)
-                .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
+            getBambooClient(bambooConfig, encryptionDetails)
+                .listBuildsForJob(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey, maxNumberOfBuilds);
         Response<JsonNode> response = null;
         try {
           response = getHttpRequestExecutionResponse(request);
@@ -229,14 +240,15 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<String> getArtifactPath(BambooConfig bambooConfig, String planKey) {
+  public List<String> getArtifactPath(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     try {
       return with().atMost(new Duration(20L, TimeUnit.SECONDS)).until(() -> {
         List<String> artifactPaths = new ArrayList<>();
-        BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
+        BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, encryptionDetails, planKey);
         if (lastSuccessfulBuild != null) {
           Map<String, Artifact> buildArtifactsUrlMap =
-              getBuildArtifactsUrlMap(bambooConfig, planKey, lastSuccessfulBuild.getNumber());
+              getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, lastSuccessfulBuild.getNumber());
           artifactPaths.addAll(getArtifactRelativePaths(
               buildArtifactsUrlMap.values().stream().map(Artifact::getLink).collect(Collectors.toList())));
         }
@@ -250,7 +262,8 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public String triggerPlan(BambooConfig bambooConfig, String planKey, Map<String, String> parameters) {
+  public String triggerPlan(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey,
+      Map<String, String> parameters) {
     logger.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
     Response<JsonNode> response = null;
     String buildResultKey = null;
@@ -260,7 +273,8 @@ public class BambooServiceImpl implements BambooService {
       }
       // Replace all the parameters with
       Call<JsonNode> request =
-          getBambooClient(bambooConfig).triggerPlan(getBasicAuthCredentials(bambooConfig), planKey, parameters);
+          getBambooClient(bambooConfig, encryptionDetails)
+              .triggerPlan(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey, parameters);
       response = getHttpRequestExecutionResponse(request);
       if (response.body() != null) {
         if (response.body().findValue("buildResultKey") != null) {
@@ -285,11 +299,13 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public Result getBuildResult(BambooConfig bambooConfig, String buildResultKey) {
+  public Result getBuildResult(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey) {
     Response<Result> response = null;
     try {
       Call<Result> request =
-          getBambooClient(bambooConfig).getBuildResult(getBasicAuthCredentials(bambooConfig), buildResultKey);
+          getBambooClient(bambooConfig, encryptionDetails)
+              .getBuildResult(getBasicAuthCredentials(bambooConfig, encryptionDetails), buildResultKey);
       response = request.execute();
       handleResponse(response);
       if (response.isSuccessful()) {
@@ -316,11 +332,13 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public Status getBuildResultStatus(BambooConfig bambooConfig, String buildResultKey) {
+  public Status getBuildResultStatus(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String buildResultKey) {
     Response<Status> response = null;
     try {
       Call<Status> request =
-          getBambooClient(bambooConfig).getBuildResultStatus(getBasicAuthCredentials(bambooConfig), buildResultKey);
+          getBambooClient(bambooConfig, encryptionDetails)
+              .getBuildResultStatus(getBasicAuthCredentials(bambooConfig, encryptionDetails), buildResultKey);
       response = request.execute();
       if (!response.isSuccessful()) {
         if (response.code() == 404) {
@@ -353,27 +371,13 @@ public class BambooServiceImpl implements BambooService {
     return null;
   }
 
-  //  @Override
-  //  public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig, String planKey, String buildNumber,
-  //  String artifactPathRegex) {
-  //    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
-  //    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-  //    Entry<String, String> artifactPath = artifactPathMap.entrySet().stream()
-  //        .filter(entry -> extractRelativePath(entry.getValue()) != null &&
-  //        pattern.matcher(extractRelativePath(entry.getValue())).matches()).findFirst() .orElse(null);
-  //    try {
-  //      return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
-  //    } catch (IOException ex) {
-  //      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
-  //    }
-  //  }
-
   @Override
-  public Pair<String, InputStream> downloadArtifact(
-      BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
+  public Pair<String, InputStream> downloadArtifact(BambooConfig bambooConfig,
+      List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber, String artifactPathRegex) {
     logger.info("Downloading artifact for plan {} and build number {} and artifact path {}", planKey, buildNumber,
         artifactPathRegex);
-    Map<String, Artifact> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
+    Map<String, Artifact> artifactPathMap =
+        getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, buildNumber);
     String artifactSourcePath = artifactPathRegex;
     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
     Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
@@ -391,7 +395,7 @@ public class BambooServiceImpl implements BambooService {
       try {
         URL url = new URL(link);
         URLConnection uc = url.openConnection();
-        uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+        uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
         logger.info("Artifact url {}", link);
         return ImmutablePair.of(link.substring(link.lastIndexOf("/") + 1), uc.getInputStream());
       } catch (IOException e) {
@@ -428,7 +432,7 @@ public class BambooServiceImpl implements BambooService {
         try {
           URL url = new URL(artifactUrl);
           URLConnection uc = url.openConnection();
-          uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig));
+          uc.setRequestProperty("Authorization", getBasicAuthCredentials(bambooConfig, encryptionDetails));
           if (artifactSourcePath.contains("/")) {
             artifactSourcePath = artifactSourcePath.substring(artifactSourcePath.lastIndexOf("/") + 1);
           }
@@ -445,8 +449,8 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public boolean isRunning(BambooConfig bambooConfig) {
-    return getPlanKeys(bambooConfig, 1) != null; // TODO:: First check use status API
+  public boolean isRunning(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return getPlanKeys(bambooConfig, encryptionDetails, 1) != null; // TODO:: First check use status API
   }
 
   /**
@@ -457,10 +461,12 @@ public class BambooServiceImpl implements BambooService {
    * @param buildNumber  the build number
    * @return the build artifacts url map
    */
-  private Map<String, Artifact> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String planKey, String buildNumber) {
+  private Map<String, Artifact> getBuildArtifactsUrlMap(
+      BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber) {
     logger.info("Retrieving artifacts from plan {} and build number {}", planKey, buildNumber);
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), planKey, buildNumber);
+        getBambooClient(bambooConfig, encryptionDetails)
+            .getBuildArtifacts(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey, buildNumber);
     Map<String, Artifact> artifactPathMap = new HashMap<>();
     Response<JsonNode> response;
     try {

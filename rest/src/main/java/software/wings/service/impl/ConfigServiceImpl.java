@@ -16,12 +16,12 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.FeatureName;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -30,6 +30,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptionUtils;
+import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -76,6 +78,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private EnvironmentService environmentService;
   @Inject private KmsService kmsService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ActivityService activityService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -186,7 +189,7 @@ public class ConfigServiceImpl implements ConfigService {
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = getDecryptedFile(configFile, file);
+      file = getDecryptedFile(configFile, file, appId, null);
     }
     return file;
   }
@@ -200,15 +203,35 @@ public class ConfigServiceImpl implements ConfigService {
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(fileId, file, CONFIGS);
     if (configFile.isEncrypted()) {
-      file = getDecryptedFile(configFile, file);
+      file = getDecryptedFile(configFile, file, appId, null);
     }
     return file;
   }
 
-  private File getDecryptedFile(ConfigFile configFile, File file) {
+  @Override
+  public File downloadForActivity(String appId, String configId, String activityId) {
+    ConfigFile configFile = get(appId, configId);
+    File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
+    fileService.download(configFile.getFileUuid(), file, CONFIGS);
+    if (configFile.isEncrypted()) {
+      file = getDecryptedFile(configFile, file, appId, activityId);
+    }
+    return file;
+  }
+
+  private File getDecryptedFile(ConfigFile configFile, File file, String appId, String activityId) {
     if (shouldUseKms(configFile.getAccountId())) {
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       Preconditions.checkNotNull(encryptedData);
+      if (!StringUtils.isBlank(activityId)) {
+        Activity activity = activityService.get(activityId, appId);
+        Preconditions.checkNotNull(activity, "Could not find activity " + activityId + " for app " + appId);
+        wingsPersistence.save(SecretUsageLog.builder()
+                                  .encryptedDataId(configFile.getUuid())
+                                  .workflowId(activity.getWorkflowId())
+                                  .accountId(encryptedData.getAccountId())
+                                  .build());
+      }
       return kmsService.decryptFile(file, configFile.getAccountId(), encryptedData);
     } else {
       return EncryptionUtils.decrypt(file, configFile.getAccountId());

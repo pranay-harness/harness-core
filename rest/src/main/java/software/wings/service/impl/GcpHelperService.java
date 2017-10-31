@@ -12,11 +12,16 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by bzane on 2/22/17
@@ -37,26 +42,26 @@ public class GcpHelperService {
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  @Inject private EncryptionService encryptionService;
+
   /**
    * Validate credential.
    *
-   * @param credentials the credentials
    */
-  public void validateCredential(String credentials) {
-    getGkeContainerService(credentials);
+  public void validateCredential(GcpConfig gcpConfig) {
+    getGkeContainerService(gcpConfig, Collections.emptyList());
   }
 
   /**
    * Gets a GCP container service.
    *
-   * @param credentials the credentials
    * @return the gke container service
    */
-  public Container getGkeContainerService(String credentials) {
+  public Container getGkeContainerService(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = getGoogleCredential(credentials);
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service", e);
@@ -69,8 +74,11 @@ public class GcpHelperService {
     }
   }
 
-  public GoogleCredential getGoogleCredential(String credentials) throws IOException {
-    GoogleCredential credential = GoogleCredential.fromStream(IOUtils.toInputStream(credentials));
+  public GoogleCredential getGoogleCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException {
+    encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+    GoogleCredential credential =
+        GoogleCredential.fromStream(IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent())));
     if (credential.createScopedRequired()) {
       credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }

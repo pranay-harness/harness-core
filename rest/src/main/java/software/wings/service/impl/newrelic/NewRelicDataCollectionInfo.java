@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;
@@ -28,4 +29,5 @@ public class NewRelicDataCollectionInfo {
   private int collectionTime;
   private long newRelicAppId;
   private int dataCollectionMinute;
+  List<EncryptedDataDetail> encryptedDataDetails;
 }

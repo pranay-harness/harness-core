@@ -5,6 +5,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 
+import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -14,11 +15,13 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -44,13 +47,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceLocator serviceLocator;
+  @Inject private KmsService kmsService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     List<JobDetails> jobs = getBuildService(settingAttribute, appId)
-                                .getJobs(settingAttribute.getValue(), Optional.ofNullable(parentJobName));
+                                .getJobs(value, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
     TreeSet<JobDetails> jobDetailsSet =
         Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
@@ -62,7 +68,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Map<String, String> getPlans(String appId, String settingId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return getBuildService(settingAttribute, appId, artifactStreamType).getPlans(settingAttribute.getValue());
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
+    return getBuildService(settingAttribute, appId, artifactStreamType).getPlans(value, encryptedDataDetails);
   }
 
   @Override
@@ -72,8 +80,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     notNullCheck("Setting", settingAttribute);
     Service service = serviceResourceService.get(appId, serviceId);
     notNullCheck("Service", service);
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     return getBuildService(settingAttribute, appId)
-        .getPlans(settingAttribute.getValue(), service.getArtifactType(), repositoryType);
+        .getPlans(value, encryptedDataDetails, service.getArtifactType(), repositoryType);
   }
 
   @Override
@@ -81,8 +91,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String jobName, String settingId, String groupId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
-                               .getArtifactPaths(jobName, groupId, settingAttribute.getValue()));
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
   }
 
   @Override
@@ -96,12 +108,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     String artifactStreamType = artifactStream.getArtifactStreamType();
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
-          .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
+          .getBuilds(appId, artifactStreamAttributes, value, encryptedDataDetails);
     } else {
       return getBuildService(settingAttribute, appId)
-          .getBuilds(appId, artifactStreamAttributes, settingAttribute.getValue());
+          .getBuilds(appId, artifactStreamAttributes, value, encryptedDataDetails);
     }
   }
 
@@ -115,12 +129,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     String artifactStreamType = artifactStream.getArtifactStreamType();
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     if (ArtifactStreamType.AMAZON_S3.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
-          .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingAttribute.getValue());
+          .getLastSuccessfulBuild(appId, artifactStreamAttributes, value, encryptedDataDetails);
     } else {
       return getBuildService(settingAttribute, appId)
-          .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingAttribute.getValue());
+          .getLastSuccessfulBuild(appId, artifactStreamAttributes, value, encryptedDataDetails);
     }
   }
 
@@ -128,7 +144,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Set<String> getGroupIds(String appId, String repoType, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return Sets.newTreeSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, settingAttribute.getValue()));
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, value, encryptedDataDetails));
   }
 
   @Override
@@ -136,8 +154,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
+    SettingValue value = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = kmsService.getEncryptionDetails((Encryptable) value, null);
     return getBuildService(settingAttribute, appId)
-        .validateArtifactSource(settingAttribute.getValue(), artifactStreamAttributes);
+        .validateArtifactSource(value, encryptedDataDetails, artifactStreamAttributes);
   }
 
   @Override

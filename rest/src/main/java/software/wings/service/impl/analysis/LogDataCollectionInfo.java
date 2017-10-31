@@ -3,9 +3,11 @@ package software.wings.service.impl.analysis;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,4 +29,5 @@ public abstract class LogDataCollectionInfo {
   private int collectionTime;
   private Set<String> hosts;
   private StateType stateType;
+  List<EncryptedDataDetail> encryptedDataDetails;
 }

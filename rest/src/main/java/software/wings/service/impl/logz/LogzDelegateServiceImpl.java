@@ -1,5 +1,7 @@
 package software.wings.service.impl.logz;
 
+import com.google.inject.Inject;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import retrofit2.Call;
@@ -9,11 +11,14 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.logz.LogzRestClient;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by rsingh on 8/21/17.
@@ -22,10 +27,11 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   private static final Object logzQuery = JsonUtils.asObject(
       "{ \"size\": 0, \"query\": { \"bool\": { \"must\": [{ \"range\": { \"@timestamp\": { \"gte\": \"now-5m\", \"lte\": \"now\" } } }] } }, \"aggs\": { \"byType\": { \"terms\": { \"field\": \"type\", \"size\": 5 } } } }",
       Object.class);
+  @Inject private EncryptionService encryptionService;
   @Override
-  public void validateConfig(LogzConfig logzConfig) {
+  public void validateConfig(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      final Call<Object> request = getLogzRestClient(logzConfig).search(logzQuery);
+      final Call<Object> request = getLogzRestClient(logzConfig, encryptedDataDetails).search(logzQuery);
       final Response<Object> response = request.execute();
       if (response.isSuccessful()) {
         return;
@@ -37,8 +43,10 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   }
 
   @Override
-  public Object search(LogzConfig logzConfig, ElkLogFetchRequest logFetchRequest) throws IOException {
-    final Call<Object> request = getLogzRestClient(logzConfig).search(logFetchRequest.toElasticSearchJsonObject());
+  public Object search(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      ElkLogFetchRequest logFetchRequest) throws IOException {
+    final Call<Object> request =
+        getLogzRestClient(logzConfig, encryptedDataDetails).search(logFetchRequest.toElasticSearchJsonObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -48,9 +56,9 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   }
 
   @Override
-  public Object getLogSample(LogzConfig logzConfig) throws IOException {
+  public Object getLogSample(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
     final Call<Object> request =
-        getLogzRestClient(logzConfig).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
+        getLogzRestClient(logzConfig, encryptedDataDetails).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
@@ -58,7 +66,9 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
     throw new WingsException(response.errorBody().string());
   }
 
-  private LogzRestClient getLogzRestClient(final LogzConfig logzConfig) {
+  private LogzRestClient getLogzRestClient(
+      final LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(logzConfig, encryptedDataDetails);
     OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();

@@ -63,6 +63,15 @@ public interface ConfigService {
   File download(String appId, String configId, Integer version);
 
   /**
+   * delegate call to download the file
+   * @param appId
+   * @param fileId
+   * @param activityId
+   * @return
+   */
+  File downloadForActivity(String appId, String fileId, String activityId);
+
+  /**
    * Update.
    *
    * @param configFile  the config file

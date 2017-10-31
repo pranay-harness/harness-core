@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
+
+import java.util.List;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -25,4 +28,5 @@ public class AppdynamicsDataCollectionInfo {
   private long tierId;
   private int collectionTime;
   private int dataCollectionMinute;
+  private List<EncryptedDataDetail> encryptedDataDetails;
 }

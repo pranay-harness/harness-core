@@ -43,6 +43,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -90,7 +91,8 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(kubernetesClient);
+    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG, Collections.emptyList()))
+        .thenReturn(kubernetesClient);
     when(kubernetesClient.replicationControllers()).thenReturn(replicationControllers);
     when(replicationControllers.inNamespace("default")).thenReturn(namespacedControllers);
     when(kubernetesClient.services()).thenReturn(services);
@@ -122,7 +124,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteController() {
-    kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
+    kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedControllers).withName(args.capture());
@@ -138,7 +140,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteService() {
-    kubernetesContainerService.deleteService(KUBERNETES_CONFIG, "service");
+    kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedServices).withName(args.capture());
@@ -149,7 +151,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldSetControllerPodCount() {
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
-        KUBERNETES_CONFIG, "foo", "bar", 0, 3, new ExecutionLogCallback());
+        KUBERNETES_CONFIG, Collections.emptyList(), "foo", "bar", 0, 3, new ExecutionLogCallback());
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());
@@ -163,7 +165,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     when(scalableReplicationController.get())
         .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());
 
-    int count = kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, "foo");
+    int count = kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
 
     assertThat(count).isEqualTo(8);
   }

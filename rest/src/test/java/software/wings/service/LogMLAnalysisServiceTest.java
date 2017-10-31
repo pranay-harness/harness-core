@@ -4,6 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Lists;
 
@@ -13,9 +17,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
@@ -36,16 +38,15 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
-import software.wings.service.impl.elk.ElkDelegateServiceImpl;
-import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
-import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
-import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.elk.ElkAnalysisService;
+import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.splunk.SplunkDelegateService;
+import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -83,6 +84,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Inject private AnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ElkAnalysisService elkAnalysisService;
+  @Inject private KmsService kmsService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private SplunkDelegateService splunkDelegateService;
+  @Inject private ElkDelegateService elkDelegateService;
+  @Inject private SumoDelegateService sumoDelegateService;
 
   @Before
   public void setup() {
@@ -102,9 +108,9 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void testValidateSplunkConfig() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new SplunkDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(splunkDelegateService);
+    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(splunkDelegateService, "encryptionService", encryptionService);
     final SplunkConfig splunkConfig = SplunkConfig.builder()
                                           .accountId(accountId)
                                           .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
@@ -119,22 +125,22 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
   @Test
   public void testVersion() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new ElkDelegateServiceImpl());
-    Whitebox.setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(elkDelegateService);
+    setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(elkDelegateService, "encryptionService", encryptionService);
     ElkConfig elkConfig = new ElkConfig();
     elkConfig.setElkUrl("http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
     elkConfig.setElkConnector(ElkConnector.KIBANA_SERVER);
-    String version = elkAnalysisService.getVersion(accountId, elkConfig);
+    String version = elkAnalysisService.getVersion(accountId, elkConfig, null);
     assertEquals("5.5.2", version);
   }
 
   @Test
   @Repeat(times = 5, successes = 1)
   public void testValidateSumoLogicConfig() throws Exception {
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(new SumoDelegateServiceImpl());
-    Whitebox.setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(sumoDelegateService);
+    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(splunkDelegateService, "encryptionService", encryptionService);
     final SumoConfig sumoConfig = new SumoConfig();
     sumoConfig.setAccountId(accountId);
     sumoConfig.setSumoUrl("https://api.us2.sumologic.com:443/api/v1/");
