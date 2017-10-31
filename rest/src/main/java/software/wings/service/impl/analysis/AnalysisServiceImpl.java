@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -28,6 +29,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
@@ -38,6 +40,7 @@ import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ExecutionStatus;
@@ -78,6 +81,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected MainConfiguration configuration;
   @Inject protected DelegateServiceImpl delegateService;
+  @Inject protected KmsService kmsService;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -424,6 +428,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public void validateConfig(final SettingAttribute settingAttribute, StateType stateType) {
     ErrorCode errorCode = null;
+    List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();
     try {
       switch (stateType) {
         case SPLUNKV2:
@@ -431,28 +436,28 @@ public class AnalysisServiceImpl implements AnalysisService {
           SyncTaskContext splunkTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           delegateProxyFactory.get(SplunkDelegateService.class, splunkTaskContext)
-              .validateConfig((SplunkConfig) settingAttribute.getValue());
+              .validateConfig((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
           SyncTaskContext elkTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-              .validateConfig((ElkConfig) settingAttribute.getValue());
+              .validateConfig((ElkConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
           SyncTaskContext logzTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
-              .validateConfig((LogzConfig) settingAttribute.getValue());
+              .validateConfig((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case SUMO:
           errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
           SyncTaskContext sumoTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
-              .validateConfig((SumoConfig) settingAttribute.getValue());
+              .validateConfig((SumoConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
@@ -466,6 +471,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
@@ -476,13 +483,13 @@ public class AnalysisServiceImpl implements AnalysisService {
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
           SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
           return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-              .getLogSample((ElkConfig) settingAttribute.getValue(), index);
+              .getLogSample((ElkConfig) settingAttribute.getValue(), index, encryptedDataDetails);
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
           SyncTaskContext logzTaskContext =
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           return delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
-              .getLogSample((LogzConfig) settingAttribute.getValue());
+              .getLogSample((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);

@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -9,15 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.artifact.ArtifactFile;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.delegatetasks.DelegateFile;
-import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.bamboo.BambooService;
-import software.wings.utils.Misc;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +27,6 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
   private static final Logger logger = LoggerFactory.getLogger(BambooCollectionTask.class);
 
   @Inject private BambooService bambooService;
-  @Inject private DelegateFileManager delegateFileManager;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   public BambooCollectionTask(String delegateId, DelegateTask delegateTask,
@@ -42,22 +36,19 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
-        (List<String>) parameters[4], (Map<String, String>) parameters[5]);
+    return run((BambooConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+        (List<String>) parameters[3], (Map<String, String>) parameters[4]);
   }
 
-  public ListNotifyResponseData run(String bambooUrl, String username, char[] password, String planKey,
-      List<String> artifactPaths, Map<String, String> arguments) {
+  public ListNotifyResponseData run(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
+      String planKey, List<String> artifactPaths, Map<String, String> arguments) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
-      BambooConfig bambooConfig =
-          BambooConfig.builder().bambooUrl(bambooUrl).username(username).password(password).build();
-
       for (String artifactPath : artifactPaths) {
-        Pair<String, InputStream> fileInfo =
-            bambooService.downloadArtifact(bambooConfig, planKey, arguments.get(BUILD_NO), artifactPath);
+        Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(
+            bambooConfig, encryptionDetails, planKey, arguments.get(BUILD_NO), artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }

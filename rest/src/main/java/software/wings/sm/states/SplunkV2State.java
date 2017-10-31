@@ -99,7 +99,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
         appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
         getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-        logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts);
+        logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
+        kmsService.getEncryptionDetails(splunkConfig, context.getWorkflowId()));
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

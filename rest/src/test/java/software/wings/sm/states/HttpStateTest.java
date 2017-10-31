@@ -7,15 +7,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -37,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Injector;
 
 import com.github.tomakehurst.wiremock.http.Fault;
@@ -51,8 +53,10 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -62,6 +66,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Collections;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -80,18 +85,25 @@ public class HttpStateTest extends WingsBaseTest {
           .withAssertion(
               "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
 
-  private static final Activity.Builder activityBuilder = anActivity()
-                                                              .withUuid(ACTIVITY_ID)
-                                                              .withAppId(APP_ID)
-                                                              .withApplicationName(APP_NAME)
-                                                              .withEnvironmentId(ENV_ID)
-                                                              .withEnvironmentName(ENV_NAME)
-                                                              .withEnvironmentType(EnvironmentType.NON_PROD)
-                                                              .withCommandName("healthCheck1")
-                                                              .withType(Type.Verification)
-                                                              .withStateExecutionInstanceId(STATE_EXECUTION_ID)
-                                                              .withStateExecutionInstanceName("healthCheck1")
-                                                              .withCommandType(StateType.HTTP.name());
+  private static final Activity activity = Activity.builder()
+                                               .applicationName(APP_NAME)
+                                               .environmentId(ENV_ID)
+                                               .environmentName(ENV_NAME)
+                                               .environmentType(EnvironmentType.NON_PROD)
+                                               .commandName("healthCheck1")
+                                               .type(Type.Verification)
+                                               .stateExecutionInstanceId(STATE_EXECUTION_ID)
+                                               .stateExecutionInstanceName("healthCheck1")
+                                               .commandType(StateType.HTTP.name())
+                                               .status(ExecutionStatus.RUNNING)
+                                               .commandUnits(Collections.emptyList())
+                                               .serviceVariables(Maps.newHashMap())
+                                               .build();
+
+  static {
+    activity.setUuid(ACTIVITY_ID);
+    activity.setAppId(APP_ID);
+  }
   /**
    * The Wire mock rule.
    */
@@ -99,6 +111,7 @@ public class HttpStateTest extends WingsBaseTest {
 
   @Mock private WorkflowStandardParams workflowStandardParams;
   @Mock private ActivityService activityService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @Inject private Injector injector;
   @Mock private DelegateService delegateService;
 
@@ -130,6 +143,10 @@ public class HttpStateTest extends WingsBaseTest {
       activity.setUuid(ACTIVITY_ID);
       return activity;
     });
+
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
+        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution().build());
+    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   /**
@@ -178,7 +195,7 @@ public class HttpStateTest extends WingsBaseTest {
                 .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
 
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
   }
 
@@ -212,7 +229,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
 
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
   }
 
@@ -257,15 +274,31 @@ public class HttpStateTest extends WingsBaseTest {
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
 
-    verify(activityService)
-        .save(activityBuilder.but()
-                  .withHostName("localhost")
-                  .withServiceId(SERVICE_ID)
-                  .withServiceName(SERVICE_NAME)
-                  .withServiceInstanceId(SERVICE_INSTANCE_ID)
-                  .withServiceTemplateId(TEMPLATE_ID)
-                  .withServiceTemplateName(TEMPLATE_NAME)
-                  .build());
+    Activity act = Activity.builder()
+                       .applicationName(APP_NAME)
+                       .environmentId(ENV_ID)
+                       .environmentName(ENV_NAME)
+                       .environmentType(EnvironmentType.NON_PROD)
+                       .commandName("healthCheck1")
+                       .type(Type.Verification)
+                       .stateExecutionInstanceId(STATE_EXECUTION_ID)
+                       .stateExecutionInstanceName("healthCheck1")
+                       .commandType(StateType.HTTP.name())
+                       .hostName("localhost")
+                       .serviceId(SERVICE_ID)
+                       .serviceName(SERVICE_NAME)
+                       .serviceInstanceId(SERVICE_INSTANCE_ID)
+                       .serviceTemplateId(TEMPLATE_ID)
+                       .serviceTemplateName(TEMPLATE_NAME)
+                       .status(ExecutionStatus.RUNNING)
+                       .commandUnits(Collections.emptyList())
+                       .serviceVariables(Maps.newHashMap())
+                       .build();
+
+    act.setUuid(ACTIVITY_ID);
+    act.setAppId(APP_ID);
+
+    verify(activityService).save(act);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
   }
 
@@ -292,7 +325,7 @@ public class HttpStateTest extends WingsBaseTest {
     assertThat(response.getStateExecutionData().getExecutionSummary()).isNotNull();
     assertThat(response.getStateExecutionData().getExecutionDetails()).isNotNull();
 
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
   }
 
@@ -326,7 +359,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
 
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
@@ -355,7 +388,7 @@ public class HttpStateTest extends WingsBaseTest {
                 .withHttpResponseBody("NoHttpResponseException: localhost:8088 failed to respond")
                 .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
@@ -383,7 +416,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                .withHttpResponseBody("MalformedChunkCodingException: Bad chunk header")
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
@@ -411,7 +444,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                .withHttpResponseBody("ClientProtocolException: ")
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
@@ -439,7 +472,7 @@ public class HttpStateTest extends WingsBaseTest {
             "httpUrl", "assertionStatus", "httpResponseCode");
     assertThat(((HttpStateExecutionData) response.getStateExecutionData()).getHttpResponseBody())
         .contains("Connect to www.google.com:81 ");
-    verify(activityService).save(activityBuilder.build());
+    verify(activityService).save(activity);
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 

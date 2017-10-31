@@ -21,6 +21,8 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -47,6 +49,10 @@ public class ElasticLoadBalancerState extends State {
 
   @Attributes(title = "Custom Entity") @SchemaIgnore private String custom;
 
+  @Transient @Inject private transient KmsService kmsService;
+
+  @Transient @Inject private transient EncryptionService encryptionService;
+
   public ElasticLoadBalancerState(String name) {
     super(name, StateType.ELASTIC_LOAD_BALANCER.name());
   }
@@ -68,12 +74,15 @@ public class ElasticLoadBalancerState extends State {
       region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+      encryptionService.decrypt(awsConfig, kmsService.getEncryptionDetails(awsConfig, context.getWorkflowId()));
       return execute(
           context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       SettingAttribute elbSetting =
           settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
       ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
+      encryptionService.decrypt(
+          loadBalancerConfig, kmsService.getEncryptionDetails(loadBalancerConfig, context.getWorkflowId()));
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),

@@ -35,6 +35,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -56,8 +57,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   @Inject private SettingsService settingsService;
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
   @Inject private EventEmitter eventEmitter;
+  @Inject private KmsService kmsService;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
@@ -99,9 +100,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(jenkinsArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-                jenkinsConfig.getPassword(), jenkinsArtifactStream.getJobname(),
-                jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .withParameters(new Object[] {jenkinsConfig, kmsService.getEncryptionDetails(jenkinsConfig, null),
+                jenkinsArtifactStream.getJobname(), jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
       case BAMBOO: {
@@ -114,9 +114,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(bambooArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(
-                new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(), bambooConfig.getPassword(),
-                    bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .withParameters(new Object[] {bambooConfig, kmsService.getEncryptionDetails(bambooConfig, null),
+                bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
       case NEXUS: {
@@ -129,9 +128,9 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(nexusArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {nexusConfig.getNexusUrl(), nexusConfig.getUsername(),
-                nexusConfig.getPassword(), nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
-                nexusArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .withParameters(new Object[] {nexusConfig, kmsService.getEncryptionDetails(nexusConfig, null),
+                nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
+                nexusArtifactStream.getArtifactPaths()})
             .build();
       }
       case ARTIFACTORY: {
@@ -144,10 +143,10 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(artifactoryArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
-                artifactoryConfig.getPassword(), artifactoryArtifactStream.getJobname(),
-                artifactoryArtifactStream.getGroupId(), artifactoryArtifactStream.getArtifactPaths(),
-                artifactoryArtifactStream.getArtifactPattern(), artifact.getMetadata()})
+            .withParameters(new Object[] {artifactoryConfig, kmsService.getEncryptionDetails(artifactoryConfig, null),
+                artifactoryArtifactStream.getJobname(), artifactoryArtifactStream.getGroupId(),
+                artifactoryArtifactStream.getArtifactPaths(), artifactoryArtifactStream.getArtifactPattern(),
+                artifact.getMetadata()})
             .build();
       }
       case AMAZON_S3: {
@@ -160,7 +159,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withAccountId(accountId)
             .withAppId(amazonS3ArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {awsConfig.getAccountId(), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+            .withParameters(new Object[] {awsConfig, kmsService.getEncryptionDetails(awsConfig, null),
                 amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
             .build();
       }

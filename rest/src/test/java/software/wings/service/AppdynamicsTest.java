@@ -2,22 +2,30 @@ package software.wings.service;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -25,10 +33,15 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -36,17 +49,44 @@ import javax.inject.Inject;
 /**
  * Created by rsingh on 10/10/17.
  */
+@RunWith(Parameterized.class)
 public class AppdynamicsTest extends WingsBaseTest {
-  @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
+  @Inject private KmsService kmsService;
+  @Inject private KmsDelegateServiceImpl kmsDelegateService;
   @Inject private AppdynamicsService appdynamicsService;
-  @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private EncryptionService encryptionService;
+  @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
+  @Mock private DelegateProxyFactory appdDelegateProxyFactory;
+  @Mock private DelegateProxyFactory kmsDelegateProxyFactory;
   private SettingAttribute settingAttribute;
   private String accountId;
 
+  @Parameter public boolean isKmsEnabled;
+
+  @Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[][] {{true}, {false}});
+  }
+
   @Before
   public void setup() {
+    initMocks(this);
+    setInternalState(appdynamicsDelegateService, "encryptionService", encryptionService);
+    when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
+    when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(kmsDelegateService);
+    setInternalState(kmsService, "delegateProxyFactory", kmsDelegateProxyFactory);
+    setInternalState(appdynamicsService, "delegateProxyFactory", appdDelegateProxyFactory);
+    setInternalState(wingsPersistence, "kmsService", kmsService);
+
     accountId = UUID.randomUUID().toString();
+
+    if (isKmsEnabled) {
+      final KmsConfig kmsConfig = getKmsConfig();
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+      enableKmsFeatureFlag();
+    }
+
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("https://wingsnfr.saas.appdynamics.com/controller")
@@ -61,21 +101,16 @@ public class AppdynamicsTest extends WingsBaseTest {
                            .withValue(appDynamicsConfig)
                            .build();
     wingsPersistence.save(settingAttribute);
-    MockitoAnnotations.initMocks(this);
-    Mockito.when(delegateProxyFactory.get(Mockito.anyObject(), Mockito.any(SyncTaskContext.class)))
-        .thenReturn(appdynamicsDelegateService);
-    Whitebox.setInternalState(appdynamicsService, "delegateProxyFactory", delegateProxyFactory);
   }
 
   @Test
-  @RealMongo
   @Repeat(times = 5, successes = 1)
   public void validateConfig() {
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword("cbm411sjesma".toCharArray());
     appdynamicsService.validateConfig(settingAttribute);
   }
 
   @Test
-  @RealMongo
   @Repeat(times = 5, successes = 1)
   public void getAllApplications() throws IOException {
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
@@ -83,7 +118,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   @Repeat(times = 5, successes = 1)
   public void getTiers() throws IOException {
     NewRelicApplication application = getDemoApp();
@@ -92,17 +126,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
-  @Repeat(times = 5, successes = 1)
-  public void getBusinessTransactions() throws IOException {
-    NewRelicApplication application = getDemoApp();
-    List<AppdynamicsBusinessTransaction> businessTransactions =
-        appdynamicsService.getBusinessTransactions(settingAttribute.getUuid(), application.getId());
-    assertFalse(businessTransactions.isEmpty());
-  }
-
-  @Test
-  @RealMongo
   @Repeat(times = 5, successes = 1)
   public void getTierBTMetrics() throws IOException {
     NewRelicApplication application = getDemoApp();
@@ -116,7 +139,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   @Repeat(times = 5, successes = 1)
   public void getTierBTMetricData() throws IOException {
     NewRelicApplication application = getDemoApp();
@@ -143,5 +165,21 @@ public class AppdynamicsTest extends WingsBaseTest {
     }
 
     throw new IllegalStateException("Could not find application appd-integration");
+  }
+
+  private KmsConfig getKmsConfig() {
+    final KmsConfig kmsConfig = new KmsConfig();
+    kmsConfig.setName("myKms");
+    kmsConfig.setDefault(true);
+    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
+    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
+    kmsConfig.setSecretKey("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");
+    return kmsConfig;
+  }
+
+  private void enableKmsFeatureFlag() {
+    FeatureFlag kmsFeatureFlag =
+        FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
+    wingsPersistence.save(kmsFeatureFlag);
   }
 }

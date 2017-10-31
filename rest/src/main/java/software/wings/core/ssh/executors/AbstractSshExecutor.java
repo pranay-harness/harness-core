@@ -41,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -252,6 +253,28 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       public void downloadToStream(OutputStream outputStream) throws IOException {
         try (InputStream inputStream = delegateFileManager.downloadByFileId(configFileMetaData.getFileBucket(),
                  configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
+          IOUtils.copy(inputStream, outputStream);
+        }
+      }
+    });
+  }
+
+  @Override
+  public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
+    if (isNullOrEmpty(configFileMetaData.getFileId()) || isNullOrEmpty(configFileMetaData.getFilename())) {
+      saveExecutionLog("There are no artifacts to copy. " + configFileMetaData.toString());
+      return CommandExecutionStatus.SUCCESS;
+    }
+    return scpOneFile(configFileMetaData.getDestinationDirectoryPath(), new FileProvider() {
+      @Override
+      public Pair<String, Long> getInfo() throws IOException {
+        return ImmutablePair.of(configFileMetaData.getFilename(), configFileMetaData.getLength());
+      }
+
+      @Override
+      public void downloadToStream(OutputStream outputStream) throws IOException {
+        try (InputStream inputStream = delegateFileManager.downloadByConfigFileId(configFileMetaData.getFileId(),
+                 config.getAccountId(), config.getAppId(), configFileMetaData.getActivityId())) {
           IOUtils.copy(inputStream, outputStream);
         }
       }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
@@ -57,6 +58,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.yaml.YamlGitSyncService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
@@ -124,6 +126,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private WorkflowService workflowService;
   @Inject private SettingsService settingsService;
   @Inject private YamlGitSyncService yamlGitSyncService;
+  @Inject private KmsService kmsService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -939,12 +942,14 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (DockerConfig) settingAttribute.getValue();
+            DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+            String dockerPasswordRef =
+                kmsService.getEncryptedYamlRef(dockerConfig, Base.GLOBAL_APP_ID, "password", dockerYaml.getName());
             settingAttribute.setName(dockerYaml.getName());
             config = DockerConfig.builder()
                          .accountId(accountId)
                          .dockerRegistryUrl(dockerYaml.getUrl())
-                         .password(((DockerConfig) beforeConfig).getPassword())
+                         .password(dockerPasswordRef.toCharArray())
                          .username(dockerYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
@@ -1095,13 +1100,15 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (AppDynamicsConfig) settingAttribute.getValue();
+            AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+            String passwordRef = kmsService.getEncryptedYamlRef(
+                appDynamicsConfig, Base.GLOBAL_APP_ID, "password", appDynamicsYaml.getName());
             settingAttribute.setName(appDynamicsYaml.getName());
             config = AppDynamicsConfig.builder()
                          .accountId(accountId)
                          .accountname(appDynamicsYaml.getAccountname())
                          .controllerUrl(appDynamicsYaml.getUrl())
-                         .password(((AppDynamicsConfig) beforeConfig).getPassword())
+                         .password(passwordRef.toCharArray())
                          .username(appDynamicsYaml.getUsername())
                          .build();
             settingAttribute.setValue(config);
@@ -1121,11 +1128,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
               return rr;
             }
 
-            beforeConfig = (SplunkConfig) settingAttribute.getValue();
+            SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
+            String splunkPasswordRef =
+                kmsService.getEncryptedYamlRef(splunkConfig, Base.GLOBAL_APP_ID, "password", splunkYaml.getName());
             settingAttribute.setName(splunkYaml.getName());
             config = SplunkConfig.builder()
                          .accountId(accountId)
-                         .password(((SplunkConfig) beforeConfig).getPassword())
+                         .password(splunkPasswordRef.toCharArray())
                          .splunkUrl(splunkYaml.getUrl())
                          .username(splunkYaml.getUsername())
                          .build();

@@ -15,6 +15,7 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -41,7 +42,8 @@ public class NewRelicTest extends WingsBaseTest {
   @Repeat(times = 5, successes = 1)
   @Ignore
   public void getAllApplications() throws IOException {
-    List<NewRelicApplication> allApplications = newRelicDelegateService.getAllApplications(newRelicConfig);
+    List<NewRelicApplication> allApplications =
+        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList());
     assertFalse(allApplications.isEmpty());
   }
 
@@ -51,7 +53,7 @@ public class NewRelicTest extends WingsBaseTest {
   public void getApplicationInstances() throws IOException {
     NewRelicApplication demoApp = getDemoApp();
     List<NewRelicApplicationInstance> applicationInstances =
-        newRelicDelegateService.getApplicationInstances(newRelicConfig, demoApp.getId());
+        newRelicDelegateService.getApplicationInstances(newRelicConfig, Collections.emptyList(), demoApp.getId());
     assertFalse(applicationInstances.isEmpty());
   }
 
@@ -61,12 +63,13 @@ public class NewRelicTest extends WingsBaseTest {
   public void getMetricsNameToCollect() throws IOException {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =
-        newRelicDelegateService.getMetricsNameToCollect(newRelicConfig, demoApp.getId());
+        newRelicDelegateService.getMetricsNameToCollect(newRelicConfig, Collections.emptyList(), demoApp.getId());
     assertFalse(metricsNameToCollect.isEmpty());
   }
 
   private NewRelicApplication getDemoApp() throws IOException {
-    List<NewRelicApplication> allApplications = newRelicDelegateService.getAllApplications(newRelicConfig);
+    List<NewRelicApplication> allApplications =
+        newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList());
     for (NewRelicApplication application : allApplications) {
       if (application.getName().equals("rsingh-demo-app")) {
         return application;

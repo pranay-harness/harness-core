@@ -6,8 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
@@ -20,6 +23,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -50,6 +54,7 @@ import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
@@ -66,6 +71,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -79,6 +85,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -86,9 +94,11 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * Created by rishi on 2/27/17.
@@ -103,6 +113,9 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private KmsService kmsService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  private ExecutionContextImpl context;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -141,6 +154,16 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   private EcsServiceDeploy ecsServiceDeploy =
       anEcsServiceDeploy(STATE_NAME).withCommandName(COMMAND_NAME).withInstanceCount(1).build();
 
+  @Before
+  public void setUp() {
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(ecsServiceDeploy, "kmsService", kmsService);
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
+        .thenReturn(aWorkflowExecution().build());
+    context = new ExecutionContextImpl(stateExecutionInstance);
+    setInternalState(context, "workflowExecutionService", workflowExecutionService);
+  }
+
   /**
    * Set up.
    */
@@ -173,7 +196,9 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 
-    Activity activity = Activity.Builder.anActivity().withUuid(ACTIVITY_ID).build();
+    Activity activity = Activity.builder().build();
+    activity.setUuid(ACTIVITY_ID);
+
     when(activityService.save(any(Activity.class))).thenReturn(activity);
 
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
@@ -187,14 +212,14 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecute() {
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);
     ecsService.setCreatedAt(new Date());
     ecsService.setDesiredCount(0);
-    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+    when(awsClusterService.getServices(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), CLUSTER_NAME))
         .thenReturn(Lists.newArrayList(ecsService));
 
     ExecutionResponse response = ecsServiceDeploy.execute(context);
@@ -207,7 +232,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Test
   public void shouldExecuteThrowInvalidRequest() {
     try {
-      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
       on(context).set("serviceTemplateService", serviceTemplateService);
       ecsServiceDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -225,7 +249,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
@@ -240,7 +263,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ecsService.setServiceName(ECS_SERVICE_OLD_NAME);
     ecsService.setCreatedAt(new Date());
     ecsService.setDesiredCount(1);
-    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+    when(awsClusterService.getServices(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), CLUSTER_NAME))
         .thenReturn(Lists.newArrayList(ecsService));
 
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
@@ -259,7 +283,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
             .withDownsize(false)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -274,7 +297,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)

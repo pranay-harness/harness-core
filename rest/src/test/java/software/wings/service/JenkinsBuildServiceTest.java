@@ -96,7 +96,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(()
                         -> jenkinsBuildService.getBuilds(
-                            APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig));
+                            APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig, null));
   }
 
   /**
@@ -107,7 +107,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
     assertThat(
-        jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig))
+        jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig, null))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(
@@ -122,7 +122,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchJobNames() throws IOException {
     when(jenkins.getJobs(anyString())).thenReturn(ImmutableList.of(new JobDetails("jobName", false)));
-    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, Optional.empty());
+    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
     List<String> jobNames = jenkinsBuildService.extractJobNameFromJobDetails(jobs);
     assertThat(jobNames).containsExactly("jobName");
   }
@@ -139,7 +139,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     artifact.setRelativePath("relativePath");
     when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
     when(jobWithDetails.getLastSuccessfulBuild().details().getArtifacts()).thenReturn(ImmutableList.of(artifact));
-    assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, jenkinsConfig))
+    assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, jenkinsConfig, null))
         .containsExactly("relativePath");
   }
 

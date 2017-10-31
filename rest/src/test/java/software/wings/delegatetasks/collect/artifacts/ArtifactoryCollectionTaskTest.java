@@ -56,7 +56,7 @@ public class ArtifactoryCollectionTaskTest {
   @Test
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();
-    when(artifactoryService.downloadArtifacts(any(ArtifactoryConfig.class), anyString(), anyString(), anyList(),
+    when(artifactoryService.downloadArtifacts(any(ArtifactoryConfig.class), any(), anyString(), anyString(), anyList(),
              anyString(), anyMap(), anyString(), anyString(), anyString()))
         .thenReturn(res);
     res = artifactoryCollectionTask.run(collectionTask.getParameters());

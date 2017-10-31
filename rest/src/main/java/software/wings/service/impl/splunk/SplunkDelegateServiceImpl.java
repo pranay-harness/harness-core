@@ -5,6 +5,8 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import software.wings.beans.SplunkConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
 import java.net.MalformedURLException;
@@ -12,14 +14,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by rsingh on 6/30/17.
  */
 public class SplunkDelegateServiceImpl implements SplunkDelegateService {
+  @Inject private EncryptionService encryptionService;
   @Override
-  public void validateConfig(SplunkConfig splunkConfig) {
+  public void validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
+      encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       final ServiceArgs loginArgs = new ServiceArgs();
       loginArgs.setUsername(splunkConfig.getUsername());
       loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));

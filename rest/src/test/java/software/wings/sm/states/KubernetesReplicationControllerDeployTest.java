@@ -6,10 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.ContainerServiceData.ContainerServiceDataBuilder.aContainerServiceData;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
@@ -22,6 +24,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -84,6 +87,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -91,6 +96,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,6 +118,9 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private KubernetesConfig kubernetesConfig;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private KmsService kmsService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  private ExecutionContextImpl context;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -186,7 +195,8 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 
-    Activity activity = Activity.Builder.anActivity().withUuid(ACTIVITY_ID).build();
+    Activity activity = Activity.builder().build();
+    activity.setUuid(ACTIVITY_ID);
     when(activityService.save(any(Activity.class))).thenReturn(activity);
 
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
@@ -196,11 +206,16 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(kubernetesReplicationControllerDeploy, "kmsService", kmsService);
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
+        .thenReturn(aWorkflowExecution().build());
+    context = new ExecutionContextImpl(stateExecutionInstance);
+    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test
   public void shouldExecute() {
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     ReplicationController replicationController = new ReplicationControllerBuilder()
@@ -212,10 +227,12 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .withReplicas(0)
                                                       .endSpec()
                                                       .build();
-    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME, "default")).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(kubernetesConfig))
+    when(gkeClusterService.getCluster(computeProvider, Collections.emptyList(), CLUSTER_NAME, "default"))
+        .thenReturn(kubernetesConfig);
+    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList()))
         .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
-    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
+    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
+        .thenReturn(replicationController);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -228,7 +245,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Test
   public void shouldExecuteThrowInvalidRequest() {
     try {
-      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
       on(context).set("serviceTemplateService", serviceTemplateService);
       kubernetesReplicationControllerDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -246,7 +262,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
 
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
@@ -269,10 +284,12 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                                       .withReplicas(2)
                                                       .endSpec()
                                                       .build();
-    when(gkeClusterService.getCluster(computeProvider, CLUSTER_NAME, "default")).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(kubernetesConfig))
+    when(gkeClusterService.getCluster(computeProvider, Collections.emptyList(), CLUSTER_NAME, "default"))
+        .thenReturn(kubernetesConfig);
+    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList()))
         .thenReturn(new ReplicationControllerListBuilder().addToItems(replicationController).build());
-    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
+    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
+        .thenReturn(replicationController);
 
     CommandStateExecutionData commandStateExecutionData =
         aCommandStateExecutionData()
@@ -290,7 +307,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
             .withDownsize(false)
             .build();
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -305,7 +321,6 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)

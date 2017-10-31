@@ -100,6 +100,8 @@ public interface ExecutionContext {
    */
   String getWorkflowExecutionId();
 
+  String getWorkflowId();
+
   /**
    * Gets workflow execution name.
    *

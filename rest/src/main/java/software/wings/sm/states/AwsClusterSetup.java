@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -26,10 +27,12 @@ import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -41,6 +44,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by brett on 4/14/17
@@ -69,6 +73,7 @@ public class AwsClusterSetup extends State {
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject @Transient private transient KmsService kmsService;
 
   /**
    * Instantiates a new state.
@@ -98,6 +103,8 @@ public class AwsClusterSetup extends State {
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    List<EncryptedDataDetail> encryptionDetails =
+        kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), context.getWorkflowId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
 
@@ -127,7 +134,7 @@ public class AwsClusterSetup extends State {
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);
 
-    awsClusterService.createCluster(region, computeProviderSetting, clusterConfiguration);
+    awsClusterService.createCluster(region, computeProviderSetting, encryptionDetails, clusterConfiguration);
 
     ClusterElement clusterElement = aClusterElement()
                                         .withUuid(serviceId)

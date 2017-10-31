@@ -6,10 +6,11 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.annotation.Encrypted;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue;
 
 /**
@@ -18,6 +19,7 @@ import software.wings.settings.SettingValue;
 @JsonTypeName("JENKINS")
 @Data
 @Builder
+@ToString(exclude = "password")
 public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;

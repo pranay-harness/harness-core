@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encrypted;
 
 /**
@@ -38,4 +39,6 @@ public class KmsConfig extends Base {
   private boolean isDefault = true;
 
   @SchemaIgnore @NotEmpty private String accountId;
+
+  @SchemaIgnore @Transient private int numOfEncryptedValue;
 }

@@ -51,7 +51,9 @@ public class BambooServiceTest extends WingsBaseTest {
                     .withBody(
                         "{\"expand\":\"plans\",\"plans\":{\"plan\":[{\"shortName\":\"BAMBOO_PLAN_NAME\",\"key\":\"BAMBOO_PLAN_KEY\"}]}}")
                     .withHeader("Content-Type", "application/json")));
-    assertThat(bambooService.getPlanKeys(bambooConfig)).hasSize(1).containsEntry("BAMBOO_PLAN_KEY", "BAMBOO_PLAN_NAME");
+    assertThat(bambooService.getPlanKeys(bambooConfig, null))
+        .hasSize(1)
+        .containsEntry("BAMBOO_PLAN_KEY", "BAMBOO_PLAN_NAME");
   }
 
   @Test
@@ -62,7 +64,7 @@ public class BambooServiceTest extends WingsBaseTest {
                                              .withStatus(200)
                                              .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
                                              .withHeader("Content-Type", "application/json")));
-    assertThatThrownBy(() -> bambooService.getPlanKeys(bambooConfig))
+    assertThatThrownBy(() -> bambooService.getPlanKeys(bambooConfig, null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.UNKNOWN_ERROR.name());
   }
@@ -83,7 +85,7 @@ public class BambooServiceTest extends WingsBaseTest {
                     .withBody(
                         "{\"results\":{\"result\":[{\"vcsRevisionKey\":\"REV_11\",\"buildNumber\":11}, {\"vcsRevisionKey\":\"REV_12\",\"buildNumber\":12}]}}")
                     .withHeader("Content-Type", "application/json")));
-    List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
+    List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, null, "BAMBOO_PLAN_KEY", 50);
     Assertions.assertThat(bamboo_plan_key)
         .containsExactly(aBuildDetails().withNumber("11").withRevision("REV_11").build(),
             aBuildDetails().withNumber("12").withRevision("REV_12").build());
@@ -96,7 +98,7 @@ public class BambooServiceTest extends WingsBaseTest {
         urlEqualTo(
             "/rest/api/latest/result/BAMBOO_PLAN_KEY.json?authType=basic&buildState=Successful&expand=results.result&max-result=50"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
-    assertThatThrownBy(() -> bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50))
+    assertThatThrownBy(() -> bambooService.getBuilds(bambooConfig, null, "BAMBOO_PLAN_KEY", 50))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.UNKNOWN_ERROR.name());
   }

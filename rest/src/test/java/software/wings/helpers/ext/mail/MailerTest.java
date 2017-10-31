@@ -18,6 +18,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 
 import java.io.IOException;
+import java.util.Collections;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
@@ -58,6 +59,7 @@ public class MailerTest extends WingsBaseTest {
                     .username(EMAIL)
                     .password(PASSWORD)
                     .build(),
+        Collections.emptyList(),
         anEmailData()
             .withHasHtml(false)
             .withBody("test")
@@ -92,6 +94,7 @@ public class MailerTest extends WingsBaseTest {
                     .username(EMAIL)
                     .password(PASSWORD)
                     .build(),
+        Collections.emptyList(),
         anEmailData()
             .withHasHtml(true)
             .withBody("test")
@@ -126,6 +129,7 @@ public class MailerTest extends WingsBaseTest {
                     .username(EMAIL)
                     .password(PASSWORD)
                     .build(),
+        Collections.emptyList(),
         anEmailData()
             .withHasHtml(false)
             .withTemplateName("testmail")

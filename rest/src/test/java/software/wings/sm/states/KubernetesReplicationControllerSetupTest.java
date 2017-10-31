@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -57,6 +59,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -71,11 +74,13 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -84,12 +89,15 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
 
+import java.util.Collections;
 import java.util.Date;
 
 /**
@@ -107,6 +115,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private KubernetesConfig kubernetesConfig;
+  @Mock private KmsService kmsService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -190,6 +200,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
     when(settingsService.get(SETTING_ID)).thenReturn(dockerConfigSettingAttribute);
+    when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(dockerConfigSettingAttribute);
 
     replicationController =
         new ReplicationControllerBuilder()
@@ -259,21 +270,31 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                             .endStatus()
                             .build();
 
-    when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString(), anyString()))
+    when(gkeClusterService.getCluster(
+             any(SettingAttribute.class), eq(Collections.emptyList()), anyString(), anyString()))
         .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
+    when(kubernetesContainerService.createController(
+             eq(kubernetesConfig), eq(Collections.emptyList()), any(ReplicationController.class)))
         .thenReturn(replicationController);
-    when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
+    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList())).thenReturn(null);
     when(kubernetesContainerService.createOrReplaceService(
-             eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
+             eq(kubernetesConfig), eq(Collections.emptyList()), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
-    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
+    when(kubernetesContainerService.createOrReplaceSecret(
+             eq(kubernetesConfig), eq(Collections.emptyList()), any(Secret.class)))
+        .thenReturn(secret);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
+        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution().build());
+    setInternalState(kubernetesReplicationControllerSetup, "kmsService", kmsService);
+    setInternalState(kubernetesReplicationControllerSetup, "encryptionService", new EncryptionServiceImpl());
+    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test
@@ -294,6 +315,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
+                                                      .withAppId(APP_ID)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
@@ -308,14 +330,15 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
             .endMetadata()
             .build();
 
-    when(kubernetesContainerService.listControllers(kubernetesConfig))
+    when(kubernetesContainerService.listControllers(kubernetesConfig, Collections.emptyList()))
         .thenReturn(new ReplicationControllerListBuilder()
                         .withItems(Lists.newArrayList(kubernetesReplicationController))
                         .build());
 
     ExecutionResponse response = kubernetesReplicationControllerSetup.execute(context);
     assertThat(response).isNotNull();
-    verify(gkeClusterService, times(2)).getCluster(any(SettingAttribute.class), anyString(), anyString());
-    verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(ReplicationController.class));
+    verify(gkeClusterService, times(2))
+        .getCluster(any(SettingAttribute.class), eq(Collections.emptyList()), anyString(), anyString());
+    verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(), any(ReplicationController.class));
   }
 }

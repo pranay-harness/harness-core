@@ -28,6 +28,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.HostService;
 
+import java.util.Collections;
 import javax.inject.Inject;
 
 /**
@@ -45,8 +46,8 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(asList(host)).build());
     SettingAttribute computeProviderSettingAttribute =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build();
-    PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(null, computeProviderSettingAttribute, new PageRequest<>());
+    PageResponse<Host> hosts = infrastructureProvider.listHosts(
+        null, computeProviderSettingAttribute, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts).hasSize(1).containsExactly(host);
     verify(hostService).list(any(PageRequest.class));
   }

@@ -39,7 +39,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetJobs() {
-    System.out.println(bambooService.getPlanKeys(bambooConfig));
+    System.out.println(bambooService.getPlanKeys(bambooConfig, null));
   }
 
   @Test
@@ -47,18 +47,18 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetLastSuccessfulBuild() {
-    System.out.println(bambooService.getLastSuccessfulBuild(bambooConfig, "TOD-TOD-JOB1"));
+    System.out.println(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1"));
   }
 
   @Test
   public void shouldGetBuilds() {
-    System.out.println(bambooService.getBuilds(bambooConfig, "TOD-TOD-JOB1", 50));
+    System.out.println(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", 50));
   }
 
   @Test
   public void shouldGetBuildArtifacts() {
     Pair<String, InputStream> stringInputStreamPair =
-        bambooService.downloadArtifact(bambooConfig, "TOD-TOD-JOB1", "11", "*");
+        bambooService.downloadArtifact(bambooConfig, null, "TOD-TOD-JOB1", "11", "*");
     System.out.println(stringInputStreamPair.getKey());
   }
 }

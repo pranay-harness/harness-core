@@ -9,6 +9,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -38,24 +39,23 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
     try {
-      return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
-          (String) parameters[4], (List<String>) parameters[5], (Map<String, String>) parameters[6]);
+      return run((NexusConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+          (String) parameters[3], (List<String>) parameters[4]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
 
-  public ListNotifyResponseData run(String nexusUrl, String username, char[] password, String repoType, String groupId,
-      List<String> artifactPaths, Map<String, String> arguments) {
+  public ListNotifyResponseData run(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoType, String groupId, List<String> artifactPaths) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
-      NexusConfig nexusConfig = NexusConfig.builder().nexusUrl(nexusUrl).username(username).password(password).build();
       for (String artifactPath : artifactPaths) {
-        logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
+        logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusConfig.getNexusUrl());
         Pair<String, InputStream> fileInfo =
-            nexusService.downloadArtifact(nexusConfig, repoType, groupId, artifactPath);
+            nexusService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }

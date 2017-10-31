@@ -23,6 +23,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.delegate.service.MetricDataStoreServiceImpl;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
 import software.wings.delegate.service.DelegateFileManagerImpl;
@@ -89,6 +90,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -164,6 +166,7 @@ public class DelegateModule extends AbstractModule {
     bind(GcrBuildService.class).to(GcrBuildServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(KmsDelegateService.class).to(KmsDelegateServiceImpl.class);
+    bind(EncryptionService.class).to(EncryptionServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

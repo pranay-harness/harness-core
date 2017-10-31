@@ -1,21 +1,30 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import software.wings.beans.KubernetesConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by brett on 2/22/17
  */
 @Singleton
 public class KubernetesHelperService {
+  @Inject private EncryptionService encryptionService;
   /**
    * Gets a Kubernetes client.
    */
-  public KubernetesClient getKubernetesClient(KubernetesConfig kubernetesConfig) {
+  public KubernetesClient getKubernetesClient(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
     return new DefaultKubernetesClient(
         new ConfigBuilder()
             .withMasterUrl(kubernetesConfig.getMasterUrl())
@@ -31,6 +40,6 @@ public class KubernetesHelperService {
   }
 
   public void validateCredential(KubernetesConfig kubernetesConfig) {
-    getKubernetesClient(kubernetesConfig).replicationControllers().list();
+    getKubernetesClient(kubernetesConfig, Collections.emptyList()).replicationControllers().list();
   }
 }
