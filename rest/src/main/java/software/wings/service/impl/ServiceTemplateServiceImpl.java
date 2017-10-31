@@ -375,7 +375,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
       if (newFiles != null && !newFiles.isEmpty()) {
         mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
-                                .filter(new TreeSet<>(comparing(ConfigFile::getName))::add)
+                                .filter(new TreeSet<>(comparing(ConfigFile::getRelativeFilePath))::add)
                                 .collect(toList());
       }
     }
