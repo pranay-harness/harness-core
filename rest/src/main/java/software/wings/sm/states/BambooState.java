@@ -2,11 +2,11 @@ package software.wings.sm.states;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionData;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -31,6 +31,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.BambooSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -70,6 +71,7 @@ public class BambooState extends State {
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
+  @Inject private KmsService kmsService;
 
   public BambooState(String name) {
     super(name, StateType.BAMBOO.name());
@@ -219,17 +221,17 @@ public class BambooState extends State {
     final String finalPlanName = evaluatedPlanName;
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask =
-        DelegateTask.Builder.aDelegateTask()
-            .withTaskType(getTaskType())
-            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(),
-                bambooConfig.getPassword(), finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
-            .withEnvId(envId)
-            .withInfrastructureMappingId(infrastructureMappingId)
-            .build();
+    DelegateTask delegateTask = DelegateTask.Builder.aDelegateTask()
+                                    .withTaskType(getTaskType())
+                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                    .withWaitId(activityId)
+                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .withParameters(new Object[] {bambooConfig,
+                                        kmsService.getEncryptionDetails(bambooConfig, context.getWorkflowId()),
+                                        finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
+                                    .withEnvId(envId)
+                                    .withInfrastructureMappingId(infrastructureMappingId)
+                                    .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
@@ -296,32 +298,37 @@ public class BambooState extends State {
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
-    Activity.Builder activityBuilder =
-        anActivity()
-            .withAppId(app.getUuid())
-            .withApplicationName(app.getName())
-            .withEnvironmentId(env.getUuid())
-            .withEnvironmentName(env.getName())
-            .withEnvironmentType(env.getEnvironmentType())
-            .withCommandName(getName())
-            .withType(Activity.Type.Verification)
-            .withWorkflowType(executionContext.getWorkflowType())
-            .withWorkflowExecutionName(executionContext.getWorkflowExecutionName())
-            .withStateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .withStateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .withCommandType(getStateType())
-            .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
+    Activity.ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .environmentId(env.getUuid())
+            .environmentName(env.getName())
+            .environmentType(env.getEnvironmentType())
+            .commandName(getName())
+            .type(Activity.Type.Verification)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(Collections.emptyList())
+            .serviceVariables(Maps.newHashMap())
+            .status(ExecutionStatus.RUNNING);
 
     if (instanceElement != null) {
-      activityBuilder.withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
-          .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
-          .withServiceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
-          .withServiceInstanceId(instanceElement.getUuid())
-          .withHostName(instanceElement.getHost().getHostName());
+      activityBuilder.serviceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .serviceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .serviceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .serviceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .serviceInstanceId(instanceElement.getUuid())
+          .hostName(instanceElement.getHost().getHostName());
     }
 
-    return activityService.save(activityBuilder.build()).getUuid();
+    Activity activity = activityBuilder.build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {

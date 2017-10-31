@@ -2,6 +2,7 @@ package software.wings.helpers.ext.amazons3;
 
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
@@ -15,43 +16,48 @@ import java.util.Map;
 public interface AmazonS3Service {
   /**
    * Get Repositories
+   *
    * @return map RepoId and Name
    */
-  Map<String, String> getBuckets(final AwsConfig awsConfig);
+  Map<String, String> getBuckets(final AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Get artifact paths for a given repo from the given bucket.
-   * @param awsConfig aws cloud provider config
+   *
+   * @param awsConfig  aws cloud provider config
    * @param bucketName s3 bucket name
    * @return
    */
-  List<String> getArtifactPaths(AwsConfig awsConfig, String bucketName);
+  List<String> getArtifactPaths(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName);
 
   /**
    * downloads artifacts from s3 based on the given inputs
-   * @param awsConfig aws config
-   * @param bucketName bucket name
+   *
+   * @param awsConfig     aws config
+   * @param bucketName    bucket name
    * @param artifactPaths artifact paths
-   * @param delegateId delegate id
-   * @param taskId task id
-   * @param accountId account id
+   * @param delegateId    delegate id
+   * @param taskId        task id
+   * @param accountId     account id
    * @return
    * @throws IOException
    * @throws URISyntaxException
    */
-  ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, String bucketName, List<String> artifactPaths,
-      String delegateId, String taskId, String accountId) throws IOException, URISyntaxException;
+  ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, List<String> artifactPaths, String delegateId, String taskId, String accountId)
+      throws IOException, URISyntaxException;
 
   /**
    * Gets the artifact related information
-   * @param config aws cloud provider config
+   *
+   * @param config     aws cloud provider config
    * @param bucketName bucket name
-   * @param key   artifact path / key
+   * @param key        artifact path / key
    * @return
    */
-  BuildDetails getArtifactBuildDetails(
-      AwsConfig config, String bucketName, String key, boolean versioningEnabledForBucket);
+  BuildDetails getArtifactBuildDetails(AwsConfig config, List<EncryptedDataDetail> encryptionDetails, String bucketName,
+      String key, boolean versioningEnabledForBucket);
 
-  List<BuildDetails> getArtifactsBuildDetails(
-      AwsConfig awsConfig, String bucketName, List<String> artifactPaths, boolean isExpression);
+  List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String bucketName, List<String> artifactPaths, boolean isExpression);
 }

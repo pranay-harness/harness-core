@@ -9,7 +9,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -75,7 +74,7 @@ public class ActivityResourceTest {
   /**
    * The constant ACTUAL_ACTIVITY.
    */
-  public static final Activity ACTUAL_ACTIVITY = anActivity().build();
+  public static final Activity ACTUAL_ACTIVITY = Activity.builder().build();
   /**
    * The constant ACTUAL_LOG.
    */

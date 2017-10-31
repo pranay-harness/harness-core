@@ -9,6 +9,7 @@ import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
@@ -16,11 +17,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.request.EcsFilter;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -35,14 +38,17 @@ public class EcsContainerSyncImpl implements ContainerSync {
 
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
+  @Inject private KmsService kmsService;
 
   @Override
-  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
+  public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest, String workflowId) {
     EcsFilter filter = (EcsFilter) syncRequest.getFilter();
     String nextToken = null;
     SettingAttribute settingAttribute = settingsService.get(filter.getAwsComputeProviderId());
+    List<EncryptedDataDetail> encryptionDetails =
+        kmsService.getEncryptionDetails((Encryptable) settingAttribute.getValue(), workflowId);
     Validator.notNullCheck("SettingAttribute", settingAttribute);
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute);
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptionDetails);
     Validator.notNullCheck("AwsConfig", awsConfig);
     List<Task> tasks;
     List<ContainerInfo> result = new ArrayList<>();
@@ -57,7 +63,8 @@ public class EcsContainerSyncImpl implements ContainerSync {
                                                 .withDesiredStatus("RUNNING");
         ListTasksResult listTasksResult;
         try {
-          listTasksResult = awsHelperService.listTasks(filter.getRegion(), awsConfig, listTasksRequest);
+          listTasksResult =
+              awsHelperService.listTasks(filter.getRegion(), awsConfig, encryptionDetails, listTasksRequest);
         } catch (WingsException ex) {
           // if the cluster / service has been deleted, we need to continue and check the rest of the service names
           List<ResponseMessage> responseMessageList = ex.getResponseMessageList();
@@ -80,7 +87,7 @@ public class EcsContainerSyncImpl implements ContainerSync {
           DescribeTasksRequest describeTasksRequest =
               new DescribeTasksRequest().withCluster(filter.getClusterName()).withTasks(listTasksResult.getTaskArns());
           DescribeTasksResult describeTasksResult =
-              awsHelperService.describeTasks(filter.getRegion(), awsConfig, describeTasksRequest);
+              awsHelperService.describeTasks(filter.getRegion(), awsConfig, encryptionDetails, describeTasksRequest);
           tasks = describeTasksResult.getTasks();
           for (Task task : tasks) {
             if (task != null) {

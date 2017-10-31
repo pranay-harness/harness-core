@@ -3,6 +3,7 @@ package software.wings.helpers.ext.ecr;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -18,7 +19,8 @@ public interface EcrClassicService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(EcrConfig ecrConfig, String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(
+      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
@@ -27,7 +29,8 @@ public interface EcrClassicService {
    * @param imageName the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(EcrConfig ecrConfig, String imageName);
+  BuildDetails getLastSuccessfulBuild(
+      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
 
   /**
    * Validates the Image
@@ -36,7 +39,7 @@ public interface EcrClassicService {
    * @param imageName the image name
    * @return the boolean
    */
-  boolean verifyRepository(EcrConfig ecrConfig, String imageName);
+  boolean verifyRepository(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
 
   /**
    * Validate the credentials
@@ -44,7 +47,7 @@ public interface EcrClassicService {
    * @param ecrConfig the ecr config
    * @return boolean
    */
-  boolean validateCredentials(EcrConfig ecrConfig);
+  boolean validateCredentials(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * List ecr registry list.
@@ -52,11 +55,12 @@ public interface EcrClassicService {
    * @param ecrConfig the ecr config
    * @return the list
    */
-  List<String> listEcrRegistry(EcrConfig ecrConfig);
+  List<String> listEcrRegistry(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * Get the ECR repository info for the given name
-   * @param ecrConfig ecr artifact server / connector config
+   *
+   * @param ecrConfig         ecr artifact server / connector config
    * @param ecrArtifactStream repository name
    * @return ecr image url
    */

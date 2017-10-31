@@ -8,9 +8,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -22,7 +24,7 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
-      SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
     return hostService.list(req);
   }
 

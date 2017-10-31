@@ -33,6 +33,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;
@@ -51,11 +52,12 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
 
   @Override
-  public KubernetesConfig createCluster(
-      SettingAttribute computeProviderSetting, String zoneClusterName, String namespace, Map<String, String> params) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public KubernetesConfig createCluster(SettingAttribute computeProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, String namespace,
+      Map<String, String> params) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
@@ -105,21 +107,24 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     if (cluster.getMasterAuth().getPassword() != null) {
       kubernetesConfigBuilder.password(cluster.getMasterAuth().getPassword().toCharArray());
     }
-    return kubernetesConfigBuilder.build();
+    KubernetesConfig kubernetesConfig = kubernetesConfigBuilder.build();
+    kubernetesConfig.setDecrypted(true);
+    return kubernetesConfig;
   }
 
-  private String validateAndGetCredentials(SettingAttribute computeProviderSetting) {
+  private GcpConfig validateAndGetCredentials(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "args", "InvalidConfiguration");
     }
-    return String.valueOf(((GcpConfig) computeProviderSetting.getValue()).getServiceAccountKeyFileContent());
+    return ((GcpConfig) computeProviderSetting.getValue());
   }
 
   @Override
-  public boolean deleteCluster(SettingAttribute computeProviderSetting, String zoneClusterName) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public boolean deleteCluster(
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
@@ -175,11 +180,11 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public KubernetesConfig getCluster(
-      SettingAttribute computeProviderSetting, String zoneClusterName, String namespace) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public KubernetesConfig getCluster(SettingAttribute computeProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, String namespace) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
@@ -196,10 +201,11 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public List<String> listClusters(SettingAttribute computeProviderSetting) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public List<String> listClusters(
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     try {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(projectId, ALL_ZONES).execute();
@@ -214,16 +220,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return null;
   }
 
-  private String getProjectIdFromCredentials(String credentials) {
-    return (String) ((DBObject) JSON.parse(credentials)).get("project_id");
+  private String getProjectIdFromCredentials(char[] credentials) {
+    return (String) ((DBObject) JSON.parse(new String(credentials))).get("project_id");
   }
 
   @Override
-  public boolean setNodePoolAutoscaling(SettingAttribute computeProviderSetting, String zoneClusterName,
-      @Nullable String nodePoolId, boolean enabled, int min, int max) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public boolean setNodePoolAutoscaling(SettingAttribute computeProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, @Nullable String nodePoolId,
+      boolean enabled, int min, int max) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
@@ -259,11 +266,11 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public NodePoolAutoscaling getNodePoolAutoscaling(
-      SettingAttribute computeProviderSetting, String zoneClusterName, @Nullable String nodePoolId) {
-    String credentials = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
-    String projectId = getProjectIdFromCredentials(credentials);
+  public NodePoolAutoscaling getNodePoolAutoscaling(SettingAttribute computeProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String zoneClusterName, @Nullable String nodePoolId) {
+    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];

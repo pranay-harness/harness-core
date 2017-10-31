@@ -3,8 +3,13 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -38,7 +43,9 @@ import software.wings.dl.PageResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.security.KmsService;
 
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -48,6 +55,7 @@ import javax.inject.Inject;
 public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private AwsHelperService awsHelperService;
+  @Mock private KmsService kmsService;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
 
@@ -58,7 +66,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
           .build();
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before
-  public void setUp() throws Exception {}
+  public void setUp() throws Exception {
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(infrastructureProvider, "kmsService", kmsService);
+  }
 
   @Test
   public void shouldListHostsPublicDns() {
@@ -68,13 +79,13 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         new DescribeInstancesResult().withReservations(new Reservation().withInstances(
             new Instance().withPublicDnsName("HOST_NAME_1"), new Instance().withPublicDnsName("HOST_NAME_2")));
     when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
+             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
-    PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
+    PageResponse<Host> hosts = infrastructureProvider.listHosts(
+        awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
 
     assertThat(hosts)
         .hasSize(2)
@@ -82,7 +93,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(awsHelperService)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest);
+        .describeEc2Instances(
+            (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
   }
 
   @Test
@@ -93,13 +105,13 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         new DescribeInstancesResult().withReservations(new Reservation().withInstances(
             new Instance().withPrivateDnsName("HOST_NAME_1"), new Instance().withPrivateDnsName("HOST_NAME_2")));
     when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
+             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(false).build();
-    PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
+    PageResponse<Host> hosts = infrastructureProvider.listHosts(
+        awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
 
     assertThat(hosts)
         .hasSize(2)
@@ -107,7 +119,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(awsHelperService)
-        .describeEc2Instances((AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest);
+        .describeEc2Instances(
+            (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
   }
 
   @Test
@@ -117,16 +130,17 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
 
     when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Regions.US_EAST_1.getName(), instancesRequest))
+             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
         .thenReturn(describeInstancesResult);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
-    PageResponse<Host> hosts =
-        infrastructureProvider.listHosts(awsInfrastructureMapping, awsSetting, new PageRequest<>());
+    PageResponse<Host> hosts = infrastructureProvider.listHosts(
+        awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
 
     assertThat(hosts).hasSize(0);
-    verify(awsHelperService).describeEc2Instances(awsConfig, Regions.US_EAST_1.getName(), instancesRequest);
+    verify(awsHelperService)
+        .describeEc2Instances(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
   }
 
   @Test
@@ -171,11 +185,12 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withDesiredCapacity(1)
                                                          .build();
 
-    when(awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping))
+    when(
+        awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping))
         .thenReturn(singletonList("INSTANCE_ID"));
 
     when(awsHelperService.describeEc2Instances(
-             awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
+             awsConfig, Collections.emptyList(), region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
         .thenReturn(new DescribeInstancesResult().withReservations(
             new Reservation().withInstances(new Instance()
                                                 .withPrivateDnsName(HOST_NAME)
@@ -184,7 +199,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                 .withState(new InstanceState().withName("running")))));
     when(awsHelperService.getHostnameFromPrivateDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
-    List<Host> hosts = infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(infrastructureMapping, awsSetting);
+    List<Host> hosts =
+        infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(null, infrastructureMapping, awsSetting);
 
     assertThat(hosts)
         .hasSize(1)
@@ -192,9 +208,11 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .isEqualTo(singletonList(
             aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
-    verify(awsHelperService).setAutoScalingGroupCapacity(awsConfig, infrastructureMapping);
-    verify(awsHelperService).listInstanceIdsFromAutoScalingGroup(awsConfig, infrastructureMapping);
+    verify(awsHelperService).setAutoScalingGroupCapacity(awsConfig, Collections.emptyList(), infrastructureMapping);
     verify(awsHelperService)
-        .describeEc2Instances(awsConfig, region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
+        .listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping);
+    verify(awsHelperService)
+        .describeEc2Instances(
+            awsConfig, Collections.emptyList(), region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
   }
 }

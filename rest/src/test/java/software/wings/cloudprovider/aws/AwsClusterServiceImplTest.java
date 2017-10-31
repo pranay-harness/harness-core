@@ -26,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Created by anubhaw on 1/3/17.
@@ -48,29 +49,33 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateCluster() {
-    awsClusterService.createCluster(Regions.US_EAST_1.getName(), cloudProviderSetting, clusterConfiguration);
+    awsClusterService.createCluster(
+        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), clusterConfiguration);
 
     ImmutableMap<String, Object> params =
         ImmutableMap.of("autoScalingGroupName", AUTO_SCALING_GROUP_NAME, "clusterName", CLUSTER_NAME,
             "availabilityZones", Arrays.asList("AZ1", "AZ2"), "vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
     verify(ecsContainerService)
-        .provisionNodes(Regions.US_EAST_1.getName(), cloudProviderSetting, 5, LAUNCHER_TEMPLATE_NAME, params);
+        .provisionNodes(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), 5,
+            LAUNCHER_TEMPLATE_NAME, params);
   }
 
   @Test
   public void shouldResizeCluster() {
-    awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 0, 5,
-        10, new ExecutionLogCallback());
+    awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(),
+        CLUSTER_NAME, SERVICE_NAME, 0, 5, 10, new ExecutionLogCallback());
     verify(ecsContainerService)
-        .provisionTasks(eq(Regions.US_EAST_1.getName()), eq(cloudProviderSetting), eq(CLUSTER_NAME), eq(SERVICE_NAME),
-            eq(5), eq(10), any(ExecutionLogCallback.class));
+        .provisionTasks(eq(Regions.US_EAST_1.getName()), eq(cloudProviderSetting), eq(Collections.emptyList()),
+            eq(CLUSTER_NAME), eq(SERVICE_NAME), eq(5), eq(10), any(ExecutionLogCallback.class));
   }
 
   @Test
   public void shouldDeleteService() {
-    awsClusterService.deleteService(Regions.US_EAST_1.getName(), cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME);
+    awsClusterService.deleteService(
+        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
     verify(ecsContainerService)
-        .deleteService(Regions.US_EAST_1.getName(), cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME);
+        .deleteService(
+            Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
   }
 }

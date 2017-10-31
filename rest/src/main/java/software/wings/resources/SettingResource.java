@@ -29,7 +29,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -201,10 +201,10 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    String credentials = IOUtils.toString(uploadedInputStream);
+    char[] credentials = IOUtils.toString(uploadedInputStream).toCharArray();
     SettingValue value = null;
-    if (GCP.name().equals(type) && !isNullOrEmpty(credentials)) {
-      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials.toCharArray()).build();
+    if (GCP.name().equals(type) && credentials != null && credentials.length > 0) {
+      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
     }
     SettingAttribute.Builder settingAttribute =
         aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId);

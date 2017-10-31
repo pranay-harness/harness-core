@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
@@ -95,15 +96,16 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
     private List<AppdynamicsMetricData> getMetricsData() throws IOException {
       final AppDynamicsConfig appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
+      final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
       final List<AppdynamicsMetric> tierMetrics =
-          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId);
+          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails);
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
         metricsData.addAll(appdynamicsDelegateService.getTierBTMetricData(
-            appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
+            appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES, encryptionDetails));
       }
       for (int i = metricsData.size() - 1; i >= 0; i--) {
         String metricName = metricsData.get(i).getMetricName();

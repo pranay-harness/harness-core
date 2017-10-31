@@ -2,9 +2,11 @@ package software.wings.service.impl.newrelic;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
@@ -24,6 +26,8 @@ import javax.inject.Inject;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class MetricAnalysisExecutionData extends StateExecutionData {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 

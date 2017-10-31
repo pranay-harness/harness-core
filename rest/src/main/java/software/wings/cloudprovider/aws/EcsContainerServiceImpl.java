@@ -55,6 +55,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
@@ -773,12 +774,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void provisionNodes(String region, SettingAttribute connectorConfig, Integer clusterSize,
-      String launchConfigName, Map<String, Object> params) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
+  public void provisionNodes(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, Integer clusterSize, String launchConfigName,
+      Map<String, Object> params) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     String clusterName = (String) params.get("clusterName");
-    awsHelperService.createCluster(region, awsConfig, new CreateClusterRequest().withClusterName(clusterName));
+    awsHelperService.createCluster(
+        region, awsConfig, encryptedDataDetails, new CreateClusterRequest().withClusterName(clusterName));
     logger.info("Successfully created empty cluster " + params.get("clusterName"));
 
     logger.info("Creating autoscaling group for cluster...");
@@ -790,7 +793,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     List<String> availabilityZones = (List<String>) params.get("availabilityZones");
 
     logger.info("Creating autoscaling group for cluster...");
-    awsHelperService.createAutoScalingGroup(awsConfig, region,
+    awsHelperService.createAutoScalingGroup(awsConfig, encryptedDataDetails, region,
         new CreateAutoScalingGroupRequest()
             .withLaunchConfigurationName(launchConfigName)
             .withDesiredCapacity(clusterSize)
@@ -802,16 +805,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     logger.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
 
-    waitForAllInstancesToBeReady(awsConfig, region, autoScalingGroupName, clusterSize);
-    waitForAllInstanceToRegisterWithCluster(region, awsConfig, clusterName, clusterSize);
+    waitForAllInstancesToBeReady(awsConfig, encryptedDataDetails, region, autoScalingGroupName, clusterSize);
+    waitForAllInstanceToRegisterWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize);
 
     logger.info("All instances are ready for deployment");
   }
 
-  private void waitForAllInstanceToRegisterWithCluster(
-      String region, AwsConfig awsConfig, String clusterName, Integer clusterSize) {
+  private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
     int retryCount = RETRY_COUNTER;
-    while (!allInstancesRegisteredWithCluster(region, awsConfig, clusterName, clusterSize)) {
+    while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
       }
@@ -819,10 +822,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private void waitForAllInstancesToBeReady(
-      AwsConfig awsConfig, String region, String autoscalingGroupName, Integer clusterSize) {
+  private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String autoscalingGroupName, Integer clusterSize) {
     int retryCount = RETRY_COUNTER;
-    while (!allInstanceInReadyState(awsConfig, region, autoscalingGroupName, clusterSize)) {
+    while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
       }
@@ -830,10 +833,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private boolean allInstancesRegisteredWithCluster(
-      String region, AwsConfig awsConfig, String name, Integer clusterSize) {
+  private boolean allInstancesRegisteredWithCluster(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String name, Integer clusterSize) {
     Cluster cluster =
-        awsHelperService.describeClusters(region, awsConfig, new DescribeClustersRequest().withClusters(name))
+        awsHelperService
+            .describeClusters(region, awsConfig, encryptedDataDetails, new DescribeClustersRequest().withClusters(name))
             .getClusters()
             .get(0);
     logger.info("Waiting for instances to register with cluster. {}/{} registered...",
@@ -842,10 +846,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return cluster.getRegisteredContainerInstancesCount() == clusterSize;
   }
 
-  private boolean allInstanceInReadyState(AwsConfig awsConfig, String region, String name, Integer clusterSize) {
+  private boolean allInstanceInReadyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String name, Integer clusterSize) {
     AutoScalingGroup autoScalingGroup =
         awsHelperService
-            .describeAutoScalingGroups(awsConfig, region,
+            .describeAutoScalingGroups(awsConfig, encryptedDataDetails, region,
                 new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(Arrays.asList(name)))
             .getAutoScalingGroups()
             .get(0);
@@ -856,8 +861,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public String deployService(String region, SettingAttribute connectorConfig, String serviceDefinition) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
+  public String deployService(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String serviceDefinition) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
     CreateServiceRequest createServiceRequest;
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
@@ -865,18 +871,21 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       throw new WingsException(INVALID_REQUEST, "message", ex.getMessage(), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
-    CreateServiceResult createServiceResult = awsHelperService.createService(region, awsConfig, createServiceRequest);
+    CreateServiceResult createServiceResult =
+        awsHelperService.createService(region, awsConfig, encryptedDataDetails, createServiceRequest);
 
-    waitForTasksToBeInRunningState(region, awsConfig, createServiceRequest.getCluster(),
+    waitForTasksToBeInRunningState(region, awsConfig, encryptedDataDetails, createServiceRequest.getCluster(),
         createServiceRequest.getServiceName(), new ExecutionLogCallback());
 
     return createServiceResult.getService().getServiceArn();
   }
 
-  private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig, String clusterName,
-      String serviceName, ExecutionLogCallback executionLogCallback) {
+  private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(region, awsConfig, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(
+        region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
@@ -885,9 +894,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
-      String clusterName, String serviceName, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRunning(region, awsConfig, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(
+        region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         break;
       }
@@ -895,10 +906,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private boolean allDesiredTaskRunning(String region, AwsConfig awsConfig, String clusterName, String serviceName,
+  private boolean allDesiredTaskRunning(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
     Service service = awsHelperService
-                          .describeServices(region, awsConfig,
+                          .describeServices(region, awsConfig, encryptedDataDetails,
                               new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                           .getServices()
                           .get(0);
@@ -913,28 +925,30 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void deleteService(String region, SettingAttribute connectorConfig, String clusterName, String serviceName) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
-    awsHelperService.deleteService(
-        region, awsConfig, new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
+  public void deleteService(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+    awsHelperService.deleteService(region, awsConfig, encryptedDataDetails,
+        new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
   }
 
   @Override
-  public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig, String clusterName,
-      String serviceName, Integer desiredCount, int serviceSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig);
+  public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, Integer desiredCount,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     try {
       List<Service> services = awsHelperService
-                                   .describeServices(region, awsConfig,
+                                   .describeServices(region, awsConfig, encryptedDataDetails,
                                        new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                                    .getServices();
       int oldDesiredCount = services != null && services.size() > 0 ? services.get(0).getDesiredCount() : 0;
 
       UpdateServiceRequest updateServiceRequest =
           new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-      UpdateServiceResult updateServiceResult = awsHelperService.updateService(region, awsConfig, updateServiceRequest);
+      UpdateServiceResult updateServiceResult =
+          awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
       List<ServiceEvent> events = updateServiceResult.getService().getEvents();
 
       String latestExcludedEventId = null;
@@ -942,19 +956,19 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         latestExcludedEventId = events.get(0).getId();
       }
 
-      waitForServiceUpdateToComplete(
-          updateServiceResult, region, awsConfig, clusterName, serviceName, desiredCount, executionLogCallback);
+      waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
+          serviceName, desiredCount, executionLogCallback);
       executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
       waitForTasksToBeInRunningStateButDontThrowException(
-          region, awsConfig, clusterName, serviceName, executionLogCallback);
+          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
 
       if (oldDesiredCount < desiredCount) { // don't do it for downsize.
-        waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, clusterName, serviceName,
-            serviceSteadyStateTimeout, executionLogCallback);
+        waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, encryptedDataDetails, clusterName,
+            serviceName, serviceSteadyStateTimeout, executionLogCallback);
       }
 
       List<String> taskArns = awsHelperService
-                                  .listTasks(region, awsConfig,
+                                  .listTasks(region, awsConfig, encryptedDataDetails,
                                       new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
                                   .getTaskArns();
       if (taskArns == null || taskArns.size() == 0) {
@@ -962,24 +976,25 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       }
 
       logger.info("Task arns = " + taskArns);
-      List<Task> tasks =
-          awsHelperService
-              .describeTasks(region, awsConfig, new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
-              .getTasks();
+      List<Task> tasks = awsHelperService
+                             .describeTasks(region, awsConfig, encryptedDataDetails,
+                                 new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+                             .getTasks();
       List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
       logger.info("Container Instances = " + containerInstances);
 
-      List<ContainerInstance> containerInstanceList = awsHelperService
-                                                          .describeContainerInstances(region, awsConfig,
-                                                              new DescribeContainerInstancesRequest()
-                                                                  .withCluster(clusterName)
-                                                                  .withContainerInstances(containerInstances))
-                                                          .getContainerInstances();
+      List<ContainerInstance> containerInstanceList =
+          awsHelperService
+              .describeContainerInstances(region, awsConfig, encryptedDataDetails,
+                  new DescribeContainerInstancesRequest()
+                      .withCluster(clusterName)
+                      .withContainerInstances(containerInstances))
+              .getContainerInstances();
       List<ContainerInfo> containerInfos = new ArrayList<>();
       containerInstanceList.forEach(containerInstance -> {
         com.amazonaws.services.ec2.model.Instance ec2Instance =
             awsHelperService
-                .describeEc2Instances(awsConfig, region,
+                .describeEc2Instances(awsConfig, encryptedDataDetails, region,
                     new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
                 .getReservations()
                 .get(0)
@@ -1045,8 +1060,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
-      String clusterName, String serviceName, int serviceSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     int retryCount = (serviceSteadyStateTimeout * 60 * 1000) / SLEEP_INTERVAL;
 
     if (retryCount == 0) {
@@ -1058,7 +1073,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       do {
         executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
         Service service = awsHelperService
-                              .describeServices(region, awsConfig,
+                              .describeServices(region, awsConfig, encryptedDataDetails,
                                   new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                               .getServices()
                               .get(0);
@@ -1090,13 +1105,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   private void waitForServiceUpdateToComplete(UpdateServiceResult updateServiceResult, String region,
-      AwsConfig awsConfig, String clusterName, String serviceName, Integer desiredCount,
-      ExecutionLogCallback executionLogCallback) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     final Service[] service = {updateServiceResult.getService()};
     try {
       with().pollInterval(10L, TimeUnit.SECONDS).atMost(new Duration(60L, TimeUnit.SECONDS)).until(() -> {
         service[0] = awsHelperService
-                         .describeServices(region, awsConfig,
+                         .describeServices(region, awsConfig, encryptedDataDetails,
                              new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                          .getServices()
                          .get(0);
@@ -1114,33 +1129,35 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void createService(
-      String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
-    awsHelperService.createService(region, awsConfig, clusterConfiguration);
+  public void createService(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, CreateServiceRequest clusterConfiguration) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    awsHelperService.createService(region, awsConfig, encryptedDataDetails, clusterConfiguration);
   }
 
   @Override
-  public TaskDefinition createTask(
-      String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute);
-    return awsHelperService.registerTaskDefinition(region, awsConfig, registerTaskDefinitionRequest)
+  public TaskDefinition createTask(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails);
+    return awsHelperService
+        .registerTaskDefinition(region, awsConfig, encryptedDataDetails, registerTaskDefinitionRequest)
         .getTaskDefinition();
   }
 
   @Override
-  public List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName) {
-    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting);
+  public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
     List<Service> services = new ArrayList<>();
     ListServicesResult listServicesResult;
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
     do {
-      listServicesResult = awsHelperService.listServices(region, awsConfig, listServicesRequest);
+      listServicesResult = awsHelperService.listServices(region, awsConfig, encryptedDataDetails, listServicesRequest);
       if (listServicesResult.getServiceArns() == null || listServicesResult.getServiceArns().size() == 0) {
         break;
       }
       services.addAll(awsHelperService
-                          .describeServices(region, awsConfig,
+                          .describeServices(region, awsConfig, encryptedDataDetails,
                               new DescribeServicesRequest()
                                   .withCluster(clusterName)
                                   .withServices(listServicesResult.getServiceArns()))

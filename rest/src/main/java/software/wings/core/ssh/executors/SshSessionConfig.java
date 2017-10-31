@@ -5,7 +5,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.annotation.Encrypted;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
 
@@ -52,6 +52,16 @@ public class SshSessionConfig implements Encryptable {
   @Override
   public List<Field> getEncryptedFields() {
     return WingsReflectionUtils.getEncryptedFields(this.getClass());
+  }
+
+  @Override
+  public boolean isDecrypted() {
+    return false;
+  }
+
+  @Override
+  public void setDecrypted(boolean decrypted) {
+    throw new IllegalStateException();
   }
 
   /**

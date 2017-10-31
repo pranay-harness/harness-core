@@ -99,20 +99,21 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
-
     final long dataCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
-    final NewRelicDataCollectionInfo dataCollectionInfo = NewRelicDataCollectionInfo.builder()
-                                                              .newRelicConfig(newRelicConfig)
-                                                              .applicationId(context.getAppId())
-                                                              .stateExecutionId(context.getStateExecutionInstanceId())
-                                                              .workflowId(getWorkflowId(context))
-                                                              .workflowExecutionId(context.getWorkflowExecutionId())
-                                                              .serviceId(getPhaseServiceId(context))
-                                                              .startTime(dataCollectionStartTimeStamp)
-                                                              .collectionTime(Integer.parseInt(timeDuration))
-                                                              .newRelicAppId(Long.parseLong(applicationId))
-                                                              .dataCollectionMinute(0)
-                                                              .build();
+    final NewRelicDataCollectionInfo dataCollectionInfo =
+        NewRelicDataCollectionInfo.builder()
+            .newRelicConfig(newRelicConfig)
+            .applicationId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .workflowId(getWorkflowId(context))
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .serviceId(getPhaseServiceId(context))
+            .startTime(dataCollectionStartTimeStamp)
+            .collectionTime(Integer.parseInt(timeDuration))
+            .newRelicAppId(Long.parseLong(applicationId))
+            .dataCollectionMinute(0)
+            .encryptedDataDetails(kmsService.getEncryptionDetails(newRelicConfig, context.getWorkflowId()))
+            .build();
 
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

@@ -7,6 +7,7 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentEvent;
 import software.wings.api.ContainerServiceData;
@@ -44,6 +45,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
@@ -74,6 +76,7 @@ public class ContainerInstanceHelper {
   @Inject private InstanceService instanceService;
   @Inject private SettingsService settingsService;
   @Inject private GkeClusterService gkeClusterService;
+  @Inject private KmsService kmsService;
 
   @Inject @Named("KubernetesInstanceSync") private ContainerSync kubernetesSyncService;
   @Inject @Named("EcsInstanceSync") private ContainerSync ecsSyncService;
@@ -340,16 +343,17 @@ public class ContainerInstanceHelper {
   }
 
   public ContainerSyncResponse getLatestInstancesFromContainerServer(Set<String> containerSvcNameSet,
-      InstanceType instanceType, String appId, String infraMappingId, String clusterName, String computeProviderId) {
-    ContainerFilter containerFilter =
-        getContainerFilter(containerSvcNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId);
+      InstanceType instanceType, String appId, String infraMappingId, String clusterName, String computeProviderId,
+      String workflowId) {
+    ContainerFilter containerFilter = getContainerFilter(
+        containerSvcNameSet, instanceType, appId, infraMappingId, clusterName, computeProviderId, workflowId);
     Validator.notNullCheck("ContainerFilter", containerFilter);
 
     ContainerSyncRequest instanceSyncRequest = ContainerSyncRequest.builder().filter(containerFilter).build();
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      return kubernetesSyncService.getInstances(instanceSyncRequest);
+      return kubernetesSyncService.getInstances(instanceSyncRequest, workflowId);
     } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      return ecsSyncService.getInstances(instanceSyncRequest);
+      return ecsSyncService.getInstances(instanceSyncRequest, workflowId);
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
@@ -358,7 +362,7 @@ public class ContainerInstanceHelper {
   }
 
   private ContainerFilter getContainerFilter(Set<String> containerSvcNameSet, InstanceType instanceType, String appId,
-      String infraMappingId, String clusterName, String computeProviderId) {
+      String infraMappingId, String clusterName, String computeProviderId, String workflowId) {
     ContainerFilter containerFilter;
     Validator.notNullCheck("InstanceType", instanceType);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
@@ -366,7 +370,7 @@ public class ContainerInstanceHelper {
     if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
       containerFilter = KubernetesFilter.builder()
                             .replicationControllerNameSet(containerSvcNameSet)
-                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping))
+                            .kubernetesConfig(getKubernetesConfig(infrastructureMapping, workflowId))
                             .build();
       containerFilter.setClusterName(clusterName);
 
@@ -393,15 +397,16 @@ public class ContainerInstanceHelper {
     return containerFilter;
   }
 
-  private KubernetesConfig getKubernetesConfig(InfrastructureMapping infrastructureMapping) {
+  private KubernetesConfig getKubernetesConfig(InfrastructureMapping infrastructureMapping, String workflowId) {
     KubernetesConfig kubernetesConfig;
 
     if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       SettingAttribute computeProviderSetting =
           settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      kubernetesConfig = gkeClusterService.getCluster(
-          computeProviderSetting, gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
+      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting,
+          kmsService.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), workflowId),
+          gcpInfraMapping.getClusterName(), gcpInfraMapping.getNamespace());
     } else {
       kubernetesConfig = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig();
     }

@@ -58,6 +58,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
 
     final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
+    encryptionService.decrypt(splunkConfig, dataCollectionInfo.getEncryptedDataDetails());
     final ServiceArgs loginArgs = new ServiceArgs();
     loginArgs.setUsername(splunkConfig.getUsername());
     loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));

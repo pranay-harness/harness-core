@@ -7,6 +7,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Data;
 
 /**
  * The type Ssh execution credential.
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * @author Rishi
  */
 @JsonTypeName("SSH")
+@Data
 public class SSHExecutionCredential extends ExecutionCredential {
   private String sshUser;
   private char[] sshPassword;
@@ -28,99 +30,6 @@ public class SSHExecutionCredential extends ExecutionCredential {
     super(ExecutionType.SSH);
   }
 
-  /**
-   * Gets ssh user.
-   *
-   * @return the ssh user
-   */
-  public String getSshUser() {
-    return sshUser;
-  }
-
-  /**
-   * Sets ssh user.
-   *
-   * @param sshUser the ssh user
-   */
-  public void setSshUser(String sshUser) {
-    this.sshUser = sshUser;
-  }
-
-  /**
-   * Gets ssh password.
-   *
-   * @return the ssh password
-   */
-  public char[] getSshPassword() {
-    return sshPassword;
-  }
-
-  /**
-   * Sets ssh password.
-   *
-   * @param sshPassword the ssh password
-   */
-  public void setSshPassword(char[] sshPassword) {
-    this.sshPassword = sshPassword;
-  }
-
-  /**
-   * Gets app account.
-   *
-   * @return the app account
-   */
-  public String getAppAccount() {
-    return appAccount;
-  }
-
-  /**
-   * Sets app account.
-   *
-   * @param appAccount the app account
-   */
-  public void setAppAccount(String appAccount) {
-    this.appAccount = appAccount;
-  }
-
-  /**
-   * Gets app account password.
-   *
-   * @return the app account password
-   */
-  public char[] getAppAccountPassword() {
-    return appAccountPassword;
-  }
-
-  /**
-   * Sets app account password.
-   *
-   * @param appAccountPassword the app account password
-   */
-  public void setAppAccountPassword(char[] appAccountPassword) {
-    this.appAccountPassword = appAccountPassword;
-  }
-
-  /**
-   * Gets key passphrase.
-   *
-   * @return the key passphrase
-   */
-  public char[] getKeyPassphrase() {
-    return keyPassphrase;
-  }
-
-  /**
-   * Sets key passphrase.
-   *
-   * @param keyPassphrase the key passphrase
-   */
-  public void setKeyPassphrase(char[] keyPassphrase) {
-    this.keyPassphrase = keyPassphrase;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("sshUser", sshUser).add("appAccount", appAccount).toString();

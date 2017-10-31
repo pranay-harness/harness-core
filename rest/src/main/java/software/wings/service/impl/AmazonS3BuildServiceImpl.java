@@ -7,6 +7,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.utils.ArtifactType;
 
@@ -24,41 +25,44 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   @Inject private AmazonS3Service amazonS3Service;
 
   @Override
-  public Map<String, String> getPlans(AwsConfig config) {
-    return amazonS3Service.getBuckets(config);
+  public Map<String, String> getPlans(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return amazonS3Service.getBuckets(config, encryptionDetails);
   }
 
   @Override
-  public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig awsConfig) {
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     String artifactName = artifactStreamAttributes.getArtifactName();
-    return amazonS3Service.getArtifactsBuildDetails(
-        awsConfig, artifactStreamAttributes.getJobName(), Lists.newArrayList(artifactName), artifactName.contains("*"));
+    return amazonS3Service.getArtifactsBuildDetails(awsConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
+        Lists.newArrayList(artifactName), artifactName.contains("*"));
   }
 
   @Override
-  public List<JobDetails> getJobs(AwsConfig jenkinsConfig, Optional<String> parentJobName) {
+  public List<JobDetails> getJobs(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     return null;
   }
 
   @Override
-  public List<String> getArtifactPaths(String bucketName, String groupId, AwsConfig config) {
-    return amazonS3Service.getArtifactPaths(config, bucketName);
+  public List<String> getArtifactPaths(
+      String bucketName, String groupId, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return amazonS3Service.getArtifactPaths(config, encryptionDetails, bucketName);
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, AwsConfig config) {
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return null;
   }
 
   @Override
-  public Map<String, String> getPlans(AwsConfig config, ArtifactType artifactType, String repositoryType) {
+  public Map<String, String> getPlans(
+      AwsConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
     return null;
   }
 
   @Override
-  public List<String> getGroupIds(String repoType, AwsConfig config) {
+  public List<String> getGroupIds(String repoType, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return null;
   }
 
@@ -68,7 +72,8 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   }
 
   @Override
-  public boolean validateArtifactSource(AwsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean validateArtifactSource(AwsConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     return false;
   }
 }

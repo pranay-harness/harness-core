@@ -112,7 +112,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                             Collections.singleton(hostName), collectionStartTime,
                             collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                     logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(), elkFetchRequest);
+                    searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
+                        elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest);
                     hostnameField = elkDataCollectionInfo.getHostnameField();
                     messageField = elkDataCollectionInfo.getMessageField();
                     timestampField = elkDataCollectionInfo.getTimestampField();
@@ -126,8 +127,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                         collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
                     logger.info(
                         "running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
-                    searchResponse =
-                        logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(), logzFetchRequest);
+                    searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
+                        logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest);
                     hostnameField = logzDataCollectionInfo.getHostnameField();
                     messageField = logzDataCollectionInfo.getMessageField();
                     timestampField = logzDataCollectionInfo.getTimestampField();

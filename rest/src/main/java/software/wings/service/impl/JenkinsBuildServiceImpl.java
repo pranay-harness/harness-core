@@ -20,11 +20,14 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +52,19 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private JenkinsFactory jenkinsFactory;
+  @Inject private EncryptionService encryptionService;
 
   @Override
-  public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config) {
-    return getBuildDetails(artifactStreamAttributes, appId, config);
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails);
   }
 
-  private List<BuildDetails> getBuildDetails(
-      ArtifactStreamAttributes artifactStreamAttributes, String appId, JenkinsConfig jenkinsConfig) {
+  private List<BuildDetails> getBuildDetails(ArtifactStreamAttributes artifactStreamAttributes, String appId,
+      JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
@@ -70,7 +75,9 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public List<JobDetails> getJobs(JenkinsConfig jenkinsConfig, Optional<String> parentJobName) {
+  public List<JobDetails> getJobs(
+      JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
@@ -88,7 +95,9 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, String groupId, JenkinsConfig jenkinsConfig) {
+  public List<String> getArtifactPaths(
+      String jobName, String groupId, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     List<String> artifactPaths = new ArrayList<>();
@@ -108,10 +117,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig jenkinsConfig) {
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
@@ -122,8 +132,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(JenkinsConfig jenkinsConfig) {
-    List<JobDetails> jobs = getJobs(jenkinsConfig, Optional.empty());
+  public Map<String, String> getPlans(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    List<JobDetails> jobs = getJobs(jenkinsConfig, encryptionDetails, Optional.empty());
     Map<String, String> jobKeyMap = new HashMap<>();
     if (jobs != null) {
       jobs.forEach(jobKey -> jobKeyMap.put(jobKey.getJobName(), jobKey.getJobName()));
@@ -132,12 +142,14 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public Map<String, String> getPlans(JenkinsConfig config, ArtifactType artifactType, String repositoryType) {
-    return getPlans(config);
+  public Map<String, String> getPlans(JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactType artifactType, String repositoryType) {
+    return getPlans(config, encryptionDetails);
   }
 
   @Override
-  public List<String> getGroupIds(String jobName, JenkinsConfig jenkinsConfig) {
+  public List<String> getGroupIds(
+      String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     throw new WingsException(
         ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Jenkins Artifact Stream");
   }
@@ -152,6 +164,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
           "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
+    encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
@@ -159,7 +172,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public boolean validateArtifactSource(JenkinsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean validateArtifactSource(JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     return true;
   }
 }

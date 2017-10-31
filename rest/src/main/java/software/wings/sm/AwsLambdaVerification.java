@@ -1,6 +1,5 @@
 package software.wings.sm;
 
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.utils.Misc.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,6 +29,7 @@ import software.wings.utils.LambdaConvention;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -130,22 +130,26 @@ public class AwsLambdaVerification extends State {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
-    Activity.Builder activityBuilder =
-        anActivity()
-            .withAppId(app.getUuid())
-            .withApplicationName(app.getName())
-            .withEnvironmentId(env.getUuid())
-            .withEnvironmentName(env.getName())
-            .withEnvironmentType(env.getEnvironmentType())
-            .withCommandName(getName())
-            .withType(Type.Verification)
-            .withWorkflowType(executionContext.getWorkflowType())
-            .withWorkflowExecutionName(executionContext.getWorkflowExecutionName())
-            .withStateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .withStateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .withCommandType(getStateType())
-            .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
-    return activityService.save(activityBuilder.build()).getUuid();
+    Activity activity = Activity.builder()
+                            .applicationName(app.getName())
+                            .environmentId(env.getUuid())
+                            .environmentName(env.getName())
+                            .environmentType(env.getEnvironmentType())
+                            .commandName(getName())
+                            .type(Type.Verification)
+                            .workflowType(executionContext.getWorkflowType())
+                            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                            .commandType(getStateType())
+                            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                            .workflowId(executionContext.getWorkflowId())
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .status(ExecutionStatus.RUNNING)
+                            .build();
+    activity.setAppId(app.getUuid());
+    return activityService.save(activity).getUuid();
   }
 
   private void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {

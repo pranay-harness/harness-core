@@ -13,5 +13,7 @@ public interface DelegateFileManager {
   String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId) throws IOException;
   InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
       throws IOException;
+  InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
+      throws IOException;
   DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException;
 }
