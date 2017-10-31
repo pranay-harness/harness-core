@@ -50,9 +50,9 @@ public class CloudWatchServiceTest extends WingsBaseTest {
                    .withNamespace(NAMESPACE)
                    .withMetricName(METRIC_NAME)
                    .withDimensions(asList(new Dimension().withName(METRIC_DIMENSION)))));
-    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), anyString()))
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), any(), anyString()))
         .thenReturn(listMetricsResult.getMetrics());
-    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), anyString(), any(ListMetricsRequest.class)))
+    when(awsHelperService.getCloudWatchMetrics(any(AwsConfig.class), any(), anyString(), any(ListMetricsRequest.class)))
         .thenReturn(listMetricsResult.getMetrics());
   }
 

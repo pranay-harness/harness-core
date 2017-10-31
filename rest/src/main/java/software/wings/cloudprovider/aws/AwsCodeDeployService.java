@@ -5,6 +5,7 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -17,9 +18,11 @@ public interface AwsCodeDeployService {
    *
    * @param region               the region
    * @param cloudProviderSetting the cloud provider setting
+   * @param encryptionDetails
    * @return the list
    */
-  List<String> listApplications(String region, SettingAttribute cloudProviderSetting);
+  List<String> listApplications(
+      String region, SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * List deployment group list.
@@ -27,30 +30,35 @@ public interface AwsCodeDeployService {
    * @param region               the region
    * @param appName              the app name
    * @param cloudProviderSetting the cloud provider setting
+   * @param encryptedDataDetails
    * @return the list
    */
-  List<String> listDeploymentGroup(String region, String appName, SettingAttribute cloudProviderSetting);
+  List<String> listDeploymentGroup(String region, String appName, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * List deployment configuration list.
    *
    * @param region               the region
    * @param cloudProviderSetting the cloud provider setting
+   * @param encryptedDataDetails
    * @return the list
    */
-  List<String> listDeploymentConfiguration(String region, SettingAttribute cloudProviderSetting);
+  List<String> listDeploymentConfiguration(
+      String region, SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Deploy application.
    *
    * @param region                  the region
    * @param cloudProviderSetting    the cloud provider setting
-   * @param createDeploymentRequest the create deployment request
-   * @param executionLogCallback    the execution log callback
-   * @return the code deploy deployment info
+   * @param encryptedDataDetails
+   *@param createDeploymentRequest the create deployment request
+   * @param executionLogCallback    the execution log callback   @return the code deploy deployment info
    */
   CodeDeployDeploymentInfo deployApplication(String region, SettingAttribute cloudProviderSetting,
-      CreateDeploymentRequest createDeploymentRequest, ExecutionLogCallback executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, CreateDeploymentRequest createDeploymentRequest,
+      ExecutionLogCallback executionLogCallback);
 
   /**
    * Gets application current revision info.
@@ -58,8 +66,9 @@ public interface AwsCodeDeployService {
    * @param region               the region
    * @param appName              the app name
    * @param cloudProviderSetting the cloud provider setting
+   * @param encryptedDataDetails
    * @return the application current revision info
    */
-  RevisionLocation getApplicationRevisionList(
-      String region, String appName, String deploymentGroupName, SettingAttribute cloudProviderSetting);
+  RevisionLocation getApplicationRevisionList(String region, String appName, String deploymentGroupName,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails);
 }

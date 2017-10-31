@@ -12,6 +12,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
@@ -34,7 +35,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
-      SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
     return aPageResponse().withResponse(null).build();
   }
 
@@ -59,7 +60,8 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
-    return gkeClusterService.listClusters(computeProviderSetting);
+  public List<String> listClusterNames(
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
+    return gkeClusterService.listClusters(computeProviderSetting, encryptedDataDetails);
   }
 }

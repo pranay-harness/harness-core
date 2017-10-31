@@ -60,35 +60,35 @@ public class NexusBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetPlans() {
-    when(nexusService.getRepositories(nexusConfig))
+    when(nexusService.getRepositories(nexusConfig, null))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
-    Map<String, String> jobs = nexusBuildService.getPlans(nexusConfig);
+    Map<String, String> jobs = nexusBuildService.getPlans(nexusConfig, null);
     assertThat(jobs).hasSize(2).containsEntry("releases", "Releases");
   }
 
   @Test
   public void shouldGetJobs() {
-    when(nexusService.getRepositories(nexusConfig))
+    when(nexusService.getRepositories(nexusConfig, null))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
-    List<JobDetails> jobs = nexusBuildService.getJobs(nexusConfig, Optional.empty());
+    List<JobDetails> jobs = nexusBuildService.getJobs(nexusConfig, null, Optional.empty());
     List<String> jobNames = nexusBuildService.extractJobNameFromJobDetails(jobs);
     assertThat(jobNames).hasSize(2).containsExactlyInAnyOrder("releases", "snapshots");
   }
 
   @Test
   public void shouldGetArtifactPaths() {
-    when(nexusService.getArtifactPaths(nexusConfig, "releases")).thenReturn(ImmutableList.of("/fakepath"));
-    List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig);
+    when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(ImmutableList.of("/fakepath"));
+    List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null);
     assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakepath");
   }
 
   @Test
   public void shouldGetBuilds() {
-    when(nexusService.getVersions(nexusConfig, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME))
+    when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("3.0").build(), aBuildDetails().withNumber("2.1.2").build()));
     List<BuildDetails> buildDetails =
-        nexusBuildService.getBuilds("nexus", nexusArtifactStream.getArtifactStreamAttributes(), nexusConfig);
+        nexusBuildService.getBuilds("nexus", nexusArtifactStream.getArtifactStreamAttributes(), nexusConfig, null);
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).containsExactly("3.0", "2.1.2");
   }
 

@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import software.wings.jersey.JsonViews;
 import software.wings.annotation.Encrypted;
-import software.wings.security.encryption.Encryptable;
+import software.wings.annotation.Encryptable;
 import software.wings.settings.SettingValue;
 
 import javax.validation.constraints.NotNull;

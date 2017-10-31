@@ -14,6 +14,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
+    List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
     String clusterName = context.getClusterName();
     String namespace = context.getNamespace();
     List<ContainerServiceData> desiredCounts = context.getDesiredCounts();
@@ -50,8 +52,9 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     try {
       List<ContainerInfo> containerInfos = new ArrayList<>();
       desiredCounts.forEach(dc
-          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, clusterName, namespace, dc.getName(),
-              dc.getPreviousCount(), dc.getDesiredCount(), serviceSteadyStateTimeout, executionLogCallback)));
+          -> containerInfos.addAll(executeInternal(region, cloudProviderSetting, cloudProviderCredentials, clusterName,
+              namespace, dc.getName(), dc.getPreviousCount(), dc.getDesiredCount(), serviceSteadyStateTimeout,
+              executionLogCallback)));
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       boolean allContainersSuccess =
           containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -66,6 +69,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
   }
 
   protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
-      String clusterName, String namespace, String serviceName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String namespace, String serviceName,
+      int previousCount, int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 }

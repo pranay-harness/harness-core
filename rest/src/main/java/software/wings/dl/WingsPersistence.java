@@ -321,14 +321,4 @@ public interface WingsPersistence {
    * @throws Exception if the authorization fails for any reason
    */
   Query createAuthorizedQuery(Class collectionClass, boolean disableValidation);
-
-  /**
-   * Only to be used in testing encryption.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @param id  the id
-   * @return the t
-   */
-  <T extends Base> T getWithoutDecryptingTestOnly(Class<T> cls, String id);
 }

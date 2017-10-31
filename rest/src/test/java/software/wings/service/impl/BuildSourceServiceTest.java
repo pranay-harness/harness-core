@@ -1,0 +1,470 @@
+package software.wings.service.impl;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.integration.DataGenUtil.HARNESS_ARTIFACTORY;
+import static software.wings.integration.DataGenUtil.HARNESS_BAMBOO_SERVICE;
+import static software.wings.integration.DataGenUtil.HARNESS_DOCKER_REGISTRY;
+import static software.wings.integration.DataGenUtil.HARNESS_NEXUS;
+import static software.wings.utils.ArtifactType.*;
+
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KmsConfig;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.DataGenUtil;
+import software.wings.rules.RepeatRule.Repeat;
+import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.DockerBuildService;
+import software.wings.service.intfc.EcrBuildService;
+import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.NexusBuildService;
+import software.wings.service.intfc.security.KmsDelegateService;
+import software.wings.service.intfc.security.KmsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.ArtifactType;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import javax.inject.Inject;
+
+/**
+ * Created by rsingh on 10/9/17.
+ */
+@RunWith(Parameterized.class)
+public class BuildSourceServiceTest extends WingsBaseTest {
+  @Parameter public boolean isKmsEnabled;
+  @Parameter(1) public SettingVariableTypes type;
+  @Parameter(2) public ArtifactStreamType streamType;
+  @Parameter(3) public String repositoryType;
+  @Parameter(4) public String jobName;
+  @Parameter(5) public String groupId;
+  @Parameter(6) public String artifactPath;
+  @Parameter(7) public ArtifactType artifactType;
+
+  private String accountId;
+  private String appId;
+  private SettingAttribute settingAttribute;
+  private ArtifactStream artifactStream;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private DelegateProxyFactory kmsDelegateProxyFactory;
+  @Inject private BuildSourceService buildSourceService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private JenkinsBuildService jenkinsBuildService;
+  @Inject private BambooBuildService bambooBuildService;
+  @Inject private NexusBuildService nexusBuildService;
+  @Inject private DockerBuildService dockerBuildService;
+  @Inject private ArtifactoryBuildService artifactoryBuildService;
+  @Inject private EcrBuildService ecrBuildService;
+  @Inject private KmsService kmsService;
+  @Inject private KmsDelegateService kmsDelegateService;
+
+  @Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[][] {{true, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "",
+                                             "todolist_war", "", "target/todolist.war", WAR},
+        {false, SettingVariableTypes.JENKINS, ArtifactStreamType.JENKINS, "", "todolist_war", "", "target/todolist.war",
+            WAR},
+        {true, SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war",
+            WAR},
+        {false, SettingVariableTypes.BAMBOO, ArtifactStreamType.BAMBOO, "", "TOD-TOD", "", "artifacts/todolist.war",
+            WAR},
+        {true, SettingVariableTypes.NEXUS, ArtifactStreamType.NEXUS, "", "releases", "io.harness.test", "todolist",
+            WAR},
+        {false, SettingVariableTypes.NEXUS, ArtifactStreamType.NEXUS, "", "releases", "io.harness.test", "todolist",
+            WAR},
+        {true, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
+        {false, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
+            "io/harness/todolist/todolist*", "", WAR},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
+            "io/harness/todolist/todolist*", "", WAR},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
+            RPM},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
+            RPM},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
+            "io/harness/todolist/todolist/*/todolist*", "", WAR},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
+            "io/harness/todolist/todolist/*/todolist*", "", WAR},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
+            "wingsplugins/todolist", "", DOCKER},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
+            "wingsplugins/todolist", "", DOCKER},
+        {true, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
+            "todolist", DOCKER},
+        {false, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
+            "todolist", DOCKER}});
+  }
+
+  @Before
+  public void setUp() {
+    initMocks(this);
+    when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(kmsDelegateService);
+    setInternalState(kmsService, "delegateProxyFactory", kmsDelegateProxyFactory);
+    setInternalState(wingsPersistence, "kmsService", kmsService);
+    accountId = UUID.randomUUID().toString();
+    appId = UUID.randomUUID().toString();
+    if (isKmsEnabled) {
+      final KmsConfig kmsConfig = getKmsConfig();
+      kmsService.saveKmsConfig(accountId, kmsConfig);
+      enableKmsFeatureFlag();
+    }
+    Service service =
+        Service.Builder.aService().withAppId(appId).withArtifactType(artifactType).withName("Some service").build();
+    wingsPersistence.save(service);
+    switch (type) {
+      case JENKINS:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(jenkinsBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName(BaseIntegrationTest.HARNESS_JENKINS)
+                               .withCategory(Category.CONNECTOR)
+                               .withAccountId(accountId)
+                               .withValue(JenkinsConfig.builder()
+                                              .accountId(accountId)
+                                              .jenkinsUrl("https://jenkins.wings.software")
+                                              .username("wingsbuild")
+                                              .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new JenkinsArtifactStream();
+        ((JenkinsArtifactStream) artifactStream).setJobname(jobName);
+        ((JenkinsArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+      case BAMBOO:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName(HARNESS_BAMBOO_SERVICE)
+                               .withCategory(Category.CONNECTOR)
+                               .withAccountId(accountId)
+                               .withValue(BambooConfig.builder()
+                                              .accountId(accountId)
+                                              .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
+                                              .username("wingsbuild")
+                                              .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new BambooArtifactStream();
+        ((BambooArtifactStream) artifactStream).setJobname(jobName);
+        ((BambooArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+
+      case NEXUS:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName(HARNESS_NEXUS)
+                               .withCategory(Category.CONNECTOR)
+                               .withAccountId(accountId)
+                               .withValue(NexusConfig.builder()
+                                              .accountId(accountId)
+                                              .nexusUrl("https://nexus.wings.software")
+                                              .username("admin")
+                                              .password("wings123!".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new NexusArtifactStream();
+        ((NexusArtifactStream) artifactStream).setJobname(jobName);
+        ((NexusArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
+        ((NexusArtifactStream) artifactStream).setGroupId(groupId);
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+
+      case DOCKER:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(dockerBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName(HARNESS_DOCKER_REGISTRY)
+                               .withCategory(Category.CONNECTOR)
+                               .withAccountId(accountId)
+                               .withValue(DockerConfig.builder()
+                                              .accountId(accountId)
+                                              .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                              .username("wingsplugins")
+                                              .password("W!ngs@DockerHub".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new DockerArtifactStream();
+        ((DockerArtifactStream) artifactStream).setImageName(artifactPath);
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+      case ARTIFACTORY:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(artifactoryBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName(HARNESS_ARTIFACTORY)
+                               .withCategory(Category.CONNECTOR)
+                               .withAccountId(accountId)
+                               .withValue(ArtifactoryConfig.builder()
+                                              .accountId(accountId)
+                                              .artifactoryUrl("https://harness.jfrog.io/harness")
+                                              .username("admin")
+                                              .password("harness123!".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new ArtifactoryArtifactStream();
+        ((ArtifactoryArtifactStream) artifactStream).setJobname(jobName);
+        ((ArtifactoryArtifactStream) artifactStream).setArtifactPattern(groupId);
+        ((ArtifactoryArtifactStream) artifactStream).setRepositoryType(repositoryType);
+        ((ArtifactoryArtifactStream) artifactStream).setImageName(groupId);
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+      case ECR:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(ecrBuildService);
+        settingAttribute = aSettingAttribute()
+                               .withName("AWS")
+                               .withCategory(Category.CLOUD_PROVIDER)
+                               .withAccountId(accountId)
+                               .withValue(AwsConfig.builder()
+                                              .accountId(accountId)
+                                              .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
+                                              .secretKey("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".toCharArray())
+                                              .build())
+                               .build();
+        artifactStream = new EcrArtifactStream();
+        ((EcrArtifactStream) artifactStream).setRegion(Regions.US_EAST_1.getName());
+        ((EcrArtifactStream) artifactStream).setImageName(groupId);
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(appId);
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid type: " + type);
+    }
+    wingsPersistence.save(artifactStream);
+    wingsPersistence.save(settingAttribute);
+    setInternalState(buildSourceService, "delegateProxyFactory", delegateProxyFactory);
+  }
+
+  @Test
+  public void getJobs() {
+    switch (type) {
+      case DOCKER:
+      case ARTIFACTORY:
+      case ECR:
+        return;
+
+      default:
+        Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
+        assertTrue(jobs.size() > 0);
+    }
+  }
+
+  @Test
+  public void getPlans() {
+    switch (type) {
+      case DOCKER:
+      case ECR:
+        return;
+      default:
+        Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
+        assertTrue(plans.size() > 0);
+    }
+  }
+
+  @Test
+  public void getPlansWithService() {
+    switch (type) {
+      case DOCKER:
+      case ECR:
+        return;
+
+      default:
+        Service service =
+            Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+        wingsPersistence.save(service);
+        Map<String, String> plans = buildSourceService.getPlans(
+            appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
+        assertTrue(plans.size() > 0);
+    }
+  }
+
+  @Test
+  public void getArtifactPaths() {
+    switch (type) {
+      case DOCKER:
+      case ARTIFACTORY:
+        return;
+
+      default:
+        Set<String> artifactPaths =
+            buildSourceService.getArtifactPaths(appId, jobName, settingAttribute.getUuid(), groupId, streamType.name());
+        assertTrue(artifactPaths.size() > 0);
+        assertTrue(artifactPaths.contains(artifactPath));
+    }
+  }
+
+  @Test
+  public void getBuilds() {
+    switch (type) {
+      case DOCKER:
+      case ECR:
+        return;
+
+      default:
+        List<BuildDetails> builds =
+            buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
+        assertTrue(builds.size() > 0);
+    }
+  }
+
+  @Test
+  public void getLastSuccessfulBuild() {
+    switch (type) {
+      case DOCKER:
+      case ECR:
+        return;
+      case ARTIFACTORY:
+        switch (repositoryType) {
+          case "any":
+          case "docker":
+            return;
+          case "maven":
+            Service service =
+                Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+            wingsPersistence.save(service);
+            BuildDetails build =
+                buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
+            assertNotNull(build);
+            break;
+          default:
+            throw new IllegalArgumentException("invalid repo type");
+        }
+
+      default:
+        Service service =
+            Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+        wingsPersistence.save(service);
+        BuildDetails build =
+            buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
+        assertNotNull(build);
+    }
+  }
+
+  @Test
+  public void getGroupIds() {
+    Set<String> groupIds = null;
+    switch (type) {
+      case JENKINS:
+      case BAMBOO:
+      case DOCKER:
+      case ECR:
+        try {
+          groupIds = buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid());
+          fail("should throw excpetion");
+        } catch (WingsException e) {
+          // expected
+          return;
+        }
+        break;
+      case ARTIFACTORY:
+        switch (repositoryType) {
+          case "any":
+            return;
+          case "maven":
+          case "docker":
+            groupIds = buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid());
+            break;
+          default:
+            throw new IllegalArgumentException("invalid repo type: " + repositoryType);
+        }
+      case NEXUS:
+        groupIds = buildSourceService.getGroupIds(appId, jobName, settingAttribute.getUuid());
+        break;
+      default:
+        throw new IllegalArgumentException("invalid type: " + type);
+    }
+    assertFalse(groupIds.isEmpty());
+  }
+
+  @Test
+  @Repeat(times = 5, successes = 1)
+  public void validateArtifactSource() {
+    switch (type) {
+      case JENKINS:
+      case BAMBOO:
+      case NEXUS:
+        assertTrue(buildSourceService.validateArtifactSource(appId, settingAttribute.getUuid(), null));
+        break;
+      case ARTIFACTORY:
+        if (repositoryType.equals("docker")) {
+          return;
+        }
+      case DOCKER:
+        assertTrue(buildSourceService.validateArtifactSource(
+            appId, settingAttribute.getUuid(), artifactStream.getArtifactStreamAttributes()));
+        break;
+      case ECR:
+        return;
+      default:
+        throw new IllegalArgumentException("invalid type: " + type);
+    }
+  }
+
+  private KmsConfig getKmsConfig() {
+    final KmsConfig kmsConfig = new KmsConfig();
+    kmsConfig.setName("myKms");
+    kmsConfig.setDefault(true);
+    kmsConfig.setKmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d");
+    kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
+    kmsConfig.setSecretKey("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");
+    return kmsConfig;
+  }
+
+  private void enableKmsFeatureFlag() {
+    FeatureFlag kmsFeatureFlag =
+        FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
+    wingsPersistence.save(kmsFeatureFlag);
+  }
+}

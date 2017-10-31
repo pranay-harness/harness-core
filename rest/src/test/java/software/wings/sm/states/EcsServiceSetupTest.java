@@ -6,9 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -19,6 +22,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -53,6 +57,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -70,6 +75,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -78,12 +84,15 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
 
+import java.util.Collections;
 import java.util.Date;
 
 /**
@@ -99,6 +108,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
+  @Mock private KmsService kmsService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -173,13 +184,14 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
     when(settingsService.get(SETTING_ID)).thenReturn(dockerConfigSettingAttribute);
+    when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
 
     taskDefinition = new TaskDefinition();
     taskDefinition.setFamily(TASK_FAMILY);
     taskDefinition.setRevision(TASK_REVISION);
 
-    when(awsClusterService.createTask(
-             eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class)))
+    when(awsClusterService.createTask(eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(),
+             any(RegisterTaskDefinitionRequest.class)))
         .thenReturn(taskDefinition);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
@@ -187,6 +199,13 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    setInternalState(ecsServiceSetup, "kmsService", kmsService);
+    setInternalState(ecsServiceSetup, "encryptionService", new EncryptionServiceImpl());
+    setInternalState(ecsServiceSetup, "settingsService", settingsService);
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
+        .thenReturn(aWorkflowExecution().build());
+    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test
@@ -207,6 +226,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
+                                                      .withAppId(APP_ID)
                                                       .withRegion(Regions.US_EAST_1.getName())
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
@@ -217,14 +237,16 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     ecsService.setServiceName(EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()));
     ecsService.setCreatedAt(new Date());
 
-    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+    when(awsClusterService.getServices(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), CLUSTER_NAME))
         .thenReturn(Lists.newArrayList(ecsService));
     ExecutionResponse response = ecsServiceSetup.execute(context);
     assertThat(response).isNotNull();
     verify(awsClusterService)
-        .createTask(
-            eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class));
+        .createTask(eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(),
+            any(RegisterTaskDefinitionRequest.class));
     verify(awsClusterService)
-        .createService(eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(CreateServiceRequest.class));
+        .createService(
+            eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(), any(CreateServiceRequest.class));
   }
 }

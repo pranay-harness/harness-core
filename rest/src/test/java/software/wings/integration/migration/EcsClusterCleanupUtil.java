@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.rules.Integration;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,15 +43,17 @@ public class EcsClusterCleanupUtil extends WingsBaseTest {
 
   @Test
   public void cleanupOldServices() {
-    List<Service> zeroTaskServices = awsClusterService.getServices(region.getName(), connectorConfig, clusterName)
-                                         .stream()
-                                         .filter(s -> s.getDesiredCount() == 0)
-                                         .collect(Collectors.toList());
+    List<Service> zeroTaskServices =
+        awsClusterService.getServices(region.getName(), connectorConfig, Collections.emptyList(), clusterName)
+            .stream()
+            .filter(s -> s.getDesiredCount() == 0)
+            .collect(Collectors.toList());
     System.out.println("Deleting " + zeroTaskServices.size() + " unused services.");
     zeroTaskServices.forEach(s -> {
       String oldServiceName = s.getServiceName();
       System.out.println("Deleting " + oldServiceName);
-      awsClusterService.deleteService(region.getName(), connectorConfig, clusterName, oldServiceName);
+      awsClusterService.deleteService(
+          region.getName(), connectorConfig, Collections.emptyList(), clusterName, oldServiceName);
     });
   }
 }

@@ -170,24 +170,25 @@ public class AwsLambdaState extends State {
 
     List<CommandUnit> commandUnitList =
         serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
-    Activity.Builder activityBuilder = Activity.Builder.anActivity()
-                                           .withAppId(app.getUuid())
-                                           .withApplicationName(app.getName())
-                                           .withEnvironmentId(envId)
-                                           .withEnvironmentName(env.getName())
-                                           .withEnvironmentType(env.getEnvironmentType())
-                                           .withServiceId(service.getUuid())
-                                           .withServiceName(service.getName())
-                                           .withCommandName(command.getName())
-                                           .withType(Type.Command)
-                                           .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                                           .withWorkflowType(context.getWorkflowType())
-                                           .withWorkflowExecutionName(context.getWorkflowExecutionName())
-                                           .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                           .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                           .withCommandUnits(commandUnitList)
-                                           .withCommandType(command.getCommandUnitType().name())
-                                           .withServiceVariables(context.getServiceVariables());
+    Activity.ActivityBuilder activityBuilder = Activity.builder()
+                                                   .applicationName(app.getName())
+                                                   .environmentId(envId)
+                                                   .environmentName(env.getName())
+                                                   .environmentType(env.getEnvironmentType())
+                                                   .serviceId(service.getUuid())
+                                                   .serviceName(service.getName())
+                                                   .commandName(command.getName())
+                                                   .type(Type.Command)
+                                                   .workflowExecutionId(context.getWorkflowExecutionId())
+                                                   .workflowId(context.getWorkflowId())
+                                                   .workflowType(context.getWorkflowType())
+                                                   .workflowExecutionName(context.getWorkflowExecutionName())
+                                                   .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                                   .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                                   .commandUnits(commandUnitList)
+                                                   .commandType(command.getCommandUnitType().name())
+                                                   .serviceVariables(context.getServiceVariables())
+                                                   .status(ExecutionStatus.RUNNING);
 
     Artifact artifact = getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), workflowStandardParams);
     if (artifact == null) {
@@ -195,13 +196,15 @@ public class AwsLambdaState extends State {
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
-    activityBuilder.withArtifactStreamId(artifactStream.getUuid())
-        .withArtifactStreamName(artifactStream.getSourceName())
-        .withArtifactName(artifact.getDisplayName())
-        .withArtifactId(artifact.getUuid());
-    activityBuilder.withArtifactId(artifact.getUuid()).withArtifactName(artifact.getDisplayName());
+    activityBuilder.artifactStreamId(artifactStream.getUuid())
+        .artifactStreamName(artifactStream.getSourceName())
+        .artifactName(artifact.getDisplayName())
+        .artifactId(artifact.getUuid());
+    activityBuilder.artifactId(artifact.getUuid()).artifactName(artifact.getDisplayName());
 
-    Activity activity = activityService.save(activityBuilder.build());
+    Activity build = activityBuilder.build();
+    build.setAppId(app.getUuid());
+    Activity activity = activityService.save(build);
 
     Builder logBuilder = aLog()
                              .withAppId(activity.getAppId())

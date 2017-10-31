@@ -6,6 +6,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.util.List;
@@ -30,25 +31,24 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask<List
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
     try {
-      return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
-          (String) parameters[4], (List<String>) parameters[5], (String) parameters[6],
-          (Map<String, String>) parameters[7]);
+      return run((ArtifactoryConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
+          (String) parameters[3], (List<String>) parameters[4], (String) parameters[5],
+          (Map<String, String>) parameters[6]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
     }
   }
 
-  public ListNotifyResponseData run(String artifactoryUrl, String username, char[] password, String repoType,
-      String groupId, List<String> artifactPaths, String artifactPattern, Map<String, String> metadata) {
+  public ListNotifyResponseData run(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String repoType, String groupId, List<String> artifactPaths, String artifactPattern,
+      Map<String, String> metadata) {
     try {
-      ArtifactoryConfig artifactoryConfig =
-          ArtifactoryConfig.builder().artifactoryUrl(artifactoryUrl).username(username).password(password).build();
-      return artifactoryService.downloadArtifacts(artifactoryConfig, repoType, groupId, artifactPaths, artifactPattern,
-          metadata, getDelegateId(), getTaskId(), getAccountId());
+      return artifactoryService.downloadArtifacts(artifactoryConfig, encryptedDataDetails, repoType, groupId,
+          artifactPaths, artifactPattern, metadata, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.warn(
-          "Exception occurred while collecting artifact for artifact server {}  " + e.getMessage(), artifactoryUrl, e);
+      logger.warn("Exception occurred while collecting artifact for artifact server {}  " + e.getMessage(),
+          artifactoryConfig.getArtifactoryUrl(), e);
     }
     return new ListNotifyResponseData();
   }

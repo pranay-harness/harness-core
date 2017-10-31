@@ -53,7 +53,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   public void testGetJobs() throws Exception {
     JenkinsConfig jenkinsConfig =
         JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).password(JENKINS_PASSWORD).username(JENKINS_USERNAME).build();
-    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, Optional.empty());
+    List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
     assertTrue(jobs.size() > 0);
   }
 }

@@ -1,10 +1,9 @@
 package software.wings.helpers.ext.ecr;
 
-import com.amazonaws.services.ecr.model.Repository;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
@@ -21,7 +20,8 @@ public interface EcrService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(AwsConfig awsConfig, String region, String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
@@ -30,24 +30,27 @@ public interface EcrService {
    * @param imageName the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(AwsConfig awsConfig, String imageName);
+  BuildDetails getLastSuccessfulBuild(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
 
   /**
    * Validates the Image
    *
    * @param awsConfig the ecr config
-   * @param region the aws region
+   * @param region    the aws region
    * @param imageName the image name
    * @return the boolean
    */
-  boolean verifyRepository(AwsConfig awsConfig, String region, String imageName);
+  boolean verifyRepository(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName);
 
   /**
    * Lists aws regions
+   *
    * @param awsConfig aws config
    * @return
    */
-  List<String> listRegions(AwsConfig awsConfig);
+  List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 
   /**
    * List ecr registry list.
@@ -55,14 +58,16 @@ public interface EcrService {
    * @param awsConfig the ecr config
    * @return the list
    */
-  List<String> listEcrRegistry(AwsConfig awsConfig, String region);
+  List<String> listEcrRegistry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
 
   /**
    * Get the ECR repository info for the given name
-   * @param awsConfig aws cloud provider config
-   * @param region aws region
+   *
+   * @param awsConfig         aws cloud provider config
+   * @param region            aws region
    * @param ecrArtifactStream repository name
    * @return ecr image url
    */
-  String getEcrImageUrl(AwsConfig awsConfig, String region, EcrArtifactStream ecrArtifactStream);
+  String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      EcrArtifactStream ecrArtifactStream);
 }

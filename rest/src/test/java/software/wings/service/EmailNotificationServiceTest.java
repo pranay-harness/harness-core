@@ -25,6 +25,8 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.Collections;
+
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
@@ -80,7 +82,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   @Test
   public void shouldSendEmailWithTemplate() throws Exception {
     emailDataNotificationService.send(emailTemplateData);
-    verify(mailer).send(smtpConfig, emailTemplateData);
+    verify(mailer).send(smtpConfig, Collections.emptyList(), emailTemplateData);
     verify(settingsService).getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name());
   }
 
@@ -92,7 +94,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   @Test
   public void shouldSendEmailWithBody() throws Exception {
     emailDataNotificationService.send(emailBodyData);
-    verify(mailer).send(smtpConfig, emailBodyData);
+    verify(mailer).send(smtpConfig, Collections.emptyList(), emailBodyData);
     verify(settingsService).getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name());
   }
 

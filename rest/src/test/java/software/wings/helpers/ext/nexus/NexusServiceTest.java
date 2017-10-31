@@ -10,12 +10,15 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.internal.util.reflection.Whitebox;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 
 import java.io.InputStream;
 import java.util.List;
@@ -35,6 +38,11 @@ public class NexusServiceTest {
 
   private NexusConfig nexusConfig =
       NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
+
+  @Before
+  public void setUp() {
+    Whitebox.setInternalState(nexusService, "encryptionService", new EncryptionServiceImpl());
+  }
 
   @Test
   public void shouldGetRepositories() {
@@ -62,7 +70,7 @@ public class NexusServiceTest {
                         + " </data>"
                         + "</repositories>")
                     .withHeader("Content-Type", "application/xml")));
-    assertThat(nexusService.getRepositories(nexusConfig)).hasSize(1).containsEntry("snapshots", "Snapshots");
+    assertThat(nexusService.getRepositories(nexusConfig, null)).hasSize(1).containsEntry("snapshots", "Snapshots");
   }
 
   @Test
@@ -94,7 +102,7 @@ public class NexusServiceTest {
                         + "  </data>\n"
                         + "</content>")
                     .withHeader("Content-Type", "application/xml")));
-    assertThat(nexusService.getArtifactPaths(nexusConfig, "releases")).hasSize(2).contains("/fakepath/");
+    assertThat(nexusService.getArtifactPaths(nexusConfig, null, "releases")).hasSize(2).contains("/fakepath/");
   }
 
   @Test
@@ -118,7 +126,7 @@ public class NexusServiceTest {
                         + "  </data>\n"
                         + "</content>")
                     .withHeader("Content-Type", "application/xml")));
-    assertThat(nexusService.getArtifactPaths(nexusConfig, "releases", "fakepath"))
+    assertThat(nexusService.getArtifactPaths(nexusConfig, null, "releases", "fakepath"))
         .hasSize(1)
         .contains("/fakepath/nexus-client-core/");
   }
@@ -144,7 +152,7 @@ public class NexusServiceTest {
                         + "  </data>\n"
                         + "</content>")
                     .withHeader("Content-Type", "application/xml")));
-    assertThat(nexusService.getArtifactPaths(nexusConfig, "releases", "/fakepath"))
+    assertThat(nexusService.getArtifactPaths(nexusConfig, null, "releases", "/fakepath"))
         .hasSize(1)
         .contains("/fakepath/nexus-client-core/");
   }
@@ -156,7 +164,7 @@ public class NexusServiceTest {
                                              .withStatus(200)
                                              .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
                                              .withHeader("Content-Type", "application/xml")));
-    assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig))
+    assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, null))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
@@ -169,7 +177,7 @@ public class NexusServiceTest {
                                              .withFault(Fault.EMPTY_RESPONSE)
                                              .withHeader("Content-Type", "application/xml")));
 
-    assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, "releases"))
+    assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, null, "releases"))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("unexpected end of stream");
   }
@@ -182,7 +190,7 @@ public class NexusServiceTest {
                                              .withFault(Fault.RANDOM_DATA_THEN_CLOSE)
                                              .withHeader("Content-Type", "application/xml")));
 
-    assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, "releases", "fakepath"))
+    assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, null, "releases", "fakepath"))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("unexpected end of stream");
   }
@@ -243,7 +251,7 @@ public class NexusServiceTest {
                                                  + "</indexBrowserTreeViewResponse>")
                                              .withHeader("Content-Type", "application/xml")));
 
-    assertThat(nexusService.getGroupIdPaths(nexusConfig, "releases")).hasSize(1).contains("fakepath");
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "releases")).hasSize(1).contains("fakepath");
   }
 
   @Test
@@ -327,7 +335,7 @@ public class NexusServiceTest {
                         + "</indexBrowserTreeViewResponse>")
                     .withHeader("Content-Type", "application/xml")));
 
-    assertThat(nexusService.getArtifactNames(nexusConfig, "releases", "software.wings.nexus"))
+    assertThat(nexusService.getArtifactNames(nexusConfig, null, "releases", "software.wings.nexus"))
         .hasSize(1)
         .contains("rest-client");
   }
@@ -444,7 +452,7 @@ public class NexusServiceTest {
                     .withHeader("Content-Type", "application/xml")));
 
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(nexusConfig, "releases", "software.wings.nexus", "rest-client");
+        nexusService.getVersions(nexusConfig, null, "releases", "software.wings.nexus", "rest-client");
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -527,7 +535,7 @@ public class NexusServiceTest {
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     // TODO: Need to mock the file input stream
     Pair<String, InputStream> fileInfo =
-        nexusService.downloadArtifact(nexusConfig, "releases", "software.wings.nexus", "rest-client", "LATEST");
+        nexusService.downloadArtifact(nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "LATEST");
 
     assertThat(fileInfo).isNotNull();
     assertThat(fileInfo.getKey()).isEqualTo("rest-client-3.0.jar");
@@ -537,7 +545,7 @@ public class NexusServiceTest {
   public void shouldGetLatestVersion() {
     setPomModelWireMock();
     BuildDetails buildDetails =
-        nexusService.getLatestVersion(nexusConfig, "releases", "software.wings.nexus", "rest-client");
+        nexusService.getLatestVersion(nexusConfig, null, "releases", "software.wings.nexus", "rest-client");
     assertThat(buildDetails).extracting(BuildDetails::getNumber).containsExactly("3.0");
   }
   private void setPomModelWireMock() {

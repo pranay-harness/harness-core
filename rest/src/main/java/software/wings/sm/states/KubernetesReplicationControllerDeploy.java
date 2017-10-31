@@ -17,11 +17,13 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,11 +55,12 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
-  protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected Optional<Integer> getServiceDesiredCount(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     if (isNotEmpty(containerServiceElement.getName())) {
       ReplicationController replicationController = kubernetesContainerService.getController(
-          getKubernetesConfig(settingAttribute, containerServiceElement), containerServiceElement.getName());
+          getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), Collections.emptyList(),
+          containerServiceElement.getName());
       if (replicationController != null) {
         return Optional.of(replicationController.getSpec().getReplicas());
       }
@@ -66,11 +69,11 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
-  protected LinkedHashMap<String, Integer> getActiveServiceCounts(
-      SettingAttribute settingAttribute, String region, ContainerServiceElement containerServiceElement) {
+  protected LinkedHashMap<String, Integer> getActiveServiceCounts(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, ContainerServiceElement containerServiceElement) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    ReplicationControllerList replicationControllers =
-        kubernetesContainerService.listControllers(getKubernetesConfig(settingAttribute, containerServiceElement));
+    ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(
+        getKubernetesConfig(settingAttribute, encryptedDataDetails, containerServiceElement), Collections.emptyList());
     if (replicationControllers != null) {
       String controllerNamePrefix =
           getReplicationControllerNamePrefixFromControllerName(containerServiceElement.getName());
@@ -86,11 +89,11 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     return result;
   }
 
-  private KubernetesConfig getKubernetesConfig(
-      SettingAttribute settingAttribute, ContainerServiceElement containerServiceElement) {
+  private KubernetesConfig getKubernetesConfig(SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, ContainerServiceElement containerServiceElement) {
     return settingAttribute.getValue() instanceof GcpConfig
-        ? gkeClusterService.getCluster(
-              settingAttribute, containerServiceElement.getClusterName(), containerServiceElement.getNamespace())
+        ? gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, containerServiceElement.getClusterName(),
+              containerServiceElement.getNamespace())
         : (KubernetesConfig) settingAttribute.getValue();
   }
 

@@ -41,7 +41,6 @@ public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@EncryptionKey2a@".toCharArray();
   @JsonIgnore @Transient private SecretKeyFactory FACTORY;
 
-  private static final EncryptionType encryptionType = EncryptionType.SIMPLE;
   @JsonIgnore @Transient private char[] key;
   private byte[] salt;
   @JsonIgnore @Transient private SecretKey secretKey;
@@ -73,10 +72,6 @@ public class SimpleEncryption implements EncryptionInterface {
     this.key = key;
     this.salt = salt;
     this.secretKey = generateSecretKey(key, salt);
-  }
-
-  public EncryptionType getEncryptionType() {
-    return this.encryptionType;
   }
 
   @JsonIgnore

@@ -2,6 +2,10 @@ package software.wings.dl;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -13,11 +17,13 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.base.MoreObjects;
 
 import org.assertj.core.util.Lists;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.JenkinsConfig;
@@ -30,6 +36,8 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,6 +61,8 @@ import javax.ws.rs.core.UriInfo;
  */
 public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private KmsService kmsService;
+  @Inject private EncryptionService encryptionService;
 
   /**
    * Should query by in operator.
@@ -506,11 +516,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Test
   public void shouldStoreAndRetrieveEncryptedPassword() {
     String rand = String.valueOf(Math.random());
+    String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
     JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                       .jenkinsUrl("https://jenkins.wings.software")
                                       .accountId("kmpySmUISimoRrJL6NL73w")
                                       .username("wingsbuild")
-                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                      .password(password.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")
@@ -521,22 +532,26 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(settingAttribute);
     SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(result).isNotNull().isEqualToComparingFieldByFieldRecursively(settingAttribute);
-    SettingAttribute undecryptedResult =
-        wingsPersistence.getWithoutDecryptingTestOnly(SettingAttribute.class, settingAttribute.getUuid());
+    SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(undecryptedResult).isNotNull();
-    assertThat(Arrays.equals(((JenkinsConfig) settingAttribute.getValue()).getPassword(),
-                   ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
+    assertThat(Arrays.equals(password.toCharArray(), ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
         .isFalse();
+
+    // decrypt and compare
+    encryptionService.decrypt(
+        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null));
+    assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
   }
 
   @Test
   public void shouldUpdateEncryptedPassword() {
     String rand = String.valueOf(Math.random());
+    String originalPassword = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
     JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                       .jenkinsUrl("https://jenkins.wings.software")
                                       .accountId("kmpySmUISimoRrJL6NL73w")
                                       .username("wingsbuild")
-                                      .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                      .password(originalPassword.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId("kmpySmUISimoRrJL6NL73w")
@@ -551,13 +566,14 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.updateField(SettingAttribute.class, settingId, "value", jenkinsConfig);
     SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingId);
     char[] password = ((JenkinsConfig) result.getValue()).getPassword();
-    assertThat(Arrays.equals(password, newPassword));
-    SettingAttribute undecryptedResult =
-        wingsPersistence.getWithoutDecryptingTestOnly(SettingAttribute.class, settingAttribute.getUuid());
+    assertFalse(Arrays.equals(newPassword, password));
+    SettingAttribute undecryptedResult = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(undecryptedResult).isNotNull();
-    assertThat(Arrays.equals(((JenkinsConfig) result.getValue()).getPassword(),
-                   ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
-        .isFalse();
+    assertThat(Arrays.equals(newPassword, ((JenkinsConfig) undecryptedResult.getValue()).getPassword())).isFalse();
+
+    encryptionService.decrypt(
+        (Encryptable) result.getValue(), kmsService.getEncryptionDetails((Encryptable) result.getValue(), null));
+    assertTrue(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword()));
   }
 
   @Test
@@ -579,8 +595,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));
-    ServiceVariable undecryptedResult =
-        wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, serviceVariableId);
+    ServiceVariable undecryptedResult = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(undecryptedResult).isNotNull();
     assertThat(Arrays.equals(password, undecryptedResult.getValue())).isFalse();
   }
@@ -604,8 +619,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(Arrays.equals(password, result.getValue()));
-    ServiceVariable undecryptedResult =
-        wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, serviceVariableId);
+    ServiceVariable undecryptedResult = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(undecryptedResult).isNotNull();
     assertThat(Arrays.equals(password, undecryptedResult.getValue()));
   }

@@ -6,6 +6,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
+import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
@@ -15,6 +16,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
 
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
+  @Inject private EncryptionService encryptionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
@@ -42,6 +45,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
+    decryptCredentials(context);
     if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
       return executeSshCommand(command, context);
     } else {
@@ -98,5 +102,22 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
 
     return commandExecutionStatus;
+  }
+
+  private void decryptCredentials(CommandExecutionContext commandExecutionContext) {
+    if (commandExecutionContext.getHostConnectionAttributes() != null) {
+      encryptionService.decrypt((Encryptable) commandExecutionContext.getHostConnectionAttributes().getValue(),
+          commandExecutionContext.getHostConnectionCredentials());
+    }
+
+    if (commandExecutionContext.getBastionConnectionAttributes() != null) {
+      encryptionService.decrypt((Encryptable) commandExecutionContext.getBastionConnectionAttributes().getValue(),
+          commandExecutionContext.getBastionConnectionCredentials());
+    }
+
+    if (commandExecutionContext.getCloudProviderSetting() != null) {
+      encryptionService.decrypt((Encryptable) commandExecutionContext.getCloudProviderSetting().getValue(),
+          commandExecutionContext.getCloudProviderCredentials());
+    }
   }
 }

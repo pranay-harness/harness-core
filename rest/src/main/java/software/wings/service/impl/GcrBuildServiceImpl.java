@@ -12,6 +12,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.utils.ArtifactType;
 
@@ -30,48 +31,52 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Inject private GcrService gcrService;
 
   @Override
-  public List<BuildDetails> getBuilds(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, GcpConfig gcpConfig) {
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCR.name());
-    return gcrService.getBuilds(gcpConfig, artifactStreamAttributes, 50);
+    return gcrService.getBuilds(gcpConfig, encryptionDetails, artifactStreamAttributes, 50);
   }
 
   @Override
-  public List<JobDetails> getJobs(GcpConfig gcpConfig, Optional<String> parentJobName) {
+  public List<JobDetails> getJobs(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     return Lists.newArrayList();
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, String groupId, GcpConfig config) {
+  public List<String> getArtifactPaths(
+      String jobName, String groupId, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      String appId, ArtifactStreamAttributes artifactStreamAttributes, GcpConfig gcpConfig) {
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
-  public Map<String, String> getPlans(GcpConfig config) {
-    return getJobs(config, Optional.empty())
+  public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return getJobs(config, encryptionDetails, Optional.empty())
         .stream()
         .collect(Collectors.toMap(o -> o.getJobName(), o -> o.getJobName()));
   }
 
   @Override
-  public Map<String, String> getPlans(GcpConfig config, ArtifactType artifactType, String reposiotoryType) {
-    return getPlans(config);
+  public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactType artifactType, String reposiotoryType) {
+    return getPlans(config, encryptionDetails);
   }
 
   @Override
-  public List<String> getGroupIds(String jobName, GcpConfig config) {
+  public List<String> getGroupIds(String jobName, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
-  public boolean validateArtifactSource(GcpConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
-    return gcrService.verifyImageName(config, artifactStreamAttributes);
+  public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes) {
+    return gcrService.verifyImageName(config, encryptionDetails, artifactStreamAttributes);
   }
 
   @Override

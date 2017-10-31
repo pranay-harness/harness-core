@@ -57,16 +57,16 @@ public class BambooTaskTest {
       parameters.forEach(
           parameterEntry -> { evaluatedParameters.put(parameterEntry.getKey(), parameterEntry.getValue()); });
     }
-    when(bambooService.triggerPlan(bambooConfig, planKey, evaluatedParameters)).thenReturn(buildResultKey);
-    when(bambooService.getBuildResultStatus(bambooConfig, buildResultKey))
+    when(bambooService.triggerPlan(bambooConfig, null, planKey, evaluatedParameters)).thenReturn(buildResultKey);
+    when(bambooService.getBuildResultStatus(bambooConfig, null, buildResultKey))
         .thenReturn(Status.builder().finished(true).build());
   }
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
-    when(bambooService.getBuildResult(bambooConfig, planKey))
+    when(bambooService.getBuildResult(bambooConfig, null, planKey))
         .thenReturn(Result.builder().buildResultKey(buildResultKey).buildState("Successful").build());
-    bambooTask.run(bambooUrl, userName, password, planKey, parameters, filePathAssertionEntries);
-    verify(bambooService).triggerPlan(bambooConfig, planKey, Collections.emptyMap());
-    verify(bambooService).getBuildResult(bambooConfig, buildResultKey);
+    bambooTask.run(bambooConfig, null, planKey, parameters, filePathAssertionEntries);
+    verify(bambooService).triggerPlan(bambooConfig, null, planKey, Collections.emptyMap());
+    verify(bambooService).getBuildResult(bambooConfig, null, buildResultKey);
   }
 }

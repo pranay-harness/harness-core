@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 
 /**
  * Created by rsingh on 9/11/17.
@@ -25,6 +27,7 @@ public abstract class AbstractDelegateDataCollectionTask
   protected final AtomicBoolean completed = new AtomicBoolean(false);
   protected ScheduledExecutorService collectionService;
   protected final Object lockObject = new Object();
+  @Inject protected EncryptionService encryptionService;
 
   public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {

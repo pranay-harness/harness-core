@@ -3,15 +3,17 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -27,7 +29,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import org.junit.Test;
@@ -35,7 +39,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Builder;
 import software.wings.beans.Event.Type;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -51,36 +54,14 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
 public class ActivityServiceTest extends WingsBaseTest {
-  private static final Builder builder = anActivity()
-                                             .withEnvironmentId(ENV_ID)
-                                             .withEnvironmentName(ENV_NAME)
-                                             .withEnvironmentType(PROD)
-                                             .withAppId(APP_ID)
-                                             .withApplicationName(APP_NAME)
-                                             .withArtifactId(ARTIFACT_ID)
-                                             .withArtifactName(ARTIFACT_NAME)
-                                             .withCommandName(COMMAND_NAME)
-                                             .withCommandType(EXEC.name())
-                                             .withHostName(HOST_NAME)
-                                             .withArtifactStreamId(ARTIFACT_STREAM_NAME)
-                                             .withServiceName(SERVICE_NAME)
-                                             .withServiceId(SERVICE_ID)
-                                             .withServiceTemplateName(TEMPLATE_NAME)
-                                             .withServiceTemplateId(TEMPLATE_ID)
-                                             .withStatus(ExecutionStatus.RUNNING)
-                                             .withWorkflowExecutionId("WORKFLOW_ID")
-                                             .withWorkflowExecutionName("Workflow 1")
-                                             .withWorkflowType(WorkflowType.SIMPLE)
-                                             .withStateExecutionInstanceId("STATE_ID")
-                                             .withStateExecutionInstanceName("STATE")
-                                             .withServiceInstanceId(SERVICE_INSTANCE_ID);
-
   @Inject private WingsPersistence wingsPersistence;
 
   @Mock private ServiceResourceService serviceResourceService;
@@ -96,7 +77,33 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListActivities() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .build();
+    activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
     assertThat(activityService.list(new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
@@ -106,7 +113,33 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetActivity() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .build();
+    activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
     assertThat(activityService.get(activity.getUuid(), activity.getAppId())).isEqualTo(activity);
   }
@@ -116,7 +149,34 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveActivity() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandUnits(Collections.emptyList())
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .build();
+    activity.setAppId(APP_ID);
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
     verify(serviceInstanceService).updateActivity(activity);
@@ -138,11 +198,35 @@ public class ActivityServiceTest extends WingsBaseTest {
     List<CommandUnit> commandUnitList = asList(new InitSshCommandUnit(),
         anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build(),
         new CleanupSshCommandUnit());
-    Activity activity = builder.but()
-                            .withCommandName(COMMAND_NAME)
-                            .withCommandType(CommandUnitType.COMMAND.name())
-                            .withCommandUnits(commandUnitList)
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandName(COMMAND_NAME)
+                            .commandType(CommandUnitType.COMMAND.name())
+                            .commandUnits(commandUnitList)
                             .build();
+    activity.setAppId(APP_ID);
+
     String activityId = wingsPersistence.save(activity);
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
@@ -156,7 +240,33 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetLastActivityForService() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .build();
+    activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
     Activity activityForService = activityService.getLastActivityForService(APP_ID, SERVICE_ID);
     assertThat(activityForService).isEqualTo(activity);
@@ -167,7 +277,33 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetLastProductionActivityForService() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .build();
+    activity.setAppId(APP_ID);
     activity.setEnvironmentType(PROD);
     wingsPersistence.save(activity);
     Activity lastProductionActivityForService = activityService.getLastProductionActivityForService(APP_ID, SERVICE_ID);
@@ -179,10 +315,36 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateActivityStatus() {
-    Activity activity = builder.but().build();
+    Activity activity = Activity.builder()
+                            .environmentId(ENV_ID)
+                            .environmentName(ENV_NAME)
+                            .environmentType(PROD)
+                            .applicationName(APP_NAME)
+                            .artifactId(ARTIFACT_ID)
+                            .artifactName(ARTIFACT_NAME)
+                            .commandName(COMMAND_NAME)
+                            .commandType(EXEC.name())
+                            .hostName(HOST_NAME)
+                            .artifactStreamId(ARTIFACT_STREAM_NAME)
+                            .serviceName(SERVICE_NAME)
+                            .serviceId(SERVICE_ID)
+                            .serviceTemplateName(TEMPLATE_NAME)
+                            .serviceTemplateId(TEMPLATE_ID)
+                            .status(ExecutionStatus.RUNNING)
+                            .workflowExecutionId("WORKFLOW_ID")
+                            .workflowExecutionName("Workflow 1")
+                            .workflowType(WorkflowType.SIMPLE)
+                            .stateExecutionInstanceId("STATE_ID")
+                            .stateExecutionInstanceName("STATE")
+                            .workflowId(WORKFLOW_ID)
+                            .commandUnits(Collections.emptyList())
+                            .serviceVariables(Maps.newHashMap())
+                            .serviceInstanceId(SERVICE_INSTANCE_ID)
+                            .build();
+    activity.setAppId(APP_ID);
+    activity.setUuid(ACTIVITY_ID);
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
-    verify(serviceInstanceService).updateActivity(activity);
     verify(eventEmitter)
         .send(Channel.ACTIVITIES,
             anEvent()
@@ -195,7 +357,7 @@ public class ActivityServiceTest extends WingsBaseTest {
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
 
     activity.setStatus(ExecutionStatus.SUCCESS);
-    verify(serviceInstanceService, times(2)).updateActivity(activity);
+    verify(serviceInstanceService, times(2)).updateActivity(anyObject());
     verify(eventEmitter)
         .send(Channel.ACTIVITIES,
             anEvent()

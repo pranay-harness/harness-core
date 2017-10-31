@@ -13,6 +13,7 @@ import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -30,6 +31,8 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
   @Inject private MainConfiguration mainConfiguration;
 
+  @Inject private KmsService kmsService;
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)
    */
@@ -38,7 +41,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     SmtpConfig config =
         emailData.isSystem() ? mainConfiguration.getSmtpConfig() : getSmtpConfig(emailData.getAccountId());
 
-    mailer.send(config, emailData);
+    mailer.send(config, kmsService.getEncryptionDetails(config, null), emailData);
   }
 
   @Override
