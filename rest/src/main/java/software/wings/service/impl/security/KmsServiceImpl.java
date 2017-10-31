@@ -19,9 +19,11 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.UuidAware;
@@ -521,6 +523,12 @@ public class KmsServiceImpl implements KmsService {
         if (serviceVaribaleQuery.hasNext()) {
           ServiceVariable serviceVariable = serviceVaribaleQuery.next();
           serviceVariable.setValue(SECRET_MASK.toCharArray());
+          if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+            ServiceTemplate serviceTemplate =
+                wingsPersistence.get(ServiceTemplate.class, serviceVariable.getEntityId());
+            Preconditions.checkNotNull(serviceTemplate, "can't find service template " + serviceVariable);
+            serviceVariable.setServiceId(serviceTemplate.getServiceId());
+          }
           return serviceVariable;
         }
         return null;

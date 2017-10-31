@@ -39,6 +39,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
@@ -794,6 +795,48 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
     assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
     assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
+  }
+
+  @Test
+  public void kmsEncryptionSaveServiceVariableTemplate() throws IOException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    String serviceId = wingsPersistence.save(Service.Builder.aService().withName(UUID.randomUUID().toString()).build());
+    String serviceTemplateId =
+        wingsPersistence.save(ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).build());
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(UUID.randomUUID().toString())
+                                                .envId(UUID.randomUUID().toString())
+                                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                                .entityId(serviceTemplateId)
+                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
+                                                .expression(UUID.randomUUID().toString())
+                                                .accountId(accountId)
+                                                .name(UUID.randomUUID().toString())
+                                                .value(UUID.randomUUID().toString().toCharArray())
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+    ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertEquals(serviceVariable, savedAttribute);
+    assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    Collection<UuidAware> uuidAwares = kmsService.listEncryptedValues(accountId);
+    assertEquals(1, uuidAwares.size());
+    ServiceVariable listedVariable = (ServiceVariable) uuidAwares.iterator().next();
+    assertEquals(KmsServiceImpl.SECRET_MASK, new String(listedVariable.getValue()));
+    assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
+    assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
+    assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
+    assertEquals(serviceId, listedVariable.getServiceId());
   }
 
   @Test
