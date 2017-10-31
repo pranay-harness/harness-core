@@ -46,6 +46,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
   @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
+  @JsonProperty("watcherMetadataUrl") private String watcherMetadataUrl;
   @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
   @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
@@ -214,6 +215,14 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    */
   public void setDelegateMetadataUrl(String delegateMetadataUrl) {
     this.delegateMetadataUrl = delegateMetadataUrl;
+  }
+
+  public String getWatcherMetadataUrl() {
+    return watcherMetadataUrl;
+  }
+
+  public void setWatcherMetadataUrl(String watcherMetadataUrl) {
+    this.watcherMetadataUrl = watcherMetadataUrl;
   }
 
   private ConnectorFactory getDefaultAdminConnectorFactory() {

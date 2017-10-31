@@ -9,7 +9,7 @@ if [ -e delegate.jar ]
 then
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
 
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
+  if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
   then
     echo "Downloading Delegate..."
     mkdir -p backup.$CURRENT_VERSION

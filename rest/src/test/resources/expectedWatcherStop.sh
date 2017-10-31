@@ -31,7 +31,6 @@ case "$OSTYPE" in
     ;;
 esac
 
-<#noparse>
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -39,4 +38,28 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-</#noparse>
+
+if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+then
+  i=0
+  while [ "$i" -le 30 ]
+  do
+    if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`
+    then
+      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs kill
+      if [ "$i" -gt 0 ]
+      then
+        sleep 1
+      fi
+      i=$((i+1))
+    else
+      echo "Watcher stopped"
+      exit 0
+    fi
+  done
+  echo "Unable to stop watcher in 30 seconds."
+  exit 1
+else
+  echo "Watcher not running"
+  exit 0
+fi
