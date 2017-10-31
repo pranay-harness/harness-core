@@ -251,11 +251,13 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldOverrideConfigFiles() {
-    List<ConfigFile> existingFiles = asList(aConfigFile().withUuid("FILE_ID_1").withName("app.properties").build(),
-        aConfigFile().withUuid("FILE_ID_2").withName("cache.xml").build());
+    List<ConfigFile> existingFiles = asList(
+        aConfigFile().withUuid("FILE_ID_1").withRelativeFilePath("app.properties").withName("app.properties").build(),
+        aConfigFile().withUuid("FILE_ID_2").withRelativeFilePath("cache.xml").withName("cache.xml").build());
 
-    List<ConfigFile> newFiles = asList(aConfigFile().withUuid("FILE_ID_3").withName("app.properties").build(),
-        aConfigFile().withUuid("FILE_ID_4").withName("cache.xml").build());
+    List<ConfigFile> newFiles = asList(
+        aConfigFile().withUuid("FILE_ID_3").withRelativeFilePath("app.properties").withName("app.properties").build(),
+        aConfigFile().withUuid("FILE_ID_4").withRelativeFilePath("cache.xml").withName("cache.xml").build());
 
     List<ConfigFile> computedConfigFiles = templateService.overrideConfigFiles(existingFiles, newFiles);
     assertThat(computedConfigFiles).isEqualTo(newFiles);
