@@ -225,6 +225,11 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateJarDownloadUrl = null;
     boolean jarFileExists = false;
 
+    String watcherLatestVersion = "";
+    String watcherJarRelativePath;
+    String watcherJarDownloadUrl = "";
+    String watcherMetadataUrl = "";
+
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       String delegateMatadata = Request.Get(delegateMetadataUrl)
@@ -256,17 +261,42 @@ public class DelegateServiceImpl implements DelegateService {
       doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
     }
 
+    if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
+      try {
+        watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
+        String watcherMetadata = Request.Get(watcherMetadataUrl)
+                                     .connectTimeout(10000)
+                                     .socketTimeout(10000)
+                                     .execute()
+                                     .returnContent()
+                                     .asString()
+                                     .trim();
+        logger.info("Watcher meta data: [{}]", watcherMetadata);
+
+        watcherLatestVersion = substringBefore(watcherMetadata, " ").trim();
+        watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+        watcherJarDownloadUrl = "http://" + (watcherMetadataUrl.split("/")[2]).trim() + "/" + watcherJarRelativePath;
+      } catch (IOException e) {
+        logger.warn("Unable to fetch watcher version information", e);
+        logger.warn("LatestVersion=[{}], watcherJarDownloadUrl=[{}]", watcherLatestVersion, watcherJarDownloadUrl);
+      }
+
+      logger.info("Found watcher latest version: [{}] url: [{}]", watcherLatestVersion, watcherJarDownloadUrl);
+    }
+
     if (doUpgrade) {
       Account account = accountService.get(accountId);
-      ImmutableMap<Object, Object> immutableMap = ImmutableMap.builder()
-                                                      .put("accountId", accountId)
-                                                      .put("accountSecret", account.getAccountKey())
-                                                      .put("upgradeVersion", latestVersion)
-                                                      .put("currentVersion", version)
-                                                      .put("delegateJarUrl", delegateJarDownloadUrl)
-                                                      .put("managerHostAndPort", managerHost)
-                                                      .build();
-      return immutableMap;
+      return ImmutableMap.builder()
+          .put("accountId", accountId)
+          .put("accountSecret", account.getAccountKey())
+          .put("upgradeVersion", latestVersion)
+          .put("currentVersion", version)
+          .put("delegateJarUrl", delegateJarDownloadUrl)
+          .put("managerHostAndPort", managerHost)
+          .put("watcherJarUrl", watcherJarDownloadUrl)
+          .put("watcherUpgradeVersion", watcherLatestVersion)
+          .put("watcherCheckLocation", watcherMetadataUrl)
+          .build();
     }
     return null;
   }
@@ -274,9 +304,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public File download(String managerHost, String accountId) throws IOException, TemplateException {
     File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
-    File run = File.createTempFile("run", ".sh");
-    File stop = File.createTempFile("stop", ".sh");
-    File readme = File.createTempFile("README", ".txt");
 
     ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
     out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
@@ -285,6 +312,42 @@ public class DelegateServiceImpl implements DelegateService {
     ImmutableMap<Object, Object> scriptParams =
         getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
+    if (featureFlagService.isEnabled(FeatureName.WATCHER, accountId)) {
+      File watch = File.createTempFile("watch", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(watch))) {
+        cfg.getTemplate("watch.sh.ftl").process(scriptParams, fileWriter);
+      }
+      watch = new File(watch.getAbsolutePath());
+      ZipArchiveEntry watchZipArchiveEntry = new ZipArchiveEntry(watch, Constants.DELEGATE_DIR + "/watch.sh");
+      watchZipArchiveEntry.setUnixMode(0755 << 16L);
+      AsiExtraField permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      watchZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(watchZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(watch)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      File stopwatch = File.createTempFile("stopwatch", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stopwatch))) {
+        cfg.getTemplate("stopwatch.sh.ftl").process(null, fileWriter);
+      }
+      stopwatch = new File(stopwatch.getAbsolutePath());
+      ZipArchiveEntry stopwatchZipArchiveEntry =
+          new ZipArchiveEntry(stopwatch, Constants.DELEGATE_DIR + "/stopwatch.sh");
+      stopwatchZipArchiveEntry.setUnixMode(0755 << 16L);
+      permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      stopwatchZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(stopwatchZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(stopwatch)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+    }
+
+    File run = File.createTempFile("run", ".sh");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
       cfg.getTemplate("run.sh.ftl").process(scriptParams, fileWriter);
     }
@@ -300,6 +363,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     out.closeArchiveEntry();
 
+    File stop = File.createTempFile("stop", ".sh");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
       cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
     }
@@ -315,6 +379,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     out.closeArchiveEntry();
 
+    File readme = File.createTempFile("README", ".txt");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
       cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
     }

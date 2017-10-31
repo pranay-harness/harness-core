@@ -1,6 +1,8 @@
 package software.wings.watcher.service;
 
-import com.google.inject.Injector;
+import static org.apache.commons.lang.StringUtils.substringAfter;
+import static org.apache.commons.lang.StringUtils.substringBefore;
+
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -30,7 +32,6 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject private ExecutorService executorService;
   @Inject private UpgradeService upgradeService;
-  @Inject private Injector injector;
   @Inject private WatcherConfiguration watcherConfiguration;
 
   private String accountId;
@@ -83,19 +84,22 @@ public class WatcherServiceImpl implements WatcherService {
             -> {
           logger.info("Checking for upgrade");
           try {
-            String checkLocationKey = watcherConfiguration.getUpgradeCheckLocation();
-            S3Object obj = amazonS3Client.getObject("wingswatchers", checkLocationKey);
+            String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
+            String bucketName =
+                watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
+            String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf("/"));
+            S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
             BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-            String[] tokens = reader.readLine().split(" ");
-            String newVersion = tokens[0];
+            String watcherMetadata = reader.readLine();
+            String latestVersion = substringBefore(watcherMetadata, " ").trim();
+            String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
             String version = getVersion();
-            boolean upgrade = !StringUtils.equals(version, newVersion);
+            boolean upgrade = !StringUtils.equals(version, latestVersion);
             if (upgrade) {
               logger.info("[Old] Upgrading watcher.");
-              String newVersionJarKey = tokens[1];
-              S3Object newVersionJarObj = amazonS3Client.getObject("wingswatchers", newVersionJarKey);
+              S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
 
-              upgradeService.doUpgrade(newVersionJarObj.getObjectContent(), getVersion(), newVersion);
+              upgradeService.doUpgrade(newVersionJarObj.getObjectContent(), getVersion(), latestVersion);
             } else {
               logger.info("Watcher up to date");
             }

@@ -1,39 +1,5 @@
 #!/bin/bash -e
 
-vercomp () {
-    if [[ $1 == $2 ]]
-    then
-        echo "0"
-        return
-    fi
-    local IFS=.
-    local i ver1=($1) ver2=($2)
-    # fill empty fields in ver1 with zeros
-    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
-    do
-        ver1[i]=0
-    done
-    for ((i=0; i<${#ver1[@]}; i++))
-    do
-        if [[ -z ${ver2[i]} ]]
-        then
-            # fill empty fields in ver2 with zeros
-            ver2[i]=0
-        fi
-        if ((10#${ver1[i]} > 10#${ver2[i]}))
-        then
-            echo "1"
-            return
-        fi
-        if ((10#${ver1[i]} < 10#${ver2[i]}))
-        then
-            echo "2"
-            return
-        fi
-    done
-    echo "0"
-}
-
 JRE_DIR=jre1.8.0_131
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
@@ -95,7 +61,7 @@ then
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) != 0 ]
+  if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
   then
     echo "Downloading Delegate..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
