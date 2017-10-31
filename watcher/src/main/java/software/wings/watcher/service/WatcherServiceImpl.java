@@ -71,10 +71,11 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   @Override
-  public void resume() {}
-
-  @Override
-  public void stop() {}
+  public void stop() {
+    synchronized (waiter) {
+      waiter.notify();
+    }
+  }
 
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(
