@@ -34,7 +34,7 @@ import javax.inject.Inject;
 public class UpgradeServiceImpl implements UpgradeService {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeServiceImpl.class);
 
-  @Inject private SignalService signalService;
+  @Inject private WatcherService watcherService;
   @Inject private TimeLimiter timeLimiter;
 
   @Override
@@ -69,13 +69,9 @@ public class UpgradeServiceImpl implements UpgradeService {
       BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
       if (process.getProcess().isAlive() && waitForStringOnStream(reader, "watchstarted", 15)) {
         logger.info("[Old] Watcher upgraded. Stopping.");
-        try {
-          removeWatcherVersionFromCapsule(version, newVersion);
-          cleanupOldWatcherVersionFromBackup(version, newVersion);
-          signalService.stop();
-        } finally {
-          signalService.resume();
-        }
+        removeWatcherVersionFromCapsule(version, newVersion);
+        cleanupOldWatcherVersionFromBackup(version, newVersion);
+        watcherService.stop();
       } else {
         logger.error("[Old] Failed to upgrade watcher.");
         process.getProcess().destroy();

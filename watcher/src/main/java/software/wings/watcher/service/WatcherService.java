@@ -6,7 +6,5 @@ package software.wings.watcher.service;
 public interface WatcherService {
   void run(boolean upgrade);
 
-  void resume();
-
   void stop();
 }
