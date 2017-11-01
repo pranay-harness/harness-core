@@ -30,6 +30,7 @@ import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -126,6 +127,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
     return delegateService.queueTask(delegateTask);

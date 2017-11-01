@@ -205,7 +205,7 @@ class TSAnomlyDetector(object):
                     result['transactions'][txn_ind]['metrics'][metric_ind] = response
 
         #print(json.dumps(result))
-        print(time.time() - start_time)
+        #print(time.time() - start_time)
         return result
 
 
