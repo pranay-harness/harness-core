@@ -49,11 +49,18 @@ class SAXHMMDistance(object):
 
     @staticmethod
     def create_threshold(distance_matrix):
-        threshold = 0.0
-        for i in range(len(distance_matrix)):
-            threshold += distance_matrix[i][(i + 2) % len(distance_matrix)]
-        threshold = (threshold / len(distance_matrix))
-        return [threshold / 3, threshold / 2]
+        thresholds = {0: 0.01}
+        n = len(distance_matrix) - 1
+        for tolerance in range(1, 4):
+            threshold = 0.0
+            max_deviation = 1 + tolerance
+            for i in range(n):
+                ind = (i + max_deviation) if (i + max_deviation) < n else i - max_deviation
+                if ind == -1:
+                    continue
+                threshold = max(distance_matrix[i][ind], threshold)
+            thresholds[tolerance] = threshold
+        return thresholds
 
     @staticmethod
     def get_adjusted_distance(metric_deviation_type, min_threshold, apply_sax, x, y, a, b):
@@ -143,7 +150,8 @@ class SAXHMMDistanceFinder(object):
                  min_metric_threshold):
         self.metric_name = metric_name
         self.smooth_window = smooth_window
-        self.thresholds = SAXHMMDistance.thresholds * tolerance
+        self.thresholds = SAXHMMDistance.thresholds
+        self.tolerance = tolerance
         self.metric_deviation_type = metric_deviation_type
         self.min_metric_threshold = min_metric_threshold
         self.control_data_dict = control_data_dict
@@ -309,6 +317,9 @@ class SAXHMMDistanceFinder(object):
                 ma = np.ma.masked_array(dist_vector, np.isnan(dist_vector))
                 ma0 = ma.filled(0)
 
+                # Replace distance of 2.24 with tolerance
+                dist_vector[dist_vector == 2.24] = self.thresholds[self.tolerance]
+
                 if 'weights' in self.test_data_dict:
                     control_weights_smoothed = [
                         smooth(self.smooth_window, a_weight, self.control_data_dict['weights_type'])
@@ -353,9 +364,8 @@ class SAXHMMDistanceFinder(object):
                     optimal_cuts[i] = a_optimal_test_cut
                     optimal_data[i] = np.array([]) if len(a_optimal_test_indices) == 0 else \
                         np.array([0 if q == -1 else test_data_smoothed[i][q] for q in a_optimal_test_indices])
-                    risk[i] = 0 \
-                        if score[i] < self.thresholds[0] else 1 \
-                        if score[i] < self.thresholds[1] \
+                    risk[i] = 0 if score[i] < self.thresholds.get(self.tolerance - 1) else 1 \
+                        if score[i] < self.thresholds.get(self.tolerance) \
                         else 2
 
         return dict(distances=distances, nn=nn, score=score, control_cuts=cuts, test_cuts=self.test_cuts,
