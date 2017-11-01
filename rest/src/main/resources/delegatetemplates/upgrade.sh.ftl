@@ -29,7 +29,7 @@ then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl -#kLO $JVM_URL
   echo "Extracting JRE packages..."
-  mkdir tmp
+  mkdir -p tmp
   mv $JVM_TAR_FILENAME tmp
   cd tmp
   tar xzf $JVM_TAR_FILENAME
