@@ -2,6 +2,8 @@ package software.wings.scheduler;
 
 import com.google.inject.Injector;
 
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -63,7 +65,12 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
   private Properties getDefaultProperties() {
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
+    Builder mongoClientOptions = MongoClientOptions.builder()
+                                     .connectTimeout(30000)
+                                     .serverSelectionTimeout(90000)
+                                     .maxConnectionIdleTime(600000)
+                                     .socketKeepAlive(true);
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     Properties props = new Properties();
     props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
     props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
