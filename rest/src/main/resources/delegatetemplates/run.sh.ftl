@@ -7,6 +7,7 @@ then
   curl -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   tar xzf $JVM_TAR_FILENAME
+  mv $JRE_DIR_OLD $JRE_DIR
   ln -s $JRE_DIR jre
 fi
 

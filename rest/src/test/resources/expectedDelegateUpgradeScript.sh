@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-JRE_DIR=jre1.8.0_131
+JRE_DIR_OLD=jre1.8.0_131
+JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
@@ -62,13 +63,15 @@ else
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 fi
 
-if [ ! -d  $JRE_DIR ]
+if [ ! -d $JRE_DIR ]
 then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl -#kLO $JVM_URL
   echo "Extracting JRE packages..."
+  rm -rf $JRE_DIR_OLD
   tar xzf $JVM_TAR_FILENAME
+  mv $JRE_DIR_OLD $JRE_DIR
   rm -rf jre
   ln -s $JRE_DIR jre
 fi

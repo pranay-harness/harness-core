@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-JRE_DIR=jre1.8.0_131
+JRE_DIR_OLD=jre1.8.0_131
+JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
@@ -46,6 +47,7 @@ then
   curl -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   tar xzf $JVM_TAR_FILENAME
+  mv $JRE_DIR_OLD $JRE_DIR
   ln -s $JRE_DIR jre
 fi
 
