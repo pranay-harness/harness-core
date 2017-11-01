@@ -87,6 +87,8 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   private String encryptedFileId;
 
+  @SchemaIgnore @Transient private String serviceId;
+
   /**
    * Gets version for env.
    *

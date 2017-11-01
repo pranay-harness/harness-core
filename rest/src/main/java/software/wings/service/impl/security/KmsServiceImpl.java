@@ -539,7 +539,13 @@ public class KmsServiceImpl implements KmsService {
                                                    .equal(data.getParentId())
                                                    .fetch(new FindOptions().limit(1));
         if (configFileQuery.hasNext()) {
-          return configFileQuery.next();
+          ConfigFile configFile = configFileQuery.next();
+          if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
+            ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, configFile.getEntityId());
+            Preconditions.checkNotNull(serviceTemplate, "can't find service template " + configFile);
+            configFile.setServiceId(serviceTemplate.getServiceId());
+          }
+          return configFile;
         }
         return null;
 
