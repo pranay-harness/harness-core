@@ -1,6 +1,6 @@
 import sys
 
-from core.SAXHMMDistance import SAXHMMDistanceFinder
+from core.SAXHMMDistance import SAXHMMDistanceFinder, SAXHMMDistance
 from core.TimeSeriesUtils import get_deviation_type, get_deviation_min_threshold
 from sources.SplunkFileSource import SplunkFileSource
 import numpy as np
@@ -89,7 +89,8 @@ def test_5():
 
 
 def main(args):
-    test_5()
+    dist = SAXHMMDistance()
+    print(dist.distance_matrix)
 
 
 if __name__ == "__main__":
