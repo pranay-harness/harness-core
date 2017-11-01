@@ -543,12 +543,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.warn("Delegate task {} is null (async)", taskId);
       } else if (!assignDelegateService.canAssign(task, delegateId)) {
         logger.info("Delegate {} does not accept task {} (async)", delegateId, taskId);
-        if (System.currentTimeMillis() - task.getCreatedAt() > 3 * 60 * 1000) {
-          if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, accountId)) {
-            alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
-                aNoEligibleDelegatesAlert().withTask(task).build());
-          }
-        }
+        ensureDelegateAvailableToExecuteTask(task);
       } else {
         logger.info("Assigning task {} to delegate {} (async)", taskId, delegateId);
         UpdateOperations<DelegateTask> updateOperations =
@@ -563,12 +558,7 @@ public class DelegateServiceImpl implements DelegateService {
         delegateTask = null;
       } else if (!assignDelegateService.canAssign(delegateTask, delegateId)) {
         logger.info("Delegate {} does not accept task {}", delegateId, taskId);
-        if (System.currentTimeMillis() - delegateTask.getCreatedAt() > 30 * 1000) {
-          if (featureFlagService.isEnabled(FeatureName.NO_ELIGIBLE_DELEGATES_ALERTS, accountId)) {
-            alertService.openAlert(delegateTask.getAccountId(), delegateTask.getAppId(), NoEligibleDelegates,
-                aNoEligibleDelegatesAlert().withTask(delegateTask).build());
-          }
-        }
+        ensureDelegateAvailableToExecuteTask(delegateTask);
         delegateTask = null;
       } else {
         logger.info("Assigning task {} to delegate {}", taskId, delegateId);
