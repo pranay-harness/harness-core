@@ -19,13 +19,11 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.ExpressionEvaluator;
 
@@ -53,7 +51,6 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private VariableProcessor variableProcessor;
   @Inject @Transient private SettingsService settingsService;
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
-  @Inject @Transient private WorkflowExecutionService workflowExecutionService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -290,7 +287,7 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
 
-    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements()));
+    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowId()));
 
     return context;
   }
@@ -367,9 +364,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   @Override
   public String getWorkflowId() {
-    final WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(getAppId(), getWorkflowExecutionId());
-    return executionDetails.getWorkflowId();
+    return stateExecutionInstance.getWorkflowId();
   }
 
   @Override
@@ -425,7 +420,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
     ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
     List<ServiceVariable> serviceVariables =
-        serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid());
+        serviceTemplateService.computeServiceVariables(getAppId(), envId, serviceTemplate.getUuid(), getWorkflowId());
     serviceVariables.forEach(serviceVariable
         -> variables.put(renderExpression(serviceVariable.getName()),
             withEncryptedValues || serviceVariable.getType() != ENCRYPTED_TEXT

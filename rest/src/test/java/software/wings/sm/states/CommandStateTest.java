@@ -234,9 +234,6 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
     when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(commandState, "kmsService", kmsService);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
-        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution().build());
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   /**
