@@ -10,7 +10,6 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -296,25 +295,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     Command command = getCommandByNameAndVersion(appId, serviceId, commandName, version).getCommand();
 
-    Command executableCommand = command;
-    if (executableCommand == null) {
-      return new ArrayList<>();
-    }
-
-    if (isNotBlank(command.getReferenceId())) {
-      executableCommand = getCommandByNameAndVersion(
-          appId, serviceId, command.getReferenceId(), commandNameVersionMap.get(command.getReferenceId()))
-                              .getCommand();
-      if (executableCommand == null) {
-        throw new WingsException(COMMAND_DOES_NOT_EXIST);
-      }
-    }
-
-    return executableCommand.getCommandUnits()
+    return command.getCommandUnits()
         .stream()
         .flatMap(commandUnit -> {
           if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-            return getFlattenCommandUnitList(appId, serviceId, commandUnit.getName(), commandNameVersionMap).stream();
+            String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
+                ? ((Command) commandUnit).getReferenceId()
+                : commandUnit.getName();
+            return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
           } else {
             return Stream.of(commandUnit);
           }
