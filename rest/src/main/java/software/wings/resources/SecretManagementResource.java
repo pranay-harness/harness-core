@@ -15,6 +15,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -26,6 +27,7 @@ import javax.ws.rs.QueryParam;
 @Api("secrets")
 @Path("/secrets")
 @Produces("application/json")
+@Consumes("application/json")
 @AuthRule(ResourceType.SETTING)
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
@@ -34,7 +36,7 @@ public class SecretManagementResource {
   @Path("/usage")
   @Timed
   @ExceptionMetered
-  RestResponse<List<SecretUsageLog>> getUsageLogs(@QueryParam("accountId") final String accountId,
+  public RestResponse<List<SecretUsageLog>> getUsageLogs(@QueryParam("accountId") final String accountId,
       @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
       throws IllegalAccessException {
     return new RestResponse<>(secretManager.getUsageLogs(entityId, variableType));
@@ -44,7 +46,7 @@ public class SecretManagementResource {
   @Path("/change-logs")
   @Timed
   @ExceptionMetered
-  RestResponse<List<Pair<Long, EmbeddedUser>>> getChangeLogs(@QueryParam("accountId") final String accountId,
+  public RestResponse<List<Pair<Long, EmbeddedUser>>> getChangeLogs(@QueryParam("accountId") final String accountId,
       @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
       throws IllegalAccessException {
     return new RestResponse<>(secretManager.getChangeLogs(entityId, variableType));

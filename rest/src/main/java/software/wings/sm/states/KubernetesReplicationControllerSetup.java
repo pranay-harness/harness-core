@@ -305,9 +305,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
                     || c.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
             .collect(Collectors.toList())) {
       if (lastReplicationController == null
-          || controller.getMetadata().getCreationTimestamp().compareTo(
-                 lastReplicationController.getMetadata().getCreationTimestamp())
-              > 0) {
+          || getRevisionFromControllerName(controller.getMetadata().getName())
+              > getRevisionFromControllerName(lastReplicationController.getMetadata().getName())) {
         lastReplicationController = controller;
       }
     }
