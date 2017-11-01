@@ -23,7 +23,6 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -54,7 +53,6 @@ import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
@@ -71,7 +69,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WorkflowExecution;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -85,7 +82,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -98,7 +94,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 
 /**
  * Created by rishi on 2/27/17.
@@ -114,7 +109,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private KmsService kmsService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
   private ExecutionContextImpl context;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
@@ -158,10 +152,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void setUp() {
     when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(ecsServiceDeploy, "kmsService", kmsService);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
-        .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   /**
@@ -207,7 +198,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
   }
 
   @Test

@@ -205,13 +205,12 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
     when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(kubernetesReplicationControllerDeploy, "kmsService", kmsService);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test

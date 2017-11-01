@@ -942,6 +942,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setExecutionName(workflowExecution.getName());
     stateExecutionInstance.setExecutionUuid(workflowExecution.getUuid());
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
+    stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
 
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();
