@@ -11,12 +11,15 @@ import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/23/16.
@@ -41,7 +44,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     SmtpConfig config =
         emailData.isSystem() ? mainConfiguration.getSmtpConfig() : getSmtpConfig(emailData.getAccountId());
 
-    mailer.send(config, kmsService.getEncryptionDetails(config, null), emailData);
+    List<EncryptedDataDetail> encryptionDetails =
+        emailData.isSystem() ? Collections.emptyList() : kmsService.getEncryptionDetails(config, null);
+    mailer.send(config, encryptionDetails, emailData);
   }
 
   @Override
