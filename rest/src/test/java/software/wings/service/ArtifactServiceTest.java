@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
@@ -29,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.Status;
@@ -62,7 +62,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                 .withRevision("1.0")
                                 .withDisplayName("DISPLAY_NAME")
                                 .withCreatedAt(System.currentTimeMillis())
-                                .withCreatedBy(anEmbeddedUser().withUuid("USER_ID").build())
+                                .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build())
                                 .withServiceIds(asList(SERVICE_ID));
 
   /**
