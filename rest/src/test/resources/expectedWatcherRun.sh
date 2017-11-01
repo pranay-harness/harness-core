@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-JRE_DIR=jre1.8.0_131
+JRE_DIR_OLD=jre1.8.0_131
+JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
