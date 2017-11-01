@@ -45,6 +45,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -80,6 +81,7 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CryptoUtil;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -266,7 +268,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
 
       artifactStreamAction.setWorkflowName(workflow.getName());
+      if (artifactStreamAction.isWebHook() && artifactStreamAction.getRequestBody() != null
+          && workflow.getOrchestrationWorkflow() != null
+          && workflow.getOrchestrationWorkflow().getUserVariables() != null
+          && !workflow.getOrchestrationWorkflow().getUserVariables().isEmpty()) {
+        Map<String, String> parameters = new HashMap<>();
+        workflow.getOrchestrationWorkflow().getUserVariables().forEach(
+            uservariable -> { parameters.put(uservariable.getName(), uservariable.getName() + "_placeholder"); });
+        WebHookRequest webHookRequest = JsonUtils.asObject(artifactStreamAction.getRequestBody(), WebHookRequest.class);
+        webHookRequest.setParameters(parameters);
+        artifactStreamAction.setRequestBody(JsonUtils.asJson(webHookRequest));
+      }
+
       artifactStreamAction.setEnvName(environment.getName());
+
     } else {
       Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), true);
       if (pipeline.getServices().stream().noneMatch(
@@ -398,9 +413,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     payload.put("artifactSource", streamId);
 
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      payload.put("dockerImageTag", "${DOCKER_IMAGE_TAG}");
+      payload.put("dockerImageTag", "dockerImageTag_placeholder");
     } else {
-      payload.put("buildNumber", "${BUILD_NUMBER}");
+      payload.put("buildNumber", "buildNumber_placeholder");
     }
 
     webHookToken.setPayload(new Gson().toJson(payload));
