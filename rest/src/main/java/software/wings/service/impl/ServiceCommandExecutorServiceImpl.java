@@ -6,8 +6,6 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import com.google.common.collect.Sets;
 import com.google.inject.Singleton;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -32,8 +30,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
-  private static final Logger logger = LoggerFactory.getLogger(ServiceCommandExecutorServiceImpl.class);
-
   /**
    * The Command unit executor service.
    */
@@ -109,7 +105,6 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   }
 
   private void decryptCredentials(CommandExecutionContext commandExecutionContext) {
-    logger.info("decrypting: {}", commandExecutionContext);
     if (commandExecutionContext.getHostConnectionAttributes() != null) {
       encryptionService.decrypt((Encryptable) commandExecutionContext.getHostConnectionAttributes().getValue(),
           commandExecutionContext.getHostConnectionCredentials());
