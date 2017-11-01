@@ -32,6 +32,7 @@ import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 8/21/17.
@@ -68,6 +69,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
     return delegateService.queueTask(delegateTask);

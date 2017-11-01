@@ -40,6 +40,7 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by raghu on 8/4/17.
@@ -158,6 +159,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                                     .withWaitId(waitId)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId), waitId);
     return delegateService.queueTask(delegateTask);
