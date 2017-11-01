@@ -37,6 +37,20 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   /**
+   * Should evaluate host url.
+   */
+  @Test
+  public void shouldEvaluatePartially() {
+    String expression = "http://${host.hostName}:${PORT}/health/status";
+    Host host = new Host();
+    host.setHostName("${HOST}.$DOMAIN.${COM}");
+    Map<String, Object> context = new HashMap<>();
+    context.put("host", host);
+    String retValue = expressionEvaluator.merge(expression, context);
+    assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.${COM}:${PORT}/health/status");
+  }
+
+  /**
    * Should evaluate with name value.
    */
   @Test

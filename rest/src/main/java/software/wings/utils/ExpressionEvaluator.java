@@ -195,6 +195,16 @@ public class ExpressionEvaluator {
         logger.warn("Ignoring exception -" + e.getMessage(), e);
         continue;
       }
+      if (evaluatedValue.contains("$")) {
+        String[] strings = evaluatedValue.split("\\$");
+        StringBuffer sb2 = new StringBuffer();
+        sb2.append(strings[0]);
+        for (int i = 1; i < strings.length; i++) {
+          sb2.append("\\$").append(strings[i]);
+        }
+        evaluatedValue = sb2.toString();
+        logger.info(evaluatedValue);
+      }
       matcher.appendReplacement(sb, evaluatedValue);
     }
     matcher.appendTail(sb);
