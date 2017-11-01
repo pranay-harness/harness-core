@@ -46,6 +46,8 @@ def normalize_metric(control_data, test_data):
     :param test_data:  same as control values but for test group
 
     """
+
+    # TODO use hellengers distance to compare the control and test distribution
     data = np.concatenate((control_data.flatten(), test_data.flatten()))
     mean = np.nanmean(data)
     std = np.nanstd(data)

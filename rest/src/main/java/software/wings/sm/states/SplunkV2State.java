@@ -34,6 +34,7 @@ import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.
@@ -112,6 +113,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationID), waitId);
     return delegateService.queueTask(delegateTask);
