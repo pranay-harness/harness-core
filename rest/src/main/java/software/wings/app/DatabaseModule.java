@@ -10,6 +10,8 @@ import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
-import software.wings.utils.Misc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.util.Arrays;
@@ -49,8 +50,15 @@ public class DatabaseModule extends AbstractModule {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
+
+    Builder mongoClientOptions = MongoClientOptions.builder()
+                                     .connectTimeout(30000)
+                                     .serverSelectionTimeout(90000)
+                                     .maxConnectionIdleTime(600000)
+                                     .socketKeepAlive(true);
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);
+
     this.primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     DistributedLockSvcOptions distributedLockSvcOptions =
         new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
