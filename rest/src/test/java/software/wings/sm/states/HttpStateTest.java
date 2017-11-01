@@ -111,7 +111,6 @@ public class HttpStateTest extends WingsBaseTest {
 
   @Mock private WorkflowStandardParams workflowStandardParams;
   @Mock private ActivityService activityService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
   @Inject private Injector injector;
   @Mock private DelegateService delegateService;
 
@@ -143,10 +142,6 @@ public class HttpStateTest extends WingsBaseTest {
       activity.setUuid(ACTIVITY_ID);
       return activity;
     });
-
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
-        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution().build());
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   /**
