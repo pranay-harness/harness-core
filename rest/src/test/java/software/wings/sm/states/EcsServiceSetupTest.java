@@ -22,7 +22,6 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -57,7 +56,6 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -84,7 +82,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -109,7 +106,6 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private KmsService kmsService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -198,14 +194,11 @@ public class EcsServiceSetupTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
     when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(ecsServiceSetup, "kmsService", kmsService);
     setInternalState(ecsServiceSetup, "encryptionService", new EncryptionServiceImpl());
     setInternalState(ecsServiceSetup, "settingsService", settingsService);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
-        .thenReturn(aWorkflowExecution().build());
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test

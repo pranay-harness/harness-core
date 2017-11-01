@@ -303,7 +303,9 @@ public class AwsLambdaState extends State {
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
     Map<String, String> serviceVariables =
-        serviceTemplateService.computeServiceVariables(appId, envId, infrastructureMapping.getServiceTemplateId())
+        serviceTemplateService
+            .computeServiceVariables(
+                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowId())
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));

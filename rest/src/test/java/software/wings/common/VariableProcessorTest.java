@@ -2,6 +2,7 @@ package software.wings.common;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -47,7 +48,7 @@ public class VariableProcessorTest {
    */
   @Test
   public void shouldGetNoVariables() throws Exception {
-    assertThat(variableProcessor.getVariables(new ArrayDeque<>())).isEmpty();
+    assertThat(variableProcessor.getVariables(new ArrayDeque<>(), null)).isEmpty();
   }
 
   /**
@@ -57,7 +58,7 @@ public class VariableProcessorTest {
    */
   @Test
   public void shouldGetVariablesForInstanceElement() throws Exception {
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID))
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null))
         .thenReturn(asList(ServiceVariable.builder().name("PORT").value("8080".toCharArray()).build()));
 
     WorkflowStandardParams workflowStandardParams =
@@ -68,7 +69,7 @@ public class VariableProcessorTest {
             .withHost(aHostElement().withUuid(HOST_ID).build())
             .build();
 
-    assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement))))
+    assertThat(variableProcessor.getVariables(new ArrayDeque<>(asList(workflowStandardParams, instanceElement)), null))
         .hasSize(1)
         .containsAllEntriesOf(ImmutableMap.of("PORT", "8080"));
   }
