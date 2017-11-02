@@ -2,12 +2,15 @@ package software.wings.scheduler;
 
 import com.google.inject.Injector;
 
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +66,12 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
   private Properties getDefaultProperties() {
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
+    Builder mongoClientOptions = MongoClientOptions.builder()
+                                     .connectTimeout(30000)
+                                     .serverSelectionTimeout(90000)
+                                     .maxConnectionIdleTime(600000)
+                                     .socketKeepAlive(true);
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     Properties props = new Properties();
     props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
     props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
@@ -123,5 +131,15 @@ public class AbstractQuartzScheduler implements QuartzScheduler {
       }
     }
     return false;
+  }
+
+  @Override
+  public Date rescheduleJob(TriggerKey triggerKey, Trigger newTrigger) {
+    try {
+      return scheduler.rescheduleJob(triggerKey, newTrigger);
+    } catch (SchedulerException e) {
+      logger.error("Couldn't reschedule cron for trigger {} with trigger {}", triggerKey, newTrigger);
+    }
+    return null;
   }
 }

@@ -64,7 +64,6 @@ public class KmsDelegateServiceImpl implements KmsDelegateService {
             .encryptedValue(encryptedValue)
             .type(SettingVariableTypes.KMS)
             .kmsId(kmsConfig.getUuid())
-            .updates(new HashMap<>())
             .build();
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {

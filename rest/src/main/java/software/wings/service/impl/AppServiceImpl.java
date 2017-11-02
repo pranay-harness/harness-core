@@ -54,6 +54,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -103,6 +104,7 @@ public class AppServiceImpl implements AppService {
   @Inject private InstanceService instanceService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AlertService alertService;
+  @Inject private TriggerService triggerService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -350,6 +352,7 @@ public class AppServiceImpl implements AppService {
         serviceResourceService.deleteByApp(appId);
         instanceService.deleteByApp(appId);
         alertService.deleteByApp(appId);
+        triggerService.deleteByApp(appId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())

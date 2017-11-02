@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static java.lang.System.currentTimeMillis;
-import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
@@ -11,7 +10,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.utils.validation.Update;
 
 import javax.validation.constraints.NotNull;
@@ -65,20 +63,18 @@ public class Base implements UuidAware {
     EmbeddedUser embeddedUser = null;
 
     if (user != null) {
-      embeddedUser = anEmbeddedUser()
-                         .withUuid(UserThreadLocal.get().getUuid())
-                         .withEmail(UserThreadLocal.get().getEmail())
-                         .withName(UserThreadLocal.get().getName())
+      embeddedUser = EmbeddedUser.builder()
+                         .uuid(UserThreadLocal.get().getUuid())
+                         .email(UserThreadLocal.get().getEmail())
+                         .name(UserThreadLocal.get().getName())
                          .build();
+    }
+
+    if (createdBy == null && !(this instanceof Account)) {
+      createdBy = embeddedUser;
     }
 
     lastUpdatedAt = currentTimeMillis();
     lastUpdatedBy = embeddedUser;
-
-    if (createdBy == null && !(this instanceof Account)) {
-      createdBy = embeddedUser;
-    } else if (getClass().equals(EncryptedData.class)) {
-      ((EncryptedData) this).addToUpdatedBy(lastUpdatedAt, lastUpdatedBy);
-    }
   }
 }
