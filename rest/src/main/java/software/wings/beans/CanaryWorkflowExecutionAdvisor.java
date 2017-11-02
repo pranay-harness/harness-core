@@ -14,6 +14,7 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -300,8 +301,21 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     if (failureStrategies == null || failureStrategies.isEmpty()) {
       return null;
     }
-    Optional<FailureStrategy> rollbackStrategy =
+
+    List<FailureStrategy> filteredFailureStrategies =
         failureStrategies.stream()
+            .filter(
+                f -> CollectionUtils.isNotEmpty(f.getSpecificSteps()) && f.getSpecificSteps().contains(state.getName()))
+            .collect(Collectors.toList());
+
+    if (filteredFailureStrategies.isEmpty()) {
+      filteredFailureStrategies = failureStrategies.stream()
+                                      .filter(f -> CollectionUtils.isEmpty(f.getSpecificSteps()))
+                                      .collect(Collectors.toList());
+    }
+
+    Optional<FailureStrategy> rollbackStrategy =
+        filteredFailureStrategies.stream()
             .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
             .findFirst();
 
@@ -309,13 +323,14 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get();
     }
 
-    rollbackStrategy =
-        failureStrategies.stream().filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE).findFirst();
+    rollbackStrategy = filteredFailureStrategies.stream()
+                           .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE)
+                           .findFirst();
 
     if (rollbackStrategy.isPresent()) {
       return rollbackStrategy.get();
     }
 
-    return failureStrategies.get(0);
+    return filteredFailureStrategies.get(0);
   }
 }
