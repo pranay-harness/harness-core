@@ -16,6 +16,7 @@ public class FailureStrategy {
   private int retryCount;
   private List<Integer> retryIntervals;
   private RepairActionCode repairActionCodeAfterRetry;
+  private List<String> specificSteps;
 
   public List<FailureType> getFailureTypes() {
     return failureTypes;
@@ -63,6 +64,14 @@ public class FailureStrategy {
 
   public void setRepairActionCodeAfterRetry(RepairActionCode repairActionCodeAfterRetry) {
     this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
+  }
+
+  public List<String> getSpecificSteps() {
+    return specificSteps;
+  }
+
+  public void setSpecificSteps(List<String> specificSteps) {
+    this.specificSteps = specificSteps;
   }
 
   @Override
