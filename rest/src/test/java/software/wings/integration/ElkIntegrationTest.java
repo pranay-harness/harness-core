@@ -1,6 +1,10 @@
 package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
@@ -13,17 +17,30 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.LogAnalysisManagerJob;
+import software.wings.scheduler.LogAnalysisManagerJob.LogAnalysisTask;
 import software.wings.scheduler.LogClusterManagerJob.LogClusterTask;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -32,11 +49,14 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.sm.states.AbstractLogAnalysisState;
+import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +79,17 @@ import javax.ws.rs.core.GenericType;
 public class ElkIntegrationTest extends BaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private AnalysisService analysisService;
+  @Inject private LogAnalysisManagerJob logAnalysisManagerJob;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private DelegateService delegateService;
+
+  private String accountId;
+  private String appId;
+  private String stateExecutionId;
+  private String workflowId;
+  private String workflowExecutionId;
+  private String serviceId;
+  private String delegateTaskId;
 
   @Before
   public void setUp() throws Exception {
@@ -72,6 +103,13 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     hosts.add("ip-172-31-12-51");
     hosts.add("ip-172-31-12-78");
     hosts.add("ip-172-31-15-177");
+    accountId = UUID.randomUUID().toString();
+    appId = UUID.randomUUID().toString();
+    stateExecutionId = UUID.randomUUID().toString();
+    workflowId = UUID.randomUUID().toString();
+    workflowExecutionId = UUID.randomUUID().toString();
+    serviceId = UUID.randomUUID().toString();
+    delegateTaskId = UUID.randomUUID().toString();
   }
 
   @Test
@@ -236,5 +274,353 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
       }
     }
     return rv;
+  }
+
+  @Test
+  public void controlButNoTestData() throws IOException, JobExecutionException, InterruptedException {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(appId)
+            .withName(workflowId + "-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    List<LogElement> logElements = new ArrayList<>();
+
+    final String query = UUID.randomUUID().toString();
+    final String host = UUID.randomUUID().toString();
+    final int logCollectionMinute = 0;
+    LogElement splunkHeartBeatElement = new LogElement();
+    splunkHeartBeatElement.setQuery(query);
+    splunkHeartBeatElement.setClusterLabel("-3");
+    splunkHeartBeatElement.setHost(host);
+    splunkHeartBeatElement.setCount(0);
+    splunkHeartBeatElement.setLogMessage("");
+    splunkHeartBeatElement.setTimeStamp(0);
+    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    logElements.add(splunkHeartBeatElement);
+
+    LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
+    logElements.add(logElement);
+
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, prevStateExecutionId, workflowId,
+        workFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(appId)
+                            .withName(workflowId + "-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    logElements = new ArrayList<>();
+
+    splunkHeartBeatElement = new LogElement();
+    splunkHeartBeatElement.setQuery(query);
+    splunkHeartBeatElement.setClusterLabel("-3");
+    splunkHeartBeatElement.setHost(host);
+    splunkHeartBeatElement.setCount(0);
+    splunkHeartBeatElement.setLogMessage("");
+    splunkHeartBeatElement.setTimeStamp(0);
+    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    logElements.add(splunkHeartBeatElement);
+
+    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
+            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .queries(com.google.common.collect.Sets.newHashSet(query.split(",")))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.SPLUNKV2)
+            .stateBaseUrl(LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL)
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    UUID lockValue = UUID.randomUUID();
+    LogAnalysisTask.lock(stateExecutionId, lockValue);
+    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId, lockValue)
+        .run();
+    LogMLAnalysisSummary logMLAnalysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
+    assertEquals(logMLAnalysisSummary.getControlClusters().size(), 1);
+    assertEquals(logMLAnalysisSummary.getTestClusters().size(), 0);
+    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No new data for the given queries");
+  }
+
+  @Test
+  public void testButNoControlData() throws IOException, JobExecutionException, InterruptedException {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(appId)
+            .withName(workflowId + "-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    List<LogElement> logElements = new ArrayList<>();
+
+    final String query = UUID.randomUUID().toString();
+    final String host = UUID.randomUUID().toString();
+    final int logCollectionMinute = 0;
+    LogElement splunkHeartBeatElement = new LogElement();
+    splunkHeartBeatElement.setQuery(query);
+    splunkHeartBeatElement.setClusterLabel("-3");
+    splunkHeartBeatElement.setHost(host);
+    splunkHeartBeatElement.setCount(0);
+    splunkHeartBeatElement.setLogMessage("");
+    splunkHeartBeatElement.setTimeStamp(0);
+    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    logElements.add(splunkHeartBeatElement);
+
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, prevStateExecutionId, workflowId, workFlowExecutionId,
+        serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(appId)
+                            .withName(workflowId + "-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    logElements = new ArrayList<>();
+
+    splunkHeartBeatElement = new LogElement();
+    splunkHeartBeatElement.setQuery(query);
+    splunkHeartBeatElement.setClusterLabel("-3");
+    splunkHeartBeatElement.setHost(host);
+    splunkHeartBeatElement.setCount(0);
+    splunkHeartBeatElement.setLogMessage("");
+    splunkHeartBeatElement.setTimeStamp(0);
+    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
+    logElements.add(logElement);
+
+    logElements.add(splunkHeartBeatElement);
+
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
+            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .queries(com.google.common.collect.Sets.newHashSet(query.split(",")))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.SUMO)
+            .stateBaseUrl(LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    UUID lockValue = UUID.randomUUID();
+    LogAnalysisTask.lock(stateExecutionId, lockValue);
+    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId, lockValue)
+        .run();
+    LogMLAnalysisSummary logMLAnalysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No baseline data for the given queries");
+    LogMLAnalysisRecord logAnalysisRecord =
+        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
+    assertNull(logAnalysisRecord.getControl_clusters());
+    assertNull(logAnalysisRecord.getTest_clusters());
+    assertEquals(logAnalysisRecord.getTest_events().size(), 1);
+  }
+
+  @Test
+  public void noControlandTestData() throws IOException, JobExecutionException, InterruptedException {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(appId)
+            .withName(workflowId + "-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String workFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    List<LogElement> logElements = new ArrayList<>();
+
+    final String query = UUID.randomUUID().toString();
+    final String host = UUID.randomUUID().toString();
+    final int logCollectionMinute = 0;
+    LogElement elkBeatElement = new LogElement();
+    elkBeatElement.setQuery(query);
+    elkBeatElement.setClusterLabel("-3");
+    elkBeatElement.setHost(host);
+    elkBeatElement.setCount(0);
+    elkBeatElement.setLogMessage("");
+    elkBeatElement.setTimeStamp(0);
+    elkBeatElement.setLogCollectionMinute(logCollectionMinute);
+
+    logElements.add(elkBeatElement);
+
+    analysisService.saveLogData(StateType.ELK, accountId, appId, prevStateExecutionId, workflowId, workFlowExecutionId,
+        serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(appId)
+                            .withName(workflowId + "-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    logElements = new ArrayList<>();
+
+    elkBeatElement = new LogElement();
+    elkBeatElement.setQuery(query);
+    elkBeatElement.setClusterLabel("-3");
+    elkBeatElement.setHost(host);
+    elkBeatElement.setCount(0);
+    elkBeatElement.setLogMessage("");
+    elkBeatElement.setTimeStamp(0);
+    elkBeatElement.setLogCollectionMinute(logCollectionMinute);
+    logElements.add(elkBeatElement);
+
+    analysisService.saveLogData(StateType.ELK, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(com.google.common.collect.Sets.newHashSet(host))
+            .testNodes(com.google.common.collect.Sets.newHashSet(host))
+            .queries(com.google.common.collect.Sets.newHashSet(query.split(",")))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(1)
+            .stateType(StateType.ELK)
+            .stateBaseUrl(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    UUID lockValue = UUID.randomUUID();
+    LogAnalysisTask.lock(stateExecutionId, lockValue);
+    new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine, delegateService, analysisContext,
+        jobExecutionContext, delegateTaskId, lockValue)
+        .run();
+    LogMLAnalysisSummary logMLAnalysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
+    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No data found for the given queries.");
+    LogMLAnalysisRecord logAnalysisRecord =
+        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
+    assertNull(logAnalysisRecord);
   }
 }
