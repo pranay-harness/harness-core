@@ -112,7 +112,8 @@ class SplunkDatasetNew(object):
         else:
             logger.info("No test url or nodes provided. This is a baseline run")
 
-        if control_events is None and test_events is None:
+        if (control_events is None or len(control_events) == 0) \
+                and (test_events is None or len(test_events) == 0):
             logger.error("No new control events or test events")
             sys.exit(2)
 

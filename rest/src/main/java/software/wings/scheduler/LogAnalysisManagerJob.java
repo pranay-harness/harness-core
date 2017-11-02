@@ -65,9 +65,9 @@ public class LogAnalysisManagerJob implements Job {
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-      if (!LogAnalysisTask.stateExecutionLocks.contains(context.getStateExecutionId())) {
+      if (LogAnalysisTask.canLock(context.getStateExecutionId())) {
         UUID id = UUID.randomUUID();
-        if (LogAnalysisTask.stateExecutionLocks.putIfAbsent(context.getStateExecutionId(), id) == null) {
+        if (LogAnalysisTask.lock(context.getStateExecutionId(), id)) {
           logger.info("Submitting log analysis job to queue " + context.getStateExecutionId());
           // TODO unbounded task queue
           executorService.submit(new LogAnalysisTask(wingsPersistence, analysisService, waitNotifyEngine,
@@ -100,6 +100,14 @@ public class LogAnalysisManagerJob implements Job {
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
     private UUID uuid;
+
+    public static boolean canLock(String stateExecutionId) {
+      return !stateExecutionLocks.containsKey(stateExecutionId);
+    }
+
+    public static boolean lock(String stateExecutionId, UUID lockValue) {
+      return stateExecutionLocks.putIfAbsent(stateExecutionId, lockValue) == null;
+    }
 
     protected void preProcess(int logAnalysisMinute, String query) {
       if (context.getTestNodes() == null) {
@@ -166,14 +174,22 @@ public class LogAnalysisManagerJob implements Job {
           int logAnalysisMinute = analysisService.getCollectionMinuteForL1(context.getQueries().iterator().next(),
               context.getAppId(), context.getStateExecutionId(), context.getStateType(), getCollectedNodes());
           if (logAnalysisMinute != -1) {
-            boolean hasRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
+            boolean hasTestRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
                 context.getAppId(), context.getStateExecutionId(), context.getStateType(), context.getTestNodes(),
                 ClusterLevel.L1, logAnalysisMinute);
 
-            if (hasRecords) {
+            if (hasTestRecords) {
               preProcess(logAnalysisMinute, context.getQueries().iterator().next());
-              new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService).run();
             }
+            /*
+             * Run even if we don't have test data, since we may have control data for this minute.
+             * If not, then the control data for this minute will be lost forever. The analysis job
+             * should fail with error code -2 if no control and no test data is provided. The manager
+             * should ignore failures with status code -2. If control is present and no test, the control data
+             * is processed and added to the result. If test is present, but no control, the test events
+             * are saved for future processing.
+             */
+            new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService).run();
             analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(), context.getAppId(),
                 context.getQueries().iterator().next(), context.getTestNodes(), logAnalysisMinute,
                 ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getFinal());
@@ -188,7 +204,7 @@ public class LogAnalysisManagerJob implements Job {
         if (analysisSummary == null) {
           analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(),
               context.getStateExecutionId(), StringUtils.join(context.getQueries(), ","),
-              "No data found for the given queries yet. Check if the load is running");
+              "No data found for the given queries.");
         }
 
       } catch (Exception ex) {

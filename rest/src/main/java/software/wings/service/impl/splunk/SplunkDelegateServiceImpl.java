@@ -15,12 +15,14 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
  * Created by rsingh on 6/30/17.
  */
 public class SplunkDelegateServiceImpl implements SplunkDelegateService {
+  private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   @Inject private EncryptionService encryptionService;
   @Override
   public void validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -37,6 +39,10 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       if (url.toURI().getScheme().equals("https")) {
         HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
       }
+      Service service = new Service(loginArgs);
+      service.setConnectTimeout(HTTP_TIMEOUT);
+      service.setReadTimeout(HTTP_TIMEOUT);
+
       Service.connect(loginArgs);
     } catch (Throwable t) {
       if (t instanceof MalformedURLException) {
