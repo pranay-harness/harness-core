@@ -24,9 +24,11 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RepeatRule.Repeat;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
@@ -61,6 +63,9 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory kmsDelegateProxyFactory;
   private SettingAttribute settingAttribute;
   private String accountId;
+  private final String userEmail = "rsingh@harness.io";
+  private final String userName = "raghu";
+  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
 
   @Parameter public boolean isKmsEnabled;
 
@@ -72,6 +77,8 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Before
   public void setup() {
     initMocks(this);
+    wingsPersistence.save(user);
+    UserThreadLocal.set(user);
     setInternalState(appdynamicsDelegateService, "encryptionService", encryptionService);
     when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
     when(kmsDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(kmsDelegateService);

@@ -37,6 +37,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
@@ -55,6 +56,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.DataGenUtil;
 import software.wings.rules.RepeatRule.Repeat;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -106,6 +108,9 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Inject private EcrBuildService ecrBuildService;
   @Inject private KmsService kmsService;
   @Inject private KmsDelegateService kmsDelegateService;
+  private final String userEmail = "rsingh@harness.io";
+  private final String userName = "raghu";
+  private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -153,6 +158,8 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     setInternalState(wingsPersistence, "kmsService", kmsService);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
+    wingsPersistence.save(user);
+    UserThreadLocal.set(user);
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
       kmsService.saveKmsConfig(accountId, kmsConfig);
