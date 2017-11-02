@@ -109,6 +109,7 @@ import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.SystemCatalogSeviceImpl;
+import software.wings.service.impl.TriggerServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
@@ -189,6 +190,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SystemCatalogService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -334,6 +336,7 @@ public class WingsModule extends AbstractModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(KmsDelegateService.class).to(KmsDelegateServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
+    bind(TriggerService.class).to(TriggerServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

@@ -498,11 +498,7 @@ public class KmsServiceImpl implements KmsService {
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
     char[] encryptChars = simpleEncryption.encryptChars(value);
 
-    return EncryptedData.builder()
-        .encryptionKey(encryptionKey)
-        .encryptedValue(encryptChars)
-        .updates(new HashMap<>())
-        .build();
+    return EncryptedData.builder().encryptionKey(encryptionKey).encryptedValue(encryptChars).build();
   }
 
   private char[] decryptLocal(EncryptedData data) {
