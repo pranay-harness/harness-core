@@ -34,6 +34,7 @@ import javax.inject.Inject;
  * Created by rsingh on 5/18/17.
  */
 public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask {
+  private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   public static final int DELAY_MINUTES = 2;
   public static final int RETRY_SLEEP_SECS = 30;
 
@@ -80,6 +81,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     }
 
     try {
+      splunkService = new Service(loginArgs);
+      splunkService.setConnectTimeout(HTTP_TIMEOUT);
+      splunkService.setReadTimeout(HTTP_TIMEOUT);
       splunkService = Service.connect(loginArgs);
     } catch (Exception ex) {
       taskResult.setStatus(DataCollectionTaskStatus.FAILURE);

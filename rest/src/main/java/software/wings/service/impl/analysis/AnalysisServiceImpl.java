@@ -377,7 +377,9 @@ public class AnalysisServiceImpl implements AnalysisService {
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg =
         analysisRecord.getAnalysisSummaryMessage() == null || analysisRecord.getAnalysisSummaryMessage().isEmpty()
-        ? "No anomaly found"
+        ? analysisRecord.getControl_clusters() == null
+            ? "No baseline data for the given queries"
+            : analysisRecord.getTest_clusters() == null ? "No new data for the given queries" : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
     int unknownClusters = 0;
