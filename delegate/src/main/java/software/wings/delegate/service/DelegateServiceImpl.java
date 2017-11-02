@@ -562,9 +562,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void enforceDelegateTaskTimeout(DelegateTask delegateTask) {
-    long startTime = System.currentTimeMillis();
     boolean stillRunning = true;
-    while (stillRunning && System.currentTimeMillis() - startTime < delegateTask.getTimeout()) {
+    while (stillRunning && !delegateTask.isTimedOut()) {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
