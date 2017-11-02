@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -83,7 +84,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
 
-  private String accountId;
   private String appId;
   private String stateExecutionId;
   private String workflowId;
@@ -103,7 +103,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     hosts.add("ip-172-31-12-51");
     hosts.add("ip-172-31-12-78");
     hosts.add("ip-172-31-15-177");
-    accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
     workflowId = UUID.randomUUID().toString();
@@ -621,6 +620,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No data found for the given queries.");
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
-    assertNull(logAnalysisRecord);
+    assertNotNull(logAnalysisRecord);
   }
 }
