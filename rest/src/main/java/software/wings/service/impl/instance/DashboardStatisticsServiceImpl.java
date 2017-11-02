@@ -496,14 +496,24 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             getEntitySummary(workflowExecution.getPipelineExecution().getPipeline().getName(),
                 workflowExecution.getUuid(), EntityType.PIPELINE.name());
 
-        Artifact artifact = workflowExecution.getExecutionArgs()
-                                .getArtifacts()
-                                .stream()
-                                .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
-                                .findFirst()
-                                .get();
-        ArtifactSummary artifactSummary = getArtifactSummary(
-            artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
+        ArtifactSummary artifactSummary = null;
+        List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
+        if (artifacts != null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("artifacts is null for workflowExecution:" + workflowExecution.getName());
+          }
+
+          Artifact artifact = workflowExecution.getExecutionArgs()
+                                  .getArtifacts()
+                                  .stream()
+                                  .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
+                                  .findFirst()
+                                  .get();
+          if (artifact != null) {
+            artifactSummary = getArtifactSummary(
+                artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
+          }
+        }
 
         Builder builder = aPipelineExecutionHistory()
                               .withPipeline(pipelineSummary)

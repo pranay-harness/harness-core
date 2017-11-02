@@ -58,6 +58,7 @@ import software.wings.rules.RealMongo;
 import software.wings.rules.RepeatRule.Repeat;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.KmsDelegateServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
@@ -311,7 +312,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionWhileSaving() throws IOException {
+  public void kmsEncryptionWhileSaving() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
@@ -348,8 +349,12 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
     assertEquals(userName, encryptedData.getCreatedBy().getName());
 
-    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
-    assertTrue(allUpdates.isEmpty());
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(1, changeLogs.size());
+    SecretChangeLog secretChangeLog = changeLogs.get(0);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
 
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncryptedValsForKms + 1, query.asList().size());
@@ -451,7 +456,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionUpdateObject() throws IOException {
+  public void kmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
@@ -482,8 +487,7 @@ public class KmsTest extends WingsBaseTest {
 
     ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    User user1 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    User user1 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user1").build();
     wingsPersistence.save(user1);
     UserThreadLocal.set(user1);
     wingsPersistence.save(savedAttribute);
@@ -499,47 +503,51 @@ public class KmsTest extends WingsBaseTest {
     EncryptedData encryptedData = query.asList().get(0);
     assertEquals(kmsConfig.getUuid(), encryptedData.getKmsId());
 
-    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
-    assertEquals(1, allUpdates.size());
-    Pair<Long, EmbeddedUser> pair = allUpdates.iterator().next();
-    assertEquals(user1.getUuid(), pair.getValue().getUuid());
-    assertEquals(user1.getEmail(), pair.getValue().getEmail());
-    assertEquals(user1.getName(), pair.getValue().getName());
-    assertNotEquals(encryptedData.getCreatedAt(), pair.getKey().longValue());
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(2, changeLogs.size());
+    SecretChangeLog secretChangeLog = changeLogs.get(0);
+    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
 
-    User user2 =
-        User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName(UUID.randomUUID().toString()).build();
+    secretChangeLog = changeLogs.get(1);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
+
+    User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
     wingsPersistence.save(savedAttribute);
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
     assertEquals(1, query.asList().size());
-    encryptedData = query.asList().get(0);
 
-    allUpdates = encryptedData.getAllUpdates();
-    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
-    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
-    assertEquals(userName, encryptedData.getCreatedBy().getName());
+    changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(3, changeLogs.size());
+    secretChangeLog = changeLogs.get(0);
+    assertEquals(user2.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user2.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user2.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
 
-    assertEquals(2, allUpdates.size());
-    Iterator<Pair<Long, EmbeddedUser>> pairIterator = allUpdates.iterator();
+    secretChangeLog = changeLogs.get(1);
+    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
 
-    pair = pairIterator.next();
-    assertEquals(user2.getUuid(), pair.getValue().getUuid());
-    assertEquals(user2.getEmail(), pair.getValue().getEmail());
-    assertEquals(user2.getName(), pair.getValue().getName());
-
-    pair = pairIterator.next();
-    assertEquals(user1.getUuid(), pair.getValue().getUuid());
-    assertEquals(user1.getEmail(), pair.getValue().getEmail());
-    assertEquals(user1.getName(), pair.getValue().getName());
-
-    assertNotEquals(encryptedData.getCreatedAt(), pair.getKey().longValue());
+    secretChangeLog = changeLogs.get(2);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
   }
 
   @Test
-  public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException {
+  public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
@@ -581,9 +589,15 @@ public class KmsTest extends WingsBaseTest {
     Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
     assertEquals(1, query.asList().size());
-    EncryptedData encryptedData = query.asList().get(0);
-    Set<Pair<Long, EmbeddedUser>> allUpdates = encryptedData.getAllUpdates();
-    assertEquals(0, allUpdates.size());
+
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(1, changeLogs.size());
+    SecretChangeLog secretChangeLog = changeLogs.get(0);
+
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
 
     final String newPassWord = UUID.randomUUID().toString();
     final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
@@ -609,13 +623,22 @@ public class KmsTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
     assertEquals(1, query.asList().size());
-    encryptedData = query.asList().get(0);
-    allUpdates = encryptedData.getAllUpdates();
-    assertEquals(1, allUpdates.size());
-    Pair<Long, EmbeddedUser> pair = allUpdates.iterator().next();
-    assertEquals(user1.getUuid(), pair.getValue().getUuid());
-    assertEquals(user1.getEmail(), pair.getValue().getEmail());
-    assertEquals(user1.getName(), pair.getValue().getName());
+    EncryptedData encryptedData = query.asList().get(0);
+
+    changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(2, changeLogs.size());
+    secretChangeLog = changeLogs.get(0);
+    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
+
+    secretChangeLog = changeLogs.get(1);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
+
     assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
     assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
     assertEquals(userName, encryptedData.getCreatedBy().getName());
@@ -640,23 +663,25 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, query.asList().size());
     encryptedData = query.asList().get(0);
 
-    allUpdates = encryptedData.getAllUpdates();
-    assertEquals(user.getUuid(), encryptedData.getCreatedBy().getUuid());
-    assertEquals(userEmail, encryptedData.getCreatedBy().getEmail());
-    assertEquals(userName, encryptedData.getCreatedBy().getName());
+    changeLogs = secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(3, changeLogs.size());
+    secretChangeLog = changeLogs.get(0);
+    assertEquals(user2.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user2.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user2.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
 
-    assertEquals(2, allUpdates.size());
-    Iterator<Pair<Long, EmbeddedUser>> pairIterator = allUpdates.iterator();
+    secretChangeLog = changeLogs.get(1);
+    assertEquals(user1.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user1.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user1.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed password", secretChangeLog.getDescription());
 
-    pair = pairIterator.next();
-    assertEquals(user2.getUuid(), pair.getValue().getUuid());
-    assertEquals(user2.getEmail(), pair.getValue().getEmail());
-    assertEquals(user2.getName(), pair.getValue().getName());
-
-    pair = pairIterator.next();
-    assertEquals(user1.getUuid(), pair.getValue().getUuid());
-    assertEquals(user1.getEmail(), pair.getValue().getEmail());
-    assertEquals(user1.getName(), pair.getValue().getName());
+    secretChangeLog = changeLogs.get(2);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
   }
 
   @Test
@@ -761,7 +786,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionSaveServiceVariable() throws IOException {
+  public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
@@ -788,6 +813,17 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).asList().size());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
+    Map<String, Object> keyValuePairs = new HashMap<>();
+    keyValuePairs.put("name", "newName");
+    keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
+    keyValuePairs.put("value", "newValue".toCharArray());
+    wingsPersistence.updateFields(ServiceVariable.class, savedAttributeId, keyValuePairs);
+    assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
+
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field("parentId").equal(savedAttributeId);
+    assertEquals(1, query.asList().size());
+
     Collection<UuidAware> uuidAwares = kmsService.listEncryptedValues(accountId);
     assertEquals(1, uuidAwares.size());
     ServiceVariable listedVariable = (ServiceVariable) uuidAwares.iterator().next();
@@ -795,6 +831,22 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(serviceVariable.getEntityType(), listedVariable.getEntityType());
     assertEquals(Type.ENCRYPTED_TEXT, listedVariable.getType());
     assertEquals(SettingVariableTypes.SERVICE_VARIABLE, listedVariable.getSettingType());
+    assertEquals("newName", listedVariable.getName());
+
+    List<SecretChangeLog> changeLogs =
+        secretManager.getChangeLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    assertEquals(2, changeLogs.size());
+    SecretChangeLog secretChangeLog = changeLogs.get(0);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Changed value", secretChangeLog.getDescription());
+
+    secretChangeLog = changeLogs.get(1);
+    assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+    assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+    assertEquals(user.getName(), secretChangeLog.getUser().getName());
+    assertEquals("Created", secretChangeLog.getDescription());
   }
 
   @Test
@@ -2088,12 +2140,19 @@ public class KmsTest extends WingsBaseTest {
       wingsPersistence.save(appDAttribute);
     }
 
-    List<Pair<Long, EmbeddedUser>> changeLogs =
-        secretManager.getChangeLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
-    assertEquals(numOfUpdates, changeLogs.size());
-    for (Pair<Long, EmbeddedUser> changeLog : changeLogs) {
-      assertEquals(userName, changeLog.getValue().getName());
-      assertEquals(userEmail, changeLog.getValue().getEmail());
+    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    assertEquals(numOfUpdates + 1, changeLogs.size());
+    for (int i = 0; i <= numOfUpdates; i++) {
+      SecretChangeLog secretChangeLog = changeLogs.get(i);
+      assertEquals(user.getUuid(), secretChangeLog.getUser().getUuid());
+      assertEquals(user.getEmail(), secretChangeLog.getUser().getEmail());
+      assertEquals(user.getName(), secretChangeLog.getUser().getName());
+
+      if (i == numOfUpdates) {
+        assertEquals("Created", secretChangeLog.getDescription());
+      } else {
+        assertEquals("Changed password", secretChangeLog.getDescription());
+      }
     }
   }
 

@@ -22,7 +22,11 @@ public interface Encryptable {
     return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
-  boolean isDecrypted();
+  default boolean
+    isDecrypted() {
+      return false;
+    }
 
-  void setDecrypted(boolean decrypted);
+  default void
+    setDecrypted(boolean decrypted) {}
 }

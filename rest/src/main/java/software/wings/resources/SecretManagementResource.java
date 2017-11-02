@@ -10,6 +10,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -46,7 +47,7 @@ public class SecretManagementResource {
   @Path("/change-logs")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<Pair<Long, EmbeddedUser>>> getChangeLogs(@QueryParam("accountId") final String accountId,
+  public RestResponse<List<SecretChangeLog>> getChangeLogs(@QueryParam("accountId") final String accountId,
       @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
       throws IllegalAccessException {
     return new RestResponse<>(secretManager.getChangeLogs(entityId, variableType));

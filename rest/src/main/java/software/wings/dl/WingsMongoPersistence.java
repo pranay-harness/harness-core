@@ -2,9 +2,9 @@ package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
+import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.inject.Singleton;
@@ -26,6 +26,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
@@ -38,6 +39,7 @@ import software.wings.security.EncryptionType;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.KmsService;
 
@@ -235,10 +237,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       updateOperations.set("lastUpdatedBy",
-          anEmbeddedUser()
-              .withUuid(UserThreadLocal.get().getUuid())
-              .withEmail(UserThreadLocal.get().getEmail())
-              .withName(UserThreadLocal.get().getName())
+          EmbeddedUser.builder()
+              .uuid(UserThreadLocal.get().getUuid())
+              .email(UserThreadLocal.get().getEmail())
+              .name(UserThreadLocal.get().getName())
               .build());
     }
     return primaryDatastore.update(updateQuery, updateOperations);
@@ -251,16 +253,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       updateOperations.set("lastUpdatedBy",
-          anEmbeddedUser()
-              .withUuid(UserThreadLocal.get().getUuid())
-              .withEmail(UserThreadLocal.get().getEmail())
-              .withName(UserThreadLocal.get().getName())
+          EmbeddedUser.builder()
+              .uuid(UserThreadLocal.get().getUuid())
+              .email(UserThreadLocal.get().getEmail())
+              .name(UserThreadLocal.get().getName())
               .build());
       updateOperations.setOnInsert("createdBy",
-          anEmbeddedUser()
-              .withUuid(UserThreadLocal.get().getUuid())
-              .withEmail(UserThreadLocal.get().getEmail())
-              .withName(UserThreadLocal.get().getName())
+          EmbeddedUser.builder()
+              .uuid(UserThreadLocal.get().getUuid())
+              .email(UserThreadLocal.get().getEmail())
+              .name(UserThreadLocal.get().getName())
               .build());
     }
     updateOperations.setOnInsert("createdAt", currentTimeMillis());
@@ -278,10 +280,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     ops.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       ops.set("lastUpdatedBy",
-          anEmbeddedUser()
-              .withUuid(UserThreadLocal.get().getUuid())
-              .withEmail(UserThreadLocal.get().getEmail())
-              .withName(UserThreadLocal.get().getName())
+          EmbeddedUser.builder()
+              .uuid(UserThreadLocal.get().getUuid())
+              .email(UserThreadLocal.get().getEmail())
+              .name(UserThreadLocal.get().getName())
               .build());
     }
     return primaryDatastore.update(ent, ops);
@@ -311,13 +313,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
           && Encryptable.class.isInstance(value)) {
         Encryptable e = (Encryptable) value;
-        try {
-          encrypt(
-              e, (Encryptable) ((SettingAttribute) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId)).getValue());
-          updateParentIfNecessary(e, entityId);
-        } catch (IllegalAccessException ex) {
-          throw new WingsException("Failed to encrypt secret", ex);
-        }
+        encrypt(e, (Encryptable) ((SettingAttribute) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId)).getValue());
         value = e;
       } else if (encryptable) {
         Field f = declaredAndInheritedFields.stream()
@@ -333,12 +329,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
             Encryptable object = (Encryptable) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
 
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs)) {
-              deleteEncryptionReference(object, Collections.singleton(f.getName()));
               String accountId = object.getAccountId();
               if (kmsService.shouldUseKms(accountId)) {
                 Field encryptedField = getEncryptedRefField(f, object);
                 String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
-                updateParentIfNecessary(object, entityId);
                 operations.set(encryptedField.getName(), encryptedId);
                 operations.unset(f.getName());
                 continue;
@@ -658,14 +652,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     EncryptedData encryptedData = StringUtils.isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
     final KmsConfig kmsConfig = kmsService.getKmsConfig(accountId);
     EncryptedData encryptedPair = kmsService.encrypt(secret, accountId, kmsConfig);
+    String changeLogDescription = "";
 
     if (encryptedData == null) {
       encryptedData = encryptedPair;
       encryptedData.setAccountId(accountId);
       encryptedData.setType(object.getSettingType());
+      changeLogDescription = "Created";
     } else {
       encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
       encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
+      changeLogDescription = "Changed " + getDecryptedField(encryptedField, object).getName();
     }
 
     if (kmsConfig != null) {
@@ -673,6 +670,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     encryptedData.setEncryptionType(EncryptionType.KMS);
     encryptedId = save(encryptedData);
+    save(SecretChangeLog.builder()
+             .accountId(accountId)
+             .encryptedDataId(encryptedId)
+             .description(changeLogDescription)
+             .user(EmbeddedUser.builder()
+                       .uuid(UserThreadLocal.get().getUuid())
+                       .email(UserThreadLocal.get().getEmail())
+                       .name(UserThreadLocal.get().getName())
+                       .build())
+             .build());
     encryptedField.set(object, encryptedId);
     return encryptedId;
   }

@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -35,6 +37,8 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
@@ -65,6 +69,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private HostService hostService;
+  @Transient @Inject private transient KmsService kmsService;
+
+  @Transient @Inject private transient EncryptionService encryptionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
@@ -346,7 +353,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId) {
+  public List<ServiceVariable> computeServiceVariables(
+      String appId, String envId, String templateId, String workflowId) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
     if (serviceTemplate == null) {
       return new ArrayList<>();
@@ -359,8 +367,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> templateServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), false);
 
-    return overrideServiceSettings(
-        overrideServiceSettings(serviceVariables, allServiceVariables), templateServiceVariables);
+    return overrideServiceSettings(overrideServiceSettings(serviceVariables, allServiceVariables, workflowId),
+        templateServiceVariables, workflowId);
   }
 
   /* (non-Javadoc)
@@ -388,10 +396,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    *
    * @param existingServiceVariables the existing files
    * @param newServiceVariables      the new files
+   * @param workflowId
    * @return the list
    */
   private List<ServiceVariable> overrideServiceSettings(
-      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
+      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables, String workflowId) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (existingServiceVariables.size() != 0 || newServiceVariables.size() != 0) {
       logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -404,6 +413,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
+    mergedServiceSettings.forEach(serviceVariable -> {
+      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+        encryptionService.decrypt(serviceVariable, kmsService.getEncryptionDetails(serviceVariable, workflowId));
+      }
+    });
     return mergedServiceSettings;
   }
 }

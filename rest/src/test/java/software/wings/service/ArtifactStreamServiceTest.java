@@ -149,7 +149,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   public void shouldDockerArtifactStreamCreate() {
     when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
-    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(dockerArtifactStream);
     when(buildSourceService.validateArtifactSource(dockerArtifactStream.getAppId(), dockerArtifactStream.getSettingId(),
              dockerArtifactStream.getArtifactStreamAttributes()))
         .thenReturn(true);
@@ -161,25 +161,25 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDockerArtifactStreamUpdate() {
-    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(dockerArtifactStream);
+    when(wingsPersistence.saveAndGet(ArtifactStream.class, dockerArtifactStream)).thenReturn(dockerArtifactStream);
     when(buildSourceService.validateArtifactSource(dockerArtifactStream.getAppId(), dockerArtifactStream.getSettingId(),
              dockerArtifactStream.getArtifactStreamAttributes()))
         .thenReturn(true);
-    ArtifactStream artifactStream = artifactStreamService.update(jenkinsArtifactStream);
+    ArtifactStream artifactStream = artifactStreamService.update(dockerArtifactStream);
     assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
-    verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
-    verify(wingsPersistence).save(any(ArtifactStream.class));
+    verify(wingsPersistence, times(1)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
+    verify(wingsPersistence).saveAndGet(ArtifactStream.class, dockerArtifactStream);
   }
 
   @Test
   public void shouldUpdate() {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
+    when(wingsPersistence.saveAndGet(ArtifactStream.class, jenkinsArtifactStream)).thenReturn(jenkinsArtifactStream);
     ArtifactStream artifactStream = artifactStreamService.update(jenkinsArtifactStream);
     assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
-    verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
-    verify(wingsPersistence).save(any(ArtifactStream.class));
+    verify(wingsPersistence, times(1)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
+    verify(wingsPersistence).saveAndGet(ArtifactStream.class, jenkinsArtifactStream);
   }
 
   @Test

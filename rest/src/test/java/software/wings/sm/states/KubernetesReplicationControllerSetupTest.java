@@ -59,7 +59,6 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.internal.util.reflection.Whitebox;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -74,7 +73,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -89,7 +87,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -116,7 +113,6 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private KubernetesConfig kubernetesConfig;
   @Mock private KmsService kmsService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -288,13 +284,10 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(emptyList());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null)).thenReturn(emptyList());
     when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
-        .thenReturn(WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution().build());
     setInternalState(kubernetesReplicationControllerSetup, "kmsService", kmsService);
     setInternalState(kubernetesReplicationControllerSetup, "encryptionService", new EncryptionServiceImpl());
-    setInternalState(context, "workflowExecutionService", workflowExecutionService);
   }
 
   @Test

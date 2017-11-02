@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -50,15 +51,17 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<Pair<Long, EmbeddedUser>> getChangeLogs(String entityId, SettingVariableTypes variableType)
+  public List<SecretChangeLog> getChangeLogs(String entityId, SettingVariableTypes variableType)
       throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
-    List<Pair<Long, EmbeddedUser>> rv = new ArrayList<>();
-    Iterator<EncryptedData> encryptedDataQuery =
-        wingsPersistence.createQuery(EncryptedData.class).field("_id").hasAnyOf(secretIds).fetch();
-    while (encryptedDataQuery.hasNext()) {
-      EncryptedData encryptedData = encryptedDataQuery.next();
-      rv.addAll(encryptedData.getAllUpdates());
+    List<SecretChangeLog> rv = new ArrayList<>();
+    Iterator<SecretChangeLog> secretChangeLogsQuery = wingsPersistence.createQuery(SecretChangeLog.class)
+                                                          .field("encryptedDataId")
+                                                          .hasAnyOf(secretIds)
+                                                          .order("-createdAt")
+                                                          .fetch();
+    while (secretChangeLogsQuery.hasNext()) {
+      rv.add(secretChangeLogsQuery.next());
     }
 
     return rv;
