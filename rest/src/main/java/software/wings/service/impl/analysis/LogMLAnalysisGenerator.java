@@ -150,8 +150,8 @@ public class LogMLAnalysisGenerator implements Runnable {
               attempt += PYTHON_JOB_RETRIES;
               break;
             case 2:
-              logger.warn("No test data from the deployed nodes " + context.getStateExecutionId() + " for minute "
-                  + logAnalysisMinute);
+              logger.warn("No control and test data from the deployed nodes " + context.getStateExecutionId()
+                  + " for minute " + logAnalysisMinute);
               attempt += PYTHON_JOB_RETRIES;
               break;
             default:
