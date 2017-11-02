@@ -2,7 +2,6 @@ package software.wings.integration.migration;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 
 import com.google.inject.Inject;
 
@@ -14,6 +13,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.artifact.EcrArtifactStream;
@@ -87,8 +87,7 @@ public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
           settingAttribute.setEnvId(GLOBAL_ENV_ID);
           settingAttribute.setName(name);
           settingAttribute.setCreatedAt(System.nanoTime());
-          settingAttribute.setCreatedBy(
-              anEmbeddedUser().withEmail(userEmail).withName(userName).withUuid(userUuid).build());
+          settingAttribute.setCreatedBy(EmbeddedUser.builder().email(userEmail).name(userName).uuid(userUuid).build());
 
           settingAttribute.setUuid(UUIDGenerator.getUuid());
           try {

@@ -14,7 +14,6 @@ import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflo
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
@@ -286,7 +285,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     User user = UserThreadLocal.get();
     if (user != null) {
-      approvalDetails.setApprovedBy(anEmbeddedUser().withEmail(user.getEmail()).withName(user.getName()).build());
+      approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
     }
     ApprovalStateExecutionData executionData = null;
     if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
@@ -677,7 +676,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     User user = UserThreadLocal.get();
     if (user != null) {
       stdParams.setCurrentUser(
-          anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build());
+          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
     }
     workflowExecution.setExecutionArgs(executionArgs);
 
@@ -855,7 +854,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     User user = UserThreadLocal.get();
     if (user != null) {
       EmbeddedUser triggeredBy =
-          anEmbeddedUser().withUuid(user.getUuid()).withEmail(user.getEmail()).withName(user.getName()).build();
+          EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
       workflowExecution.setTriggeredBy(triggeredBy);
       workflowExecution.setCreatedBy(triggeredBy);
     } else if (workflowExecution.getExecutionArgs() != null
@@ -864,8 +863,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setCreatedBy(workflowExecution.getExecutionArgs().getTriggeredBy());
     } else {
       // Triggered by Auto Trigger
-      workflowExecution.setTriggeredBy(anEmbeddedUser().withName("Deployment trigger").build());
-      workflowExecution.setCreatedBy(anEmbeddedUser().withName("Deployment trigger").build());
+      workflowExecution.setTriggeredBy(EmbeddedUser.builder().name("Deployment trigger").build());
+      workflowExecution.setCreatedBy(EmbeddedUser.builder().name("Deployment trigger").build());
     }
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
     if (executionArgs != null) {
@@ -942,6 +941,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setExecutionName(workflowExecution.getName());
     stateExecutionInstance.setExecutionUuid(workflowExecution.getUuid());
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
+    stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
 
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();

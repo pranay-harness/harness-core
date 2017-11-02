@@ -132,6 +132,17 @@ public interface ArtifactService {
   Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId, String artifactSourceName);
 
   /**
+   * Fetch latest artifact for artifact stream artifact.
+   *
+   * @param appId            the app id
+   * @param artifactStreamId the artifact stream id
+   * @param artifactSourceName the artifact source name
+   * @return the artifact
+   */
+  Artifact fetchLastCollectedArtifactForArtifactStream(
+      String appId, String artifactStreamId, String artifactSourceName);
+
+  /**
    * Delete by artifact stream.
    *
    * @param appId            the app id

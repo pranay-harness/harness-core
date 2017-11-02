@@ -298,6 +298,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .forEach(artifact -> delete(appId, artifact.getUuid()));
   }
 
+  @Override
   public Artifact fetchLatestArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
     return wingsPersistence.createQuery(Artifact.class)
@@ -310,6 +311,22 @@ public class ArtifactServiceImpl implements ArtifactService {
         .order("-createdAt")
         .field("status")
         .hasAnyOf(Arrays.asList(RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+        .get();
+  }
+
+  @Override
+  public Artifact fetchLastCollectedArtifactForArtifactStream(
+      String appId, String artifactStreamId, String artifactSourceName) {
+    return wingsPersistence.createQuery(Artifact.class)
+        .field("appId")
+        .equal(appId)
+        .field("artifactStreamId")
+        .equal(artifactStreamId)
+        .field("artifactSourceName")
+        .equal(artifactSourceName)
+        .order("-createdAt")
+        .field("status")
+        .hasAnyOf(Arrays.asList(READY, APPROVED))
         .get();
   }
 

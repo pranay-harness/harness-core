@@ -204,6 +204,7 @@ public class Pipeline extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private List<Service> services;
 
     private Builder() {}
 
@@ -327,6 +328,16 @@ public class Pipeline extends Base {
     }
 
     /**
+     * With services
+     * @param services
+     * @return
+     */
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -342,7 +353,8 @@ public class Pipeline extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withServices(services);
     }
 
     /**
@@ -362,6 +374,7 @@ public class Pipeline extends Base {
       pipeline.setCreatedAt(createdAt);
       pipeline.setLastUpdatedBy(lastUpdatedBy);
       pipeline.setLastUpdatedAt(lastUpdatedAt);
+      pipeline.setServices(services);
       return pipeline;
     }
   }

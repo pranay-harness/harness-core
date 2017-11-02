@@ -97,6 +97,11 @@ public class WingsTestConstants {
   public static final String ARTIFACT_STREAM_NAME = "ARTIFACT_STREAM_NAME";
 
   /**
+   * The constant ARTIFACT_SOURCE_NAME.
+   */
+  public static final String ARTIFACT_SOURCE_NAME = "ARTIFACT_SOURCE_NAME";
+
+  /**
    * The constant BUILD_JOB_NAME.
    */
   public static final String BUILD_JOB_NAME = "BUILD_JOB_NAME";
@@ -475,4 +480,19 @@ public class WingsTestConstants {
    * The constant PHASE_STEP.
    */
   public static final String PHASE_STEP = "PHASE_STEP";
+
+  /**
+   * The constant TRIGGER_ID
+   */
+  public static final String TRIGGER_ID = "TRIGGER_ID";
+
+  /**
+   * The constant TRIGGER_ID
+   */
+  public static final String TRIGGER_NAME = "TRIGGER_NAME";
+
+  /**
+   * The constant TRIGGER_ID
+   */
+  public static final String ARTIFACT_FILTER = "ARTIFACT_FILTER";
 }

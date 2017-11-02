@@ -34,7 +34,7 @@ public class VariableProcessor {
    * @param contextElements the context elements
    * @return the variables
    */
-  public Map<String, String> getVariables(ArrayDeque<ContextElement> contextElements) {
+  public Map<String, String> getVariables(ArrayDeque<ContextElement> contextElements, String workflowId) {
     Map<String, String> variables = new HashMap<>();
     Optional<ContextElement> instanceElement =
         contextElements.stream()
@@ -49,8 +49,8 @@ public class VariableProcessor {
               .get();
 
       InstanceElement instance = (InstanceElement) instanceElement.get();
-      List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(
-          standardParam.getAppId(), standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid());
+      List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
+          standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowId);
       serviceSettingMap.forEach(
           serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
     }
