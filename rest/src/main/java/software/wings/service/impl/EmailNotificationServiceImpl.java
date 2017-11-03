@@ -45,7 +45,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
         emailData.isSystem() ? mainConfiguration.getSmtpConfig() : getSmtpConfig(emailData.getAccountId());
 
     List<EncryptedDataDetail> encryptionDetails =
-        emailData.isSystem() ? Collections.emptyList() : kmsService.getEncryptionDetails(config, null);
+        emailData.isSystem() ? Collections.emptyList() : kmsService.getEncryptionDetails(config, null, null);
     mailer.send(config, encryptionDetails, emailData);
   }
 

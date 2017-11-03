@@ -255,17 +255,18 @@ public class JenkinsState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(getTaskType())
-                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                    .withWaitId(activityId)
-                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .withParameters(new Object[] {jenkinsConfig,
-                                        kmsService.getEncryptionDetails(jenkinsConfig, context.getWorkflowId()),
-                                        finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {jenkinsConfig,
+                kmsService.getEncryptionDetails(jenkinsConfig, context.getWorkflowId(), context.getAppId()),
+                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
+            .withEnvId(envId)
+            .withInfrastructureMappingId(infrastructureMappingId)
+            .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());

@@ -116,7 +116,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
-    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureMappingService, "kmsService", kmsService);
   }
 
@@ -503,7 +503,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     Host provisionedHost = aHost().withHostName(HOST_NAME).build();
     when(awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
-             null, awsInfrastructureMapping, computeProviderSetting))
+             null, APP_ID, awsInfrastructureMapping, computeProviderSetting))
         .thenReturn(singletonList(provisionedHost));
 
     when(awsInfrastructureProvider.saveHost(provisionedHost)).thenReturn(provisionedHost);
@@ -524,7 +524,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider)
-        .maybeSetAutoScaleCapacityAndGetHosts(null, awsInfrastructureMapping, computeProviderSetting);
+        .maybeSetAutoScaleCapacityAndGetHosts(null, APP_ID, awsInfrastructureMapping, computeProviderSetting);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)

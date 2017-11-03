@@ -111,7 +111,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
         new SumoDataCollectionInfo(sumoConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
             context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
             getPhaseServiceId(context), queries, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hosts,
-            kmsService.getEncryptionDetails(sumoConfig, context.getWorkflowId()));
+            kmsService.getEncryptionDetails(sumoConfig, context.getWorkflowId(), context.getAppId()));
     String waitId = UUIDGenerator.getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

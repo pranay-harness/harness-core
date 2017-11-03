@@ -150,7 +150,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(kmsService.getEncryptionDetails(anyObject(), anyString())).thenReturn(Collections.emptyList());
+    when(kmsService.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(ecsServiceDeploy, "kmsService", kmsService);
     context = new ExecutionContextImpl(stateExecutionInstance);
   }
