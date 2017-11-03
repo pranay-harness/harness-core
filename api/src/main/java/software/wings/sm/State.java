@@ -35,6 +35,8 @@ public abstract class State {
 
   @SchemaIgnore private List<TemplateExpression> templateExpressions;
 
+  @SchemaIgnore private boolean executeWithPreviousSteps;
+
   /**
    * Instantiates a new state.
    *
@@ -137,6 +139,15 @@ public abstract class State {
 
   public void setTemplateExpressions(List<TemplateExpression> templateExpressions) {
     this.templateExpressions = templateExpressions;
+  }
+
+  @SchemaIgnore
+  public boolean isExecuteWithPreviousSteps() {
+    return executeWithPreviousSteps;
+  }
+
+  public void setExecuteWithPreviousSteps(boolean executeWithPreviousSteps) {
+    this.executeWithPreviousSteps = executeWithPreviousSteps;
   }
 
   /**

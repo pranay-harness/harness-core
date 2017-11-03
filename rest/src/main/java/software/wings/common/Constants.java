@@ -408,4 +408,6 @@ public interface Constants {
   String WINGS_RUNTIME_PATH = "WINGS_RUNTIME_PATH";
   String WINGS_STAGING_PATH = "WINGS_STAGING_PATH";
   String WINGS_BACKUP_PATH = "WINGS_BACKUP_PATH";
+
+  String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
 }

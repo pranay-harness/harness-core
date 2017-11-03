@@ -1,5 +1,5 @@
 {
-  "ui:order": ["url", "method", "header", "body", "assertion"],
+  "ui:order": ["url", "method", "header", "body", "assertion", "executeWithPreviousSteps"],
   "header": {
     "ui:placeholder": "Content-Type: application/json, Accept: application/json,..."
   },

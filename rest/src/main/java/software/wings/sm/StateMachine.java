@@ -332,7 +332,12 @@ public class StateMachine extends Base {
           Node nodeFrom = nodeIdMap.get(link.getFrom());
           Node nodeTo = nodeIdMap.get(link.getTo());
 
-          State stateFrom = statesMap.get(nodeFrom.getName());
+          State stateFrom = null;
+          try {
+            stateFrom = statesMap.get(nodeFrom.getName());
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
           State stateTo = statesMap.get(nodeTo.getName());
 
           TransitionType transitionType = TransitionType.valueOf(link.getType().toUpperCase());

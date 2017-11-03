@@ -134,6 +134,11 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return messageField;
   }
 
+  @Attributes(title = "Execute with previous steps")
+  public boolean getExecuteWithPreviousSteps() {
+    return super.isExecuteWithPreviousSteps();
+  }
+
   @Override
   @SchemaIgnore
   public Logger getLogger() {

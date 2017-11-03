@@ -220,19 +220,47 @@ public class PhaseStep {
         originNode = forkNode;
       }
     } else {
-      String id1 = null;
-      String id2;
-      for (Node step : getSteps()) {
-        id2 = step.getId();
+      int i = 0;
+      Node forkNode = null;
+      Node prevNode = null;
+      while (i < steps.size()) {
+        Node step = steps.get(i);
         step.setOrigin(false);
         graphBuilder.addNodes(step);
-        if (id1 == null && originNode == null) {
-          originNode = step;
-        } else {
+        boolean executeWithPreviousSteps =
+            Boolean.TRUE.equals(step.getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS));
+        if (i > 0 && step.getProperties() != null && executeWithPreviousSteps) {
           graphBuilder.addLinks(
-              aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+              aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
+        } else if (i < steps.size() - 1
+            && Boolean.TRUE.equals(steps.get(i + 1).getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS))) {
+          forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
+          graphBuilder.addNodes(forkNode);
+          graphBuilder.addLinks(
+              aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
+          if (prevNode == null) {
+            originNode = forkNode;
+          } else {
+            graphBuilder.addLinks(aLink()
+                                      .withFrom(prevNode.getId())
+                                      .withTo(forkNode.getId())
+                                      .withType(TransitionType.SUCCESS.name())
+                                      .build());
+          }
+          prevNode = forkNode;
+        } else {
+          if (prevNode == null) {
+            originNode = step;
+          } else {
+            graphBuilder.addLinks(aLink()
+                                      .withFrom(prevNode.getId())
+                                      .withTo(step.getId())
+                                      .withType(TransitionType.SUCCESS.name())
+                                      .build());
+          }
+          prevNode = step;
         }
-        id1 = id2;
+        i++;
       }
     }
     originNode.setOrigin(true);
